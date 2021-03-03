@@ -1,4 +1,3 @@
-@[TOC](目录)
 
 ## 一、程序集描述
 
@@ -120,19 +119,21 @@ RRQMSocket是一个整合性网络通信框架，特点是支持高并发、事�
 > FileService是基于TcpService的类，其功能基础和TcpService一致。但是也有增强功能，其介绍如下：
 #### 4.2.2 属性、事件及方法概述
 **a.属性**
-`IP`:连接到服务器的远程客户端的IP地址。
-`Port`：连接到服务器的远程客户端的端口号 。
-`BufferLength`：缓存池长度。
-`Logger`：日志记录器。
-`MainSocket`：Socket主通信器 。
-`Online`：判断TcpSocketClient是否在线。
-`AllowSend`：是否允许发送数据。
-`BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
-`DataHandlingAdapter`：数据处理适配器。
-`DownloadSpeed`：下载总速度。
-`UploadSpeed`：上传总速度。
-`BreakpointResume`：断点续传开关。
-`IsFsatUpload`：快速上传开关。
+
+- `IP`:连接到服务器的远程客户端的IP地址。
+- `Port`：连接到服务器的远程客户端的端口号 。
+- `BufferLength`：缓存池长度。
+- `Logger`：日志记录器。
+- `MainSocket`：Socket主通信器 。
+- `Online`：判断TcpSocketClient是否在线。
+- `AllowSend`：是否允许发送数据。
+- `BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
+- `DataHandlingAdapter`：数据处理适配器。
+- `DownloadSpeed`：下载总速度。
+- `UploadSpeed`：上传总速度。
+- `BreakpointResume`：断点续传开关。
+- `IsFsatUpload`：快速上传开关。
+
 **b.事件**
 |事件名| 触发 |
 |--|--|
@@ -155,25 +156,27 @@ RRQMSocket是一个整合性网络通信框架，特点是支持高并发、事�
 > FileClient是基于TcpClient的类，其功能基础和TcpClient一致。但是也有增强功能，其介绍如下：
 #### 4.3.2 属性、事件及方法概述
 **a.属性**
-`IP`:连接到服务器的远程客户端的IP地址。
-`Port`：连接到服务器的远程客户端的端口号 。
-`BufferLength`：缓存池长度。
-`Logger`：日志记录器。
-`MainSocket`：Socket主通信器 。
-`Online`：判断TcpSocketClient是否在线。
-`AllowSend`：是否允许发送数据。
-`BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
-`DataHandlingAdapter`：数据处理适配器。
-`DownloadSpeed`：下载速度。
-`UploadSpeed`：上传速度。
-`UploadFileBlocks`：上传文件包集合。
-`DownloadFileBlocks`：下载文件包集合。
-`Timeout`：单次请求超时时间。
-`UploadProgress`：上传进度。
-`DownloadProgress`：下载进度。
-`UploadFileInfo`：上传文件信息。
-`DownloadFileInfo`：下载文件信息。
-`ReceiveDirectory`：下载文件存放目录。
+
+- `IP`:连接到服务器的远程客户端的IP地址。
+- `Port`：连接到服务器的远程客户端的端口号 。
+- `BufferLength`：缓存池长度。
+- `Logger`：日志记录器。
+- `MainSocket`：Socket主通信器 。
+- `Online`：判断TcpSocketClient是否在线。
+- `AllowSend`：是否允许发送数据。
+- `BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
+- `DataHandlingAdapter`：数据处理适配器。
+- `DownloadSpeed`：下载速度。
+- `UploadSpeed`：上传速度。
+- `UploadFileBlocks`：上传文件包集合。
+- `DownloadFileBlocks`：下载文件包集合。
+- `Timeout`：单次请求超时时间。
+- `UploadProgress`：上传进度。
+- `DownloadProgress`：下载进度。
+- `UploadFileInfo`：上传文件信息。
+- `DownloadFileInfo`：下载文件信息。
+- `ReceiveDirectory`：下载文件存放目录。
+
 **b.事件**
 |事件名| 触发 |
 |--|--|
