@@ -1,0 +1,110 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;netstandard2.0;netcoreapp3.1</TargetFrameworks>
+    <ApplicationIcon>RRQM.ico</ApplicationIcon>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
+    <Version>3.1.0</Version>
+    <Company>若汝棋茗</Company>
+    <Copyright>Copyright © 2020 若汝棋茗</Copyright>
+    <Description>
+      程序集为限制性工具，如果有定制化需求，请联系作者QQ:505554090
+
+      更新时间：2021.03.02
+
+      更新内容:
+      ①TCP框架
+      1.全面引入RRQMCore中的优质内容，例如内存池，等待数据回传，消息通知等。
+      2.TCP传出数据由Byte替换为ByteBlock，具有和流一样的操作。
+      3.TcpService采用泛型，避免拆装箱操作。
+      4.修复服务器多线程模式下数据解析错误。
+      5.增加固定包头，固定长度，终止字符分割三种不同的数据解析功能。
+
+      ②文件传输模块：
+      1.极致优化性能，更少的内存申请、更大的传输单元，传输速度达500Mb/s
+
+      ③RPC模块
+      1.重新架构RPC，代理生成所有文件，避免元数据泄露问题。
+      2.取消反向RPC内容，改为SendBytesWaitReturn方法替代。
+      3.重新定义序列化接口，采用分块序列化方式，将主要序列化工作交由系统。
+    </Description>
+    <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
+    <PackageIconUrl></PackageIconUrl>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <PackageIcon>RRQM.png</PackageIcon>
+    <Authors>若汝棋茗</Authors>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+    <DocumentationFile>bin\Debug\net45\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+    <DocumentationFile>bin\Release\net45\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.CodeDom">
+      <Version>4.7.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <PackageReference Include="System.CodeDom">
+      <Version>4.7.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="RPC\Socket\RPCClient.cs" />
+    <Compile Update="RPC\Socket\RPCService.cs" />
+    <Compile Update="RPC\Socket\RRQMTcpSocketClient .cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="FileTransfer\Interface\" />
+    <Folder Include="Global\Enum\" />
+    <Folder Include="RPC\Enum\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="RRQM.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RRQMCore" Version="1.2.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,142 @@
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  源代码仓库：https://gitee.com/RRQM_Home
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RRQMSocket
+{
+    /// <summary>
+    /// 固定长度数据处理器
+    /// </summary>
+    public class FixedSizeDataHandlingAdapter : DataHandlingAdapter
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="fixedSize">数据包的长度</param>
+        public FixedSizeDataHandlingAdapter(int fixedSize)
+        {
+            this.FixedSize = fixedSize;
+        }
+        /// <summary>
+        /// 获取已设置的数据包的长度
+        /// </summary>
+        public int FixedSize { get; private set; }
+
+        /// <summary>
+        /// 临时包
+        /// </summary>
+        private ByteBlock tempByteBlock;
+
+        /// <summary>
+        /// 包剩余长度
+        /// </summary>
+        private int surPlusLength = 0;
+
+        /// <summary>
+        /// 预处理
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        protected override void PreviewReceived(ByteBlock byteBlock)
+        {
+            byte[] buffer = byteBlock.Buffer;
+            int r = (int)byteBlock.Position;
+            if (this.tempByteBlock == null)
+            {
+                SplitPackage(buffer, 0, r);
+            }
+            else
+            {
+                if (surPlusLength == r)
+                {
+                    this.tempByteBlock.Write(buffer, 0, surPlusLength);
+                    PreviewHandle(this.tempByteBlock);
+                    this.tempByteBlock.Dispose();
+                    this.tempByteBlock=null;
+                    surPlusLength = 0;
+                }
+                else if (surPlusLength < r)
+                {
+                    this.tempByteBlock.Write(buffer, 0, surPlusLength);
+                    PreviewHandle(this.tempByteBlock);
+                    this.tempByteBlock.Dispose();
+                    this.tempByteBlock = null;
+                    SplitPackage(buffer, surPlusLength, r);
+                }
+                else
+                {
+                    this.tempByteBlock.Write(buffer, 0, r);
+                    surPlusLength -= r;
+                }
+            }
+        }
+        private void SplitPackage(byte[] dataBuffer, int index, int r)
+        {
+
+            while (index < r)
+            {
+                if (r - index >= this.FixedSize)
+                {
+                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+                    byteBlock.Write(dataBuffer, index, this.FixedSize);
+                    PreviewHandle(byteBlock);
+                    surPlusLength = 0;
+                }
+                else//半包
+                {
+                    this.tempByteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+                    surPlusLength = this.FixedSize - (r - index);
+                    this.tempByteBlock.Write(dataBuffer, index, r - index);
+                }
+                index += this.FixedSize;
+            }
+        }
+
+        private void PreviewHandle(ByteBlock byteBlock)
+        {
+            try
+            {
+                this.GoReceived(byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 预处理
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        protected override void PreviewSend(byte[] buffer, int offset, int length)
+        {
+            int dataLen = length - offset;
+            if (dataLen>this.FixedSize)
+            {
+                throw new RRQMOverlengthException("发送的数据包长度大于FixedSize");
+            }
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+            byteBlock.Write(buffer, offset, length);
+            for (int i = (int)byteBlock.Position; i < this.FixedSize; i++)
+            {
+                byteBlock.Buffer[i] = 0;
+            }
+            this.GoSend(byteBlock.Buffer, 0, this.FixedSize);
+            byteBlock.Dispose();
+        }
+    }
+}

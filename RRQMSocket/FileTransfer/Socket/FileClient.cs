@@ -1,0 +1,884 @@
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  源代码仓库：https://gitee.com/RRQM_Home
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.IO;
+using RRQMCore.Log;
+using RRQMCore.Run;
+using RRQMCore.Serialization;
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+
+namespace RRQMSocket.FileTransfer
+{
+    /// <summary>
+    /// 通讯客户端主类
+    /// </summary>
+    public sealed class FileClient : TcpClient
+    {
+
+        /// <summary>
+        /// 无参数构造函数
+        /// </summary>
+        public FileClient()
+        {
+            this.BufferLength = 1024 * 64;
+            this.TransferType = TransferType.None;
+            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+        }
+
+        private string receiveDirectory = string.Empty;
+
+        /// <summary>
+        /// 获取正在下载的文件信息
+        /// </summary>
+        public FileInfo DownloadFileInfo { get { return downloadFileBlocks == null ? null : downloadFileBlocks.FileInfo; } }
+
+        /// <summary>
+        /// 获取下载进度
+        /// </summary>
+        public float DownloadProgress
+        {
+            get
+            {
+                if (downloadFileBlocks.FileInfo != null)
+                {
+                    this.downloadProgress = downloadFileBlocks.FileInfo.FileLength > 0 ? (float)receivedPosition / downloadFileBlocks.FileInfo.FileLength : 0;//计算下载完成进度
+                }
+                else
+                {
+                    this.downloadProgress = 0;
+                }
+                return downloadProgress <= 1 ? downloadProgress : 1;
+            }
+        }
+
+        /// <summary>
+        /// 获取下载速度
+        /// </summary>
+        public long DownloadSpeed
+        {
+            get
+            {
+                this.downloadSpeed = tempReceiveLength;
+                tempReceiveLength = 0;
+                return downloadSpeed;
+            }
+        }
+
+        /// <summary>
+        /// 获取上传速度
+        /// </summary>
+        public long UploadSpeed
+        {
+            get
+            {
+                this.uploadSpeed = tempSendLength;
+                tempSendLength = 0;
+                return uploadSpeed;
+            }
+        }
+
+        /// <summary>
+        ///  获取或设置默认接收文件的存放目录
+        /// </summary>
+        public string ReceiveDirectory
+        {
+            get { return receiveDirectory; }
+            set { receiveDirectory = value == null ? string.Empty : value; }
+        }
+
+        /// <summary>
+        /// 获取下载状态
+        /// </summary>
+        public TransferType TransferType { get; private set; }
+
+        /// <summary>
+        /// 获取正在上传的文件信息
+        /// </summary>
+        public FileInfo UploadFileInfo { get { return uploadFileBlocks == null ? null : uploadFileBlocks.FileInfo; } }
+
+        /// <summary>
+        /// 获取上传进度
+        /// </summary>
+        public float UploadProgress
+        {
+            get
+            {
+                if (uploadFileBlocks.FileInfo != null)
+                {
+                    this.uploadProgress = uploadFileBlocks.FileInfo.FileLength > 0 ? (float)sendPosition / uploadFileBlocks.FileInfo.FileLength : 0;//计算上传完成进度
+                }
+                else
+                {
+                    this.uploadProgress = 0;
+                }
+                return uploadProgress <= 1 ? uploadProgress : 1;
+            }
+        }
+
+        private int timeout = 10;
+        /// <summary>
+        /// 单次请求超时时间 min=5,max=60 单位：秒
+        /// </summary>
+        public int Timeout
+        {
+            get { return timeout; }
+            set
+            {
+                timeout = value < 5 ? 5 : (value > 60 ? 60 : value);
+            }
+        }
+
+
+        /// <summary>
+        /// 正在下载的文件包
+        /// </summary>
+        public ProgressBlockCollection DownloadFileBlocks
+        {
+            get { return downloadFileBlocks; }
+        }
+
+        /// <summary>
+        /// 正在上传的文件包
+        /// </summary>
+        public ProgressBlockCollection UploadFileBlocks
+        {
+            get { return uploadFileBlocks; }
+        }
+
+        private ProgressBlockCollection downloadFileBlocks;
+        private ProgressBlockCollection uploadFileBlocks;
+
+        private float downloadProgress;
+        private long downloadSpeed;
+        private float uploadProgress;
+        private long uploadSpeed;
+        private bool isPauseDownload;
+        private bool isPauseUpload;
+        private long receivedPosition;
+        private RRQMStream downloadFileStream;
+        private long sendPosition;
+        private long tempReceiveLength;
+        private long tempSendLength;
+        private Thread thread_Download;
+        private Thread thread_Upload;
+        private EventWaitHandle waitHandleDownload;
+        private EventWaitHandle waitHandleUpload;
+        private WaitData<ByteBlock> waitDataSend;
+        private RRQMAgreementHelper AgreementHelper;
+
+        /// <summary>
+        /// 刚开始下载文件的时候
+        /// </summary>
+        public event RRQMTransferFileEventHandler BeforeDownloadFile;
+
+        /// <summary>
+        /// 刚开始上传文件的时候
+        /// </summary>
+        public event RRQMFileEventHandler BeforeUploadFile;
+
+        /// <summary>
+        /// 当文件接收完成时
+        /// </summary>
+        public event RRQMFileFinishedEventHandler DownloadFileFinshed;
+
+        /// <summary>
+        /// 传输文件错误
+        /// </summary>
+        public event RRQMTransferFileMessageEventHandler TransferFileError;
+
+        /// <summary>
+        /// 当文件上传完成时
+        /// </summary>
+        public event RRQMFileFinishedEventHandler UploadFileFinshed;
+
+        /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <param name="setting"></param>
+        public override void Connect(ConnectSetting setting)
+        {
+            base.Connect(setting);
+            AgreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
+        }
+        private void BeforeDownloadFileMethod(object sender, TransferFileEventArgs e)
+        {
+            BeforeDownloadFile?.Invoke(sender, e);
+        }
+
+        private void BeforeUploadFileMethod(object sender, FileEventArgs e)
+        {
+            BeforeUploadFile?.Invoke(sender, e);
+        }
+
+        private void DownloadFileFinshedMethod(object sender, FileFinishedArgs e)
+        {
+            DownloadFileFinshed?.Invoke(sender, e);
+        }
+
+        private void TransferFileErrorMethod(object sender, TransferFileMessageArgs e)
+        {
+            TransferFileError?.Invoke(sender, e);
+        }
+
+        private void UploadFileFinshedMethod(object sender, FileFinishedArgs e)
+        {
+            UploadFileFinshed?.Invoke(sender, e);
+        }
+
+        /// <summary>
+        /// 请求下载文件
+        /// </summary>
+        /// <param name="url">请求参数</param>
+        /// <param name="waitTime">请求等待时间</param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMTransferingException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void DownloadFile(FileUrl url, int waitTime)
+        {
+            lock (locker)
+            {
+                if (!this.Online)
+                {
+                    throw new RRQMException("未连接服务器");
+                }
+                else if (this.TransferType != TransferType.None)
+                {
+                    throw new RRQMTransferingException("已有传输任务在进行中");
+                }
+
+                byte[] datas = SerializeConvert.BinarySerialize(url);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
+                byteBlock.Write(datas);
+                try
+                {
+                    ByteBlock returnByteBlock = this.SendWait(1001, waitTime, byteBlock);
+                    if (returnByteBlock == null)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                    returnByteBlock.Position = 0;
+                    FileWaitResult waitResult = SerializeConvert.BinaryDeserialize<FileWaitResult>(returnByteBlock);
+                    if (waitResult.Status == 2)
+                    {
+                        throw new RRQMTransferErrorException(waitResult.Message);
+                    }
+
+                    StartDownloadFile((ProgressBlockCollection)waitResult.Data, url.Restart);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 发送系统消息
+        /// </summary>
+        /// <param name="Text">文本</param>
+        ///<exception cref="RRQMException"></exception>
+        public void SendSystemMessage(string Text)
+        {
+            try
+            {
+                byte[] datas = Encoding.UTF8.GetBytes(Text);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
+
+                try
+                {
+                    byteBlock.Write(datas);
+                    this.SendWait(1000, this.timeout, byteBlock);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new RRQMException(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// 上传文件
+        /// </summary>
+        /// <param name="url"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMTransferingException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void UploadFile(FileUrl url)
+        {
+            lock (locker)
+            {
+                if (!this.Online)
+                {
+                    throw new RRQMNotConnectedException("未连接到服务器");
+                }
+                else if (this.TransferType != TransferType.None)
+                {
+                    throw new RRQMTransferingException("已有传输任务在进行中");
+                }
+                UrlFileInfo urlFileInfo = new UrlFileInfo();
+
+                using (FileStream stream = File.OpenRead(url.FilePath))
+                {
+                    urlFileInfo.Restart = url.Restart;
+                    urlFileInfo.FilePath = url.FilePath;
+                    urlFileInfo.Flag = url.Flag;
+                    urlFileInfo.FileHash = FileControler.GetStreamHash(stream);
+                    urlFileInfo.FileLength = stream.Length;
+                    urlFileInfo.FileName = Path.GetFileName(url.FilePath);
+                }
+                this.UploadFile(urlFileInfo);
+            }
+        }
+
+        /// <summary>
+        /// 上传文件
+        /// </summary>
+        /// <param name="urlFileInfo"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMTransferingException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void UploadFile(UrlFileInfo urlFileInfo)
+        {
+            lock (locker)
+            {
+                if (!this.Online)
+                {
+                    throw new RRQMNotConnectedException("未连接到服务器");
+                }
+                else if (this.TransferType != TransferType.None)
+                {
+                    throw new RRQMTransferingException("已有传输任务在进行中");
+                }
+                RequestUploadFileBlock requsetBlocks = FileBaseTool.GetRequestProgressBlockCollection(urlFileInfo, urlFileInfo.Restart);
+                byte[] datas = SerializeConvert.BinarySerialize(requsetBlocks);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
+                byteBlock.Write(datas);
+
+                try
+                {
+                    ByteBlock resultByteBlock = this.SendWait(1010, this.timeout, byteBlock);
+                    if (resultByteBlock == null)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                    resultByteBlock.Position = 0;
+                    FileWaitResult waitResult = SerializeConvert.BinaryDeserialize<FileWaitResult>(resultByteBlock);
+                    if (waitResult.Status == 0)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                    else if (waitResult.Status == 2)
+                    {
+                        throw new RRQMTransferErrorException(waitResult.Message);
+                    }
+                    else if (waitResult.Status == 3)
+                    {
+                        this.TransferType = TransferType.Upload;
+
+                        TransferFileEventArgs args = new TransferFileEventArgs();
+                        args.FileInfo = requsetBlocks.FileInfo;
+                        args.TargetPath = requsetBlocks.FileInfo.FilePath;
+                        BeforeUploadFileMethod(this, args);//触发接收文件事件
+                        requsetBlocks.FileInfo.FilePath = args.TargetPath;
+                        this.uploadFileBlocks = requsetBlocks;
+                        UploadFileFinished();
+                    }
+                    else
+                    {
+                        ProgressBlockCollection blocks = (ProgressBlockCollection)waitResult.Data;
+                        blocks.FileInfo.FilePath = urlFileInfo.FilePath;
+                        this.StartUploadFile(blocks);
+                    }
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 暂停下载
+        /// </summary>
+        public void PauseDownload()
+        {
+            this.isPauseDownload = true;
+        }
+
+        /// <summary>
+        /// 暂停上传
+        /// </summary>
+        public void PauseUpload()
+        {
+            this.isPauseUpload = true;
+        }
+
+        /// <summary>
+        /// 继续当前下载
+        /// </summary>
+        ///<exception cref="RRQMNotTransferException"></exception>
+        public void ResumeDownload()
+        {
+            if (waitHandleDownload == null)
+            {
+                throw new RRQMNotTransferException("没有可以继续的任务");
+            }
+            else
+            {
+                this.isPauseDownload = false;
+                waitHandleDownload.Set();
+            }
+        }
+
+        /// <summary>
+        /// 继续上传
+        /// </summary>
+        ///<exception cref="RRQMNotTransferException"></exception>
+        ///<exception cref="RRQMException"></exception>
+        public void ResumeUpload()
+        {
+            if (waitHandleUpload == null)
+            {
+                throw new RRQMNotTransferException("没有可以继续的任务");
+            }
+            else
+            {
+                this.isPauseUpload = false;
+                waitHandleUpload.Set();
+            }
+        }
+
+        /// <summary>
+        /// 停止当前下载
+        /// </summary>
+        ///<exception cref="RRQMException"></exception>
+        public void StopDownload()
+        {
+            OutDownload();
+        }
+
+        /// <summary>
+        /// 停止上传
+        /// </summary>
+        public void StopUpload()
+        {
+            try
+            {
+                ByteBlock byteBlock = this.SendWait(1013, this.timeout);
+                if (byteBlock != null && byteBlock.Buffer[0] == 1)
+                {
+                    OutUpload();
+                }
+                else
+                {
+                    throw new RRQMException("未能成功停止上传，请重试");
+                }
+            }
+            catch (Exception)
+            {
+                throw new RRQMException("未能成功停止上传，请重试");
+            }
+        }
+
+
+        private void StartDownloadFile(ProgressBlockCollection blocks, bool restart)
+        {
+            this.TransferType = TransferType.Download;
+
+            TransferFileEventArgs args = new TransferFileEventArgs();
+            args.FileInfo = blocks.FileInfo;
+
+            args.TargetPath = Path.Combine(receiveDirectory, blocks.FileInfo.FileName);
+
+            BeforeDownloadFileMethod(this, args);//触发接收文件事件
+            blocks.FileInfo.FilePath = args.TargetPath;
+
+            downloadFileStream = FileBaseTool.GetNewFileStream(ref blocks, restart);
+            downloadFileBlocks = blocks;
+            this.isPauseDownload = false;
+
+            thread_Download = new Thread(this.DownloadFileBlock);
+            thread_Download.IsBackground = true;
+            thread_Download.Start();
+        }
+
+        private void StartUploadFile(ProgressBlockCollection blocks)
+        {
+            this.TransferType = TransferType.Upload;
+
+            TransferFileEventArgs args = new TransferFileEventArgs();
+            args.FileInfo = blocks.FileInfo;
+            args.TargetPath = blocks.FileInfo.FilePath;
+            BeforeUploadFileMethod(this, args);//触发接收文件事件
+            blocks.FileInfo.FilePath = args.TargetPath;
+            this.uploadFileBlocks = blocks;
+            this.isPauseUpload = false;
+
+            thread_Upload = new Thread(this.UploadFileBlock);
+            thread_Upload.IsBackground = true;
+            thread_Upload.Start();
+        }
+
+        private void DownloadFileBlock(object o)
+        {
+            waitHandleDownload = new AutoResetEvent(false);
+            foreach (FileProgressBlock fileBlock in this.downloadFileBlocks)
+            {
+                if (!fileBlock.Finished)
+                {
+                    this.receivedPosition = fileBlock.StreamPosition;
+
+                    this.sendPosition = fileBlock.StreamPosition;
+                    long surplusLength = fileBlock.UnitLength;
+                    int reTryCount = 0;
+                    while (surplusLength > 0)
+                    {
+                        if (this.isPauseDownload)
+                        {
+                            waitHandleDownload.WaitOne();
+                        }
+
+                        ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                        byteBlock.Write(BitConverter.GetBytes(this.sendPosition));
+
+                        long requestLength = surplusLength > (this.BufferLength - 1) ? (this.BufferLength - 1) : surplusLength;
+                        byteBlock.Write(BitConverter.GetBytes(requestLength));
+
+                        try
+                        {
+                            ByteBlock returnByteBlock = this.SendWait(1002, this.timeout, byteBlock);
+                            if (returnByteBlock == null || returnByteBlock.Buffer[0] != 1)
+                            {
+                                reTryCount++;
+                                Logger.Debug(LogType.Message, this, $"下载文件错误，正在尝试第{reTryCount}次重试");
+                                if (reTryCount > 10)
+                                {
+                                    this.OutDownload();
+                                    TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                    args.FileInfo = this.downloadFileBlocks.FileInfo;
+                                    args.TransferType = TransferType.Download;
+                                    args.Message = "下载文件错误";
+                                    TransferFileErrorMethod(this, args);
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                reTryCount = 0;
+                                tempReceiveLength += requestLength;
+                                while (true)
+                                {
+                                    string mes;
+                                    if (FileBaseTool.WriteFile(downloadFileStream,out mes, this.sendPosition, returnByteBlock.Buffer, 1, (int)returnByteBlock.Position - 1))
+                                    {
+                                        this.sendPosition += requestLength;
+                                        surplusLength -= requestLength;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        reTryCount++;
+                                        Logger.Debug(LogType.Message, this, $"下载文件时，发生写入错误，正在尝试第{reTryCount}次重试");
+                                        if (reTryCount > 10)
+                                        {
+                                            this.OutDownload();
+                                            TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                            args.FileInfo = this.downloadFileBlocks.FileInfo;
+                                            args.TransferType = TransferType.Download;
+                                            args.Message = "文件写入错误："+mes;
+                                            TransferFileErrorMethod(this, args);
+                                            return;
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                        finally
+                        {
+                            byteBlock.Dispose();
+                        }
+                    }
+                    fileBlock.Finished = true;
+                    FileBaseTool.SaveProgressBlockCollection(downloadFileStream, this.downloadFileBlocks);
+                }
+            }
+
+            this.DownloadFileFinished();
+        }
+
+        private void UploadFileBlock()
+        {
+            waitHandleUpload = new AutoResetEvent(false);
+            foreach (FileProgressBlock fileBlock in this.uploadFileBlocks)
+            {
+                if (!fileBlock.Finished)
+                {
+                    this.receivedPosition = fileBlock.StreamPosition;
+
+                    this.sendPosition = fileBlock.StreamPosition;
+                    long surplusLength = fileBlock.UnitLength;
+                    int reTryCount = 0;
+                    while (surplusLength > 0)
+                    {
+                        if (this.isPauseUpload)
+                        {
+                            waitHandleUpload.WaitOne();
+                        }
+                        byte[] positionBytes = BitConverter.GetBytes(this.sendPosition);
+                        long submitLength = surplusLength > (this.BufferLength - 21) ? (this.BufferLength - 21) : surplusLength;
+                        byte[] submitLengthBytes = BitConverter.GetBytes(submitLength);
+                        ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                        if (this.sendPosition + submitLength == fileBlock.StreamPosition + fileBlock.UnitLength)
+                        {
+                            byteBlock.Write(1);
+                        }
+                        else
+                        {
+                            byteBlock.Write(0);
+                        }
+
+                        byteBlock.Write(BitConverter.GetBytes(fileBlock.Index));
+                        byteBlock.Write(positionBytes);
+                        byteBlock.Write(submitLengthBytes);
+                        try
+                        {
+                            if (FileBaseTool.ReadFileBytes(this.uploadFileBlocks.FileInfo.FilePath, this.sendPosition, byteBlock, 21, (int)submitLength))
+                            {
+                                ByteBlock returnByteBlock = this.SendWait(1011, this.timeout, byteBlock);
+                                if (returnByteBlock != null && returnByteBlock.Buffer[0] == 1)
+                                {
+                                    reTryCount = 0;
+                                    this.tempSendLength += submitLength;
+                                    this.sendPosition += submitLength;
+                                    surplusLength -= submitLength;
+                                }
+                                else
+                                {
+                                    reTryCount++;
+                                    Logger.Debug(LogType.Message, this, $"上传文件错误，正在尝试第{reTryCount}次重试");
+                                    if (reTryCount > 10)
+                                    {
+                                        TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                        args.FileInfo = this.uploadFileBlocks.FileInfo;
+                                        args.TransferType = TransferType.Upload;
+                                        args.Message = "未知错误";
+                                        TransferFileErrorMethod(this, args);
+                                    }
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            byteBlock.Dispose();
+                        }
+                    }
+                }
+            }
+
+            UploadFileFinished();
+        }
+
+        private void DownloadFileFinished()
+        {
+            try
+            {
+                ByteBlock resultByteBlock = this.SendWait(1004, this.timeout);
+                if (resultByteBlock.Position == 1 && resultByteBlock.Buffer[0] == 1)
+                {
+                    FileBaseTool.FileFinished(downloadFileStream);
+                    FileFinishedArgs args = new FileFinishedArgs();
+                    args.FileInfo = downloadFileBlocks.FileInfo;
+                    TransferFileHashDictionary.AddFile(downloadFileBlocks.FileInfo);
+                    DownloadFileFinshedMethod(this, args);
+
+                }
+            }
+            catch (Exception e)
+            {
+                TransferFileMessageArgs args = new TransferFileMessageArgs();
+                args.FileInfo = this.DownloadFileInfo;
+                args.TransferType = TransferType.Download;
+                args.Message = e.Message;
+                TransferFileErrorMethod(this, args);
+            }
+            finally
+            {
+                OutDownload();
+            }
+        }
+
+        private void UploadFileFinished()
+        {
+            int reTryCount = 0;
+            while (reTryCount < 10)
+            {
+                ByteBlock byteBlock = this.SendWait(1012, this.timeout);
+                if (byteBlock != null && byteBlock.Buffer[0] == 1)
+                {
+                    FileFinishedArgs args = new FileFinishedArgs();
+                    args.FileInfo = uploadFileBlocks.FileInfo;
+                    this.uploadFileBlocks = null;
+                    UploadFileFinshedMethod(this, args);
+                    OutUpload();
+                    break;
+                }
+                reTryCount++;
+            }
+
+
+        }
+
+        private void OutDownload()
+        {
+            if (this.waitHandleDownload != null)
+            {
+                this.waitHandleDownload.Dispose();
+            }
+            if (this.downloadFileStream != null)
+            {
+                this.downloadFileStream.Dispose();
+            }
+            this.downloadFileBlocks = null;
+            this.TransferType = TransferType.None;
+
+            if (this.thread_Download != null)
+            {
+                this.thread_Download.Abort();
+                this.thread_Download = null;
+            }
+            this.SendWait(1003, this.timeout);
+        }
+
+        private void OutUpload()
+        {
+            if (this.waitHandleUpload != null)
+            {
+                this.waitHandleUpload.Dispose();
+            }
+
+            this.uploadFileBlocks = null;
+            this.TransferType = TransferType.None;
+
+            if (this.thread_Upload != null)
+            {
+                this.thread_Upload.Abort();
+                this.thread_Upload = null;
+            }
+        }
+
+        /// <summary>
+        /// 发送Byte数组，并等待返回
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="waitTime"></param>
+        /// <returns></returns>
+        public byte[] SendBytesWaitReturn(byte[] data, int offset, int length, int waitTime = 3)
+        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(length - offset);
+            byteBlock.Write(data, offset, length);
+            ByteBlock resultByteBlock = this.SendWait(1014, this.timeout, byteBlock);
+            if (resultByteBlock != null && resultByteBlock.Buffer[0] == 1)
+            {
+                byte[] buffer = new byte[resultByteBlock.Position - 1];
+                resultByteBlock.Position = 1;
+                resultByteBlock.Read(buffer, 0, buffer.Length);
+                return buffer;
+            }
+            else
+            {
+                throw new RRQMException("未知错误");
+            }
+        }
+
+        /// <summary>
+        /// 处理已接收到的数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        protected override void HandleReceivedData(ByteBlock byteBlock)
+        {
+            if (this.waitDataSend != null)
+            {
+                this.waitDataSend.Set(byteBlock);
+            }
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public override void Send(byte[] buffer, int offset, int length)
+        {
+            throw new RRQMException("不允许发送自由数据");
+        }
+
+        private ByteBlock SendWait(int agreement, int waitTime, ByteBlock byteBlock = null)
+        {
+            //1001:请求下载
+            //1002:请求下载分包
+            //1003:停止下载
+            //1004:下载完成
+
+            lock (locker)
+            {
+                this.waitDataSend = new WaitData<ByteBlock>();
+                try
+                {
+                    if (byteBlock == null)
+                    {
+                        AgreementHelper.SocketSend(agreement);
+                    }
+                    else
+                    {
+                        AgreementHelper.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Position);
+                    }
+                }
+                catch
+                {
+                }
+                this.waitDataSend.WaitResult = null;
+                this.waitDataSend.Wait(waitTime * 1000);
+                ByteBlock resultByteBlock = this.waitDataSend.WaitResult;
+                this.waitDataSend.Dispose();
+                this.waitDataSend = null;
+                return resultByteBlock;
+            }
+        }
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+            this.disposable = true;
+            this.TransferType = TransferType.None;
+            this.downloadProgress = 0;
+            this.uploadProgress = 0;
+            this.downloadSpeed = 0;
+            this.uploadSpeed = 0;
+        }
+    }
+}
