@@ -205,13 +205,13 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        public void HandleBuffer(ByteBlock byteBlock)
+        void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
         {
-            this.DataHandlingAdapter.Received(byteBlock);
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            this.dataHandlingAdapter.Received(byteBlock);
         }
 
         /// <summary>

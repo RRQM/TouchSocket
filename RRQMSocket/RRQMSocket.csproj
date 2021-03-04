@@ -5,29 +5,22 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.1.0</Version>
+    <Version>3.1.2</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2020 若汝棋茗</Copyright>
     <Description>
-      程序集为限制性工具，如果有定制化需求，请联系作者QQ:505554090
-
-      更新时间：2021.03.02
+      更新时间：2021.03.04
 
       更新内容:
+      
       ①TCP框架
-      1.全面引入RRQMCore中的优质内容，例如内存池，等待数据回传，消息通知等。
-      2.TCP传出数据由Byte替换为ByteBlock，具有和流一样的操作。
-      3.TcpService采用泛型，避免拆装箱操作。
-      4.修复服务器多线程模式下数据解析错误。
-      5.增加固定包头，固定长度，终止字符分割三种不同的数据解析功能。
+      无
 
       ②文件传输模块：
-      1.极致优化性能，更少的内存申请、更大的传输单元，传输速度达500Mb/s
+      1.修复在没有文件传输时获取进度会抛出异常的错误。
 
       ③RPC模块
-      1.重新架构RPC，代理生成所有文件，避免元数据泄露问题。
-      2.取消反向RPC内容，改为SendBytesWaitReturn方法替代。
-      3.重新定义序列化接口，采用分块序列化方式，将主要序列化工作交由系统。
+      无
     </Description>
     <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>

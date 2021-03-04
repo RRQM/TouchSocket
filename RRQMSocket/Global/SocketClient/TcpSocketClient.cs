@@ -74,13 +74,10 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        public void HandleBuffer(ByteBlock byteBlock)
+
+        void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
         {
-            if (this.dataHandlingAdapter==null)
+            if (this.dataHandlingAdapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
             }
@@ -239,6 +236,6 @@ namespace RRQMSocket
             this.breakOut = true;
         }
 
-        
+       
     }
 }

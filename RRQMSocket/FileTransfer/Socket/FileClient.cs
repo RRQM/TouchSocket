@@ -51,6 +51,10 @@ namespace RRQMSocket.FileTransfer
         {
             get
             {
+                if (downloadFileBlocks==null)
+                {
+                    return 0;
+                }
                 if (downloadFileBlocks.FileInfo != null)
                 {
                     this.downloadProgress = downloadFileBlocks.FileInfo.FileLength > 0 ? (float)receivedPosition / downloadFileBlocks.FileInfo.FileLength : 0;//计算下载完成进度
@@ -115,6 +119,10 @@ namespace RRQMSocket.FileTransfer
         {
             get
             {
+                if (uploadFileBlocks == null)
+                {
+                    return 0;
+                }
                 if (uploadFileBlocks.FileInfo != null)
                 {
                     this.uploadProgress = uploadFileBlocks.FileInfo.FileLength > 0 ? (float)sendPosition / uploadFileBlocks.FileInfo.FileLength : 0;//计算上传完成进度
@@ -499,6 +507,10 @@ namespace RRQMSocket.FileTransfer
 
         private void StartDownloadFile(ProgressBlockCollection blocks, bool restart)
         {
+            if (this.TransferType!= TransferType.None)
+            {
+                return;
+            }
             this.TransferType = TransferType.Download;
 
             TransferFileEventArgs args = new TransferFileEventArgs();

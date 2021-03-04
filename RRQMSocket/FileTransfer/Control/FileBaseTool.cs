@@ -192,19 +192,24 @@ namespace RRQMSocket.FileTransfer
             return blocks;
         }
 
+        //static object locker = new object();
         internal static bool ReadFileBytes(string path,  long beginPosition, ByteBlock byteBlock, int offset, int length)
         {
-            using (FileStream fileStream = File.OpenRead(path))
-            {
-                fileStream.Position = beginPosition;
-                int r = fileStream.Read(byteBlock.Buffer, offset, length);
-                if (r == length)
+            //lock (locker)
+            //{
+                using (FileStream fileStream = File.OpenRead(path))
                 {
-                    byteBlock.Position = offset + length;
-                    return true;
+                    fileStream.Position = beginPosition;
+                    int r = fileStream.Read(byteBlock.Buffer, offset, length);
+                    if (r == length)
+                    {
+                        byteBlock.Position = offset + length;
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
-            }
+            //}
+           
         }
 
         #endregion Methods
