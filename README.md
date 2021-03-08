@@ -1,5 +1,9 @@
 
 ## 一、程序集描述
+# ![Logo](/RRQMSocket/RRQM.png) RRQMSocket
+
+[![NuGet version (SAEA)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages?q=rrqm)
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 ### 说明
 >RRQMSocket程序集由作者若汝棋茗开发，所有版权归作者所有，程序集源代码在遵循Apache License 2.0的开源协议下，可供其他开发者二次开发及（商业）使用。
@@ -41,15 +45,17 @@ RRQMSocket是一个整合性网络通信框架，特点是支持高并发、事�
 > TcpService是所有基于TCP协议类的基类，也是在服务器端创建服务器的对象类，但该类是抽象类，必须通过继承才能创建其具体对象，原因是在该类中，只实现了服务器的管理功能，但未实现其数据接收和处理功能，所以必须倚仗服务器辅助类才能实现其实际功能。其简单介绍如下：
 #### 3.1.2 属性、事件及方法概述
 **a.属性**
-`IP`:绑定服务器所用到的IP地址。
-`Port`：绑定服务器所用到的端口号 。
-`BufferLength`：缓存池长度。
-`Logger`：日志记录器。
-`MainSocket`：Socket主通信器 。
-`IsBand`：判断服务器绑定是否成功。
-`IsCheckClientAlive`：是否自动检验客户端活性（心跳检测）。
-`BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
-`SocketClients`：获取已连接并且存活的客户端集合。
+
+- `IP`:绑定服务器所用到的IP地址。
+- `Port`：绑定服务器所用到的端口号 。
+- `BufferLength`：缓存池长度。
+- `Logger`：日志记录器。
+- `MainSocket`：Socket主通信器 。
+- `IsBand`：判断服务器绑定是否成功。
+- `IsCheckClientAlive`：是否自动检验客户端活性（心跳检测）。
+- `BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
+- `SocketClients`：获取已连接并且存活的客户端集合。
+
 **b.事件**
 |事件名| 触发 |
 |--|--|
@@ -67,15 +73,17 @@ RRQMSocket是一个整合性网络通信框架，特点是支持高并发、事�
 > TcpClient是基于TCP协议的客户端抽象类，一般的在接收和处理普通TCP报文时，客户端是不限类型、语言的。但是为统一使用，本程序集仍提供统一类型，其介绍如下：
 #### 3.2.2 属性、事件及方法概述
 **a.属性**
-`IP`:连接服务器所用到的IP地址。
-`Port`：连接服务器所用到的端口号 。
-`BufferLength`：缓存池长度。
-`Logger`：日志记录器。
-`MainSocket`：Socket主通信器 。
-`Online`：判断客户端是否连接成功。
-`AllowSend`：是否允许发送数据。
-`BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
-`DataHandlingAdapter`：数据处理适配器。
+
+- `IP`:连接服务器所用到的IP地址。
+- `Port`：连接服务器所用到的端口号 。
+- `BufferLength`：缓存池长度。
+- `Logger`：日志记录器。
+- `MainSocket`：Socket主通信器 。
+- `Online`：判断客户端是否连接成功。
+- `AllowSend`：是否允许发送数据。
+- `BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
+- `DataHandlingAdapter`：数据处理适配器。
+
 **b.事件**
 |事件名| 触发 |
 |--|--|
@@ -92,17 +100,21 @@ RRQMSocket是一个整合性网络通信框架，特点是支持高并发、事�
 > TcpSocketClient是基于TCP协议的服务器客户端抽象类，因为服务器类只对连接的客户端进行管理和检测，所以对于数据的处理，必须由辅助类实现，可以认为TcpSocketClient就是一个特殊的客户端类，他具有和TcpClient一样的接口功能，是直接参数数据交换的类，其介绍如下：
 #### 3.3.2 属性、事件及方法概述
 **a.属性**
-`IP`:连接到服务器的远程客户端的IP地址。
-`Port`：连接到服务器的远程客户端的端口号 。
-`BufferLength`：缓存池长度。
-`Logger`：日志记录器。
-`MainSocket`：Socket主通信器 。
-`Online`：判断TcpSocketClient是否在线。
-`AllowSend`：是否允许发送数据。
-`BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
-`DataHandlingAdapter`：数据处理适配器。
+
+- `IP`:连接到服务器的远程客户端的IP地址。
+- `Port`：连接到服务器的远程客户端的端口号 。
+- `BufferLength`：缓存池长度。
+- `Logger`：日志记录器。
+- `MainSocket`：Socket主通信器 。
+- `Online`：判断TcpSocketClient是否在线。
+- `AllowSend`：是否允许发送数据。
+- `BytePool`：获取内存池实例，该实例不可直接赋值，但是可以设置其参数。
+- `DataHandlingAdapter`：数据处理适配器。
+
 **b.事件**
+
 无
+
 **c.方法**
 |方法名| 功能 |
 |--|--|
