@@ -4,6 +4,7 @@
 
 [![NuGet version (SAEA)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages?q=rrqm)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+[![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://img.shields.io/nuget/dt/RRQMSocket)
 
 ### 说明
 >RRQMSocket程序集由作者若汝棋茗开发，所有版权归作者所有，程序集源代码在遵循Apache License 2.0的开源协议下，可供其他开发者二次开发及（商业）使用。
