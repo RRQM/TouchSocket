@@ -89,11 +89,14 @@ RRQMSocket是一个整合性网络通信框架，特点是支持高并发、事�
 - `DataHandlingAdapter`：数据处理适配器。
 
 **b.事件**
+
 |事件名| 触发 |
 |--|--|
 | ConnectedService| 当客户端连接成功时 |
 | DisConnectedService| 当客户端断开连接时 |
+
 **c.方法**
+
 |方法名| 功能 |
 |--|--|
 | Connect| 连接服务器 |
@@ -279,5 +282,5 @@ RPC是远程过程调用（Remote Procedure Call）的缩写形式。客户程�
 
 > 1.Bobo Joker
 
-<img src="https://images.gitee.com/uploads/images/2021/0309/103526_e593bf10_8553710.jpeg" width = "300" height = "200" alt="图片名称" align=center />
-<img src="https://images.gitee.com/uploads/images/2021/0309/103556_abcfa5a4_8553710.png " width = "300" height = "200" alt="图片名称" align=center />
+<img src="https://images.gitee.com/uploads/images/2021/0309/103526_e593bf10_8553710.jpeg" width = "400" height = "400" alt="图片名称" align=center />
+<img src="https://images.gitee.com/uploads/images/2021/0309/103556_abcfa5a4_8553710.png " width = "400" height = "400" alt="图片名称" align=center />
