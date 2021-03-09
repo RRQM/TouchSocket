@@ -183,6 +183,7 @@ namespace RRQMSocket
                 if (r == 0)
                 {
                     DisConnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                    return;
                 }
 
                 ClientBuffer clientBuffer = new ClientBuffer();

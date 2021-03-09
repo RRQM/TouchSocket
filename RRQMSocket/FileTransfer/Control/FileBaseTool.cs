@@ -40,7 +40,7 @@ namespace RRQMSocket.FileTransfer
                 stream = new RRQMStream(path, FileMode.Open, FileAccess.ReadWrite);
                 stream.Read(buffer, 0, buffer.Length);
                 ProgressBlockCollection readBlocks = SerializeConvert.BinaryDeserialize<ProgressBlockCollection>(buffer);
-                if (readBlocks.FileInfo.FileHash == blocks.FileInfo.FileHash)
+                if (readBlocks.FileInfo.FileHash != null && blocks.FileInfo.FileHash != null && readBlocks.FileInfo.FileHash == blocks.FileInfo.FileHash)
                 {
                     blocks = readBlocks;
                     stream.fileInfo = blocks.FileInfo;
@@ -82,7 +82,7 @@ namespace RRQMSocket.FileTransfer
         }
 
 
-        internal static bool WriteFile(RRQMStream stream,out string mes, long streamPosition, byte[] buffer, int offset, int length)
+        internal static bool WriteFile(RRQMStream stream, out string mes, long streamPosition, byte[] buffer, int offset, int length)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace RRQMSocket.FileTransfer
                 mes = null;
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 mes = ex.Message;
                 return false;
@@ -193,23 +193,25 @@ namespace RRQMSocket.FileTransfer
         }
 
         //static object locker = new object();
-        internal static bool ReadFileBytes(string path,  long beginPosition, ByteBlock byteBlock, int offset, int length)
+        internal static bool ReadFileBytes(string path, long beginPosition, ByteBlock byteBlock, int offset, int length)
         {
-            //lock (locker)
-            //{
-                using (FileStream fileStream = File.OpenRead(path))
-                {
-                    fileStream.Position = beginPosition;
-                    int r = fileStream.Read(byteBlock.Buffer, offset, length);
-                    if (r == length)
-                    {
-                        byteBlock.Position = offset + length;
-                        return true;
-                    }
-                    return false;
-                }
-            //}
-           
+            FileStream fileStream = TransferFileStreamDic.GetFileStream(path);
+
+            fileStream.Position = beginPosition;
+
+            if (byteBlock.Buffer.Length < length + offset)
+            {
+                byteBlock.SetBuffer(new byte[length + offset]);
+            }
+
+            int r = fileStream.Read(byteBlock.Buffer, offset, length);
+            if (r == length)
+            {
+                byteBlock.Position = offset + length;
+                return true;
+            }
+            return false;
+
         }
 
         #endregion Methods

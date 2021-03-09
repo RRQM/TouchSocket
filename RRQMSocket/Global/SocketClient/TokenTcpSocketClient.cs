@@ -9,34 +9,18 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using RRQMCore.Pool;
+using System;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
-    /*
-    若汝棋茗
-    */
-
-    internal class ClientBuffer:IPoolObject
+    /// <summary>
+    /// 服务器辅助类
+    /// </summary>
+    public abstract class TokenTcpSocketClient : TcpSocketClient
     {
-        internal IHandleBuffer client;
-        internal ByteBlock byteBlock;
-
-        public bool NewCreat { get ; set ; }
-
-        public void Create()
-        {
-           
-        }
-
-        public void Destroy()
-        {
-           
-        }
-
-        public void Recreate()
-        {
-           
-        }
+       
     }
 }

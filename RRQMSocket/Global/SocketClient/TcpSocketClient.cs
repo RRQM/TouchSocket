@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Pool;
 using System;
 using System.Net.Sockets;
 
@@ -18,21 +19,15 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器辅助类
     /// </summary>
-    public abstract class TcpSocketClient : BaseSocket, IClient, IHandleBuffer
+    public abstract class TcpSocketClient : BaseSocket, IClient, IHandleBuffer, IPoolObject
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public TcpSocketClient(BytePool bytePool)
-        {
-            this.BytePool = bytePool;
-            this.AllowSend = true;
-            this.DataHandlingAdapter = new NormalDataHandlingAdapter();
-        }
+       
+        internal ObjectPool<RRQMSocketAsyncEventArgs> socketAsyncPool;
         internal bool breakOut;
         internal BufferQueueGroup queueGroup;
         private readonly byte[] test = new byte[0];
         private bool isBeginReceive;
+        private SocketAsyncEventArgs eventArgs;
 
         /// <summary>
         /// 允许发送自由数据
@@ -48,6 +43,11 @@ namespace RRQMSocket
         /// 包含此辅助类的主服务器类
         /// </summary>
         public IService Service { get; internal set; }
+
+        /// <summary>
+        /// 用于索引的令箭
+        /// </summary>
+        public string Token { get; internal set; }
 
         /// <summary>
         /// 判断该实例是否还在线
@@ -74,6 +74,10 @@ namespace RRQMSocket
             }
         }
 
+        /// <summary>
+        /// 是否为新建对象
+        /// </summary>
+        public bool NewCreat { get; set; }
 
         void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
         {
@@ -92,12 +96,20 @@ namespace RRQMSocket
 
         /// <summary>
         /// 初始化完成后，未接收数据前
+        /// DataHandlingAdapter赋值
         /// </summary>
-        protected internal virtual void Initialize()
-        { 
-        
+        protected virtual void Initialize()
+        {
+            this.AllowSend = true;
+            if (this.NewCreat)
+            {
+                this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+            }
         }
-
+        internal void BeginInitialize()
+        {
+            this.Initialize();
+        }
         /// <summary>
         /// 发送字节流
         /// </summary>
@@ -164,13 +176,74 @@ namespace RRQMSocket
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 try
                 {
-                    MainSocket.BeginReceive(byteBlock.Buffer, 0, byteBlock.Buffer.Length, SocketFlags.None, new AsyncCallback(Received), byteBlock);
+                    this.eventArgs.UserToken = byteBlock;
+                    this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                    if (!this.MainSocket.ReceiveAsync(this.eventArgs))
+                    {
+                        ProcessReceive();
+                    }
+
                 }
                 catch
                 {
                     this.breakOut = true;
                 }
                 this.isBeginReceive = true;
+            }
+            //if (!this.isBeginReceive)
+            //{
+            //    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            //    try
+            //    {
+            //        this.MainSocket.ReceiveAsync(new RRQMSocketAsyncEventArgs());
+
+            //        MainSocket.BeginReceive(byteBlock.Buffer, 0, byteBlock.Buffer.Length, SocketFlags.None, new AsyncCallback(Received), byteBlock);
+            //    }
+            //    catch
+            //    {
+            //        this.breakOut = true;
+            //    }
+            //    this.isBeginReceive = true;
+            //}
+        }
+        private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            if (e.LastOperation == SocketAsyncOperation.Receive)
+            {
+                ByteBlock byteBlock = (ByteBlock)this.eventArgs.UserToken;
+                byteBlock.Position = this.eventArgs.BytesTransferred;
+
+                ClientBuffer clientBuffer = this.queueGroup.clientBufferPool.GetObject();
+                clientBuffer.client = this;
+                clientBuffer.byteBlock = byteBlock;
+                queueGroup.bufferAndClient.Enqueue(clientBuffer);
+                queueGroup.waitHandleBuffer.Set();
+                WaitReceive();
+                ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                this.eventArgs.UserToken = newByteBlock;
+                this.eventArgs.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+                ProcessReceive();
+            }
+        }
+        private void ProcessReceive()
+        {
+            if (!this.disposable)
+            {
+                if (this.eventArgs.SocketError == SocketError.Success)
+                {
+                    // 检查远程主机是否关闭连接
+                    if (this.eventArgs.BytesTransferred > 0)
+                    {
+                        if (!this.MainSocket.ReceiveAsync(this.eventArgs))
+                        {
+                            ProcessReceive();
+                        }
+                    }
+                }
+                else
+                {
+                    this.breakOut = true;
+                }
             }
         }
 
@@ -197,11 +270,11 @@ namespace RRQMSocket
         {
             try
             {
-
                 int r = MainSocket.EndReceive(ar);
                 if (r == 0)
                 {
                     this.breakOut = true;
+                    return;
                 }
                 ClientBuffer clientBuffer = new ClientBuffer();
                 clientBuffer.client = this;
@@ -236,6 +309,31 @@ namespace RRQMSocket
             this.breakOut = true;
         }
 
-       
+        /// <summary>
+        /// 重新获取
+        /// </summary>
+        public virtual void Recreate()
+        {
+            this.breakOut = false;
+            this.disposable = false;
+            this.isBeginReceive = false;
+        }
+
+        /// <summary>
+        /// 销毁
+        /// </summary>
+        public virtual void Destroy()
+        {
+            this.MainSocket = null;
+        }
+
+        /// <summary>
+        /// 初次创建
+        /// </summary>
+        public virtual void Create()
+        {
+            this.eventArgs = new SocketAsyncEventArgs();
+            this.eventArgs.Completed += this.EventArgs_Completed;
+        }
     }
 }

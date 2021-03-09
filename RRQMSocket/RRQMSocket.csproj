@@ -12,12 +12,17 @@
       更新时间：2021.03.04
 
       更新内容:
-      
+
       ①TCP框架
-      无
+      1.引入对象池，具体写法看Demo。
 
       ②文件传输模块：
-      1.修复在没有文件传输时获取进度会抛出异常的错误。
+      1.修复：在没有文件传输时获取进度会抛出异常的错误。
+      2.修复：客户端在释放资源后仍尝试传输的bug。
+      2.修复：客户端在上传时Flag异常问题。
+      2.优化：传输逻辑，在非续传模式下，不再验证Hash。
+      3.优化：限速逻辑，在大宽带传输时，不再需要修改BufferLength。
+
 
       ③RPC模块
       无
@@ -80,7 +85,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="FileTransfer\Interface\" />
     <Folder Include="Global\Enum\" />
     <Folder Include="RPC\Enum\" />
   </ItemGroup>
@@ -97,7 +101,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RRQMCore" Version="1.2.0" />
+    <Reference Include="RRQMCore">
+      <HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

@@ -43,10 +43,10 @@ namespace RRQMSocket
         /// <summary>
         /// 主通信器
         /// </summary>
-        protected internal Socket MainSocket
+        internal Socket MainSocket
         {
             get { return mainSocket; }
-            internal set
+            set
             {
                 mainSocket = value;
                 if (value == null || mainSocket.RemoteEndPoint == null)
@@ -89,6 +89,7 @@ namespace RRQMSocket
             set
             {
                 bufferLength = value < 1024 ? 1024 : (value > 1024 * 1024 * 10 ? 1024 * 1024 * 10 : value);
+                this.OnBufferLengthChanged();
             }
         }
 
@@ -98,6 +99,14 @@ namespace RRQMSocket
         public ILog Logger { get; protected set; }
 
         /// <summary>
+        /// 当BufferLength改变值的时候
+        /// </summary>
+        protected virtual void OnBufferLengthChanged()
+        { 
+        
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public virtual void Dispose()
@@ -105,6 +114,7 @@ namespace RRQMSocket
             this.disposable = true;
             if (mainSocket != null)
             {
+                mainSocket.Shutdown(SocketShutdown.Both);
                 mainSocket.Close();
             }
         }

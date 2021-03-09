@@ -90,8 +90,12 @@ namespace RRQMSocket
             {
                 if (r > this.MaxSize)
                 {
-                    this.tempByteBlock.Dispose();
-                    this.tempByteBlock = null;
+                    if (this.tempByteBlock != null)
+                    {
+                        this.tempByteBlock.Dispose();
+                        this.tempByteBlock = null;
+                    }
+
                     Logger.Debug(LogType.Error, this, "在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
                     return;
                 }
@@ -115,10 +119,10 @@ namespace RRQMSocket
                     this.PreviewHandle(packageByteBlock);
                     startIndex = lastIndex + 1;
                 }
-                if (this.tempByteBlock!=null)
+                if (this.tempByteBlock != null)
                 {
                     this.tempByteBlock.Dispose();
-                    this.tempByteBlock=null;
+                    this.tempByteBlock = null;
                 }
                 if (startIndex < r)
                 {

@@ -19,10 +19,5 @@ namespace RRQMSocket.FileTransfer
         /// 文件信息
         /// </summary>
         public FileInfo FileInfo { get; set; }
-
-        /// <summary>
-        /// 标签
-        /// </summary>
-        public string Flag { get; set; }
     }
 }

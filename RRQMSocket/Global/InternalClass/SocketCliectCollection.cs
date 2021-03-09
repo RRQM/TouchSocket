@@ -8,38 +8,88 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 客户端集合
     /// </summary>
-    public class SocketCliectCollection<T> : List<T>where T: TcpSocketClient
+    [DebuggerDisplay("Count={Count}")]
+    public class SocketCliectCollection<T> : IEnumerable<T> where T : TcpSocketClient
     {
-        internal new void Add(T socketClient)
+        internal SocketCliectCollection(string tokenString)
         {
-            base.Add(socketClient);
+            this.tokenString = tokenString;
+        }
+        private string tokenString;
+        private int num;
+
+        /// <summary>
+        /// 数量
+        /// </summary>
+        public int Count { get { return this.tokenDic.Count; } }
+
+        ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
+
+        internal void Add(T socketClient, bool reBulid)
+        {
+            if (reBulid)
+            {
+                num++;
+                string key = $"{num}-{this.tokenString}";
+                socketClient.Token = key;
+                this.tokenDic.TryAdd(key, socketClient);
+            }
+            else
+            {
+                this.tokenDic.TryAdd(socketClient.Token, socketClient);
+            }
         }
 
-        internal new void AddRange(IEnumerable<T> socketClients)
+        internal ICollection<string> GetTokens()
         {
-            base.AddRange(socketClients);
+            return tokenDic.Keys;
         }
 
-        internal new void Remove(T socketClient)
+        internal void Remove(string token)
         {
-            base.Remove(socketClient);
+            this.tokenDic.TryRemove(token, out _);
         }
 
-        internal new void RemoveAt(int index)
+        internal void Clear()
         {
-            base.RemoveAt(index);
+            this.tokenDic.Clear();
         }
 
-        internal new void Clear()
+        /// <summary>
+        /// 获取SocketClient
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public T GetSocketClient(string token)
         {
-            base.Clear();
+            T t;
+            this.tokenDic.TryGetValue(token, out t);
+            return t;
+        }
+
+        /// <summary>
+        /// 用于枚举
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<T> GetEnumerator()
+        {
+            return this.tokenDic.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.tokenDic.Values.GetEnumerator();
         }
     }
 }

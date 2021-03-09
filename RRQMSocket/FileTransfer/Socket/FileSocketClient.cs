@@ -25,25 +25,8 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 已接收的客户端
     /// </summary>
-    public sealed class FileSocketClient : TcpSocketClient
+    public sealed class FileSocketClient : TcpSocketClient, IFileService, IFileClient
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool"></param>
-        public FileSocketClient(BytePool bytePool) : base(bytePool)
-        {
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-        }
-
-        /// <summary>
-        /// 初始化后
-        /// </summary>
-        protected internal override void Initialize()
-        {
-            base.Initialize();
-            this.AgreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
-        }
         #region 属性
 
         private long maxDownloadSpeed = 1024 * 1024;
@@ -104,6 +87,7 @@ namespace RRQMSocket.FileTransfer
                     value = 1024;
                 }
                 maxDownloadSpeed = value;
+                MaxSpeedChanged(maxDownloadSpeed);
             }
         }
 
@@ -120,6 +104,7 @@ namespace RRQMSocket.FileTransfer
                     value = 1024;
                 }
                 maxUploadSpeed = value;
+                MaxSpeedChanged(maxUploadSpeed);
             }
         }
 
@@ -133,11 +118,49 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public FileInfo UploadFileInfo { get { return uploadFileBlocks == null ? null : uploadFileBlocks.FileInfo; } }
 
+        /// <summary>
+        /// 正在下载的文件包
+        /// </summary>
+        public ProgressBlockCollection DownloadFileBlocks
+        {
+            get { return downloadFileBlocks; }
+        }
+
+        /// <summary>
+        /// 正在上传的文件包
+        /// </summary>
+        public ProgressBlockCollection UploadFileBlocks
+        {
+            get { return uploadFileBlocks; }
+        }
+
+        /// <summary>
+        /// 获取下载速度
+        /// </summary>
+        public long DownloadSpeed
+        {
+            get 
+            {
+                return this.sendDataLength;
+            }
+        }
+
+        /// <summary>
+        /// 获取上传速度
+        /// </summary>
+        public long UploadSpeed
+        {
+            get
+            {
+                return this.receivedDataLength;
+            }
+        }
+
         #endregion 属性
 
         #region 字段
-
         internal bool breakpointResume;
+        private bool bufferLengthChanged;
         private long receivedDataLength;
         private long sendDataLength;
         private long sendPosition;
@@ -219,7 +242,33 @@ namespace RRQMSocket.FileTransfer
 
         #endregion 判断调用事件
 
-
+        private void MaxSpeedChanged(long speed)
+        {
+            if (speed < 1024 * 1024)
+            {
+                this.BufferLength = 1024 * 10;
+            }
+            else if (speed < 1024 * 1024 * 10)
+            {
+                this.BufferLength = 1024 * 64;
+            }
+            else if (speed < 1024 * 1024 * 50)
+            {
+                this.BufferLength = 1024 * 512;
+            }
+            else if (speed < 1024 * 1024 * 100)
+            {
+                this.BufferLength = 1024 * 1024;
+            }
+            else if (speed < 1024 * 1024 * 200)
+            {
+                this.BufferLength = 1024 * 1024 * 5;
+            }
+            else
+            {
+                this.BufferLength = 1024 * 1024 * 10;
+            }
+        }
         internal override void WaitReceive()
         {
             if (this.GetNowTick() - timeTick > 0)
@@ -281,16 +330,17 @@ namespace RRQMSocket.FileTransfer
                         fileInfo.FilePath = url.FilePath;
                         fileInfo.FileLength = stream.Length;
                         fileInfo.FileName = Path.GetFileName(url.FilePath);
-                        fileInfo.FileHash = FileControler.GetStreamHash(stream);
+                        if (this.breakpointResume)
+                        {
+                            fileInfo.FileHash = FileControler.GetStreamHash(stream);
+                        }
                         TransferFileHashDictionary.AddFile(fileInfo);
                     }
                 }
 
-                bool restart = this.breakpointResume ? url.Restart : true;
-
                 TransferFileEventArgs args = new TransferFileEventArgs();
                 args.FileInfo = fileInfo;
-                args.Flag = url.Flag;
+                args.FileInfo.Flag = url.Flag;
                 args.IsPermitTransfer = true;
                 args.TargetPath = args.FileInfo.FilePath;
                 BeforeSendFileMethod(this, args);
@@ -332,7 +382,7 @@ namespace RRQMSocket.FileTransfer
             else if (FileControler.FileIsOpen(requestBlocks.FileInfo.FilePath))
             {
                 waitResult.Status = 2;
-                waitResult.Message = "该文件正在由其他客户端上传";
+                waitResult.Message = "该文件已被打开，或许正在由其他客户端上传";
             }
             else
             {
@@ -397,7 +447,15 @@ namespace RRQMSocket.FileTransfer
                 Speed.downloadSpeed += requestLength;
                 this.sendPosition = position + requestLength;
                 this.sendDataLength += requestLength;
-                byteBlock.Buffer[0] = 1;
+                if (this.bufferLengthChanged)
+                {
+                    byteBlock.Buffer[0] = 3;
+                }
+                else
+                {
+                    byteBlock.Buffer[0] = 1;
+                }
+
             }
             else
             {
@@ -407,6 +465,7 @@ namespace RRQMSocket.FileTransfer
 
         private void DownloadFinished(ByteBlock byteBlock)
         {
+            TransferFileStreamDic.DisposeFileStream(this.DownloadFileInfo.FilePath);
             byteBlock.Write(1);
             FileFinishedArgs args = new FileFinishedArgs();
             args.FileInfo = this.downloadFileBlocks.FileInfo;
@@ -422,12 +481,21 @@ namespace RRQMSocket.FileTransfer
             long submitLength = BitConverter.ToInt64(receivedbyteBlock.Buffer, 17);
 
             string mes;
-            if (FileBaseTool.WriteFile(this.uploadFileStream,out mes, position, receivedbyteBlock.Buffer, 25, (int)submitLength))
+            if (FileBaseTool.WriteFile(this.uploadFileStream, out mes, position, receivedbyteBlock.Buffer, 25, (int)submitLength))
             {
                 this.receivePosition = position + submitLength;
                 this.receivedDataLength += submitLength;
                 Speed.uploadSpeed += submitLength;
-                byteBlock.Write(1);
+
+                if (this.bufferLengthChanged)
+                {
+                    byteBlock.Write(3);
+                }
+                else
+                {
+                    byteBlock.Write(1);
+                }
+
                 if (status == 1)
                 {
                     FileProgressBlock fileProgress = this.uploadFileBlocks.FirstOrDefault(a => a.Index == index);
@@ -438,12 +506,13 @@ namespace RRQMSocket.FileTransfer
             else
             {
                 byteBlock.Write(2);
-                Logger.Debug( LogType.Error,this,"上传文件写入错误："+mes);
+                Logger.Debug(LogType.Error, this, "上传文件写入错误：" + mes);
             }
         }
 
         private void UploadFinished(ByteBlock byteBlock)
         {
+            TransferFileHashDictionary.AddFile(this.UploadFileInfo);
             if (this.uploadFileStream != null)
             {
                 FileBaseTool.FileFinished(this.uploadFileStream);
@@ -492,6 +561,14 @@ namespace RRQMSocket.FileTransfer
         }
 
         #endregion 协议函数
+
+        /// <summary>
+        /// 当BufferLength改变值的时候
+        /// </summary>
+        protected override void OnBufferLengthChanged()
+        {
+            bufferLengthChanged = true;
+        }
 
         /// <summary>
         /// 获取当前时间帧
@@ -666,6 +743,32 @@ namespace RRQMSocket.FileTransfer
                         }
                         break;
                     }
+
+
+                case 1020:
+                    {
+                        try
+                        {
+                            if (this.TransferType == TransferType.Download)
+                            {
+                                this.MaxSpeedChanged(this.maxDownloadSpeed);
+                            }
+                            else
+                            {
+                                this.MaxSpeedChanged(this.maxUploadSpeed);
+                            }
+                            TransferSetting transferSetting = new TransferSetting();
+                            transferSetting.breakpointResume = this.breakpointResume;
+                            transferSetting.bufferLength = this.BufferLength;
+                            returnByteBlock.Write(SerializeConvert.BinarySerialize(transferSetting));
+                            this.bufferLengthChanged = false;
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex.StackTrace);
+                        }
+                        break;
+                    }
             }
 
             try
@@ -679,6 +782,18 @@ namespace RRQMSocket.FileTransfer
             finally
             {
                 returnByteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 初始化后
+        /// </summary>
+        protected override void Initialize()
+        {
+            this.AgreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
+            if (this.NewCreat)
+            {
+                this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             }
         }
 

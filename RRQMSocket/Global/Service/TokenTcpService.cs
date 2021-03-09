@@ -1,43 +1,34 @@
-//------------------------------------------------------------------------------
-//  此代码版权归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  源代码仓库：https://gitee.com/RRQM_Home
-//  交流QQ群：234762506
-//  感谢您的下载和使用
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
+﻿using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Pool;
-using RRQMCore.Run;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// TCP服务器
+    /// 需要验证的TCP服务器
     /// </summary>
-    public abstract class TcpService<T> : BaseSocket, IService where T : TcpSocketClient
+    public abstract class TokenTcpService<T> : BaseSocket, IService where T : TcpSocketClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TcpService()
+        public TokenTcpService()
         {
             this.IsCheckClientAlive = true;
-            this.SocketClients = new SocketCliectCollection<T>("TCP");
+            this.SocketClients = new SocketCliectCollection<T>("TokenTCP");
             this.clientSocketQueue = new ConcurrentQueue<Socket>();
-            this.BytePool = new BytePool(1024 * 1024 * 1000, 1024 *1024 *20);
+            this.BytePool = new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20);
             this.ObjectPool = new ObjectPool<T>();
-            this.socketAsyncPool = new ObjectPool<RRQMSocketAsyncEventArgs>();
             this.MaxCount = 10000;
         }
 
@@ -58,19 +49,10 @@ namespace RRQMSocket
         public int MaxCount
         {
             get { return maxCount; }
-            set 
+            set
             {
                 this.ObjectPool.Capacity = value;
-                this.socketAsyncPool.Capacity = value;
-
-                if (this.bufferQueueGroups!=null&& this.bufferQueueGroups.Length>0)
-                {
-                    foreach (var item in this.bufferQueueGroups)
-                    {
-                        item.clientBufferPool.Capacity = value/ this.bufferQueueGroups.Length;
-                    }
-                }
-                maxCount = value; 
+                maxCount = value;
             }
         }
 
@@ -83,19 +65,17 @@ namespace RRQMSocket
         /// <summary>
         /// 获取对象池实例
         /// </summary>
-        public ObjectPool<T> ObjectPool { get;private set; }
+        public ObjectPool<T> ObjectPool { get; private set; }
 
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
         public SocketCliectCollection<T> SocketClients { get; private set; }
-
-
         private BufferQueueGroup[] bufferQueueGroups;
         private ConcurrentQueue<Socket> clientSocketQueue;
         private Thread threadStartUpReceive;
         private Thread threadAccept;
-        private ObjectPool<RRQMSocketAsyncEventArgs> socketAsyncPool;
+
         #region 事件
 
         /// <summary>
@@ -144,7 +124,7 @@ namespace RRQMSocket
                 }
 
                 MainSocket.Listen(30);
-               
+
                 threadStartUpReceive = new Thread(StartUpReceive);
                 threadStartUpReceive.IsBackground = true;
                 threadStartUpReceive.Name = "启动接收消息线程";
@@ -161,7 +141,6 @@ namespace RRQMSocket
                     BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                     bufferQueueGroups[i] = bufferQueueGroup;
                     bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                    bufferQueueGroup.clientBufferPool = new  ObjectPool<ClientBuffer>(this.maxCount);//处理用户的消息
                     bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
                     bufferQueueGroup.bufferAndClient = new BufferQueue();
                     bufferQueueGroup.Thread.IsBackground = true;
@@ -215,9 +194,9 @@ namespace RRQMSocket
                             try
                             {
                                 T client = CreatSocketCliect();
-                                if (this.SocketClients.Count>this.maxCount)
+                                if (this.SocketClients.Count > this.maxCount)
                                 {
-                                    this.Logger.Debug( LogType.Error,this,"连接客户端数量已达到设定最大值");
+                                    this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
                                     socket.Shutdown(SocketShutdown.Both);
                                     socket.Dispose();
                                     continue;
@@ -229,9 +208,8 @@ namespace RRQMSocket
                                         client.queueGroup = this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length];
                                         client.Service = this;
                                         client.BytePool = this.BytePool;
-                                        client.socketAsyncPool = this.socketAsyncPool;
                                     }
-                                   
+
                                     client.MainSocket = socket;
                                     client.BufferLength = this.BufferLength;
                                     client.BeginInitialize();
@@ -244,7 +222,7 @@ namespace RRQMSocket
                             {
                                 Logger.Debug(LogType.Error, this, $"在接收客户端时发生错误，信息：{e.Message}");
                             }
-                           
+
                         }
                     }
 
@@ -252,7 +230,7 @@ namespace RRQMSocket
                     foreach (var token in collection)
                     {
                         T client = this.SocketClients.GetSocketClient(token);
-                        if (client==null)
+                        if (client == null)
                         {
                             continue;
                         }
@@ -294,7 +272,6 @@ namespace RRQMSocket
                     }
                     finally
                     {
-                        queueGroup.clientBufferPool.DestroyObject(clientBuffer);
                         clientBuffer.byteBlock.Dispose();
                     }
                 }
@@ -326,8 +303,8 @@ namespace RRQMSocket
             {
                 threadStartUpReceive.Abort();
                 threadStartUpReceive = null;
-            } 
-            
+            }
+
             if (threadAccept != null)
             {
                 threadAccept.Abort();

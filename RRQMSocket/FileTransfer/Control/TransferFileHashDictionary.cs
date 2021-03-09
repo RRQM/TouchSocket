@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.IO;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,24 +25,8 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public static class TransferFileHashDictionary
     {
-        internal static void Initialization()
-        {
-            if (filePathAndInfo == null)
-            {
-                filePathAndInfo = new Dictionary<string, FileInfo>();
-            }
-        }
 
-        internal static void UnInitialization()
-        {
-            if (filePathAndInfo != null)
-            {
-                filePathAndInfo.Clear();
-                filePathAndInfo = null;
-            }
-        }
-
-        private static Dictionary<string, FileInfo> filePathAndInfo;
+        private static ConcurrentDictionary<string, FileInfo> filePathAndInfo=new ConcurrentDictionary<string, FileInfo>();
 
         /// <summary>
         /// 字典存储文件Hash的最大数量，默认为5000
@@ -54,41 +39,20 @@ namespace RRQMSocket.FileTransfer
         /// <param name="filePath"></param>
         public static void AddFile(string filePath)
         {
-            lock (typeof(TransferFileHashDictionary))
+            if (!File.Exists(filePath))
             {
-                if (filePathAndInfo == null)
-                {
-                    return;
-                }
-                FileInfo fileInfo = new FileInfo();
-                using (FileStream stream = File.OpenRead(filePath))
-                {
-                    fileInfo.FilePath = filePath;
-                    fileInfo.FileLength = stream.Length;
-                    fileInfo.FileName = Path.GetFileName(filePath);
-                    fileInfo.FileHash =FileControler.GetStreamHash(stream);
-                }
-                if (filePathAndInfo.Keys.Contains(filePath))
-                {
-                    filePathAndInfo[filePath] = fileInfo;
-                }
-                else
-                {
-                    lock (typeof(TransferFileHashDictionary))
-                    {
-                        filePathAndInfo.Add(filePath, fileInfo);
-
-                        if (filePathAndInfo.Count > MaxCount)
-                        {
-                            foreach (var item in filePathAndInfo.Keys)
-                            {
-                                filePathAndInfo.Remove(item);
-                                break;
-                            }
-                        }
-                    }
-                }
+                return;
             }
+
+            FileInfo fileInfo = new FileInfo();
+            using (FileStream stream = File.OpenRead(filePath))
+            {
+                fileInfo.FilePath = filePath;
+                fileInfo.FileLength = stream.Length;
+                fileInfo.FileName = Path.GetFileName(filePath);
+                fileInfo.FileHash = FileControler.GetStreamHash(stream);
+            }
+            AddFile(fileInfo);
         }
 
         /// <summary>
@@ -97,27 +61,23 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileInfo"></param>
         public static void AddFile(FileInfo fileInfo)
         {
-            lock (typeof(TransferFileHashDictionary))
+            if (fileInfo == null)
             {
-                if (filePathAndInfo == null)
-                {
-                    return;
-                }
+                return;
+            }
+            filePathAndInfo.AddOrUpdate(fileInfo.FilePath, fileInfo, (key, oldValue) =>
+              {
+                  return fileInfo;
+              });
 
-                if (filePathAndInfo.Keys.Contains(fileInfo.FilePath))
+            if (filePathAndInfo.Count > MaxCount)
+            {
+                foreach (var item in filePathAndInfo.Keys)
                 {
-                    filePathAndInfo[fileInfo.FilePath] = fileInfo;
-                }
-                else
-                {
-                    filePathAndInfo.Add(fileInfo.FilePath, fileInfo);
-                    if (filePathAndInfo.Count > MaxCount)
+                    FileInfo info;
+                    if (filePathAndInfo.TryRemove(item, out info))
                     {
-                        foreach (var item in filePathAndInfo.Keys)
-                        {
-                            filePathAndInfo.Remove(item);
-                            break;
-                        }
+                        break;
                     }
                 }
             }
@@ -128,33 +88,25 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public static void ClearDictionary()
         {
-            lock (typeof(TransferFileHashDictionary))
+            if (filePathAndInfo == null)
             {
-                if (filePathAndInfo == null)
-                {
-                    return;
-                }
-                filePathAndInfo.Clear();
+                return;
             }
+            filePathAndInfo.Clear();
         }
 
         /// <summary>
         /// 移除
         /// </summary>
         /// <param name="filePath"></param>
-        public static void Remove(string filePath)
+        /// <returns></returns>
+        public static bool Remove(string filePath)
         {
-            lock (typeof(TransferFileHashDictionary))
+            if (filePathAndInfo == null)
             {
-                if (filePathAndInfo == null)
-                {
-                    return;
-                }
-                if (filePathAndInfo.ContainsKey(filePath))
-                {
-                    filePathAndInfo.Remove(filePath);
-                }
+                return false;
             }
+            return filePathAndInfo.TryRemove(filePath, out _);
         }
 
         /// <summary>
@@ -165,24 +117,21 @@ namespace RRQMSocket.FileTransfer
         /// <returns></returns>
         public static bool GetFileInfo(string filePath, out FileInfo fileInfo)
         {
-            lock (typeof(TransferFileHashDictionary))
+            if (filePathAndInfo == null)
             {
-                if (filePathAndInfo == null)
+                fileInfo = null;
+                return false;
+            }
+            if (filePathAndInfo.ContainsKey(filePath))
+            {
+                fileInfo = filePathAndInfo[filePath];
+                if (File.Exists(filePath))
                 {
-                    fileInfo = null;
-                    return false;
-                }
-                if (filePathAndInfo.ContainsKey(filePath))
-                {
-                    fileInfo = filePathAndInfo[filePath];
-                    if (File.Exists(filePath))
+                    using (FileStream stream = File.OpenRead(filePath))
                     {
-                        using (FileStream stream = File.OpenRead(filePath))
+                        if (fileInfo.FileLength == stream.Length)
                         {
-                            if (fileInfo.FileLength == stream.Length)
-                            {
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }
@@ -200,32 +149,29 @@ namespace RRQMSocket.FileTransfer
         /// <returns></returns>
         public static bool GetFileInfoFromHash(string fileHash, out FileInfo fileInfo)
         {
-            lock (typeof(TransferFileHashDictionary))
+            if (filePathAndInfo == null)
             {
-                if (filePathAndInfo == null)
-                {
-                    fileInfo = null;
-                    return false;
-                }
-                if (fileHash == null)
-                {
-                    fileInfo = null;
-                    return false;
-                }
+                fileInfo = null;
+                return false;
+            }
+            if (fileHash == null)
+            {
+                fileInfo = null;
+                return false;
+            }
 
-                foreach (var item in filePathAndInfo.Values)
+            foreach (var item in filePathAndInfo.Values)
+            {
+                if (item.FileHash == fileHash)
                 {
-                    if (item.FileHash == fileHash)
+                    if (File.Exists(item.FilePath))
                     {
-                        if (File.Exists(item.FilePath))
+                        using (FileStream stream = File.OpenRead(item.FilePath))
                         {
-                            using (FileStream stream = File.OpenRead(item.FilePath))
+                            if (item.FileLength == stream.Length)
                             {
-                                if (item.FileLength == stream.Length)
-                                {
-                                    fileInfo = item;
-                                    return true;
-                                }
+                                fileInfo = item;
+                                return true;
                             }
                         }
                     }

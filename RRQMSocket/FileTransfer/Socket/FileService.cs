@@ -18,7 +18,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public sealed class FileService : TcpService<FileSocketClient>
+    public sealed class FileService : TcpService<FileSocketClient>, IFileService
     {
         /// <summary>
         /// 构造函数
@@ -61,28 +61,15 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public bool BreakpointResume { get; set; }
 
-        private bool isFsatUpload;
+        /// <summary>
+        /// 最大下载速度
+        /// </summary>
+        public long MaxDownloadSpeed { get; set; } = 1024 * 1024;
 
         /// <summary>
-        /// 是否支持快速上传
+        /// 最大上传速度
         /// </summary>
-        public bool IsFsatUpload
-        {
-            get { return isFsatUpload; }
-            set
-            {
-                isFsatUpload = value;
-                if (isFsatUpload)
-                {
-                    TransferFileHashDictionary.Initialization();
-                }
-                else
-                {
-                    TransferFileHashDictionary.UnInitialization();
-                }
-            }
-        }
-
+        public long MaxUploadSpeed { get; set; } = 1024 * 1024;
         #endregion 属性
 
         #region 字段
@@ -133,15 +120,20 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         protected override FileSocketClient CreatSocketCliect()
         {
-            FileSocketClient socketCliect = new FileSocketClient(this.BytePool);
+            FileSocketClient socketCliect = this.ObjectPool.GetObject();
             socketCliect.breakpointResume = this.BreakpointResume;
-            socketCliect.BeforeReceiveFile += this.BeforeReceiveFile;
-            socketCliect.SendFileFinished += this.SendFileFinished;
-            socketCliect.BeforeSendFile += this.BeforeSendFile;
-            socketCliect.ReceiveSystemMes += this.ReceiveSystemMes;
-            socketCliect.ReceiveFileFinished += this.ReceiveFileFinished;
-            socketCliect.ReceivedBytesThenReturn += this.ReceivedBytesThenReturn;
-            socketCliect.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            socketCliect.MaxDownloadSpeed = this.MaxDownloadSpeed;
+            socketCliect.MaxUploadSpeed = this.MaxUploadSpeed;
+            if (socketCliect.NewCreat)
+            {
+                socketCliect.BeforeReceiveFile += this.BeforeReceiveFile;
+                socketCliect.SendFileFinished += this.SendFileFinished;
+                socketCliect.BeforeSendFile += this.BeforeSendFile;
+                socketCliect.ReceiveSystemMes += this.ReceiveSystemMes;
+                socketCliect.ReceiveFileFinished += this.ReceiveFileFinished;
+                socketCliect.ReceivedBytesThenReturn += this.ReceivedBytesThenReturn;
+            }
+
             return socketCliect;
         }
     }

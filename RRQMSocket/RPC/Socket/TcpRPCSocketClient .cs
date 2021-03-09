@@ -27,22 +27,31 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        internal TcpRPCSocketClient(BytePool bytePool, MethodStore methodStore, MethodStore clientStore) : base(bytePool)
+        public TcpRPCSocketClient()
         {
             this.waitHandles = new RRQMWaitHandle<WaitBytes>();
-            this.serverMethodStore = methodStore;
-            this.clientMethodStore = clientStore;
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+        }
+
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        protected override void Initialize()
+        {
+            this.agreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
+            if (this.NewCreat )
+            {
+                this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            }
         }
 
         /// <summary>
         /// 序列化生成器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
+        internal MethodStore serverMethodStore;
+        internal MethodStore clientMethodStore;
 
         private RRQMWaitHandle<WaitBytes> waitHandles;
-        private MethodStore serverMethodStore;
-        private MethodStore clientMethodStore;
         private RRQMAgreementHelper agreementHelper;
 
         /// <summary>
@@ -134,8 +143,6 @@ namespace RRQMSocket.RPC
 
         private void Agreement_102()
         {
-            this.agreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
-
             agreementHelper.SocketSend(102, SerializeConvert.BinarySerialize(this.clientMethodStore.GetAllMethodItem()));
         }
 

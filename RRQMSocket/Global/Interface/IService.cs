@@ -34,6 +34,11 @@ namespace RRQMSocket
         BytePool BytePool { get; }
 
         /// <summary>
+        /// 获取或设置最大可连接数
+        /// </summary>
+        int MaxCount { get; set;}
+
+        /// <summary>
         /// 检验客户端活性（避免异常而导致的失活）
         /// </summary>
         bool IsCheckClientAlive { get; set; }

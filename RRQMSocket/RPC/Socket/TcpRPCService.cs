@@ -169,6 +169,13 @@ namespace RRQMSocket.RPC
                         serverMethodStore.AddInstanceMethod(instanceOfMethod);
                     }
                 }
+
+                EventInfo[] eventInfos = instance.GetType().GetEvents();
+                foreach (EventInfo eventInfo in eventInfos)
+                {
+                    propertyCode.AddTypeString(eventInfo.EventHandlerType);
+                    string s = propertyCode.GetTypeFullName(eventInfo.EventHandlerType);
+                }
             }
 
             InstanceMethod[] instances = this.serverMethodStore.GetAllInstanceMethod();
@@ -231,13 +238,19 @@ namespace RRQMSocket.RPC
             }
             this.serverMethodStore.SetProxyInfo(proxyInfo, setting.ProxyToken);
         }
+        
         /// <summary>
         /// 将连接进来的用户进行储存
         /// </summary>
         protected override TcpRPCSocketClient CreatSocketCliect()
         {
-            TcpRPCSocketClient socketCliect = new TcpRPCSocketClient(this.BytePool,this.serverMethodStore, this.clientMethodStore);
-            socketCliect.SerializeConverter = this.SerializeConverter;
+            TcpRPCSocketClient socketCliect = this.ObjectPool.GetObject();
+            if (socketCliect.NewCreat)
+            {
+                socketCliect.serverMethodStore = this.serverMethodStore;
+                socketCliect.clientMethodStore = this.clientMethodStore;
+                socketCliect.SerializeConverter = this.SerializeConverter;
+            }
             return socketCliect;
         }
 

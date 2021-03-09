@@ -8,6 +8,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Pool;
 using System.Threading;
 
 namespace RRQMSocket
@@ -19,6 +20,7 @@ namespace RRQMSocket
     internal class BufferQueueGroup
     {
         internal Thread Thread;
+        internal ObjectPool<ClientBuffer> clientBufferPool;
         internal BufferQueue bufferAndClient;
         internal EventWaitHandle waitHandleBuffer;
     }
