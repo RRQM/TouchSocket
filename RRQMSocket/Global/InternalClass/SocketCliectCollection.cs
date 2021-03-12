@@ -22,12 +22,16 @@ namespace RRQMSocket
     [DebuggerDisplay("Count={Count}")]
     public class SocketCliectCollection<T> : IEnumerable<T> where T : TcpSocketClient
     {
-        internal SocketCliectCollection(string tokenString)
+        internal SocketCliectCollection()
         {
-            this.tokenString = tokenString;
+            //this.tokenString = tokenString;
         }
-        private string tokenString;
-        private int num;
+
+        /// <summary>
+        /// 获取或设置分配IDToken的格式
+        /// </summary>
+        public string IDTokenFormat { get; set; }
+        private int number;
 
         /// <summary>
         /// 数量
@@ -36,18 +40,17 @@ namespace RRQMSocket
 
         ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
 
-        internal void Add(T socketClient, bool reBulid)
+        internal bool Add(T socketClient, bool reBulid)
         {
             if (reBulid)
             {
-                num++;
-                string key = $"{num}-{this.tokenString}";
-                socketClient.Token = key;
-                this.tokenDic.TryAdd(key, socketClient);
+                number++;
+                socketClient.IDToken =string.Format(IDTokenFormat,number) ;
+               return this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
             }
             else
             {
-                this.tokenDic.TryAdd(socketClient.Token, socketClient);
+              return  this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
             }
         }
 
@@ -66,17 +69,19 @@ namespace RRQMSocket
             this.tokenDic.Clear();
         }
 
+        private T GetSocketClient(string iDToken)
+        {
+            T t;
+            this.tokenDic.TryGetValue(iDToken, out t);
+            return t;
+        }
+
         /// <summary>
         /// 获取SocketClient
         /// </summary>
-        /// <param name="token"></param>
+        /// <param name="iDToken"></param>
         /// <returns></returns>
-        public T GetSocketClient(string token)
-        {
-            T t;
-            this.tokenDic.TryGetValue(token, out t);
-            return t;
-        }
+        public T this[string iDToken] { get { return this.GetSocketClient(iDToken); } }
 
         /// <summary>
         /// 用于枚举

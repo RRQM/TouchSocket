@@ -47,7 +47,7 @@ namespace RRQMSocket
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
             byte[] agreementBytes = BitConverter.GetBytes(agreement);
-           
+
             byteBlock.Write(lenBytes);
             byteBlock.Write(agreementBytes);
 
@@ -146,9 +146,9 @@ namespace RRQMSocket
         /// <param name="dataBuffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void SocketSend(int agreement, byte[] dataBuffer,int offset,int length)
+        public void SocketSend(int agreement, byte[] dataBuffer, int offset, int length)
         {
-            int dataLen = length-offset + 8;
+            int dataLen = length - offset + 8;
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
             byte[] agreementBytes = BitConverter.GetBytes(agreement);
@@ -166,7 +166,7 @@ namespace RRQMSocket
                 byteBlock.Dispose();
             }
         }
-        
+
         /// <summary>
         /// 发送协议流
         /// </summary>
@@ -174,7 +174,7 @@ namespace RRQMSocket
         /// <param name="dataByteBlock"></param>
         public void SocketSend(int agreement, ByteBlock dataByteBlock)
         {
-            int dataLen = (int)dataByteBlock.Position + 8;
+            int dataLen = (int)dataByteBlock.Length + 8;
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
             byte[] agreementBytes = BitConverter.GetBytes(agreement);
@@ -182,10 +182,10 @@ namespace RRQMSocket
             byteBlock.Write(lenBytes);
             byteBlock.Write(agreementBytes);
 
-            byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Position);
+            byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
             try
             {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
+                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
             }
             finally
             {
@@ -220,20 +220,20 @@ namespace RRQMSocket
             {
                 byteBlock.Dispose();
             }
-        } 
-        
+        }
+
         /// <summary>
         /// 发送流
         /// </summary>
         /// <param name="dataByteBlock"></param>
         public void SocketSend(ByteBlock dataByteBlock)
         {
-            int dataLen = (int)dataByteBlock.Position+4;
+            int dataLen = (int)dataByteBlock.Position + 4;
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
-          
+
             byteBlock.Write(lenBytes);
-           
+
             byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Position);
             try
             {
@@ -243,9 +243,9 @@ namespace RRQMSocket
             {
                 byteBlock.Dispose();
             }
-        } 
-        
-        
+        }
+
+
         #endregion 方法
 
 

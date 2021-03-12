@@ -10,21 +10,21 @@
 //------------------------------------------------------------------------------
 namespace RRQMSocket.RPC
 {
-    /// <summary>
-    /// 通讯服务端主类
-    /// </summary>
-    public abstract class RPCService<T> : TcpService<T> where T:TcpSocketClient
-    {
-        #region 公用方法
+    ///// <summary>
+    ///// 通讯服务端主类
+    ///// </summary>
+    //public abstract class RPCService<T> : TcpService<T> where T:TcpSocketClient,new()
+    //{
+    //    #region 公用方法
 
-        /// <summary>
-        /// 开启RPC服务
-        /// </summary>
-        /// <param name="setting">设置</param>
-        /// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
-        /// <exception cref="RRQMRPCException">RPC异常</exception>
-        public abstract void OpenRPCServer(RPCServerSetting setting);
+    //    /// <summary>
+    //    /// 开启RPC服务
+    //    /// </summary>
+    //    /// <param name="setting">设置</param>
+    //    /// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
+    //    /// <exception cref="RRQMRPCException">RPC异常</exception>
+    //    public abstract void OpenRPCServer(RPCServerSetting setting);
 
-        #endregion 公用方法
-    }
+    //    #endregion 公用方法
+    //}
 }

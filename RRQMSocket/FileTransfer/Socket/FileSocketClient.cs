@@ -139,7 +139,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public long DownloadSpeed
         {
-            get 
+            get
             {
                 return this.sendDataLength;
             }
@@ -193,7 +193,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 当接收到系统信息的时候
         /// </summary>
-        internal event RRQMShowMesEventHandler ReceiveSystemMes;
+        internal event RRQMMessageEventHandler ReceiveSystemMes;
 
         /// <summary>
         /// 当文件发送完
@@ -204,8 +204,6 @@ namespace RRQMSocket.FileTransfer
         /// 收到字节数组并返回
         /// </summary>
         internal event RRQMBytesEventHandler ReceivedBytesThenReturn;
-
-
         #endregion 事件
 
         #region 判断调用事件
@@ -595,6 +593,39 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
+        /// 发送消息
+        /// </summary>
+        /// <param name="mes"></param>
+        /// <exception cref="RRQMException"></exception>
+        public void SendSystemMes(string mes)
+        {
+            if (mes == null || mes == string.Empty)
+            {
+                throw new RRQMException("消息不可为空");
+            }
+            byte[] datas = Encoding.UTF8.GetBytes(mes);
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length + 12);
+            try
+            {
+                byteBlock.Write(BitConverter.GetBytes(1000));
+                byteBlock.Write(BitConverter.GetBytes(1000));
+                byteBlock.Write(BitConverter.GetBytes(1000));
+                byteBlock.Write(datas);
+                AgreementHelper.SocketSend(1000,byteBlock);
+            }
+            catch (Exception ex)
+            {
+                throw new RRQMException(ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+
+
+        /// <summary>
         /// 处理已接收到的数据
         /// </summary>
         /// <param name="byteBlock"></param>
@@ -795,6 +826,16 @@ namespace RRQMSocket.FileTransfer
             {
                 this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Recreate()
+        {
+            base.Recreate();
+            this.maxDownloadSpeed = 1024 * 1024;
+            this.maxUploadSpeed = 1024 * 1024;
         }
 
         /// <summary>

@@ -16,18 +16,19 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 已接收的客户端
+    /// RPC服务器辅助类
     /// </summary>
-    public sealed class TcpRPCSocketClient : TcpSocketClient, ISerialize
+    public sealed class RPCSocketClient : TcpSocketClient, ISerialize
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TcpRPCSocketClient()
+        public RPCSocketClient()
         {
             this.waitHandles = new RRQMWaitHandle<WaitBytes>();
         }
@@ -61,13 +62,28 @@ namespace RRQMSocket.RPC
         private void Agreement_101(byte[] buffer)
         {
             RPCContext content = SerializeConvert.RRQMBinaryDeserialize<RPCContext>(buffer, 4);
-            InstanceMethod serverInstance = this.serverMethodStore.GetInstanceMethod(content.Method);
-            if (serverInstance != null)
+            InstanceMethod instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
+            if (instanceMethod.async)
             {
-                ServerProvider instance = serverInstance.Instance;
+                Task.Factory.StartNew(()=> 
+                {
+                    ExecuteMethod(content, instanceMethod);
+                });
+            }
+            else
+            {
+                ExecuteMethod(content, instanceMethod);
+            }
+        }
+
+        private void ExecuteMethod(RPCContext content, InstanceMethod instanceMethod)
+        {
+            if (instanceMethod != null)
+            {
+                ServerProvider instance = instanceMethod.instance;
                 try
                 {
-                    MethodItem methodItem = serverInstance.MethodItem;
+                    MethodItem methodItem = instanceMethod.methodItem;
                     object[] parameters = null;
                     if (content.ParametersBytes != null)
                     {
@@ -80,11 +96,11 @@ namespace RRQMSocket.RPC
 
 
                     instance.RPCEnter(methodItem);
-                    MethodInfo method = serverInstance.Method;
+                    MethodInfo method = instanceMethod.method;
                     content.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(method.Invoke(instance, parameters));
                     content.Status = 1;
                     content.Message = null;
-                    if (!serverInstance.MethodItem.IsOutOrRef)
+                    if (!instanceMethod.methodItem.IsOutOrRef)
                     {
                         content.ParametersBytes = null;
                     }
@@ -97,7 +113,7 @@ namespace RRQMSocket.RPC
                         }
                         content.ParametersBytes = datas;
                     }
-                    instance.RPCLeave(serverInstance.MethodItem);
+                    instance.RPCLeave(instanceMethod.methodItem);
                 }
                 catch (TargetInvocationException e)
                 {
@@ -110,13 +126,13 @@ namespace RRQMSocket.RPC
                     {
                         content.Message = "函数内部发生异常，信息：未知";
                     }
-                    instance.RPCError(serverInstance.MethodItem);
+                    instance.RPCError(instanceMethod.methodItem);
                 }
                 catch (Exception e)
                 {
                     content.Status = 2;
                     content.Message = e.Message;
-                    instance.RPCError(serverInstance.MethodItem);
+                    instance.RPCError(instanceMethod.methodItem);
                 }
             }
             else
@@ -138,14 +154,21 @@ namespace RRQMSocket.RPC
             {
                 byteBlock.Dispose();
             }
-
         }
 
+        /// <summary>
+        /// 初始化
+        /// </summary>
         private void Agreement_102()
         {
             agreementHelper.SocketSend(102, SerializeConvert.BinarySerialize(this.clientMethodStore.GetAllMethodItem()));
         }
 
+        /// <summary>
+        /// 等待字节返回
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="r"></param>
         private void Agreement_110(byte[] buffer, int r)
         {
             WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
@@ -188,6 +211,17 @@ namespace RRQMSocket.RPC
             }
 
             return waitBytes.Bytes;
+        }
+
+        /// <summary>
+        /// 向RPC发送数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public override void Send(byte[] buffer, int offset, int length)
+        {
+            agreementHelper.SocketSend(111,buffer,offset,length);
         }
 
         /// <summary>

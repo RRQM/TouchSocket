@@ -56,9 +56,9 @@ namespace RRQMSocket.RPC
             string className = this.ClassName;
             codeString.AppendLine(string.Format("public class {0}", className));//类开始
             codeString.AppendLine("{");
-            codeString.AppendLine($"public {className}(RRQMSocket.RPC.RPCClient client)");
+            codeString.AppendLine($"public {className}(RRQMSocket.RPC.IRPCClient client)");
             codeString.AppendLine("{");
-            codeString.AppendLine("this.client=client;");
+            codeString.AppendLine("this.Client=client;");
             codeString.AppendLine("}");
             AppendAttributes();
             AppendMethods();
@@ -100,7 +100,7 @@ namespace RRQMSocket.RPC
 
         private void AppendAttributes()
         {
-            codeString.AppendLine("private RRQMSocket.RPC.RPCClient client;");
+            codeString.AppendLine("public RRQMSocket.RPC.IRPCClient Client{get;private set; }");
         }
         public string GetName(Type type)
         {
@@ -126,7 +126,7 @@ namespace RRQMSocket.RPC
                         else
                         {
                             isReturn = true;
-                            codeString.Append(string.Format("public  {0} {1} ", this.GetName(method.ReturnType), methodName));
+                            codeString.Append(string.Format("public {0} {1} ", this.GetName(method.ReturnType), methodName));
                         }
                         codeString.Append("(");//方法参数
 
@@ -168,36 +168,40 @@ namespace RRQMSocket.RPC
 
                         codeString.AppendLine("{");//方法开始
 
-                        codeString.AppendLine("if(client==null)");
+                        codeString.AppendLine("if(Client==null)");
                         codeString.AppendLine("{");
-                        codeString.AppendLine("throw new RRQMRPCException(\"RPCClient为空，请先初始化或者进行赋值\");");
+                        codeString.AppendLine("throw new RRQMRPCException(\"IRPCClient为空，请先初始化或者进行赋值\");");
                         codeString.AppendLine("}");
 
-                        codeString.AppendLine("List<object> list = new List<object>();");
-
+                        codeString.Append($"object[] parameters = new object[]");
+                        codeString.Append("{");
                         foreach (ParameterInfo parameter in parameters)
                         {
                             if (parameter.ParameterType.Name.Contains("&") && parameter.IsOut)
                             {
-                                codeString.AppendLine(string.Format("list.Add(default({0}));", this.GetName(parameter.ParameterType)));
+                                codeString.Append($"default({this.GetName(parameter.ParameterType)})");
                             }
                             else
                             {
-                                codeString.AppendLine(string.Format("list.Add({0});", parameter.Name));
+                                codeString.Append(parameter.Name);
                             }
+                            if (parameter!=parameters[parameters.Length-1])
+                            {
+                                codeString.Append(",");
+                            } 
                         }
-                        codeString.AppendLine("object[] parameters = list.ToArray();");
+                        codeString.AppendLine("};");
 
                         if (isReturn)
                         {
-                            codeString.Append(string.Format("{0} returnData=client.RPCInvoke<{0}>", this.GetName(method.ReturnType)));
+                            codeString.Append(string.Format("{0} returnData=Client.RPCInvoke<{0}>", this.GetName(method.ReturnType)));
                             codeString.Append("(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
                             codeString.AppendLine(",ref parameters,waitTime);");
                         }
                         else
                         {
-                            codeString.Append("client.RPCInvoke(");
+                            codeString.Append("Client.RPCInvoke(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
                             codeString.AppendLine(",ref parameters,waitTime);");
                         }
@@ -256,7 +260,7 @@ namespace RRQMSocket.RPC
                             }
                             codeString.AppendLine("int waitTime = 3)");
                             codeString.AppendLine("{");//方法开始
-                            codeString.AppendLine("if(client==null)");
+                            codeString.AppendLine("if(Client==null)");
                             codeString.AppendLine("{");
                             codeString.AppendLine("throw new RRQMRPCException(\"RPCClient为空，请先初始化或者进行赋值\");");
                             codeString.AppendLine("}");
@@ -359,7 +363,7 @@ namespace RRQMSocket.RPC
                         codeString.AppendLine("int waitTime = 3)");
 
                         codeString.AppendLine("{");//方法开始
-                        codeString.AppendLine("if(client==null)");
+                        codeString.AppendLine("if(Client==null)");
                         codeString.AppendLine("{");
                         codeString.AppendLine("throw new RRQMRPCException(\"RPCClient为空，请先初始化或者进行赋值\");");
                         codeString.AppendLine("}");
@@ -383,14 +387,14 @@ namespace RRQMSocket.RPC
                         if (isReturn)
                         {
                             string returnStr = this.GetName(method.ReturnType);
-                            codeString.Append(string.Format("{0} returnData=client.RPCInvoke<{0}>", returnStr));
+                            codeString.Append(string.Format("{0} returnData=Client.RPCInvoke<{0}>", returnStr));
                             codeString.Append("(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
                             codeString.AppendLine(",ref parameters,waitTime);");
                         }
                         else
                         {
-                            codeString.Append("client.RPCInvoke(");
+                            codeString.Append("Client.RPCInvoke(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
                             codeString.AppendLine(",ref parameters,waitTime);");
                         }
@@ -452,7 +456,7 @@ namespace RRQMSocket.RPC
                             }
                             codeString.AppendLine("int waitTime = 3)");
                             codeString.AppendLine("{");//方法开始
-                            codeString.AppendLine("if(client==null)");
+                            codeString.AppendLine("if(Client==null)");
                             codeString.AppendLine("{");
                             codeString.AppendLine("throw new RRQMRPCException(\"RPCClient为空，请先初始化或者进行赋值\");");
                             codeString.AppendLine("}");

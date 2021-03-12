@@ -20,9 +20,8 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public sealed class TcpRPCService : RPCService<TcpRPCSocketClient>, ISerialize
+    public sealed class TcpRPCService : TokenTcpService<RPCSocketClient>, IRPCService, ISerialize
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -35,20 +34,27 @@ namespace RRQMSocket.RPC
         private MethodStore clientMethodStore;
 
         /// <summary>
+        /// 获取函数仓库
+        /// </summary>
+        public MethodStore MethodStore { get { return this.serverMethodStore; } }
+
+        /// <summary>
         /// RPC代理文件版本
         /// </summary>
         public Version RPCVersion { get; private set; }
+
         /// <summary>
         /// 序列化生成器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
+
         /// <summary>
         /// 开启RPC服务
         /// </summary>
         /// <param name="setting">设置</param>
         /// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
         /// <exception cref="RRQMRPCException">RPC异常</exception>
-        public override void OpenRPCServer(RPCServerSetting setting)
+        public  void OpenRPCServer(RPCServerSetting setting)
         {
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
@@ -62,7 +68,9 @@ namespace RRQMSocket.RPC
 
             foreach (Type type in types)
             {
-                serverProviders.Add(Activator.CreateInstance(type) as ServerProvider);
+                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
+                serverProvider.RPCService = this;
+                serverProviders.Add(serverProvider);
                 if (singleAssembly == null)
                 {
                     singleAssembly = type.Assembly;
@@ -163,32 +171,27 @@ namespace RRQMSocket.RPC
                         }
 
                         InstanceMethod instanceOfMethod = new InstanceMethod();
-                        instanceOfMethod.Instance = instance;
-                        instanceOfMethod.Method = method;
-                        instanceOfMethod.MethodItem = methodItem;
+                        instanceOfMethod.instance = instance;
+                        instanceOfMethod.method = method;
+                        instanceOfMethod.methodItem = methodItem;
+                        instanceOfMethod.async = attribute.Async;
                         serverMethodStore.AddInstanceMethod(instanceOfMethod);
                     }
                 }
 
-                EventInfo[] eventInfos = instance.GetType().GetEvents();
-                foreach (EventInfo eventInfo in eventInfos)
-                {
-                    propertyCode.AddTypeString(eventInfo.EventHandlerType);
-                    string s = propertyCode.GetTypeFullName(eventInfo.EventHandlerType);
-                }
             }
 
             InstanceMethod[] instances = this.serverMethodStore.GetAllInstanceMethod();
             foreach (InstanceMethod item in instances)
             {
                 MethodItem clientMethodItem = new MethodItem();
-                clientMethodItem.IsOutOrRef = item.MethodItem.IsOutOrRef;
-                clientMethodItem.Method = item.MethodItem.Method;
-                clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.MethodItem.ReturnType);
-                clientMethodItem.ParameterTypesString = new string[item.MethodItem.ParameterTypes.Length];
-                for (int i = 0; i < item.MethodItem.ParameterTypes.Length; i++)
+                clientMethodItem.IsOutOrRef = item.methodItem.IsOutOrRef;
+                clientMethodItem.Method = item.methodItem.Method;
+                clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.methodItem.ReturnType);
+                clientMethodItem.ParameterTypesString = new string[item.methodItem.ParameterTypes.Length];
+                for (int i = 0; i < item.methodItem.ParameterTypes.Length; i++)
                 {
-                    clientMethodItem.ParameterTypesString[i] = propertyCode.GetTypeFullName(item.MethodItem.ParameterTypes[i]);
+                    clientMethodItem.ParameterTypesString[i] = propertyCode.GetTypeFullName(item.methodItem.ParameterTypes[i]);
                 }
                 clientMethodStore.AddMethodItem(clientMethodItem);
             }
@@ -207,10 +210,10 @@ namespace RRQMSocket.RPC
             }
 
             codes.Add(propertyCode.GetPropertyCode());
-            //foreach (var item in codes)
-            //{
-            //    Console.WriteLine(item);
-            //}
+            foreach (var item in codes)
+            {
+                Console.WriteLine(item);
+            }
             this.RPCVersion = CodeMap.Version;
 
             System.CodeDom.Compiler.CompilerResults cr = codeProvider.CompileAssemblyFromSource(objCompilerParameters, codes.ToArray());
@@ -238,20 +241,19 @@ namespace RRQMSocket.RPC
             }
             this.serverMethodStore.SetProxyInfo(proxyInfo, setting.ProxyToken);
         }
-        
+
         /// <summary>
-        /// 将连接进来的用户进行储存
+        /// 在创建完成TcpRPCSocketClient后
         /// </summary>
-        protected override TcpRPCSocketClient CreatSocketCliect()
+        /// <param name="tcpSocketClient"></param>
+        protected override void OnCreatSocketCliect(RPCSocketClient tcpSocketClient)
         {
-            TcpRPCSocketClient socketCliect = this.ObjectPool.GetObject();
-            if (socketCliect.NewCreat)
+            if (tcpSocketClient.NewCreat)
             {
-                socketCliect.serverMethodStore = this.serverMethodStore;
-                socketCliect.clientMethodStore = this.clientMethodStore;
-                socketCliect.SerializeConverter = this.SerializeConverter;
+                tcpSocketClient.serverMethodStore = this.serverMethodStore;
+                tcpSocketClient.clientMethodStore = this.clientMethodStore;
+                tcpSocketClient.SerializeConverter = this.SerializeConverter;
             }
-            return socketCliect;
         }
 
         private void AddReferencedAssemblie(System.CodeDom.Compiler.CompilerParameters objCompilerParameters, string name)
@@ -266,5 +268,14 @@ namespace RRQMSocket.RPC
             }
         }
 
+        /// <summary>
+        /// 通过IDToken获得实例
+        /// </summary>
+        /// <param name="iDToken"></param>
+        /// <returns></returns>
+        public ISocketClient GetSocketClient(string iDToken)
+        {
+            return this.SocketClients[iDToken];
+        }
     }
 }

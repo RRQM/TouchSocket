@@ -11,26 +11,49 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket.RPC
 {
-    /*
-    若汝棋茗
-    */
-
-    internal class MethodStore
+    /// <summary>
+    /// 函数仓库
+    /// </summary>
+    public class MethodStore
     {
         internal MethodStore()
         {
             this.methodNamesKey = new Dictionary<string, MethodItem>();
-            this.ServerMethodKey = new Dictionary<string, InstanceMethod>();
+            this.serverMethodKey = new Dictionary<string, InstanceMethod>();
         }
-        private Dictionary<string, InstanceMethod> ServerMethodKey;
+        private Dictionary<string, InstanceMethod> serverMethodKey;
 
         private Dictionary<string, MethodItem> methodNamesKey;
 
         private RPCProxyInfo proxyInfo;
         private string proxyToken;
+
+        /// <summary>
+        /// 获取服务类实例
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="RRQMException"></exception>
+        public ServerProvider[] GetServerProviders()
+        {
+            if (this.serverMethodKey==null)
+            {
+                throw new RRQMException("serverMethodKey为空");
+            }
+            List<ServerProvider> providers = new List<ServerProvider>();
+            foreach (var item in serverMethodKey.Values)
+            {
+                if (!providers.Contains(item.instance))
+                {
+                    providers.Add(item.instance);
+                }
+            }
+
+            return providers.ToArray();
+        }
         
         internal void SetProxyInfo(RPCProxyInfo proxyInfo, string proxyToken)
         {
@@ -60,14 +83,14 @@ namespace RRQMSocket.RPC
 
         internal void AddInstanceMethod(InstanceMethod method)
         {
-            ServerMethodKey.Add(method.MethodItem.Method, method);
+            serverMethodKey.Add(method.methodItem.Method, method);
         }
 
         internal InstanceMethod GetInstanceMethod(string method)
         {
-            if (this.ServerMethodKey.ContainsKey(method))
+            if (this.serverMethodKey.ContainsKey(method))
             {
-                return this.ServerMethodKey[method];
+                return this.serverMethodKey[method];
             }
             return null;
         }
@@ -75,7 +98,7 @@ namespace RRQMSocket.RPC
         internal InstanceMethod[] GetAllInstanceMethod()
         {
             List<InstanceMethod> instances = new List<InstanceMethod>();
-            foreach (InstanceMethod item in this.ServerMethodKey.Values)
+            foreach (InstanceMethod item in this.serverMethodKey.Values)
             {
                 instances.Add(item);
             }

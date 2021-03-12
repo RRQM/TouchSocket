@@ -8,64 +8,64 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMSocket;
 using RRQMSocket.FileTransfer;
 
-namespace RRQMSocket
-{
-    #region 根委托
+/// <summary>
+/// 显示信息
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMMessageEventHandler(object sender, MesEventArgs e);
 
-    /// <summary>
-    /// 显示信息
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    public delegate void RRQMShowMesEventHandler(object sender, MesEventArgs e);
+/// <summary>
+/// 字节数据
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMBytesEventHandler(object sender, BytesEventArgs e);
 
-    #endregion 根委托
+/// <summary>
+/// ByteBlock
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
 
-    #region FileTransfer委托
+/// <summary>
+/// 传输文件处理
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMTransferFileEventHandler(object sender, TransferFileEventArgs e);
 
-    /// <summary>
-    /// 字节数据
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    public delegate void RRQMBytesEventHandler(object sender, BytesEventArgs e);
+/// <summary>
+/// 文件处理
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMFileEventHandler(object sender, FileEventArgs e);
 
-    /// <summary>
-    /// 传输文件处理
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    public delegate void RRQMTransferFileEventHandler(object sender, TransferFileEventArgs e);
+/// <summary>
+/// 发送文件
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMSendFileEventHandler(object sender, TransferFileArgs e);
 
-    /// <summary>
-    /// 文件处理
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    public delegate void RRQMFileEventHandler(object sender, FileEventArgs e);
+/// <summary>
+/// 完成发送
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMFileFinishedEventHandler(object sender, FileFinishedArgs e);
 
-    /// <summary>
-    /// 发送文件
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    public delegate void RRQMSendFileEventHandler(object sender, TransferFileArgs e);
+/// <summary>
+/// 传输文件错误
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMTransferFileMessageEventHandler(object sender, TransferFileMessageArgs e);
 
-    /// <summary>
-    /// 完成发送
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    public delegate void RRQMFileFinishedEventHandler(object sender, FileFinishedArgs e);
 
-    /// <summary>
-    /// 传输文件错误
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    public delegate void RRQMTransferFileMessageEventHandler(object sender, TransferFileMessageArgs e);
-
-    #endregion FileTransfer委托
-}

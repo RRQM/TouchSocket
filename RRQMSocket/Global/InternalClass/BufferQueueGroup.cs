@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Pool;
+using System;
 using System.Threading;
 
 namespace RRQMSocket
@@ -17,11 +18,38 @@ namespace RRQMSocket
     若汝棋茗
     */
 
-    internal class BufferQueueGroup
+    internal class BufferQueueGroup: IDisposable
     {
         internal Thread Thread;
         internal ObjectPool<ClientBuffer> clientBufferPool;
         internal BufferQueue bufferAndClient;
         internal EventWaitHandle waitHandleBuffer;
+
+        public void Dispose()
+        {
+            if (Thread!=null)
+            {
+                Thread.Abort();
+                Thread = null;
+            }
+
+            if (clientBufferPool!=null)
+            {
+                clientBufferPool.Clear();
+            }
+
+            if (bufferAndClient!=null)
+            {
+                while (bufferAndClient.TryDequeue(out _))
+                {
+
+                }
+            }
+
+            if (waitHandleBuffer!=null)
+            {
+                waitHandleBuffer.Dispose();
+            }
+        }
     }
 }

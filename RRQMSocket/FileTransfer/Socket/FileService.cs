@@ -18,7 +18,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public sealed class FileService : TcpService<FileSocketClient>, IFileService
+    public sealed class FileService : TokenTcpService<FileSocketClient>, IFileService
     {
         /// <summary>
         /// 构造函数
@@ -83,7 +83,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 当接收到系统信息的时候
         /// </summary>
-        public event RRQMShowMesEventHandler ReceiveSystemMes;
+        public event RRQMMessageEventHandler ReceiveSystemMes;
 
         /// <summary>
         /// 刚开始接受文件的时候
@@ -116,25 +116,23 @@ namespace RRQMSocket.FileTransfer
         #endregion 公用方法
 
         /// <summary>
-        /// 将连接进来的用户进行储存
+        /// 创建完成FileSocketClient
         /// </summary>
-        protected override FileSocketClient CreatSocketCliect()
+        /// <param name="tcpSocketClient"></param>
+        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient)
         {
-            FileSocketClient socketCliect = this.ObjectPool.GetObject();
-            socketCliect.breakpointResume = this.BreakpointResume;
-            socketCliect.MaxDownloadSpeed = this.MaxDownloadSpeed;
-            socketCliect.MaxUploadSpeed = this.MaxUploadSpeed;
-            if (socketCliect.NewCreat)
+            tcpSocketClient.breakpointResume = this.BreakpointResume;
+            tcpSocketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
+            tcpSocketClient.MaxUploadSpeed = this.MaxUploadSpeed;
+            if (tcpSocketClient.NewCreat)
             {
-                socketCliect.BeforeReceiveFile += this.BeforeReceiveFile;
-                socketCliect.SendFileFinished += this.SendFileFinished;
-                socketCliect.BeforeSendFile += this.BeforeSendFile;
-                socketCliect.ReceiveSystemMes += this.ReceiveSystemMes;
-                socketCliect.ReceiveFileFinished += this.ReceiveFileFinished;
-                socketCliect.ReceivedBytesThenReturn += this.ReceivedBytesThenReturn;
+                tcpSocketClient.BeforeReceiveFile += this.BeforeReceiveFile;
+                tcpSocketClient.SendFileFinished += this.SendFileFinished;
+                tcpSocketClient.BeforeSendFile += this.BeforeSendFile;
+                tcpSocketClient.ReceiveSystemMes += this.ReceiveSystemMes;
+                tcpSocketClient.ReceiveFileFinished += this.ReceiveFileFinished;
+                tcpSocketClient.ReceivedBytesThenReturn += this.ReceivedBytesThenReturn;
             }
-
-            return socketCliect;
         }
     }
 }

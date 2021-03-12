@@ -12,35 +12,54 @@ using System;
 
 namespace RRQMSocket.RPC
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
-    ///
+    /// RPC方法标记属性类
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class RRQMRPCMethodAttribute : Attribute
     {
         /// <summary>
-        ///
+        /// 构造函数
         /// </summary>
         public RRQMRPCMethodAttribute()
         {
         }
 
         /// <summary>
-        ///
+        /// 构造函数
         /// </summary>
-        /// <param name="methodKey"></param>
+        /// <param name="methodKey">指定函数键</param>
         public RRQMRPCMethodAttribute(string methodKey)
         {
             this.MethodKey = methodKey;
         }
 
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodKey">指定函数键</param>
+        /// <param name="async">异步执行该方法</param>
+        public RRQMRPCMethodAttribute(string methodKey,bool async)
+        {
+            this.MethodKey = methodKey;
+            this.Async = async;
+        }
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="async">异步执行该方法</param>
+        public RRQMRPCMethodAttribute(bool async)
+        {
+            this.Async = async;
+        }
+        /// <summary>
+        /// 是否异步执行
+        /// </summary>
+        public bool Async { get;private set; }
+
+        /// <summary>
         /// 注册键
         /// </summary>
-        public string MethodKey { get; set; }
+        public string MethodKey { get; private set; }
     }
 }

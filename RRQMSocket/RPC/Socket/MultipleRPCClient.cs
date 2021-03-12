@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -13,10 +13,13 @@ using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
+using RRQMSocket.Pool;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -25,22 +28,32 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 通讯客户端主类
+    /// 集群RPC客户端
     /// </summary>
-    public sealed class RPCClient : TokenTcpClient, IRPCClient, ISerialize
+    public sealed class MultipleRPCClient : IRPCClient, ISerialize
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RPCClient()
+        public MultipleRPCClient(int capacity)
         {
+            this.locker = new object();
+            this.BytePool = new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20);
             BinarySerializeConverter serializeConverter = new BinarySerializeConverter();
             this.SerializeConverter = serializeConverter;
             this.methodStore = new MethodStore();
             this.singleWaitData = new WaitData<WaitResult>();
             this.singleWaitData.WaitResult = new WaitResult();
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            this.ConnectionPool = TcpConnectionPool<RRQMTokenTcpClient>.CreatConnectionPool(capacity, this.BytePool, this.ConnectionPool_OnClientIni, this.BytePool);
+            this.Logger = new Log();
         }
+
+        private void ConnectionPool_OnClientIni(RRQMTokenTcpClient tcpClient)
+        {
+            tcpClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            tcpClient.OnReceivedData += this.TcpClient_OnReceivedData;
+        }
+
         /// <summary>
         /// 收到字节数组并返回
         /// </summary>
@@ -56,29 +69,64 @@ namespace RRQMSocket.RPC
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
+        /// <summary>
+        /// 获取连接池实例
+        /// </summary>
+        public TcpConnectionPool<RRQMTokenTcpClient> ConnectionPool { get; private set; }
+
+        private ILog logger;
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        public ILog Logger
+        {
+            get { return logger; }
+            set
+            {
+                logger = value;
+                if (this.ConnectionPool != null)
+                {
+                    this.ConnectionPool.Logger = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public BytePool BytePool { get; private set; }
+
+        /// <summary>
+        /// 获取即将在下一次通信的客户端单体
+        /// </summary>
+        public RRQMTokenTcpClient NextClient { get { return this.ConnectionPool == null ? null : this.ConnectionPool.GetNextClient(); } }
+
+        /// <summary>
+        /// 获取即将在下一次通信的客户端单体的IDToken
+        /// </summary>
+        public string IDToken { get { return this.ConnectionPool == null ? null : this.ConnectionPool.GetNextClient().IDToken; } }
+
         private WaitData<WaitResult> singleWaitData;
         private RRQMWaitHandle<RPCContext> waitHandles = new RRQMWaitHandle<RPCContext>();
         private MethodStore methodStore;
         private RPCProxyInfo proxyFile;
-        private RRQMAgreementHelper agreementHelper;
+        private object locker;
 
         /// <summary>
         /// 连接服务器
         /// </summary>
-        /// <param name="setting"></param>
+        /// <param name="endPoint"></param>
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMRPCException"></exception>
-        public override void Connect(ConnectSetting setting)
+        public void Connect(EndPoint endPoint)
         {
-            base.Connect(setting);
-            this.agreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
             lock (locker)
             {
-                int length = this.BufferLength;
+                this.ConnectionPool.Connect(endPoint);
                 try
                 {
                     this.methodStore = null;
-                    agreementHelper.SocketSend(102);
+                    SendAgreement(102);
                     this.singleWaitData.Wait(1000 * 10);
                 }
                 catch (Exception e)
@@ -93,6 +141,16 @@ namespace RRQMSocket.RPC
             }
         }
 
+        /// <summary>
+        /// 连接服务器
+        /// </summary>
+        /// <param name="setting"></param>
+        public void Connect(ConnectSetting setting)
+        {
+            IPAddress IP = IPAddress.Parse(setting.TargetIP);
+            EndPoint endPoint = new IPEndPoint(IP, setting.TargetPort);
+            this.Connect(endPoint);
+        }
 
         /// <summary>
         /// 获取远程服务器RPC服务文件
@@ -105,7 +163,7 @@ namespace RRQMSocket.RPC
         {
             lock (locker)
             {
-                agreementHelper.SocketSend(100, proxyToken);
+                SendAgreement(100, proxyToken);
                 this.singleWaitData.Wait(1000 * 10);
 
                 if (this.proxyFile == null)
@@ -162,7 +220,7 @@ namespace RRQMSocket.RPC
                 waitData.WaitResult.ParametersBytes = datas;
                 SerializeConvert.RRQMBinarySerialize(byteBlock, waitData.WaitResult);
 
-                agreementHelper.SocketSend(101, byteBlock);
+                SendAgreement(101, byteBlock);
             }
             catch (Exception e)
             {
@@ -199,10 +257,6 @@ namespace RRQMSocket.RPC
                 {
                     throw new RRQMException(e.Message);
                 }
-            }
-            else
-            {
-                parameters = null;
             }
 
             try
@@ -243,7 +297,7 @@ namespace RRQMSocket.RPC
                 waitData.WaitResult.ParametersBytes = datas;
                 SerializeConvert.RRQMBinarySerialize(byteBlock, waitData.WaitResult);
 
-                agreementHelper.SocketSend(101, byteBlock);
+                SendAgreement(101, byteBlock);
             }
             catch (Exception e)
             {
@@ -280,33 +334,26 @@ namespace RRQMSocket.RPC
                     throw new RRQMException(e.Message);
                 }
             }
-            else
-            {
-                parameters = null;
-            }
+
 
         }
 
 
-        private void Agreement_110(byte[] buffer, int r)
+        private void Agreement_110(object sender,byte[] buffer, int r)
         {
             WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
             BytesEventArgs args = new BytesEventArgs();
             args.ReceivedDataBytes = waitBytes.Bytes;
-            this.ReceivedBytesThenReturn?.Invoke(this, args);
+            this.ReceivedBytesThenReturn?.Invoke(sender, args);
             waitBytes.Bytes = args.ReturnDataBytes;
 
-            agreementHelper.SocketSend(110, SerializeConvert.BinarySerialize(waitBytes));
+            SendAgreement(110, SerializeConvert.BinarySerialize(waitBytes));
         }
 
-        /// <summary>
-        /// 处理已接收到的数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock)
+        private void TcpClient_OnReceivedData(object sender, ByteBlock e)
         {
-            byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Length;
+            byte[] buffer = e.Buffer;
+            int r = (int)e.Length;
             int agreement = BitConverter.ToInt32(buffer, 0);
             switch (agreement)
             {
@@ -334,9 +381,9 @@ namespace RRQMSocket.RPC
 
                             this.waitHandles.SetRun(result.Sign, result);
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{ex.Message}");
                         }
                         break;
                     }
@@ -354,9 +401,9 @@ namespace RRQMSocket.RPC
 
                             this.singleWaitData.Set();
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{ex.Message}");
                         }
                         break;
                     }
@@ -364,25 +411,25 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            Agreement_110(buffer, r);
+                            Agreement_110(sender,buffer, r);
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{ex.Message}");
                         }
                         break;
-                    } 
+                    }
                 case 111:/*收到服务器数据*/
                     {
                         ByteBlock block = this.BytePool.GetByteBlock(r - 4);
                         try
                         {
-                            block.Write(byteBlock.Buffer, 4, r - 4);
+                            block.Write(e.Buffer, 4, r - 4);
                             ReceivedByteBlock?.Invoke(this, block);
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 111, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: 111, 错误详情:{ex.Message}");
                         }
                         finally
                         {
@@ -391,6 +438,87 @@ namespace RRQMSocket.RPC
                         break;
                     }
 
+            }
+        }
+
+        private Socket GetSocket()
+        {
+            return this.ConnectionPool.GetNextClient().MainSocket;
+        }
+        private void SendAgreement(int agreement, byte[] dataBuffer)
+        {
+            byte[] data = dataBuffer;
+            int dataLen = data.Length + 8;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
+            byte[] lenBytes = BitConverter.GetBytes(dataLen);
+            byte[] agreementBytes = BitConverter.GetBytes(agreement);
+
+            byteBlock.Write(lenBytes);
+            byteBlock.Write(agreementBytes);
+
+            byteBlock.Write(data, 0, data.Length);
+            try
+            {
+                this.ConnectionPool.Send(byteBlock.Buffer, 0, (int)byteBlock.Position);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+        private void SendAgreement(int agreement, ByteBlock dataByteBlock)
+        {
+            int dataLen = (int)dataByteBlock.Length + 4;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
+            byte[] agreementBytes = BitConverter.GetBytes(agreement);
+            byteBlock.Write(agreementBytes);
+            byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
+            try
+            {
+                this.ConnectionPool.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+        private void SendAgreement(int agreement, string text)
+        {
+            byte[] data = Encoding.UTF8.GetBytes(text);
+            int dataLen = data.Length + 8;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
+            byte[] lenBytes = BitConverter.GetBytes(dataLen);
+            byte[] agreementBytes = BitConverter.GetBytes(agreement);
+
+            byteBlock.Write(lenBytes);
+            byteBlock.Write(agreementBytes);
+
+            byteBlock.Write(data, 0, data.Length);
+            try
+            {
+                this.ConnectionPool.Send(byteBlock.Buffer, 0, (int)byteBlock.Position);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+        private void SendAgreement(int agreement)
+        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(8);
+            byte[] lenBytes = BitConverter.GetBytes(8);
+            byte[] agreementBytes = BitConverter.GetBytes(agreement);
+
+            byteBlock.Write(lenBytes);
+            byteBlock.Write(agreementBytes);
+
+            try
+            {
+                this.GetSocket().Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
     }

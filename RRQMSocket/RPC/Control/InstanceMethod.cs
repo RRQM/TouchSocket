@@ -12,14 +12,11 @@ using System.Reflection;
 
 namespace RRQMSocket.RPC
 {
-    /*
-    若汝棋茗
-    */
-
     internal class InstanceMethod
     {
-        internal ServerProvider Instance { get; set; }
-        internal MethodInfo Method { get; set; }
-        internal MethodItem MethodItem { get; set;}
+        internal ServerProvider instance;
+        internal MethodInfo method;
+        internal MethodItem methodItem;
+        internal bool async;
     }
 }

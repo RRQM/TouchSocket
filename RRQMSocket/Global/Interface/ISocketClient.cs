@@ -8,30 +8,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-//namespace RRQMSocket
-//{
-//    /*
-//    若汝棋茗
-//    */
+namespace RRQMSocket
+{
+    /// <summary>
+    /// 服务器辅助类接口
+    /// </summary>
+    public interface ISocketClient:IClient
+    {
+        /// <summary>
+        /// 用于索引的令箭
+        /// </summary>
+        string IDToken { get; }
 
-//    /// <summary>
-//    /// 服务器辅助类接口
-//    /// </summary>
-//    public interface ISocketClient
-//    {
-//        /// <summary>
-//        /// 远程连接地址名
-//        /// </summary>
-//        string Name { get; }
-
-//        /// <summary>
-//        /// IPv4地址
-//        /// </summary>
-//        string IP { get; }
-
-//        /// <summary>
-//        /// 端口号
-//        /// </summary>
-//        int Port { get; }
-//    }
-//}
+        /// <summary>
+        /// 包含此辅助类的主服务器类
+        /// </summary>
+        IService Service { get; }
+    }
+}

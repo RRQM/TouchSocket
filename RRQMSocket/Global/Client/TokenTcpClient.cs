@@ -1,0 +1,136 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+
+namespace RRQMSocket
+{
+    /// <summary>
+    /// 需要验证的TCP客户端
+    /// </summary>
+    public abstract class TokenTcpClient : TcpClient
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public TokenTcpClient() : base(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        {
+
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="bytePool">设置内存池实例</param>
+        public TokenTcpClient(BytePool bytePool):base(bytePool)
+        {
+        }
+        private string connectionToken = "rrqm";
+        /// <summary>
+        /// 连接令箭,当为null或空时，重置为默认值“rrqm”
+        /// </summary>
+        public string ConnectionToken
+        {
+            get { return connectionToken; }
+            set
+            {
+                if (value == null||value==string.Empty)
+                {
+                    value = "rrqm";
+                }
+                connectionToken = value;
+            }
+        }
+
+
+        /// <summary>
+        /// 获取服务器分配的令箭
+        /// </summary>
+        public string IDToken { get; private set; }
+
+        /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <param name="setting"></param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        public override void Connect(ConnectSetting setting)
+        {
+            IPAddress IP = IPAddress.Parse(setting.TargetIP);
+            EndPoint endPoint = new IPEndPoint(IP, setting.TargetPort);
+            this.Connect(endPoint);
+        }
+
+        /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        public override void Connect(EndPoint endPoint)
+        {
+            if (this.disposable)
+            {
+                throw new RRQMException("无法重新利用已释放对象");
+            }
+            Socket socket=new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+           
+            try
+            {
+                socket.Connect(endPoint);
+                this.MainSocket = socket;
+                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.ConnectionToken));
+            }
+            catch (Exception e)
+            {
+                throw new RRQMException(e.Message);
+            }
+
+            int waitCount = 0;
+            while (waitCount < 50)
+            {
+                if (this.MainSocket.Available > 0)
+                {
+                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                    try
+                    {
+                        int r = this.MainSocket.Receive(byteBlock.Buffer);
+                        if (r > 0)
+                        {
+                            if (byteBlock.Buffer[0] == 1)
+                            {
+                                this.IDToken = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
+                                Start();
+                                return;
+                            }
+                            else if (byteBlock.Buffer[0] == 2)
+                            {
+                                throw new RRQMException("Token验证错误");
+                            }
+                            else if (byteBlock.Buffer[0] == 3)
+                            {
+                                throw new RRQMException("连接数量已达到服务器设定最大值");
+                            }
+                        }
+
+                    }
+                    finally
+                    {
+                        byteBlock.Dispose();
+                    }
+                }
+                waitCount++;
+                Thread.Sleep(20);
+            }
+
+            throw new RRQMTimeoutException("验证Token超时");
+        }
+    }
+}

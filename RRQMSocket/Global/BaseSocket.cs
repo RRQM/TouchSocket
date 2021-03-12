@@ -27,7 +27,10 @@ namespace RRQMSocket
         {
             this.Logger = new Log();
         }
-
+        /// <summary>
+        /// 心跳检测包
+        /// </summary>
+        protected static readonly byte[] heartPackage = new byte[0];
         /// <summary>
         /// 锁
         /// </summary>
@@ -48,15 +51,28 @@ namespace RRQMSocket
             get { return mainSocket; }
             set
             {
-                mainSocket = value;
-                if (value == null || mainSocket.RemoteEndPoint == null)
+                if (value == null)
                 {
                     this.Name = null;
                     this.IP = null;
                     this.Port = -1;
                     return;
                 }
-                this.Name = mainSocket.RemoteEndPoint.ToString();
+
+                mainSocket = value;
+                if (mainSocket.IsBound&&mainSocket.LocalEndPoint != null)
+                {
+                    this.Name = mainSocket.LocalEndPoint.ToString();
+                }
+                else if (mainSocket.Connected && mainSocket.RemoteEndPoint != null)
+                {
+                    this.Name = mainSocket.RemoteEndPoint.ToString();
+                }
+                else
+                {
+                    return;
+                }
+
                 int r = this.Name.IndexOf(":");
                 this.IP = this.Name.Substring(0, r);
                 this.Port = Convert.ToInt32(this.Name.Substring(r + 1, this.Name.Length - (r + 1)));
@@ -102,8 +118,8 @@ namespace RRQMSocket
         /// 当BufferLength改变值的时候
         /// </summary>
         protected virtual void OnBufferLengthChanged()
-        { 
-        
+        {
+
         }
 
         /// <summary>
@@ -114,8 +130,8 @@ namespace RRQMSocket
             this.disposable = true;
             if (mainSocket != null)
             {
-                mainSocket.Shutdown(SocketShutdown.Both);
                 mainSocket.Close();
+                mainSocket.Dispose();
             }
         }
     }

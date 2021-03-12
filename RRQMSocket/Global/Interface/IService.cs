@@ -43,5 +43,7 @@ namespace RRQMSocket
         /// </summary>
         bool IsCheckClientAlive { get; set; }
 
+
+
     }
 }

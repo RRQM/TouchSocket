@@ -16,6 +16,7 @@ using RRQMCore.Run;
 using RRQMCore.Serialization;
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading;
 
@@ -24,7 +25,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯客户端主类
     /// </summary>
-    public sealed class FileClient : TcpClient, IFileClient
+    public sealed class FileClient : TokenTcpClient, IFileClient
     {
 
         /// <summary>
@@ -212,16 +213,20 @@ namespace RRQMSocket.FileTransfer
         public event RRQMFileFinishedEventHandler UploadFileFinshed;
 
         /// <summary>
+        /// 当接收到系统信息的时候
+        /// </summary>
+        public event RRQMMessageEventHandler ReceiveSystemMes;
+
+        /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="setting"></param>
-        public override void Connect(ConnectSetting setting)
+        /// <param name="endPoint"></param>
+        public override void Connect(EndPoint endPoint)
         {
-            base.Connect(setting);
+            base.Connect(endPoint);
             AgreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
             SynchronizeTransferSetting();
         }
-
         private void SynchronizeTransferSetting()
         {
             ByteBlock byteBlock = this.SendWait(1020, this.timeout);
@@ -238,25 +243,25 @@ namespace RRQMSocket.FileTransfer
         {
             BeforeDownloadFile?.Invoke(sender, e);
         }
-
         private void BeforeUploadFileMethod(object sender, FileEventArgs e)
         {
             BeforeUploadFile?.Invoke(sender, e);
         }
-
         private void DownloadFileFinshedMethod(object sender, FileFinishedArgs e)
         {
             DownloadFileFinshed?.Invoke(sender, e);
         }
-
         private void TransferFileErrorMethod(object sender, TransferFileMessageArgs e)
         {
             TransferFileError?.Invoke(sender, e);
         }
-
         private void UploadFileFinshedMethod(object sender, FileFinishedArgs e)
         {
             UploadFileFinshed?.Invoke(sender, e);
+        }
+        private void ReceiveSystemMesMethod(object sender, MesEventArgs e)
+        {
+            ReceiveSystemMes?.Invoke(sender, e);
         }
 
         /// <summary>
@@ -542,6 +547,8 @@ namespace RRQMSocket.FileTransfer
             downloadFileBlocks = blocks;
             this.isPauseDownload = false;
 
+            this.SynchronizeTransferSetting();
+
             thread_Download = new Thread(this.DownloadFileBlock);
             thread_Download.IsBackground = true;
             thread_Download.Start();
@@ -558,6 +565,8 @@ namespace RRQMSocket.FileTransfer
             blocks.FileInfo.FilePath = args.TargetPath;
             this.uploadFileBlocks = blocks;
             this.isPauseUpload = false;
+
+            this.SynchronizeTransferSetting();
 
             thread_Upload = new Thread(this.UploadFileBlock);
             thread_Upload.IsBackground = true;
@@ -695,10 +704,13 @@ namespace RRQMSocket.FileTransfer
                                 ByteBlock returnByteBlock = this.SendWait(1011, this.timeout, byteBlock);
                                 if (returnByteBlock != null && returnByteBlock.Buffer[0] != 2)
                                 {
+
                                     reTryCount = 0;
                                     this.tempSendLength += submitLength;
                                     this.sendPosition += submitLength;
                                     surplusLength -= submitLength;
+
+
                                     if (returnByteBlock.Buffer[0] == 3)
                                     {
                                         this.SynchronizeTransferSetting();
@@ -718,6 +730,14 @@ namespace RRQMSocket.FileTransfer
                                     }
                                 }
                             }
+                            else
+                            {
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message);
                         }
                         finally
                         {
@@ -851,11 +871,30 @@ namespace RRQMSocket.FileTransfer
         /// <param name="byteBlock"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock)
         {
+            if (byteBlock.Length>16)
+            {
+                if (BitConverter.ToInt32(byteBlock.Buffer,0) ==1000)
+                {
+                    if (BitConverter.ToInt32(byteBlock.Buffer, 4) == 1000)
+                    {
+                        if (BitConverter.ToInt32(byteBlock.Buffer, 8) == 1000)
+                        {
+                            if (BitConverter.ToInt32(byteBlock.Buffer, 12) == 1000)
+                            {
+                                ReceiveSystemMesMethod(this,new MesEventArgs(Encoding.UTF8.GetString(byteBlock.Buffer,16,(int)byteBlock.Length-16)));
+                            }
+                        }
+                    }
+                }
+            }
+
             if (this.waitDataSend != null)
             {
                 this.waitDataSend.Set(byteBlock);
             }
+
         }
+
 
         /// <summary>
         /// 发送字节流
@@ -878,6 +917,7 @@ namespace RRQMSocket.FileTransfer
             //1003:停止下载
             //1004:下载完成
 
+
             lock (locker)
             {
                 this.waitDataSend = new WaitData<ByteBlock>();
@@ -895,7 +935,6 @@ namespace RRQMSocket.FileTransfer
                 catch
                 {
                 }
-                this.waitDataSend.WaitResult = null;
                 this.waitDataSend.Wait(waitTime * 1000);
                 ByteBlock resultByteBlock = this.waitDataSend.WaitResult;
                 this.waitDataSend.Dispose();
@@ -909,15 +948,15 @@ namespace RRQMSocket.FileTransfer
         public override void Dispose()
         {
             base.Dispose();
-            if (this.TransferType== TransferType.Download)
+            if (this.TransferType == TransferType.Download)
             {
                 this.OutDownload();
             }
-            else if (this.TransferType== TransferType.Upload)
+            else if (this.TransferType == TransferType.Upload)
             {
                 this.OutUpload();
             }
-           
+
             this.disposable = true;
             this.TransferType = TransferType.None;
             this.downloadProgress = 0;
