@@ -10,8 +10,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Serialization;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RRQMSocket.RPC
 {
@@ -28,8 +26,9 @@ namespace RRQMSocket.RPC
             {
                 return null;
             }
-            return SerializeConvert.RRQMBinaryDeserialize(parameterBytes,0, parameterType);
+            return SerializeConvert.RRQMBinaryDeserialize(parameterBytes, 0, parameterType);
         }
+
         public override byte[] SerializeParameter(object parameter)
         {
             if (parameter == null)
@@ -38,7 +37,7 @@ namespace RRQMSocket.RPC
             }
             return SerializeConvert.RRQMBinarySerialize(parameter);
         }
-#pragma warning restore CS1591 
 
+#pragma warning restore CS1591
     }
 }

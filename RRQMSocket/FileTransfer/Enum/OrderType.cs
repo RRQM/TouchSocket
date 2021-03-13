@@ -8,7 +8,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -61,7 +60,7 @@ namespace RRQMSocket.FileTransfer
     //    SystemMessage,
 
     //    /// <summary>
-    //    /// 
+    //    ///
     //    /// </summary>
     //    ReturnBytes
     //}

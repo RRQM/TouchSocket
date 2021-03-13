@@ -31,7 +31,7 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         protected ISocketClient GetSocketClient(string iDToken)
         {
-            if (this.RPCService==null)
+            if (this.RPCService == null)
             {
                 throw new RRQMRPCException("该实例并非服务器托管实例，获取对象为空");
             }
@@ -44,7 +44,6 @@ namespace RRQMSocket.RPC
         /// <param name="methodItem"></param>
         protected internal virtual void RPCEnter(MethodItem methodItem)
         {
-
         }
 
         /// <summary>
@@ -53,7 +52,6 @@ namespace RRQMSocket.RPC
         /// <param name="methodItem"></param>
         protected internal virtual void RPCError(MethodItem methodItem)
         {
-
         }
 
         /// <summary>
@@ -62,7 +60,6 @@ namespace RRQMSocket.RPC
         /// <param name="methodItem"></param>
         protected internal virtual void RPCLeave(MethodItem methodItem)
         {
-
         }
     }
 }

@@ -1,15 +1,17 @@
-﻿using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  源代码仓库：https://gitee.com/RRQM_Home
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using RRQMCore.Log;
-using RRQMCore.Pool;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace RRQMSocket
@@ -20,6 +22,7 @@ namespace RRQMSocket
     public abstract class TokenTcpService<T> : TcpService<T> where T : TcpSocketClient, new()
     {
         private string connectionToken = "rrqm";
+
         /// <summary>
         /// 连接令箭,当为null或空时，重置为默认值“rrqm”
         /// </summary>
@@ -84,7 +87,6 @@ namespace RRQMSocket
                                     socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
                                     return;
                                 }
-
                             }
                             else
                             {
@@ -110,7 +112,6 @@ namespace RRQMSocket
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Dispose();
             });
-
         }
     }
 }

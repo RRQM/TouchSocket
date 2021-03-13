@@ -67,5 +67,3 @@ public delegate void RRQMFileFinishedEventHandler(object sender, FileFinishedArg
 /// <param name="sender"></param>
 /// <param name="e"></param>
 public delegate void RRQMTransferFileMessageEventHandler(object sender, TransferFileMessageArgs e);
-
-

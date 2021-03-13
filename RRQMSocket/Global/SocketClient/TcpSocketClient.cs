@@ -47,6 +47,7 @@ namespace RRQMSocket
         public bool Online { get { return !this.breakOut; } }
 
         private DataHandlingAdapter dataHandlingAdapter;
+
         /// <summary>
         /// 数据处理适配器
         /// </summary>
@@ -97,10 +98,12 @@ namespace RRQMSocket
                 this.DataHandlingAdapter = new NormalDataHandlingAdapter();
             }
         }
+
         internal void BeginInitialize()
         {
             this.Initialize();
         }
+
         /// <summary>
         /// 发送字节流
         /// </summary>
@@ -126,6 +129,7 @@ namespace RRQMSocket
         {
             this.dataHandlingAdapter.Send(buffer, offset, length);
         }
+
         /// <summary>
         /// 发送流中的有效数据
         /// </summary>
@@ -137,6 +141,7 @@ namespace RRQMSocket
         {
             this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
+
         private void Sent(byte[] buffer, int offset, int length)
         {
             if (!this.Online)
@@ -169,7 +174,6 @@ namespace RRQMSocket
                     {
                         ProcessReceive();
                     }
-
                 }
                 catch
                 {
@@ -178,11 +182,12 @@ namespace RRQMSocket
                 this.isBeginReceive = true;
             }
         }
+
         private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
             try
             {
-                if (e.LastOperation == SocketAsyncOperation.Receive&& e.BytesTransferred > 0)
+                if (e.LastOperation == SocketAsyncOperation.Receive && e.BytesTransferred > 0)
                 {
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.Position = e.BytesTransferred;
@@ -208,8 +213,8 @@ namespace RRQMSocket
             {
                 this.breakOut = true;
             }
-
         }
+
         private void ProcessReceive()
         {
             if (!this.disposable)

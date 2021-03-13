@@ -8,17 +8,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
-using RRQMCore.Pool;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Net;
 
 namespace RRQMSocket.Pool
 {
@@ -40,7 +36,7 @@ namespace RRQMSocket.Pool
         /// <param name="capacity">容量</param>
         public static TcpConnectionPool<T> CreatConnectionPool(int capacity)
         {
-            return CreatConnectionPool(capacity, new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20),null,null);
+            return CreatConnectionPool(capacity, new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20), null, null);
         }
 
         /// <summary>
@@ -116,7 +112,6 @@ namespace RRQMSocket.Pool
                     {
                         this.queue.Enqueue(client);
                     }
-
                 }
                 count++;
             }
@@ -187,6 +182,7 @@ namespace RRQMSocket.Pool
         {
             this.Send(buffer, 0, buffer.Length);
         }
+
         /// <summary>
         /// 发送流中的有效数据
         /// </summary>
@@ -198,6 +194,7 @@ namespace RRQMSocket.Pool
         {
             this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
+
         /// <summary>
         /// 发送字节流
         /// </summary>
@@ -225,7 +222,7 @@ namespace RRQMSocket.Pool
                     {
                         this.ErrorClientList.Add(client);
                         Logger.Debug(LogType.Warning, client, ex.Message);
-                        this.OnClientError?.Invoke(client,new MesEventArgs(ex.Message));
+                        this.OnClientError?.Invoke(client, new MesEventArgs(ex.Message));
                     }
                 }
                 if (++count > this.FreeSize)
@@ -233,8 +230,8 @@ namespace RRQMSocket.Pool
                     throw new RRQMException();
                 }
             }
-
         }
+
         /// <summary>
         /// 清空池中对象
         /// </summary>
@@ -251,6 +248,7 @@ namespace RRQMSocket.Pool
             }
             this.ErrorClientList.Clear();
         }
+
         /// <summary>
         /// 释放资源
         /// </summary>

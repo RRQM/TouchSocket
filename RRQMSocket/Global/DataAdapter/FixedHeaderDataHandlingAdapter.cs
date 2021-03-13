@@ -11,10 +11,6 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -56,10 +52,10 @@ namespace RRQMSocket
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
-           
+
             if (agreementTempBytes != null)
             {
-                SeamPackage(buffer,r);
+                SeamPackage(buffer, r);
             }
             else if (this.tempByteBlock == null)
             {
@@ -94,11 +90,11 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="r"></param>
-        private void SeamPackage(byte [] buffer,int r)
+        private void SeamPackage(byte[] buffer, int r)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(r+ agreementTempBytes.Length);
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(r + agreementTempBytes.Length);
             byteBlock.Write(agreementTempBytes);
-            byteBlock.Write(buffer,0,r);
+            byteBlock.Write(buffer, 0, r);
             r += agreementTempBytes.Length;
             agreementTempBytes = null;
             SplitPackage(byteBlock.Buffer, 0, r);
@@ -113,7 +109,6 @@ namespace RRQMSocket
         /// <param name="r"></param>
         private void SplitPackage(byte[] dataBuffer, int index, int r)
         {
-
             while (index < r)
             {
                 if (r - index <= 4)
@@ -134,7 +129,7 @@ namespace RRQMSocket
                     Logger.Debug(LogType.Error, this, "接收数据长度小于设定值，已放弃接收");
                     return;
                 }
-                else if(length > this.MaxSizeHeader)
+                else if (length > this.MaxSizeHeader)
                 {
                     Logger.Debug(LogType.Error, this, "接收数据长度大于设定值，已放弃接收");
                     return;

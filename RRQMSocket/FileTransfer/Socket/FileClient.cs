@@ -27,7 +27,6 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public sealed class FileClient : TokenTcpClient, IFileClient
     {
-
         /// <summary>
         /// 无参数构造函数
         /// </summary>
@@ -137,6 +136,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         private int timeout = 10;
+
         /// <summary>
         /// 单次请求超时时间 min=5,max=60 单位：秒
         /// </summary>
@@ -227,6 +227,7 @@ namespace RRQMSocket.FileTransfer
             AgreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
             SynchronizeTransferSetting();
         }
+
         private void SynchronizeTransferSetting()
         {
             ByteBlock byteBlock = this.SendWait(1020, this.timeout);
@@ -239,26 +240,32 @@ namespace RRQMSocket.FileTransfer
             this.breakpointResume = transferSetting.breakpointResume;
             this.BufferLength = transferSetting.bufferLength;
         }
+
         private void BeforeDownloadFileMethod(object sender, TransferFileEventArgs e)
         {
             BeforeDownloadFile?.Invoke(sender, e);
         }
+
         private void BeforeUploadFileMethod(object sender, FileEventArgs e)
         {
             BeforeUploadFile?.Invoke(sender, e);
         }
+
         private void DownloadFileFinshedMethod(object sender, FileFinishedArgs e)
         {
             DownloadFileFinshed?.Invoke(sender, e);
         }
+
         private void TransferFileErrorMethod(object sender, TransferFileMessageArgs e)
         {
             TransferFileError?.Invoke(sender, e);
         }
+
         private void UploadFileFinshedMethod(object sender, FileFinishedArgs e)
         {
             UploadFileFinshed?.Invoke(sender, e);
         }
+
         private void ReceiveSystemMesMethod(object sender, MesEventArgs e)
         {
             ReceiveSystemMes?.Invoke(sender, e);
@@ -526,7 +533,6 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-
         private void StartDownloadFile(ProgressBlockCollection blocks, bool restart)
         {
             if (this.TransferType != TransferType.None)
@@ -649,7 +655,6 @@ namespace RRQMSocket.FileTransfer
                                         }
                                     }
                                 }
-
                             }
                         }
                         finally
@@ -704,12 +709,10 @@ namespace RRQMSocket.FileTransfer
                                 ByteBlock returnByteBlock = this.SendWait(1011, this.timeout, byteBlock);
                                 if (returnByteBlock != null && returnByteBlock.Buffer[0] != 2)
                                 {
-
                                     reTryCount = 0;
                                     this.tempSendLength += submitLength;
                                     this.sendPosition += submitLength;
                                     surplusLength -= submitLength;
-
 
                                     if (returnByteBlock.Buffer[0] == 3)
                                     {
@@ -732,7 +735,6 @@ namespace RRQMSocket.FileTransfer
                             }
                             else
                             {
-
                             }
                         }
                         catch (Exception ex)
@@ -762,7 +764,6 @@ namespace RRQMSocket.FileTransfer
                     args.FileInfo = downloadFileBlocks.FileInfo;
                     TransferFileHashDictionary.AddFile(downloadFileBlocks.FileInfo);
                     DownloadFileFinshedMethod(this, args);
-
                 }
             }
             catch (Exception e)
@@ -797,8 +798,6 @@ namespace RRQMSocket.FileTransfer
                 }
                 reTryCount++;
             }
-
-
         }
 
         private void OutDownload()
@@ -871,9 +870,9 @@ namespace RRQMSocket.FileTransfer
         /// <param name="byteBlock"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock)
         {
-            if (byteBlock.Length>16)
+            if (byteBlock.Length > 16)
             {
-                if (BitConverter.ToInt32(byteBlock.Buffer,0) ==1000)
+                if (BitConverter.ToInt32(byteBlock.Buffer, 0) == 1000)
                 {
                     if (BitConverter.ToInt32(byteBlock.Buffer, 4) == 1000)
                     {
@@ -881,7 +880,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             if (BitConverter.ToInt32(byteBlock.Buffer, 12) == 1000)
                             {
-                                ReceiveSystemMesMethod(this,new MesEventArgs(Encoding.UTF8.GetString(byteBlock.Buffer,16,(int)byteBlock.Length-16)));
+                                ReceiveSystemMesMethod(this, new MesEventArgs(Encoding.UTF8.GetString(byteBlock.Buffer, 16, (int)byteBlock.Length - 16)));
                             }
                         }
                     }
@@ -892,9 +891,7 @@ namespace RRQMSocket.FileTransfer
             {
                 this.waitDataSend.Set(byteBlock);
             }
-
         }
-
 
         /// <summary>
         /// 发送字节流
@@ -916,7 +913,6 @@ namespace RRQMSocket.FileTransfer
             //1002:请求下载分包
             //1003:停止下载
             //1004:下载完成
-
 
             lock (locker)
             {
@@ -942,6 +938,7 @@ namespace RRQMSocket.FileTransfer
                 return resultByteBlock;
             }
         }
+
         /// <summary>
         /// 释放资源
         /// </summary>

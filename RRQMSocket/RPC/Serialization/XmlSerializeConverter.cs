@@ -10,10 +10,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Serialization;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -23,6 +19,7 @@ namespace RRQMSocket.RPC
     public class XmlSerializeConverter : SerializeConverter
     {
 #pragma warning disable CS1591 // XML 注释
+
         public override object DeserializeParameter(byte[] parameterBytes, Type parameterType)
         {
             if (parameterBytes == null)
@@ -40,6 +37,7 @@ namespace RRQMSocket.RPC
             }
             return SerializeConvert.XmlSerializeToBytes(parameter);
         }
+
 #pragma warning restore CS1591
     }
 }

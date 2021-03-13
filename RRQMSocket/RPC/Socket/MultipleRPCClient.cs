@@ -16,14 +16,9 @@ using RRQMCore.Serialization;
 using RRQMSocket.Pool;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -75,6 +70,7 @@ namespace RRQMSocket.RPC
         public TcpConnectionPool<RRQMTokenTcpClient> ConnectionPool { get; private set; }
 
         private ILog logger;
+
         /// <summary>
         /// 日志记录器
         /// </summary>
@@ -137,7 +133,6 @@ namespace RRQMSocket.RPC
                 {
                     throw new RRQMTimeoutException("连接初始化超时");
                 }
-
             }
         }
 
@@ -334,12 +329,9 @@ namespace RRQMSocket.RPC
                     throw new RRQMException(e.Message);
                 }
             }
-
-
         }
 
-
-        private void Agreement_110(object sender,byte[] buffer, int r)
+        private void Agreement_110(object sender, byte[] buffer, int r)
         {
             WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
             BytesEventArgs args = new BytesEventArgs();
@@ -357,7 +349,6 @@ namespace RRQMSocket.RPC
             int agreement = BitConverter.ToInt32(buffer, 0);
             switch (agreement)
             {
-
                 case 100:/* 100表示获取RPC引用文件上传状态返回*/
                     {
                         try
@@ -411,7 +402,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            Agreement_110(sender,buffer, r);
+                            Agreement_110(sender, buffer, r);
                         }
                         catch (Exception ex)
                         {
@@ -437,7 +428,6 @@ namespace RRQMSocket.RPC
                         }
                         break;
                     }
-
             }
         }
 
@@ -445,6 +435,7 @@ namespace RRQMSocket.RPC
         {
             return this.ConnectionPool.GetNextClient().MainSocket;
         }
+
         private void SendAgreement(int agreement, byte[] dataBuffer)
         {
             byte[] data = dataBuffer;
@@ -466,6 +457,7 @@ namespace RRQMSocket.RPC
                 byteBlock.Dispose();
             }
         }
+
         private void SendAgreement(int agreement, ByteBlock dataByteBlock)
         {
             int dataLen = (int)dataByteBlock.Length + 4;
@@ -482,6 +474,7 @@ namespace RRQMSocket.RPC
                 byteBlock.Dispose();
             }
         }
+
         private void SendAgreement(int agreement, string text)
         {
             byte[] data = Encoding.UTF8.GetBytes(text);
@@ -503,6 +496,7 @@ namespace RRQMSocket.RPC
                 byteBlock.Dispose();
             }
         }
+
         private void SendAgreement(int agreement)
         {
             ByteBlock byteBlock = this.BytePool.GetByteBlock(8);

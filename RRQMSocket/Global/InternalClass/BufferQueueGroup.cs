@@ -18,7 +18,7 @@ namespace RRQMSocket
     若汝棋茗
     */
 
-    internal class BufferQueueGroup: IDisposable
+    internal class BufferQueueGroup : IDisposable
     {
         internal Thread Thread;
         internal ObjectPool<ClientBuffer> clientBufferPool;
@@ -27,26 +27,25 @@ namespace RRQMSocket
 
         public void Dispose()
         {
-            if (Thread!=null)
+            if (Thread != null)
             {
                 Thread.Abort();
                 Thread = null;
             }
 
-            if (clientBufferPool!=null)
+            if (clientBufferPool != null)
             {
                 clientBufferPool.Clear();
             }
 
-            if (bufferAndClient!=null)
+            if (bufferAndClient != null)
             {
                 while (bufferAndClient.TryDequeue(out _))
                 {
-
                 }
             }
 
-            if (waitHandleBuffer!=null)
+            if (waitHandleBuffer != null)
             {
                 waitHandleBuffer.Dispose();
             }

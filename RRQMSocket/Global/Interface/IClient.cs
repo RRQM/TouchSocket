@@ -8,16 +8,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using System;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 终端接口
     /// </summary>
-    public interface IClient: IDisposable
+    public interface IClient : IDisposable
     {
         /// <summary>
         /// 判断是否在线

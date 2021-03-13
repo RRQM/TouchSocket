@@ -12,7 +12,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 
 namespace RRQMSocket
 {
@@ -31,6 +30,7 @@ namespace RRQMSocket
         /// 获取或设置分配IDToken的格式
         /// </summary>
         public string IDTokenFormat { get; set; }
+
         private int number;
 
         /// <summary>
@@ -38,19 +38,19 @@ namespace RRQMSocket
         /// </summary>
         public int Count { get { return this.tokenDic.Count; } }
 
-        ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
+        private ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
 
         internal bool Add(T socketClient, bool reBulid)
         {
             if (reBulid)
             {
                 number++;
-                socketClient.IDToken =string.Format(IDTokenFormat,number) ;
-               return this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
+                socketClient.IDToken = string.Format(IDTokenFormat, number);
+                return this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
             }
             else
             {
-              return  this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
+                return this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
             }
         }
 

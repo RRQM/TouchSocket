@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>net45;net461;netstandard2.0;netcoreapp3.1</TargetFrameworks>
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.1.2</Version>
+    <Version>3.5.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2020 若汝棋茗</Copyright>
     <Description>
@@ -135,9 +135,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="RRQMCore">
-      <HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
-    </Reference>
+    <PackageReference Include="RRQMCore" Version="1.2.2" />
   </ItemGroup>
 
 </Project>

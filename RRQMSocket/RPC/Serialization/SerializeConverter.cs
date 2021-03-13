@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
 
 namespace RRQMSocket.RPC
 {
@@ -29,7 +28,6 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         public abstract byte[] SerializeParameter(object parameter);
 
-        
         /// <summary>
         /// 反序列化传输对象
         /// </summary>
@@ -37,6 +35,5 @@ namespace RRQMSocket.RPC
         /// <param name="parameterType"></param>
         /// <returns></returns>
         public abstract object DeserializeParameter(byte[] parameterBytes, Type parameterType);
-
     }
 }

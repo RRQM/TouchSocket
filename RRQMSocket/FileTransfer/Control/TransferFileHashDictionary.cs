@@ -10,9 +10,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.IO;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -25,8 +23,7 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public static class TransferFileHashDictionary
     {
-
-        private static ConcurrentDictionary<string, FileInfo> filePathAndInfo=new ConcurrentDictionary<string, FileInfo>();
+        private static ConcurrentDictionary<string, FileInfo> filePathAndInfo = new ConcurrentDictionary<string, FileInfo>();
 
         /// <summary>
         /// 字典存储文件Hash的最大数量，默认为5000

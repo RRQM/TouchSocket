@@ -39,7 +39,7 @@ namespace RRQMSocket.RPC
         protected override void Initialize()
         {
             this.agreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
-            if (this.NewCreat )
+            if (this.NewCreat)
             {
                 this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             }
@@ -49,6 +49,7 @@ namespace RRQMSocket.RPC
         /// 序列化生成器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
+
         internal MethodStore serverMethodStore;
         internal MethodStore clientMethodStore;
 
@@ -65,7 +66,7 @@ namespace RRQMSocket.RPC
             InstanceMethod instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
             if (instanceMethod.async)
             {
-                Task.Factory.StartNew(()=> 
+                Task.Factory.StartNew(() =>
                 {
                     ExecuteMethod(content, instanceMethod);
                 });
@@ -93,7 +94,6 @@ namespace RRQMSocket.RPC
                             parameters[i] = this.SerializeConverter.DeserializeParameter(content.ParametersBytes[i], methodItem.ParameterTypes[i]);
                         }
                     }
-
 
                     instance.RPCEnter(methodItem);
                     MethodInfo method = instanceMethod.method;
@@ -221,7 +221,7 @@ namespace RRQMSocket.RPC
         /// <param name="length"></param>
         public override void Send(byte[] buffer, int offset, int length)
         {
-            agreementHelper.SocketSend(111,buffer,offset,length);
+            agreementHelper.SocketSend(111, buffer, offset, length);
         }
 
         /// <summary>

@@ -19,6 +19,5 @@ namespace RRQMSocket.RPC
         /// 序列化生成器
         /// </summary>
         SerializeConverter SerializeConverter { get; set; }
-
     }
 }

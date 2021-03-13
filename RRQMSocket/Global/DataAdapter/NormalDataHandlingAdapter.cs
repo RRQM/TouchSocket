@@ -9,11 +9,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -39,7 +34,7 @@ namespace RRQMSocket
         /// <param name="length">长度</param>
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            this.GoSend(buffer,offset,length);
+            this.GoSend(buffer, offset, length);
         }
     }
 }

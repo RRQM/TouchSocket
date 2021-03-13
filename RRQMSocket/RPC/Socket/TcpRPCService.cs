@@ -54,7 +54,7 @@ namespace RRQMSocket.RPC
         /// <param name="setting">设置</param>
         /// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
         /// <exception cref="RRQMRPCException">RPC异常</exception>
-        public  void OpenRPCServer(RPCServerSetting setting)
+        public void OpenRPCServer(RPCServerSetting setting)
         {
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
@@ -155,7 +155,6 @@ namespace RRQMSocket.RPC
                             {
                                 methodItem.ParameterTypes[i] = parameters[i].ParameterType;
                             }
-
                         }
 
                         AddReferencedAssemblie(objCompilerParameters, method.ReturnType.Assembly.Location);
@@ -178,7 +177,6 @@ namespace RRQMSocket.RPC
                         serverMethodStore.AddInstanceMethod(instanceOfMethod);
                     }
                 }
-
             }
 
             InstanceMethod[] instances = this.serverMethodStore.GetAllInstanceMethod();

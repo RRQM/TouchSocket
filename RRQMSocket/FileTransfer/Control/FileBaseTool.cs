@@ -81,7 +81,6 @@ namespace RRQMSocket.FileTransfer
             stream.Flush();
         }
 
-
         internal static bool WriteFile(RRQMStream stream, out string mes, long streamPosition, byte[] buffer, int offset, int length)
         {
             try
@@ -143,7 +142,6 @@ namespace RRQMSocket.FileTransfer
                     position += blockLength;
                 }
             }
-
             else
             {
                 FileProgressBlock block = new FileProgressBlock();
@@ -211,7 +209,6 @@ namespace RRQMSocket.FileTransfer
                 return true;
             }
             return false;
-
         }
 
         #endregion Methods

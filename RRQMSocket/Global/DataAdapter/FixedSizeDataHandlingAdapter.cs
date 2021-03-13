@@ -9,11 +9,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -30,6 +25,7 @@ namespace RRQMSocket
         {
             this.FixedSize = fixedSize;
         }
+
         /// <summary>
         /// 获取已设置的数据包的长度
         /// </summary>
@@ -64,7 +60,7 @@ namespace RRQMSocket
                     this.tempByteBlock.Write(buffer, 0, surPlusLength);
                     PreviewHandle(this.tempByteBlock);
                     this.tempByteBlock.Dispose();
-                    this.tempByteBlock=null;
+                    this.tempByteBlock = null;
                     surPlusLength = 0;
                 }
                 else if (surPlusLength < r)
@@ -82,9 +78,9 @@ namespace RRQMSocket
                 }
             }
         }
+
         private void SplitPackage(byte[] dataBuffer, int index, int r)
         {
-
             while (index < r)
             {
                 if (r - index >= this.FixedSize)
@@ -125,7 +121,7 @@ namespace RRQMSocket
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
             int dataLen = length - offset;
-            if (dataLen>this.FixedSize)
+            if (dataLen > this.FixedSize)
             {
                 throw new RRQMOverlengthException("发送的数据包长度大于FixedSize");
             }

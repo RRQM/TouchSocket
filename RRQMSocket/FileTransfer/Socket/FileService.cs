@@ -8,10 +8,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
-using RRQMCore.Log;
-using RRQMCore.Serialization;
-using System;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -70,12 +66,14 @@ namespace RRQMSocket.FileTransfer
         /// 最大上传速度
         /// </summary>
         public long MaxUploadSpeed { get; set; } = 1024 * 1024;
+
         #endregion 属性
 
         #region 字段
 
         private long downloadSpeed;
         private long uploadSpeed;
+
         #endregion 字段
 
         #region 事件
@@ -109,11 +107,8 @@ namespace RRQMSocket.FileTransfer
         /// 收到字节数组并返回
         /// </summary>
         public event RRQMBytesEventHandler ReceivedBytesThenReturn;
+
         #endregion 事件
-
-        #region 公用方法
-
-        #endregion 公用方法
 
         /// <summary>
         /// 创建完成FileSocketClient

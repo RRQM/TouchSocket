@@ -21,12 +21,12 @@ namespace RRQMSocket.RPC
     /// RPC代理文件程序
     /// </summary>
     [Serializable]
-    public class RPCProxyInfo:WaitResult
+    public class RPCProxyInfo : WaitResult
     {
         /// <summary>
         /// 程序名
         /// </summary>
-        public string AssemblyName { get;internal set; }
+        public string AssemblyName { get; internal set; }
 
         /// <summary>
         /// 数据

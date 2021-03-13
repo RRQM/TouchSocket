@@ -10,11 +10,8 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -66,7 +63,6 @@ namespace RRQMSocket
         /// 编码格式
         /// </summary>
         public Encoding Encoding { get; private set; }
-
 
         private ByteBlock tempByteBlock;
 

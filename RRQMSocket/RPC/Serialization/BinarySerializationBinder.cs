@@ -9,11 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -32,8 +28,9 @@ namespace RRQMSocket.RPC
         }
 
         private Type type;
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="assemblyName"></param>
         /// <param name="typeName"></param>

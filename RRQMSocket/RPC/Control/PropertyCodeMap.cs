@@ -8,13 +8,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Data.Converter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -31,6 +29,7 @@ namespace RRQMSocket.RPC
         private static readonly Type byteType = typeof(byte);
         private static readonly Type shortType = typeof(short);
         private static readonly Type longType = typeof(long);
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -40,6 +39,7 @@ namespace RRQMSocket.RPC
             codeString = new StringBuilder();
             this.nameSpace = nameSpace;
         }
+
         /// <summary>
         /// 所属程序集
         /// </summary>
@@ -71,12 +71,13 @@ namespace RRQMSocket.RPC
             codeString.AppendLine("}");
             return codeString.ToString();
         }
+
         private StringBuilder codeString;
         private string nameSpace;
         private Dictionary<Type, string> propertyDic = new Dictionary<Type, string>();
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -112,7 +113,7 @@ namespace RRQMSocket.RPC
                 {
                     Type baseType = Enum.GetUnderlyingType(type);
                     StringBuilder stringBuilder = new StringBuilder();
-                    if (baseType==byteType)
+                    if (baseType == byteType)
                     {
                         stringBuilder.AppendLine($"public enum {type.Name}:byte");
                         stringBuilder.AppendLine("{");
@@ -123,7 +124,7 @@ namespace RRQMSocket.RPC
                             stringBuilder.AppendLine($"{enumString}={(byte)item},");
                         }
                     }
-                    else if (baseType==shortType)
+                    else if (baseType == shortType)
                     {
                         stringBuilder.AppendLine($"public enum {type.Name}:short");
                         stringBuilder.AppendLine("{");
@@ -156,7 +157,7 @@ namespace RRQMSocket.RPC
                             stringBuilder.AppendLine($"{enumString}={(long)item},");
                         }
                     }
-                   
+
                     stringBuilder.AppendLine("}");
                     if (!propertyDic.ContainsKey(type))
                     {
@@ -171,9 +172,9 @@ namespace RRQMSocket.RPC
 
                         stringBuilder.AppendLine("[Serializable]");
                         stringBuilder.AppendLine($"public class {type.Name}");
-                        if (type.BaseType!=typeof(object))
+                        if (type.BaseType != typeof(object))
                         {
-                            AddTypeString(type.BaseType); 
+                            AddTypeString(type.BaseType);
                             if (type.BaseType.IsGenericType)
                             {
                                 Type[] types = type.BaseType.GetGenericArguments();
@@ -199,7 +200,7 @@ namespace RRQMSocket.RPC
                             }
                         }
                         stringBuilder.AppendLine("{");
-                        PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Instance|BindingFlags.Public|BindingFlags.DeclaredOnly|BindingFlags.GetProperty|BindingFlags.SetProperty);
+                        PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty);
 
                         foreach (PropertyInfo itemProperty in propertyInfos)
                         {
@@ -237,14 +238,12 @@ namespace RRQMSocket.RPC
                             stringBuilder.AppendLine("{get;set;}");
                         }
 
-
                         stringBuilder.AppendLine("}");
 
                         if (!propertyDic.ContainsKey(type))
                         {
                             propertyDic.Add(type, stringBuilder.ToString());
                         }
-
                     }
                 }
             }

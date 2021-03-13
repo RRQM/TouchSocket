@@ -26,7 +26,7 @@ namespace RRQMSocket.RPC
             codeString = new StringBuilder();
         }
 
-        internal static string GetAssemblyInfo(string assemblyName,Version version)
+        internal static string GetAssemblyInfo(string assemblyName, Version version)
         {
             CodeMap codeMap = new CodeMap();
             codeMap.AppendAssemblyInfo(assemblyName, version);
@@ -102,10 +102,12 @@ namespace RRQMSocket.RPC
         {
             codeString.AppendLine("public RRQMSocket.RPC.IRPCClient Client{get;private set; }");
         }
+
         public string GetName(Type type)
         {
             return PropertyCode.GetTypeFullName(type);
         }
+
         private void AppendMethods()
         {
             if (Methods != null)
@@ -185,10 +187,10 @@ namespace RRQMSocket.RPC
                             {
                                 codeString.Append(parameter.Name);
                             }
-                            if (parameter!=parameters[parameters.Length-1])
+                            if (parameter != parameters[parameters.Length - 1])
                             {
                                 codeString.Append(",");
-                            } 
+                            }
                         }
                         codeString.AppendLine("};");
 

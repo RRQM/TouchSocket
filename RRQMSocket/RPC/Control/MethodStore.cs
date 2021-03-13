@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using RRQMCore.Exceptions;
 
 namespace RRQMSocket.RPC
 {
@@ -25,6 +25,7 @@ namespace RRQMSocket.RPC
             this.methodNamesKey = new Dictionary<string, MethodItem>();
             this.serverMethodKey = new Dictionary<string, InstanceMethod>();
         }
+
         private Dictionary<string, InstanceMethod> serverMethodKey;
 
         private Dictionary<string, MethodItem> methodNamesKey;
@@ -39,7 +40,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMException"></exception>
         public ServerProvider[] GetServerProviders()
         {
-            if (this.serverMethodKey==null)
+            if (this.serverMethodKey == null)
             {
                 throw new RRQMException("serverMethodKey为空");
             }
@@ -54,7 +55,7 @@ namespace RRQMSocket.RPC
 
             return providers.ToArray();
         }
-        
+
         internal void SetProxyInfo(RPCProxyInfo proxyInfo, string proxyToken)
         {
             this.proxyInfo = proxyInfo;
@@ -64,7 +65,7 @@ namespace RRQMSocket.RPC
         internal RPCProxyInfo GetProxyInfo(string proxyToken)
         {
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
-            if (this.proxyToken==proxyToken)
+            if (this.proxyToken == proxyToken)
             {
                 proxyInfo.AssemblyData = this.proxyInfo.AssemblyData;
                 proxyInfo.AssemblyName = this.proxyInfo.AssemblyName;
@@ -105,6 +106,7 @@ namespace RRQMSocket.RPC
 
             return instances.ToArray();
         }
+
         internal void AddMethodItem(MethodItem methodItem)
         {
             methodNamesKey.Add(methodItem.Method, methodItem);
@@ -122,6 +124,7 @@ namespace RRQMSocket.RPC
         }
 
         private bool initialized;
+
         internal MethodItem GetMethodItem(string methodName)
         {
             if (!this.initialized)
@@ -167,7 +170,6 @@ namespace RRQMSocket.RPC
                 {
                     throw new RRQMRPCException($"RPC初始化时找不到{typeName}的类型");
                 }
-
             }
 
             return type;

@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 
@@ -31,8 +30,10 @@ namespace RRQMSocket
             this.mainSocket = socket;
             this.bytePool = bytePool;
         }
+
         private Socket mainSocket;
         private BytePool bytePool;
+
         #region 方法
 
         /// <summary>
@@ -245,9 +246,6 @@ namespace RRQMSocket
             }
         }
 
-
         #endregion 方法
-
-
     }
 }

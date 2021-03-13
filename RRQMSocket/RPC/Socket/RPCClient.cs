@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -15,12 +15,6 @@ using RRQMCore.Run;
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -41,6 +35,7 @@ namespace RRQMSocket.RPC
             this.singleWaitData.WaitResult = new WaitResult();
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
+
         /// <summary>
         /// 收到字节数组并返回
         /// </summary>
@@ -89,10 +84,8 @@ namespace RRQMSocket.RPC
                 {
                     throw new RRQMTimeoutException("连接初始化超时");
                 }
-
             }
         }
-
 
         /// <summary>
         /// 获取远程服务器RPC服务文件
@@ -284,9 +277,7 @@ namespace RRQMSocket.RPC
             {
                 parameters = null;
             }
-
         }
-
 
         private void Agreement_110(byte[] buffer, int r)
         {
@@ -310,7 +301,6 @@ namespace RRQMSocket.RPC
             int agreement = BitConverter.ToInt32(buffer, 0);
             switch (agreement)
             {
-
                 case 100:/* 100表示获取RPC引用文件上传状态返回*/
                     {
                         try
@@ -371,7 +361,7 @@ namespace RRQMSocket.RPC
                             Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
                         }
                         break;
-                    } 
+                    }
                 case 111:/*收到服务器数据*/
                     {
                         ByteBlock block = this.BytePool.GetByteBlock(r - 4);
@@ -390,7 +380,6 @@ namespace RRQMSocket.RPC
                         }
                         break;
                     }
-
             }
         }
     }

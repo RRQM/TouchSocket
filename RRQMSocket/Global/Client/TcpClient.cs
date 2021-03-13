@@ -26,9 +26,8 @@ namespace RRQMSocket
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TcpClient():this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        public TcpClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
         {
-           
         }
 
         /// <summary>
@@ -40,6 +39,7 @@ namespace RRQMSocket
             this.BytePool = bytePool;
             this.DataHandlingAdapter = new NormalDataHandlingAdapter();
         }
+
         /// <summary>
         /// 判断是否已连接
         /// </summary>
@@ -51,6 +51,7 @@ namespace RRQMSocket
         public BytePool BytePool { get; private set; }
 
         private DataHandlingAdapter dataHandlingAdapter;
+
         /// <summary>
         /// 数据处理适配器
         /// </summary>
@@ -159,18 +160,18 @@ namespace RRQMSocket
                 {
                     ProcessReceive();
                 }
-
             }
             catch
             {
                 DisConnectedServiceMethod(this, new MesEventArgs("BreakOut"));
             }
         }
+
         private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
             try
             {
-                if (e.LastOperation == SocketAsyncOperation.Receive&& this.eventArgs.BytesTransferred > 0)
+                if (e.LastOperation == SocketAsyncOperation.Receive && this.eventArgs.BytesTransferred > 0)
                 {
                     ByteBlock byteBlock = (ByteBlock)this.eventArgs.UserToken;
                     byteBlock.Position = this.eventArgs.BytesTransferred;
@@ -196,8 +197,8 @@ namespace RRQMSocket
             {
                 DisConnectedServiceMethod(this, new MesEventArgs("BreakOut"));
             }
-
         }
+
         private void ProcessReceive()
         {
             if (!this.disposable)
@@ -215,6 +216,7 @@ namespace RRQMSocket
                 }
             }
         }
+
         private void HandleBuffer()
         {
             while (true)
@@ -273,6 +275,7 @@ namespace RRQMSocket
         {
             this.Send(buffer, 0, buffer.Length);
         }
+
         /// <summary>
         /// 发送流中的有效数据
         /// </summary>
@@ -284,6 +287,7 @@ namespace RRQMSocket
         {
             this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
+
         /// <summary>
         /// 发送字节流
         /// </summary>

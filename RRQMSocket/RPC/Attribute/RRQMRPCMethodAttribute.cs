@@ -39,11 +39,12 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="methodKey">指定函数键</param>
         /// <param name="async">异步执行该方法</param>
-        public RRQMRPCMethodAttribute(string methodKey,bool async)
+        public RRQMRPCMethodAttribute(string methodKey, bool async)
         {
             this.MethodKey = methodKey;
             this.Async = async;
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -52,10 +53,11 @@ namespace RRQMSocket.RPC
         {
             this.Async = async;
         }
+
         /// <summary>
         /// 是否异步执行
         /// </summary>
-        public bool Async { get;private set; }
+        public bool Async { get; private set; }
 
         /// <summary>
         /// 注册键

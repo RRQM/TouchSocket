@@ -17,26 +17,23 @@ namespace RRQMSocket
     若汝棋茗
     */
 
-    internal class ClientBuffer:IPoolObject
+    internal class ClientBuffer : IPoolObject
     {
         internal IHandleBuffer client;
         internal ByteBlock byteBlock;
 
-        public bool NewCreat { get ; set ; }
+        public bool NewCreat { get; set; }
 
         public void Create()
         {
-           
         }
 
         public void Destroy()
         {
-           
         }
 
         public void Recreate()
         {
-           
         }
     }
 }

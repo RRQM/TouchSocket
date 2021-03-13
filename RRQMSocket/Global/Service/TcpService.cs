@@ -12,7 +12,6 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Pool;
-using RRQMCore.Run;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,7 +38,7 @@ namespace RRQMSocket
             this.BytePool = new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20);
             this.SocketClientPool = new ObjectPool<T>();
             this.MaxCount = 10000;
-          T t=  this.SocketClients["s"];
+            T t = this.SocketClients["s"];
         }
 
         /// <summary>
@@ -60,6 +59,7 @@ namespace RRQMSocket
         public bool IsCheckClientAlive { get; set; }
 
         private int maxCount;
+
         /// <summary>
         /// 最大可连接数
         /// </summary>
@@ -81,7 +81,6 @@ namespace RRQMSocket
             }
         }
 
-
         /// <summary>
         /// 获取内存池实例
         /// </summary>
@@ -101,6 +100,7 @@ namespace RRQMSocket
         private ConcurrentQueue<Socket> clientSocketQueue;
         private Thread threadStartUpReceive;
         private Thread threadAccept;
+
         #region 事件
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace RRQMSocket
 
             IsBind = true;
         }
-        
+
         private void StartAccept()
         {
             while (true)
@@ -218,6 +218,7 @@ namespace RRQMSocket
                 }
             }
         }
+
         private void StartUpReceive()
         {
             while (true)
@@ -261,6 +262,7 @@ namespace RRQMSocket
                 }
             }
         }
+
         private void Handle(object o)
         {
             BufferQueueGroup queueGroup = (BufferQueueGroup)o;
@@ -331,7 +333,6 @@ namespace RRQMSocket
                 client.BeginReceive();
                 this.SocketClients.Add(client, client.NewCreat);
                 ClientConnectedMethod(client, null);
-
             }
             catch (Exception e)
             {

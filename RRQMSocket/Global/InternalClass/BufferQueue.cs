@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace RRQMSocket
 {
@@ -22,6 +21,5 @@ namespace RRQMSocket
     /// </summary>
     internal class BufferQueue : ConcurrentQueue<ClientBuffer>
     {
-       
     }
 }

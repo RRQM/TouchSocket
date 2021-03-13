@@ -159,6 +159,7 @@ namespace RRQMSocket.FileTransfer
         #endregion 属性
 
         #region 字段
+
         internal bool breakpointResume;
         private bool bufferLengthChanged;
         private long receivedDataLength;
@@ -171,6 +172,7 @@ namespace RRQMSocket.FileTransfer
         private ProgressBlockCollection downloadFileBlocks;
         private RRQMStream uploadFileStream;
         private RRQMAgreementHelper AgreementHelper;
+
         #endregion 字段
 
         #region 事件
@@ -204,6 +206,7 @@ namespace RRQMSocket.FileTransfer
         /// 收到字节数组并返回
         /// </summary>
         internal event RRQMBytesEventHandler ReceivedBytesThenReturn;
+
         #endregion 事件
 
         #region 判断调用事件
@@ -267,6 +270,7 @@ namespace RRQMSocket.FileTransfer
                 this.BufferLength = 1024 * 1024 * 10;
             }
         }
+
         internal override void WaitReceive()
         {
             if (this.GetNowTick() - timeTick > 0)
@@ -430,7 +434,6 @@ namespace RRQMSocket.FileTransfer
                     waitResult.Message = ex.Message;
                     waitResult.Data = null;
                 }
-
             }
 
             byteBlock.Write(SerializeConvert.BinarySerialize(waitResult));
@@ -453,7 +456,6 @@ namespace RRQMSocket.FileTransfer
                 {
                     byteBlock.Buffer[0] = 1;
                 }
-
             }
             else
             {
@@ -611,7 +613,7 @@ namespace RRQMSocket.FileTransfer
                 byteBlock.Write(BitConverter.GetBytes(1000));
                 byteBlock.Write(BitConverter.GetBytes(1000));
                 byteBlock.Write(datas);
-                AgreementHelper.SocketSend(1000,byteBlock);
+                AgreementHelper.SocketSend(1000, byteBlock);
             }
             catch (Exception ex)
             {
@@ -622,8 +624,6 @@ namespace RRQMSocket.FileTransfer
                 byteBlock.Dispose();
             }
         }
-
-
 
         /// <summary>
         /// 处理已接收到的数据
@@ -761,7 +761,6 @@ namespace RRQMSocket.FileTransfer
                         break;
                     }
 
-
                 case 1014:
                     {
                         try
@@ -774,7 +773,6 @@ namespace RRQMSocket.FileTransfer
                         }
                         break;
                     }
-
 
                 case 1020:
                     {
@@ -829,7 +827,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public override void Recreate()
         {

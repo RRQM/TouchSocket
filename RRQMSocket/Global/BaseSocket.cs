@@ -27,10 +27,12 @@ namespace RRQMSocket
         {
             this.Logger = new Log();
         }
+
         /// <summary>
         /// 心跳检测包
         /// </summary>
         protected static readonly byte[] heartPackage = new byte[0];
+
         /// <summary>
         /// 锁
         /// </summary>
@@ -60,7 +62,7 @@ namespace RRQMSocket
                 }
 
                 mainSocket = value;
-                if (mainSocket.IsBound&&mainSocket.LocalEndPoint != null)
+                if (mainSocket.IsBound && mainSocket.LocalEndPoint != null)
                 {
                     this.Name = mainSocket.LocalEndPoint.ToString();
                 }
@@ -119,7 +121,6 @@ namespace RRQMSocket
         /// </summary>
         protected virtual void OnBufferLengthChanged()
         {
-
         }
 
         /// <summary>
