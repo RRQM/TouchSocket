@@ -5,7 +5,7 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.5.0</Version>
+    <Version>3.5.1</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2020 若汝棋茗</Copyright>
     <Description>

@@ -208,10 +208,10 @@ namespace RRQMSocket.RPC
             }
 
             codes.Add(propertyCode.GetPropertyCode());
-            foreach (var item in codes)
-            {
-                Console.WriteLine(item);
-            }
+            //foreach (var item in codes)
+            //{
+            //    Console.WriteLine(item);
+            //}
             this.RPCVersion = CodeMap.Version;
 
             System.CodeDom.Compiler.CompilerResults cr = codeProvider.CompileAssemblyFromSource(objCompilerParameters, codes.ToArray());
