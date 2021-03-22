@@ -1,50 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFrameworks>net45;net461;netstandard2.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net45;netcoreapp3.1;netstandard2.0</TargetFrameworks>
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.5.1</Version>
+    <Version>3.5.2</Version>
     <Company>若汝棋茗</Company>
-    <Copyright>Copyright © 2020 若汝棋茗</Copyright>
+    <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
-		更新时间：2021.03.13
+		更新时间：2021.03.15
 
 		更新内容:
-		此次更新内容较多，会产生一些不兼容问题，谨慎更新。
+		修福3.5.1部分BUG。
 
 		①TCP框架
-		1.增加：引入对象池，SocketClient的生成由系统完成，用户只需要在创建时增加其他设置即可。
-		2.增加：TokenTcp系列，和普通tcp相比，性能并无差别，只是在连接时需要Token验证。
-		3.增加：ConnectionPool连接池系列，在使用时可直接发送，接收数据。
-		4.增加：RRQMTokenTcpClient类，简单的TokenTcpClient的实现，以供RPC池使用。
-		5.增加：TcpService，TcpClient类，在绑定，连接时除了快捷设置外，还可以使用EndPoint。
-		6.增加：ISocketClient类，实现所有服务器辅助类接口。
-		7.增加：TcpService类，增加最大连接设置，超出连接数的将被断开连接。
-		8.修改：SocketClientCollection类，由字典贮存完成，可通过IDToken索引获得实例。
-		9.修改：SocketClientCollection类，重新赋值IDTokenFormat，可修改IDToken的生成规则。
-		10.修改：其他类，继承关系，接口实现都做了不同程度的调整。
-		11.修复：修复在断开连接的情况下仍然接收空数据的情况。
-		12.删除：移除AlowSend属性。
+		无
 
 		②文件传输模块：
-		1.增加：服务器端增加SendSystemMes方法。
-		2.修改：客户端，服务器辅助类继承关系改变，需要验证Token。
-		3.修改：在不开启断点续传的情况下，不进行Hash验证，这意味着快速上传将失效。
-		4.删除：快速上传开关，在断点续传模式下默认开启。
-		5.优化：限速逻辑，在大宽带传输时，不再需要修改BufferLength。
+		无
 
 		③RPC模块
-		1.增加：服务器端增加（开放）Send方法，可以直接让RPCSocketClient回传消息。
-		2.增加：RRQMMethodAttribute类。增加异步设置。
-		3.增加：MultipleRPCClient类，集群RPC通信池，在牺牲小量性能的情况下保障更稳定的传输。
-		4.增加：IRPCClient接口，在生成代理文件时需要传入该接口参数。
-		5.增加：IRPCClient接口，可直接获取IDToken。
-		6.增加：TcpRPCService类，开放MethodStore属性，用于获取所有的ServiceProvider实例。
-		7.修改：RPCClient，RPCService类，继承，接口实现更改。
-		8.修改：ServerProvider类，增加相关属性和方法，用于获取调用该实例方法的ISocketClient。
-		9.优化：CodeMap类，优化生成代码逻辑。
+		无
 	</Description>
     <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
@@ -95,19 +71,6 @@
     <OutputPath></OutputPath>
   </PropertyGroup>
 
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.CodeDom">
-      <Version>4.7.0</Version>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-    <PackageReference Include="System.CodeDom">
-      <Version>4.7.0</Version>
-    </PackageReference>
-  </ItemGroup>
-
   <ItemGroup>
     <Compile Remove="Global\Enum\**" />
     <Compile Remove="RPC\Enum\**" />
@@ -134,8 +97,26 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
+      <Version>3.9.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyModel">
+      <Version>5.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
+      <Version>3.9.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyModel">
+      <Version>5.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="RRQMCore" Version="1.2.2" />
+    <PackageReference Include="RRQMCore" Version="1.2.5" />
   </ItemGroup>
 
 </Project>

@@ -24,21 +24,30 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public abstract class TcpService<T> : BaseSocket, IService where T : TcpSocketClient, new()
+    public abstract class TcpService<T> : BaseSocket, ITcpService where T : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TcpService()
+        public TcpService():this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
         {
+           
+        }
+        
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="bytePool">内存池实例</param>
+        public TcpService(BytePool bytePool)
+        {
+            this.Logger = new Log();
             this.IsCheckClientAlive = true;
             this.SocketClients = new SocketCliectCollection<T>();
             this.IDTokenFormat = "{0}-TCP";
             this.clientSocketQueue = new ConcurrentQueue<Socket>();
-            this.BytePool = new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20);
+            this.BytePool = bytePool;
             this.SocketClientPool = new ObjectPool<T>();
             this.MaxCount = 10000;
-            T t = this.SocketClients["s"];
         }
 
         /// <summary>
@@ -277,7 +286,7 @@ namespace RRQMSocket
                 {
                     try
                     {
-                        clientBuffer.client.HandleBuffer(clientBuffer.byteBlock);
+                        clientBuffer.client.HandleBuffer(clientBuffer);
                     }
                     catch (Exception e)
                     {
@@ -303,7 +312,8 @@ namespace RRQMSocket
         /// 例如事件等，请先判断NewCreat值再做处理。
         /// </summary>
         /// <param name="tcpSocketClient"></param>
-        protected abstract void OnCreatSocketCliect(T tcpSocketClient);
+        /// <param name="newCreat">true：首次创建。false：从对象池获得</param>
+        protected abstract void OnCreatSocketCliect(T tcpSocketClient,bool newCreat);
 
         internal virtual void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
@@ -323,13 +333,13 @@ namespace RRQMSocket
                     client.queueGroup = queueGroup;
                     client.Service = this;
                     client.BytePool = this.BytePool;
+                    client.Logger = this.Logger;
                 }
 
                 client.MainSocket = socket;
                 client.BufferLength = this.BufferLength;
-                OnCreatSocketCliect(client);
+                OnCreatSocketCliect(client, client.NewCreat);
 
-                client.BeginInitialize();
                 client.BeginReceive();
                 this.SocketClients.Add(client, client.NewCreat);
                 ClientConnectedMethod(client, null);
@@ -365,7 +375,7 @@ namespace RRQMSocket
             }
             foreach (var item in bufferQueueGroups)
             {
-                item.Thread.Abort();
+                item.Dispose();
             }
         }
     }

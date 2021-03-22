@@ -35,7 +35,7 @@ namespace RRQMSocket.RPC
             {
                 return null;
             }
-            return SerializeConvert.RRQMBinarySerialize(parameter);
+            return SerializeConvert.RRQMBinarySerialize(parameter,true);
         }
 
 #pragma warning restore CS1591

@@ -10,17 +10,16 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Pool;
+using System.Net;
 
 namespace RRQMSocket
 {
-    /*
-    若汝棋茗
-    */
-
+  
     internal class ClientBuffer : IPoolObject
     {
         internal IHandleBuffer client;
         internal ByteBlock byteBlock;
+        internal EndPoint endPoint;
 
         public bool NewCreat { get; set; }
 

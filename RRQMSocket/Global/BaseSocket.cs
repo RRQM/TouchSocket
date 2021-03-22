@@ -62,14 +62,15 @@ namespace RRQMSocket
                 }
 
                 mainSocket = value;
-                if (mainSocket.IsBound && mainSocket.LocalEndPoint != null)
-                {
-                    this.Name = mainSocket.LocalEndPoint.ToString();
-                }
-                else if (mainSocket.Connected && mainSocket.RemoteEndPoint != null)
+                if (mainSocket.Connected && mainSocket.RemoteEndPoint != null)
                 {
                     this.Name = mainSocket.RemoteEndPoint.ToString();
                 }
+                else if (mainSocket.IsBound && mainSocket.LocalEndPoint != null)
+                {
+                    this.Name = mainSocket.LocalEndPoint.ToString();
+                }
+
                 else
                 {
                     return;
@@ -114,7 +115,7 @@ namespace RRQMSocket
         /// <summary>
         /// 日志记录器
         /// </summary>
-        public ILog Logger { get; protected set; }
+        public ILog Logger { get;  set; }
 
         /// <summary>
         /// 当BufferLength改变值的时候

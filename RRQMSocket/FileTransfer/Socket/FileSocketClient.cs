@@ -159,7 +159,7 @@ namespace RRQMSocket.FileTransfer
         #endregion 属性
 
         #region 字段
-
+        internal RRQMAgreementHelper AgreementHelper;
         internal bool breakpointResume;
         private bool bufferLengthChanged;
         private long receivedDataLength;
@@ -171,7 +171,7 @@ namespace RRQMSocket.FileTransfer
         private ProgressBlockCollection uploadFileBlocks;
         private ProgressBlockCollection downloadFileBlocks;
         private RRQMStream uploadFileStream;
-        private RRQMAgreementHelper AgreementHelper;
+       
 
         #endregion 字段
 
@@ -814,18 +814,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        /// <summary>
-        /// 初始化后
-        /// </summary>
-        protected override void Initialize()
-        {
-            this.AgreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
-            if (this.NewCreat)
-            {
-                this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-            }
-        }
-
+       
         /// <summary>
         ///
         /// </summary>

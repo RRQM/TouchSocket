@@ -114,13 +114,15 @@ namespace RRQMSocket.FileTransfer
         /// 创建完成FileSocketClient
         /// </summary>
         /// <param name="tcpSocketClient"></param>
-        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient)
+        /// <param name="newCreat"></param>
+        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient,bool newCreat)
         {
             tcpSocketClient.breakpointResume = this.BreakpointResume;
             tcpSocketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             tcpSocketClient.MaxUploadSpeed = this.MaxUploadSpeed;
-            if (tcpSocketClient.NewCreat)
+            if (newCreat)
             {
+                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 tcpSocketClient.BeforeReceiveFile += this.BeforeReceiveFile;
                 tcpSocketClient.SendFileFinished += this.SendFileFinished;
                 tcpSocketClient.BeforeSendFile += this.BeforeSendFile;
@@ -128,6 +130,8 @@ namespace RRQMSocket.FileTransfer
                 tcpSocketClient.ReceiveFileFinished += this.ReceiveFileFinished;
                 tcpSocketClient.ReceivedBytesThenReturn += this.ReceivedBytesThenReturn;
             }
+            tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient.MainSocket, this.BytePool);
+
         }
     }
 }

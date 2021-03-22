@@ -21,6 +21,22 @@ namespace RRQMSocket
     /// </summary>
     public abstract class TokenTcpService<T> : TcpService<T> where T : TcpSocketClient, new()
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public TokenTcpService() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        {
+
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="bytePool">内存池实例</param>
+        public TokenTcpService(BytePool bytePool):base(bytePool)
+        {
+           
+        }
         private string connectionToken = "rrqm";
 
         /// <summary>
@@ -43,7 +59,7 @@ namespace RRQMSocket
         {
             Task.Factory.StartNew(async () =>
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(socket.Available);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
                 while (waitCount < 50)
                 {
@@ -75,9 +91,8 @@ namespace RRQMSocket
                                     }
                                     client.MainSocket = socket;
                                     client.BufferLength = this.BufferLength;
-                                    this.OnCreatSocketCliect(client);
+                                    this.OnCreatSocketCliect(client, client.NewCreat);
 
-                                    client.BeginInitialize();
                                     client.BeginReceive();
                                     this.SocketClients.Add(client, client.NewCreat);
                                     ClientConnectedMethod(client, null);

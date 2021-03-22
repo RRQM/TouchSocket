@@ -25,7 +25,7 @@ namespace RRQMSocket
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TokenTcpClient() : base(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        public TokenTcpClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
         {
         }
 

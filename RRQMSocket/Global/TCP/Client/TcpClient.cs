@@ -230,7 +230,7 @@ namespace RRQMSocket
                 {
                     try
                     {
-                        clientBuffer.client.HandleBuffer(clientBuffer.byteBlock);
+                        clientBuffer.client.HandleBuffer(clientBuffer);
                     }
                     catch (Exception e)
                     {
@@ -249,15 +249,7 @@ namespace RRQMSocket
             }
         }
 
-        void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
-        {
-            if (this.dataHandlingAdapter == null)
-            {
-                throw new RRQMException("数据处理适配器为空");
-            }
-            this.dataHandlingAdapter.Received(byteBlock);
-        }
-
+   
         /// <summary>
         /// 处理已接收到的数据
         /// </summary>
@@ -328,6 +320,15 @@ namespace RRQMSocket
             {
                 this.queueGroup.Dispose();
             }
+        }
+
+        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
     }
 }

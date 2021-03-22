@@ -26,12 +26,14 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 返回值类型
         /// </summary>
-        public Type ReturnType { get; internal set; }
+        [NonSerialized]
+        internal Type ReturnType;
 
         /// <summary>
         /// 参数类型
         /// </summary>
-        public Type[] ParameterTypes { get; internal set; }
+        [NonSerialized]
+        internal Type[] ParameterTypes;
 
         /// <summary>
         /// 返回值类型

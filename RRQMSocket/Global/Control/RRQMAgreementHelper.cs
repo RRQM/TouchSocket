@@ -43,7 +43,7 @@ namespace RRQMSocket
         /// <param name="text"></param>
         public void SocketSend(int agreement, string text)
         {
-            byte[] data = Encoding.UTF8.GetBytes(text);
+            byte[] data = Encoding.UTF8.GetBytes(text==null?string.Empty:text);
             int dataLen = data.Length + 8;
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);

@@ -23,7 +23,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC服务器辅助类
     /// </summary>
-    public sealed class RPCSocketClient : TcpSocketClient, ISerialize
+    public sealed class RPCSocketClient : TcpSocketClient
     {
         /// <summary>
         /// 构造函数
@@ -31,18 +31,6 @@ namespace RRQMSocket.RPC
         public RPCSocketClient()
         {
             this.waitHandles = new RRQMWaitHandle<WaitBytes>();
-        }
-
-        /// <summary>
-        /// 初始化
-        /// </summary>
-        protected override void Initialize()
-        {
-            this.agreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
-            if (this.NewCreat)
-            {
-                this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-            }
         }
 
         /// <summary>
@@ -54,7 +42,7 @@ namespace RRQMSocket.RPC
         internal MethodStore clientMethodStore;
 
         private RRQMWaitHandle<WaitBytes> waitHandles;
-        private RRQMAgreementHelper agreementHelper;
+        internal RRQMAgreementHelper agreementHelper;
 
         /// <summary>
         /// 函数式调用
@@ -62,7 +50,7 @@ namespace RRQMSocket.RPC
         /// <param name="buffer"></param>
         private void Agreement_101(byte[] buffer)
         {
-            RPCContext content = SerializeConvert.RRQMBinaryDeserialize<RPCContext>(buffer, 4);
+            RPCContext content = RPCContext.Deserialize(buffer, 4);
             InstanceMethod instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
             if (instanceMethod.async)
             {
@@ -143,7 +131,7 @@ namespace RRQMSocket.RPC
             ByteBlock byteBlock = this.BytePool.GetByteBlock(1024);
             try
             {
-                SerializeConvert.RRQMBinarySerialize(byteBlock, content);
+                content.Serialize(byteBlock);
                 agreementHelper.SocketSend(101, byteBlock);
             }
             catch (Exception ex)

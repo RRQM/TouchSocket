@@ -72,37 +72,11 @@ namespace RRQMSocket
         /// </summary>
         public bool NewCreat { get; set; }
 
-        void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
-        {
-            if (this.dataHandlingAdapter == null)
-            {
-                throw new RRQMException("数据处理适配器为空");
-            }
-            this.dataHandlingAdapter.Received(byteBlock);
-        }
-
         /// <summary>
         /// 处理已接收到的数据
         /// </summary>
         /// <param name="byteBlock"></param>
         protected abstract void HandleReceivedData(ByteBlock byteBlock);
-
-        /// <summary>
-        /// 初始化完成后，未接收数据前
-        /// DataHandlingAdapter赋值
-        /// </summary>
-        protected virtual void Initialize()
-        {
-            if (this.NewCreat)
-            {
-                this.DataHandlingAdapter = new NormalDataHandlingAdapter();
-            }
-        }
-
-        internal void BeginInitialize()
-        {
-            this.Initialize();
-        }
 
         /// <summary>
         /// 发送字节流
@@ -286,6 +260,15 @@ namespace RRQMSocket
         {
             this.eventArgs = new SocketAsyncEventArgs();
             this.eventArgs.Completed += this.EventArgs_Completed;
+        }
+
+        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
     }
 }

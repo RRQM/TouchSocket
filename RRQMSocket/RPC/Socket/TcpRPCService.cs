@@ -1,279 +1,109 @@
-//------------------------------------------------------------------------------
-//  此代码版权归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  源代码仓库：https://gitee.com/RRQM_Home
-//  交流QQ群：234762506
-//  感谢您的下载和使用
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+////------------------------------------------------------------------------------
+////  此代码版权归作者本人若汝棋茗所有
+////  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+////  CSDN博客：https://blog.csdn.net/qq_40374647
+////  哔哩哔哩视频：https://space.bilibili.com/94253567
+////  源代码仓库：https://gitee.com/RRQM_Home
+////  交流QQ群：234762506
+////  感谢您的下载和使用
+////------------------------------------------------------------------------------
+////------------------------------------------------------------------------------
+//using System;
+//using Microsoft.CSharp;
+//using System.CodeDom.Compiler;
+//using System.Collections.Generic;
+//using System.IO;
+//using System.Linq;
+//using System.Reflection;
+//using System.Text;
+//using RRQMCore.ByteManager;
+//using System.Net;
 
-namespace RRQMSocket.RPC
-{
-    /// <summary>
-    /// 通讯服务端主类
-    /// </summary>
-    public sealed class TcpRPCService : TokenTcpService<RPCSocketClient>, IRPCService, ISerialize
-    {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public TcpRPCService()
-        {
-            this.SerializeConverter = new BinarySerializeConverter();
-        }
+//#if !NET45_OR_GREATER
+//using Microsoft.CodeAnalysis;
+//using Microsoft.CodeAnalysis.CSharp;
+//using Microsoft.Extensions.DependencyModel;
+//using Microsoft.CodeAnalysis.Text;
+//using Microsoft.CodeAnalysis.Emit;
+//#endif
 
-        private MethodStore serverMethodStore;
-        private MethodStore clientMethodStore;
+//namespace RRQMSocket.RPC
+//{
+//    /// <summary>
+//    /// 通讯服务端主类
+//    /// </summary>
+//    public sealed class TcpRPCService : RPCService, IRPCService
+//    {
+//        /// <summary>
+//        /// 构造函数
+//        /// </summary>
+//        public TcpRPCService()
+//        {
+//            tcpService = new RRQMTokenTcpService<RPCSocketClient>();
+//            tcpService.CreatSocketCliect += this.TcpService_CreatSocketCliect;
+//        }
 
-        /// <summary>
-        /// 获取函数仓库
-        /// </summary>
-        public MethodStore MethodStore { get { return this.serverMethodStore; } }
+//        private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, bool newCreat)
+//        {
+//            if (newCreat)
+//            {
+//                tcpSocketClient.serverMethodStore = this.serverMethodStore;
+//                tcpSocketClient.clientMethodStore = this.clientMethodStore;
+//                tcpSocketClient.SerializeConverter = this.SerializeConverter;
+//                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+//            }
+//            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient.MainSocket, this.BytePool);
+//        }
 
-        /// <summary>
-        /// RPC代理文件版本
-        /// </summary>
-        public Version RPCVersion { get; private set; }
+//        private RRQMTokenTcpService<RPCSocketClient> tcpService;
 
-        /// <summary>
-        /// 序列化生成器
-        /// </summary>
-        public SerializeConverter SerializeConverter { get; set; }
+//        /// <summary>
+//        /// 绑定状态
+//        /// </summary>
+//        public override bool IsBind => this.tcpService.IsBind;
 
-        /// <summary>
-        /// 开启RPC服务
-        /// </summary>
-        /// <param name="setting">设置</param>
-        /// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
-        /// <exception cref="RRQMRPCException">RPC异常</exception>
-        public void OpenRPCServer(RPCServerSetting setting)
-        {
-            this.serverMethodStore = new MethodStore();
-            this.clientMethodStore = new MethodStore();
-            string nameSpace = setting.NameSpace == null ? "RRQMRPC" : $"RRQMRPC.{setting.NameSpace}";
+//        /// <summary>
+//        /// 获取内存池实例
+//        /// </summary>
+//        public override BytePool BytePool => this.tcpService.BytePool;
+        
+//        /// <summary>
+//        /// 通过ID获得通信实例
+//        /// </summary>
+//        /// <param name="iDToken"></param>
+//        /// <returns></returns>
+//        public override ISocketClient GetSocketClient(string iDToken)
+//        {
+//            return this.tcpService.SocketClients[iDToken];
+//        }
 
-            List<ServerProvider> serverProviders = new List<ServerProvider>();
-            Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
+//        /// <summary>
+//        /// 绑定IP及端口号
+//        /// </summary>
+//        /// <param name="setting"></param>
+//        public override void Bind(BindSetting setting)
+//        {
+//            this.tcpService.Bind(setting);
+//        }
 
-            Assembly singleAssembly = null;
+//        /// <summary>
+//        /// 绑定IP及端口号
+//        /// </summary>
+//        /// <param name="endPoint"></param>
+//        /// <param name="threadCount"></param>
+//        public override void Bind(EndPoint endPoint, int threadCount)
+//        {
+//            this.tcpService.Bind(endPoint, threadCount);
+//        }
 
-            foreach (Type type in types)
-            {
-                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
-                serverProvider.RPCService = this;
-                serverProviders.Add(serverProvider);
-                if (singleAssembly == null)
-                {
-                    singleAssembly = type.Assembly;
-                }
-                else if (singleAssembly != type.Assembly)
-                {
-                    throw new RRQMRPCException("所有的服务类必须声明在同一程序集内");
-                }
-            }
+//        /// <summary>
+//        /// 释放资源
+//        /// </summary>
+//        public override void Dispose()
+//        {
+//            this.tcpService.Dispose();
+//        }
+//    }
 
-            PropertyCodeMap propertyCode = new PropertyCodeMap(singleAssembly, nameSpace);
+//}
 
-            Microsoft.CSharp.CSharpCodeProvider codeProvider = new Microsoft.CSharp.CSharpCodeProvider();
-
-            System.CodeDom.Compiler.CompilerParameters objCompilerParameters = new System.CodeDom.Compiler.CompilerParameters();
-
-            string assemblyName;
-            if (setting.NameSpace != null && setting.NameSpace.Trim().Length > 0)
-            {
-                assemblyName = string.Format("RRQMRPC.{0}.dll", setting.NameSpace);
-            }
-            else
-            {
-                assemblyName = "RRQMRPC.dll";
-            }
-            objCompilerParameters.OutputAssembly = assemblyName;
-
-            objCompilerParameters.GenerateExecutable = false;
-            objCompilerParameters.GenerateInMemory = false;
-
-            objCompilerParameters.ReferencedAssemblies.Add("System.dll");
-            objCompilerParameters.ReferencedAssemblies.Add("mscorlib.dll");
-            objCompilerParameters.ReferencedAssemblies.Add("RRQMCore.dll");
-
-            AddReferencedAssemblie(objCompilerParameters, this.GetType().Assembly.Location);
-
-            Dictionary<string, List<MethodInfo>> classAndMethods = new Dictionary<string, List<MethodInfo>>();
-
-            foreach (ServerProvider instance in serverProviders)
-            {
-                if (!classAndMethods.Keys.Contains(instance.GetType().Name))
-                {
-                    classAndMethods.Add(instance.GetType().Name, new List<MethodInfo>());
-                }
-                MethodInfo[] methodInfos = instance.GetType().GetMethods();
-                foreach (MethodInfo method in methodInfos)
-                {
-                    if (method.IsGenericMethod)
-                    {
-                        throw new RRQMRPCException("RPC方法中不支持泛型参数");
-                    }
-                    RRQMRPCMethodAttribute attribute = method.GetCustomAttribute<RRQMRPCMethodAttribute>();
-                    if (attribute != null)
-                    {
-                        classAndMethods[instance.GetType().Name].Add(method);
-
-                        string methodName = attribute.MethodKey == null || attribute.MethodKey.Trim().Length == 0 ? method.Name : attribute.MethodKey;
-
-                        MethodItem methodItem = new MethodItem();
-                        methodItem.Method = methodName;
-
-                        ParameterInfo[] parameters = method.GetParameters();
-                        methodItem.ParameterTypes = new Type[parameters.Length];
-                        for (int i = 0; i < parameters.Length; i++)
-                        {
-                            if (parameters[i].ParameterType.IsByRef)
-                            {
-                                methodItem.IsOutOrRef = true;
-                            }
-
-                            if (parameters[i].ParameterType.FullName != null)
-                            {
-                                AddReferencedAssemblie(objCompilerParameters, parameters[i].ParameterType.Assembly.Location);
-                            }
-                            propertyCode.AddTypeString(parameters[i].ParameterType);
-
-                            if (parameters[i].ParameterType.FullName.Contains("&"))
-                            {
-                                methodItem.ParameterTypes[i] = Type.GetType(parameters[i].ParameterType.FullName.Replace("&", string.Empty));
-                            }
-                            else
-                            {
-                                methodItem.ParameterTypes[i] = parameters[i].ParameterType;
-                            }
-                        }
-
-                        AddReferencedAssemblie(objCompilerParameters, method.ReturnType.Assembly.Location);
-                        propertyCode.AddTypeString(method.ReturnType);
-                        methodItem.ReturnType = method.ReturnType;
-                        try
-                        {
-                            serverMethodStore.AddMethodItem(methodItem);
-                        }
-                        catch (Exception)
-                        {
-                            throw new RRQMRPCKeyException($"方法名为{methodName}的方法已经注册");
-                        }
-
-                        InstanceMethod instanceOfMethod = new InstanceMethod();
-                        instanceOfMethod.instance = instance;
-                        instanceOfMethod.method = method;
-                        instanceOfMethod.methodItem = methodItem;
-                        instanceOfMethod.async = attribute.Async;
-                        serverMethodStore.AddInstanceMethod(instanceOfMethod);
-                    }
-                }
-            }
-
-            InstanceMethod[] instances = this.serverMethodStore.GetAllInstanceMethod();
-            foreach (InstanceMethod item in instances)
-            {
-                MethodItem clientMethodItem = new MethodItem();
-                clientMethodItem.IsOutOrRef = item.methodItem.IsOutOrRef;
-                clientMethodItem.Method = item.methodItem.Method;
-                clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.methodItem.ReturnType);
-                clientMethodItem.ParameterTypesString = new string[item.methodItem.ParameterTypes.Length];
-                for (int i = 0; i < item.methodItem.ParameterTypes.Length; i++)
-                {
-                    clientMethodItem.ParameterTypesString[i] = propertyCode.GetTypeFullName(item.methodItem.ParameterTypes[i]);
-                }
-                clientMethodStore.AddMethodItem(clientMethodItem);
-            }
-
-            CodeMap.Namespace = nameSpace;
-            CodeMap.PropertyCode = propertyCode;
-            List<string> codes = new List<string>();
-            codes.Add(CodeMap.GetAssemblyInfo(nameSpace, setting.Version));
-
-            foreach (string className in classAndMethods.Keys)
-            {
-                CodeMap codeMap = new CodeMap();
-                codeMap.ClassName = className;
-                codeMap.Methods = classAndMethods[className].ToArray();
-                codes.Add(codeMap.GetCode());
-            }
-
-            codes.Add(propertyCode.GetPropertyCode());
-            //foreach (var item in codes)
-            //{
-            //    Console.WriteLine(item);
-            //}
-            this.RPCVersion = CodeMap.Version;
-
-            System.CodeDom.Compiler.CompilerResults cr = codeProvider.CompileAssemblyFromSource(objCompilerParameters, codes.ToArray());
-
-            if (cr.Errors.HasErrors)
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-
-                foreach (System.CodeDom.Compiler.CompilerError err in cr.Errors)
-                {
-                    stringBuilder.AppendLine(err.ErrorText);
-                }
-
-                throw new RRQMRPCException(stringBuilder.ToString());
-            }
-
-            RPCProxyInfo proxyInfo = new RPCProxyInfo();
-            proxyInfo = new RPCProxyInfo();
-            proxyInfo.AssemblyName = assemblyName;
-            proxyInfo.Version = this.RPCVersion;
-            proxyInfo.AssemblyData = File.ReadAllBytes(assemblyName);
-            if (setting.ProxySourceCodeVisible)
-            {
-                proxyInfo.Codes = codes.ToArray();
-            }
-            this.serverMethodStore.SetProxyInfo(proxyInfo, setting.ProxyToken);
-        }
-
-        /// <summary>
-        /// 在创建完成TcpRPCSocketClient后
-        /// </summary>
-        /// <param name="tcpSocketClient"></param>
-        protected override void OnCreatSocketCliect(RPCSocketClient tcpSocketClient)
-        {
-            if (tcpSocketClient.NewCreat)
-            {
-                tcpSocketClient.serverMethodStore = this.serverMethodStore;
-                tcpSocketClient.clientMethodStore = this.clientMethodStore;
-                tcpSocketClient.SerializeConverter = this.SerializeConverter;
-            }
-        }
-
-        private void AddReferencedAssemblie(System.CodeDom.Compiler.CompilerParameters objCompilerParameters, string name)
-        {
-            if (name.Contains("System.dll") || name.Contains("mscorlib.dll"))
-            {
-                return;
-            }
-            else if (!objCompilerParameters.ReferencedAssemblies.Contains(name))
-            {
-                objCompilerParameters.ReferencedAssemblies.Add(name);
-            }
-        }
-
-        /// <summary>
-        /// 通过IDToken获得实例
-        /// </summary>
-        /// <param name="iDToken"></param>
-        /// <returns></returns>
-        public ISocketClient GetSocketClient(string iDToken)
-        {
-            return this.SocketClients[iDToken];
-        }
-    }
-}

@@ -11,49 +11,13 @@
 ### 说明
 >RRQMSocket程序集由作者若汝棋茗开发，所有版权归作者所有，程序集源代码在遵循Apache License 2.0的开源协议下，可供其他开发者二次开发及（商业）使用。
 ### 交流方式
- 此处更新不及时，详细信息请查阅CSDN主页。
+
  - [CSDN博客主页](https://blog.csdn.net/qq_40374647)
  - [哔哩哔哩视频](https://space.bilibili.com/94253567)
  - [源代码仓库主页](https://gitee.com/RRQM_Home) 
  - 交流QQ群：234762506
 
 ### 版本更新历史
-            更新时间：2021.03.13
-
-		更新内容:
-		此次更新内容较多，会产生一些不兼容问题，谨慎更新。
-
-		①TCP框架
-		1.增加：引入对象池，SocketClient的生成由系统完成，用户只需要在创建时增加其他设置即可。
-		2.增加：TokenTcp系列，和普通tcp相比，性能并无差别，只是在连接时需要Token验证。
-		3.增加：ConnectionPool连接池系列，在使用时可直接发送，接收数据。
-		4.增加：RRQMTokenTcpClient类，简单的TokenTcpClient的实现，以供RPC池使用。
-		5.增加：TcpService，TcpClient类，在绑定，连接时除了快捷设置外，还可以使用EndPoint。
-		6.增加：ISocketClient类，实现所有服务器辅助类接口。
-		7.增加：TcpService类，增加最大连接设置，超出连接数的将被断开连接。
-		8.修改：SocketClientCollection类，由字典贮存完成，可通过IDToken索引获得实例。
-		9.修改：SocketClientCollection类，重新赋值IDTokenFormat，可修改IDToken的生成规则。
-		10.修改：其他类，继承关系，接口实现都做了不同程度的调整。
-		11.修复：修复在断开连接的情况下仍然接收空数据的情况。
-		12.删除：移除AlowSend属性。
-
-		②文件传输模块：
-		1.增加：服务器端增加SendSystemMes方法。
-		2.修改：客户端，服务器辅助类继承关系改变，需要验证Token。
-		3.修改：在不开启断点续传的情况下，不进行Hash验证，这意味着快速上传将失效。
-		4.删除：快速上传开关，在断点续传模式下默认开启。
-		5.优化：限速逻辑，在大宽带传输时，不再需要修改BufferLength。
-
-		③RPC模块
-		1.增加：服务器端增加（开放）Send方法，可以直接让RPCSocketClient回传消息。
-		2.增加：RRQMMethodAttribute类。增加异步设置。
-		3.增加：MultipleRPCClient类，集群RPC通信池，在牺牲小量性能的情况下保障更稳定的传输。
-		4.增加：IRPCClient接口，在生成代理文件时需要传入该接口参数。
-		5.增加：IRPCClient接口，可直接获取IDToken。
-		6.增加：TcpRPCService类，开放MethodStore属性，用于获取所有的ServiceProvider实例。
-		7.修改：RPCClient，RPCService类，继承，接口实现更改。
-		8.修改：ServerProvider类，增加相关属性和方法，用于获取调用该实例方法的ISocketClient。
-		9.优化：CodeMap类，优化生成代码逻辑。
 ***
       更新时间：2021.03.02
       更新内容:
@@ -76,7 +40,7 @@
 RRQMSocket是一个整合性网络通信框架，特点是支持高并发、事件驱动、易用性强、二次开发难度低等。其中主要内容包括:TCP服务通信框架、文件传输、RPC等内容，后续还会继续扩展其他组件，希望大家多多支持。
 
 **常用类继承图**
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0313/103833_a421175e_8553710.png "类图.png")
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210303103818135.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwMzc0NjQ3,size_16,color_FFFFFF,t_70)
 
 ## 三、TCP服务框架
 ### 3.1 服务器类（TcpService）

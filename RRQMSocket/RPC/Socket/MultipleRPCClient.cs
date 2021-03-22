@@ -25,15 +25,28 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 集群RPC客户端
     /// </summary>
-    public sealed class MultipleRPCClient : IRPCClient, ISerialize
+    public sealed class MultipleRPCClient : ITcpRPCClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public MultipleRPCClient(int capacity)
+        /// <param name="capacity">客户端数量</param>
+        /// <param name="iDToken">连接ID</param>
+        public MultipleRPCClient(int capacity,string iDToken):this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20),capacity,iDToken)
         {
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="bytePool"></param>
+        /// <param name="capacity">客户端数量</param>
+        /// <param name="iDToken">连接ID</param>
+        public MultipleRPCClient(BytePool bytePool,int capacity,string iDToken)
+        {
+            this.iDToken = iDToken;
             this.locker = new object();
-            this.BytePool = new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20);
+            this.BytePool = bytePool;
             BinarySerializeConverter serializeConverter = new BinarySerializeConverter();
             this.SerializeConverter = serializeConverter;
             this.methodStore = new MethodStore();
@@ -42,9 +55,10 @@ namespace RRQMSocket.RPC
             this.ConnectionPool = TcpConnectionPool<RRQMTokenTcpClient>.CreatConnectionPool(capacity, this.BytePool, this.ConnectionPool_OnClientIni, this.BytePool);
             this.Logger = new Log();
         }
-
+        private string iDToken;
         private void ConnectionPool_OnClientIni(RRQMTokenTcpClient tcpClient)
         {
+            tcpClient.ConnectionToken = this.iDToken;
             tcpClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             tcpClient.OnReceivedData += this.TcpClient_OnReceivedData;
         }
@@ -176,11 +190,16 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化RPC
         /// </summary>
+        ///<exception cref="ArgumentNullException"></exception>
         public void InitializedRPC()
         {
             if (this.methodStore != null)
             {
                 this.methodStore.InitializedType();
+            }
+            else
+            {
+                throw new ArgumentNullException("函数映射为空");
             }
         }
 
@@ -213,7 +232,7 @@ namespace RRQMSocket.RPC
                     datas.Add(this.SerializeConverter.SerializeParameter(parameter));
                 }
                 waitData.WaitResult.ParametersBytes = datas;
-                SerializeConvert.RRQMBinarySerialize(byteBlock, waitData.WaitResult);
+                waitData.WaitResult.Serialize(byteBlock);
 
                 SendAgreement(101, byteBlock);
             }
@@ -290,7 +309,7 @@ namespace RRQMSocket.RPC
                     datas.Add(this.SerializeConverter.SerializeParameter(parameter));
                 }
                 waitData.WaitResult.ParametersBytes = datas;
-                SerializeConvert.RRQMBinarySerialize(byteBlock, waitData.WaitResult);
+                waitData.WaitResult.Serialize(byteBlock);
 
                 SendAgreement(101, byteBlock);
             }
@@ -368,7 +387,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            RPCContext result = SerializeConvert.RRQMBinaryDeserialize<RPCContext>(buffer, 4);
+                            RPCContext result = RPCContext.Deserialize(buffer, 4);
 
                             this.waitHandles.SetRun(result.Sign, result);
                         }

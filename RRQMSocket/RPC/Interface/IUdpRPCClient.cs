@@ -13,11 +13,8 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC序列化接口
     /// </summary>
-    public interface ISerialize
+    public interface IUdpRPCClient:IRPCClient
     {
-        /// <summary>
-        /// 序列化生成器
-        /// </summary>
-        SerializeConverter SerializeConverter { get; set; }
+       
     }
 }

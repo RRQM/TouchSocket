@@ -15,21 +15,28 @@ using RRQMCore.Run;
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// 通讯客户端主类
     /// </summary>
-    public sealed class RPCClient : TokenTcpClient, IRPCClient, ISerialize
+    public sealed class RPCClient : TokenTcpClient, ITcpRPCClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RPCClient()
+        public RPCClient():this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
         {
-            BinarySerializeConverter serializeConverter = new BinarySerializeConverter();
-            this.SerializeConverter = serializeConverter;
+        }
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="bytePool"></param>
+        public RPCClient(BytePool bytePool):base(bytePool)
+        {
+            this.SerializeConverter = new BinarySerializeConverter();
             this.methodStore = new MethodStore();
             this.singleWaitData = new WaitData<WaitResult>();
             this.singleWaitData.WaitResult = new WaitResult();
@@ -153,8 +160,7 @@ namespace RRQMSocket.RPC
                     datas.Add(this.SerializeConverter.SerializeParameter(parameter));
                 }
                 waitData.WaitResult.ParametersBytes = datas;
-                SerializeConvert.RRQMBinarySerialize(byteBlock, waitData.WaitResult);
-
+                waitData.WaitResult.Serialize(byteBlock);
                 agreementHelper.SocketSend(101, byteBlock);
             }
             catch (Exception e)
@@ -224,7 +230,7 @@ namespace RRQMSocket.RPC
             waitData.WaitResult = new RPCContext();
             MethodItem methodItem = this.methodStore.GetMethodItem(method);
             waitData.WaitResult.Method = methodItem.Method;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(1024);
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
 
             try
             {
@@ -234,8 +240,7 @@ namespace RRQMSocket.RPC
                     datas.Add(this.SerializeConverter.SerializeParameter(parameter));
                 }
                 waitData.WaitResult.ParametersBytes = datas;
-                SerializeConvert.RRQMBinarySerialize(byteBlock, waitData.WaitResult);
-
+                waitData.WaitResult.Serialize(byteBlock);
                 agreementHelper.SocketSend(101, byteBlock);
             }
             catch (Exception e)
@@ -320,7 +325,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            RPCContext result = SerializeConvert.RRQMBinaryDeserialize<RPCContext>(buffer, 4);
+                            RPCContext result = RPCContext.Deserialize(buffer, 4);
 
                             this.waitHandles.SetRun(result.Sign, result);
                         }
@@ -335,6 +340,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
+
                             MethodItem[] methodItems = SerializeConvert.BinaryDeserialize<MethodItem[]>(buffer, 4, r - 4);
                             this.methodStore = new MethodStore();
                             foreach (var item in methodItems)

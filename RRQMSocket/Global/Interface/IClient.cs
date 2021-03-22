@@ -20,19 +20,9 @@ namespace RRQMSocket
     public interface IClient : IDisposable
     {
         /// <summary>
-        /// 判断是否在线
-        /// </summary>
-        bool Online { get; }
-
-        /// <summary>
         /// 内存池实例
         /// </summary>
         BytePool BytePool { get; }
-
-        /// <summary>
-        /// 数据处理适配器
-        /// </summary>
-        DataHandlingAdapter DataHandlingAdapter { get; set; }
 
         /// <summary>
         /// 发送字节流

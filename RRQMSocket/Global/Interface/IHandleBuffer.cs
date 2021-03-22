@@ -20,7 +20,7 @@ namespace RRQMSocket
         /// <summary>
         ///  处理数据
         /// </summary>
-        /// <param name="byteBlock"></param>
-        void HandleBuffer(ByteBlock byteBlock);
+        /// <param name="clientBuffer"></param>
+        void HandleBuffer(ClientBuffer clientBuffer);
     }
 }

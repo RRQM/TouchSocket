@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System.Net;
 
 namespace RRQMSocket
 {
@@ -18,10 +19,17 @@ namespace RRQMSocket
     public interface IService
     {
         /// <summary>
-        /// 绑定TCP服务
+        /// 绑定服务
         /// </summary>
         /// <param name="setting"></param>
         void Bind(BindSetting setting);
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="threadCount"></param>
+        void Bind(EndPoint endPoint, int threadCount);
 
         /// <summary>
         /// 获取绑定状态
@@ -32,15 +40,5 @@ namespace RRQMSocket
         /// 内存池实例
         /// </summary>
         BytePool BytePool { get; }
-
-        /// <summary>
-        /// 获取或设置最大可连接数
-        /// </summary>
-        int MaxCount { get; set; }
-
-        /// <summary>
-        /// 检验客户端活性（避免异常而导致的失活）
-        /// </summary>
-        bool IsCheckClientAlive { get; set; }
     }
 }

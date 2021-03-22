@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 该服务所属的服务器
         /// </summary>
-        public IRPCService RPCService { get; internal set; }
+        public RPCService RPCService { get; internal set; }
 
         /// <summary>
         /// 通过IDToken获得实例
@@ -35,7 +35,7 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("该实例并非服务器托管实例，获取对象为空");
             }
-            return this.RPCService.GetSocketClient(iDToken);
+            return this.RPCService.GetTcpSocketClient(iDToken);
         }
 
         /// <summary>
