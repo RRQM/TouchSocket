@@ -31,8 +31,8 @@ namespace RRQMSocket.RPC
         /// 构造函数
         /// </summary>
         /// <param name="capacity">客户端数量</param>
-        /// <param name="iDToken">连接ID</param>
-        public MultipleRPCClient(int capacity,string iDToken):this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20),capacity,iDToken)
+        /// <param name="connectionToken"></param>
+        public MultipleRPCClient(int capacity,string connectionToken) :this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20),capacity, connectionToken)
         {
         }
 
@@ -41,10 +41,10 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="bytePool"></param>
         /// <param name="capacity">客户端数量</param>
-        /// <param name="iDToken">连接ID</param>
-        public MultipleRPCClient(BytePool bytePool,int capacity,string iDToken)
+        /// <param name="connectionToken">连接ID</param>
+        public MultipleRPCClient(BytePool bytePool,int capacity,string connectionToken)
         {
-            this.iDToken = iDToken;
+            this.connectionToken = connectionToken;
             this.locker = new object();
             this.BytePool = bytePool;
             BinarySerializeConverter serializeConverter = new BinarySerializeConverter();
@@ -55,10 +55,10 @@ namespace RRQMSocket.RPC
             this.ConnectionPool = TcpConnectionPool<RRQMTokenTcpClient>.CreatConnectionPool(capacity, this.BytePool, this.ConnectionPool_OnClientIni, this.BytePool);
             this.Logger = new Log();
         }
-        private string iDToken;
+        private string connectionToken;
         private void ConnectionPool_OnClientIni(RRQMTokenTcpClient tcpClient)
         {
-            tcpClient.ConnectionToken = this.iDToken;
+            tcpClient.ConnectionToken = this.connectionToken;
             tcpClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             tcpClient.OnReceivedData += this.TcpClient_OnReceivedData;
         }

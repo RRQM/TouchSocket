@@ -7,14 +7,26 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace RRQMSocket.Pool
+namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 终端组
+    /// 代码类型
     /// </summary>
-    public interface IClientGroup
+    public enum CodeType
     {
+        /// <summary>
+        /// 类代码
+        /// </summary>
+        Class,
+        /// <summary>
+        /// 服务代码
+        /// </summary>
+        Service
     }
 }

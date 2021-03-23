@@ -200,7 +200,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 当文件接收完成时
         /// </summary>
-        public event RRQMFileFinishedEventHandler DownloadFileFinshed;
+        public event RRQMFileFinishedEventHandler DownloadFileFinished;
 
         /// <summary>
         /// 传输文件错误
@@ -210,7 +210,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 当文件上传完成时
         /// </summary>
-        public event RRQMFileFinishedEventHandler UploadFileFinshed;
+        public event RRQMFileFinishedEventHandler UploadFileFinished;
 
         /// <summary>
         /// 当接收到系统信息的时候
@@ -251,9 +251,9 @@ namespace RRQMSocket.FileTransfer
             BeforeUploadFile?.Invoke(sender, e);
         }
 
-        private void DownloadFileFinshedMethod(object sender, FileFinishedArgs e)
+        private void DownloadFileFinishedMethod(object sender, FileFinishedArgs e)
         {
-            DownloadFileFinshed?.Invoke(sender, e);
+            DownloadFileFinished?.Invoke(sender, e);
         }
 
         private void TransferFileErrorMethod(object sender, TransferFileMessageArgs e)
@@ -261,9 +261,9 @@ namespace RRQMSocket.FileTransfer
             TransferFileError?.Invoke(sender, e);
         }
 
-        private void UploadFileFinshedMethod(object sender, FileFinishedArgs e)
+        private void UploadFileFinishedMethod(object sender, FileFinishedArgs e)
         {
-            UploadFileFinshed?.Invoke(sender, e);
+            UploadFileFinished?.Invoke(sender, e);
         }
 
         private void ReceiveSystemMesMethod(object sender, MesEventArgs e)
@@ -434,7 +434,7 @@ namespace RRQMSocket.FileTransfer
                         BeforeUploadFileMethod(this, args);//触发接收文件事件
                         requsetBlocks.FileInfo.FilePath = args.TargetPath;
                         this.uploadFileBlocks = requsetBlocks;
-                        UploadFileFinished();
+                        UploadFileFinished_s();
                     }
                     else
                     {
@@ -667,7 +667,7 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            this.DownloadFileFinished();
+            this.DownloadFileFinished_s();
         }
 
         private void UploadFileBlock()
@@ -749,11 +749,12 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            UploadFileFinished();
+            UploadFileFinished_s();
         }
 
-        private void DownloadFileFinished()
+        private void DownloadFileFinished_s()
         {
+
             try
             {
                 ByteBlock resultByteBlock = this.SendWait(1004, this.timeout);
@@ -763,7 +764,7 @@ namespace RRQMSocket.FileTransfer
                     FileFinishedArgs args = new FileFinishedArgs();
                     args.FileInfo = downloadFileBlocks.FileInfo;
                     TransferFileHashDictionary.AddFile(downloadFileBlocks.FileInfo);
-                    DownloadFileFinshedMethod(this, args);
+                    DownloadFileFinishedMethod(this, args);
                 }
             }
             catch (Exception e)
@@ -780,7 +781,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private void UploadFileFinished()
+        private void UploadFileFinished_s()
         {
             int reTryCount = 0;
             while (reTryCount < 10)
@@ -791,8 +792,8 @@ namespace RRQMSocket.FileTransfer
                     TransferFileStreamDic.DisposeFileStream(this.UploadFileInfo.FilePath);
                     FileFinishedArgs args = new FileFinishedArgs();
                     args.FileInfo = uploadFileBlocks.FileInfo;
+                    UploadFileFinishedMethod(this, args);
                     this.uploadFileBlocks = null;
-                    UploadFileFinshedMethod(this, args);
                     OutUpload();
                     break;
                 }

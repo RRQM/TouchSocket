@@ -1,4 +1,17 @@
-﻿using RRQMCore.ByteManager;
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  源代码仓库：https://gitee.com/RRQM_Home
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+using RRQMCore.Run;
+using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,52 +29,322 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        public UdpRPCClient():this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        { 
-        
+        public UdpRPCClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        {
+
         }
-      
+        private EndPoint remoteService;
+        private MethodStore methodStore;
+        private WaitData<WaitResult> singleWaitData;
+        private RRQMUdpSession udpSession;
+        private RPCProxyInfo proxyFile;
+        private WaitResult waitResult;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="bytePool"></param>
         public UdpRPCClient(BytePool bytePool)
         {
+            this.waitResult = new WaitResult();
+            this.Logger = new Log();
+            this.singleWaitData = new WaitData<WaitResult>();
             this.BytePool = bytePool;
             this.udpSession = new RRQMUdpSession();
             this.udpSession.OnReceivedData += this.UdpSession_OnReceivedData;
         }
 
-        private void UdpSession_OnReceivedData(EndPoint remoteEndpoint, ByteBlock e)
+        /// <summary>
+        /// 绑定TCP服务
+        /// </summary>
+        /// <param name="setting"></param>
+        /// <param name="remoteService"></param>
+        /// <exception cref="RRQMException"></exception>
+        public void Bind(BindSetting setting, EndPoint remoteService)
         {
-           
+            EndPoint endPoint = new IPEndPoint(IPAddress.Parse(setting.IP), setting.Port);
+            this.Bind(endPoint, setting.MultithreadThreadCount, remoteService);
         }
 
-        private RRQMUdpSession udpSession;
+        /// <summary>
+        /// 绑定TCP服务
+        /// </summary>
+        /// <param name="endPoint">节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <param name="remoteService"></param>
+        /// <exception cref="RRQMException"></exception>
+        public void Bind(EndPoint endPoint, int threadCount, EndPoint remoteService)
+        {
+            this.udpSession.Bind(endPoint, threadCount);
+            this.remoteService = remoteService;
+            int count = 0;
+            while (count < 3)
+            {
+                lock (this)
+                {
+                    try
+                    {
+                        this.methodStore = null;
+                        this.UDPSend(102);
+                        this.singleWaitData.Wait(1000 * 3);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RRQMRPCException(e.Message);
+                    }
+                    if (this.methodStore != null)
+                    {
+                        return;
+                    }
+                }
+                count++;
+            }
+            throw new RRQMTimeoutException("连接初始化超时");
+        }
+
+        /// <summary>
+        /// 数据交互缓存池限制，Min:1k Byte，Max:10Mb Byte
+        /// </summary>
+        public int BufferLength { get => this.udpSession.BufferLength; set { this.udpSession.BufferLength = value; } }
+
         /// <summary>
         /// 序列化生成器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
         /// <summary>
+        /// 调用时是否进行送达反馈
+        /// </summary>
+        public bool Feedback { get; set; }
+
+        /// <summary>
         /// 获取内存池实例
         /// </summary>
         public BytePool BytePool { get; private set; }
 
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        public ILog Logger { get; set; }
+
+
+        /// <summary>
+        /// 获取远程服务器RPC服务文件
+        /// </summary>
+        /// <param name="proxyToken">代理令箭</param>
+        /// <returns></returns>
+        /// <exception cref="RRQMRPCException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
         public RPCProxyInfo GetProxyInfo(string proxyToken)
         {
-           
+            int count = 0;
+            while (count < 3)
+            {
+                lock (this)
+                {
+                    byte[] datas;
+                    if (proxyToken == null)
+                    {
+                        datas = new byte[0];
+                    }
+                    else
+                    {
+                        datas = Encoding.UTF8.GetBytes(proxyToken);
+                    }
+                    this.UDPSend(100, datas, 0, datas.Length);
+                    this.singleWaitData.Wait(3);
+                    if (this.proxyFile != null)
+                    {
+                        return this.proxyFile;
+                    }
+                }
+                count++;
+            }
+
+            return null;
         }
 
+        /// <summary>
+        /// 初始化RPC
+        /// </summary>
         public void InitializedRPC()
         {
-           
+            if (this.methodStore == null)
+            {
+                throw new RRQMRPCException("函数映射表为空");
+            }
+
+            this.methodStore.InitializedType();
         }
 
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">函数名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="waitTime">等待时间</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
         public void RPCInvoke(string method, ref object[] parameters, int waitTime = 3)
         {
-           
+            lock (this)
+            {
+                this.singleWaitData.WaitResult = null;
+                RPCContext context = new RPCContext();
+                MethodItem methodItem = this.methodStore.GetMethodItem(method);
+                context.Method = methodItem.Method;
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+
+                try
+                {
+                    List<byte[]> datas = new List<byte[]>();
+                    foreach (object parameter in parameters)
+                    {
+                        datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    }
+                    context.ParametersBytes = datas;
+                    context.Serialize(byteBlock);
+                    if (this.Feedback)
+                    {
+                        UDPSend(101, byteBlock);
+                    }
+                    else
+                    {
+                        UDPSend(103, byteBlock);
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new RRQMException(e.Message);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+                if (this.Feedback)
+                {
+                    this.singleWaitData.Wait(waitTime * 1000);
+                    if (this.singleWaitData.WaitResult == null)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                }
+
+            }
         }
 
+        private void UdpSession_OnReceivedData(EndPoint remoteEndpoint, ByteBlock byteBlock)
+        {
+            byte[] buffer = byteBlock.Buffer;
+            int r = (int)byteBlock.Position;
+            int agreement = BitConverter.ToInt32(buffer, 0);
+            switch (agreement)
+            {
+                case 100:/* 100表示获取RPC引用文件上传状态返回*/
+                    {
+                        try
+                        {
+                            proxyFile = SerializeConvert.BinaryDeserialize<RPCProxyInfo>(buffer, 4, r - 4);
+                            this.singleWaitData.Set();
+                        }
+                        catch
+                        {
+                            proxyFile = null;
+                        }
+
+                        break;
+                    }
+
+                case 101:/*函数调用返回数据对象*/
+                    {
+                        try
+                        {
+                            this.singleWaitData.Set(waitResult);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+
+                case 102:/*连接初始化返回数据对象*/
+                    {
+                        try
+                        {
+
+                            MethodItem[] methodItems = SerializeConvert.BinaryDeserialize<MethodItem[]>(buffer, 4, r - 4);
+                            this.methodStore = new MethodStore();
+                            foreach (var item in methodItems)
+                            {
+                                this.methodStore.AddMethodItem(item);
+                            }
+
+                            this.singleWaitData.Set();
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+            }
+        }
+
+        private void UDPSend(int agreement, byte[] buffer, int offset, int length)
+        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(length + 4);
+            try
+            {
+                byteBlock.Write(BitConverter.GetBytes(agreement));
+                byteBlock.Write(buffer, offset, length);
+                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, remoteService);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Debug(LogType.Error, this, ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+        private void UDPSend(int agreement, ByteBlock block)
+        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(block.Length + 4);
+            try
+            {
+                byteBlock.Write(BitConverter.GetBytes(agreement));
+                byteBlock.Write(block.Buffer, 0, (int)block.Length);
+                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, remoteService);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Debug(LogType.Error, this, ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+        private void UDPSend(int agreement)
+        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            try
+            {
+                byteBlock.Write(BitConverter.GetBytes(agreement));
+                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, remoteService);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Debug(LogType.Error, this, ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
     }
 }

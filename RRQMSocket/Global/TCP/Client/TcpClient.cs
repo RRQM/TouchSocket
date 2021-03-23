@@ -82,16 +82,16 @@ namespace RRQMSocket
         /// <summary>
         /// 断开连接
         /// </summary>
-        public event RRQMMessageEventHandler DisConnectedService;
+        public event RRQMMessageEventHandler DisconnectedService;
 
         private void ConnectedServiceMethod(object sender, MesEventArgs e)
         {
             ConnectedService?.Invoke(sender, e);
         }
 
-        private void DisConnectedServiceMethod(object sender, MesEventArgs e)
+        private void DisconnectedServiceMethod(object sender, MesEventArgs e)
         {
-            DisConnectedService?.Invoke(sender, e);
+            DisconnectedService?.Invoke(sender, e);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace RRQMSocket
             }
             catch
             {
-                DisConnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
             }
         }
 
@@ -190,12 +190,12 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    DisConnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                    DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
                 }
             }
             catch
             {
-                DisConnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
             }
         }
 
@@ -212,7 +212,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    DisConnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                    DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
                 }
             }
         }

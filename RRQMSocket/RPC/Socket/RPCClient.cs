@@ -76,7 +76,6 @@ namespace RRQMSocket.RPC
             this.agreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
             lock (locker)
             {
-                int length = this.BufferLength;
                 try
                 {
                     this.methodStore = null;
@@ -125,10 +124,12 @@ namespace RRQMSocket.RPC
         /// </summary>
         public void InitializedRPC()
         {
-            if (this.methodStore != null)
+            if (this.methodStore == null)
             {
-                this.methodStore.InitializedType();
+                throw new RRQMRPCException("函数映射表为空");
             }
+
+            this.methodStore.InitializedType();
         }
 
         /// <summary>

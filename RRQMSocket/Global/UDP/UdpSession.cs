@@ -27,9 +27,9 @@ namespace RRQMSocket
         /// <summary>
         /// 构造函数
         /// </summary>
-        public UdpSession():this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        public UdpSession() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
         {
-          
+
         }
 
         /// <summary>
@@ -39,6 +39,7 @@ namespace RRQMSocket
         public UdpSession(BytePool bytePool)
         {
             this.BytePool = bytePool;
+            this.BufferLength = 1024 * 64;
         }
 
         /// <summary>
@@ -184,7 +185,7 @@ namespace RRQMSocket
                 {
                     try
                     {
-                        clientBuffer.client.HandleBuffer(clientBuffer);
+                        HandleBuffer(clientBuffer);
                     }
                     catch (Exception e)
                     {
@@ -267,9 +268,13 @@ namespace RRQMSocket
             }
         }
 
-        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        private void HandleBuffer(ClientBuffer clientBuffer)
         {
             HandleReceivedData(clientBuffer.endPoint, clientBuffer.byteBlock);
+        }
+
+        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        {
         }
     }
 }

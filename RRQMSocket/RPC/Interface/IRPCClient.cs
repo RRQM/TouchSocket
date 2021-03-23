@@ -7,8 +7,10 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Log;
 
 namespace RRQMSocket.RPC
 {
@@ -18,9 +20,14 @@ namespace RRQMSocket.RPC
     public interface IRPCClient
     {
         /// <summary>
+        /// 日志记录器
+        /// </summary>
+        ILog Logger { get; set; }
+
+        /// <summary>
         /// 获取内存池实例
         /// </summary>
-         BytePool BytePool { get; }
+        BytePool BytePool { get; }
 
         /// <summary>
         /// 序列化生成器

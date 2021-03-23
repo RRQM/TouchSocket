@@ -1,4 +1,13 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  源代码仓库：https://gitee.com/RRQM_Home
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+using System;
 using Microsoft.CSharp;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -38,6 +47,7 @@ namespace RRQMSocket.RPC
             this.tcpService.CreatSocketCliect += this.TcpService_CreatSocketCliect;
             this.udpSession = new RRQMUdpSession(this.BytePool);
             this.udpSession.OnReceivedData += this.UdpSession_OnReceivedData;
+            this.ServerProviders = new ServerProviderCollection();
         }
         /// <summary>
         /// 日志记录器
@@ -75,9 +85,9 @@ namespace RRQMSocket.RPC
         private MethodStore clientMethodStore;
 
         /// <summary>
-        /// 获取函数仓库
+        /// 获取服务实例
         /// </summary>
-        public MethodStore MethodStore { get { return this.serverMethodStore; } }
+        public ServerProviderCollection ServerProviders { get; private set; }
 
         /// <summary>
         /// RPC代理文件版本
@@ -128,6 +138,27 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <param name="serverProvider"></param>
+        public void RegistService(ServerProvider serverProvider)
+        {
+            serverProvider.RPCService = this;
+            this.ServerProviders.Add(serverProvider);
+        }
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>返回T实例</returns>
+        public ServerProvider RegistService<T>()where T:ServerProvider
+        {
+            ServerProvider serverProvider=(ServerProvider) Activator.CreateInstance(typeof(T));
+            this.RegistService(serverProvider);
+            return serverProvider;
+        }
+
+        /// <summary>
         /// 开启RPC服务
         /// </summary>
         /// <param name="setting">设置</param>
@@ -136,35 +167,17 @@ namespace RRQMSocket.RPC
         /// <returns>返回源代码</returns>
         public string[] OpenRPCServer(RPCServerSetting setting)
         {
+            if (this.ServerProviders.Count == 0)
+            {
+                throw new RRQMRPCException("已注册服务数量为0");
+            }
+
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
             string nameSpace = setting.NameSpace == null ? "RRQMRPC" : $"RRQMRPC.{setting.NameSpace}";
             List<string> refs = new List<string>();
-            List<ServerProvider> serverProviders = new List<ServerProvider>();
-            Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
-
-            Assembly singleAssembly = null;
-
-            foreach (Type type in types)
-            {
-                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
-                serverProvider.RPCService = this;
-                serverProviders.Add(serverProvider);
-                if (singleAssembly == null)
-                {
-                    singleAssembly = type.Assembly;
-                }
-                else if (singleAssembly != type.Assembly)
-                {
-                    throw new RRQMRPCException("所有的服务类必须声明在同一程序集内");
-                }
-            }
-
-            PropertyCodeMap propertyCode = new PropertyCodeMap(singleAssembly, nameSpace);
-
-
-
+           
+            PropertyCodeMap propertyCode = new PropertyCodeMap(this.ServerProviders.SingleAssembly, nameSpace);
             string assemblyName;
             if (setting.NameSpace != null && setting.NameSpace.Trim().Length > 0)
             {
@@ -174,11 +187,9 @@ namespace RRQMSocket.RPC
             {
                 assemblyName = "RRQMRPC.dll";
             }
-
-
             Dictionary<string, List<MethodInfo>> classAndMethods = new Dictionary<string, List<MethodInfo>>();
 
-            foreach (ServerProvider instance in serverProviders)
+            foreach (ServerProvider instance in this.ServerProviders)
             {
                 if (!classAndMethods.Keys.Contains(instance.GetType().Name))
                 {
@@ -284,7 +295,7 @@ namespace RRQMSocket.RPC
             proxyInfo = new RPCProxyInfo();
             proxyInfo.AssemblyName = assemblyName;
             proxyInfo.Version = this.RPCVersion;
-            proxyInfo.AssemblyData = CompileCode(assemblyName, codes.ToArray(), refs);
+           // proxyInfo.AssemblyData = CompileCode(assemblyName, codes.ToArray(), refs);
             if (setting.ProxySourceCodeVisible)
             {
                 proxyInfo.Codes = codes.ToArray();
@@ -440,10 +451,23 @@ namespace RRQMSocket.RPC
                         try
                         {
                             Agreement_101(buffer);
+                            this.UDPSend(101,remoteEndPoint,new byte[0]);
                         }
                         catch (Exception e)
                         {
                             Logger.Debug(LogType.Error, this, $"UDP错误代码: 101, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 103:/*函数式调用,不需要回应*/
+                    {
+                        try
+                        {
+                            Agreement_101(buffer);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"UDP错误代码: 103, 错误详情:{e.Message}");
                         }
                         break;
                     }
