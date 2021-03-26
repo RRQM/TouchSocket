@@ -7,6 +7,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System;
 using System.Collections.Generic;
@@ -40,16 +41,16 @@ namespace RRQMSocket
         /// <summary>
         /// 创建泛型T时
         /// </summary>
-        public event Action<T, bool> CreatSocketCliect;
+        public event Action<T, CreatOption> CreatSocketCliect;
 
         /// <summary>
         /// 重写函数
         /// </summary>
         /// <param name="tcpSocketClient"></param>
-        /// <param name="newCreat"></param>
-        protected override void OnCreatSocketCliect(T tcpSocketClient, bool newCreat)
+        /// <param name="creatOption"></param>
+        protected override void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption)
         {
-            CreatSocketCliect?.Invoke(tcpSocketClient,newCreat);
+            CreatSocketCliect?.Invoke(tcpSocketClient,creatOption);
         }
     }
 }

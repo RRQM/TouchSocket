@@ -7,14 +7,28 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-namespace RRQMSocket.RPC
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RRQMSocket
 {
     /// <summary>
-    /// RPC序列化接口
+    /// 创建设置
     /// </summary>
-    public interface IUdpRPCClient:IRPCClient
+    public class CreatOption
     {
-       
+        /// <summary>
+        /// 判断该T是否为新建对象，
+        /// true：首次创建。false：从对象池获得
+        /// </summary>
+        public bool NewCreat { get; internal set; }
+
+        /// <summary>
+        /// 获取或设置该T的ID
+        /// </summary>
+        public string IDToken { get; set; }
     }
 }

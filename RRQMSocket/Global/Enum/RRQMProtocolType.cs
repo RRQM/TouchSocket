@@ -7,27 +7,30 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RRQMSocket.RPC
+namespace RRQMSocket
 {
     /// <summary>
-    /// 代码类型
+    /// 协议类型
     /// </summary>
-    public enum CodeType
+    public enum RRQMProtocolType
     {
         /// <summary>
-        /// 类代码
+        /// TCP协议
         /// </summary>
-        Class,
+        TCP,
         /// <summary>
-        /// 服务代码
+        /// UDP协议
         /// </summary>
-        Service
+        UDP,
+        /// <summary>
+        /// 应用层协议HTTP
+        /// </summary>
+        HTTP
     }
 }

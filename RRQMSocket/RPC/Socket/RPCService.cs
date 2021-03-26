@@ -7,6 +7,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 using System;
 using Microsoft.CSharp;
 using System.CodeDom.Compiler;
@@ -40,40 +41,42 @@ namespace RRQMSocket.RPC
         /// </summary>
         public RPCService()
         {
-            this.Logger = new Log();
-            this.BytePool = new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20);
-            this.SerializeConverter = new BinarySerializeConverter();
-            this.tcpService = new RRQMTokenTcpService<RPCSocketClient>(this.BytePool);
-            this.tcpService.CreatSocketCliect += this.TcpService_CreatSocketCliect;
-            this.udpSession = new RRQMUdpSession(this.BytePool);
-            this.udpSession.OnReceivedData += this.UdpSession_OnReceivedData;
             this.ServerProviders = new ServerProviderCollection();
+            this.RPCParsers = new RPCParserCollection();
         }
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        public ILog Logger { get; protected set; }
 
         /// <summary>
-        /// 获取内存池实例
+        /// 获取RPC解析器集合
         /// </summary>
-        public BytePool BytePool { get; private set; }
+        public RPCParserCollection RPCParsers { get; private set; }
 
-        private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, bool newCreat)
+        /// <summary>
+        /// 添加RPC解析器
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="parser"></param>
+        public void AddRPCParser(string key, IRPCParser parser)
         {
-            if (newCreat)
-            {
-                tcpSocketClient.serverMethodStore = this.serverMethodStore;
-                tcpSocketClient.clientMethodStore = this.clientMethodStore;
-                tcpSocketClient.SerializeConverter = this.SerializeConverter;
-                tcpSocketClient.Logger = this.Logger;
-                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-            }
-            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient.MainSocket, tcpSocketClient.BytePool);
+            this.RPCParsers.Add(key, parser);
+            parser.InvokeMethod += InvokeMethod;
         }
 
-        private RRQMTokenTcpService<RPCSocketClient> tcpService;
-        private RRQMUdpSession udpSession;
+        private void InvokeMethod(IRPCParser parser, RPCContext content)
+        {
+            InstanceMethod instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
+            if (instanceMethod.async)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    ExecuteMethod(parser, content, instanceMethod);
+                });
+            }
+            else
+            {
+                ExecuteMethod(parser, content, instanceMethod);
+            }
+        }
+
         /// <summary>
         /// 服务器函数映射
         /// </summary>
@@ -95,46 +98,20 @@ namespace RRQMSocket.RPC
         public Version RPCVersion { get; private set; }
 
         /// <summary>
-        /// 序列化生成器
+        /// 设置服务方法可用性
         /// </summary>
-        public SerializeConverter SerializeConverter { get; set; }
-
-        /// <summary>
-        /// 绑定TCP
-        /// </summary>
-        /// <param name="setting"></param>
-        public void BindTCP(BindSetting setting)
+        /// <param name="method">方法名</param>
+        /// <param name="enable">可用性</param>
+        /// <exception cref="RRQMRPCException"></exception>
+        public void SetMethodEnable(string method,bool enable)
         {
-            this.tcpService.Bind(setting);
-        }
+            InstanceMethod instance= this.serverMethodStore.GetInstanceMethod(method);
+            if (instance==null)
+            {
+                throw new RRQMRPCException("未找到该方法");
+            }
 
-        /// <summary>
-        /// 绑定TCP服务
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="threadCount"></param>
-        public void BindTCP(EndPoint endPoint, int threadCount)
-        {
-            this.tcpService.Bind(endPoint, threadCount);
-        }
-
-        /// <summary>
-        /// 绑定TCP服务
-        /// </summary>
-        /// <param name="setting"></param>
-        public void BindUDP(BindSetting setting)
-        {
-            this.udpSession.Bind(setting);
-        }
-
-        /// <summary>
-        /// 绑定TCP
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="threadCount"></param>
-        public void BindUDP(EndPoint endPoint, int threadCount)
-        {
-            this.udpSession.Bind(endPoint, threadCount);
+            instance.isEnable = enable;
         }
 
         /// <summary>
@@ -146,14 +123,32 @@ namespace RRQMSocket.RPC
             serverProvider.RPCService = this;
             this.ServerProviders.Add(serverProvider);
         }
+
+        /// <summary>
+        /// 注册所有服务
+        /// </summary>
+        /// <returns></returns>
+        public int RegistAllService()
+        {
+            Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
+               .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
+
+            foreach (Type type in types)
+            {
+                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
+                RegistService(serverProvider);
+            }
+            return types.Length;
+        }
+
         /// <summary>
         /// 注册服务
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns>返回T实例</returns>
-        public ServerProvider RegistService<T>()where T:ServerProvider
+        public ServerProvider RegistService<T>() where T : ServerProvider
         {
-            ServerProvider serverProvider=(ServerProvider) Activator.CreateInstance(typeof(T));
+            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(typeof(T));
             this.RegistService(serverProvider);
             return serverProvider;
         }
@@ -172,11 +167,16 @@ namespace RRQMSocket.RPC
                 throw new RRQMRPCException("已注册服务数量为0");
             }
 
+            if (this.RPCParsers.Count == 0)
+            {
+                throw new RRQMRPCException("请至少添加一种RPC解析器");
+            }
+
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
             string nameSpace = setting.NameSpace == null ? "RRQMRPC" : $"RRQMRPC.{setting.NameSpace}";
             List<string> refs = new List<string>();
-           
+
             PropertyCodeMap propertyCode = new PropertyCodeMap(this.ServerProviders.SingleAssembly, nameSpace);
             string assemblyName;
             if (setting.NameSpace != null && setting.NameSpace.Trim().Length > 0)
@@ -211,7 +211,7 @@ namespace RRQMSocket.RPC
 
                         MethodItem methodItem = new MethodItem();
                         methodItem.Method = methodName;
-
+                        methodItem.SP = attribute.SP;
                         ParameterInfo[] parameters = method.GetParameters();
                         methodItem.ParameterTypes = new Type[parameters.Length];
                         for (int i = 0; i < parameters.Length; i++)
@@ -254,6 +254,7 @@ namespace RRQMSocket.RPC
                         instanceOfMethod.method = method;
                         instanceOfMethod.methodItem = methodItem;
                         instanceOfMethod.async = attribute.Async;
+                        instanceOfMethod.isEnable = true;
                         serverMethodStore.AddInstanceMethod(instanceOfMethod);
                     }
                 }
@@ -295,13 +296,17 @@ namespace RRQMSocket.RPC
             proxyInfo = new RPCProxyInfo();
             proxyInfo.AssemblyName = assemblyName;
             proxyInfo.Version = this.RPCVersion;
-           // proxyInfo.AssemblyData = CompileCode(assemblyName, codes.ToArray(), refs);
+            proxyInfo.AssemblyData = CompileCode(assemblyName, codes.ToArray(), refs);
             if (setting.ProxySourceCodeVisible)
             {
                 proxyInfo.Codes = codes.ToArray();
             }
             this.serverMethodStore.SetProxyInfo(proxyInfo, setting.ProxyToken);
 
+            foreach (var item in this.RPCParsers)
+            {
+                item.InitMethodStore(this.serverMethodStore, this.clientMethodStore);
+            }
             return codes.ToArray();
         }
 
@@ -406,219 +411,87 @@ namespace RRQMSocket.RPC
 
 #endif
 
-        /// <summary>
-        /// 通过IDToken获得实例
-        /// </summary>
-        /// <param name="iDToken"></param>
-        /// <returns></returns>
-        public ISocketClient GetTcpSocketClient(string iDToken)
-        {
-            if (this.tcpService != null)
-            {
-                return this.tcpService.SocketClients[iDToken];
-            }
-            return null;
-        }
-
-        private void UdpSession_OnReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
-        {
-            byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Position;
-            int agreement = BitConverter.ToInt32(buffer, 0);
-
-            switch (agreement)
-            {
-                case 100:/*100，请求RPC文件*/
-                    {
-                        try
-                        {
-                            string proxyToken = null;
-                            if (r - 4 > 0)
-                            {
-                                proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
-                            }
-                            this.UDPSend(100, remoteEndPoint, SerializeConvert.BinarySerialize(this.serverMethodStore.GetProxyInfo(proxyToken)));
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"UDP错误代码: 100, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-
-                case 101:/*函数式调用*/
-                    {
-                        try
-                        {
-                            Agreement_101(buffer);
-                            this.UDPSend(101,remoteEndPoint,new byte[0]);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"UDP错误代码: 101, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                case 103:/*函数式调用,不需要回应*/
-                    {
-                        try
-                        {
-                            Agreement_101(buffer);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"UDP错误代码: 103, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                case 102:/*连接初始化*/
-                    {
-                        try
-                        {
-                            Agreement_102(remoteEndPoint);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-
-            }
-        }
-
-        /// <summary>
-        /// 函数式调用
-        /// </summary>
-        /// <param name="buffer"></param>
-        private void Agreement_101(byte[] buffer)
-        {
-            RPCContext content = RPCContext.Deserialize(buffer, 4);
-            InstanceMethod instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
-            if (instanceMethod.async)
-            {
-                Task.Factory.StartNew(() =>
-                {
-                    ExecuteMethod(content, instanceMethod);
-                });
-            }
-            else
-            {
-                ExecuteMethod(content, instanceMethod);
-            }
-        }
-        /// <summary>
-        /// 初始化
-        /// </summary>
-        private void Agreement_102(EndPoint endPoint)
-        {
-            UDPSend(102, endPoint, SerializeConvert.BinarySerialize(this.clientMethodStore.GetAllMethodItem()));
-        }
-        private void ExecuteMethod(RPCContext content, InstanceMethod instanceMethod)
+        private void ExecuteMethod(IRPCParser parser, RPCContext content, InstanceMethod instanceMethod)
         {
             if (instanceMethod != null)
             {
-                ServerProvider instance = instanceMethod.instance;
-                try
+                if (instanceMethod.isEnable)
                 {
-                    MethodItem methodItem = instanceMethod.methodItem;
-                    object[] parameters = null;
-                    if (content.ParametersBytes != null)
+                    ServerProvider instance = instanceMethod.instance;
+                    try
                     {
-                        parameters = new object[content.ParametersBytes.Count];
-                        for (int i = 0; i < parameters.Length; i++)
+                        MethodItem methodItem = instanceMethod.methodItem;
+                        object[] parameters = null;
+                        if (content.ParametersBytes != null)
                         {
-                            parameters[i] = this.SerializeConverter.DeserializeParameter(content.ParametersBytes[i], methodItem.ParameterTypes[i]);
+                            parameters = new object[content.ParametersBytes.Count];
+                            for (int i = 0; i < parameters.Length; i++)
+                            {
+                                parameters[i] = parser.SerializeConverter.DeserializeParameter(content.ParametersBytes[i], methodItem.ParameterTypes[i]);
+                            }
                         }
-                    }
 
-                    instance.RPCEnter(methodItem);
-                    MethodInfo method = instanceMethod.method;
-                    content.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(method.Invoke(instance, parameters));
-                    content.Status = 1;
-                    content.Message = null;
-                    if (!instanceMethod.methodItem.IsOutOrRef)
-                    {
-                        content.ParametersBytes = null;
-                    }
-                    else
-                    {
-                        List<byte[]> datas = new List<byte[]>();
-                        foreach (object parameter in parameters)
+                        instance.RPCEnter(parser, methodItem);
+                        MethodInfo method = instanceMethod.method;
+                        content.ReturnParameterBytes = parser.SerializeConverter.SerializeParameter(method.Invoke(instance, parameters));
+                        content.Status = 1;
+                        content.Message = null;
+                        if (!instanceMethod.methodItem.IsOutOrRef)
                         {
-                            datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                            content.ParametersBytes = null;
                         }
-                        content.ParametersBytes = datas;
+                        else
+                        {
+                            List<byte[]> datas = new List<byte[]>();
+                            foreach (object parameter in parameters)
+                            {
+                                datas.Add(parser.SerializeConverter.SerializeParameter(parameter));
+                            }
+                            content.ParametersBytes = datas;
+                        }
+                        instance.RPCLeave(parser, instanceMethod.methodItem);
                     }
-                    instance.RPCLeave(instanceMethod.methodItem);
-                }
-                catch (TargetInvocationException e)
-                {
-                    content.Status = 2;
-                    if (e.InnerException != null)
+                    catch (RRQMAbandonRPCException e)
                     {
-                        content.Message = "函数内部发生异常，信息：" + e.InnerException.Message;
+                        if (!e.Feedback)
+                        {
+                            return;
+                        }
+                        content.Status = 4;
+                        content.Message = "函数被阻止执行，信息：" + e.Message;
                     }
-                    else
+                    catch (TargetInvocationException e)
                     {
-                        content.Message = "函数内部发生异常，信息：未知";
+                        content.Status = 2;
+                        if (e.InnerException != null)
+                        {
+                            content.Message = "函数内部发生异常，信息：" + e.InnerException.Message;
+                        }
+                        else
+                        {
+                            content.Message = "函数内部发生异常，信息：未知";
+                        }
+                        instance.RPCError(parser, instanceMethod.methodItem);
                     }
-                    instance.RPCError(instanceMethod.methodItem);
+                    catch (Exception e)
+                    {
+                        content.Status = 2;
+                        content.Message = e.Message;
+                        instance.RPCError(parser, instanceMethod.methodItem);
+                    }
                 }
-                catch (Exception e)
+                else
                 {
-                    content.Status = 2;
-                    content.Message = e.Message;
-                    instance.RPCError(instanceMethod.methodItem);
+                    content.Status = 3;
                 }
+
             }
             else
             {
-                content.Message = "未找到该公共方法，或该方法未标记RRQMRPCMethod";
                 content.Status = 2;
             }
 
-        }
-
-
-        private void UDPSend(int agreement, EndPoint endPoint, byte[] buffer, int offset, int length)
-        {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(length + 4);
-            try
-            {
-                byteBlock.Write(BitConverter.GetBytes(agreement));
-                byteBlock.Write(buffer, offset, length);
-                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, endPoint);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-        private void UDPSend(int agreement, EndPoint endPoint, byte[] buffer)
-        {
-            this.UDPSend(agreement, endPoint, buffer, 0, buffer.Length);
-        }
-        /// <summary>
-        /// 释放TCP服务器
-        /// </summary>
-        public void DisposeTCP()
-        {
-            if (this.tcpService != null)
-            {
-                this.tcpService.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 释放UDP服务器
-        /// </summary>
-        public void DisposeUDP()
-        {
-            if (this.udpSession != null)
-            {
-                this.udpSession.Dispose();
-            }
+            parser.EndInvokeMethod(content);
         }
 
         /// <summary>

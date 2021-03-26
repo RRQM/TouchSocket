@@ -92,15 +92,25 @@ namespace RRQMSocket
                                     }
                                     client.MainSocket = socket;
                                     client.BufferLength = this.BufferLength;
-                                    this.OnCreatSocketCliect(client, client.NewCreat);
 
-                                    client.BeginReceive();
-                                    this.SocketClients.Add(client, client.NewCreat);
-                                    ClientConnectedMethod(client, null);
+                                    CreatOption creatOption = new CreatOption();
+                                    creatOption.NewCreat = client.NewCreat;
+                                    if (client.NewCreat)
+                                    {
+                                        creatOption.IDToken = this.SocketClients.GetDefaultID();
+                                    }
+                                    OnCreatSocketCliect(client, creatOption);
+                                    client.IDToken = creatOption.IDToken;
+
+                                    this.SocketClients.Add(client);
 
                                     byteBlock.Write(1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.IDToken));
                                     socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
+
+                                    client.BeginReceive();
+                                    ClientConnectedMethod(client, null);
+
                                     return;
                                 }
                             }

@@ -166,7 +166,7 @@ namespace RRQMSocket.RPC
                         {
                             codeString.Append(",");
                         }
-                        codeString.AppendLine("int waitTime = 3)");
+                        codeString.AppendLine("InvokeOption invokeOption = null)");
 
                         codeString.AppendLine("{");//方法开始
 
@@ -199,13 +199,13 @@ namespace RRQMSocket.RPC
                             codeString.Append(string.Format("{0} returnData=Client.RPCInvoke<{0}>", this.GetName(method.ReturnType)));
                             codeString.Append("(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
-                            codeString.AppendLine(",ref parameters,waitTime);");
+                            codeString.AppendLine(",ref parameters,invokeOption);");
                         }
                         else
                         {
                             codeString.Append("Client.RPCInvoke(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
-                            codeString.AppendLine(",ref parameters,waitTime);");
+                            codeString.AppendLine(",ref parameters,invokeOption);");
                         }
 
                         for (int i = 0; i < parameters.Length; i++)
@@ -260,7 +260,7 @@ namespace RRQMSocket.RPC
                             {
                                 codeString.Append(",");
                             }
-                            codeString.AppendLine("int waitTime = 3)");
+                            codeString.AppendLine("InvokeOption invokeOption = null)");
                             codeString.AppendLine("{");//方法开始
                             codeString.AppendLine("if(Client==null)");
                             codeString.AppendLine("{");
@@ -294,7 +294,7 @@ namespace RRQMSocket.RPC
                             {
                                 codeString.Append(",");
                             }
-                            codeString.Append("waitTime);");
+                            codeString.Append("invokeOption);");
                             codeString.AppendLine("});");
                             codeString.AppendLine("}");
                         }
@@ -362,7 +362,7 @@ namespace RRQMSocket.RPC
                         {
                             codeString.Append(",");
                         }
-                        codeString.AppendLine("int waitTime = 3)");
+                        codeString.AppendLine("InvokeOption invokeOption = null)");
 
                         codeString.AppendLine("{");//方法开始
                         codeString.AppendLine("if(Client==null)");
@@ -392,13 +392,13 @@ namespace RRQMSocket.RPC
                             codeString.Append(string.Format("{0} returnData=Client.RPCInvoke<{0}>", returnStr));
                             codeString.Append("(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
-                            codeString.AppendLine(",ref parameters,waitTime);");
+                            codeString.AppendLine(",ref parameters,invokeOption);");
                         }
                         else
                         {
                             codeString.Append("Client.RPCInvoke(");
                             codeString.Append(string.Format("\"{0}\"", methodName));
-                            codeString.AppendLine(",ref parameters,waitTime);");
+                            codeString.AppendLine(",ref parameters,invokeOption);");
                         }
 
                         for (int i = 0; i < parameters.Length; i++)
@@ -456,7 +456,7 @@ namespace RRQMSocket.RPC
                             {
                                 codeString.Append(",");
                             }
-                            codeString.AppendLine("int waitTime = 3)");
+                            codeString.AppendLine("InvokeOption invokeOption = null)");
                             codeString.AppendLine("{");//方法开始
                             codeString.AppendLine("if(Client==null)");
                             codeString.AppendLine("{");
@@ -486,7 +486,7 @@ namespace RRQMSocket.RPC
                             {
                                 codeString.Append(",");
                             }
-                            codeString.Append("waitTime);");
+                            codeString.Append("invokeOption);");
                             codeString.AppendLine("});");
                             codeString.AppendLine("}");
                         }

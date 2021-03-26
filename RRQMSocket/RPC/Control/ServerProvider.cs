@@ -25,40 +25,30 @@ namespace RRQMSocket.RPC
         public RPCService RPCService { get; internal set; }
 
         /// <summary>
-        /// 通过IDToken获得实例
+        /// RPC即将进入,
+        /// 若是想放弃本次执行，请抛出<see cref="RRQMAbandonRPCException"/>
         /// </summary>
-        /// <param name="iDToken"></param>
-        /// <returns></returns>
-        protected ISocketClient GetSocketClient(string iDToken)
-        {
-            if (this.RPCService == null)
-            {
-                throw new RRQMRPCException("该实例并非服务器托管实例，获取对象为空");
-            }
-            return this.RPCService.GetTcpSocketClient(iDToken);
-        }
-
-        /// <summary>
-        /// RPC即将进入时
-        /// </summary>
+        /// <param name="parser"></param>
         /// <param name="methodItem"></param>
-        protected internal virtual void RPCEnter(MethodItem methodItem)
+        protected internal virtual void RPCEnter(IRPCParser parser,MethodItem methodItem)
         {
         }
 
         /// <summary>
         /// 执行RPC发生错误
         /// </summary>
+        /// <param name="parser"></param>
         /// <param name="methodItem"></param>
-        protected internal virtual void RPCError(MethodItem methodItem)
+        protected internal virtual void RPCError(IRPCParser parser, MethodItem methodItem)
         {
         }
 
         /// <summary>
         /// RPC方法执行完成
         /// </summary>
+        /// <param name="parser"></param>
         /// <param name="methodItem"></param>
-        protected internal virtual void RPCLeave(MethodItem methodItem)
+        protected internal virtual void RPCLeave(IRPCParser parser, MethodItem methodItem)
         {
         }
     }

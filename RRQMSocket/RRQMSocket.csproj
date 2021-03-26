@@ -4,24 +4,37 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.5.2</Version>
+    <Version>3.6.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
-		更新时间：2021.03.15
+      更新时间：2021.03.26
 
-		更新内容:
-		修福3.5.1部分BUG。
+      更新内容:
+      小版本更新
 
-		①TCP框架
-		无
+      ①TCP框架
+      1.修改：服务器和客户端构造函数增加BytePool赋值参数。
+      2.修改：服务器和客户端部分单词拼写错误。
+      3.增加：IDToken可以在OnCreatSocketCliect方法中初次。
 
-		②文件传输模块：
-		无
+      ②UDP框架
+      1.新框架上线。
 
-		③RPC模块
-		无
-	</Description>
+      ③文件传输模块：
+      1.修改：客户端部分单词拼写错误。
+      2.修复：文件传输完成时，获取传输状态错误Bug。
+
+      ④RPC模块
+      新架构
+      1.必须通过服务注册才能获得服务。
+      2.服务实现必须通过解析器，目前拥有TCP、UDP两种，可以实现TCP和UDP在同一服务中调用。
+      3.支持单个方法异步调用。
+      4.支持单个方法支持TCP和UDP同时调用。
+      5.支持不反馈调用，在测试中10w次调用仅用时0.9秒。
+      6.支持RPC单个方法禁用。
+      7.支持RPC单次方法拒绝调用。
+    </Description>
     <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -51,15 +64,15 @@
     <OutputPath></OutputPath>
   </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
-		<DocumentationFile>bin\Debug\net461\RRQMSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-	</PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
+    <DocumentationFile>bin\Debug\net461\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
-		<DocumentationFile>bin\Release\net461\RRQMSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-	</PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+    <DocumentationFile>bin\Release\net461\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
@@ -72,11 +85,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Global\Enum\**" />
     <Compile Remove="RPC\Enum\**" />
-    <EmbeddedResource Remove="Global\Enum\**" />
     <EmbeddedResource Remove="RPC\Enum\**" />
-    <None Remove="Global\Enum\**" />
     <None Remove="RPC\Enum\**" />
   </ItemGroup>
 

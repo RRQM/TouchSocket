@@ -17,36 +17,41 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// tcp协议RPC客户端
+    /// 放弃RPC执行
     /// </summary>
-    public interface ITcpRPCClient : IRPCClient
+    [Serializable]
+    public class RRQMAbandonRPCException : RRQMException
     {
         /// <summary>
-        /// 获取IDToken
+        /// 构造函数
         /// </summary>
-        string IDToken { get; }
+        /// <param name="feedback">是否反馈信息</param>
+        /// <param name="message">信息</param>
+        public RRQMAbandonRPCException(bool feedback,string message):base(message)
+        {
+            this.Feedback = feedback;
+        }
 
         /// <summary>
-        /// 收到ByteBlock时触发
+        /// 构造函数
         /// </summary>
-        event RRQMByteBlockEventHandler ReceivedByteBlock;
+        /// <param name="message">信息</param>
+        public RRQMAbandonRPCException(string message):this(true,message)
+        {
+
+        }
 
         /// <summary>
-        /// 收到字节数组并返回
+        /// 构造函数
         /// </summary>
-        event RRQMBytesEventHandler ReceivedBytesThenReturn;
+        public RRQMAbandonRPCException():this(true,null)
+        {
+
+        }
 
         /// <summary>
-        /// 函数式调用
+        /// 是否反馈信息
         /// </summary>
-        /// <param name="method">方法名</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="waitTime">等待时间（秒）</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns>服务器返回结果</returns>
-        T RPCInvoke<T>(string method, ref object[] parameters, int waitTime = 3);
+        public bool Feedback { get;private set; }
     }
 }

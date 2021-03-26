@@ -20,27 +20,19 @@ namespace RRQMSocket.RPC
     /// RPC传输类
     /// </summary>
     [Serializable]
-    internal class RPCContext : WaitResult
+    public class RPCContext : WaitResult
     {
-        /// <summary>
-        /// 方法
-        /// </summary>
-        internal string Method { get; set; }
-
-        /// <summary>
-        /// 返回值
-        /// </summary>
-        internal byte[] ReturnParameterBytes { get; set; }
-
-        /// <summary>
-        /// 参数列表
-        /// </summary>
-        internal List<byte[]> ParametersBytes { get; set; }
+        internal string Method;
+        internal byte Feedback;
+        internal byte[] ReturnParameterBytes;
+        internal object Flag;
+        internal List<byte[]> ParametersBytes;
 
         internal void Serialize(ByteBlock byteBlock)
         {
             byteBlock.Write(BitConverter.GetBytes(this.Sign));
             byteBlock.Write(this.Status);
+            byteBlock.Write(this.Feedback);
 
             if (this.Message != null)
             {
@@ -51,8 +43,8 @@ namespace RRQMSocket.RPC
             else
             {
                 byteBlock.Write(0);
-            } 
-            
+            }
+
             if (this.Method != null)
             {
                 byte[] meBytes = Encoding.UTF8.GetBytes(this.Method);
@@ -63,7 +55,7 @@ namespace RRQMSocket.RPC
             {
                 byteBlock.Write(0);
             }
-            
+
             if (this.ReturnParameterBytes != null)
             {
                 byteBlock.Write(BitConverter.GetBytes(this.ReturnParameterBytes.Length));
@@ -73,7 +65,7 @@ namespace RRQMSocket.RPC
             {
                 byteBlock.Write(BitConverter.GetBytes(0));
             }
-            
+
             if (this.ParametersBytes != null)
             {
                 byteBlock.Write((byte)this.ParametersBytes.Count);
@@ -89,7 +81,7 @@ namespace RRQMSocket.RPC
                         byteBlock.Write(BitConverter.GetBytes(0));
                     }
                 }
-              
+
             }
             else
             {
@@ -98,16 +90,18 @@ namespace RRQMSocket.RPC
 
         }
 
-        internal static RPCContext Deserialize(byte[] buffer,int offset)
+        internal static RPCContext Deserialize(byte[] buffer, int offset)
         {
             RPCContext context = new RPCContext();
-            context.Sign = BitConverter.ToInt32(buffer,offset);
+            context.Sign = BitConverter.ToInt32(buffer, offset);
             offset += 4;
             context.Status = buffer[offset];
             offset += 1;
+            context.Feedback = buffer[offset];
+            offset += 1;
             int lenMes = buffer[offset];
             offset += 1;
-            context.Message = Encoding.UTF8.GetString(buffer,offset,lenMes);
+            context.Message = Encoding.UTF8.GetString(buffer, offset, lenMes);
             offset += lenMes;
             int lenMet = buffer[offset];
             offset += 1;
@@ -115,10 +109,10 @@ namespace RRQMSocket.RPC
             offset += lenMet;
             int lenRet = BitConverter.ToInt32(buffer, offset);
             offset += 4;
-            if (lenRet>0)
+            if (lenRet > 0)
             {
                 context.ReturnParameterBytes = new byte[lenRet];
-                Array.Copy(buffer,offset, context.ReturnParameterBytes,0,lenRet);
+                Array.Copy(buffer, offset, context.ReturnParameterBytes, 0, lenRet);
             }
             offset += lenRet;
             context.ParametersBytes = new List<byte[]>();
@@ -126,7 +120,7 @@ namespace RRQMSocket.RPC
             offset += 1;
             for (int i = 0; i < countPar; i++)
             {
-                int lenPar = BitConverter.ToInt32(buffer,offset);
+                int lenPar = BitConverter.ToInt32(buffer, offset);
                 offset += 4;
                 if (lenPar > 0)
                 {

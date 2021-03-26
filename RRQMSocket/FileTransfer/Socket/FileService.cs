@@ -114,13 +114,13 @@ namespace RRQMSocket.FileTransfer
         /// 创建完成FileSocketClient
         /// </summary>
         /// <param name="tcpSocketClient"></param>
-        /// <param name="newCreat"></param>
-        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient,bool newCreat)
+        /// <param name="creatOption"></param>
+        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient, CreatOption creatOption)
         {
             tcpSocketClient.breakpointResume = this.BreakpointResume;
             tcpSocketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             tcpSocketClient.MaxUploadSpeed = this.MaxUploadSpeed;
-            if (newCreat)
+            if (creatOption.NewCreat)
             {
                 tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 tcpSocketClient.BeforeReceiveFile += this.BeforeReceiveFile;

@@ -7,6 +7,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
@@ -24,7 +25,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// UDP协议客户端
     /// </summary>
-    public class UdpRPCClient : IUdpRPCClient
+    public class UdpRPCClient : IRPCClient
     {
         /// <summary>
         /// 构造函数
@@ -46,6 +47,7 @@ namespace RRQMSocket.RPC
         /// <param name="bytePool"></param>
         public UdpRPCClient(BytePool bytePool)
         {
+            this.SerializeConverter = new BinarySerializeConverter();
             this.waitResult = new WaitResult();
             this.Logger = new Log();
             this.singleWaitData = new WaitData<WaitResult>();
@@ -53,6 +55,17 @@ namespace RRQMSocket.RPC
             this.udpSession = new RRQMUdpSession();
             this.udpSession.OnReceivedData += this.UdpSession_OnReceivedData;
         }
+
+        /// <summary>
+        /// 收到字节数组并返回
+        /// </summary>
+        public event RRQMBytesEventHandler ReceivedBytesThenReturn;
+
+        /// <summary>
+        /// 收到ByteBlock时触发
+        /// </summary>
+        public event RRQMByteBlockEventHandler ReceivedByteBlock;
+
 
         /// <summary>
         /// 绑定TCP服务
@@ -112,10 +125,6 @@ namespace RRQMSocket.RPC
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
-        /// <summary>
-        /// 调用时是否进行送达反馈
-        /// </summary>
-        public bool Feedback { get; set; }
 
         /// <summary>
         /// 获取内存池实例
@@ -126,6 +135,11 @@ namespace RRQMSocket.RPC
         /// 日志记录器
         /// </summary>
         public ILog Logger { get; set; }
+
+        /// <summary>
+        /// 返回ID
+        /// </summary>
+        public string IDToken => null;
 
 
         /// <summary>
@@ -177,64 +191,17 @@ namespace RRQMSocket.RPC
             this.methodStore.InitializedType();
         }
 
-        /// <summary>
-        /// 函数式调用
-        /// </summary>
-        /// <param name="method">函数名</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="waitTime">等待时间</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public void RPCInvoke(string method, ref object[] parameters, int waitTime = 3)
+
+        private void Agreement_110(byte[] buffer, int r)
         {
-            lock (this)
-            {
-                this.singleWaitData.WaitResult = null;
-                RPCContext context = new RPCContext();
-                MethodItem methodItem = this.methodStore.GetMethodItem(method);
-                context.Method = methodItem.Method;
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-
-                try
-                {
-                    List<byte[]> datas = new List<byte[]>();
-                    foreach (object parameter in parameters)
-                    {
-                        datas.Add(this.SerializeConverter.SerializeParameter(parameter));
-                    }
-                    context.ParametersBytes = datas;
-                    context.Serialize(byteBlock);
-                    if (this.Feedback)
-                    {
-                        UDPSend(101, byteBlock);
-                    }
-                    else
-                    {
-                        UDPSend(103, byteBlock);
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMException(e.Message);
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
-                if (this.Feedback)
-                {
-                    this.singleWaitData.Wait(waitTime * 1000);
-                    if (this.singleWaitData.WaitResult == null)
-                    {
-                        throw new RRQMTimeoutException("等待结果超时");
-                    }
-                }
-
-            }
+            WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
+            BytesEventArgs args = new BytesEventArgs();
+            args.ReceivedDataBytes = waitBytes.Bytes;
+            this.ReceivedBytesThenReturn?.Invoke(this, args);
+            waitBytes.Bytes = args.ReturnDataBytes;
+            byte[] data = SerializeConvert.BinarySerialize(waitBytes);
+            UDPSend(110, data, 0, data.Length);
         }
-
         private void UdpSession_OnReceivedData(EndPoint remoteEndpoint, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
@@ -287,6 +254,36 @@ namespace RRQMSocket.RPC
                         catch (Exception e)
                         {
                             Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 110:/*反向函数调用返回*/
+                    {
+                        try
+                        {
+                            Agreement_110(buffer, r);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 111:/*收到服务器数据*/
+                    {
+                        ByteBlock block = this.BytePool.GetByteBlock(r - 4);
+                        try
+                        {
+                            block.Write(byteBlock.Buffer, 4, r - 4);
+                            ReceivedByteBlock?.Invoke(this, block);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 111, 错误详情:{e.Message}");
+                        }
+                        finally
+                        {
+                            block.Dispose();
                         }
                         break;
                     }
@@ -344,6 +341,127 @@ namespace RRQMSocket.RPC
             finally
             {
                 byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns>服务器返回结果</returns>
+        public T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption)
+        {
+            lock (this)
+            {
+                this.singleWaitData.WaitResult = null;
+                RPCContext context = new RPCContext();
+                MethodItem methodItem = this.methodStore.GetMethodItem(method);
+                context.Method = methodItem.Method;
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                if (invokeOption == null)
+                {
+                    invokeOption = InvokeOption.NoFeedback;
+                }
+                try
+                {
+                    if (invokeOption.Feedback)
+                    {
+                        context.Feedback = 1;
+                    }
+                    List<byte[]> datas = new List<byte[]>();
+                    foreach (object parameter in parameters)
+                    {
+                        datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    }
+                    context.ParametersBytes = datas;
+                    context.Serialize(byteBlock);
+
+                    UDPSend(101, byteBlock);
+
+                }
+                catch (Exception e)
+                {
+                    throw new RRQMException(e.Message);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+                if (invokeOption.Feedback)
+                {
+                    this.singleWaitData.Wait(invokeOption.WaitTime * 1000);
+                    if (this.singleWaitData.WaitResult == null)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                }
+                return default(T);
+            }
+        }
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">函数名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void RPCInvoke(string method, ref object[] parameters, InvokeOption invokeOption)
+        {
+            lock (this)
+            {
+                this.singleWaitData.WaitResult = null;
+                RPCContext context = new RPCContext();
+                MethodItem methodItem = this.methodStore.GetMethodItem(method);
+                context.Method = methodItem.Method;
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                if (invokeOption == null)
+                {
+                    invokeOption = InvokeOption.NoFeedback;
+                }
+                try
+                {
+                    if (invokeOption.Feedback)
+                    {
+                        context.Feedback = 1;
+                    }
+                    List<byte[]> datas = new List<byte[]>();
+                    foreach (object parameter in parameters)
+                    {
+                        datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    }
+                    context.ParametersBytes = datas;
+                    context.Serialize(byteBlock);
+
+                    UDPSend(101, byteBlock);
+
+                }
+                catch (Exception e)
+                {
+                    throw new RRQMException(e.Message);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+                if (invokeOption.Feedback)
+                {
+                    this.singleWaitData.Wait(invokeOption.WaitTime * 1000);
+                    if (this.singleWaitData.WaitResult == null)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                }
+
             }
         }
     }

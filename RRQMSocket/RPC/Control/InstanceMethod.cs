@@ -18,5 +18,6 @@ namespace RRQMSocket.RPC
         internal MethodInfo method;
         internal MethodItem methodItem;
         internal bool async;
+        internal bool isEnable;
     }
 }

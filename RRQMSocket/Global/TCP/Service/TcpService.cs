@@ -309,11 +309,11 @@ namespace RRQMSocket
         /// 成功连接后创建（或从对象池中获得）辅助类,
         /// 用户可以在该方法中再进行自定义设置，
         /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
-        /// 例如事件等，请先判断NewCreat值再做处理。
+        /// 例如事件等，请先判断CreatOption.NewCreat值再做处理。
         /// </summary>
         /// <param name="tcpSocketClient"></param>
-        /// <param name="newCreat">true：首次创建。false：从对象池获得</param>
-        protected abstract void OnCreatSocketCliect(T tcpSocketClient,bool newCreat);
+        /// <param name="creatOption"></param>
+        protected abstract void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption);
 
         internal virtual void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
@@ -338,10 +338,18 @@ namespace RRQMSocket
 
                 client.MainSocket = socket;
                 client.BufferLength = this.BufferLength;
-                OnCreatSocketCliect(client, client.NewCreat);
 
+                CreatOption creatOption = new CreatOption();
+                creatOption.NewCreat = client.NewCreat;
+                if (client.NewCreat)
+                {
+                    creatOption.IDToken = this.SocketClients.GetDefaultID();
+                }
+                OnCreatSocketCliect(client, creatOption);
+                client.IDToken = creatOption.IDToken;
+
+                this.SocketClients.Add(client);
                 client.BeginReceive();
-                this.SocketClients.Add(client, client.NewCreat);
                 ClientConnectedMethod(client, null);
             }
             catch (Exception e)

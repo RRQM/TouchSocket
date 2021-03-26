@@ -8,6 +8,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Exceptions;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,18 +41,19 @@ namespace RRQMSocket
 
         private ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
 
-        internal bool Add(T socketClient, bool reBulid)
+        internal void Add(T socketClient)
         {
-            if (reBulid)
+            if (this.tokenDic.TryAdd(socketClient.IDToken, socketClient))
             {
-                number++;
-                socketClient.IDToken = string.Format(IDTokenFormat, number);
-                return this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
+                return;
             }
-            else
-            {
-                return this.tokenDic.TryAdd(socketClient.IDToken, socketClient);
-            }
+            throw new RRQMException("ID重复添加");
+        }
+
+        internal string GetDefaultID()
+        {
+            number++;
+            return string.Format(IDTokenFormat, number);
         }
 
         internal ICollection<string> GetTokens()

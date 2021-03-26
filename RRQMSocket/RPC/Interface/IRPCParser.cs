@@ -7,7 +7,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,17 +16,31 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 代码类型
+    /// RPC解析器接口
     /// </summary>
-    public enum CodeType
+    public interface IRPCParser
     {
         /// <summary>
-        /// 类代码
+        /// 调用方法
         /// </summary>
-        Class,
+        event Action<IRPCParser,RPCContext> InvokeMethod;
+
         /// <summary>
-        /// 服务代码
+        /// 调用方法结束后
         /// </summary>
-        Service
+        /// <param name="context"></param>
+        void EndInvokeMethod(RPCContext context);
+
+       /// <summary>
+       /// 初始化函数映射
+       /// </summary>
+       /// <param name="serverMethodStore"></param>
+       /// <param name="clientMethodStore"></param>
+        void InitMethodStore(MethodStore serverMethodStore, MethodStore clientMethodStore);
+
+        /// <summary>
+        /// 序列化转换器
+        /// </summary>
+        SerializeConverter SerializeConverter { get; set; }
     }
 }

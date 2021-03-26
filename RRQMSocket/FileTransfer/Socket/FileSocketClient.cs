@@ -469,6 +469,7 @@ namespace RRQMSocket.FileTransfer
             byteBlock.Write(1);
             FileFinishedArgs args = new FileFinishedArgs();
             args.FileInfo = this.downloadFileBlocks.FileInfo;
+            this.TransferType = TransferType.None;
             SendFileFinishedMethod(this, args);
             this.downloadFileBlocks = null;
         }
@@ -678,7 +679,7 @@ namespace RRQMSocket.FileTransfer
                         }
                         break;
                     }
-                case 1003:
+                case 1003://停止下载
                     {
                         try
                         {

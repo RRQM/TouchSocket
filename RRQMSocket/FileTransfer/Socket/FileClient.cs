@@ -19,6 +19,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -434,7 +435,11 @@ namespace RRQMSocket.FileTransfer
                         BeforeUploadFileMethod(this, args);//触发接收文件事件
                         requsetBlocks.FileInfo.FilePath = args.TargetPath;
                         this.uploadFileBlocks = requsetBlocks;
-                        UploadFileFinished_s();
+
+                        Task.Run(()=> 
+                        {
+                            UploadFileFinished_s();
+                        });
                     }
                     else
                     {
@@ -507,7 +512,7 @@ namespace RRQMSocket.FileTransfer
         ///<exception cref="RRQMException"></exception>
         public void StopDownload()
         {
-            OutDownload();
+            OutDownload(true);
         }
 
         /// <summary>
@@ -613,7 +618,7 @@ namespace RRQMSocket.FileTransfer
                                 Logger.Debug(LogType.Message, this, $"下载文件错误，正在尝试第{reTryCount}次重试");
                                 if (reTryCount > 10)
                                 {
-                                    this.OutDownload();
+                                    this.OutDownload(true);
                                     TransferFileMessageArgs args = new TransferFileMessageArgs();
                                     args.FileInfo = this.downloadFileBlocks.FileInfo;
                                     args.TransferType = TransferType.Download;
@@ -645,7 +650,7 @@ namespace RRQMSocket.FileTransfer
                                         Logger.Debug(LogType.Message, this, $"下载文件时，发生写入错误，正在尝试第{reTryCount}次重试");
                                         if (reTryCount > 10)
                                         {
-                                            this.OutDownload();
+                                            this.OutDownload(true);
                                             TransferFileMessageArgs args = new TransferFileMessageArgs();
                                             args.FileInfo = this.downloadFileBlocks.FileInfo;
                                             args.TransferType = TransferType.Download;
@@ -667,7 +672,7 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            this.DownloadFileFinished_s();
+            Task.Run(()=> { this.DownloadFileFinished_s(); });
         }
 
         private void UploadFileBlock()
@@ -749,7 +754,10 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            UploadFileFinished_s();
+            Task.Run(() =>
+            {
+                UploadFileFinished_s();
+            });
         }
 
         private void DownloadFileFinished_s()
@@ -764,6 +772,8 @@ namespace RRQMSocket.FileTransfer
                     FileFinishedArgs args = new FileFinishedArgs();
                     args.FileInfo = downloadFileBlocks.FileInfo;
                     TransferFileHashDictionary.AddFile(downloadFileBlocks.FileInfo);
+
+                    OutDownload(false);
                     DownloadFileFinishedMethod(this, args);
                 }
             }
@@ -774,10 +784,6 @@ namespace RRQMSocket.FileTransfer
                 args.TransferType = TransferType.Download;
                 args.Message = e.Message;
                 TransferFileErrorMethod(this, args);
-            }
-            finally
-            {
-                OutDownload();
             }
         }
 
@@ -792,16 +798,16 @@ namespace RRQMSocket.FileTransfer
                     TransferFileStreamDic.DisposeFileStream(this.UploadFileInfo.FilePath);
                     FileFinishedArgs args = new FileFinishedArgs();
                     args.FileInfo = uploadFileBlocks.FileInfo;
-                    UploadFileFinishedMethod(this, args);
                     this.uploadFileBlocks = null;
                     OutUpload();
+                    UploadFileFinishedMethod(this, args);
                     break;
                 }
                 reTryCount++;
             }
         }
 
-        private void OutDownload()
+        private void OutDownload(bool abort)
         {
             if (this.waitHandleDownload != null)
             {
@@ -819,7 +825,10 @@ namespace RRQMSocket.FileTransfer
                 this.thread_Download.Abort();
                 this.thread_Download = null;
             }
-            this.SendWait(1003, this.timeout);
+            if (abort)
+            {
+                this.SendWait(1003, this.timeout);
+            }
         }
 
         private void OutUpload()
@@ -948,7 +957,7 @@ namespace RRQMSocket.FileTransfer
             base.Dispose();
             if (this.TransferType == TransferType.Download)
             {
-                this.OutDownload();
+                this.OutDownload(true);
             }
             else if (this.TransferType == TransferType.Upload)
             {

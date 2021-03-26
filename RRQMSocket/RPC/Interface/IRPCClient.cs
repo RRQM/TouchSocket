@@ -20,6 +20,34 @@ namespace RRQMSocket.RPC
     public interface IRPCClient
     {
         /// <summary>
+        /// 收到ByteBlock时触发
+        /// </summary>
+        event RRQMByteBlockEventHandler ReceivedByteBlock;
+
+        /// <summary>
+        /// 收到字节数组并返回
+        /// </summary>
+        event RRQMBytesEventHandler ReceivedBytesThenReturn;
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns>服务器返回结果</returns>
+        T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption);
+
+        /// <summary>
+        /// 获取IDToken
+        /// </summary>
+        string IDToken { get; }
+
+        /// <summary>
         /// 日志记录器
         /// </summary>
         ILog Logger { get; set; }
@@ -54,11 +82,11 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="method">函数名</param>
         /// <param name="parameters">参数</param>
-        /// <param name="waitTime">等待时间</param>
+        /// <param name="invokeOption">RPC调用设置</param>
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        void RPCInvoke(string method, ref object[] parameters, int waitTime = 3);
+        void RPCInvoke(string method, ref object[] parameters, InvokeOption invokeOption);
     }
 }
