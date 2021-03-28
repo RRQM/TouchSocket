@@ -85,6 +85,11 @@ namespace RRQMSocket.FileTransfer
         {
             try
             {
+                if (stream==null||!stream.CanWrite)
+                {
+                    mes = "流已释放";
+                    return false;
+                }
                 stream.Position = streamPosition + 1024 * 1024;
                 stream.Write(buffer, offset, length);
                 stream.Flush();

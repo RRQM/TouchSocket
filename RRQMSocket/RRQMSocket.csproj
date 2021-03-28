@@ -4,27 +4,26 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.6.3</Version>
+    <Version>3.6.5</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
       更新时间：2021.03.28
-      更新提示: 兼容3.6.0更新
+      更新提示: 兼容性更新
 
       更新内容：
       ①TCP框架
-      1.修改：服务器和客户端构造函数增加BytePool赋值参数。
-      2.修改：服务器和客户端部分单词拼写错误。
-      3.修改：取消程序集内所有线程的Abort方法的调用，优雅的改用信号量控制。
-      4.增加：IDToken可以在OnCreatSocketCliect方法中初次。
-      5.增加：IPv6协议服务器绑定和客户端连接。
+      1.修改：取消程序集内所有线程的Abort方法的调用，优雅的改用信号量控制。
+      2.增加：IPv6协议服务器绑定和客户端连接。
+      3.修复：TCP服务器分配ID为空的Bug。
+      4.修复：Token服务器连接时ID为空的Bug。
 
       ②UDP框架
-      1.新框架上线。
+      1.增加：IPv6协议服务器绑定和客户端连接。
 
-      ③文件传输模块：
-      1.修改：客户端部分单词拼写错误。
-      2.修复：文件传输完成时，获取传输状态错误Bug。
+      ③文件传输模块（传输速度可达500Mb/s）：
+      1.修复：断点续传失效Bug。
+      2.修复：终止传输时异常Bug。
 
       ④RPC模块
       新架构

@@ -58,7 +58,7 @@ namespace RRQMSocket.FileTransfer
                 }
                 if (downloadFileBlocks.FileInfo != null)
                 {
-                    this.downloadProgress = downloadFileBlocks.FileInfo.FileLength > 0 ? (float)receivedPosition / downloadFileBlocks.FileInfo.FileLength : 0;//计算下载完成进度
+                    this.downloadProgress = downloadFileBlocks.FileInfo.FileLength > 0 ? (float)downloadPosition / downloadFileBlocks.FileInfo.FileLength : 0;//计算下载完成进度
                 }
                 else
                 {
@@ -126,7 +126,7 @@ namespace RRQMSocket.FileTransfer
                 }
                 if (uploadFileBlocks.FileInfo != null)
                 {
-                    this.uploadProgress = uploadFileBlocks.FileInfo.FileLength > 0 ? (float)sendPosition / uploadFileBlocks.FileInfo.FileLength : 0;//计算上传完成进度
+                    this.uploadProgress = uploadFileBlocks.FileInfo.FileLength > 0 ? (float)uploadPosition / uploadFileBlocks.FileInfo.FileLength : 0;//计算上传完成进度
                 }
                 else
                 {
@@ -175,9 +175,9 @@ namespace RRQMSocket.FileTransfer
         private long uploadSpeed;
         private bool isPauseDownload;
         private bool isPauseUpload;
-        private long receivedPosition;
+        private long downloadPosition;
+        private long uploadPosition;
         private RRQMStream downloadFileStream;
-        private long sendPosition;
         private long tempReceiveLength;
         private long tempSendLength;
         private Thread thread_Download;
@@ -436,7 +436,7 @@ namespace RRQMSocket.FileTransfer
                         requsetBlocks.FileInfo.FilePath = args.TargetPath;
                         this.uploadFileBlocks = requsetBlocks;
 
-                        Task.Run(()=> 
+                        Task.Run(() =>
                         {
                             UploadFileFinished_s();
                         });
@@ -593,9 +593,7 @@ namespace RRQMSocket.FileTransfer
             {
                 if (!fileBlock.Finished)
                 {
-                    this.receivedPosition = fileBlock.StreamPosition;
-
-                    this.sendPosition = fileBlock.StreamPosition;
+                    this.downloadPosition = fileBlock.StreamPosition;
                     long surplusLength = fileBlock.UnitLength;
                     int reTryCount = 0;
                     while (surplusLength > 0)
@@ -611,7 +609,7 @@ namespace RRQMSocket.FileTransfer
                         }
 
                         ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                        byteBlock.Write(BitConverter.GetBytes(this.sendPosition));
+                        byteBlock.Write(BitConverter.GetBytes(this.downloadPosition));
 
                         long requestLength = surplusLength > (this.BufferLength - 1) ? (this.BufferLength - 1) : surplusLength;
                         byteBlock.Write(BitConverter.GetBytes(requestLength));
@@ -637,13 +635,18 @@ namespace RRQMSocket.FileTransfer
                             else
                             {
                                 reTryCount = 0;
-                                tempReceiveLength += requestLength;
+                                
                                 while (true)
                                 {
-                                    string mes;
-                                    if (FileBaseTool.WriteFile(downloadFileStream, out mes, this.sendPosition, returnByteBlock.Buffer, 1, (int)returnByteBlock.Position - 1))
+                                    if (this.TransferType !=  TransferType.Download)
                                     {
-                                        this.receivedPosition += requestLength;
+                                        return;
+                                    }
+                                    string mes;
+                                    if (FileBaseTool.WriteFile(downloadFileStream, out mes, this.downloadPosition, returnByteBlock.Buffer, 1, (int)returnByteBlock.Position - 1))
+                                    {
+                                        tempReceiveLength += requestLength;
+                                        this.downloadPosition += requestLength;
                                         surplusLength -= requestLength;
                                         if (returnByteBlock.Buffer[0] == 3)
                                         {
@@ -657,11 +660,11 @@ namespace RRQMSocket.FileTransfer
                                         Logger.Debug(LogType.Message, this, $"下载文件时，发生写入错误，正在尝试第{reTryCount}次重试");
                                         if (reTryCount > 10)
                                         {
-                                            this.OutDownload(true);
                                             TransferFileMessageArgs args = new TransferFileMessageArgs();
-                                            args.FileInfo = this.downloadFileBlocks.FileInfo;
+                                            args.FileInfo = this.DownloadFileInfo;
                                             args.TransferType = TransferType.Download;
                                             args.Message = "文件写入错误：" + mes;
+                                            this.OutDownload(true);
                                             TransferFileErrorMethod(this, args);
                                             return;
                                         }
@@ -679,7 +682,7 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            Task.Run(()=> { this.DownloadFileFinished_s(); });
+            Task.Run(() => { this.DownloadFileFinished_s(); });
         }
 
         private void UploadFileBlock()
@@ -689,7 +692,7 @@ namespace RRQMSocket.FileTransfer
             {
                 if (!fileBlock.Finished)
                 {
-                    this.sendPosition = fileBlock.StreamPosition;
+                    this.uploadPosition = fileBlock.StreamPosition;
                     long surplusLength = fileBlock.UnitLength;
                     int reTryCount = 0;
                     while (surplusLength > 0)
@@ -703,11 +706,11 @@ namespace RRQMSocket.FileTransfer
                         {
                             waitHandleUpload.WaitOne();
                         }
-                        byte[] positionBytes = BitConverter.GetBytes(this.sendPosition);
+                        byte[] positionBytes = BitConverter.GetBytes(this.uploadPosition);
                         long submitLength = surplusLength > (this.BufferLength - 21) ? (this.BufferLength - 21) : surplusLength;
                         byte[] submitLengthBytes = BitConverter.GetBytes(submitLength);
                         ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                        if (this.sendPosition + submitLength == fileBlock.StreamPosition + fileBlock.UnitLength)
+                        if (this.uploadPosition + submitLength == fileBlock.StreamPosition + fileBlock.UnitLength)
                         {
                             byteBlock.Write(1);
                         }
@@ -721,20 +724,28 @@ namespace RRQMSocket.FileTransfer
                         byteBlock.Write(submitLengthBytes);
                         try
                         {
-                            if (FileBaseTool.ReadFileBytes(this.uploadFileBlocks.FileInfo.FilePath, this.sendPosition, byteBlock, 21, (int)submitLength))
+                            if (this.TransferType!= TransferType.Upload)
+                            {
+                                return;
+                            }
+                            if (FileBaseTool.ReadFileBytes(this.uploadFileBlocks.FileInfo.FilePath, this.uploadPosition, byteBlock, 21, (int)submitLength))
                             {
                                 ByteBlock returnByteBlock = this.SendWait(1011, this.timeout, byteBlock);
                                 if (returnByteBlock != null && returnByteBlock.Buffer[0] != 2)
                                 {
                                     reTryCount = 0;
                                     this.tempSendLength += submitLength;
-                                    this.sendPosition += submitLength;
+                                    this.uploadPosition += submitLength;
                                     surplusLength -= submitLength;
 
                                     if (returnByteBlock.Buffer[0] == 3)
                                     {
                                         this.SynchronizeTransferSetting();
                                     }
+                                }
+                                else if (returnByteBlock != null && returnByteBlock.Buffer[0] != 4)
+                                {
+                                    return;
                                 }
                                 else
                                 {

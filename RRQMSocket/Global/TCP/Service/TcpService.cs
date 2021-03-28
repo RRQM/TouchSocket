@@ -356,6 +356,10 @@ namespace RRQMSocket
                 {
                     creatOption.IDToken = this.SocketClients.GetDefaultID();
                 }
+                else
+                {
+                    creatOption.IDToken = client.IDToken;
+                }
                 OnCreatSocketCliect(client, creatOption);
                 client.IDToken = creatOption.IDToken;
 

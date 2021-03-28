@@ -34,9 +34,9 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="bytePool">内存池实例</param>
-        public TokenTcpService(BytePool bytePool):base(bytePool)
+        public TokenTcpService(BytePool bytePool) : base(bytePool)
         {
-           
+
         }
         private string connectionToken = "rrqm";
 
@@ -98,6 +98,10 @@ namespace RRQMSocket
                                     if (client.NewCreat)
                                     {
                                         creatOption.IDToken = this.SocketClients.GetDefaultID();
+                                    }
+                                    else
+                                    {
+                                        creatOption.IDToken = client.IDToken;
                                     }
                                     OnCreatSocketCliect(client, creatOption);
                                     client.IDToken = creatOption.IDToken;

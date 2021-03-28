@@ -111,8 +111,9 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="fileInfo"></param>
+        /// <param name="breakpointResume"></param>
         /// <returns></returns>
-        public static bool GetFileInfo(string filePath, out FileInfo fileInfo)
+        public static bool GetFileInfo(string filePath, out FileInfo fileInfo,bool breakpointResume)
         {
             if (filePathAndInfo == null)
             {
@@ -128,6 +129,11 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (fileInfo.FileLength == stream.Length)
                         {
+                            if (breakpointResume&&fileInfo.FileHash==null)
+                            {
+                                fileInfo.FileHash = FileControler.GetStreamHash(stream);
+                                AddFile(fileInfo);
+                            }
                             return true;
                         }
                     }

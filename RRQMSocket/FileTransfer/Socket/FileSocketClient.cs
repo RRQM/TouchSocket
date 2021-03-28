@@ -171,7 +171,7 @@ namespace RRQMSocket.FileTransfer
         private ProgressBlockCollection uploadFileBlocks;
         private ProgressBlockCollection downloadFileBlocks;
         private RRQMStream uploadFileStream;
-       
+
 
         #endregion 字段
 
@@ -324,7 +324,7 @@ namespace RRQMSocket.FileTransfer
             {
                 FileInfo fileInfo;
 
-                if (!TransferFileHashDictionary.GetFileInfo(url.FilePath, out fileInfo))
+                if (!TransferFileHashDictionary.GetFileInfo(url.FilePath, out fileInfo, breakpointResume))
                 {
                     fileInfo = new FileInfo();
                     using (FileStream stream = File.OpenRead(url.FilePath))
@@ -441,26 +441,38 @@ namespace RRQMSocket.FileTransfer
 
         private void DownloadBlockData(ByteBlock byteBlock, byte[] buffer)
         {
-            long position = BitConverter.ToInt64(buffer, 4);
-            long requestLength = BitConverter.ToInt64(buffer, 12);
-            if (FileBaseTool.ReadFileBytes(downloadFileBlocks.FileInfo.FilePath, position, byteBlock, 1, (int)requestLength))
+            if (this.TransferType != TransferType.Download)
             {
-                Speed.downloadSpeed += requestLength;
-                this.sendPosition = position + requestLength;
-                this.sendDataLength += requestLength;
-                if (this.bufferLengthChanged)
+                byteBlock.Write(0);
+                return;
+            }
+            try
+            {
+                long position = BitConverter.ToInt64(buffer, 4);
+                long requestLength = BitConverter.ToInt64(buffer, 12);
+                if (FileBaseTool.ReadFileBytes(downloadFileBlocks.FileInfo.FilePath, position, byteBlock, 1, (int)requestLength))
                 {
-                    byteBlock.Buffer[0] = 3;
+                    Speed.downloadSpeed += requestLength;
+                    this.sendPosition = position + requestLength;
+                    this.sendDataLength += requestLength;
+                    if (this.bufferLengthChanged)
+                    {
+                        byteBlock.Buffer[0] = 3;
+                    }
+                    else
+                    {
+                        byteBlock.Buffer[0] = 1;
+                    }
                 }
                 else
                 {
-                    byteBlock.Buffer[0] = 1;
+                    byteBlock.Buffer[0] = 2;
                 }
             }
-            else
+            catch
             {
-                byteBlock.Buffer[0] = 2;
             }
+
         }
 
         private void DownloadFinished(ByteBlock byteBlock)
@@ -476,6 +488,11 @@ namespace RRQMSocket.FileTransfer
 
         private void UploadBlockData(ByteBlock byteBlock, ByteBlock receivedbyteBlock)
         {
+            if (this.TransferType!= TransferType.Upload)
+            {
+                byteBlock.Write(4);
+                return;
+            }
             byte status = receivedbyteBlock.Buffer[4];
             int index = BitConverter.ToInt32(receivedbyteBlock.Buffer, 5);
             long position = BitConverter.ToInt64(receivedbyteBlock.Buffer, 9);
@@ -815,7 +832,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-       
+
         /// <summary>
         ///
         /// </summary>
