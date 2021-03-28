@@ -105,19 +105,27 @@ namespace RRQMSocket
             EndPoint endPoint = new IPEndPoint(IP, setting.TargetPort);
             this.Connect(endPoint);
         }
-
         /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <exception cref="RRQMException"></exception>
+        /// <param name="endPoint">节点</param>
         public virtual void Connect(EndPoint endPoint)
+        {
+            this.Connect(AddressFamily.InterNetwork,endPoint);
+        }
+        /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <param name="addressFamily">寻址方案，支持IPv6</param>
+        /// <param name="endPoint">节点</param>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Connect(AddressFamily addressFamily,EndPoint endPoint)
         {
             if (this.disposable)
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
                 socket.Connect(endPoint);

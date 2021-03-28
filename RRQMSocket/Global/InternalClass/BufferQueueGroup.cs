@@ -27,12 +27,6 @@ namespace RRQMSocket
 
         public void Dispose()
         {
-            if (Thread != null)
-            {
-                Thread.Abort();
-                Thread = null;
-            }
-
             if (clientBufferPool != null)
             {
                 clientBufferPool.Clear();

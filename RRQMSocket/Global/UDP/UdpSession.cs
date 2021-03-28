@@ -67,7 +67,7 @@ namespace RRQMSocket
         private long recivedCount;
 
         /// <summary>
-        /// 绑定TCP服务
+        /// 绑定UDP服务
         /// </summary>
         /// <param name="setting"></param>
         /// <exception cref="RRQMException"></exception>
@@ -76,14 +76,23 @@ namespace RRQMSocket
             EndPoint endPoint = new IPEndPoint(IPAddress.Parse(setting.IP), setting.Port);
             this.Bind(endPoint, setting.MultithreadThreadCount);
         }
-
         /// <summary>
-        /// 绑定TCP服务
+        /// 绑定UDP服务
         /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="threadCount"></param>
+        public void Bind(EndPoint endPoint, int threadCount)
+        {
+            this.Bind(AddressFamily.InterNetwork, endPoint, threadCount);
+        }
+        /// <summary>
+        /// 绑定UDP服务
+        /// </summary>
+        /// <param name="addressFamily">寻址方案，支持IPv6</param>
         /// <param name="endPoint">节点</param>
         /// <param name="threadCount">多线程数量</param>
         /// <exception cref="RRQMException"></exception>
-        public void Bind(EndPoint endPoint, int threadCount)
+        public void Bind(AddressFamily addressFamily,EndPoint endPoint, int threadCount)
         {
             if (this.disposable)
             {
@@ -97,7 +106,7 @@ namespace RRQMSocket
             {
                 try
                 {
-                    Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    Socket socket = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp);
                     socket.Bind(endPoint);
                     this.MainSocket = socket;
 

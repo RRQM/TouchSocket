@@ -89,7 +89,12 @@ namespace RRQMSocket.RPC
             }
             if (type.IsByRef)
             {
-                type = Type.GetType(type.FullName.Replace("&", string.Empty));
+                string typeName = type.FullName.Replace("&", string.Empty);
+                type = Type.GetType(typeName);
+                if (type==null)
+                {
+                    type = this.Assembly.GetType(typeName);
+                }
             }
             if (!type.IsPrimitive && type != typeof(string))
             {
@@ -267,7 +272,12 @@ namespace RRQMSocket.RPC
 
             if (type.IsByRef)
             {
-                type = Type.GetType(type.FullName.Replace("&", string.Empty));
+                string typeName = type.FullName.Replace("&", string.Empty);
+                type = Type.GetType(typeName);
+                if (type == null)
+                {
+                    type = this.Assembly.GetType(typeName);
+                }
             }
 
             if (type.IsPrimitive || type == typeof(string))
@@ -282,6 +292,21 @@ namespace RRQMSocket.RPC
             {
                 return type.FullName;
             }
+        }
+
+        internal Type GetRefOutType(Type type)
+        {
+            string typeName = type.FullName.Replace("&", string.Empty);
+            type = Type.GetType(typeName);
+            if (type == null)
+            {
+                type = this.Assembly.GetType(typeName);
+                if (type==null)
+                {
+                    throw new RRQMRPCException($"未能识别类型{typeName}");
+                }
+            }
+            return type;
         }
     }
 }

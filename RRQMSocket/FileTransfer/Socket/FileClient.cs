@@ -562,6 +562,7 @@ namespace RRQMSocket.FileTransfer
 
             thread_Download = new Thread(this.DownloadFileBlock);
             thread_Download.IsBackground = true;
+            thread_Download.Name = "文件下载线程";
             thread_Download.Start();
         }
 
@@ -581,6 +582,7 @@ namespace RRQMSocket.FileTransfer
 
             thread_Upload = new Thread(this.UploadFileBlock);
             thread_Upload.IsBackground = true;
+            thread_Upload.Name = "文件上传线程";
             thread_Upload.Start();
         }
 
@@ -598,6 +600,11 @@ namespace RRQMSocket.FileTransfer
                     int reTryCount = 0;
                     while (surplusLength > 0)
                     {
+                        if (disposable)
+                        {
+                            OutDownload(true);
+                            return;
+                        }
                         if (this.isPauseDownload)
                         {
                             waitHandleDownload.WaitOne();
@@ -687,6 +694,11 @@ namespace RRQMSocket.FileTransfer
                     int reTryCount = 0;
                     while (surplusLength > 0)
                     {
+                        if (disposable)
+                        {
+                            OutUpload();
+                            return;
+                        }
                         if (this.isPauseUpload)
                         {
                             waitHandleUpload.WaitOne();
@@ -820,11 +832,6 @@ namespace RRQMSocket.FileTransfer
             this.downloadFileBlocks = null;
             this.TransferType = TransferType.None;
 
-            if (this.thread_Download != null)
-            {
-                this.thread_Download.Abort();
-                this.thread_Download = null;
-            }
             if (abort)
             {
                 this.SendWait(1003, this.timeout);
@@ -841,11 +848,6 @@ namespace RRQMSocket.FileTransfer
             this.uploadFileBlocks = null;
             this.TransferType = TransferType.None;
 
-            if (this.thread_Upload != null)
-            {
-                this.thread_Upload.Abort();
-                this.thread_Upload = null;
-            }
         }
 
         /// <summary>

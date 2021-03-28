@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System.Net;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
@@ -30,6 +31,14 @@ namespace RRQMSocket
         /// <param name="endPoint"></param>
         /// <param name="threadCount"></param>
         void Bind(EndPoint endPoint, int threadCount);
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <param name="endPoint"></param>
+        /// <param name="threadCount"></param>
+        void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount);
 
         /// <summary>
         /// 获取绑定状态

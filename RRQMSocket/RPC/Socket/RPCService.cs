@@ -229,7 +229,8 @@ namespace RRQMSocket.RPC
 
                             if (parameters[i].ParameterType.FullName.Contains("&"))
                             {
-                                methodItem.ParameterTypes[i] = Type.GetType(parameters[i].ParameterType.FullName.Replace("&", string.Empty));
+                                
+                                methodItem.ParameterTypes[i] = propertyCode.GetRefOutType(parameters[i].ParameterType);
                             }
                             else
                             {

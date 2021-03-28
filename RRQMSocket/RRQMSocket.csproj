@@ -4,19 +4,20 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.6.0</Version>
+    <Version>3.6.3</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
-      更新时间：2021.03.26
+      更新时间：2021.03.28
+      更新提示: 兼容3.6.0更新
 
-      更新内容:
-      小版本更新
-
+      更新内容：
       ①TCP框架
       1.修改：服务器和客户端构造函数增加BytePool赋值参数。
       2.修改：服务器和客户端部分单词拼写错误。
-      3.增加：IDToken可以在OnCreatSocketCliect方法中初次。
+      3.修改：取消程序集内所有线程的Abort方法的调用，优雅的改用信号量控制。
+      4.增加：IDToken可以在OnCreatSocketCliect方法中初次。
+      5.增加：IPv6协议服务器绑定和客户端连接。
 
       ②UDP框架
       1.新框架上线。
@@ -34,6 +35,7 @@
       5.支持不反馈调用，在测试中10w次调用仅用时0.9秒。
       6.支持RPC单个方法禁用。
       7.支持RPC单次方法拒绝调用。
+      8.修复：out参数编译错误 。
     </Description>
     <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>

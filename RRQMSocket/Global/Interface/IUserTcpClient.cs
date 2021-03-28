@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
 using System.Net;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
@@ -19,17 +20,24 @@ namespace RRQMSocket
     public interface IUserTcpClient : IUserClient
     {
         /// <summary>
-        /// 连接客户端
+        /// 连接服务器
         /// </summary>
         /// <param name="setting"></param>
         /// <exception cref="RRQMException"></exception>
         void Connect(ConnectSetting setting);
 
         /// <summary>
-        /// 连接客户端
+        /// 连接服务器
         /// </summary>
         /// <param name="endPoint"></param>
         /// <exception cref="RRQMException"></exception>
         void Connect(EndPoint endPoint);
+
+        /// <summary>
+        /// 连接服务器
+        /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <param name="endPoint"></param>
+        void Connect(AddressFamily addressFamily,EndPoint endPoint);
     }
 }

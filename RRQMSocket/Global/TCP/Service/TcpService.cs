@@ -150,8 +150,19 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="endPoint">节点</param>
         /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
         public void Bind(EndPoint endPoint, int threadCount)
+        {
+            this.Bind(AddressFamily.InterNetwork, endPoint, threadCount);
+        }
+
+        /// <summary>
+        /// 绑定TCP服务
+        /// </summary>
+        /// <param name="addressFamily">寻址方案，支持IPv6</param>
+        /// <param name="endPoint">节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        public void Bind(AddressFamily addressFamily,EndPoint endPoint, int threadCount)
         {
             if (this.disposable)
             {
@@ -165,7 +176,7 @@ namespace RRQMSocket
             {
                 try
                 {
-                    Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
                     socket.Bind(endPoint);
                     this.MainSocket = socket;
                 }
@@ -370,17 +381,7 @@ namespace RRQMSocket
             }
 
             this.SocketClients.Clear();
-            if (threadStartUpReceive != null)
-            {
-                threadStartUpReceive.Abort();
-                threadStartUpReceive = null;
-            }
 
-            if (threadAccept != null)
-            {
-                threadAccept.Abort();
-                threadAccept = null;
-            }
             foreach (var item in bufferQueueGroups)
             {
                 item.Dispose();
