@@ -97,19 +97,19 @@ namespace RRQMSocket
                                     creatOption.NewCreat = client.NewCreat;
                                     if (client.NewCreat)
                                     {
-                                        creatOption.IDToken = this.SocketClients.GetDefaultID();
+                                        creatOption.ID = this.SocketClients.GetDefaultID();
                                     }
                                     else
                                     {
-                                        creatOption.IDToken = client.IDToken;
+                                        creatOption.ID = client.ID;
                                     }
                                     OnCreatSocketCliect(client, creatOption);
-                                    client.IDToken = creatOption.IDToken;
+                                    client.ID = creatOption.ID;
 
                                     this.SocketClients.Add(client);
 
                                     byteBlock.Write(1);
-                                    byteBlock.Write(Encoding.UTF8.GetBytes(client.IDToken));
+                                    byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
                                     socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
 
                                     client.BeginReceive();

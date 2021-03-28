@@ -24,11 +24,11 @@
 //        string[] OpenRPCServer(RPCServerSetting setting);
 
 //        /// <summary>
-//        /// 通过IDToken获得实例
+//        /// 通过ID获得实例
 //        /// </summary>
-//        /// <param name="iDToken"></param>
+//        /// <param name="id"></param>
 //        /// <returns></returns>
-//        ISocketClient GetSocketClient(string iDToken);
+//        ISocketClient GetSocketClient(string id);
 
 //        /// <summary>
 //        /// 序列化生成器

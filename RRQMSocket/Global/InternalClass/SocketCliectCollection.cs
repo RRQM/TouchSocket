@@ -28,9 +28,9 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 获取或设置分配IDToken的格式
+        /// 获取或设置分配ID的格式
         /// </summary>
-        public string IDTokenFormat { get; set; }
+        public string IDFormat { get; set; }
 
         private int number;
 
@@ -43,7 +43,7 @@ namespace RRQMSocket
 
         internal void Add(T socketClient)
         {
-            if (this.tokenDic.TryAdd(socketClient.IDToken, socketClient))
+            if (this.tokenDic.TryAdd(socketClient.ID, socketClient))
             {
                 return;
             }
@@ -53,7 +53,7 @@ namespace RRQMSocket
         internal string GetDefaultID()
         {
             number++;
-            return string.Format(IDTokenFormat, number);
+            return string.Format(IDFormat, number);
         }
 
         internal ICollection<string> GetTokens()
@@ -71,19 +71,19 @@ namespace RRQMSocket
             this.tokenDic.Clear();
         }
 
-        private T GetSocketClient(string iDToken)
+        private T GetSocketClient(string id)
         {
             T t;
-            this.tokenDic.TryGetValue(iDToken, out t);
+            this.tokenDic.TryGetValue(id, out t);
             return t;
         }
 
         /// <summary>
         /// 获取SocketClient
         /// </summary>
-        /// <param name="iDToken"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
-        public T this[string iDToken] { get { return this.GetSocketClient(iDToken); } }
+        public T this[string id] { get { return this.GetSocketClient(id); } }
 
         /// <summary>
         /// 用于枚举

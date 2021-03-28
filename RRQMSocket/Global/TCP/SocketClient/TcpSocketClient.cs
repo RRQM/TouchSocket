@@ -39,7 +39,7 @@ namespace RRQMSocket
         /// <summary>
         /// 用于索引的令箭
         /// </summary>
-        public string IDToken { get; internal set; }
+        public string ID { get; internal set; }
 
         /// <summary>
         /// 判断该实例是否还在线

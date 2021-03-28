@@ -43,7 +43,7 @@ namespace RRQMSocket
             this.Logger = new Log();
             this.IsCheckClientAlive = true;
             this.SocketClients = new SocketCliectCollection<T>();
-            this.IDTokenFormat = "{0}-TCP";
+            this.IDFormat = "{0}-TCP";
             this.clientSocketQueue = new ConcurrentQueue<Socket>();
             this.BytePool = bytePool;
             this.SocketClientPool = new ObjectPool<T>();
@@ -51,11 +51,11 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 获取或设置分配IDToken的格式，
+        /// 获取或设置分配ID的格式，
         /// 格式必须符合字符串格式，至少包含一个补位，
         /// 初始值为“{0}-TCP”
         /// </summary>
-        public string IDTokenFormat { get { return this.SocketClients.IDTokenFormat; } set { this.SocketClients.IDTokenFormat = value; } }
+        public string IDFormat { get { return this.SocketClients.IDFormat; } set { this.SocketClients.IDFormat = value; } }
 
         /// <summary>
         /// 获取绑定状态
@@ -354,14 +354,14 @@ namespace RRQMSocket
                 creatOption.NewCreat = client.NewCreat;
                 if (client.NewCreat)
                 {
-                    creatOption.IDToken = this.SocketClients.GetDefaultID();
+                    creatOption.ID = this.SocketClients.GetDefaultID();
                 }
                 else
                 {
-                    creatOption.IDToken = client.IDToken;
+                    creatOption.ID = client.ID;
                 }
                 OnCreatSocketCliect(client, creatOption);
-                client.IDToken = creatOption.IDToken;
+                client.ID = creatOption.ID;
 
                 this.SocketClients.Add(client);
                 client.BeginReceive();

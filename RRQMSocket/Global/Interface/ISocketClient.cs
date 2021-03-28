@@ -18,7 +18,7 @@ namespace RRQMSocket
         /// <summary>
         /// 用于索引的令箭
         /// </summary>
-        string IDToken { get; }
+        string ID { get; }
         /// <summary>
         /// 判断是否在线
         /// </summary>

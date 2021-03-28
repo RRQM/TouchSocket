@@ -29,6 +29,6 @@ namespace RRQMSocket
         /// <summary>
         /// 获取或设置该T的ID
         /// </summary>
-        public string IDToken { get; set; }
+        public string ID { get; set; }
     }
 }

@@ -112,9 +112,9 @@ namespace RRQMSocket.RPC
         public RRQMTokenTcpClient NextClient { get { return this.ConnectionPool == null ? null : this.ConnectionPool.GetNextClient(); } }
 
         /// <summary>
-        /// 获取即将在下一次通信的客户端单体的IDToken
+        /// 获取即将在下一次通信的客户端单体的ID
         /// </summary>
-        public string IDToken { get { return this.ConnectionPool == null ? null : this.ConnectionPool.GetNextClient().IDToken; } }
+        public string ID { get { return this.ConnectionPool == null ? null : this.ConnectionPool.GetNextClient().ID; } }
 
         private WaitData<WaitResult> singleWaitData;
         private RRQMWaitHandle<RPCContext> waitHandles = new RRQMWaitHandle<RPCContext>();

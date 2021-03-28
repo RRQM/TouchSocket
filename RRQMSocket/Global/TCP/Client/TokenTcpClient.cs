@@ -59,7 +59,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取服务器分配的令箭
         /// </summary>
-        public string IDToken { get; private set; }
+        public string ID { get; private set; }
 
         /// <summary>
         /// 连接到服务器
@@ -112,7 +112,7 @@ namespace RRQMSocket
                         {
                             if (byteBlock.Buffer[0] == 1)
                             {
-                                this.IDToken = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
+                                this.ID = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
                                 Start();
                                 return;
                             }

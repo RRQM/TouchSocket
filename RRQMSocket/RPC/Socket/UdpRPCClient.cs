@@ -139,7 +139,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 返回ID
         /// </summary>
-        public string IDToken => null;
+        public string ID => null;
 
 
         /// <summary>

@@ -43,9 +43,9 @@ namespace RRQMSocket.RPC
         T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption);
 
         /// <summary>
-        /// 获取IDToken
+        /// 获取ID
         /// </summary>
-        string IDToken { get; }
+        string ID { get; }
 
         /// <summary>
         /// 日志记录器
