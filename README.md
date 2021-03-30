@@ -1,5 +1,5 @@
 
-## 一、程序集描述
+
  ![Logo](/RRQMSocket/RRQM.png) 
 # RRQMSocket
  
@@ -8,7 +8,8 @@
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://img.shields.io/nuget/dt/RRQMSocket)
 
-## 说明
+## 一、程序集描述
+#### 说明
 > **RRQMSocket程序集由作者若汝棋茗开发，所有版权归作者所有，程序集源代码在遵循Apache License 2.0的开源协议以及附加协议下，可供其他开发者二次开发或（商业）使用。**
 
 #### Apache License 2.0开源协议简述
