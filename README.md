@@ -3,7 +3,6 @@
  ![Logo](/RRQMSocket/RRQM.png) 
 # RRQMSocket
  
-
 [![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages?q=rrqm)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://img.shields.io/nuget/dt/RRQMSocket)
@@ -25,13 +24,13 @@
 - 一旦获得授权，没有任何人可以取消。比如，你基于该产品代码开发了衍生产品，你不用担心会在某一天被禁止使用该代码。
 
 #### 附加协议
-#### 二次开发须知:
+ **二次开发须知:** 
 - 二次开发完成后的作品必须附带源作品所有作者信息，包括但不限于作者名、Gitee地址等。
 - 完成后的作品（仅RRQMSocket部分）必须将发布时最新源代码提交一份给本作者。
 
 **以上内容必须全部符合，开发授权才成立。**
 
-#### 盈利性（商业）用途使用须知:
+ **盈利性（商业）用途使用须知:** 
 - 不得将程序集用作违法犯罪活动。
 - 不得将程序集单独包装售卖。
 - 不得擦除程序集所有有关作者的信息。
@@ -46,6 +45,12 @@
  - [哔哩哔哩视频](https://space.bilibili.com/94253567)
  - [源代码仓库主页](https://gitee.com/RRQM_Home) 
  - 交流QQ群：234762506
+
+### API文档
+[RRQMSocket API文档](https://www.showdoc.com.cn/RRQM)
+
+（文档目前还在积极完善当中）
+
 
 ## 二、程序集功能概述
 &emsp;&emsp;RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
