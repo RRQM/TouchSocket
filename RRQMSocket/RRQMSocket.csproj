@@ -4,38 +4,21 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.6.5.1</Version>
+    <Version>4.0.0.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
-      更新时间：2021.03.28
-      更新提示: 兼容性更新
+      更新时间：2021.04.02
+      更新提示: 移除RPC、文件传输。
+               分别打包在RRQMSocket.RPC和RRQMSocket.FileTransfer。
+               如果无特别需求，请继续使用v3.6.5.1版本。
 
       更新内容：
       ①TCP框架
-      1.修改：IDToken重命名为ID。
-      2.修改：取消程序集内所有线程的Abort方法的调用，优雅的改用信号量控制。
-      3.增加：IPv6协议服务器绑定和客户端连接。
-      4.修复：TCP服务器分配ID为空的Bug。
-      5.修复：Token服务器连接时ID为空的Bug。
+      1.增加：RRQMAgreementHelper，用于发送固定包头的包含数据协议的数据。
 
       ②UDP框架
       1.增加：IPv6协议服务器绑定和客户端连接。
-
-      ③文件传输模块（传输速度可达500Mb/s）：
-      1.修复：断点续传失效Bug。
-      2.修复：终止传输时异常Bug。
-
-      ④RPC模块
-      新架构
-      1.必须通过服务注册才能获得服务。
-      2.服务实现必须通过解析器，目前拥有TCP、UDP两种，可以实现TCP和UDP在同一服务中调用。
-      3.支持单个方法异步调用。
-      4.支持单个方法支持TCP和UDP同时调用。
-      5.支持不反馈调用，在测试中10w次调用仅用时0.9秒。
-      6.支持RPC单个方法禁用。
-      7.支持RPC单次方法拒绝调用。
-      8.修复：out参数编译错误 。
     </Description>
     <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
@@ -66,16 +49,6 @@
     <OutputPath></OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
-    <DocumentationFile>bin\Debug\net461\RRQMSocket.xml</DocumentationFile>
-    <OutputPath></OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
-    <DocumentationFile>bin\Release\net461\RRQMSocket.xml</DocumentationFile>
-    <OutputPath></OutputPath>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
     <OutputPath></OutputPath>
@@ -87,18 +60,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="RPC\Enum\**" />
-    <EmbeddedResource Remove="RPC\Enum\**" />
-    <None Remove="RPC\Enum\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="RPC\Socket\RPCClient.cs" />
-    <Compile Update="RPC\Socket\RPCService.cs" />
-    <Compile Update="RPC\Socket\RRQMTcpSocketClient .cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -108,27 +69,9 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
-      <Version>3.9.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.DependencyModel">
-      <Version>5.0.0</Version>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
-      <Version>3.9.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.DependencyModel">
-      <Version>5.0.0</Version>
-    </PackageReference>
-  </ItemGroup>
-
+  
   <ItemGroup>
-    <PackageReference Include="RRQMCore" Version="1.2.5" />
+    <PackageReference Include="RRQMCore" Version="1.2.6" />
   </ItemGroup>
 
 </Project>
