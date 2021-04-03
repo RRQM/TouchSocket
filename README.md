@@ -1,17 +1,24 @@
-
+<p></p>
+<p></p>
+<p align="center">
 <img src="/RRQMSocket/RRQM.png" width = "100" height = "100" alt="图片名称" align=center />
+</p>
+
+
 
 # RRQMSocket
  
 [![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages?q=rrqm)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://img.shields.io/nuget/dt/RRQMSocket)
+[![star](https://gitee.com/dotnetchina/RRQMSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/stargazers) 
+[![fork](https://gitee.com/dotnetchina/RRQMSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/members)
 
 ## 一、程序集描述
-#### 说明
+#### 🍯说明
 > **RRQMSocket程序集由作者若汝棋茗开发，所有版权归作者所有，程序集源代码在遵循Apache License 2.0的开源协议以及附加协议下，可供其他开发者二次开发或（商业）使用。**
 
-#### Apache License 2.0开源协议简述
+#### 🌭Apache License 2.0开源协议简述
 - 永久权利
 - 一旦被授权，永久拥有。
 - 全球范围的权利
@@ -23,7 +30,7 @@
 - 授权不可撤消
 - 一旦获得授权，没有任何人可以取消。比如，你基于该产品代码开发了衍生产品，你不用担心会在某一天被禁止使用该代码。
 
-#### 附加协议
+#### 🍿附加协议
  **二次开发须知:** 
 - 二次开发完成后的作品必须附带源作品所有作者信息，包括但不限于作者名、Gitee地址等。
 - 完成后的作品（仅RRQMSocket部分）必须将发布时最新源代码提交一份给本作者。
@@ -65,12 +72,16 @@
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0403/125335_fca6616f_8553710.png "屏幕截图.png")
 
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0403/125356_77874ccf_8553710.png "屏幕截图.png")
+## 三、 系列教程
 
-## 三、TCP服务框架
+- [C#文件传输、Socket通信、大文件断点续传](https://www.bilibili.com/video/BV1ZT4y1u721/) 
+
+## 四、TCP服务框架
 ### 3.1 服务器类（TcpService）
-#### 3.1.1 概述
-> TcpService是所有基于TCP协议类的基类，也是在服务器端创建服务器的对象类，但该类是抽象类，必须通过继承才能创建其具体对象，原因是在该类中，只实现了服务器的管理功能，但未实现其数据接收和处理功能，所以必须倚仗服务器辅助类才能实现其实际功能。其简单介绍如下：
-#### 3.1.2 属性、事件及方法概述
+#### 概述
+
+> TcpService是所有基于TCP协议类的抽象类，必须通过继承才能创建其具体对象。在该类中，只实现了服务器辅助类（TcpSocketClient）的创建、设置、激活、销毁等管理功能，但未实现具体的数据接收和处理功能，所以必须倚仗服务器辅助类才能实现其实际功能。
+
 **a.属性**
 
 - `IP`:绑定服务器所用到的IP地址。
