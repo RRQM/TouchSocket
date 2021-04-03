@@ -62,7 +62,9 @@
 &emsp;&emsp;除了基本的框架外，程序集内还开发出了一些成熟框架，目前有文件传输框架、RPC框架两种，后续还会不断更新添加其他框架，希望大家多多支持和关注。
 
 **常用类继承图**
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210303103818135.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwMzc0NjQ3,size_16,color_FFFFFF,t_70)
+![输入图片说明](https://images.gitee.com/uploads/images/2021/0403/125335_fca6616f_8553710.png "屏幕截图.png")
+
+![输入图片说明](https://images.gitee.com/uploads/images/2021/0403/125356_77874ccf_8553710.png "屏幕截图.png")
 
 ## 三、TCP服务框架
 ### 3.1 服务器类（TcpService）
