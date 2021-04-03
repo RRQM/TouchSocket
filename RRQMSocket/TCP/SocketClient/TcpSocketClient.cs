@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //  此代码版权归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  源代码仓库：https://gitee.com/RRQM_Home
@@ -19,6 +19,7 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器辅助类
     /// </summary>
+
     public abstract class TcpSocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
     {
         internal bool breakOut;
@@ -119,7 +120,14 @@ namespace RRQMSocket
             }
             try
             {
-                MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                int r = 0;
+                while (length > 0)
+                {
+                    r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
+
+                    offset += r;
+                    length -= r;
+                }
             }
             catch (Exception e)
             {
@@ -134,14 +142,14 @@ namespace RRQMSocket
         {
             if (!this.isBeginReceive)
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 try
                 {
+                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                     this.eventArgs.UserToken = byteBlock;
                     this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    if (!this.MainSocket.ReceiveAsync(this.eventArgs))
+                    if (!MainSocket.ReceiveAsync(this.eventArgs))
                     {
-                        ProcessReceive();
+                        ProcessReceived(this.eventArgs);
                     }
                 }
                 catch
@@ -156,22 +164,9 @@ namespace RRQMSocket
         {
             try
             {
-                if (e.LastOperation == SocketAsyncOperation.Receive && e.BytesTransferred > 0)
+                if (e.LastOperation == SocketAsyncOperation.Receive)
                 {
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.Position = e.BytesTransferred;
-                    byteBlock.SetLength(this.eventArgs.BytesTransferred);
-
-                    ClientBuffer clientBuffer = this.queueGroup.clientBufferPool.GetObject();
-                    clientBuffer.client = this;
-                    clientBuffer.byteBlock = byteBlock;
-                    queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                    queueGroup.waitHandleBuffer.Set();
-                    WaitReceive();
-                    ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    this.eventArgs.UserToken = newByteBlock;
-                    this.eventArgs.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-                    ProcessReceive();
+                    ProcessReceived(e);
                 }
                 else
                 {
@@ -184,15 +179,37 @@ namespace RRQMSocket
             }
         }
 
-        private void ProcessReceive()
+        private void ProcessReceived(SocketAsyncEventArgs e)
         {
             if (!this.disposable)
             {
-                if (this.eventArgs.SocketError == SocketError.Success && this.eventArgs.BytesTransferred > 0)
+                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
-                    if (!this.MainSocket.ReceiveAsync(this.eventArgs))
+                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                    byteBlock.Position = e.BytesTransferred;
+                    byteBlock.SetLength(e.BytesTransferred);
+                    ClientBuffer clientBuffer = this.queueGroup.clientBufferPool.GetObject();
+                    clientBuffer.client = this;
+                    clientBuffer.byteBlock = byteBlock;
+                    queueGroup.bufferAndClient.Enqueue(clientBuffer);
+                    queueGroup.waitHandleBuffer.Set();
+                    try
                     {
-                        ProcessReceive();
+                        WaitReceive();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger.Debug(RRQMCore.Log.LogType.Error, this, ex.Message);
+                    }
+
+                    ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                    e.UserToken = newByteBlock;
+                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+
+
+                    if (!MainSocket.ReceiveAsync(e))
+                    {
+                        ProcessReceived(e);
                     }
                 }
                 else
@@ -217,7 +234,10 @@ namespace RRQMSocket
             }
         }
 
-        internal virtual void WaitReceive()
+        /// <summary>
+        /// 等待接收
+        /// </summary>
+        protected virtual void WaitReceive()
         {
         }
 

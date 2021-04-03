@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //  此代码版权归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  源代码仓库：https://gitee.com/RRQM_Home
@@ -12,6 +12,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -160,7 +161,7 @@ namespace RRQMSocket
                 this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
                 if (!this.MainSocket.ReceiveAsync(this.eventArgs))
                 {
-                    ProcessReceive();
+                    ProcessReceived(this.eventArgs);
                 }
             }
             catch
@@ -173,7 +174,26 @@ namespace RRQMSocket
         {
             try
             {
-                if (e.LastOperation == SocketAsyncOperation.Receive && this.eventArgs.BytesTransferred > 0)
+                if (e.LastOperation == SocketAsyncOperation.Receive)
+                {
+                    ProcessReceived(e);
+                }
+                else
+                {
+                    DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                }
+            }
+            catch
+            {
+                DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+            }
+        }
+
+        private void ProcessReceived(SocketAsyncEventArgs e)
+        {
+            if (!this.disposable)
+            {
+                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
                     ByteBlock byteBlock = (ByteBlock)this.eventArgs.UserToken;
                     byteBlock.Position = this.eventArgs.BytesTransferred;
@@ -188,28 +208,9 @@ namespace RRQMSocket
                     ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                     this.eventArgs.UserToken = newByteBlock;
                     this.eventArgs.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-                    ProcessReceive();
-                }
-                else
-                {
-                    DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
-                }
-            }
-            catch
-            {
-                DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
-            }
-        }
-
-        private void ProcessReceive()
-        {
-            if (!this.disposable)
-            {
-                if (this.eventArgs.SocketError == SocketError.Success && this.eventArgs.BytesTransferred > 0)
-                {
-                    if (!this.MainSocket.ReceiveAsync(this.eventArgs))
+                    if (!this.MainSocket.ReceiveAsync(e))
                     {
-                        ProcessReceive();
+                        ProcessReceived(e);
                     }
                 }
                 else
@@ -304,13 +305,21 @@ namespace RRQMSocket
             }
             try
             {
-                MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                int r = 0;
+                while (length>0)
+                {
+                    r = MainSocket.Send(buffer, offset, length, SocketFlags.None); 
+
+                    offset += r;
+                    length -= r;
+                }
             }
             catch (Exception e)
             {
                 throw new RRQMException(e.Message);
             }
         }
+
 
         /// <summary>
         /// 断开链接并释放资源

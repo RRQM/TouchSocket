@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //  此代码版权归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  源代码仓库：https://gitee.com/RRQM_Home
@@ -90,14 +90,21 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="r"></param>
-        private void SeamPackage(byte[] buffer, int r)
+        private void SeamPackage( byte[] buffer, int r)
         {
             ByteBlock byteBlock = this.BytePool.GetByteBlock(r + agreementTempBytes.Length);
             byteBlock.Write(agreementTempBytes);
             byteBlock.Write(buffer, 0, r);
-            r += agreementTempBytes.Length;
-            agreementTempBytes = null;
-            SplitPackage(byteBlock.Buffer, 0, r);
+            if (byteBlock.Length > 4)
+            {
+                r += agreementTempBytes.Length;
+                agreementTempBytes = null;
+                SplitPackage(byteBlock.Buffer, 0, r);
+            }
+            else
+            {
+                agreementTempBytes = byteBlock.ToArray();
+            }
             byteBlock.Dispose();
         }
 
@@ -119,7 +126,7 @@ namespace RRQMSocket
                 }
                 int length = BitConverter.ToInt32(dataBuffer, index);
 
-                if (length < 0)
+                if (length < 4)
                 {
                     Logger.Debug(LogType.Error, this, "接收数据长度错误，已放弃接收");
                     return;

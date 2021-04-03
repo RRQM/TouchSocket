@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //  此代码版权归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议，若本仓库没有设置，则按MIT开源协议授权
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  源代码仓库：https://gitee.com/RRQM_Home
@@ -141,34 +141,35 @@ namespace RRQMSocket
 
         private void RecvEventArg_Completed(object sender, SocketAsyncEventArgs e)
         {
-            if (e.LastOperation == SocketAsyncOperation.ReceiveFrom && e.BytesTransferred > 0)
+            if (e.LastOperation == SocketAsyncOperation.ReceiveFrom)
             {
-                ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                byteBlock.Position = e.BytesTransferred;
-                byteBlock.SetLength(e.BytesTransferred);
-
-                BufferQueueGroup queueGroup = this.bufferQueueGroups[++this.recivedCount % this.bufferQueueGroups.Length];
-                ClientBuffer clientBuffer = queueGroup.clientBufferPool.GetObject();
-                clientBuffer.endPoint = e.RemoteEndPoint;
-                clientBuffer.byteBlock = byteBlock;
-                queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                queueGroup.waitHandleBuffer.Set();
-                ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                e.UserToken = newByteBlock;
-                e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+                ProcessReceive(e);
             }
-            ProcessReceive();
+           
         }
 
-        private void ProcessReceive()
+        private void ProcessReceive(SocketAsyncEventArgs e)
         {
             if (!this.disposable)
             {
                 if (this.recvEventArg.SocketError == SocketError.Success)
                 {
+                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                    byteBlock.Position = e.BytesTransferred;
+                    byteBlock.SetLength(e.BytesTransferred);
+
+                    BufferQueueGroup queueGroup = this.bufferQueueGroups[++this.recivedCount % this.bufferQueueGroups.Length];
+                    ClientBuffer clientBuffer = queueGroup.clientBufferPool.GetObject();
+                    clientBuffer.endPoint = e.RemoteEndPoint;
+                    clientBuffer.byteBlock = byteBlock;
+                    queueGroup.bufferAndClient.Enqueue(clientBuffer);
+                    queueGroup.waitHandleBuffer.Set();
+                    ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                    e.UserToken = newByteBlock;
+                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
                     if (!this.MainSocket.ReceiveFromAsync(this.recvEventArg))
                     {
-                        ProcessReceive();
+                        ProcessReceive(e);
                     }
                 }
             }
