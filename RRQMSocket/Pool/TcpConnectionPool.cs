@@ -16,7 +16,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 
-namespace RRQMSocket
+namespace RRQMSocket.Pool
 {
     /// <summary>
     /// 连接池

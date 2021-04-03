@@ -4,22 +4,26 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>4.0.2.0</Version>
+    <Version>4.0.3.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
-      更新时间：2021.04.02
-      更新提示: 移除RPC、文件传输。
-               分别打包在RRQMSocket.RPC和RRQMSocket.FileTransfer。
-               如果无特别需求，请继续使用v3.6.5.1版本。
-
       更新内容：
-      ①TCP框架
-      1.增加：RRQMAgreementHelper，用于发送固定包头的包含数据协议的数据。
-      2.修复：IOCP模型部分Bug。
+      1.恢复了RPC和文件传输模块。
+      2.将RPC编译调整到了RRQMSocket.Plugin里面。
 
-      ②UDP框架
-      1.增加：IPv6协议服务器绑定和客户端连接。
+      程序集介绍：
+      RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
+
+      目前RRQMSocket支持的传输层协议有TCP和UDP两款，基于这两大协议的支持，使得RRQMSocket能够解析绝大部分应用层协议，比如耳熟能详的HTTP、FTP、Telnet、POP3、SMTP、DNS等，不仅如此，RRQMSocket还内置了多种分包算法，使跨语言解析变得更加简单快捷。
+
+      RRQMSocket内部设计大量引用了内存池、对象池、等待池、线程池等众多“池”化设计，使得整个框架在接收和发送数据时基本上避免了“创建-销毁”的性能消耗。而且在接收数据时设计了完美的IOCP模型，不仅避免了接收数据的再复制行为，还让数据接收与数据处理分线程操作，大大减轻了内核的负担，让内核专注于接收，性能由此提升不少。这些优化行为的最终结果就是让RRQMSocket拥有超强的数据接收处理能力，这也就意味着它的适用场景也更加广泛，您可以用它开发分布式服务器、游戏服务器、文件管理服务器、即时通信服务器等。我相信，它的表现一定令您满意。
+
+      除了基本的框架外，程序集内还开发出了一些成熟框架，目前有文件传输框架、RPC框架两种，后续还会不断更新添加其他框架，希望大家多多支持和关注。
+
+      TCP框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.Demo
+      文件传输框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo
+      RPC框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
     </Description>
     <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
@@ -28,7 +32,6 @@
     <Authors>若汝棋茗</Authors>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -51,6 +54,16 @@
     <OutputPath></OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
+    <DocumentationFile>bin\Debug\net461\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+    <DocumentationFile>bin\Release\net461\RRQMSocket.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
     <OutputPath></OutputPath>
@@ -62,6 +75,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="RPC\Enum\**" />
+    <EmbeddedResource Remove="RPC\Enum\**" />
+    <None Remove="RPC\Enum\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="RPC\Socket\RPCClient.cs" />
+    <Compile Update="RPC\Socket\RPCService.cs" />
+    <Compile Update="RPC\Socket\RRQMTcpSocketClient .cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -71,9 +96,27 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-  
+
+  <!--<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
+      <Version>3.9.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyModel">
+      <Version>5.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
+      <Version>3.9.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyModel">
+      <Version>5.0.0</Version>
+    </PackageReference>
+  </ItemGroup>-->
+
   <ItemGroup>
-    <PackageReference Include="RRQMCore" Version="1.2.11" />
+    <PackageReference Include="RRQMCore" Version="1.2.12" />
   </ItemGroup>
 
 </Project>
