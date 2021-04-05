@@ -66,6 +66,12 @@
 - 对象池设计，避免数据对象的申请、释放。
 
 #### 3.3 性能
+ **固定包头解析** 
+
+不难看出，在固定包头分包策略中，吞吐量大概在20w左右，而且基本没有GC。
+
+<img src="https://images.gitee.com/uploads/images/2021/0405/235811_d5f762fb_8553710.png" width = "400" height = "400" alt="图片名称" align=center />
+
 
 ## 七、致谢
 
