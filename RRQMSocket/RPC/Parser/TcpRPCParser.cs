@@ -22,6 +22,13 @@ namespace RRQMSocket.RPC
     public class TcpRPCParser : TokenTcpService<RPCSocketClient>, IRPCParser
     {
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public TcpRPCParser()
+        {
+            this.SerializeConverter = new BinarySerializeConverter();
+        }
+        /// <summary>
         /// 调用方法
         /// </summary>
         public event Action<IRPCParser, RPCContext> InvokeMethod;
@@ -65,7 +72,7 @@ namespace RRQMSocket.RPC
                 tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 tcpSocketClient.OnReceivedRequest += this.TcpSocketClient_OnReceivedRequest;
             }
-            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient.MainSocket, tcpSocketClient.BytePool);
+            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
 
         private void TcpSocketClient_OnReceivedRequest(object sender, ByteBlock byteBlock)

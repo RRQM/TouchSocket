@@ -124,10 +124,14 @@ namespace RRQMSocket
                 while (length > 0)
                 {
                     r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
-
+                    if (r==0&&length>0)
+                    {
+                        throw new RRQMException("发送数据不完全");
+                    }
                     offset += r;
                     length -= r;
                 }
+
             }
             catch (Exception e)
             {

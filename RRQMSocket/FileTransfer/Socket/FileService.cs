@@ -130,7 +130,8 @@ namespace RRQMSocket.FileTransfer
                 tcpSocketClient.ReceiveFileFinished += this.ReceiveFileFinished;
                 tcpSocketClient.ReceivedBytesThenReturn += this.ReceivedBytesThenReturn;
             }
-            tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient.MainSocket, this.BytePool);
+            tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient);
+
         }
     }
 }

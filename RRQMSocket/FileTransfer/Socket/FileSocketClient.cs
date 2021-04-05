@@ -159,7 +159,6 @@ namespace RRQMSocket.FileTransfer
         #endregion 属性
 
         #region 字段
-
         internal RRQMAgreementHelper AgreementHelper;
         internal bool breakpointResume;
         private bool bufferLengthChanged;
@@ -172,6 +171,7 @@ namespace RRQMSocket.FileTransfer
         private ProgressBlockCollection uploadFileBlocks;
         private ProgressBlockCollection downloadFileBlocks;
         private RRQMStream uploadFileStream;
+
 
         #endregion 字段
 
@@ -271,7 +271,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        internal override void WaitReceive()
+        internal  override void WaitReceive()
         {
             if (this.GetNowTick() - timeTick > 0)
             {
@@ -472,6 +472,7 @@ namespace RRQMSocket.FileTransfer
             catch
             {
             }
+
         }
 
         private void DownloadFinished(ByteBlock byteBlock)
@@ -487,7 +488,7 @@ namespace RRQMSocket.FileTransfer
 
         private void UploadBlockData(ByteBlock byteBlock, ByteBlock receivedbyteBlock)
         {
-            if (this.TransferType != TransferType.Upload)
+            if (this.TransferType!= TransferType.Upload)
             {
                 byteBlock.Write(4);
                 return;
@@ -831,6 +832,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+
         /// <summary>
         ///
         /// </summary>
@@ -847,7 +849,6 @@ namespace RRQMSocket.FileTransfer
         public override void Dispose()
         {
             base.Dispose();
-            this.breakOut = true;
             if (uploadFileStream != null)
             {
                 uploadFileStream.Dispose();

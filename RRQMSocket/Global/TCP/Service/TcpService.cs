@@ -211,6 +211,50 @@ namespace RRQMSocket
             IsBind = true;
         }
 
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id,byte[] buffer)
+        {
+            this.Send(id,buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id,byte[] buffer, int offset, int length)
+        {
+            this.SocketClients[id].Send(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id,ByteBlock byteBlock)
+        {
+            this.Send(id,byteBlock.Buffer, 0, (int)byteBlock.Length);
+        }
+
         private void StartAccept()
         {
             while (true)

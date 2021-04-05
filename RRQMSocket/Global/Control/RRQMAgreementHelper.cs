@@ -23,12 +23,11 @@ namespace RRQMSocket
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="socket"></param>
-        /// <param name="bytePool"></param>
-        public RRQMAgreementHelper(Socket socket, BytePool bytePool)
+        /// <param name="baseSocket"></param>
+        public RRQMAgreementHelper(BaseSocket baseSocket)
         {
-            this.mainSocket = socket;
-            this.bytePool = bytePool;
+            this.mainSocket = baseSocket.MainSocket;
+            this.bytePool = baseSocket.BytePool;
         }
 
         private Socket mainSocket;

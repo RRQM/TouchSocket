@@ -225,7 +225,7 @@ namespace RRQMSocket.FileTransfer
         public override void Connect(EndPoint endPoint)
         {
             base.Connect(endPoint);
-            AgreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
+            AgreementHelper = new RRQMAgreementHelper(this);
             SynchronizeTransferSetting();
         }
 
@@ -240,6 +240,7 @@ namespace RRQMSocket.FileTransfer
             TransferSetting transferSetting = SerializeConvert.BinaryDeserialize<TransferSetting>(byteBlock);
             this.breakpointResume = transferSetting.breakpointResume;
             this.BufferLength = transferSetting.bufferLength;
+            byteBlock.SetHolding(false);
         }
 
         private void BeforeDownloadFileMethod(object sender, TransferFileEventArgs e)
@@ -305,6 +306,7 @@ namespace RRQMSocket.FileTransfer
                     }
                     returnByteBlock.Position = 0;
                     FileWaitResult waitResult = SerializeConvert.BinaryDeserialize<FileWaitResult>(returnByteBlock);
+                    returnByteBlock.SetHolding(false);
                     if (waitResult.Status == 2)
                     {
                         throw new RRQMTransferErrorException(waitResult.Message);
@@ -334,7 +336,11 @@ namespace RRQMSocket.FileTransfer
                 try
                 {
                     byteBlock.Write(datas);
-                    this.SendWait(1000, this.timeout, byteBlock);
+                    ByteBlock returnByteBlock = this.SendWait(1000, this.timeout, byteBlock);
+                    if (returnByteBlock != null)
+                    {
+                        returnByteBlock.SetHolding(false);
+                    }
                 }
                 finally
                 {
@@ -417,6 +423,7 @@ namespace RRQMSocket.FileTransfer
                     }
                     resultByteBlock.Position = 0;
                     FileWaitResult waitResult = SerializeConvert.BinaryDeserialize<FileWaitResult>(resultByteBlock);
+                    resultByteBlock.SetHolding(false);
                     if (waitResult.Status == 0)
                     {
                         throw new RRQMTimeoutException("等待结果超时");
@@ -525,6 +532,7 @@ namespace RRQMSocket.FileTransfer
                 ByteBlock byteBlock = this.SendWait(1013, this.timeout);
                 if (byteBlock != null && byteBlock.Buffer[0] == 1)
                 {
+                    byteBlock.SetHolding(false);
                     OutUpload();
                 }
                 else
@@ -671,6 +679,11 @@ namespace RRQMSocket.FileTransfer
                                     }
                                 }
                             }
+
+                            if (returnByteBlock != null)
+                            {
+                                returnByteBlock.SetHolding(false);
+                            }
                         }
                         finally
                         {
@@ -760,6 +773,11 @@ namespace RRQMSocket.FileTransfer
                                         TransferFileErrorMethod(this, args);
                                     }
                                 }
+
+                                if (returnByteBlock != null)
+                                {
+                                    returnByteBlock.SetHolding(false);
+                                }
                             }
                             else
                             {
@@ -785,18 +803,24 @@ namespace RRQMSocket.FileTransfer
 
         private void DownloadFileFinished_s()
         {
+
             try
             {
                 ByteBlock resultByteBlock = this.SendWait(1004, this.timeout);
-                if (resultByteBlock.Position == 1 && resultByteBlock.Buffer[0] == 1)
-                {
-                    FileBaseTool.FileFinished(downloadFileStream);
-                    FileFinishedArgs args = new FileFinishedArgs();
-                    args.FileInfo = downloadFileBlocks.FileInfo;
-                    TransferFileHashDictionary.AddFile(downloadFileBlocks.FileInfo);
 
-                    OutDownload(false);
-                    DownloadFileFinishedMethod(this, args);
+                if (resultByteBlock != null)
+                {
+                    if (resultByteBlock.Position == 1 && resultByteBlock.Buffer[0] == 1)
+                    {
+                        FileBaseTool.FileFinished(downloadFileStream);
+                        FileFinishedArgs args = new FileFinishedArgs();
+                        args.FileInfo = downloadFileBlocks.FileInfo;
+                        TransferFileHashDictionary.AddFile(downloadFileBlocks.FileInfo);
+
+                        OutDownload(false);
+                        DownloadFileFinishedMethod(this, args);
+                    }
+                    resultByteBlock.SetHolding(false);
                 }
             }
             catch (Exception e)
@@ -815,16 +839,21 @@ namespace RRQMSocket.FileTransfer
             while (reTryCount < 10)
             {
                 ByteBlock byteBlock = this.SendWait(1012, this.timeout);
-                if (byteBlock != null && byteBlock.Buffer[0] == 1)
+                if (byteBlock != null)
                 {
-                    TransferFileStreamDic.DisposeFileStream(this.UploadFileInfo.FilePath);
-                    FileFinishedArgs args = new FileFinishedArgs();
-                    args.FileInfo = uploadFileBlocks.FileInfo;
-                    this.uploadFileBlocks = null;
-                    OutUpload();
-                    UploadFileFinishedMethod(this, args);
-                    break;
+                    if (byteBlock.Buffer[0] == 1)
+                    {
+                        TransferFileStreamDic.DisposeFileStream(this.UploadFileInfo.FilePath);
+                        FileFinishedArgs args = new FileFinishedArgs();
+                        args.FileInfo = uploadFileBlocks.FileInfo;
+                        this.uploadFileBlocks = null;
+                        OutUpload();
+                        UploadFileFinishedMethod(this, args);
+                        break;
+                    }
+                    byteBlock.SetHolding(false);
                 }
+
                 reTryCount++;
             }
         }
@@ -844,7 +873,11 @@ namespace RRQMSocket.FileTransfer
 
             if (abort)
             {
-                this.SendWait(1003, this.timeout);
+               ByteBlock byteBlock= this.SendWait(1003, this.timeout);
+                if (byteBlock!=null)
+                {
+                    byteBlock.SetHolding(false);
+                }
             }
         }
 
@@ -857,6 +890,7 @@ namespace RRQMSocket.FileTransfer
 
             this.uploadFileBlocks = null;
             this.TransferType = TransferType.None;
+
         }
 
         /// <summary>
@@ -872,12 +906,21 @@ namespace RRQMSocket.FileTransfer
             ByteBlock byteBlock = this.BytePool.GetByteBlock(length - offset);
             byteBlock.Write(data, offset, length);
             ByteBlock resultByteBlock = this.SendWait(1014, this.timeout, byteBlock);
-            if (resultByteBlock != null && resultByteBlock.Buffer[0] == 1)
+            if (resultByteBlock != null)
             {
-                byte[] buffer = new byte[resultByteBlock.Position - 1];
-                resultByteBlock.Position = 1;
-                resultByteBlock.Read(buffer, 0, buffer.Length);
-                return buffer;
+                if (resultByteBlock.Buffer[0] == 1)
+                {
+                    byte[] buffer = new byte[resultByteBlock.Position - 1];
+                    resultByteBlock.Position = 1;
+                    resultByteBlock.Read(buffer, 0, buffer.Length);
+                    resultByteBlock.SetHolding(false);
+                    return buffer;
+                }
+                else
+                {
+                    throw new RRQMException("未知错误");
+                }
+
             }
             else
             {
@@ -910,6 +953,7 @@ namespace RRQMSocket.FileTransfer
 
             if (this.waitDataSend != null)
             {
+                byteBlock.SetHolding(true);
                 this.waitDataSend.Set(byteBlock);
             }
         }

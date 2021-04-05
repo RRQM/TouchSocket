@@ -176,7 +176,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.FileTransfer.FileClient" Collapsed="true">
-    <Position X="15" Y="4.75" Width="1.5" />
+    <Position X="12.5" Y="4.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>oDAIWAFQgCACAACxjnAMSIBgAAgCDINBCAKCkD4IcgA=</HashCode>
       <FileName>FileTransfer\Socket\FileClient.cs</FileName>
@@ -184,7 +184,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="RRQMSocket.FileTransfer.FileService" Collapsed="true">
-    <Position X="17.25" Y="4.75" Width="1.5" />
+    <Position X="14.25" Y="4.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAgCIgAgCgAAAAAAAAAAAAEIAAAAiAAAAAwAI=</HashCode>
       <FileName>FileTransfer\Socket\FileService.cs</FileName>
@@ -221,35 +221,35 @@
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.DataHandlingAdapter" Collapsed="true">
-    <Position X="4" Y="4.5" Width="1.5" />
+    <Position X="16.5" Y="7" Width="2.5" />
     <TypeIdentifier>
       <HashCode>IAAAKAABAAIAAAAAAEAAAAAAAAIAAAAIAAAAAAIgAAA=</HashCode>
       <FileName>Global\DataAdapter\DataHandlingAdapter.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.FixedHeaderDataHandlingAdapter" Collapsed="true">
-    <Position X="0.75" Y="5.75" Width="1.5" />
+    <Position X="12" Y="8.25" Width="2.5" />
     <TypeIdentifier>
       <HashCode>gEgAJEAAAAAAAAABAAAAAAAAAAIAACAEAAAAAAAAAAA=</HashCode>
       <FileName>Global\DataAdapter\FixedHeaderDataHandlingAdapter.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.FixedSizeDataHandlingAdapter" Collapsed="true">
-    <Position X="3" Y="5.75" Width="1.5" />
+    <Position X="15" Y="8.25" Width="2.5" />
     <TypeIdentifier>
       <HashCode>gACAIEAAAAAAAAABAAAAAAAAAAIAAAAEAAAAAAAAAAA=</HashCode>
       <FileName>Global\DataAdapter\FixedSizeDataHandlingAdapter.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.NormalDataHandlingAdapter" Collapsed="true">
-    <Position X="5.25" Y="5.75" Width="1.5" />
+    <Position X="18" Y="8.25" Width="2.5" />
     <TypeIdentifier>
       <HashCode>AAAAIAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Global\DataAdapter\NormalDataHandlingAdapter.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.TerminatorDataHandlingAdapter" Collapsed="true">
-    <Position X="7.5" Y="5.75" Width="1.5" />
+    <Position X="21" Y="8.25" Width="2.5" />
     <TypeIdentifier>
       <HashCode>gEAAIEAAAAAAAAAAAAAAAAAAgAIAAAAAAgAAAAEAAAI=</HashCode>
       <FileName>Global\DataAdapter\TerminatorDataHandlingAdapter.cs</FileName>
@@ -344,14 +344,14 @@
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.RRQMTokenTcpClient" Collapsed="true">
-    <Position X="12.75" Y="4.75" Width="1.5" />
+    <Position X="10.25" Y="4.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAA=</HashCode>
       <FileName>Global\TCP\Client\RRQMTokenTcpClient.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.TcpClient" Collapsed="true">
-    <Position X="12.75" Y="1.75" Width="1.5" />
+    <Position X="10.25" Y="1.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAACAAACgAAAQQAEIEUIAAAAAAAAAEQAABAEQAACA=</HashCode>
       <FileName>Global\TCP\Client\TcpClient.cs</FileName>
@@ -359,29 +359,29 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="RRQMSocket.TokenTcpClient" Collapsed="true">
-    <Position X="12.75" Y="3.25" Width="1.5" />
+    <Position X="10.25" Y="3.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAgAAAAAAQAIAAEAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Global\TCP\Client\TokenTcpClient.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.RRQMTokenTcpService&lt;T&gt;" Collapsed="true">
-    <Position X="21.75" Y="4.75" Width="1.5" />
+    <Position X="18.75" Y="4.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAQAA=</HashCode>
       <FileName>Global\TCP\Service\RRQMTokenTcpService.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.TcpService&lt;T&gt;" Collapsed="true">
-    <Position X="19.5" Y="1.75" Width="1.5" />
+    <Position X="16.5" Y="1.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AQIggCgAACAAEAAAAICEABCAAAQAAAIABAARICEAQAA=</HashCode>
+      <HashCode>AQIggCgAACAAEAAAAMCEABCAAAQAAAIABAARICEAQAA=</HashCode>
       <FileName>Global\TCP\Service\TcpService.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="RRQMSocket.TokenTcpService&lt;T&gt;" Collapsed="true">
-    <Position X="19.5" Y="3.25" Width="1.5" />
+    <Position X="16.5" Y="3.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAEAAAAAAQAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Global\TCP\Service\TokenTcpService.cs</FileName>
@@ -411,7 +411,7 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="RRQMSocket.BaseSocket" Collapsed="true">
-    <Position X="11.5" Y="0.5" Width="1.5" />
+    <Position X="9.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>BAAAAAAAACIAIAAAAAAABAQAKAAIAAAACIAAAAQgIAA=</HashCode>
       <FileName>Global\BaseSocket.cs</FileName>
@@ -575,7 +575,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.RPC.TcpRPCParser" Collapsed="true">
-    <Position X="19.5" Y="4.75" Width="1.5" />
+    <Position X="16.5" Y="4.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAACAADgAAQAAAEAAAAAAAAAAAAAAAAIAAAAQAA=</HashCode>
       <FileName>RPC\Parser\TcpRPCParser.cs</FileName>
@@ -627,7 +627,7 @@
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
   <Class Name="RRQMSocket.RPC.RPCClient" Collapsed="true">
-    <Position X="10.5" Y="4.75" Width="1.5" />
+    <Position X="8" Y="4.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>IAAAAAgAAAAgABAAIAIAAMAAAAAAEAAAAAAAoARAAAA=</HashCode>
       <FileName>RPC\Socket\RPCClient.cs</FileName>
@@ -637,7 +637,7 @@
   <Class Name="RRQMSocket.RPC.RPCService" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="31.25" Y="3.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>gAAAQIAAACBCAgAAEAEAEAAAAQAAAAIAAAAIAAQAAAA=</HashCode>
+      <HashCode>gAAAQIAAACBCAgAAEAEAEAAAAAAAAAIAAAAIAAQAAAA=</HashCode>
       <FileName>RPC\Socket\RPCService.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -694,7 +694,7 @@
     </TypeIdentifier>
   </Interface>
   <Interface Name="RRQMSocket.IService" Collapsed="true">
-    <Position X="10.5" Y="6.5" Width="1.5" />
+    <Position X="9" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAgAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAA=</HashCode>
       <FileName>Global\Interface\IService.cs</FileName>
@@ -715,7 +715,7 @@
     </TypeIdentifier>
   </Interface>
   <Interface Name="RRQMSocket.ITcpService" Collapsed="true">
-    <Position X="10.5" Y="7.75" Width="1.5" />
+    <Position X="9.25" Y="7.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AQAAACAAAAAAAAAAAAAAAAAAAAAAAAAABAAAIAAAAAA=</HashCode>
       <FileName>Global\Interface\ITcpService.cs</FileName>

@@ -58,7 +58,7 @@ namespace RRQMSocket
         /// <summary>
         /// 主通信器
         /// </summary>
-        public Socket MainSocket
+        internal Socket MainSocket
         {
             get { return mainSocket; }
             set
@@ -85,7 +85,7 @@ namespace RRQMSocket
                     return;
                 }
 
-                int r = this.Name.IndexOf(":");
+                int r = this.Name.LastIndexOf(":");
                 this.IP = this.Name.Substring(0, r);
                 this.Port = Convert.ToInt32(this.Name.Substring(r + 1, this.Name.Length - (r + 1)));
             }

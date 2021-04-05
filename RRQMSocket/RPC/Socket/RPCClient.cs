@@ -73,7 +73,7 @@ namespace RRQMSocket.RPC
         public override void Connect(ConnectSetting setting)
         {
             base.Connect(setting);
-            this.agreementHelper = new RRQMAgreementHelper(this.MainSocket, this.BytePool);
+            this.agreementHelper = new RRQMAgreementHelper(this);
             lock (locker)
             {
                 try
