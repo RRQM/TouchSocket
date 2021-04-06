@@ -37,7 +37,7 @@
  - 交流QQ群：234762506
 
 ### API文档
-[RRQMSocket API文档](https://www.showdoc.com.cn/RRQM)
+[RRQMSocket API文档](https://www.showdoc.com.cn/RRQM?page_id=6553721168472519)
 
 （文档目前还在积极完善当中）
 
