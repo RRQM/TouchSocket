@@ -21,7 +21,7 @@
 </div>
 
 ## 一、程序集描述
-&emsp;&emsp;RRQMSocket是一个整合性的、超轻量级的网络通信框架。支持C#语言系全平台（.net Framework4.5及以上，.net Core3.1及以上，.net standard2.0及以上），支持C#语言系全框架（WPF、Winform、Blazor、Xamarin、Mono、Unity等）。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
+&emsp;&emsp;RRQMSocket是一个整合性的、超轻量级的网络通信框架。支持C#语言系全平台（.NET Framework4.5及以上，.NET Core3.1及以上，.net standard2.0及以上），支持C#语言系全框架（WPF、Winform、Blazor、Xamarin、Mono、Unity等）。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
 &emsp;&emsp;目前RRQMSocket支持的传输层协议有TCP和UDP两款，基于这两大协议的支持，使得RRQMSocket能够解析绝大部分应用层协议，比如耳熟能详的HTTP、FTP、Telnet、POP3、SMTP、DNS等，不仅如此，RRQMSocket还内置了多种分包算法，使跨语言解析变得更加简单快捷。
 
