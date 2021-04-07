@@ -88,5 +88,6 @@ namespace RRQMSocket.RPC
         /// <returns>服务器返回结果</returns>
         T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption);
 
+
     }
 }
