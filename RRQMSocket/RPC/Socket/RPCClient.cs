@@ -432,11 +432,5 @@ namespace RRQMSocket.RPC
             }
         }
 
-
-        public static void RPCInvoke(string host,string method,params object[] parameters)
-        { 
-        
-        }
-
     }
 }

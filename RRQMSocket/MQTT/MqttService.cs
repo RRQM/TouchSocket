@@ -9,7 +9,7 @@ namespace RRQMSocket.MQTT
     /// <summary>
     /// MQTT服务器
     /// </summary>
-    public class MqttService
+    class MqttService
     {  
     }
 }

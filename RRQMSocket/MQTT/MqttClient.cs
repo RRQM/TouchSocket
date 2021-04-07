@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 namespace RRQMSocket.MQTT
 {
     class MqttClient
-    { 
+    {
     }
 }
