@@ -22,6 +22,15 @@ namespace RRQMSocket
 
     public abstract class TcpSocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public TcpSocketClient()
+        {
+            this.eventArgs = new SocketAsyncEventArgs();
+            this.eventArgs.Completed += this.EventArgs_Completed;
+        }
+
         internal bool breakOut;
         internal BufferQueueGroup queueGroup;
         private bool isBeginReceive;
@@ -244,17 +253,9 @@ namespace RRQMSocket
         {
         }
 
+        
         /// <summary>
-        /// 释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-            this.breakOut = true;
-        }
-
-        /// <summary>
-        /// 重新获取
+        /// 重新获取,父类方法不可覆盖
         /// </summary>
         public virtual void Recreate()
         {
@@ -264,7 +265,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 销毁
+        /// 在断开连接时销毁对象，父类方法不可覆盖
         /// </summary>
         public virtual void Destroy()
         {
@@ -272,12 +273,11 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 初次创建
+        /// 初次创建对象，效应相当于构造函数，父类方法可覆盖
         /// </summary>
         public virtual void Create()
         {
-            this.eventArgs = new SocketAsyncEventArgs();
-            this.eventArgs.Completed += this.EventArgs_Completed;
+            this.DataHandlingAdapter = new NormalDataHandlingAdapter();
         }
 
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
@@ -288,5 +288,15 @@ namespace RRQMSocket
             }
             this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
+
+        /// <summary>
+        /// 完全释放资源
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+            this.breakOut = true;
+        }
+
     }
 }

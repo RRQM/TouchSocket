@@ -24,7 +24,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public abstract class TcpService<T> : BaseSocket, ITcpService where T : TcpSocketClient, new()
+    public  class TcpService<T> : BaseSocket, ITcpService where T : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -360,7 +360,10 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected abstract void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption);
+        protected virtual void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption)
+        { 
+        
+        }
 
         internal virtual void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
