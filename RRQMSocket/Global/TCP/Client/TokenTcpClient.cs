@@ -62,7 +62,7 @@ namespace RRQMSocket
         public string ID { get; private set; }
 
         /// <summary>
-        /// 获取或设置验证超时时间,默认为3秒；
+        /// 获取或设置验证超时时间,默认为3秒； 
         /// </summary>
         public int VerifyTimeout { get; set; } = 3;
 
