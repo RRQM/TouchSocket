@@ -11,6 +11,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
+using System.ComponentModel;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,13 +56,18 @@ namespace RRQMSocket
             }
         }
 
+        /// <summary>
+        /// 获取或设置验证超时时间,默认为3秒；
+        /// </summary>
+        public int VerifyTimeout { get; set; } = 3;
+
         internal override void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
             Task.Factory.StartNew(async () =>
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
-                while (waitCount < 50)
+                while (waitCount < VerifyTimeout * 1000/20)
                 {
                     if (socket.Available > 0)
                     {

@@ -22,11 +22,6 @@ namespace RRQMSocket
     [DebuggerDisplay("Count={Count}")]
     public class SocketCliectCollection<T> : IEnumerable<T> where T : TcpSocketClient
     {
-        internal SocketCliectCollection()
-        {
-            //this.tokenString = tokenString;
-        }
-
         /// <summary>
         /// 获取或设置分配ID的格式
         /// </summary>
@@ -76,6 +71,20 @@ namespace RRQMSocket
             T t;
             this.tokenDic.TryGetValue(id, out t);
             return t;
+        }
+
+        /// <summary>
+        /// 根据ID判断SocketClient是否存在
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool SocketClientExist(string id)
+        {
+            if (tokenDic.ContainsKey(id))
+            {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

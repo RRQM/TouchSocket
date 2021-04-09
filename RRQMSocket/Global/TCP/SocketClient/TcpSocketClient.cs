@@ -277,7 +277,10 @@ namespace RRQMSocket
         /// </summary>
         public virtual void Create()
         {
-            this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+            if (this.dataHandlingAdapter==null)
+            {
+                this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+            }
         }
 
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)

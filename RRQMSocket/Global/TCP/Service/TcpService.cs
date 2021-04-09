@@ -255,6 +255,17 @@ namespace RRQMSocket
             this.Send(id,byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
+
+        /// <summary>
+        /// 根据ID判断SocketClient是否存在
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool SocketClientExist(string id)
+        {
+            return this.SocketClients.SocketClientExist(id);
+        }
+
         private void StartAccept()
         {
             while (true)

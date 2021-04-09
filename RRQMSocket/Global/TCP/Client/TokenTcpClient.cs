@@ -62,6 +62,11 @@ namespace RRQMSocket
         public string ID { get; private set; }
 
         /// <summary>
+        /// 获取或设置验证超时时间,默认为3秒；
+        /// </summary>
+        public int VerifyTimeout { get; set; } = 3;
+
+        /// <summary>
         /// 连接到服务器
         /// </summary>
         /// <param name="setting"></param>
@@ -100,7 +105,7 @@ namespace RRQMSocket
             }
 
             int waitCount = 0;
-            while (waitCount < 50)
+            while (waitCount < VerifyTimeout * 1000 / 20)
             {
                 if (this.MainSocket.Available > 0)
                 {
