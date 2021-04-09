@@ -99,6 +99,13 @@
 - 已经上传的文件，再次上传时，可实现快速上传。
 - 极少的GC释放。
 
+#### 4.3 Demo示例
+ **Demo位置：** [RRQMSocket.FileTransfer.Demo](https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo)
+
+ **说明：** 可以看到，图一正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到346Mb/s，这是因为服务器和客户端在同一电脑上，磁盘性能限制导致的。其次，GC基本上没有释放，性能非常强悍，图二是下载文件，性能依旧非常强悍。
+
+![上传文件](https://images.gitee.com/uploads/images/2021/0409/190350_92a2ad36_8553710.png "上传文件")
+![下载文件](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "下载文件")
 ## 五、RPC框架
 #### 5.1 创建RPC框架
 几行代码就可以搭建出完整的高性能文件传输框架，具体创建步骤详见[RRQMSocket创建RPC高性能微框架，支持任意序列化、out及ref](https://blog.csdn.net/qq_40374647/article/details/109143243?spm=1001.2014.3001.5501)。
@@ -118,10 +125,21 @@
 - 全异常反馈，服务里发生的异常，会一字不差的反馈到客户端。
 - 超简单的回调方式。
 
+#### 4.3 Demo示例
+ **Demo位置：** [RRQMSocket.RPC.Demo](https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo)
+
+ **说明：** 
+图一、图二、图三分别为`UDP无反馈调用`、`TCP有反馈调用`、`TCP连接池有反馈调用`。调用次数均为10w次，调用性能非常nice。在无反馈中，吞吐量达14.28w，在有反馈中达2.72w，简直秒杀WCF（WCF使用http协议，在本机测试吞吐量为310）
+
+![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191343_e5827d04_8553710.png "屏幕截图.png")
+
+![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191501_abec9e45_8553710.png "屏幕截图.png")
+
+![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191531_d7f0a8d4_8553710.png "屏幕截图.png")
 
 ## 六、致谢
 
-谢谢大家对我的支持，如果还有其他问题，请加群讨论。谢谢！
+谢谢大家对我的支持，如果还有其他问题，请加群QQ：234762506讨论。
 
 
 ## 七、赞助
