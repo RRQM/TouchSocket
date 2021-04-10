@@ -180,69 +180,34 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 刚开始接受文件的时候
         /// </summary>
-        internal event RRQMTransferFileEventHandler BeforeReceiveFile;
+        internal  RRQMTransferFileEventHandler BeforeReceiveFile;
 
         /// <summary>
         /// 开始发送文件
         /// </summary>
-        internal event RRQMTransferFileEventHandler BeforeSendFile;
+        internal RRQMTransferFileEventHandler BeforeSendFile;
 
         /// <summary>
         /// 当文件接收完成
         /// </summary>
-        internal event RRQMFileFinishedEventHandler ReceiveFileFinished;
+        internal RRQMFileFinishedEventHandler ReceiveFileFinished;
 
         /// <summary>
         /// 当接收到系统信息的时候
         /// </summary>
-        internal event RRQMMessageEventHandler ReceiveSystemMes;
+        internal RRQMMessageEventHandler ReceiveSystemMes;
 
         /// <summary>
         /// 当文件发送完
         /// </summary>
-        internal event RRQMFileFinishedEventHandler SendFileFinished;
+        internal RRQMFileFinishedEventHandler SendFileFinished;
 
         /// <summary>
         /// 收到字节数组并返回
         /// </summary>
-        internal event RRQMBytesEventHandler ReceivedBytesThenReturn;
+        internal RRQMBytesEventHandler ReceivedBytesThenReturn;
 
         #endregion 事件
-
-        #region 判断调用事件
-
-        private void BeforeReceiveFileMethod(object sender, TransferFileEventArgs e)
-        {
-            BeforeReceiveFile?.Invoke(sender, e);
-        }
-
-        private void BeforeSendFileMethod(object sender, TransferFileEventArgs e)
-        {
-            BeforeSendFile?.Invoke(sender, e);
-        }
-
-        private void ReceiveFileFinishedMethod(object sender, FileFinishedArgs e)
-        {
-            ReceiveFileFinished?.Invoke(sender, e);
-        }
-
-        private void ReceiveSystemMesMethod(object sender, MesEventArgs e)
-        {
-            ReceiveSystemMes?.Invoke(sender, e);
-        }
-
-        private void SendFileFinishedMethod(object sender, FileFinishedArgs e)
-        {
-            SendFileFinished?.Invoke(sender, e);
-        }
-
-        private void ReceivedBytesThenReturnMethod(object sender, BytesEventArgs e)
-        {
-            ReceivedBytesThenReturn?.Invoke(sender, e);
-        }
-
-        #endregion 判断调用事件
-
         private void MaxSpeedChanged(long speed)
         {
             if (speed < 1024 * 1024)
@@ -345,7 +310,7 @@ namespace RRQMSocket.FileTransfer
                 args.FileInfo.Flag = url.Flag;
                 args.IsPermitTransfer = true;
                 args.TargetPath = args.FileInfo.FilePath;
-                BeforeSendFileMethod(this, args);
+                BeforeSendFile?.Invoke(this, args);
 
                 this.TransferType = TransferType.Download;
                 if (!args.IsPermitTransfer)
@@ -373,7 +338,7 @@ namespace RRQMSocket.FileTransfer
             args.FileInfo = requestBlocks.FileInfo;
             args.TargetPath = requestBlocks.FileInfo.FileName;
             args.IsPermitTransfer = true;
-            BeforeReceiveFileMethod(this, args);//触发 接收文件事件
+            BeforeReceiveFile?.Invoke(this, args);//触发 接收文件事件
             requestBlocks.FileInfo.FilePath = args.TargetPath;
 
             if (!args.IsPermitTransfer)
@@ -482,7 +447,7 @@ namespace RRQMSocket.FileTransfer
             FileFinishedArgs args = new FileFinishedArgs();
             args.FileInfo = this.downloadFileBlocks.FileInfo;
             this.TransferType = TransferType.None;
-            SendFileFinishedMethod(this, args);
+            SendFileFinished?.Invoke(this, args);
             this.downloadFileBlocks = null;
         }
 
@@ -541,7 +506,7 @@ namespace RRQMSocket.FileTransfer
                 TransferFileHashDictionary.AddFile(this.uploadFileBlocks.FileInfo);
                 FileFinishedArgs args = new FileFinishedArgs();
                 args.FileInfo = this.uploadFileBlocks.FileInfo;
-                ReceiveFileFinishedMethod(this, args);
+                ReceiveFileFinished?.Invoke(this, args);
 
                 this.uploadFileBlocks = null;
             }
@@ -565,7 +530,7 @@ namespace RRQMSocket.FileTransfer
             byteBlock.Position = 4;
             receivedByteBlock.Read(buffer, 0, buffer.Length);
             args.ReceivedDataBytes = buffer;
-            ReceivedBytesThenReturnMethod(this, args);
+            ReceivedBytesThenReturn?.Invoke(this, args);
             byteBlock.Write(1);
             if (args.ReturnDataBytes != null)
             {
@@ -575,7 +540,7 @@ namespace RRQMSocket.FileTransfer
 
         private void SystemMessage(string mes)
         {
-            ReceiveSystemMesMethod(this, new MesEventArgs(mes));
+            ReceiveSystemMes?.Invoke(this, new MesEventArgs(mes));
         }
 
         #endregion 协议函数

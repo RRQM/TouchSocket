@@ -41,6 +41,8 @@ public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
 /// <param name="e"></param>
 public delegate void RRQMUDPByteBlockEventHandler(EndPoint remoteEndpoint, ByteBlock e);
 
+//public delegate void RRQMTokenPreviewConnectEventHandler(object sender, ByteBlock e);
+
 /// <summary>
 /// 传输文件处理
 /// </summary>

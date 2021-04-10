@@ -115,7 +115,7 @@
   </ItemGroup>-->
 
   <ItemGroup>
-    <PackageReference Include="RRQMCore" Version="1.2.12" />
+    <PackageReference Include="RRQMCore" Version="1.2.13" />
   </ItemGroup>
 
 </Project>

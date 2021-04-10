@@ -42,7 +42,7 @@ namespace RRQMSocket
         public IService Service { get; internal set; }
 
         /// <summary>
-        /// 用于索引的令箭
+        /// 用于索引的ID
         /// </summary>
         public string ID { get; internal set; }
 
@@ -76,6 +76,11 @@ namespace RRQMSocket
         /// 是否为新建对象
         /// </summary>
         public bool NewCreat { get; set; }
+
+        /// <summary>
+        /// 标记
+        /// </summary>
+        public object Flag { get ; set ; }
 
         /// <summary>
         /// 处理已接收到的数据

@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public abstract class TokenTcpService<T> : TcpService<T> where T : TcpSocketClient, new()
+    public class TokenTcpService<T> : TcpService<T> where T : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -38,21 +38,21 @@ namespace RRQMSocket
         {
         }
 
-        private string connectionToken = "rrqm";
+        private string verifyToken = "rrqm";
 
         /// <summary>
         /// 连接令箭,当为null或空时，重置为默认值“rrqm”
         /// </summary>
-        public string ConnectionToken
+        public string VerifyToken
         {
-            get { return connectionToken; }
+            get { return verifyToken; }
             set
             {
                 if (value == null || value == string.Empty)
                 {
                     value = "rrqm";
                 }
-                connectionToken = value;
+                verifyToken = value;
             }
         }
 
@@ -67,15 +67,19 @@ namespace RRQMSocket
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
-                while (waitCount < VerifyTimeout * 1000/20)
+                while (waitCount < VerifyTimeout * 1000 / 20)
                 {
                     if (socket.Available > 0)
                     {
                         try
                         {
                             int r = socket.Receive(byteBlock.Buffer);
-                            string receivedToken = Encoding.UTF8.GetString(byteBlock.Buffer, 0, r);
-                            if (receivedToken == this.ConnectionToken)
+
+                            VerifyOption verifyOption = new VerifyOption();
+                            verifyOption.Token = Encoding.UTF8.GetString(byteBlock.Buffer, 0, r);
+                            this.OnVerifyToken(verifyOption);
+
+                            if (verifyOption.Accept)
                             {
                                 if (this.SocketClients.Count > this.MaxCount)
                                 {
@@ -89,6 +93,7 @@ namespace RRQMSocket
                                 else
                                 {
                                     T client = this.SocketClientPool.GetObject();
+                                    client.Flag = verifyOption.Flag;
                                     if (client.NewCreat)
                                     {
                                         client.queueGroup = queueGroup;
@@ -115,7 +120,7 @@ namespace RRQMSocket
 
                                     byteBlock.Write(1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
-                                    socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
+                                    socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
 
                                     client.BeginReceive();
                                     ClientConnectedMethod(client, null);
@@ -126,7 +131,11 @@ namespace RRQMSocket
                             else
                             {
                                 byteBlock.Write(2);
-                                socket.Send(byteBlock.Buffer, 0, 1, SocketFlags.None);
+                                if (verifyOption.ErrorMessage != null)
+                                {
+                                    byteBlock.Write(Encoding.UTF8.GetBytes(verifyOption.ErrorMessage));
+                                }
+                                socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
                                 socket.Shutdown(SocketShutdown.Both);
                                 socket.Dispose();
                             }
@@ -147,6 +156,22 @@ namespace RRQMSocket
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Dispose();
             });
+        }
+
+        /// <summary>
+        /// 当验证Token时
+        /// </summary>
+        /// <param name="verifyOption"></param>
+        protected virtual void OnVerifyToken(VerifyOption verifyOption)
+        {
+            if (verifyOption.Token == this.verifyToken)
+            {
+                verifyOption.Accept = true;
+            }
+            else
+            {
+                verifyOption.ErrorMessage = "Token不受理";
+            }
         }
     }
 }

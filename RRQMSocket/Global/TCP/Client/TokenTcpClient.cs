@@ -123,7 +123,7 @@ namespace RRQMSocket
                             }
                             else if (byteBlock.Buffer[0] == 2)
                             {
-                                throw new RRQMException("Token验证错误");
+                                throw new RRQMException(Encoding.UTF8.GetString(byteBlock.Buffer,1,r-1));
                             }
                             else if (byteBlock.Buffer[0] == 3)
                             {

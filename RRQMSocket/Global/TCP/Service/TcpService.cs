@@ -88,15 +88,11 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 获取对象池实例
-        /// </summary>
-        public ObjectPool<T> SocketClientPool { get; private set; }
-
-        /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
         public SocketCliectCollection<T> SocketClients { get; private set; }
 
+        internal ObjectPool<T> SocketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
         private ConcurrentQueue<Socket> clientSocketQueue;
         private Thread threadStartUpReceive;

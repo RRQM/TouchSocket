@@ -16,9 +16,14 @@ namespace RRQMSocket
     public interface ISocketClient : IClient
     {
         /// <summary>
-        /// 用于索引的令箭
+        /// 用于索引的ID
         /// </summary>
         string ID { get; }
+
+        /// <summary>
+        /// 标记
+        /// </summary>
+        object Flag { get; set; }
 
         /// <summary>
         /// 判断是否在线
