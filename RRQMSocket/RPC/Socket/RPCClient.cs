@@ -14,7 +14,10 @@ using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 
 namespace RRQMSocket.RPC
 {
@@ -58,21 +61,28 @@ namespace RRQMSocket.RPC
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
+        /// <summary>
+        /// 获取RPC快捷调用实例字典
+        /// </summary>
+        public static ConcurrentDictionary<string, RPCClient> RPCCacheDic { get { return rpcDic; } }
+
         private WaitData<WaitResult> singleWaitData;
         private RRQMWaitHandle<RPCContext> waitHandles = new RRQMWaitHandle<RPCContext>();
         private MethodStore methodStore;
         private RPCProxyInfo proxyFile;
         private RRQMAgreementHelper agreementHelper;
+        private static ConcurrentDictionary<string, RPCClient> rpcDic = new ConcurrentDictionary<string, RPCClient>();
 
         /// <summary>
         /// 连接服务器
         /// </summary>
-        /// <param name="setting"></param>
+        /// <param name="addressFamily"></param>
+        /// <param name="endPoint"></param>
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMRPCException"></exception>
-        public override void Connect(ConnectSetting setting)
+        public override void Connect(AddressFamily addressFamily, EndPoint endPoint)
         {
-            base.Connect(setting);
+            base.Connect(addressFamily, endPoint);
             this.agreementHelper = new RRQMAgreementHelper(this);
             lock (locker)
             {
@@ -146,7 +156,7 @@ namespace RRQMSocket.RPC
         public T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption)
         {
             WaitData<RPCContext> waitData = this.waitHandles.GetWaitData();
-            waitData.WaitResult = new RPCContext();
+           // waitData.WaitResult = new RPCContext();
             MethodItem methodItem = methodStore.GetMethodItem(method);
 
             waitData.WaitResult.Method = methodItem.Method;
@@ -250,7 +260,7 @@ namespace RRQMSocket.RPC
         public void RPCInvoke(string method, ref object[] parameters, InvokeOption invokeOption)
         {
             WaitData<RPCContext> waitData = this.waitHandles.GetWaitData();
-            waitData.WaitResult = new RPCContext();
+           // waitData.WaitResult = new RPCContext();
             MethodItem methodItem = this.methodStore.GetMethodItem(method);
             waitData.WaitResult.Method = methodItem.Method;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -432,5 +442,70 @@ namespace RRQMSocket.RPC
             }
         }
 
+        /// <summary>
+        /// 快捷调用RPC
+        /// </summary>
+        /// <param name="host">IP及端口</param>
+        /// <param name="methodKey">函数键</param>
+        /// <param name="verifyToken">验证Token</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        public static void CallRPC(string host, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            RPCClient client;
+            if (rpcDic.TryGetValue(host, out client) && client.Online)
+            {
+                if (client.Online)
+                {
+                    client.RPCInvoke(methodKey, ref parameters, invokeOption);
+                    return;
+                }
+                else
+                {
+                    rpcDic.TryRemove(host, out _);
+                }
+            }
+
+            IPHost iPHost = IPHost.CreatIPHost(host);
+            client = new RPCClient();
+            client.VerifyToken = verifyToken;
+            client.Connect(iPHost.AddressFamily, iPHost.EndPoint);
+            client.InitializedRPC();
+            rpcDic.TryAdd(host, client);
+            client.RPCInvoke(methodKey, ref parameters, invokeOption);
+        }
+
+        /// <summary>
+        /// 快捷调用RPC
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="host">IP及端口</param>
+        /// <param name="methodKey">函数键</param>
+        /// <param name="verifyToken">验证Token</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public static T CallRPC<T>(string host, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            RPCClient client;
+            if (rpcDic.TryGetValue(host, out client) && client.Online)
+            {
+                if (client.Online)
+                {
+                    return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
+                }
+                else
+                {
+                    rpcDic.TryRemove(host, out _);
+                }
+            }
+            IPHost iPHost = IPHost.CreatIPHost(host);
+            client = new RPCClient();
+            client.VerifyToken = verifyToken;
+            client.Connect(iPHost.AddressFamily, iPHost.EndPoint);
+            client.InitializedRPC();
+            rpcDic.TryAdd(host, client);
+            return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
+        }
     }
 }

@@ -17,6 +17,7 @@ using RRQMCore.Serialization;
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯客户端主类
     /// </summary>
-    public sealed class FileClient : TokenTcpClient, IFileClient
+    public class FileClient : TokenTcpClient, IFileClient
     {
         /// <summary>
         /// 无参数构造函数
@@ -221,14 +222,14 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 连接到服务器
         /// </summary>
+        /// <param name="addressFamily"></param>
         /// <param name="endPoint"></param>
-        public override void Connect(EndPoint endPoint)
+        public override void Connect(AddressFamily addressFamily, EndPoint endPoint)
         {
-            base.Connect(endPoint);
+            base.Connect(addressFamily, endPoint);
             AgreementHelper = new RRQMAgreementHelper(this);
             SynchronizeTransferSetting();
         }
-
         private void SynchronizeTransferSetting()
         {
             ByteBlock byteBlock = this.SendWait(1020, this.timeout);
@@ -319,6 +320,77 @@ namespace RRQMSocket.FileTransfer
                     byteBlock.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// 请求下载文件
+        /// </summary>
+        /// <param name="url">URL</param>
+        /// <param name="host">IP及端口</param>
+        /// <param name="verifyToken">验证令箭</param>
+        /// <param name="waitTime">等待时长</param>
+        /// <param name="receiveDir">存放目录</param>
+        /// <param name="finishedCallBack">完成时回调</param>
+        /// <returns></returns>
+        public static FileClient RequestDownloadFile(FileUrl url, string host, string verifyToken = null, int waitTime = 10, string receiveDir = null, RRQMFileFinishedEventHandler finishedCallBack = null)
+        {
+            FileClient fileClient = new FileClient();
+            fileClient.VerifyToken = verifyToken;
+            try
+            {
+                IPHost iPHost = IPHost.CreatIPHost(host);
+                fileClient.Connect(iPHost.AddressFamily, iPHost.EndPoint);
+               
+                if (finishedCallBack != null)
+                {
+                    fileClient.DownloadFileFinished += finishedCallBack;
+                }
+                fileClient.DownloadFileFinished += (object sender, FileFinishedArgs e) => { fileClient.Dispose(); };
+                fileClient.BeforeDownloadFile += (object sender, TransferFileEventArgs e) =>
+                {
+                    e.TargetPath = Path.Combine(receiveDir==null?"":receiveDir,e.FileInfo.FileName);
+                };
+                fileClient.DownloadFile(url, waitTime);
+                return fileClient;
+            }
+            catch (Exception ex)
+            {
+                fileClient.Dispose();
+                throw new RRQMException(ex.Message);
+            }
+           
+        }
+
+        /// <summary>
+        /// 请求上传
+        /// </summary>
+        /// <param name="url">URL</param>
+        /// <param name="host">IP及端口</param>
+        /// <param name="verifyToken">验证令箭</param>
+        /// <param name="finishedCallBack">完成时回调</param>
+        /// <returns></returns>
+        public static FileClient RequestUploadFile(FileUrl url, string host, string verifyToken = null, RRQMFileFinishedEventHandler finishedCallBack = null)
+        {
+            FileClient fileClient = new FileClient();
+            fileClient.VerifyToken = verifyToken;
+            try
+            {
+                IPHost iPHost = IPHost.CreatIPHost(host);
+                fileClient.Connect(iPHost.AddressFamily, iPHost.EndPoint);
+                fileClient.UploadFile(url);
+                if (finishedCallBack != null)
+                {
+                    fileClient.UploadFileFinished += finishedCallBack;
+                }
+                fileClient.UploadFileFinished += (object sender, FileFinishedArgs e) => { fileClient.Dispose(); };
+                return fileClient;
+            }
+            catch (Exception ex)
+            {
+                fileClient.Dispose();
+                throw new RRQMException(ex.Message);
+            }
+           
         }
 
         /// <summary>
@@ -873,8 +945,8 @@ namespace RRQMSocket.FileTransfer
 
             if (abort)
             {
-               ByteBlock byteBlock= this.SendWait(1003, this.timeout);
-                if (byteBlock!=null)
+                ByteBlock byteBlock = this.SendWait(1003, this.timeout);
+                if (byteBlock != null)
                 {
                     byteBlock.SetHolding(false);
                 }

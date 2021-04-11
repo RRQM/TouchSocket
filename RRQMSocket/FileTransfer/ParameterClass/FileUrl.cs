@@ -20,12 +20,23 @@ namespace RRQMSocket.FileTransfer
     public class FileUrl
     {
         /// <summary>
-        ///
+        /// 构造函数
         /// </summary>
         /// <param name="filePath">文件路径</param>
         public FileUrl(string filePath)
         {
             this.FilePath = filePath;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="restart"></param>
+        public FileUrl(string filePath,bool restart)
+        {
+            this.FilePath = filePath;
+            this.Restart = restart;
         }
 
         /// <summary>

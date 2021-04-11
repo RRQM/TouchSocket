@@ -14,7 +14,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public sealed class FileService : TokenTcpService<FileSocketClient>, IFileService
+    public  class FileService : TokenTcpService<FileSocketClient>, IFileService
     {
         /// <summary>
         /// 构造函数

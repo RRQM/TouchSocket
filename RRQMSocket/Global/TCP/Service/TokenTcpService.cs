@@ -107,7 +107,10 @@ namespace RRQMSocket
                                     creatOption.NewCreat = client.NewCreat;
                                     if (client.NewCreat)
                                     {
-                                        creatOption.ID = this.SocketClients.GetDefaultID();
+                                        lock (this)
+                                        {
+                                            creatOption.ID = this.SocketClients.GetDefaultID();
+                                        }
                                     }
                                     else
                                     {
@@ -116,6 +119,7 @@ namespace RRQMSocket
                                     OnCreatSocketCliect(client, creatOption);
                                     client.ID = creatOption.ID;
 
+                                   
                                     this.SocketClients.Add(client);
 
                                     byteBlock.Write(1);

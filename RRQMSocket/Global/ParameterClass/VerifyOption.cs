@@ -28,7 +28,7 @@ namespace RRQMSocket
         public string ErrorMessage { get; set; }
 
         /// <summary>
-        /// 标记
+        /// 标记，会同步至TcpSocketClient
         /// </summary>
         public object Flag { get; set; }
     }

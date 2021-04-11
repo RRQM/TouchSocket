@@ -60,7 +60,7 @@ namespace RRQMSocket.RPC
 
         private void ConnectionPool_OnClientIni(RRQMTokenTcpClient tcpClient)
         {
-            tcpClient.ConnectionToken = this.connectionToken;
+            tcpClient.VerifyToken = this.connectionToken;
             tcpClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             tcpClient.OnReceivedData += this.TcpClient_OnReceivedData;
         }

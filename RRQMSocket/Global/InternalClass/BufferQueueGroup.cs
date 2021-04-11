@@ -41,6 +41,7 @@ namespace RRQMSocket
 
             if (waitHandleBuffer != null)
             {
+                waitHandleBuffer.Set();
                 waitHandleBuffer.Dispose();
             }
         }

@@ -38,26 +38,26 @@ namespace RRQMSocket
         {
         }
 
-        private string connectionToken = "rrqm";
+        private string verifyToken = "rrqm";
 
         /// <summary>
-        /// 连接令箭,当为null或空时，重置为默认值“rrqm”
+        /// 验证令箭,当为null或空时，重置为默认值“rrqm”
         /// </summary>
-        public string ConnectionToken
+        public string VerifyToken
         {
-            get { return connectionToken; }
+            get { return verifyToken; }
             set
             {
                 if (value == null || value == string.Empty)
                 {
                     value = "rrqm";
                 }
-                connectionToken = value;
+                verifyToken = value;
             }
         }
 
         /// <summary>
-        /// 获取服务器分配的令箭
+        /// 获取服务器分配的ID
         /// </summary>
         public string ID { get; private set; }
 
@@ -66,38 +66,27 @@ namespace RRQMSocket
         /// </summary>
         public int VerifyTimeout { get; set; } = 3;
 
-        /// <summary>
-        /// 连接到服务器
-        /// </summary>
-        /// <param name="setting"></param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        public override void Connect(ConnectSetting setting)
-        {
-            IPAddress IP = IPAddress.Parse(setting.TargetIP);
-            EndPoint endPoint = new IPEndPoint(IP, setting.TargetPort);
-            this.Connect(endPoint);
-        }
 
         /// <summary>
         /// 连接到服务器
         /// </summary>
+        /// <param name="addressFamily"></param>
         /// <param name="endPoint"></param>
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public override void Connect(EndPoint endPoint)
+        public override void Connect(AddressFamily addressFamily, EndPoint endPoint)
         {
             if (this.disposable)
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
                 socket.Connect(endPoint);
                 this.MainSocket = socket;
-                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.ConnectionToken));
+                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.VerifyToken));
             }
             catch (Exception e)
             {
@@ -123,7 +112,7 @@ namespace RRQMSocket
                             }
                             else if (byteBlock.Buffer[0] == 2)
                             {
-                                throw new RRQMException(Encoding.UTF8.GetString(byteBlock.Buffer,1,r-1));
+                                throw new RRQMException(Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1));
                             }
                             else if (byteBlock.Buffer[0] == 3)
                             {
