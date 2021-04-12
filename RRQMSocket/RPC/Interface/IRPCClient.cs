@@ -52,16 +52,18 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 获取远程服务器RPC服务文件
         /// </summary>
+        /// <param name="ipHost">IP和端口</param>
+        /// <param name="verifyToken">连接验证</param>
         /// <param name="proxyToken">代理令箭</param>
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        RPCProxyInfo GetProxyInfo(string proxyToken);
+        RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null);
 
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        void InitializedRPC();
+        void InitializedRPC(string ipHost, string verifyToken = null);
 
         /// <summary>
         /// 函数式调用
@@ -87,7 +89,5 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMException"></exception>
         /// <returns>服务器返回结果</returns>
         T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption);
-
-
     }
 }

@@ -65,54 +65,6 @@ namespace RRQMSocket.RPC
         public event RRQMByteBlockEventHandler ReceivedByteBlock;
 
         /// <summary>
-        /// 绑定TCP服务
-        /// </summary>
-        /// <param name="setting"></param>
-        /// <param name="remoteService"></param>
-        /// <exception cref="RRQMException"></exception>
-        public void Bind(BindSetting setting, EndPoint remoteService)
-        {
-            EndPoint endPoint = new IPEndPoint(IPAddress.Parse(setting.IP), setting.Port);
-            this.Bind(endPoint, setting.MultithreadThreadCount, remoteService);
-        }
-
-        /// <summary>
-        /// 绑定TCP服务
-        /// </summary>
-        /// <param name="endPoint">节点</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <param name="remoteService"></param>
-        /// <exception cref="RRQMException"></exception>
-        public void Bind(EndPoint endPoint, int threadCount, EndPoint remoteService)
-        {
-            this.udpSession.Bind(endPoint, threadCount);
-            this.remoteService = remoteService;
-            int count = 0;
-            while (count < 3)
-            {
-                lock (this)
-                {
-                    try
-                    {
-                        this.methodStore = null;
-                        this.UDPSend(102);
-                        this.singleWaitData.Wait(1000 * 3);
-                    }
-                    catch (Exception e)
-                    {
-                        throw new RRQMRPCException(e.Message);
-                    }
-                    if (this.methodStore != null)
-                    {
-                        return;
-                    }
-                }
-                count++;
-            }
-            throw new RRQMTimeoutException("连接初始化超时");
-        }
-
-        /// <summary>
         /// 数据交互缓存池限制，Min:1k Byte，Max:10Mb Byte
         /// </summary>
         public int BufferLength { get => this.udpSession.BufferLength; set { this.udpSession.BufferLength = value; } }
@@ -140,12 +92,15 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 获取远程服务器RPC服务文件
         /// </summary>
+        /// <param name="ipHost"></param>
+        /// <param name="verifyToken"></param>
         /// <param name="proxyToken">代理令箭</param>
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public RPCProxyInfo GetProxyInfo(string proxyToken)
+        public RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null)
         {
+            this.remoteService = IPHost.CreatIPHost(ipHost).EndPoint;
             int count = 0;
             while (count < 3)
             {
@@ -176,14 +131,34 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        public void InitializedRPC()
+        public void InitializedRPC(string ipHost, string verifyToken = null)
         {
-            if (this.methodStore == null)
+            this.remoteService = IPHost.CreatIPHost(ipHost).EndPoint;
+            int count = 0;
+            while (count < 3)
             {
-                throw new RRQMRPCException("函数映射表为空");
+                lock (this)
+                {
+                    try
+                    {
+                        this.methodStore = null;
+                        this.UDPSend(102);
+                        this.singleWaitData.Wait(1000 * 3);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RRQMRPCException(e.Message);
+                    }
+                    if (this.methodStore != null)
+                    {
+                        this.methodStore.InitializedType();
+                        return;
+                    }
+                }
+                count++;
             }
+            throw new RRQMTimeoutException("连接初始化超时");
 
-            this.methodStore.InitializedType();
         }
 
         private void Agreement_110(byte[] buffer, int r)

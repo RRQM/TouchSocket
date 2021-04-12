@@ -13,6 +13,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace RRQMSocket
 {
@@ -47,7 +48,7 @@ namespace RRQMSocket
 
         internal string GetDefaultID()
         {
-            number++;
+            Interlocked.Increment(ref number);
             return string.Format(IDFormat, number);
         }
 

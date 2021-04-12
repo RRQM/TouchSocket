@@ -11,40 +11,40 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using RRQMCore.Pool;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
+using RRQMSocket.Pool;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 通讯客户端主类
+    /// 集群RPC客户端
     /// </summary>
-    public sealed class RPCClient : TokenTcpClient, IRPCClient
+    public sealed class RPCClient : IRPCClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RPCClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        public RPCClient()
         {
+            this.rpcJunctorPool = new ObjectPool<RpcJunctor>();
+            this.Capacity = 10;
+            this.BytePool = new BytePool();
+            BinarySerializeConverter serializeConverter = new BinarySerializeConverter();
+            this.SerializeConverter = serializeConverter;
+            this.methodStore = new MethodStore();
+            this.Logger = new Log();
         }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool"></param>
-        public RPCClient(BytePool bytePool) : base(bytePool)
-        {
-            this.SerializeConverter = new BinarySerializeConverter();
-            this.methodStore = new MethodStore();
-            this.singleWaitData = new WaitData<WaitResult>();
-            this.singleWaitData.WaitResult = new WaitResult();
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-        }
+        private string verifyToken;
+
 
         /// <summary>
         /// 收到字节数组并返回
@@ -62,69 +62,84 @@ namespace RRQMSocket.RPC
         public SerializeConverter SerializeConverter { get; set; }
 
         /// <summary>
-        /// 获取RPC快捷调用实例字典
+        /// 缓存容量
         /// </summary>
-        public static ConcurrentDictionary<string, RPCClient> RPCCacheDic { get { return rpcDic; } }
+        public int Capacity { get { return this.rpcJunctorPool.Capacity; } set { this.rpcJunctorPool.Capacity = value; } }
 
-        private WaitData<WaitResult> singleWaitData;
-        private RRQMWaitHandle<RPCContext> waitHandles = new RRQMWaitHandle<RPCContext>();
-        private MethodStore methodStore;
-        private RPCProxyInfo proxyFile;
-        private RRQMAgreementHelper agreementHelper;
-        private static ConcurrentDictionary<string, RPCClient> rpcDic = new ConcurrentDictionary<string, RPCClient>();
+        private ILog logger;
 
         /// <summary>
-        /// 连接服务器
+        /// 日志记录器
         /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="RRQMRPCException"></exception>
-        public override void Connect(AddressFamily addressFamily, EndPoint endPoint)
+        public ILog Logger
         {
-            base.Connect(addressFamily, endPoint);
-            this.agreementHelper = new RRQMAgreementHelper(this);
-            lock (locker)
+            get { return logger; }
+            set
             {
-                try
-                {
-                    this.methodStore = null;
-                    agreementHelper.SocketSend(102);
-                    this.singleWaitData.Wait(1000 * 10);
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMRPCException(e.Message);
-                }
-                if (this.methodStore == null)
-                {
-                    throw new RRQMTimeoutException("连接初始化超时");
-                }
+                logger = value;
             }
         }
 
         /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public BytePool BytePool { get; private set; }
+
+        /// <summary>
+        /// 获取即将在下一次通信的客户端单体
+        /// </summary>
+        public RpcJunctor NextJunctor { get { return this.rpcJunctorPool.PreviewGetObject(); } }
+
+        /// <summary>
+        /// 获取即将在下一次通信的客户端单体的ID
+        /// </summary>
+        public string ID
+        {
+            get
+            {
+                RpcJunctor rpcJunctor = this.rpcJunctorPool.PreviewGetObject();
+                if (rpcJunctor != null)
+                {
+                    return rpcJunctor.ID;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// RPC连接池
+        /// </summary>
+        public ObjectPool<RpcJunctor> RpcJunctorPool { get { return rpcJunctorPool; } }
+
+        /// <summary>
+        /// 获取RPC快捷调用实例字典
+        /// </summary>
+        public static ConcurrentDictionary<string, RPCClient> RPCCacheDic { get { return rpcDic; } }
+
+        private static ConcurrentDictionary<string, RPCClient> rpcDic = new ConcurrentDictionary<string, RPCClient>();
+        private IPHost iPHost;
+        private MethodStore methodStore;
+        private RPCProxyInfo proxyFile;
+        ObjectPool<RpcJunctor> rpcJunctorPool;
+
+        /// <summary>
         /// 获取远程服务器RPC服务文件
         /// </summary>
+        /// <param name="ipHost">IP和端口</param>
+        /// <param name="verifyToken">连接验证</param>
         /// <param name="proxyToken">代理令箭</param>
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public RPCProxyInfo GetProxyInfo(string proxyToken)
+        public RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null)
         {
-            lock (locker)
+            this.iPHost = IPHost.CreatIPHost(ipHost);
+            this.verifyToken = verifyToken;
+            lock (this)
             {
-                agreementHelper.SocketSend(100, proxyToken);
-                this.singleWaitData.Wait(1000 * 10);
-
-                if (this.proxyFile == null)
-                {
-                    throw new RRQMTimeoutException("获取引用文件超时");
-                }
-                else if (this.proxyFile.Status == 2)
-                {
-                    throw new RRQMRPCException(this.proxyFile.Message);
-                }
+                RpcJunctor rpcJunctor = this.GetRpcJunctor();
+                this.proxyFile = rpcJunctor.GetProxyInfo(proxyToken);
+                this.rpcJunctorPool.DestroyObject(rpcJunctor);
                 return this.proxyFile;
             }
         }
@@ -132,14 +147,24 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        public void InitializedRPC()
+        ///<exception cref="ArgumentNullException"></exception>
+        public void InitializedRPC(string ipHost, string verifyToken = null)
         {
-            if (this.methodStore == null)
-            {
-                throw new RRQMRPCException("函数映射表为空");
-            }
+            this.iPHost = IPHost.CreatIPHost(ipHost);
+            this.verifyToken = verifyToken;
+            RpcJunctor rpcJunctor = this.GetRpcJunctor();
+            this.methodStore = rpcJunctor.GetMethodStore();
 
-            this.methodStore.InitializedType();
+            if (this.methodStore != null)
+            {
+                rpcJunctor.methodStore = this.methodStore;
+                this.methodStore.InitializedType();
+                this.rpcJunctorPool.DestroyObject(rpcJunctor);
+            }
+            else
+            {
+                throw new ArgumentNullException("函数映射为空");
+            }
         }
 
         /// <summary>
@@ -155,95 +180,14 @@ namespace RRQMSocket.RPC
         /// <returns>服务器返回结果</returns>
         public T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption)
         {
-            WaitData<RPCContext> waitData = this.waitHandles.GetWaitData();
-           // waitData.WaitResult = new RPCContext();
-            MethodItem methodItem = methodStore.GetMethodItem(method);
-
-            waitData.WaitResult.Method = methodItem.Method;
-
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(1024);
-            if (invokeOption == null)
-            {
-                invokeOption = InvokeOption.CanFeedback;
-            }
+            RpcJunctor rpcJunctor = this.GetRpcJunctor();
             try
             {
-                if (invokeOption.Feedback)
-                {
-                    waitData.WaitResult.Feedback = 1;
-                }
-                List<byte[]> datas = new List<byte[]>();
-                foreach (object parameter in parameters)
-                {
-                    datas.Add(this.SerializeConverter.SerializeParameter(parameter));
-                }
-                waitData.WaitResult.ParametersBytes = datas;
-                waitData.WaitResult.Serialize(byteBlock);
-
-                agreementHelper.SocketSend(101, byteBlock);
-            }
-            catch (Exception e)
-            {
-                throw new RRQMException(e.Message);
+                return rpcJunctor.RPCInvoke<T>(method, ref parameters, invokeOption);
             }
             finally
             {
-                byteBlock.Dispose();
-            }
-            if (invokeOption.Feedback)
-            {
-                waitData.Wait(invokeOption.WaitTime * 1000);
-
-                RPCContext context = waitData.WaitResult;
-                waitData.Dispose();
-                if (context.Status == 0)
-                {
-                    throw new RRQMTimeoutException("等待结果超时");
-                }
-                else if (context.Status == 2)
-                {
-                    throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
-                }
-                else if (context.Status == 3)
-                {
-                    throw new RRQMRPCException("该方法已被禁用");
-                }
-                else if (context.Status == 4)
-                {
-                    throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.Method}");
-                }
-                if (methodItem.IsOutOrRef)
-                {
-                    try
-                    {
-                        for (int i = 0; i < parameters.Length; i++)
-                        {
-                            parameters[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodItem.ParameterTypes[i]);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        throw new RRQMException(e.Message);
-                    }
-                }
-                else
-                {
-                    parameters = null;
-                }
-
-                try
-                {
-                    return (T)this.SerializeConverter.DeserializeParameter(context.ReturnParameterBytes, methodItem.ReturnType);
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMException(e.Message);
-                }
-            }
-            else
-            {
-                waitData.Dispose();
-                return default(T);
+                this.rpcJunctorPool.DestroyObject(rpcJunctor);
             }
         }
 
@@ -259,187 +203,80 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMException"></exception>
         public void RPCInvoke(string method, ref object[] parameters, InvokeOption invokeOption)
         {
-            WaitData<RPCContext> waitData = this.waitHandles.GetWaitData();
-           // waitData.WaitResult = new RPCContext();
-            MethodItem methodItem = this.methodStore.GetMethodItem(method);
-            waitData.WaitResult.Method = methodItem.Method;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
-            {
-                invokeOption = InvokeOption.CanFeedback;
-            }
+            RpcJunctor rpcJunctor = this.GetRpcJunctor();
             try
             {
-                if (invokeOption.Feedback)
-                {
-                    waitData.WaitResult.Feedback = 1;
-                }
-                List<byte[]> datas = new List<byte[]>();
-                foreach (object parameter in parameters)
-                {
-                    datas.Add(this.SerializeConverter.SerializeParameter(parameter));
-                }
-                waitData.WaitResult.ParametersBytes = datas;
-                waitData.WaitResult.Serialize(byteBlock);
-                agreementHelper.SocketSend(101, byteBlock);
-            }
-            catch (Exception e)
-            {
-                throw new RRQMException(e.Message);
+                rpcJunctor.RPCInvoke(method, ref parameters, invokeOption);
             }
             finally
             {
-                byteBlock.Dispose();
+                this.rpcJunctorPool.DestroyObject(rpcJunctor);
             }
-            if (invokeOption.Feedback)
-            {
-                waitData.Wait(invokeOption.WaitTime * 1000);
-                RPCContext context = waitData.WaitResult;
-                waitData.Dispose();
+        }
 
-                if (context.Status == 0)
+        int tryCount;
+        private RpcJunctor GetRpcJunctor()
+        {
+            RpcJunctor rpcJunctor = this.rpcJunctorPool.PreviewGetObject();
+            if (rpcJunctor == null)
+            {
+                if (this.rpcJunctorPool.FreeSize < this.Capacity)
                 {
-                    throw new RRQMTimeoutException("等待结果超时");
-                }
-                else if (context.Status == 2)
-                {
-                    throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
-                }
-                else if (context.Status == 3)
-                {
-                    throw new RRQMRPCException("该方法已被禁用");
-                }
-                else if (context.Status == 4)
-                {
-                    throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.Method}");
-                }
-                if (methodItem.IsOutOrRef)
-                {
+                    rpcJunctor = new RpcJunctor(this.BytePool);
+                    rpcJunctor.VerifyToken = this.verifyToken;
                     try
                     {
-                        for (int i = 0; i < parameters.Length; i++)
-                        {
-                            parameters[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodItem.ParameterTypes[i]);
-                        }
+                        rpcJunctor.Connect(this.iPHost.AddressFamily, this.iPHost.EndPoint);
+                        rpcJunctor.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
+                        rpcJunctor.ReceivedByteBlock = this.OnReceivedByteBlock;
+                        rpcJunctor.Logger = this.logger;
+                        rpcJunctor.SerializeConverter = this.SerializeConverter;
+                        rpcJunctor.methodStore = this.methodStore;
+                        this.tryCount = 0;
+                        return rpcJunctor;
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        throw new RRQMException(e.Message);
+                        this.logger.Debug(LogType.Error, rpcJunctor, $"连接异常：{ex.Message}");
+                        rpcJunctor.Dispose();
+                        if (++tryCount >= this.Capacity)
+                        {
+                            throw new RRQMRPCException("重试次数达到上线");
+                        }
+                        return GetRpcJunctor();
                     }
                 }
                 else
                 {
-                    parameters = null;
+                    throw new RRQMRPCNoFreeException("无空闲RPC连接器，请稍后重试");
                 }
             }
             else
             {
-                waitData.Dispose();
+                rpcJunctor = this.rpcJunctorPool.GetObject();
+                if (!rpcJunctor.Online)
+                {
+                    rpcJunctor.Dispose();
+                    if (++tryCount >= this.Capacity)
+                    {
+                        throw new RRQMRPCException("重试次数达到上线");
+                    }
+                    return GetRpcJunctor();
+                }
+                tryCount = 0;
+                return rpcJunctor;
             }
+
         }
 
-        private void Agreement_110(byte[] buffer, int r)
+        private void OnReceivedBytesThenReturn(object sender, BytesEventArgs e)
         {
-            WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
-            BytesEventArgs args = new BytesEventArgs();
-            args.ReceivedDataBytes = waitBytes.Bytes;
-            this.ReceivedBytesThenReturn?.Invoke(this, args);
-            waitBytes.Bytes = args.ReturnDataBytes;
-
-            agreementHelper.SocketSend(110, SerializeConvert.BinarySerialize(waitBytes));
+            this.ReceivedBytesThenReturn?.Invoke(sender, e);
         }
 
-        /// <summary>
-        /// 处理已接收到的数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock)
+        private void OnReceivedByteBlock(object sender, ByteBlock e)
         {
-            byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Length;
-            int agreement = BitConverter.ToInt32(buffer, 0);
-            switch (agreement)
-            {
-                case 100:/* 100表示获取RPC引用文件上传状态返回*/
-                    {
-                        try
-                        {
-                            proxyFile = SerializeConvert.BinaryDeserialize<RPCProxyInfo>(buffer, 4, r - 4);
-                            this.singleWaitData.Set();
-                        }
-                        catch
-                        {
-                            proxyFile = null;
-                        }
-
-                        break;
-                    }
-
-                case 101:/*函数调用返回数据对象*/
-                    {
-                        try
-                        {
-                            RPCContext result = RPCContext.Deserialize(buffer, 4);
-
-                            this.waitHandles.SetRun(result.Sign, result);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-
-                case 102:/*连接初始化返回数据对象*/
-                    {
-                        try
-                        {
-                            MethodItem[] methodItems = SerializeConvert.BinaryDeserialize<MethodItem[]>(buffer, 4, r - 4);
-                            this.methodStore = new MethodStore();
-                            foreach (var item in methodItems)
-                            {
-                                this.methodStore.AddMethodItem(item);
-                            }
-
-                            this.singleWaitData.Set();
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                case 110:/*反向函数调用返回*/
-                    {
-                        try
-                        {
-                            Agreement_110(buffer, r);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                case 111:/*收到服务器数据*/
-                    {
-                        ByteBlock block = this.BytePool.GetByteBlock(r - 4);
-                        try
-                        {
-                            block.Write(byteBlock.Buffer, 4, r - 4);
-                            ReceivedByteBlock?.Invoke(this, block);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 111, 错误详情:{e.Message}");
-                        }
-                        finally
-                        {
-                            block.Dispose();
-                        }
-                        break;
-                    }
-            }
+            this.ReceivedByteBlock?.Invoke(sender, e);
         }
 
         /// <summary>
@@ -453,24 +290,13 @@ namespace RRQMSocket.RPC
         public static void CallRPC(string host, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
         {
             RPCClient client;
-            if (rpcDic.TryGetValue(host, out client) && client.Online)
+            if (rpcDic.TryGetValue(host, out client))
             {
-                if (client.Online)
-                {
-                    client.RPCInvoke(methodKey, ref parameters, invokeOption);
-                    return;
-                }
-                else
-                {
-                    rpcDic.TryRemove(host, out _);
-                }
+                client.RPCInvoke(methodKey, ref parameters, invokeOption);
+                return;
             }
-
-            IPHost iPHost = IPHost.CreatIPHost(host);
             client = new RPCClient();
-            client.VerifyToken = verifyToken;
-            client.Connect(iPHost.AddressFamily, iPHost.EndPoint);
-            client.InitializedRPC();
+            client.InitializedRPC(host, verifyToken);
             rpcDic.TryAdd(host, client);
             client.RPCInvoke(methodKey, ref parameters, invokeOption);
         }
@@ -488,24 +314,15 @@ namespace RRQMSocket.RPC
         public static T CallRPC<T>(string host, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
         {
             RPCClient client;
-            if (rpcDic.TryGetValue(host, out client) && client.Online)
+            if (rpcDic.TryGetValue(host, out client))
             {
-                if (client.Online)
-                {
-                    return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
-                }
-                else
-                {
-                    rpcDic.TryRemove(host, out _);
-                }
+                return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
             }
-            IPHost iPHost = IPHost.CreatIPHost(host);
             client = new RPCClient();
-            client.VerifyToken = verifyToken;
-            client.Connect(iPHost.AddressFamily, iPHost.EndPoint);
-            client.InitializedRPC();
+            client.InitializedRPC(host, verifyToken);
             rpcDic.TryAdd(host, client);
             return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
         }
+
     }
 }
