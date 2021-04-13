@@ -207,6 +207,16 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         internal RRQMBytesEventHandler ReceivedBytesThenReturn;
 
+        /// <summary>
+        /// 请求删除文件
+        /// </summary>
+        internal RRQMFileOperationEventHandler RequestDeleteFile;
+
+        /// <summary>
+        /// 请求文件信息
+        /// </summary>
+        internal RRQMFileOperationEventHandler RequestFileInfo;
+
         #endregion 事件
         private void MaxSpeedChanged(long speed)
         {
@@ -538,6 +548,70 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+        private void RDeleteFile(ByteBlock byteBlock,FileUrl url)
+        {
+            if (!File.Exists(url.FilePath))
+            {
+                byteBlock.Write(2);
+                return;
+            }
+            OperationFileEventArgs args = new OperationFileEventArgs();
+            args.FileInfo.FilePath = url.FilePath;
+            args.FileInfo.Flag = url.Flag;
+            this.RequestDeleteFile?.Invoke(this, args);
+            if (!args.IsPermitOperation)
+            {
+                byteBlock.Write(3);
+                return;
+            }
+            try
+            {
+                File.Delete(args.FileInfo.FilePath);
+                byteBlock.Write(1);
+            }
+            catch (Exception ex)
+            {
+                byteBlock.Write(4);
+                byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
+            }
+            
+        } 
+        
+        private void RFileInfo(ByteBlock byteBlock,FileUrl url)
+        {
+            if (!File.Exists(url.FilePath))
+            {
+                byteBlock.Write(2);
+                return;
+            }
+            OperationFileEventArgs args = new OperationFileEventArgs();
+            args.FileInfo.FilePath = url.FilePath;
+            args.FileInfo.Flag = url.Flag;
+            this.RequestFileInfo?.Invoke(this, args);
+            if (!args.IsPermitOperation)
+            {
+                byteBlock.Write(3);
+                return;
+            }
+            try
+            {
+                FileInfo fileInfo = new FileInfo();
+                using (Stream stream=File.Open(args.FileInfo.FilePath,FileMode.Open))
+                {
+                    fileInfo.FileLength = stream.Length;
+                    fileInfo.FileName = Path.GetFileName(args.FileInfo.FilePath);
+                    fileInfo.FilePath = args.FileInfo.FilePath;
+                }
+                byteBlock.Write(1);
+                byteBlock.Write(SerializeConvert.BinarySerialize(fileInfo));
+            }
+            catch (Exception ex)
+            {
+                byteBlock.Write(4);
+                byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
+            }
+            
+        }
         private void SystemMessage(string mes)
         {
             ReceiveSystemMes?.Invoke(this, new MesEventArgs(mes));
@@ -774,6 +848,36 @@ namespace RRQMSocket.FileTransfer
                             transferSetting.bufferLength = this.BufferLength;
                             returnByteBlock.Write(SerializeConvert.BinarySerialize(transferSetting));
                             this.bufferLengthChanged = false;
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex.StackTrace);
+                        }
+                        break;
+                    }
+
+                case 1021:
+                    {
+                        try
+                        {
+                            byteBlock.Seek(0,SeekOrigin.Begin);
+                            FileUrl url = SerializeConvert.BinaryDeserialize<FileUrl>(byteBlock);
+                            this.RDeleteFile(returnByteBlock,url);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex.StackTrace);
+                        }
+                        break;
+                    } 
+                
+                case 1022:
+                    {
+                        try
+                        {
+                            byteBlock.Seek(0,SeekOrigin.Begin);
+                            FileUrl url = SerializeConvert.BinaryDeserialize<FileUrl>(byteBlock);
+                            this.RFileInfo(returnByteBlock,url);
                         }
                         catch (Exception ex)
                         {

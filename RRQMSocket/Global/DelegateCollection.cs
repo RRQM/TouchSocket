@@ -51,6 +51,13 @@ public delegate void RRQMUDPByteBlockEventHandler(EndPoint remoteEndpoint, ByteB
 public delegate void RRQMTransferFileEventHandler(object sender, TransferFileEventArgs e);
 
 /// <summary>
+/// 文件操作处理
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMFileOperationEventHandler(object sender, OperationFileEventArgs e);
+
+/// <summary>
 /// 文件处理
 /// </summary>
 /// <param name="sender"></param>

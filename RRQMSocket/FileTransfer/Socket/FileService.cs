@@ -108,6 +108,15 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public event RRQMBytesEventHandler ReceivedBytesThenReturn;
 
+        /// <summary>
+        /// 请求删除文件
+        /// </summary>
+        public event RRQMFileOperationEventHandler RequestDeleteFile;
+
+        /// <summary>
+        /// 请求文件信息
+        /// </summary>
+        public event RRQMFileOperationEventHandler RequestFileInfo;
         #endregion 事件
 
         /// <summary>
@@ -129,6 +138,8 @@ namespace RRQMSocket.FileTransfer
                 tcpSocketClient.ReceiveSystemMes = this.OnReceiveSystemMes;
                 tcpSocketClient.ReceiveFileFinished = this.OnReceiveFileFinished;
                 tcpSocketClient.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
+                tcpSocketClient.RequestDeleteFile = this.OnRequestDeleteFile;
+                tcpSocketClient.RequestFileInfo = this.OnRequestFileInfo;
             }
             tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
@@ -156,6 +167,14 @@ namespace RRQMSocket.FileTransfer
         private void OnReceivedBytesThenReturn(object sender, BytesEventArgs e)
         {
             this.ReceivedBytesThenReturn?.Invoke(sender,e);
+        }
+        private void OnRequestDeleteFile(object sender, OperationFileEventArgs e)
+        {
+            this.RequestDeleteFile?.Invoke(sender,e);
+        }
+        private void OnRequestFileInfo(object sender, OperationFileEventArgs e)
+        {
+            this.RequestFileInfo?.Invoke(sender,e);
         }
     }
 }

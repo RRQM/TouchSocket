@@ -340,7 +340,7 @@ namespace RRQMSocket.FileTransfer
             {
                 IPHost iPHost = IPHost.CreatIPHost(host);
                 fileClient.Connect(iPHost.AddressFamily, iPHost.EndPoint);
-               
+
                 if (finishedCallBack != null)
                 {
                     fileClient.DownloadFileFinished += finishedCallBack;
@@ -348,7 +348,7 @@ namespace RRQMSocket.FileTransfer
                 fileClient.DownloadFileFinished += (object sender, FileFinishedArgs e) => { fileClient.Dispose(); };
                 fileClient.BeforeDownloadFile += (object sender, TransferFileEventArgs e) =>
                 {
-                    e.TargetPath = Path.Combine(receiveDir==null?"":receiveDir,e.FileInfo.FileName);
+                    e.TargetPath = Path.Combine(receiveDir == null ? "" : receiveDir, e.FileInfo.FileName);
                 };
                 fileClient.DownloadFile(url, waitTime);
                 return fileClient;
@@ -358,7 +358,7 @@ namespace RRQMSocket.FileTransfer
                 fileClient.Dispose();
                 throw new RRQMException(ex.Message);
             }
-           
+
         }
 
         /// <summary>
@@ -390,7 +390,112 @@ namespace RRQMSocket.FileTransfer
                 fileClient.Dispose();
                 throw new RRQMException(ex.Message);
             }
-           
+
+        }
+       
+        /// <summary>
+        /// 请求删除文件
+        /// </summary>
+        /// <param name="url"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void RequestDelete(FileUrl url)
+        {
+            lock (locker)
+            {
+                if (!this.Online)
+                {
+                    throw new RRQMException("未连接服务器");
+                }
+                byte[] datas = SerializeConvert.BinarySerialize(url);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
+                byteBlock.Write(datas);
+                try
+                {
+                    ByteBlock returnByteBlock = this.SendWait(1021, this.timeout, byteBlock);
+                    if (returnByteBlock == null || returnByteBlock.Length == 0)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                    byte[] returnData = returnByteBlock.ToArray();
+                    returnByteBlock.SetHolding(false);
+                    if (returnData[0] == 1)
+                    {
+                        return;
+                    }
+                    else if (returnData[0] == 2)
+                    {
+                        throw new FileNotFoundException("未找到该文件路径");
+                    }
+                    else if (returnData[0] == 3)
+                    {
+                        throw new RRQMException("服务器拒绝操作");
+                    }
+                    else if (returnData[0] == 4)
+                    {
+                        throw new RRQMException(Encoding.UTF8.GetString(returnData, 1, returnData.Length - 1));
+                    }
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 请求获取文件信息
+        /// </summary>
+        /// <param name="url"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public FileInfo RequestFileInfo(FileUrl url)
+        {
+            lock (locker)
+            {
+                if (!this.Online)
+                {
+                    throw new RRQMException("未连接服务器");
+                }
+                byte[] datas = SerializeConvert.BinarySerialize(url);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
+                byteBlock.Write(datas);
+                try
+                {
+                    ByteBlock returnByteBlock = this.SendWait(1022, this.timeout, byteBlock);
+                    if (returnByteBlock == null || returnByteBlock.Length == 0)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                    byte[] returnData = returnByteBlock.ToArray();
+                    returnByteBlock.SetHolding(false);
+                    if (returnData[0] == 1)
+                    {
+                        FileInfo fileInfo = SerializeConvert.BinaryDeserialize<FileInfo>(returnData,1,returnData.Length);
+                        return fileInfo;
+                    }
+                    else if (returnData[0] == 2)
+                    {
+                        throw new FileNotFoundException("未找到该文件路径");
+                    }
+                    else if (returnData[0] == 3)
+                    {
+                        throw new RRQMException("服务器拒绝操作");
+                    }
+                    else if (returnData[0] == 4)
+                    {
+                        throw new RRQMException(Encoding.UTF8.GetString(returnData, 1, returnData.Length - 1));
+                    }
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+
+                return null;
+            }
         }
 
         /// <summary>

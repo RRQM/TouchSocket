@@ -40,7 +40,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        ///
+        /// 构造函数
         /// </summary>
         public FileUrl()
         {

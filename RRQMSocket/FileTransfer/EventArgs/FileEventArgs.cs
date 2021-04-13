@@ -8,6 +8,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Event;
 using System;
 
 namespace RRQMSocket.FileTransfer
@@ -15,7 +16,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件事件
     /// </summary>
-    public class FileEventArgs:EventArgs
+    public class FileEventArgs:RRQMEventArgs
     {
         /// <summary>
         /// 文件信息

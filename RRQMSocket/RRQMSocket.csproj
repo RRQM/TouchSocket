@@ -4,7 +4,7 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>4.0.8.1</Version>
+    <Version>4.0.9.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
@@ -12,8 +12,10 @@
       1.修改：Token系服务器验证方式。
       2.增加：FileClient快捷上传、下载的静态方法。
       3.增加：RPC快捷调用。
-      4.修复：Dispose不能释放线程的Bug。
-      5.修复：RPC部分Bug。
+      4.增加：请求文件删除，请求文件信息方法。
+      5.修复：Dispose不能释放线程的Bug。
+      6.修复：RPC部分Bug。
+     
 
       程序集介绍：
       RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
