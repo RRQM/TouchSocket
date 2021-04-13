@@ -37,7 +37,7 @@
  - 交流QQ群：234762506
 
 ### API文档
-[RRQMSocket API文档](https://gitee.com/dotnetchina/RRQMSocket/wikis/1.1%20%E6%A6%82%E8%BF%B0?sort_id=3868546)
+[RRQMSocket API文档](https://gitee.com/dotnetchina/RRQMSocket/wikis/pages)
 
 （文档目前还在积极完善当中）
 
