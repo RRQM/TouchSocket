@@ -32,7 +32,7 @@ namespace RRQMSocket
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
         /// </summary>
-        internal Action<ByteBlock> ReceivedCallBack { get; set; }
+        internal Action<ByteBlock, object> ReceivedCallBack { get; set; }
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行发送
@@ -40,7 +40,7 @@ namespace RRQMSocket
         internal Action<byte[], int, int> SendCallBack { get; set; }
 
         /// <summary>
-        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock)"/>处理数据
+        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock,object)"/>处理数据
         /// </summary>
         /// <param name="byteBlock">数据流</param>
         protected abstract void PreviewReceived(ByteBlock byteBlock);
@@ -49,11 +49,12 @@ namespace RRQMSocket
         /// 处理已经经过预先处理后的数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected void GoReceived(ByteBlock byteBlock)
+        /// <param name="obj"></param>
+        protected void GoReceived(ByteBlock byteBlock, object obj)
         {
             try
             {
-                this.ReceivedCallBack.Invoke(byteBlock);
+                this.ReceivedCallBack.Invoke(byteBlock,obj);
             }
             catch (Exception ex)
             {

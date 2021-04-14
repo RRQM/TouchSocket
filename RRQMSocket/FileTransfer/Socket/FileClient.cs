@@ -1109,7 +1109,8 @@ namespace RRQMSocket.FileTransfer
         /// 处理已接收到的数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock)
+        /// <param name="obj"></param>
+        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             if (byteBlock.Length > 16)
             {

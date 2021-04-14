@@ -86,7 +86,8 @@ namespace RRQMSocket
         /// 处理已接收到的数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock);
+        /// <param name="obj"></param>
+        protected abstract void HandleReceivedData(ByteBlock byteBlock,object obj);
 
         /// <summary>
         /// 发送字节流

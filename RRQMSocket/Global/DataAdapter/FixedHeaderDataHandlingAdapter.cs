@@ -155,7 +155,7 @@ namespace RRQMSocket
         {
             try
             {
-                this.GoReceived(byteBlock);
+                this.GoReceived(byteBlock,null);
             }
             finally
             {

@@ -41,7 +41,8 @@ namespace RRQMSocket
         /// 处理接收数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock)
+        /// <param name="obj"></param>
+        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             OnReceivedData?.Invoke(this, byteBlock);
         }
