@@ -556,6 +556,7 @@ namespace RRQMSocket.FileTransfer
                 return;
             }
             OperationFileEventArgs args = new OperationFileEventArgs();
+            args.FileInfo = new FileInfo();
             args.FileInfo.FilePath = url.FilePath;
             args.FileInfo.Flag = url.Flag;
             this.RequestDeleteFile?.Invoke(this, args);
@@ -585,6 +586,7 @@ namespace RRQMSocket.FileTransfer
                 return;
             }
             OperationFileEventArgs args = new OperationFileEventArgs();
+            args.FileInfo = new FileInfo();
             args.FileInfo.FilePath = url.FilePath;
             args.FileInfo.Flag = url.Flag;
             this.RequestFileInfo?.Invoke(this, args);
@@ -860,7 +862,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            byteBlock.Seek(0,SeekOrigin.Begin);
+                            byteBlock.Seek(4,SeekOrigin.Begin);
                             FileUrl url = SerializeConvert.BinaryDeserialize<FileUrl>(byteBlock);
                             this.RDeleteFile(returnByteBlock,url);
                         }
@@ -875,7 +877,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            byteBlock.Seek(0,SeekOrigin.Begin);
+                            byteBlock.Seek(4,SeekOrigin.Begin);
                             FileUrl url = SerializeConvert.BinaryDeserialize<FileUrl>(byteBlock);
                             this.RFileInfo(returnByteBlock,url);
                         }
