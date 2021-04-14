@@ -20,7 +20,7 @@
 
 </div>
 
-## 一、程序集描述
+## 💿描述
 &emsp;&emsp;RRQMSocket是一个整合性的、超轻量级的网络通信框架。支持C#语言系全平台（.NET Framework4.5及以上，.NET Core3.1及以上，.net standard2.0及以上），支持C#语言系全框架（WPF、Winform、Blazor、Xamarin、Mono、Unity等）。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
 &emsp;&emsp;目前RRQMSocket支持的传输层协议有TCP和UDP两款，基于这两大协议的支持，使得RRQMSocket能够解析绝大部分应用层协议，比如耳熟能详的HTTP、FTP、Telnet、POP3、SMTP、DNS等，不仅如此，RRQMSocket还内置了多种分包算法，使跨语言解析变得更加简单快捷。
@@ -29,41 +29,34 @@
 
 &emsp;&emsp;除了基本的框架外，程序集内还开发出了一些成熟框架，目前有`Token服务器`、`文件传输框架`、`RPC框架`两种，后续还会不断更新添加其他框架，希望大家多多支持和关注。
 
-### 联系作者
+### 🔗联系作者
 
  - [CSDN博客主页](https://blog.csdn.net/qq_40374647)
  - [哔哩哔哩视频](https://space.bilibili.com/94253567)
  - [源代码仓库主页](https://gitee.com/RRQM_Home) 
  - 交流QQ群：234762506
 
-### API文档
+### ✨API文档
+
 [RRQMSocket API文档](https://gitee.com/dotnetchina/RRQMSocket/wikis/pages)
 
 （文档目前还在积极完善当中）
 
+ ### 🖥支持环境
+- .NET Framework4.5及以上。
+- .NET Core3.1及以上。
+- .NET Standard2.0及以上。
 
-## 二、程序集架构概述
+### 📦 安装
 
-#### 2.1 常用类继承图
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0403/125335_fca6616f_8553710.png "屏幕截图.png")
+- [Nuget RRQMSocket](https://www.nuget.org/packages/RRQMSocket/)
+- [微软Nuget安装教程](https://docs.microsoft.com/zh-cn/nuget/quickstart/install-and-use-a-package-in-visual-studio)
 
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0403/125356_77874ccf_8553710.png "屏幕截图.png")
-
-#### 2.2 服务器工作流程 
-<img src="https://img-blog.csdnimg.cn/2021040422400067.png" width = "400" height = "400" alt="图片名称" align=center />
-
-#### 2.3 客户端工作流程
-<img src="https://img-blog.csdnimg.cn/20210404225011467.png" width = "400" height = "300" alt="图片名称" align=center />
-
-#### 2.4 粘包、分包处理架构
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0405/220548_8d5dd2f3_8553710.png "DataHandlingAdopter.png")
-
-## 三、TCP框架
-#### 3.1 创建TCP框架
+## 一、TCP框架
+#### 1.1 创建TCP框架
 几行代码就可以搭建出完整的TCP高性能框架，具体创建步骤详见[RRQMSocket创建高并发、高性能TCP框架](https://blog.csdn.net/qq_40374647/article/details/110679663?spm=1001.2014.3001.5501)。
 
-#### 3.2 特点
+#### 1.2 特点
 - 简单易用。
 - 多线程处理。
 - IOCP完美设计模型，避免收到数据再复制。
@@ -72,23 +65,17 @@
 - 内存池设计，避免内存重复申请、释放。
 - 对象池设计，避免数据对象的申请、释放。
 
-#### 3.3 性能
- **固定包头解析** 
 
-不难看出，在固定包头分包策略中，吞吐量大概在20w左右，而且基本没有GC。
-
-<img src="https://images.gitee.com/uploads/images/2021/0405/235811_d5f762fb_8553710.png" width = "400" height = "400" alt="图片名称" align=center />
-
-## 四、Token系服务器
-#### 4.1 概述
+## 二、Token系服务器
+#### 2.1 概述
 Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要功能就是对即将完成连接的客户端进行筛选，筛选手段就是验证Token，如果Token不符合规定，则直接断开连接，其他功能和Tcp服务器一致。
 
 
-## 五、文件传输框架
-#### 5.1 创建文件服务器框架
+## 三、文件传输框架
+#### 3.1 创建文件服务器框架
 几行代码就可以搭建出完整的高性能文件传输框架，具体创建步骤详见[RRQMSocket创建文件传输、大文件续传框架](https://blog.csdn.net/qq_40374647/article/details/100546120?spm=1001.2014.3001.5501)。
 
-#### 5.2 特点
+#### 3.2 特点
 - 简单易用。
 - 多线程处理。
 - 高性能，传输速度可达500Mb/s。
@@ -104,18 +91,18 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 - 已经上传的文件，再次上传时，可实现快速上传。
 - 极少的GC释放。
 
-#### 5.3 Demo示例
+#### 3.3 Demo示例
  **Demo位置：** [RRQMSocket.FileTransfer.Demo](https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo)
 
  **说明：** 可以看到，图一正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到346Mb/s，这是因为服务器和客户端在同一电脑上，磁盘性能限制导致的。其次，GC基本上没有释放，性能非常强悍，图二是下载文件，性能依旧非常强悍。
 
 ![上传文件](https://images.gitee.com/uploads/images/2021/0409/190350_92a2ad36_8553710.png "上传文件")
 ![下载文件](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "下载文件")
-## 六、RPC框架
-#### 6.1 创建RPC框架
+## 四、RPC框架
+#### 4.1 创建RPC框架
 几行代码就可以搭建出完整的高性能文件传输框架，具体创建步骤详见[RRQMSocket创建RPC高性能微框架，支持任意序列化、out及ref](https://blog.csdn.net/qq_40374647/article/details/109143243?spm=1001.2014.3001.5501)。
 
-#### 6.2 特点
+#### 4.2 特点
 - 简单易用。
 - 多线程处理。
 - 高性能，在保证送达但不返回的情况下，10w次调用用时0.8s，在返回的情况下，用时3.9s。
@@ -130,7 +117,7 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 - 全异常反馈，服务里发生的异常，会一字不差的反馈到客户端。
 - 超简单的回调方式。
 
-#### 6.3 Demo示例
+#### 4.3 Demo示例
  **Demo位置：** [RRQMSocket.RPC.Demo](https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo)
 
  **说明：** 
@@ -142,12 +129,14 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191531_d7f0a8d4_8553710.png "屏幕截图.png")
 
-## 七、致谢
+🤝 如何贡献
+
+## 致谢
 
 谢谢大家对我的支持，如果还有其他问题，请加群QQ：234762506讨论。
 
 
-## 八、赞助
+## 💕 支持本项目
 您的支持就是我不懈努力的动力。打赏时请一定留下您的称呼。
 
  **赞助总金额:266.6￥** 
