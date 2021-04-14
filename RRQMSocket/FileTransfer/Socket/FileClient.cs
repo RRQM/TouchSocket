@@ -473,7 +473,7 @@ namespace RRQMSocket.FileTransfer
                     returnByteBlock.SetHolding(false);
                     if (returnData[0] == 1)
                     {
-                        FileInfo fileInfo = SerializeConvert.BinaryDeserialize<FileInfo>(returnData,1,returnData.Length);
+                        FileInfo fileInfo = SerializeConvert.BinaryDeserialize<FileInfo>(returnData,1,returnData.Length-1);
                         return fileInfo;
                     }
                     else if (returnData[0] == 2)
