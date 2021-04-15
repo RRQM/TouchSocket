@@ -8,28 +8,21 @@
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
-      更新内容：
-      1.修改：Token系服务器验证方式。
-      2.增加：FileClient快捷上传、下载的静态方法。
-      3.增加：RPC快捷调用。
-      4.增加：请求文件删除，请求文件信息方法。
-      5.修复：Dispose不能释放线程的Bug。
-      6.修复：RPC部分Bug。
-     
+	程序集介绍：
+	RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
+    
+	目前有文件传输框架、RPC框架两种，后续还会不断更新添加其他框架，希望大家多多支持和关注。
 
-      程序集介绍：
-      RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
+	API 文档：
+	https://gitee.com/dotnetchina/RRQMSocket/wikis/pages
+	TCP框架Demo：
+	https://gitee.com/RRQM_Home/RRQMSocket.Demo
+	文件传输框架Demo：
+	https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo
+	RPC框架Demo：
+	https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
 
-      目前RRQMSocket支持的传输层协议有TCP和UDP两款，基于这两大协议的支持，使得RRQMSocket能够解析绝大部分应用层协议，比如耳熟能详的HTTP、FTP、Telnet、POP3、SMTP、DNS等，不仅如此，RRQMSocket还内置了多种分包算法，使跨语言解析变得更加简单快捷。
-
-      RRQMSocket内部设计大量引用了内存池、对象池、等待池、线程池等众多“池”化设计，使得整个框架在接收和发送数据时基本上避免了“创建-销毁”的性能消耗。而且在接收数据时设计了完美的IOCP模型，不仅避免了接收数据的再复制行为，还让数据接收与数据处理分线程操作，大大减轻了内核的负担，让内核专注于接收，性能由此提升不少。这些优化行为的最终结果就是让RRQMSocket拥有超强的数据接收处理能力，这也就意味着它的适用场景也更加广泛，您可以用它开发分布式服务器、游戏服务器、文件管理服务器、即时通信服务器等。我相信，它的表现一定令您满意。
-
-      除了基本的框架外，程序集内还开发出了一些成熟框架，目前有文件传输框架、RPC框架两种，后续还会不断更新添加其他框架，希望大家多多支持和关注。
-
-      TCP框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.Demo
-      文件传输框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo
-      RPC框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
-    </Description>
+	</Description>
     <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
