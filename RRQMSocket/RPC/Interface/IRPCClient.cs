@@ -8,6 +8,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
@@ -17,7 +18,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 客户端RPC接口
     /// </summary>
-    public interface IRPCClient
+    public interface IRPCClient: IDisposable
     {
         /// <summary>
         /// 收到ByteBlock时触发

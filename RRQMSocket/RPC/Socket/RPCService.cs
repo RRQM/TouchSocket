@@ -49,17 +49,10 @@ namespace RRQMSocket.RPC
         private void InvokeMethod(IRPCParser parser, RPCContext content)
         {
             InstanceMethod instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
-            if (instanceMethod.async)
-            {
-                Task.Factory.StartNew(() =>
-                {
-                    ExecuteMethod(parser, content, instanceMethod);
-                });
-            }
-            else
+            Task.Factory.StartNew(() =>
             {
                 ExecuteMethod(parser, content, instanceMethod);
-            }
+            });
         }
 
         /// <summary>
@@ -251,7 +244,6 @@ namespace RRQMSocket.RPC
                         instanceOfMethod.instance = instance;
                         instanceOfMethod.method = method;
                         instanceOfMethod.methodItem = methodItem;
-                        instanceOfMethod.async = attribute.Async;
                         instanceOfMethod.isEnable = true;
                         serverMethodStore.AddInstanceMethod(instanceOfMethod);
                     }

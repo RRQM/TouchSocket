@@ -16,6 +16,24 @@ namespace RRQMSocket
     public class ConnectSetting
     {
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ConnectSetting()
+        { 
+        
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        public ConnectSetting(string ip,int port)
+        {
+            this.TargetIP = ip;
+            this.TargetPort = port;
+        }
+        /// <summary>
         /// 目标IP
         /// </summary>
         public string TargetIP { get; set; }

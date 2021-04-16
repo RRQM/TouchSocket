@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace RRQMSocket
@@ -18,58 +19,74 @@ namespace RRQMSocket
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [Serializable]
-    public class ReadOnlyList<T> : List<T>
+    public class ReadOnlyList<T>:IEnumerable<T>
     {
-        internal new void Add(T block)
+        private List<T> list = new List<T>();
+
+        internal  void Add(T block)
         {
-            base.Add(block);
+            list.Add(block);
         }
 
-        internal new void AddRange(IEnumerable<T> collection)
+        internal  void AddRange(IEnumerable<T> collection)
         {
-            base.AddRange(collection);
+            list.AddRange(collection);
         }
 
-        internal new void Remove(T block)
+        internal  void Remove(T block)
         {
-            base.Remove(block);
+            list.Remove(block);
         }
 
-        internal new void RemoveAt(int index)
+        internal  void RemoveAt(int index)
         {
-            base.RemoveAt(index);
+            list.RemoveAt(index);
         }
 
-        internal new void RemoveAll(Predicate<T> match)
+        internal  void RemoveAll(Predicate<T> match)
         {
-            base.RemoveAll(match);
+            list.RemoveAll(match);
         }
 
-        internal new void RemoveRange(int index, int range)
+        internal  void RemoveRange(int index, int range)
         {
-            base.RemoveRange(index, range);
+            list.RemoveRange(index, range);
         }
 
-        internal new void Clear()
+        internal  void Clear()
         {
-            base.Clear();
+            list.Clear();
         }
 
-        internal new void Insert(int index, T item)
+        internal  void Insert(int index, T item)
         {
-            base.Insert(index, item);
+            list.Insert(index, item);
         }
 
-        internal new void InsertRange(int index, IEnumerable<T> collection)
+        internal  void InsertRange(int index, IEnumerable<T> collection)
         {
-            base.InsertRange(index, collection);
+            list.InsertRange(index, collection);
         }
 
         /// <summary>
-        ///
+        /// 返回迭代器
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<T> GetEnumerator()
+        {
+           return this.list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+           return  this.list.GetEnumerator();
+        }
+
+        /// <summary>
+        /// 获取对象
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public new T this[int index] { get { return base[index]; } }
+        public  T this[int index] { get { return list[index]; } }
     }
 }

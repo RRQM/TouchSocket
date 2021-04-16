@@ -21,7 +21,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMRPCMethodAttribute() : this(null, false, SupportProtocol.TCP | SupportProtocol.UDP)
+        public RRQMRPCMethodAttribute() : this(null, SupportProtocol.TCP | SupportProtocol.UDP)
         {
         }
 
@@ -29,7 +29,7 @@ namespace RRQMSocket.RPC
         /// 构造函数
         /// </summary>
         /// <param name="methodKey">指定函数键</param>
-        public RRQMRPCMethodAttribute(string methodKey) : this(methodKey, false, SupportProtocol.TCP | SupportProtocol.UDP)
+        public RRQMRPCMethodAttribute(string methodKey) : this(methodKey, SupportProtocol.TCP | SupportProtocol.UDP)
         {
         }
 
@@ -37,27 +37,12 @@ namespace RRQMSocket.RPC
         /// 构造函数
         /// </summary>
         /// <param name="methodKey">指定函数键</param>
-        /// <param name="async">异步执行该方法</param>
         /// <param name="sp">支持调用协议</param>
-        public RRQMRPCMethodAttribute(string methodKey = null, bool async = false, SupportProtocol sp = SupportProtocol.TCP | SupportProtocol.UDP)
+        public RRQMRPCMethodAttribute(string methodKey = null, SupportProtocol sp = SupportProtocol.TCP | SupportProtocol.UDP)
         {
             this.MethodKey = methodKey;
-            this.Async = async;
             this.SP = sp;
         }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="async">异步执行该方法</param>
-        public RRQMRPCMethodAttribute(bool async) : this(null, async, SupportProtocol.TCP | SupportProtocol.UDP)
-        {
-        }
-
-        /// <summary>
-        /// 是否异步执行
-        /// </summary>
-        public bool Async { get; private set; }
 
         /// <summary>
         /// 注册键

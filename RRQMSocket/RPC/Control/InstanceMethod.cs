@@ -17,7 +17,6 @@ namespace RRQMSocket.RPC
         internal ServerProvider instance;
         internal MethodInfo method;
         internal MethodItem methodItem;
-        internal bool async;
         internal bool isEnable;
     }
 }

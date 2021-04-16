@@ -118,6 +118,7 @@ namespace RRQMSocket.RPC
 
         private static ConcurrentDictionary<string, RPCClient> rpcDic = new ConcurrentDictionary<string, RPCClient>();
         private IPHost iPHost;
+        private bool _disposed;
         private MethodStore methodStore;
         private RPCProxyInfo proxyFile;
         ObjectPool<RpcJunctor> rpcJunctorPool;
@@ -217,6 +218,10 @@ namespace RRQMSocket.RPC
         int tryCount;
         private RpcJunctor GetRpcJunctor()
         {
+            if (this._disposed)
+            {
+                throw new RRQMRPCException("无法利用已释放资源");
+            }
             RpcJunctor rpcJunctor = this.rpcJunctorPool.PreviewGetObject();
             if (rpcJunctor == null)
             {
@@ -324,5 +329,23 @@ namespace RRQMSocket.RPC
             return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
         }
 
+        /// <summary>
+        /// 释放所占资源
+        /// </summary>
+        public void Dispose()
+        {
+            this._disposed = true;
+            while (true)
+            {
+                RpcJunctor rpcJunctor = this.rpcJunctorPool.GetObject();
+                if (rpcJunctor==null)
+                {
+                    break;
+                }
+
+                rpcJunctor.Dispose();
+            }
+          
+        }
     }
 }

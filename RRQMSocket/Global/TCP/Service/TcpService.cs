@@ -24,7 +24,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public  class TcpService<T> : BaseSocket, ITcpService where T : TcpSocketClient, new()
+    public class TcpService<T> : BaseSocket, ITcpService where T : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -191,7 +191,7 @@ namespace RRQMSocket
                     BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                     bufferQueueGroups[i] = bufferQueueGroup;
                     bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                    bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(this.maxCount);//处理用户的消息
+                    bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(this.maxCount*10);//处理用户的消息
                     bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
                     bufferQueueGroup.bufferAndClient = new BufferQueue();
                     bufferQueueGroup.Thread.IsBackground = true;
@@ -216,9 +216,9 @@ namespace RRQMSocket
         /// <exception cref="RRQMNotConnectedException"></exception>
         /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id,byte[] buffer)
+        public virtual void Send(string id, byte[] buffer)
         {
-            this.Send(id,buffer, 0, buffer.Length);
+            this.Send(id, buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMNotConnectedException"></exception>
         /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id,byte[] buffer, int offset, int length)
+        public virtual void Send(string id, byte[] buffer, int offset, int length)
         {
             this.SocketClients[id].Send(buffer, offset, length);
         }
@@ -246,9 +246,9 @@ namespace RRQMSocket
         /// <exception cref="RRQMNotConnectedException"></exception>
         /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id,ByteBlock byteBlock)
+        public virtual void Send(string id, ByteBlock byteBlock)
         {
-            this.Send(id,byteBlock.Buffer, 0, (int)byteBlock.Length);
+            this.Send(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
 
@@ -338,19 +338,19 @@ namespace RRQMSocket
                 ClientBuffer clientBuffer;
                 if (queueGroup.bufferAndClient.TryDequeue(out clientBuffer))
                 {
-                    //try
-                    //{
-                    clientBuffer.client.HandleBuffer(clientBuffer);
-                    //}
-                    //catch (Exception e)
-                    //{
-                    //    Logger.Debug(LogType.Error, this, $"在处理数据时发生错误，信息：{e.Message}");
-                    //}
-                    //finally
-                    //{
-                    //    queueGroup.clientBufferPool.DestroyObject(clientBuffer);
-                    //    clientBuffer.byteBlock.Dispose();
-                    //}
+                    try
+                    {
+                        clientBuffer.client.HandleBuffer(clientBuffer);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Debug(LogType.Error, this, $"在处理数据时发生错误，信息：{e.Message}");
+                    }
+                    finally
+                    {
+                        queueGroup.clientBufferPool.DestroyObject(clientBuffer);
+                        clientBuffer.byteBlock.Dispose();
+                    }
                 }
                 else
                 {
@@ -368,8 +368,8 @@ namespace RRQMSocket
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
         protected virtual void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption)
-        { 
-        
+        {
+
         }
 
         internal virtual void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)

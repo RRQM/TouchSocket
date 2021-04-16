@@ -432,5 +432,13 @@ namespace RRQMSocket.RPC
                 }
             }
         }
+
+        /// <summary>
+        /// 释放所占资源
+        /// </summary>
+        public void Dispose()
+        {
+            this.udpSession.Dispose();
+        }
     }
 }

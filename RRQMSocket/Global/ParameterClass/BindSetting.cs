@@ -20,6 +20,26 @@ namespace RRQMSocket
     public class BindSetting
     {
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public BindSetting()
+        { 
+        
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        /// <param name="threadCount"></param>
+        public BindSetting(string ip,int port,int threadCount)
+        {
+            this.IP = ip;
+            this.Port = port;
+            this.MultithreadThreadCount = threadCount;
+        }
+        /// <summary>
         /// IP地址
         /// </summary>
         public string IP { get; set; }
