@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 无可用RPC异常
     /// </summary>
-    [Serializable]
+    
     public class RRQMRPCNoFreeException : RRQMException
     {
         /// <summary>

@@ -17,7 +17,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件进度块集合
     /// </summary>
-    [Serializable]
+    
     public class ProgressBlockCollection : ReadOnlyList<FileProgressBlock>
     {
         /// <summary>
@@ -35,7 +35,7 @@ namespace RRQMSocket.FileTransfer
             {
                 File.Delete(path);
             }
-            byte[] buffer = SerializeConvert.BinarySerialize(this);
+            byte[] buffer = SerializeConvert.RRQMBinarySerialize(this,true);
             using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
                 fileStream.Write(buffer, 0, buffer.Length);

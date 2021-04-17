@@ -20,7 +20,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC代理文件程序
     /// </summary>
-    [Serializable]
+    
     public class RPCProxyInfo : WaitResult
     {
         /// <summary>
@@ -36,11 +36,11 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 版本号
         /// </summary>
-        public Version Version { get; internal set; }
+        public string Version { get; internal set; }
 
         /// <summary>
         /// 源代码
         /// </summary>
-        public string[] Codes { get; internal set; }
+        public CellCode[] Codes { get; internal set; }
     }
 }

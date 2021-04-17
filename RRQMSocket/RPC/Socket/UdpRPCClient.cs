@@ -168,7 +168,7 @@ namespace RRQMSocket.RPC
             args.ReceivedDataBytes = waitBytes.Bytes;
             this.ReceivedBytesThenReturn?.Invoke(this, args);
             waitBytes.Bytes = args.ReturnDataBytes;
-            byte[] data = SerializeConvert.BinarySerialize(waitBytes);
+            byte[] data = SerializeConvert.RRQMBinarySerialize(waitBytes,true);
             UDPSend(110, data, 0, data.Length);
         }
 

@@ -338,7 +338,7 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            byteBlock.Write(SerializeConvert.BinarySerialize(waitResult));
+            byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult,true));
         }
 
         private void RequestUpload(ByteBlock byteBlock, RequestUploadFileBlock requestBlocks)
@@ -385,7 +385,7 @@ namespace RRQMSocket.FileTransfer
                             waitResult.Status = 3;
                             waitResult.Message = null;
 
-                            byteBlock.Write(SerializeConvert.BinarySerialize(waitResult));
+                            byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult,true));
                             return;
                         }
                         catch
@@ -411,7 +411,7 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            byteBlock.Write(SerializeConvert.BinarySerialize(waitResult));
+            byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult,true));
         }
 
         private void DownloadBlockData(ByteBlock byteBlock, byte[] buffer)
@@ -605,7 +605,7 @@ namespace RRQMSocket.FileTransfer
                     fileInfo.FilePath = args.FileInfo.FilePath;
                 }
                 byteBlock.Write(1);
-                byteBlock.Write(SerializeConvert.BinarySerialize(fileInfo));
+                byteBlock.Write(SerializeConvert.RRQMBinarySerialize(fileInfo,true));
             }
             catch (Exception ex)
             {
@@ -715,7 +715,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            FileUrl url = SerializeConvert.BinaryDeserialize<FileUrl>(buffer, 4, r - 4);
+                            FileUrl url = SerializeConvert.RRQMBinaryDeserialize<FileUrl>(buffer, 4);
                             RequestDownload(returnByteBlock, url);
                         }
                         catch (Exception ex)
@@ -849,7 +849,7 @@ namespace RRQMSocket.FileTransfer
                             TransferSetting transferSetting = new TransferSetting();
                             transferSetting.breakpointResume = this.breakpointResume;
                             transferSetting.bufferLength = this.BufferLength;
-                            returnByteBlock.Write(SerializeConvert.BinarySerialize(transferSetting));
+                            transferSetting.Serialize(returnByteBlock);
                             this.bufferLengthChanged = false;
                         }
                         catch (Exception ex)

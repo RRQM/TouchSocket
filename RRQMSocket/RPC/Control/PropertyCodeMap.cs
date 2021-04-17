@@ -175,7 +175,7 @@ namespace RRQMSocket.RPC
                     {
                         StringBuilder stringBuilder = new StringBuilder();
 
-                        stringBuilder.AppendLine("[Serializable]");
+                        stringBuilder.AppendLine("");
                         stringBuilder.AppendLine($"public class {type.Name}");
                         if (type.BaseType != typeof(object))
                         {

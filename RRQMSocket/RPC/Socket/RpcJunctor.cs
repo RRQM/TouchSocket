@@ -338,7 +338,7 @@ namespace RRQMSocket.RPC
             this.ReceivedBytesThenReturn?.Invoke(this, args);
             waitBytes.Bytes = args.ReturnDataBytes;
 
-            agreementHelper.SocketSend(110, SerializeConvert.BinarySerialize(waitBytes));
+            agreementHelper.SocketSend(110, SerializeConvert.RRQMBinarySerialize(waitBytes,true));
         }
 
         /// <summary>

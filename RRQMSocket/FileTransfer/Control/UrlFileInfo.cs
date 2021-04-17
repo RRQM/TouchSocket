@@ -15,7 +15,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件信息类
     /// </summary>
-    [Serializable]
+    
     public class UrlFileInfo : FileInfo
     {
         /// <summary>

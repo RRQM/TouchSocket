@@ -138,7 +138,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
         /// <exception cref="RRQMRPCException">RPC异常</exception>
         /// <returns>返回源代码</returns>
-        public string[] OpenRPCServer(RPCServerSetting setting)
+        public CellCode[] OpenRPCServer(RPCServerSetting setting)
         {
             return OpenRPCServer(setting, null);
         }
@@ -151,7 +151,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
         /// <exception cref="RRQMRPCException">RPC异常</exception>
         /// <returns>返回源代码</returns>
-        public string[] OpenRPCServer(RPCServerSetting setting, IRPCCompiler compiler)
+        public CellCode[] OpenRPCServer(RPCServerSetting setting, IRPCCompiler compiler)
         {
             if (this.ServerProviders.Count == 0)
             {
@@ -267,27 +267,40 @@ namespace RRQMSocket.RPC
 
             CodeMap.Namespace = nameSpace;
             CodeMap.PropertyCode = propertyCode;
-            List<string> codes = new List<string>();
-            codes.Add(CodeMap.GetAssemblyInfo(nameSpace, setting.Version));
+            List<CellCode> codes = new List<CellCode>();
+            //codes.Add(CodeMap.GetAssemblyInfo(nameSpace, setting.Version));
 
             foreach (string className in classAndMethods.Keys)
             {
                 CodeMap codeMap = new CodeMap();
                 codeMap.ClassName = className;
                 codeMap.Methods = classAndMethods[className].ToArray();
-                codes.Add(codeMap.GetCode());
-            }
 
-            codes.Add(propertyCode.GetPropertyCode());
+                CellCode cellCode = new CellCode();
+                cellCode.Name = className;
+                cellCode.CodeType =  CodeType.Service;
+                cellCode.Code = codeMap.GetCode();
+                codes.Add(cellCode);
+            }
+            CellCode propertyCellCode = new CellCode();
+            propertyCellCode.Name = "ClassArgs";
+            propertyCellCode.CodeType = CodeType.ClassArgs;
+            propertyCellCode.Code = propertyCode.GetPropertyCode();
+            codes.Add(propertyCellCode);
 
             this.RPCVersion = CodeMap.Version;
 
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
             proxyInfo.AssemblyName = assemblyName;
-            proxyInfo.Version = this.RPCVersion;
+            proxyInfo.Version = this.RPCVersion.ToString();
             if (compiler != null)
             {
-                proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codes.ToArray(), refs);
+                List<string> codesString = new List<string>();
+                foreach (var item in codes)
+                {
+                    codesString.Add(item.Code);
+                }
+                proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
 
             if (setting.ProxySourceCodeVisible)

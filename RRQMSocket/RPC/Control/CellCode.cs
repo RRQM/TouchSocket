@@ -9,17 +9,20 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// 生成的单元代码
     /// </summary>
+    
     public class CellCode
     {
         /// <summary>
         /// 类名
         /// </summary>
-        public string ClassName { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// 代码本体

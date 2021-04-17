@@ -16,7 +16,7 @@ namespace RRQMSocket
     /// <summary>
     /// 超长异常
     /// </summary>
-    [Serializable]
+    
     public class RRQMOverlengthException : RRQMException
     {
         /// <summary>

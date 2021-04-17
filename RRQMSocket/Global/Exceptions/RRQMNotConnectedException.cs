@@ -20,7 +20,7 @@ namespace RRQMSocket
     /// <summary>
     /// 未连接异常
     /// </summary>
-    [Serializable]
+    
     public class RRQMNotConnectedException : RRQMException
     {
         /// <summary>

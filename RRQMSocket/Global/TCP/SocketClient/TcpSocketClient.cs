@@ -13,6 +13,7 @@ using RRQMCore.Exceptions;
 using RRQMCore.Pool;
 using System;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -212,6 +213,7 @@ namespace RRQMSocket
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
                     queueGroup.waitHandleBuffer.Set();
+
                     try
                     {
                         WaitReceive();

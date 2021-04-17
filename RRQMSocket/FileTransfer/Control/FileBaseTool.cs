@@ -54,7 +54,7 @@ namespace RRQMSocket.FileTransfer
                 File.Delete(path);
             }
 
-            byte[] dataBuffer = SerializeConvert.BinarySerialize(blocks);
+            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(blocks,true);
             for (int i = 0; i < dataBuffer.Length; i++)
             {
                 buffer[i] = dataBuffer[i];
@@ -71,7 +71,7 @@ namespace RRQMSocket.FileTransfer
         internal static void SaveProgressBlockCollection(RRQMStream stream, ProgressBlockCollection blocks)
         {
             byte[] buffer = new byte[1024 * 1024];
-            byte[] dataBuffer = SerializeConvert.BinarySerialize(blocks);
+            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(blocks,true);
             for (int i = 0; i < dataBuffer.Length; i++)
             {
                 buffer[i] = dataBuffer[i];

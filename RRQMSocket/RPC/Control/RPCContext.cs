@@ -19,7 +19,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC传输类
     /// </summary>
-    [Serializable]
+    
     public class RPCContext : WaitResult
     {
         internal string Method;

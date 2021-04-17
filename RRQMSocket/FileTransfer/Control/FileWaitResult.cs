@@ -13,7 +13,7 @@ using System;
 
 namespace RRQMSocket.FileTransfer
 {
-    [Serializable]
+    
     internal class FileWaitResult : WaitResult
     {
         internal object Data { get; set; }

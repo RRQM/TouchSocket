@@ -16,7 +16,7 @@ namespace RRQMSocket
     /// <summary>
     /// 超时异常
     /// </summary>
-    [Serializable]
+    
     public class RRQMTimeoutException : RRQMException
     {
         /// <summary>

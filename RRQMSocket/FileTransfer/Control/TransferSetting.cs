@@ -8,14 +8,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using System;
 
 namespace RRQMSocket.FileTransfer
 {
-    [Serializable]
+    
     internal class TransferSetting
     {
         internal bool breakpointResume;
         internal int bufferLength;
+
+        internal void Serialize(ByteBlock byteBlock)
+        {
+            byteBlock.Write(Convert.ToByte(breakpointResume));
+            byteBlock.Write(BitConverter.GetBytes(bufferLength));
+        }
+        
+        internal static TransferSetting Deserialize(byte[] buffer,int offset)
+        {
+            TransferSetting transferSetting = new TransferSetting();
+            transferSetting.breakpointResume = BitConverter.ToBoolean(buffer,offset);
+            transferSetting.bufferLength = BitConverter.ToInt32(buffer,offset+1);
+            return transferSetting;
+        }
     }
 }

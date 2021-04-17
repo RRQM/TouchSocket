@@ -8,14 +8,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    ///
+    /// 文件块
     /// </summary>
-    [Serializable]
     public class FileBlock
     {
         /// <summary>

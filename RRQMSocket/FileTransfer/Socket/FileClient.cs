@@ -230,6 +230,7 @@ namespace RRQMSocket.FileTransfer
             AgreementHelper = new RRQMAgreementHelper(this);
             SynchronizeTransferSetting();
         }
+        
         private void SynchronizeTransferSetting()
         {
             ByteBlock byteBlock = this.SendWait(1020, this.timeout);
@@ -238,7 +239,7 @@ namespace RRQMSocket.FileTransfer
                 return;
             }
             byteBlock.Position = 0;
-            TransferSetting transferSetting = SerializeConvert.BinaryDeserialize<TransferSetting>(byteBlock);
+            TransferSetting transferSetting = TransferSetting.Deserialize(byteBlock.Buffer,0);
             this.breakpointResume = transferSetting.breakpointResume;
             this.BufferLength = transferSetting.bufferLength;
             byteBlock.SetHolding(false);
@@ -295,7 +296,7 @@ namespace RRQMSocket.FileTransfer
                     throw new RRQMTransferingException("已有传输任务在进行中");
                 }
 
-                byte[] datas = SerializeConvert.BinarySerialize(url);
+                byte[] datas = SerializeConvert.RRQMBinarySerialize(url,true);
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
                 byteBlock.Write(datas);
                 try
@@ -408,7 +409,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     throw new RRQMException("未连接服务器");
                 }
-                byte[] datas = SerializeConvert.BinarySerialize(url);
+                byte[] datas = SerializeConvert.RRQMBinarySerialize(url,true);
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
                 byteBlock.Write(datas);
                 try
@@ -459,7 +460,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     throw new RRQMException("未连接服务器");
                 }
-                byte[] datas = SerializeConvert.BinarySerialize(url);
+                byte[] datas = SerializeConvert.RRQMBinarySerialize(url,true);
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
                 byteBlock.Write(datas);
                 try
@@ -587,7 +588,7 @@ namespace RRQMSocket.FileTransfer
                     throw new RRQMTransferingException("已有传输任务在进行中");
                 }
                 RequestUploadFileBlock requsetBlocks = FileBaseTool.GetRequestProgressBlockCollection(urlFileInfo, urlFileInfo.Restart);
-                byte[] datas = SerializeConvert.BinarySerialize(requsetBlocks);
+                byte[] datas = SerializeConvert.RRQMBinarySerialize(requsetBlocks,true);
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
                 byteBlock.Write(datas);
 

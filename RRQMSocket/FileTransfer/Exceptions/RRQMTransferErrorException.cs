@@ -16,7 +16,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 传输错误
     /// </summary>
-    [Serializable]
+    
     public class RRQMTransferErrorException : RRQMException
     {
         /// <summary>

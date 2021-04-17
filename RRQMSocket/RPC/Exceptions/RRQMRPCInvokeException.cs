@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC调用异常
     /// </summary>
-    [Serializable]
+    
     public class RRQMRPCInvokeException : RRQMException
     {
         /// <summary>

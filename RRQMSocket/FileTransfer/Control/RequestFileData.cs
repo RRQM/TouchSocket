@@ -15,7 +15,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     ///
     /// </summary>
-    [Serializable]
+    
     public class RequestFileData
     {
         /// <summary>

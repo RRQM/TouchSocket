@@ -18,7 +18,7 @@ namespace RRQMSocket
     /// 只读
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    [Serializable]
+    
     public class ReadOnlyList<T>:IEnumerable<T>
     {
         private List<T> list = new List<T>();

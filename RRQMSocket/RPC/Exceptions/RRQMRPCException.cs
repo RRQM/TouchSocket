@@ -20,7 +20,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC异常
     /// </summary>
-    [Serializable]
+    
     public class RRQMRPCException : RRQMException
     {
         /// <summary>

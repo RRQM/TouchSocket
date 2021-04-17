@@ -9,17 +9,20 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// 代码类型
     /// </summary>
+    
     public enum CodeType
     {
         /// <summary>
         /// 类代码
         /// </summary>
-        Class,
+        ClassArgs,
 
         /// <summary>
         /// 服务代码

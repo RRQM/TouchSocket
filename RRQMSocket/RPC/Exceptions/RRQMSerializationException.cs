@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 序列化异常类
     /// </summary>
-    [Serializable]
+    
     public class RRQMSerializationException : RRQMException
     {
         /// <summary>

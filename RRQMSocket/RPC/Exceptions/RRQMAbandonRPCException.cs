@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 放弃RPC执行
     /// </summary>
-    [Serializable]
+    
     public class RRQMAbandonRPCException : RRQMException
     {
         /// <summary>

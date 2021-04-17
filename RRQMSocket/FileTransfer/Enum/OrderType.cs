@@ -11,7 +11,7 @@
 
 namespace RRQMSocket.FileTransfer
 {
-    //[Serializable]
+    //
     //internal enum OrderType
     //{
     //    /// <summary>

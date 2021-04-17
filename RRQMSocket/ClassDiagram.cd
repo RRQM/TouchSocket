@@ -597,11 +597,11 @@
       <FileName>RPC\Serialization\BinarySerializationBinder.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="RRQMSocket.RPC.BinarySerializeConverter" Collapsed="true">
+  <Class Name="RRQMSocket.RPC.BinarySerialize223Converter" Collapsed="true">
     <Position X="2.75" Y="8.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>ABAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>RPC\Serialization\BinarySerializeConverter.cs</FileName>
+      <FileName>RPC\Serialization\BinarySerialize223Converter.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="RRQMSocket.RPC.SerializeConverter" Collapsed="true">

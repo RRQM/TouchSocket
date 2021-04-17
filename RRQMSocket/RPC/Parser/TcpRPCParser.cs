@@ -93,7 +93,7 @@ namespace RRQMSocket.RPC
                             {
                                 proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
                             }
-                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.BinarySerialize(this.serverMethodStore.GetProxyInfo(proxyToken)));
+                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.serverMethodStore.GetProxyInfo(proxyToken),true));
                         }
                         catch (Exception e)
                         {
@@ -120,7 +120,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.BinarySerialize(this.clientMethodStore.GetAllMethodItem()));
+                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.clientMethodStore.GetAllMethodItem(),true));
                         }
                         catch (Exception e)
                         {

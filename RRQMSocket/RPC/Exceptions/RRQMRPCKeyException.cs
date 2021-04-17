@@ -20,7 +20,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC添加方法键异常
     /// </summary>
-    [Serializable]
+    
     public class RRQMRPCKeyException : RRQMException
     {
         /// <summary>

@@ -13,7 +13,7 @@ using System;
 
 namespace RRQMSocket.RPC
 {
-    [Serializable]
+    
     internal class WaitBytes : WaitResult
     {
         internal byte[] Bytes;

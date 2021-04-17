@@ -83,7 +83,7 @@ namespace RRQMSocket.RPC
                             {
                                 proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
                             }
-                            this.UDPSend(100, remoteEndPoint, SerializeConvert.BinarySerialize(this.serverMethodStore.GetProxyInfo(proxyToken)));
+                            this.UDPSend(100, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.serverMethodStore.GetProxyInfo(proxyToken),true));
                         }
                         catch (Exception e)
                         {
@@ -114,7 +114,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            UDPSend(102, remoteEndPoint, SerializeConvert.BinarySerialize(this.clientMethodStore.GetAllMethodItem()));
+                            UDPSend(102, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.clientMethodStore.GetAllMethodItem(),true));
                         }
                         catch (Exception e)
                         {

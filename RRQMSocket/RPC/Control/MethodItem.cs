@@ -15,7 +15,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 方法体
     /// </summary>
-    [Serializable]
+    
     public class MethodItem
     {
         /// <summary>
@@ -26,13 +26,11 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 返回值类型
         /// </summary>
-        [NonSerialized]
         internal Type ReturnType;
 
         /// <summary>
         /// 参数类型
         /// </summary>
-        [NonSerialized]
         internal Type[] ParameterTypes;
 
         /// <summary>

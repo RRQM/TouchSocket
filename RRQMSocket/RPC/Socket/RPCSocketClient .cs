@@ -56,7 +56,7 @@ namespace RRQMSocket.RPC
             waitData.WaitResult.Bytes = data;
             try
             {
-                byte[] buffer = SerializeConvert.BinarySerialize(waitData.WaitResult);
+                byte[] buffer = SerializeConvert.RRQMBinarySerialize(waitData.WaitResult,true);
                 agreementHelper.SocketSend(110, buffer);
             }
             catch (Exception e)
