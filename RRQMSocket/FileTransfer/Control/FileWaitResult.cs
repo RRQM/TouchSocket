@@ -16,6 +16,6 @@ namespace RRQMSocket.FileTransfer
     
     internal class FileWaitResult : WaitResult
     {
-        internal object Data { get; set; }
+        public ProgressBlockCollection ProgressBlocks { get; set; }
     }
 }

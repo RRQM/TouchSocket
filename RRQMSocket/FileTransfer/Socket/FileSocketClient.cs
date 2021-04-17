@@ -334,7 +334,7 @@ namespace RRQMSocket.FileTransfer
                     waitResult.Message = null;
                     waitResult.Status = 1;
                     downloadFileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
-                    waitResult.Data = downloadFileBlocks;
+                    waitResult.ProgressBlocks = downloadFileBlocks;
                 }
             }
 
@@ -401,13 +401,13 @@ namespace RRQMSocket.FileTransfer
                     this.uploadFileBlocks = blocks;
                     waitResult.Status = 1;
                     waitResult.Message = null;
-                    waitResult.Data = blocks;
+                    waitResult.ProgressBlocks = blocks;
                 }
                 catch (Exception ex)
                 {
                     waitResult.Status = 2;
                     waitResult.Message = ex.Message;
-                    waitResult.Data = null;
+                    waitResult.ProgressBlocks = null;
                 }
             }
 

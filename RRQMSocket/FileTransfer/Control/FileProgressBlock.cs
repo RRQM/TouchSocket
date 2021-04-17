@@ -13,19 +13,18 @@ using System;
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    ///
+    /// 文件进度块
     /// </summary>
-    
     public class FileProgressBlock : FileBlock
     {
         /// <summary>
         /// 文件块长度
         /// </summary>
-        public long UnitLength { get; set; }
+        public long UnitLength { get; internal set; }
 
         /// <summary>
         /// 完成
         /// </summary>
-        public bool Finished { get; set; }
+        public bool Finished { get; internal set; }
     }
 }

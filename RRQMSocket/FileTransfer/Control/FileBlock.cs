@@ -19,16 +19,16 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件快索引
         /// </summary>
-        public int Index { get; set; }
+        public int Index { get;internal set; }
 
         /// <summary>
         /// 文件流位置
         /// </summary>
-        public long StreamPosition { get; set; }
+        public long StreamPosition { get; internal set; }
 
         /// <summary>
         /// 文件哈希值
         /// </summary>
-        public string FileHash { get; set; }
+        public string FileHash { get; internal set; }
     }
 }

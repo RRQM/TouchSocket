@@ -55,7 +55,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     byte[] buffer = new byte[stream.Length];
                     stream.Read(buffer, 0, buffer.Length);
-                    return SerializeConvert.BinaryDeserialize<ProgressBlockCollection>(buffer, 0, buffer.Length);
+                    return SerializeConvert.RRQMBinaryDeserialize<ProgressBlockCollection>(buffer, 0);
                 }
             }
             catch (Exception)

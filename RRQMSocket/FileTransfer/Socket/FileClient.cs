@@ -314,7 +314,7 @@ namespace RRQMSocket.FileTransfer
                         throw new RRQMTransferErrorException(waitResult.Message);
                     }
 
-                    StartDownloadFile((ProgressBlockCollection)waitResult.Data, url.Restart);
+                    StartDownloadFile(waitResult.ProgressBlocks, url.Restart);
                 }
                 finally
                 {
@@ -628,7 +628,7 @@ namespace RRQMSocket.FileTransfer
                     }
                     else
                     {
-                        ProgressBlockCollection blocks = (ProgressBlockCollection)waitResult.Data;
+                        ProgressBlockCollection blocks = waitResult.ProgressBlocks;
                         blocks.FileInfo.FilePath = urlFileInfo.FilePath;
                         this.StartUploadFile(blocks);
                     }
