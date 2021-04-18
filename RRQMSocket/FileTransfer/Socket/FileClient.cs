@@ -283,7 +283,7 @@ namespace RRQMSocket.FileTransfer
         /// <exception cref="RRQMNotConnectedException"></exception>
         /// <exception cref="RRQMTransferingException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void DownloadFile(FileUrl url, int waitTime)
+        public void DownloadFile(FileUrl url, int waitTime=5)
         {
             lock (locker)
             {
@@ -307,14 +307,14 @@ namespace RRQMSocket.FileTransfer
                         throw new RRQMTimeoutException("等待结果超时");
                     }
                     returnByteBlock.Position = 0;
-                    FileWaitResult waitResult = SerializeConvert.BinaryDeserialize<FileWaitResult>(returnByteBlock);
+                    FileWaitResult waitResult = SerializeConvert.RRQMBinaryDeserialize<FileWaitResult>(returnByteBlock.Buffer,0);
                     returnByteBlock.SetHolding(false);
                     if (waitResult.Status == 2)
                     {
                         throw new RRQMTransferErrorException(waitResult.Message);
                     }
 
-                    StartDownloadFile(waitResult.ProgressBlocks, url.Restart);
+                    StartDownloadFile(waitResult.PBCollectionTemp.ToPBCollection(), url.Restart);
                 }
                 finally
                 {
@@ -474,7 +474,7 @@ namespace RRQMSocket.FileTransfer
                     returnByteBlock.SetHolding(false);
                     if (returnData[0] == 1)
                     {
-                        FileInfo fileInfo = SerializeConvert.BinaryDeserialize<FileInfo>(returnData,1,returnData.Length-1);
+                        FileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<FileInfo>(returnData,1);
                         return fileInfo;
                     }
                     else if (returnData[0] == 2)
@@ -587,9 +587,10 @@ namespace RRQMSocket.FileTransfer
                 {
                     throw new RRQMTransferingException("已有传输任务在进行中");
                 }
-                RequestUploadFileBlock requsetBlocks = FileBaseTool.GetRequestProgressBlockCollection(urlFileInfo, urlFileInfo.Restart);
-                byte[] datas = SerializeConvert.RRQMBinarySerialize(requsetBlocks,true);
+                ProgressBlockCollection requsetBlocks = FileBaseTool.GetProgressBlockCollection(urlFileInfo);
+                byte[] datas = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(requsetBlocks),true);
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
+                byteBlock.Write(BitConverter.GetBytes(urlFileInfo.Restart));
                 byteBlock.Write(datas);
 
                 try
@@ -600,7 +601,7 @@ namespace RRQMSocket.FileTransfer
                         throw new RRQMTimeoutException("等待结果超时");
                     }
                     resultByteBlock.Position = 0;
-                    FileWaitResult waitResult = SerializeConvert.BinaryDeserialize<FileWaitResult>(resultByteBlock);
+                    FileWaitResult waitResult = SerializeConvert.RRQMBinaryDeserialize<FileWaitResult>(resultByteBlock.Buffer,0);
                     resultByteBlock.SetHolding(false);
                     if (waitResult.Status == 0)
                     {
@@ -628,7 +629,7 @@ namespace RRQMSocket.FileTransfer
                     }
                     else
                     {
-                        ProgressBlockCollection blocks = waitResult.ProgressBlocks;
+                        ProgressBlockCollection blocks = waitResult.PBCollectionTemp.ToPBCollection();
                         blocks.FileInfo.FilePath = urlFileInfo.FilePath;
                         this.StartUploadFile(blocks);
                     }
@@ -646,6 +647,7 @@ namespace RRQMSocket.FileTransfer
         public void PauseDownload()
         {
             this.isPauseDownload = true;
+            this.TransferType = TransferType.PauseDownload;
         }
 
         /// <summary>
@@ -654,6 +656,7 @@ namespace RRQMSocket.FileTransfer
         public void PauseUpload()
         {
             this.isPauseUpload = true;
+            this.TransferType = TransferType.PauseUpload;
         }
 
         /// <summary>
@@ -669,6 +672,7 @@ namespace RRQMSocket.FileTransfer
             else
             {
                 this.isPauseDownload = false;
+                this.TransferType = TransferType.Download;
                 waitHandleDownload.Set();
             }
         }
@@ -687,6 +691,7 @@ namespace RRQMSocket.FileTransfer
             else
             {
                 this.isPauseUpload = false;
+                this.TransferType = TransferType.Upload;
                 waitHandleUpload.Set();
             }
         }
@@ -826,7 +831,7 @@ namespace RRQMSocket.FileTransfer
                                 {
                                     if (this.TransferType != TransferType.Download)
                                     {
-                                        return;
+                                        break;
                                     }
                                     string mes;
                                     if (FileBaseTool.WriteFile(downloadFileStream, out mes, this.downloadPosition, returnByteBlock.Buffer, 1, (int)returnByteBlock.Position - 1))
@@ -917,7 +922,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             if (this.TransferType != TransferType.Upload)
                             {
-                                return;
+                                continue;
                             }
                             if (FileBaseTool.ReadFileBytes(this.uploadFileBlocks.FileInfo.FilePath, this.uploadPosition, byteBlock, 21, (int)submitLength))
                             {
@@ -947,7 +952,7 @@ namespace RRQMSocket.FileTransfer
                                         TransferFileMessageArgs args = new TransferFileMessageArgs();
                                         args.FileInfo = this.uploadFileBlocks.FileInfo;
                                         args.TransferType = TransferType.Upload;
-                                        args.Message = "未知错误";
+                                        args.Message = "上传文件错误";
                                         TransferFileErrorMethod(this, args);
                                     }
                                 }
@@ -959,6 +964,16 @@ namespace RRQMSocket.FileTransfer
                             }
                             else
                             {
+                                reTryCount++;
+                                Logger.Debug(LogType.Message, this, $"读取上传文件错误，正在尝试第{reTryCount}次重试");
+                                if (reTryCount > 10)
+                                {
+                                    TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                    args.FileInfo = this.uploadFileBlocks.FileInfo;
+                                    args.TransferType = TransferType.Upload;
+                                    args.Message = "读取上传文件错误";
+                                    TransferFileErrorMethod(this, args);
+                                }
                             }
                         }
                         catch (Exception ex)

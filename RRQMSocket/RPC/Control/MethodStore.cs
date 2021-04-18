@@ -112,7 +112,7 @@ namespace RRQMSocket.RPC
             methodNamesKey.Add(methodItem.Method, methodItem);
         }
 
-        internal MethodItem[] GetAllMethodItem()
+        internal List<MethodItem> GetAllMethodItem()
         {
             List<MethodItem> mTs = new List<MethodItem>();
             foreach (var item in methodNamesKey.Values)
@@ -120,7 +120,7 @@ namespace RRQMSocket.RPC
                 mTs.Add(item);
             }
 
-            return mTs.ToArray();
+            return mTs;
         }
 
         private bool initialized;
@@ -150,11 +150,15 @@ namespace RRQMSocket.RPC
                     item.ReturnType = this.MethodGetType(item.ReturnTypeString);
                 }
 
-                item.ParameterTypes = new Type[item.ParameterTypesString.Length];
-                for (int i = 0; i < item.ParameterTypesString.Length; i++)
+                item.ParameterTypes = new List<Type>();
+                if (item.ParameterTypesString != null)
                 {
-                    item.ParameterTypes[i] = this.MethodGetType(item.ParameterTypesString[i]);
+                    for (int i = 0; i < item.ParameterTypesString.Count; i++)
+                    {
+                        item.ParameterTypes.Add(this.MethodGetType(item.ParameterTypesString[i]));
+                    }
                 }
+
             }
             this.initialized = true;
         }
@@ -164,12 +168,21 @@ namespace RRQMSocket.RPC
             Type type = Type.GetType(typeName);
             if (type == null)
             {
-                Assembly assembly = Assembly.Load(GetAssemblyName(typeName));
-                type = assembly.GetType(typeName);
+                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+                foreach (var assembly in assemblies)
+                {
+                    type = assembly.GetType(typeName);
+                    if (type!=null)
+                    {
+                        return type;
+                    }
+                }
                 if (type == null)
                 {
                     throw new RRQMRPCException($"RPC初始化时找不到{typeName}的类型");
                 }
+
             }
 
             return type;
@@ -180,5 +193,7 @@ namespace RRQMSocket.RPC
             int index = typeName.LastIndexOf(".");
             return typeName.Substring(0, index);
         }
+
+
     }
 }

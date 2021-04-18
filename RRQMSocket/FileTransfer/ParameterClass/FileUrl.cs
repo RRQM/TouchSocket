@@ -49,7 +49,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 下载文件名
         /// </summary>
-        public string FileName { get { return fileName; } }
+        public string FileName { get; set; }
 
         /// <summary>
         /// 是否重新开始
@@ -59,24 +59,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 路径
         /// </summary>
-        public string FilePath
-        {
-            get
-            { return filePath; }
-            set
-            {
-                this.fileName = Path.GetFileName(value);
-                this.filePath = value;
-            }
-        }
+        public string FilePath { get; set; }
 
         /// <summary>
         /// 标志
         /// </summary>
         public string Flag { get; set; }
-
-        private string filePath;
-        private string fileName;
 
         /// <summary>
         /// 判断

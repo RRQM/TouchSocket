@@ -334,14 +334,14 @@ namespace RRQMSocket.FileTransfer
                     waitResult.Message = null;
                     waitResult.Status = 1;
                     downloadFileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
-                    waitResult.ProgressBlocks = downloadFileBlocks;
+                    waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(downloadFileBlocks);
                 }
             }
 
             byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult,true));
         }
 
-        private void RequestUpload(ByteBlock byteBlock, RequestUploadFileBlock requestBlocks)
+        private void RequestUpload(ByteBlock byteBlock, PBCollectionTemp requestBlocks,bool restart)
         {
             FileWaitResult waitResult = new FileWaitResult();
             TransferFileEventArgs args = new TransferFileEventArgs();
@@ -365,7 +365,7 @@ namespace RRQMSocket.FileTransfer
             {
                 this.TransferType = TransferType.Upload;
 
-                bool restart = this.breakpointResume ? requestBlocks.Restart : true;
+                restart = this.breakpointResume ? restart : true;
                 if (!restart)
                 {
                     FileInfo fileInfo;
@@ -395,19 +395,19 @@ namespace RRQMSocket.FileTransfer
                 }
                 try
                 {
-                    ProgressBlockCollection blocks = requestBlocks;
+                    ProgressBlockCollection blocks = requestBlocks.ToPBCollection();
                     uploadFileStream = FileBaseTool.GetNewFileStream(ref blocks, restart);
                     blocks.FileInfo.FilePath = requestBlocks.FileInfo.FilePath;
                     this.uploadFileBlocks = blocks;
                     waitResult.Status = 1;
                     waitResult.Message = null;
-                    waitResult.ProgressBlocks = blocks;
+                    waitResult.PBCollectionTemp =PBCollectionTemp.GetFromProgressBlockCollection(blocks) ;
                 }
                 catch (Exception ex)
                 {
                     waitResult.Status = 2;
                     waitResult.Message = ex.Message;
-                    waitResult.ProgressBlocks = null;
+                    waitResult.PBCollectionTemp = null;
                 }
             }
 
@@ -769,9 +769,9 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            RequestUploadFileBlock blocks = SerializeConvert.BinaryDeserialize<RequestUploadFileBlock>(byteBlock.Buffer, 4, r - 4);
-
-                            RequestUpload(returnByteBlock, blocks);
+                            bool restart = BitConverter.ToBoolean(byteBlock.Buffer,4);
+                            PBCollectionTemp blocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(byteBlock.Buffer, 5);
+                            RequestUpload(returnByteBlock, blocks, restart);
                         }
                         catch (Exception ex)
                         {
@@ -878,8 +878,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            byteBlock.Seek(4,SeekOrigin.Begin);
-                            FileUrl url = SerializeConvert.BinaryDeserialize<FileUrl>(byteBlock);
+                            FileUrl url = SerializeConvert.RRQMBinaryDeserialize<FileUrl>(byteBlock.Buffer,4);
                             this.RFileInfo(returnByteBlock,url);
                         }
                         catch (Exception ex)

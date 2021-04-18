@@ -204,7 +204,7 @@ namespace RRQMSocket.RPC
                         methodItem.Method = methodName;
                         methodItem.SP = attribute.SP;
                         ParameterInfo[] parameters = method.GetParameters();
-                        methodItem.ParameterTypes = new Type[parameters.Length];
+                        methodItem.ParameterTypes = new List<Type>();
                         for (int i = 0; i < parameters.Length; i++)
                         {
                             if (parameters[i].ParameterType.IsByRef)
@@ -220,11 +220,11 @@ namespace RRQMSocket.RPC
 
                             if (parameters[i].ParameterType.FullName.Contains("&"))
                             {
-                                methodItem.ParameterTypes[i] = propertyCode.GetRefOutType(parameters[i].ParameterType);
+                                methodItem.ParameterTypes.Add(propertyCode.GetRefOutType(parameters[i].ParameterType));
                             }
                             else
                             {
-                                methodItem.ParameterTypes[i] = parameters[i].ParameterType;
+                                methodItem.ParameterTypes.Add(parameters[i].ParameterType);
                             }
                         }
 
@@ -257,10 +257,10 @@ namespace RRQMSocket.RPC
                 clientMethodItem.IsOutOrRef = item.methodItem.IsOutOrRef;
                 clientMethodItem.Method = item.methodItem.Method;
                 clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.methodItem.ReturnType);
-                clientMethodItem.ParameterTypesString = new string[item.methodItem.ParameterTypes.Length];
-                for (int i = 0; i < item.methodItem.ParameterTypes.Length; i++)
+                clientMethodItem.ParameterTypesString = new  List<string>();
+                for (int i = 0; i < item.methodItem.ParameterTypes.Count; i++)
                 {
-                    clientMethodItem.ParameterTypesString[i] = propertyCode.GetTypeFullName(item.methodItem.ParameterTypes[i]);
+                    clientMethodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(item.methodItem.ParameterTypes[i]));
                 }
                 clientMethodStore.AddMethodItem(clientMethodItem);
             }
@@ -278,7 +278,7 @@ namespace RRQMSocket.RPC
 
                 CellCode cellCode = new CellCode();
                 cellCode.Name = className;
-                cellCode.CodeType =  CodeType.Service;
+                cellCode.CodeType = CodeType.Service;
                 cellCode.Code = codeMap.GetCode();
                 codes.Add(cellCode);
             }
@@ -287,7 +287,7 @@ namespace RRQMSocket.RPC
             propertyCellCode.CodeType = CodeType.ClassArgs;
             propertyCellCode.Code = propertyCode.GetPropertyCode();
             codes.Add(propertyCellCode);
-
+            string assemblyInfo = CodeMap.GetAssemblyInfo(nameSpace, setting.Version);
             this.RPCVersion = CodeMap.Version;
 
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
@@ -300,12 +300,13 @@ namespace RRQMSocket.RPC
                 {
                     codesString.Add(item.Code);
                 }
+                codesString.Add(assemblyInfo);
                 proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
 
             if (setting.ProxySourceCodeVisible)
             {
-                proxyInfo.Codes = codes.ToArray();
+                proxyInfo.Codes = codes;
             }
             this.serverMethodStore.SetProxyInfo(proxyInfo, setting.ProxyToken);
 

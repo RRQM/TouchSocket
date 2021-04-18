@@ -40,7 +40,7 @@ namespace RRQMSocket.RPC
         /// <param name="r"></param>
         internal void Agreement_110(byte[] buffer, int r)
         {
-            WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
+            WaitBytes waitBytes = SerializeConvert.RRQMBinaryDeserialize<WaitBytes>(buffer, 4);
             this.waitHandles.SetRun(waitBytes.Sign, waitBytes);
         }
 

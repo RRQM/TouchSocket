@@ -86,7 +86,7 @@ namespace RRQMSocket
             {
                 socket.Connect(endPoint);
                 this.MainSocket = socket;
-                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.VerifyToken));
+                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.VerifyToken==null?string.Empty: this.VerifyToken));
             }
             catch (Exception e)
             {

@@ -39,7 +39,7 @@ namespace RRQMSocket.FileTransfer
             {
                 stream = new RRQMStream(path, FileMode.Open, FileAccess.ReadWrite);
                 stream.Read(buffer, 0, buffer.Length);
-                ProgressBlockCollection readBlocks = SerializeConvert.BinaryDeserialize<ProgressBlockCollection>(buffer);
+                ProgressBlockCollection readBlocks = SerializeConvert.RRQMBinaryDeserialize<ProgressBlockCollection>(buffer);
                 if (readBlocks.FileInfo.FileHash != null && blocks.FileInfo.FileHash != null && readBlocks.FileInfo.FileHash == blocks.FileInfo.FileHash)
                 {
                     blocks = readBlocks;
@@ -54,7 +54,7 @@ namespace RRQMSocket.FileTransfer
                 File.Delete(path);
             }
 
-            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(blocks,true);
+            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks) ,true);
             for (int i = 0; i < dataBuffer.Length; i++)
             {
                 buffer[i] = dataBuffer[i];
@@ -71,7 +71,7 @@ namespace RRQMSocket.FileTransfer
         internal static void SaveProgressBlockCollection(RRQMStream stream, ProgressBlockCollection blocks)
         {
             byte[] buffer = new byte[1024 * 1024];
-            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(blocks,true);
+            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
             for (int i = 0; i < dataBuffer.Length; i++)
             {
                 buffer[i] = dataBuffer[i];
@@ -129,7 +129,8 @@ namespace RRQMSocket.FileTransfer
         internal static ProgressBlockCollection GetProgressBlockCollection(FileInfo fileInfo)
         {
             ProgressBlockCollection blocks = new ProgressBlockCollection();
-            blocks.FileInfo = fileInfo;
+            blocks.FileInfo = new FileInfo();
+            blocks.FileInfo.Copy(fileInfo);
             long position = 0;
             if (fileInfo.FileLength >= 100)
             {
@@ -160,42 +161,6 @@ namespace RRQMSocket.FileTransfer
             return blocks;
         }
 
-        internal static RequestUploadFileBlock GetRequestProgressBlockCollection(FileInfo fileInfo, bool restart)
-        {
-            RequestUploadFileBlock blocks = new RequestUploadFileBlock();
-            blocks.Restart = restart;
-            blocks.FileInfo = fileInfo;
-            long position = 0;
-            if (fileInfo.FileLength >= 100)
-            {
-                long blockLength = (long)(fileInfo.FileLength / 100.0);
-
-                for (int i = 0; i < 100; i++)
-                {
-                    FileProgressBlock block = new FileProgressBlock();
-                    block.Index = i;
-                    block.FileHash = fileInfo.FileHash;
-                    block.Finished = false;
-                    block.StreamPosition = position;
-                    block.UnitLength = i != 99 ? blockLength : fileInfo.FileLength - i * blockLength;
-                    blocks.Add(block);
-                    position += blockLength;
-                }
-            }
-            else
-            {
-                FileProgressBlock block = new FileProgressBlock();
-                block.Index = 0;
-                block.FileHash = fileInfo.FileHash;
-                block.Finished = false;
-                block.StreamPosition = position;
-                block.UnitLength = fileInfo.FileLength;
-                blocks.Add(block);
-            }
-            return blocks;
-        }
-
-        //static object locker = new object();
         internal static bool ReadFileBytes(string path, long beginPosition, ByteBlock byteBlock, int offset, int length)
         {
             FileStream fileStream = TransferFileStreamDic.GetFileStream(path);

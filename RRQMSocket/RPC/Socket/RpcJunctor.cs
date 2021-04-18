@@ -105,7 +105,7 @@ namespace RRQMSocket.RPC
             lock (locker)
             {
                 agreementHelper.SocketSend(100, proxyToken);
-                this.singleWaitData.Wait(1000 * 10);
+                this.singleWaitData.Wait(1000 * 100);
 
                 if (this.proxyFile == null)
                 {
@@ -332,7 +332,7 @@ namespace RRQMSocket.RPC
 
         private void Agreement_110(byte[] buffer, int r)
         {
-            WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
+            WaitBytes waitBytes = SerializeConvert.RRQMBinaryDeserialize<WaitBytes>(buffer, 4);
             BytesEventArgs args = new BytesEventArgs();
             args.ReceivedDataBytes = waitBytes.Bytes;
             this.ReceivedBytesThenReturn?.Invoke(this, args);
@@ -357,7 +357,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            proxyFile = SerializeConvert.BinaryDeserialize<RPCProxyInfo>(buffer, 4, r - 4);
+                            proxyFile = SerializeConvert.RRQMBinaryDeserialize<RPCProxyInfo>(buffer, 4);
                             this.singleWaitData.Set();
                         }
                         catch
@@ -386,7 +386,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            MethodItem[] methodItems = SerializeConvert.BinaryDeserialize<MethodItem[]>(buffer, 4, r - 4);
+                            List<MethodItem> methodItems = SerializeConvert.RRQMBinaryDeserialize<List<MethodItem>>(buffer, 4);
                             this.methodStore = new MethodStore();
                             foreach (var item in methodItems)
                             {

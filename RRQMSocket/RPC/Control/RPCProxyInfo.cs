@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Run;
 using System;
+using System.Collections.Generic;
 
 namespace RRQMSocket.RPC
 {
@@ -41,6 +42,6 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 源代码
         /// </summary>
-        public CellCode[] Codes { get; internal set; }
+        public List<CellCode>  Codes { get; internal set; }
     }
 }

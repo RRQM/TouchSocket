@@ -32,6 +32,16 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 下载
         /// </summary>
-        Download
+        Download,
+
+        /// <summary>
+        /// 暂停下载状态
+        /// </summary>
+        PauseDownload,
+
+        /// <summary>
+        /// 暂停上传状态
+        /// </summary>
+        PauseUpload
     }
 }

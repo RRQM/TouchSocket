@@ -16,6 +16,7 @@ using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace RRQMSocket.RPC
@@ -23,7 +24,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// UDP协议客户端
     /// </summary>
-    public class UdpRPCClient : IRPCClient
+    public class UdpRPCClient : IRPCClient,IService
     {
         /// <summary>
         /// 构造函数
@@ -90,6 +91,11 @@ namespace RRQMSocket.RPC
         public string ID => null;
 
         /// <summary>
+        /// 绑定状态
+        /// </summary>
+        public bool IsBind => this.udpSession.IsBind;
+
+        /// <summary>
         /// 获取远程服务器RPC服务文件
         /// </summary>
         /// <param name="ipHost"></param>
@@ -133,6 +139,10 @@ namespace RRQMSocket.RPC
         /// </summary>
         public void InitializedRPC(string ipHost, string verifyToken = null)
         {
+            if (this.udpSession.MainSocket==null)
+            {
+                throw new RRQMRPCException("UDP端需要先绑定本地监听端口");
+            }
             this.remoteService = IPHost.CreatIPHost(ipHost).EndPoint;
             int count = 0;
             while (count < 3)
@@ -163,7 +173,7 @@ namespace RRQMSocket.RPC
 
         private void Agreement_110(byte[] buffer, int r)
         {
-            WaitBytes waitBytes = SerializeConvert.BinaryDeserialize<WaitBytes>(buffer, 4, r - 4);
+            WaitBytes waitBytes = SerializeConvert.RRQMBinaryDeserialize<WaitBytes>(buffer, 4);
             BytesEventArgs args = new BytesEventArgs();
             args.ReceivedDataBytes = waitBytes.Bytes;
             this.ReceivedBytesThenReturn?.Invoke(this, args);
@@ -183,7 +193,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            proxyFile = SerializeConvert.BinaryDeserialize<RPCProxyInfo>(buffer, 4, r - 4);
+                            proxyFile = SerializeConvert.RRQMBinaryDeserialize<RPCProxyInfo>(buffer, 4);
                             this.singleWaitData.Set();
                         }
                         catch
@@ -211,7 +221,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            MethodItem[] methodItems = SerializeConvert.BinaryDeserialize<MethodItem[]>(buffer, 4, r - 4);
+                            List<MethodItem> methodItems = SerializeConvert.RRQMBinaryDeserialize<List<MethodItem>>(buffer, 4);
                             this.methodStore = new MethodStore();
                             foreach (var item in methodItems)
                             {
@@ -439,6 +449,36 @@ namespace RRQMSocket.RPC
         public void Dispose()
         {
             this.udpSession.Dispose();
+        }
+
+        /// <summary>
+        /// 绑定本地监听
+        /// </summary>
+        /// <param name="setting"></param>
+        public void Bind(BindSetting setting)
+        {
+            this.udpSession.Bind(setting);
+        }
+
+        /// <summary>
+        /// 绑定本地监听
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="threadCount"></param>
+        public void Bind(EndPoint endPoint, int threadCount)
+        {
+            this.udpSession.Bind(endPoint, threadCount);
+        }
+
+        /// <summary>
+        /// 绑定本地监听
+        /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <param name="endPoint"></param>
+        /// <param name="threadCount"></param>
+        public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
+        {
+            this.udpSession.Bind(addressFamily, endPoint, threadCount);
         }
     }
 }
