@@ -30,8 +30,10 @@ namespace RRQMSocket.RPC
 
         private Dictionary<string, MethodItem> methodNamesKey;
 
-        private RPCProxyInfo proxyInfo;
-        private string proxyToken;
+        /// <summary>
+        /// 代理文件实例
+        /// </summary>
+        public RPCProxyInfo ProxyInfo { get;private set; }
 
         /// <summary>
         /// 获取服务类实例
@@ -56,30 +58,9 @@ namespace RRQMSocket.RPC
             return providers.ToArray();
         }
 
-        internal void SetProxyInfo(RPCProxyInfo proxyInfo, string proxyToken)
+        internal void SetProxyInfo(RPCProxyInfo proxyInfo)
         {
-            this.proxyInfo = proxyInfo;
-            this.proxyToken = proxyToken;
-        }
-
-        internal RPCProxyInfo GetProxyInfo(string proxyToken)
-        {
-            RPCProxyInfo proxyInfo = new RPCProxyInfo();
-            if (this.proxyToken == proxyToken)
-            {
-                proxyInfo.AssemblyData = this.proxyInfo.AssemblyData;
-                proxyInfo.AssemblyName = this.proxyInfo.AssemblyName;
-                proxyInfo.Codes = this.proxyInfo.Codes;
-                proxyInfo.Version = this.proxyInfo.Version;
-                proxyInfo.Status = 1;
-            }
-            else
-            {
-                proxyInfo.Status = 2;
-                proxyInfo.Message = "令箭不正确";
-            }
-
-            return proxyInfo;
+            this.ProxyInfo = proxyInfo;
         }
 
         internal void AddInstanceMethod(InstanceMethod method)

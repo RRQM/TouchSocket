@@ -30,15 +30,5 @@ namespace RRQMSocket.RPC
         /// RPC版本，该值为null时，版本生成号会递增。
         /// </summary>
         public Version Version { get; set; }
-
-        /// <summary>
-        /// 代理令箭，当客户端获取代理文件时需验证令箭
-        /// </summary>
-        public string ProxyToken { get; set; }
-
-        /// <summary>
-        /// 代理源代码是否可见
-        /// </summary>
-        public bool ProxySourceCodeVisible { get; set; }
     }
 }

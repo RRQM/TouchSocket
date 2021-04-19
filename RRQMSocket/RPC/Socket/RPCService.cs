@@ -36,6 +36,11 @@ namespace RRQMSocket.RPC
         public RPCParserCollection RPCParsers { get; private set; }
 
         /// <summary>
+        /// 代理令箭，当客户端获取代理文件时需验证令箭
+        /// </summary>
+        public string ProxyToken { get; set; }
+
+        /// <summary>
         /// 添加RPC解析器
         /// </summary>
         /// <param name="key"></param>
@@ -44,6 +49,8 @@ namespace RRQMSocket.RPC
         {
             this.RPCParsers.Add(key, parser);
             parser.InvokeMethod += InvokeMethod;
+            parser.GetProxyInfo = this.GetProxyInfo;
+            parser.InitMethodServer = this.InitMethodServer;
         }
 
         private void InvokeMethod(IRPCParser parser, RPCContext content)
@@ -55,14 +62,7 @@ namespace RRQMSocket.RPC
             });
         }
 
-        /// <summary>
-        /// 服务器函数映射
-        /// </summary>
         private MethodStore serverMethodStore;
-
-        /// <summary>
-        /// 客户端函数映射
-        /// </summary>
         private MethodStore clientMethodStore;
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("请至少添加一种RPC解析器");
             }
-
+           
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
             string nameSpace = setting.NameSpace == null ? "RRQMRPC" : $"RRQMRPC.{setting.NameSpace}";
@@ -257,7 +257,7 @@ namespace RRQMSocket.RPC
                 clientMethodItem.IsOutOrRef = item.methodItem.IsOutOrRef;
                 clientMethodItem.Method = item.methodItem.Method;
                 clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.methodItem.ReturnType);
-                clientMethodItem.ParameterTypesString = new  List<string>();
+                clientMethodItem.ParameterTypesString = new List<string>();
                 for (int i = 0; i < item.methodItem.ParameterTypes.Count; i++)
                 {
                     clientMethodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(item.methodItem.ParameterTypes[i]));
@@ -304,16 +304,8 @@ namespace RRQMSocket.RPC
                 proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
 
-            if (setting.ProxySourceCodeVisible)
-            {
-                proxyInfo.Codes = codes;
-            }
-            this.serverMethodStore.SetProxyInfo(proxyInfo, setting.ProxyToken);
+            this.serverMethodStore.SetProxyInfo(proxyInfo);
 
-            foreach (var item in this.RPCParsers)
-            {
-                item.InitMethodStore(this.serverMethodStore, this.clientMethodStore);
-            }
             return codes.ToArray();
         }
 
@@ -399,6 +391,39 @@ namespace RRQMSocket.RPC
             parser.EndInvokeMethod(content);
         }
 
+        /// <summary>
+        /// 获取代理文件
+        /// </summary>
+        /// <param name="proxyToken"></param>
+        /// <returns></returns>
+        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken)
+        {
+            RPCProxyInfo proxyInfo = new RPCProxyInfo();
+            if (this.ProxyToken == proxyToken)
+            {
+                proxyInfo.AssemblyData = this.clientMethodStore.ProxyInfo.AssemblyData;
+                proxyInfo.AssemblyName = this.clientMethodStore.ProxyInfo.AssemblyName;
+                proxyInfo.Codes = this.clientMethodStore.ProxyInfo.Codes;
+                proxyInfo.Version = this.clientMethodStore.ProxyInfo.Version;
+                proxyInfo.Status = 1;
+            }
+            else
+            {
+                proxyInfo.Status = 2;
+                proxyInfo.Message = "令箭不正确";
+            }
+
+            return proxyInfo;
+        }
+
+        /// <summary>
+        /// 初始化服务
+        /// </summary>
+        /// <returns></returns>
+        protected virtual List<MethodItem> InitMethodServer()
+        {
+           return this.clientMethodStore.GetAllMethodItem();
+        }
         /// <summary>
         /// 释放资源
         /// </summary>

@@ -12,6 +12,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using RRQMCore.Serialization;
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace RRQMSocket.RPC
@@ -34,31 +35,21 @@ namespace RRQMSocket.RPC
         public event Action<IRPCParser, RPCContext> InvokeMethod;
 
         /// <summary>
-        /// 服务器函数映射
+        /// 获取代理文件
         /// </summary>
-        private MethodStore serverMethodStore;
+        public Func<string, RPCProxyInfo> GetProxyInfo { get; set; }
 
         /// <summary>
-        /// 客户端函数映射
+        /// 初始化服务
         /// </summary>
-        private MethodStore clientMethodStore;
+        public Func<List<MethodItem>> InitMethodServer { get; set; }
 
         /// <summary>
         /// 序列化转换器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
-        /// <summary>
-        /// 初始化函数映射
-        /// </summary>
-        /// <param name="serverMethodStore"></param>
-        /// <param name="clientMethodStore"></param>
-        public void InitMethodStore(MethodStore serverMethodStore, MethodStore clientMethodStore)
-        {
-            this.serverMethodStore = serverMethodStore;
-            this.clientMethodStore = clientMethodStore;
-        }
-
+       
         /// <summary>
         /// 初创
         /// </summary>
@@ -93,7 +84,7 @@ namespace RRQMSocket.RPC
                             {
                                 proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
                             }
-                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.serverMethodStore.GetProxyInfo(proxyToken),true));
+                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo?.Invoke(proxyToken), true));
                         }
                         catch (Exception e)
                         {
@@ -120,7 +111,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.clientMethodStore.GetAllMethodItem(),true));
+                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.InitMethodServer?.Invoke(), true));
                         }
                         catch (Exception e)
                         {

@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 
 namespace RRQMSocket.RPC
 {
@@ -23,17 +24,27 @@ namespace RRQMSocket.RPC
         event Action<IRPCParser, RPCContext> InvokeMethod;
 
         /// <summary>
+        /// 获取代理文件
+        /// </summary>
+        Func<string, RPCProxyInfo> GetProxyInfo { get; set; }
+
+        /// <summary>
+        /// 初始化服务
+        /// </summary>
+        Func<List<MethodItem>> InitMethodServer { get; set; }
+
+        /// <summary>
         /// 调用方法结束后
         /// </summary>
         /// <param name="context"></param>
         void EndInvokeMethod(RPCContext context);
 
-        /// <summary>
-        /// 初始化函数映射
-        /// </summary>
-        /// <param name="serverMethodStore"></param>
-        /// <param name="clientMethodStore"></param>
-        void InitMethodStore(MethodStore serverMethodStore, MethodStore clientMethodStore);
+        ///// <summary>
+        ///// 初始化函数映射
+        ///// </summary>
+        ///// <param name="serverMethodStore"></param>
+        ///// <param name="clientMethodStore"></param>
+        //void InitMethodStore(MethodStore serverMethodStore, MethodStore clientMethodStore);
 
         /// <summary>
         /// 序列化转换器
