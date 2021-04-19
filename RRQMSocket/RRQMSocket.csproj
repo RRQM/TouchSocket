@@ -4,7 +4,7 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>4.0.10.0</Version>
+    <Version>4.0.10.1</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>
@@ -99,7 +99,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RRQMCore" Version="1.2.16" />
+    <PackageReference Include="RRQMCore" Version="1.2.17" />
   </ItemGroup>
 
 </Project>

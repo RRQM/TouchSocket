@@ -542,14 +542,6 @@ namespace RRQMSocket.FileTransfer
         {
             lock (locker)
             {
-                if (!this.Online)
-                {
-                    throw new RRQMNotConnectedException("未连接到服务器");
-                }
-                else if (this.TransferType != TransferType.None)
-                {
-                    throw new RRQMTransferingException("已有传输任务在进行中");
-                }
                 UrlFileInfo urlFileInfo = new UrlFileInfo();
 
                 using (FileStream stream = File.OpenRead(url.FilePath))
@@ -829,9 +821,9 @@ namespace RRQMSocket.FileTransfer
 
                                 while (true)
                                 {
-                                    if (this.TransferType != TransferType.Download)
+                                    if (this.TransferType != TransferType.Download&&this.TransferType!= TransferType.PauseDownload)
                                     {
-                                        break;
+                                        return;
                                     }
                                     string mes;
                                     if (FileBaseTool.WriteFile(downloadFileStream, out mes, this.downloadPosition, returnByteBlock.Buffer, 1, (int)returnByteBlock.Position - 1))
@@ -920,9 +912,9 @@ namespace RRQMSocket.FileTransfer
                         byteBlock.Write(submitLengthBytes);
                         try
                         {
-                            if (this.TransferType != TransferType.Upload)
+                            if (this.TransferType != TransferType.Upload && this.TransferType != TransferType.PauseUpload)
                             {
-                                continue;
+                                return;
                             }
                             if (FileBaseTool.ReadFileBytes(this.uploadFileBlocks.FileInfo.FilePath, this.uploadPosition, byteBlock, 21, (int)submitLength))
                             {

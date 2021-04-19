@@ -39,10 +39,10 @@ namespace RRQMSocket.FileTransfer
             {
                 stream = new RRQMStream(path, FileMode.Open, FileAccess.ReadWrite);
                 stream.Read(buffer, 0, buffer.Length);
-                ProgressBlockCollection readBlocks = SerializeConvert.RRQMBinaryDeserialize<ProgressBlockCollection>(buffer);
+                PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(buffer);
                 if (readBlocks.FileInfo.FileHash != null && blocks.FileInfo.FileHash != null && readBlocks.FileInfo.FileHash == blocks.FileInfo.FileHash)
                 {
-                    blocks = readBlocks;
+                    blocks = readBlocks.ToPBCollection();
                     stream.fileInfo = blocks.FileInfo;
                     return stream;
                 }

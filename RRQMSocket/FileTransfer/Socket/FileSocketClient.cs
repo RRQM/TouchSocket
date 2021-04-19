@@ -863,8 +863,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            byteBlock.Seek(4,SeekOrigin.Begin);
-                            FileUrl url = SerializeConvert.BinaryDeserialize<FileUrl>(byteBlock);
+                            FileUrl url = SerializeConvert.RRQMBinaryDeserialize<FileUrl>(byteBlock.Buffer,4);
                             this.RDeleteFile(returnByteBlock,url);
                         }
                         catch (Exception ex)
