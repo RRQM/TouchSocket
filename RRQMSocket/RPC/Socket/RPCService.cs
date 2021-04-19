@@ -303,7 +303,7 @@ namespace RRQMSocket.RPC
                 codesString.Add(assemblyInfo);
                 proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
-
+            proxyInfo.Codes = codes;
             this.serverMethodStore.SetProxyInfo(proxyInfo);
 
             return codes.ToArray();
@@ -401,10 +401,10 @@ namespace RRQMSocket.RPC
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
             if (this.ProxyToken == proxyToken)
             {
-                proxyInfo.AssemblyData = this.clientMethodStore.ProxyInfo.AssemblyData;
-                proxyInfo.AssemblyName = this.clientMethodStore.ProxyInfo.AssemblyName;
-                proxyInfo.Codes = this.clientMethodStore.ProxyInfo.Codes;
-                proxyInfo.Version = this.clientMethodStore.ProxyInfo.Version;
+                proxyInfo.AssemblyData = this.serverMethodStore.ProxyInfo.AssemblyData;
+                proxyInfo.AssemblyName = this.serverMethodStore.ProxyInfo.AssemblyName;
+                proxyInfo.Codes = this.serverMethodStore.ProxyInfo.Codes;
+                proxyInfo.Version = this.serverMethodStore.ProxyInfo.Version;
                 proxyInfo.Status = 1;
             }
             else
