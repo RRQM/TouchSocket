@@ -40,7 +40,7 @@
 
 [RRQMSocket API文档](https://gitee.com/dotnetchina/RRQMSocket/wikis/pages)
 
-（文档目前还在积极完善当中）
+（TCP、UDP、文件传输、RPC文档已完善。其他扩展件目前还在积极完善当中）
 
  ### 🖥支持环境
 - .NET Framework4.5及以上。
