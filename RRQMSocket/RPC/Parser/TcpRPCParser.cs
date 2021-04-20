@@ -37,12 +37,12 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 获取代理文件
         /// </summary>
-        public Func<string, RPCProxyInfo> GetProxyInfo { get; set; }
+        public Func<string, IRPCParser, RPCProxyInfo> GetProxyInfo { get; set; }
 
         /// <summary>
         /// 初始化服务
         /// </summary>
-        public Func<List<MethodItem>> InitMethodServer { get; set; }
+        public Func<IRPCParser ,List<MethodItem>> InitMethodServer { get; set; }
 
         /// <summary>
         /// 序列化转换器
@@ -84,7 +84,7 @@ namespace RRQMSocket.RPC
                             {
                                 proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
                             }
-                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo?.Invoke(proxyToken), true));
+                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo?.Invoke(proxyToken,this), true));
                         }
                         catch (Exception e)
                         {
@@ -111,7 +111,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.InitMethodServer?.Invoke(), true));
+                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.InitMethodServer?.Invoke(this), true));
                         }
                         catch (Exception e)
                         {

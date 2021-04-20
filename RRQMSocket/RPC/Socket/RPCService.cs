@@ -395,8 +395,9 @@ namespace RRQMSocket.RPC
         /// 获取代理文件
         /// </summary>
         /// <param name="proxyToken"></param>
+        /// <param name="parser"></param>
         /// <returns></returns>
-        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken)
+        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken,IRPCParser parser)
         {
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
             if (this.ProxyToken == proxyToken)
@@ -419,8 +420,9 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化服务
         /// </summary>
+        /// <param name="parser"></param>
         /// <returns></returns>
-        protected virtual List<MethodItem> InitMethodServer()
+        protected virtual List<MethodItem> InitMethodServer(IRPCParser parser)
         {
            return this.clientMethodStore.GetAllMethodItem();
         }

@@ -26,12 +26,12 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 获取代理文件
         /// </summary>
-        Func<string, RPCProxyInfo> GetProxyInfo { get; set; }
+        Func<string, IRPCParser, RPCProxyInfo> GetProxyInfo { get; set; }
 
         /// <summary>
         /// 初始化服务
         /// </summary>
-        Func<List<MethodItem>> InitMethodServer { get; set; }
+        Func<IRPCParser,List<MethodItem>> InitMethodServer { get; set; }
 
         /// <summary>
         /// 调用方法结束后
