@@ -18,21 +18,8 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件客户端助手
     /// </summary>
-    public class FileClientHelper
+    public static class FileClientHelper
     {
-        private FileClientHelper()
-        { 
         
-        }
-
-        /// <summary>
-        /// 创建新的文件客户端助手
-        /// </summary>
-        /// <param name="fileClient"></param>
-        /// <returns></returns>
-        public static FileClientHelper GetFileClientHelper(FileClient fileClient)
-        {
-            return null;
-        }
     }
 }

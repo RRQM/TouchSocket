@@ -24,7 +24,7 @@ namespace RRQMSocket.FileTransfer
         public bool Restart { get; set; }
 
         /// <summary>
-        ///
+        /// 比较
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <returns></returns>

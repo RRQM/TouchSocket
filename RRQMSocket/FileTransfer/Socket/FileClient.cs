@@ -499,6 +499,11 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+        public void RequestDownloadFile(FileUrl url)
+        {
+
+        }
+
         /// <summary>
         /// 发送系统消息
         /// </summary>
