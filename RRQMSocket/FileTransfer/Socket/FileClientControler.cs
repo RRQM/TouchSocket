@@ -18,7 +18,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件客户端助手
     /// </summary>
-    public static class FileClientHelper
+    public  class FileClientControler
     {
         
     }

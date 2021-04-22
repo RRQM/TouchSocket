@@ -48,8 +48,10 @@ namespace RRQMSocket
 
         internal string GetDefaultID()
         {
-            Interlocked.Increment(ref number);
-            return string.Format(IDFormat, number);
+            lock (this)
+            {
+                return string.Format(IDFormat, number++);
+            }
         }
 
         internal ICollection<string> GetTokens()
@@ -59,7 +61,13 @@ namespace RRQMSocket
 
         internal void Remove(string token)
         {
-            this.tokenDic.TryRemove(token, out _);
+            while (!this.tokenDic.TryRemove(token, out _))
+            {
+                if (!this.tokenDic.ContainsKey(token))
+                {
+                    break;
+                }
+            } 
         }
 
         internal void Clear()
