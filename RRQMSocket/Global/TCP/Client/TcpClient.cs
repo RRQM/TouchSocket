@@ -85,6 +85,7 @@ namespace RRQMSocket
 
         private void DisconnectedServiceMethod(object sender, MesEventArgs e)
         {
+            this.Dispose();
             DisconnectedService?.Invoke(sender, e);
         }
 
@@ -184,9 +185,9 @@ namespace RRQMSocket
                     DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                DisconnectedServiceMethod(this, new MesEventArgs(ex.Message));
             }
         }
 
@@ -196,9 +197,25 @@ namespace RRQMSocket
             {
                 if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
-                    ByteBlock byteBlock = (ByteBlock)this.eventArgs.UserToken;
-                    byteBlock.Position = this.eventArgs.BytesTransferred;
-                    byteBlock.SetLength(this.eventArgs.BytesTransferred);
+                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
+
+                    if (byteBlock.Using)
+                    {
+                        byteBlock.Position = e.BytesTransferred;
+                        byteBlock.SetLength(e.BytesTransferred);
+                    }
+                    else
+                    {
+                        byte[] buffer = new byte[e.BytesTransferred];
+                        Array.Copy(byteBlock.Buffer, buffer,buffer.Length);
+                        while (!byteBlock.Using)
+                        {
+                            byteBlock.Dispose();
+                            byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                        }
+                        byteBlock.Write(buffer);
+                    }
+
 
                     ClientBuffer clientBuffer = this.queueGroup.clientBufferPool.GetObject();
                     clientBuffer.client = this;
@@ -206,9 +223,12 @@ namespace RRQMSocket
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
                     queueGroup.waitHandleBuffer.Set();
 
+
                     ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    this.eventArgs.UserToken = newByteBlock;
-                    this.eventArgs.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+                    e.UserToken = newByteBlock;
+                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+
+
                     if (!this.MainSocket.ReceiveAsync(e))
                     {
                         ProcessReceived(e);

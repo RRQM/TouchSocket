@@ -826,7 +826,7 @@ namespace RRQMSocket.FileTransfer
 
                                 while (true)
                                 {
-                                    if (this.TransferType != TransferType.Download&&this.TransferType!= TransferType.PauseDownload)
+                                    if (this.TransferType != TransferType.Download && this.TransferType != TransferType.PauseDownload)
                                     {
                                         return;
                                     }
@@ -864,6 +864,10 @@ namespace RRQMSocket.FileTransfer
                             {
                                 returnByteBlock.SetHolding(false);
                             }
+                        }
+                        catch(Exception ex)
+                        {
+                            this.Logger.Debug( LogType.Error,this,ex.Message);
                         }
                         finally
                         {
