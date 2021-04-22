@@ -272,8 +272,9 @@ namespace RRQMSocket
                 }
                 try
                 {
-                    Socket clientCocket = this.MainSocket.Accept();
-                    this.clientSocketQueue.Enqueue(clientCocket);
+                    Socket socket = this.MainSocket.Accept();
+                    PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    //this.clientSocketQueue.Enqueue(socket);
                 }
                 catch (Exception e)
                 {
@@ -293,14 +294,14 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    while (this.clientSocketQueue.Count > 0)
-                    {
-                        Socket socket;
-                        if (this.clientSocketQueue.TryDequeue(out socket))
-                        {
-                            PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
-                        }
-                    }
+                    //while (this.clientSocketQueue.Count > 0)
+                    //{
+                    //    Socket socket;
+                    //    if (this.clientSocketQueue.TryDequeue(out socket))
+                    //    {
+                    //        PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    //    }
+                    //}
 
                     ICollection<string> collection = this.SocketClients.GetTokens();
                     foreach (var token in collection)

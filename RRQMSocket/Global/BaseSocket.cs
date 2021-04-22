@@ -146,9 +146,33 @@ namespace RRQMSocket
             this.disposable = true;
             if (mainSocket != null)
             {
+                //try
+                //{
+                //    mainSocket.Shutdown(SocketShutdown.Both);
+                //}
+                //catch
+                //{
+
+                //}
+
                 mainSocket.Close();
                 mainSocket.Dispose();
             }
         }
+
+
+
+        ///// <summary>
+        ///// 禁用发送或接收
+        ///// </summary>
+        ///// <param name="how"></param>
+        //public virtual void Shutdown(SocketShutdown how)
+        //{
+        //    if (this.mainSocket!=null)
+        //    {
+        //        mainSocket.Shutdown(SocketShutdown.Both);
+        //    }
+           
+        //}
     }
 }
