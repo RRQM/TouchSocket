@@ -13,7 +13,7 @@ using RRQMCore.Log;
 using System.Collections.Generic;
 using System.Text;
 
-namespace RRQMSocket
+namespace RRQMSocket  
 {
     /// <summary>
     /// 终止字符处理器
