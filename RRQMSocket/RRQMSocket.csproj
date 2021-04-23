@@ -73,8 +73,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Global\Time\**" />
     <Compile Remove="RPC\Enum\**" />
+    <EmbeddedResource Remove="Global\Time\**" />
     <EmbeddedResource Remove="RPC\Enum\**" />
+    <None Remove="Global\Time\**" />
     <None Remove="RPC\Enum\**" />
   </ItemGroup>
 
@@ -100,7 +103,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Global\Time\" />
     <Folder Include="Http\" />
   </ItemGroup>
 
