@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public class TokenTcpService<T> : TcpService<T> where T : TcpSocketClient, new()
+    public class TokenTcpService<TClient> : TcpService<TClient> where TClient : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -92,7 +92,7 @@ namespace RRQMSocket
                                 }
                                 else
                                 {
-                                    T client = this.SocketClientPool.GetObject();
+                                    TClient client = this.SocketClientPool.GetObject();
                                     client.Flag = verifyOption.Flag;
                                     if (client.NewCreat)
                                     {

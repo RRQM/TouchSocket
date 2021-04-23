@@ -24,7 +24,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public class TcpService<T> : BaseSocket, ITcpService where T : TcpSocketClient, new()
+    public class TcpService<TClient> : BaseSocket, ITcpService where TClient : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -40,10 +40,10 @@ namespace RRQMSocket
         public TcpService(BytePool bytePool) : base(bytePool)
         {
             this.IsCheckClientAlive = true;
-            this.SocketClients = new SocketCliectCollection<T>();
+            this.SocketClients = new SocketCliectCollection<TClient>();
             this.IDFormat = "{0}-TCP";
             this.clientSocketQueue = new ConcurrentQueue<Socket>();
-            this.SocketClientPool = new ObjectPool<T>();
+            this.SocketClientPool = new ObjectPool<TClient>();
             this.MaxCount = 10000;
         }
 
@@ -90,9 +90,9 @@ namespace RRQMSocket
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
-        public SocketCliectCollection<T> SocketClients { get; private set; }
+        public SocketCliectCollection<TClient> SocketClients { get; private set; }
 
-        internal ObjectPool<T> SocketClientPool;
+        internal ObjectPool<TClient> SocketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
         private ConcurrentQueue<Socket> clientSocketQueue;
         private Thread threadStartUpReceive;
@@ -306,7 +306,7 @@ namespace RRQMSocket
                     ICollection<string> collection = this.SocketClients.GetTokens();
                     foreach (var token in collection)
                     {
-                        T client = this.SocketClients[token];
+                        TClient client = this.SocketClients[token];
                         if (client == null)
                         {
                             continue;
@@ -368,7 +368,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected virtual void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption)
+        protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreatOption creatOption)
         {
 
         }
@@ -385,7 +385,7 @@ namespace RRQMSocket
                     return;
                 }
 
-                T client = this.SocketClientPool.GetObject();
+                TClient client = this.SocketClientPool.GetObject();
                 if (client.NewCreat)
                 {
                     client.queueGroup = queueGroup;
