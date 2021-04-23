@@ -19,7 +19,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件快索引
         /// </summary>
-        public int Index { get;internal set; }
+        public int Index { get; internal set; }
 
         /// <summary>
         /// 文件流位置

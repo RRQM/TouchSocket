@@ -8,12 +8,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Log;
-using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using RRQMCore.ByteManager;
+using RRQMCore.Log;
+using RRQMCore.Serialization;
 
 namespace RRQMSocket.RPC
 {
@@ -29,6 +29,7 @@ namespace RRQMSocket.RPC
         {
             this.SerializeConverter = new BinarySerializeConverter();
         }
+
         /// <summary>
         /// 调用方法
         /// </summary>
@@ -42,14 +43,13 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化服务
         /// </summary>
-        public Func<IRPCParser ,List<MethodItem>> InitMethodServer { get; set; }
+        public Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
 
         /// <summary>
         /// 序列化转换器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
-       
         /// <summary>
         /// 初创
         /// </summary>
@@ -84,7 +84,7 @@ namespace RRQMSocket.RPC
                             {
                                 proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
                             }
-                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo?.Invoke(proxyToken,this), true));
+                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo?.Invoke(proxyToken, this), true));
                         }
                         catch (Exception e)
                         {

@@ -8,23 +8,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
-using RRQMCore.Log;
-using RRQMCore.Run;
-using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+using RRQMCore.Run;
+using RRQMCore.Serialization;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// UDP协议客户端
     /// </summary>
-    public class UdpRPCClient : IRPCClient,IService
+    public class UdpRPCClient : IRPCClient, IService
     {
         /// <summary>
         /// 构造函数
@@ -139,7 +139,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public void InitializedRPC(string ipHost, string verifyToken = null)
         {
-            if (this.udpSession.MainSocket==null)
+            if (this.udpSession.MainSocket == null)
             {
                 throw new RRQMRPCException("UDP端需要先绑定本地监听端口");
             }
@@ -168,7 +168,6 @@ namespace RRQMSocket.RPC
                 count++;
             }
             throw new RRQMTimeoutException("连接初始化超时");
-
         }
 
         private void Agreement_110(byte[] buffer, int r)
@@ -178,7 +177,7 @@ namespace RRQMSocket.RPC
             args.ReceivedDataBytes = waitBytes.Bytes;
             this.ReceivedBytesThenReturn?.Invoke(this, args);
             waitBytes.Bytes = args.ReturnDataBytes;
-            byte[] data = SerializeConvert.RRQMBinarySerialize(waitBytes,true);
+            byte[] data = SerializeConvert.RRQMBinarySerialize(waitBytes, true);
             UDPSend(110, data, 0, data.Length);
         }
 

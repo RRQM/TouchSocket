@@ -162,7 +162,7 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("请至少添加一种RPC解析器");
             }
-           
+
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
             string nameSpace = setting.NameSpace == null ? "RRQMRPC" : $"RRQMRPC.{setting.NameSpace}";
@@ -397,7 +397,7 @@ namespace RRQMSocket.RPC
         /// <param name="proxyToken"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken,IRPCParser parser)
+        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken, IRPCParser parser)
         {
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
             if (this.ProxyToken == proxyToken)
@@ -424,8 +424,9 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         protected virtual List<MethodItem> InitMethodServer(IRPCParser parser)
         {
-           return this.clientMethodStore.GetAllMethodItem();
+            return this.clientMethodStore.GetAllMethodItem();
         }
+
         /// <summary>
         /// 释放资源
         /// </summary>

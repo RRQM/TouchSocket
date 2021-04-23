@@ -8,14 +8,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
-using RRQMCore.Log;
-using RRQMCore.Pool;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+using RRQMCore.Pool;
 
 namespace RRQMSocket
 {
@@ -102,6 +102,7 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp);
+                    PreviewBind(socket);
                     socket.Bind(endPoint);
                     this.MainSocket = socket;
 
@@ -138,6 +139,16 @@ namespace RRQMSocket
             }
 
             IsBind = true;
+        }
+
+        /// <summary>
+        /// 在Socket初始化对象后，Bind之前调用。
+        /// 可用于设置Socket参数。
+        /// 父类方法可覆盖。
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void PreviewBind(Socket socket)
+        {
         }
 
         private void RecvEventArg_Completed(object sender, SocketAsyncEventArgs e)

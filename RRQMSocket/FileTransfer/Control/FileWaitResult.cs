@@ -9,13 +9,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Run;
-using System;
 
 namespace RRQMSocket.FileTransfer
 {
-    
     internal class FileWaitResult : WaitResult
     {
-        public PBCollectionTemp  PBCollectionTemp { get; set; }
+        public PBCollectionTemp PBCollectionTemp { get; set; }
     }
 }

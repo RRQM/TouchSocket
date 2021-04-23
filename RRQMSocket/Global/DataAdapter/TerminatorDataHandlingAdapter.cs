@@ -8,12 +8,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Log;
 using System.Collections.Generic;
 using System.Text;
+using RRQMCore.ByteManager;
+using RRQMCore.Log;
 
-namespace RRQMSocket  
+namespace RRQMSocket
 {
     /// <summary>
     /// 终止字符处理器
@@ -166,7 +166,7 @@ namespace RRQMSocket
         {
             try
             {
-                this.GoReceived(byteBlock,null);
+                this.GoReceived(byteBlock, null);
             }
             finally
             {

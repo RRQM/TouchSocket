@@ -19,8 +19,7 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         public ConnectSetting()
-        { 
-        
+        {
         }
 
         /// <summary>
@@ -28,11 +27,12 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="ip"></param>
         /// <param name="port"></param>
-        public ConnectSetting(string ip,int port)
+        public ConnectSetting(string ip, int port)
         {
             this.TargetIP = ip;
             this.TargetPort = port;
         }
+
         /// <summary>
         /// 目标IP
         /// </summary>

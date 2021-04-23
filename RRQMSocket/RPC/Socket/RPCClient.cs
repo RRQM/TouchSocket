@@ -8,19 +8,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+using System.Collections.Concurrent;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Pool;
-using RRQMCore.Run;
-using RRQMCore.Serialization;
-using RRQMSocket.Pool;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
 
 namespace RRQMSocket.RPC
 {
@@ -44,7 +37,6 @@ namespace RRQMSocket.RPC
         }
 
         private string verifyToken;
-
 
         /// <summary>
         /// 收到字节数组并返回
@@ -121,7 +113,7 @@ namespace RRQMSocket.RPC
         private bool _disposed;
         private MethodStore methodStore;
         private RPCProxyInfo proxyFile;
-        ObjectPool<RpcJunctor> rpcJunctorPool;
+        private ObjectPool<RpcJunctor> rpcJunctorPool;
 
         /// <summary>
         /// 获取远程服务器RPC服务文件
@@ -215,7 +207,8 @@ namespace RRQMSocket.RPC
             }
         }
 
-        int tryCount;
+        private int tryCount;
+
         private RpcJunctor GetRpcJunctor()
         {
             if (this._disposed)
@@ -271,7 +264,6 @@ namespace RRQMSocket.RPC
                 tryCount = 0;
                 return rpcJunctor;
             }
-
         }
 
         private void OnReceivedBytesThenReturn(object sender, BytesEventArgs e)
@@ -338,14 +330,13 @@ namespace RRQMSocket.RPC
             while (true)
             {
                 RpcJunctor rpcJunctor = this.rpcJunctorPool.GetObject();
-                if (rpcJunctor==null)
+                if (rpcJunctor == null)
                 {
                     break;
                 }
 
                 rpcJunctor.Dispose();
             }
-          
         }
     }
 }

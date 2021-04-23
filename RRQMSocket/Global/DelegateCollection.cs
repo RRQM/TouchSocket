@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Net;
 using RRQMCore.ByteManager;
 using RRQMSocket;
 using RRQMSocket.FileTransfer;
-using System.Net;
 
 /// <summary>
 /// 显示信息

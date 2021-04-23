@@ -23,7 +23,7 @@ namespace RRQMSocket
         /// <param name="byteBlock">数据流</param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            this.GoReceived(byteBlock,null);
+            this.GoReceived(byteBlock, null);
         }
 
         /// <summary>

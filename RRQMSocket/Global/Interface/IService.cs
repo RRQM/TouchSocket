@@ -8,9 +8,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using System.Net;
 using System.Net.Sockets;
+using RRQMCore.ByteManager;
 
 namespace RRQMSocket
 {

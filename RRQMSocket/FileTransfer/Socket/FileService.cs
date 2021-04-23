@@ -14,7 +14,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public  class FileService : TokenTcpService<FileSocketClient>, IFileService
+    public class FileService : TokenTcpService<FileSocketClient>, IFileService
     {
         /// <summary>
         /// 构造函数
@@ -117,6 +117,7 @@ namespace RRQMSocket.FileTransfer
         /// 请求文件信息
         /// </summary>
         public event RRQMFileOperationEventHandler RequestFileInfo;
+
         #endregion 事件
 
         /// <summary>
@@ -146,35 +147,42 @@ namespace RRQMSocket.FileTransfer
 
         private void OnBeforeReceiveFile(object sender, TransferFileEventArgs e)
         {
-            this.BeforeReceiveFile?.Invoke(sender,e);
+            this.BeforeReceiveFile?.Invoke(sender, e);
         }
+
         private void OnSendFileFinished(object sender, FileFinishedArgs e)
         {
-            this.SendFileFinished?.Invoke(sender,e);
+            this.SendFileFinished?.Invoke(sender, e);
         }
+
         private void OnBeforeSendFile(object sender, TransferFileEventArgs e)
         {
-            this.BeforeSendFile?.Invoke(sender,e);
-        } 
+            this.BeforeSendFile?.Invoke(sender, e);
+        }
+
         private void OnReceiveSystemMes(object sender, MesEventArgs e)
         {
-            this.ReceiveSystemMes?.Invoke(sender,e);
-        } 
+            this.ReceiveSystemMes?.Invoke(sender, e);
+        }
+
         private void OnReceiveFileFinished(object sender, FileFinishedArgs e)
         {
-            this.ReceiveFileFinished?.Invoke(sender,e);
-        } 
+            this.ReceiveFileFinished?.Invoke(sender, e);
+        }
+
         private void OnReceivedBytesThenReturn(object sender, BytesEventArgs e)
         {
-            this.ReceivedBytesThenReturn?.Invoke(sender,e);
+            this.ReceivedBytesThenReturn?.Invoke(sender, e);
         }
+
         private void OnRequestDeleteFile(object sender, OperationFileEventArgs e)
         {
-            this.RequestDeleteFile?.Invoke(sender,e);
+            this.RequestDeleteFile?.Invoke(sender, e);
         }
+
         private void OnRequestFileInfo(object sender, OperationFileEventArgs e)
         {
-            this.RequestFileInfo?.Invoke(sender,e);
+            this.RequestFileInfo?.Invoke(sender, e);
         }
     }
 }

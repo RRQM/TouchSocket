@@ -9,14 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 超长异常
     /// </summary>
-    
+
     public class RRQMOverlengthException : RRQMException
     {
         /// <summary>

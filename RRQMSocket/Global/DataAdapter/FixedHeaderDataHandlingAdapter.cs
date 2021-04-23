@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
-using System;
 
 namespace RRQMSocket
 {
@@ -125,12 +125,12 @@ namespace RRQMSocket
                     Logger.Debug(LogType.Error, this, "接收数据长度错误，已放弃接收");
                     return;
                 }
-                else if (length-4 < this.MinSizeHeader)
+                else if (length - 4 < this.MinSizeHeader)
                 {
                     Logger.Debug(LogType.Error, this, "接收数据长度小于设定值，已放弃接收");
                     return;
                 }
-                else if (length-4 > this.MaxSizeHeader)
+                else if (length - 4 > this.MaxSizeHeader)
                 {
                     Logger.Debug(LogType.Error, this, "接收数据长度大于设定值，已放弃接收");
                     return;
@@ -156,7 +156,7 @@ namespace RRQMSocket
         {
             try
             {
-                this.GoReceived(byteBlock,null);
+                this.GoReceived(byteBlock, null);
             }
             finally
             {
@@ -172,12 +172,12 @@ namespace RRQMSocket
         /// <param name="length"></param>
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            if (length<this.MinSizeHeader)
+            if (length < this.MinSizeHeader)
             {
                 throw new RRQMException("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            
-            if (length>this.MaxSizeHeader)
+
+            if (length > this.MaxSizeHeader)
             {
                 throw new RRQMException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }

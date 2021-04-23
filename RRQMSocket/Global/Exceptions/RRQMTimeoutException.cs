@@ -9,14 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 超时异常
     /// </summary>
-    
+
     public class RRQMTimeoutException : RRQMException
     {
         /// <summary>

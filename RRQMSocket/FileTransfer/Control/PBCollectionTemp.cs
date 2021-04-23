@@ -7,11 +7,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -56,7 +52,7 @@ namespace RRQMSocket.FileTransfer
         {
             ProgressBlockCollection progressBlocks = new ProgressBlockCollection();
             progressBlocks.FileInfo = this.FileInfo;
-            if (this.Blocks!=null)
+            if (this.Blocks != null)
             {
                 progressBlocks.AddRange(this.Blocks);
             }

@@ -8,16 +8,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Pool;
 using System;
 using System.Threading;
+using RRQMCore.Pool;
 
 namespace RRQMSocket
 {
-    /*
-    若汝棋茗
-    */
-
     internal class BufferQueueGroup : IDisposable
     {
         internal Thread Thread;

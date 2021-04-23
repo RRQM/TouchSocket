@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
+using RRQMCore.ByteManager;
+using RRQMCore.Log;
 
 namespace RRQMSocket
 {
@@ -152,15 +152,12 @@ namespace RRQMSocket
                 //}
                 //catch
                 //{
-
                 //}
 
                 mainSocket.Close();
                 mainSocket.Dispose();
             }
         }
-
-
 
         ///// <summary>
         ///// 禁用发送或接收
@@ -172,7 +169,7 @@ namespace RRQMSocket
         //    {
         //        mainSocket.Shutdown(SocketShutdown.Both);
         //    }
-           
+
         //}
     }
 }

@@ -9,14 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Event;
-using System;
 
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 文件事件
     /// </summary>
-    public class FileEventArgs:RRQMEventArgs
+    public class FileEventArgs : RRQMEventArgs
     {
         /// <summary>
         /// 文件信息

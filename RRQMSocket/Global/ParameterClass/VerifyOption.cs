@@ -8,12 +8,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Event;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -25,7 +19,7 @@ namespace RRQMSocket
         /// <summary>
         /// 令箭
         /// </summary>
-        public string Token { get;internal set; }
+        public string Token { get; internal set; }
 
         /// <summary>
         /// 是否接受

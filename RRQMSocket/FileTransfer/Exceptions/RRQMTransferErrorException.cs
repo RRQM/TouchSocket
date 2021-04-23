@@ -9,14 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 传输错误
     /// </summary>
-    
+
     public class RRQMTransferErrorException : RRQMException
     {
         /// <summary>

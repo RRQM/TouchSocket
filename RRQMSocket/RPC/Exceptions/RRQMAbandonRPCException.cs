@@ -9,14 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// 放弃RPC执行
     /// </summary>
-    
+
     public class RRQMAbandonRPCException : RRQMException
     {
         /// <summary>

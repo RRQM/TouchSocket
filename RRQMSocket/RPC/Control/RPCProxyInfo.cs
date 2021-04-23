@@ -8,9 +8,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Run;
-using System;
 using System.Collections.Generic;
+using RRQMCore.Run;
 
 namespace RRQMSocket.RPC
 {
@@ -21,7 +20,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC代理文件程序
     /// </summary>
-    
+
     public class RPCProxyInfo : WaitResult
     {
         /// <summary>
@@ -42,6 +41,6 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 源代码
         /// </summary>
-        public List<CellCode>  Codes { get; internal set; }
+        public List<CellCode> Codes { get; internal set; }
     }
 }

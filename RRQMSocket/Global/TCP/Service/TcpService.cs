@@ -8,16 +8,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
-using RRQMCore.Log;
-using RRQMCore.Pool;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+using RRQMCore.Pool;
 
 namespace RRQMSocket
 {
@@ -42,7 +41,6 @@ namespace RRQMSocket
             this.IsCheckClientAlive = true;
             this.SocketClients = new SocketCliectCollection<TClient>();
             this.IDFormat = "{0}-TCP";
-            this.clientSocketQueue = new ConcurrentQueue<Socket>();
             this.SocketClientPool = new ObjectPool<TClient>();
             this.MaxCount = 10000;
         }
@@ -94,7 +92,6 @@ namespace RRQMSocket
 
         internal ObjectPool<TClient> SocketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
-        private ConcurrentQueue<Socket> clientSocketQueue;
         private Thread threadStartUpReceive;
         private Thread threadAccept;
 
@@ -165,6 +162,7 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    PreviewBind(socket);
                     socket.Bind(endPoint);
                     this.MainSocket = socket;
                 }
@@ -191,7 +189,7 @@ namespace RRQMSocket
                     BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                     bufferQueueGroups[i] = bufferQueueGroup;
                     bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                    bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(this.maxCount*10);//处理用户的消息
+                    bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(this.maxCount * 10);//处理用户的消息
                     bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
                     bufferQueueGroup.bufferAndClient = new BufferQueue();
                     bufferQueueGroup.Thread.IsBackground = true;
@@ -205,6 +203,16 @@ namespace RRQMSocket
             }
 
             IsBind = true;
+        }
+
+        /// <summary>
+        /// 在Socket初始化对象后，Bind之前调用。
+        /// 可用于设置Socket参数。
+        /// 父类方法可覆盖。
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void PreviewBind(Socket socket)
+        {
         }
 
         /// <summary>
@@ -251,7 +259,6 @@ namespace RRQMSocket
             this.Send(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
-
         /// <summary>
         /// 根据ID判断SocketClient是否存在
         /// </summary>
@@ -274,7 +281,6 @@ namespace RRQMSocket
                 {
                     Socket socket = this.MainSocket.Accept();
                     PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
-                    //this.clientSocketQueue.Enqueue(socket);
                 }
                 catch (Exception e)
                 {
@@ -370,7 +376,6 @@ namespace RRQMSocket
         /// <param name="creatOption"></param>
         protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreatOption creatOption)
         {
-
         }
 
         internal virtual void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)

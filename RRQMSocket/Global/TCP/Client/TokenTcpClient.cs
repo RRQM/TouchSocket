@@ -8,13 +8,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket
 {
@@ -62,10 +62,9 @@ namespace RRQMSocket
         public string ID { get; private set; }
 
         /// <summary>
-        /// 获取或设置验证超时时间,默认为3秒； 
+        /// 获取或设置验证超时时间,默认为3秒；
         /// </summary>
         public int VerifyTimeout { get; set; } = 3;
-
 
         /// <summary>
         /// 连接到服务器
@@ -86,7 +85,7 @@ namespace RRQMSocket
             {
                 socket.Connect(endPoint);
                 this.MainSocket = socket;
-                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.VerifyToken==null?string.Empty: this.VerifyToken));
+                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.VerifyToken == null ? string.Empty : this.VerifyToken));
             }
             catch (Exception e)
             {

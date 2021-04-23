@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket.RPC
 {
@@ -20,7 +19,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC添加方法键异常
     /// </summary>
-    
+
     public class RRQMRPCKeyException : RRQMException
     {
         /// <summary>

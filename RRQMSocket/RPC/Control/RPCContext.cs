@@ -8,18 +8,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Run;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using RRQMCore.ByteManager;
+using RRQMCore.Run;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// RPC传输类
     /// </summary>
-    
+
     public class RPCContext : WaitResult
     {
         internal string Method;

@@ -9,14 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// 序列化异常类
     /// </summary>
-    
+
     public class RRQMSerializationException : RRQMException
     {
         /// <summary>

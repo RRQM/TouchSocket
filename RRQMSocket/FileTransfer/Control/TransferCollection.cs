@@ -7,11 +7,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RRQMCore.Concurrent;
 
 namespace RRQMSocket.FileTransfer
@@ -19,8 +14,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 传输集合
     /// </summary>
-    public class TransferCollection<T> :ConcurrentList<T>
+    public class TransferCollection<T> : ConcurrentList<T>
     {
-
     }
 }

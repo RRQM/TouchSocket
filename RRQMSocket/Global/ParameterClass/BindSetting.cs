@@ -23,8 +23,7 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         public BindSetting()
-        { 
-        
+        {
         }
 
         /// <summary>
@@ -33,12 +32,13 @@ namespace RRQMSocket
         /// <param name="ip"></param>
         /// <param name="port"></param>
         /// <param name="threadCount"></param>
-        public BindSetting(string ip,int port,int threadCount)
+        public BindSetting(string ip, int port, int threadCount)
         {
             this.IP = ip;
             this.Port = port;
             this.MultithreadThreadCount = threadCount;
         }
+
         /// <summary>
         /// IP地址
         /// </summary>

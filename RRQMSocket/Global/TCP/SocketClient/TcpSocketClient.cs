@@ -8,12 +8,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+using System.Net.Sockets;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Pool;
-using System;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -81,14 +80,14 @@ namespace RRQMSocket
         /// <summary>
         /// 标记
         /// </summary>
-        public object Flag { get ; set ; }
+        public object Flag { get; set; }
 
         /// <summary>
         /// 处理已接收到的数据
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock,object obj);
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
 
         /// <summary>
         /// 发送字节流
@@ -140,14 +139,13 @@ namespace RRQMSocket
                 while (length > 0)
                 {
                     r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
-                    if (r==0&&length>0)
+                    if (r == 0 && length > 0)
                     {
                         throw new RRQMException("发送数据不完全");
                     }
                     offset += r;
                     length -= r;
                 }
-
             }
             catch (Exception e)
             {
@@ -261,7 +259,6 @@ namespace RRQMSocket
         {
         }
 
-        
         /// <summary>
         /// 重新获取,父类方法不可覆盖
         /// </summary>
@@ -285,7 +282,7 @@ namespace RRQMSocket
         /// </summary>
         public virtual void Create()
         {
-            if (this.dataHandlingAdapter==null)
+            if (this.dataHandlingAdapter == null)
             {
                 this.DataHandlingAdapter = new NormalDataHandlingAdapter();
             }
@@ -308,6 +305,5 @@ namespace RRQMSocket
             base.Dispose();
             this.breakOut = true;
         }
-
     }
 }

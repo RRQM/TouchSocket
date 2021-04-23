@@ -8,15 +8,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 请求下载参数
     /// </summary>
-    
+
     public class FileUrl
     {
         /// <summary>
@@ -33,7 +31,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="restart"></param>
-        public FileUrl(string filePath,bool restart)
+        public FileUrl(string filePath, bool restart)
         {
             this.FilePath = filePath;
             this.Restart = restart;

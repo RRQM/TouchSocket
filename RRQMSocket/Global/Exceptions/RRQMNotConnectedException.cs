@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket
 {
@@ -20,7 +19,7 @@ namespace RRQMSocket
     /// <summary>
     /// 未连接异常
     /// </summary>
-    
+
     public class RRQMNotConnectedException : RRQMException
     {
         /// <summary>

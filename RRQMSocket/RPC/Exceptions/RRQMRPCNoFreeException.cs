@@ -9,14 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// 无可用RPC异常
     /// </summary>
-    
+
     public class RRQMRPCNoFreeException : RRQMException
     {
         /// <summary>

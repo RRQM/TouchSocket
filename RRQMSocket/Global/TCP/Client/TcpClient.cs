@@ -8,13 +8,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
-using RRQMCore.Log;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
 
 namespace RRQMSocket
 {
@@ -125,6 +125,7 @@ namespace RRQMSocket
             Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
+                PreviewConnect(socket);
                 socket.Connect(endPoint);
                 this.MainSocket = socket;
                 Start();
@@ -133,6 +134,16 @@ namespace RRQMSocket
             {
                 throw new RRQMException(e.Message);
             }
+        }
+
+        /// <summary>
+        /// 在Socket初始化对象后，Connect之前调用。
+        /// 可用于设置Socket参数。
+        /// 父类方法可覆盖。
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void PreviewConnect(Socket socket)
+        {
         }
 
         internal void Start()
@@ -207,7 +218,7 @@ namespace RRQMSocket
                     else
                     {
                         byte[] buffer = new byte[e.BytesTransferred];
-                        Array.Copy(byteBlock.Buffer, buffer,buffer.Length);
+                        Array.Copy(byteBlock.Buffer, buffer, buffer.Length);
                         while (!byteBlock.Using)
                         {
                             byteBlock.Dispose();
@@ -216,18 +227,15 @@ namespace RRQMSocket
                         byteBlock.Write(buffer);
                     }
 
-
                     ClientBuffer clientBuffer = this.queueGroup.clientBufferPool.GetObject();
                     clientBuffer.client = this;
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
                     queueGroup.waitHandleBuffer.Set();
 
-
                     ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-
 
                     if (!this.MainSocket.ReceiveAsync(e))
                     {

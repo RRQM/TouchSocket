@@ -8,8 +8,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Serialization;
 using System;
+using RRQMCore.Serialization;
 
 namespace RRQMSocket.RPC
 {

@@ -8,12 +8,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket
 {
@@ -67,7 +66,7 @@ namespace RRQMSocket
                 {
                     break;
                 }
-            } 
+            }
         }
 
         internal void Clear()

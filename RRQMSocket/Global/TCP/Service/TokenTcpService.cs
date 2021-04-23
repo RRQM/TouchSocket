@@ -8,13 +8,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Log;
 using System;
-using System.ComponentModel;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using RRQMCore.ByteManager;
+using RRQMCore.Log;
 
 namespace RRQMSocket
 {
@@ -115,7 +114,6 @@ namespace RRQMSocket
                                     }
                                     OnCreatSocketCliect(client, creatOption);
                                     client.ID = creatOption.ID;
-
 
                                     this.SocketClients.Add(client);
 

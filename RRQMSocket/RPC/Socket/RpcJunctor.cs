@@ -8,17 +8,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Pool;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 
 namespace RRQMSocket.RPC
 {
@@ -67,7 +66,6 @@ namespace RRQMSocket.RPC
         internal MethodStore methodStore;
         private RPCProxyInfo proxyFile;
         private RRQMAgreementHelper agreementHelper;
-      
 
         /// <summary>
         /// 获取函数注册
@@ -233,7 +231,6 @@ namespace RRQMSocket.RPC
                     return default(T);
                 }
             }
-
         }
 
         /// <summary>
@@ -250,8 +247,6 @@ namespace RRQMSocket.RPC
         {
             lock (locker)
             {
-
-
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
                 invokeWaitData.WaitResult.Method = methodItem.Method;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -338,7 +333,7 @@ namespace RRQMSocket.RPC
             this.ReceivedBytesThenReturn?.Invoke(this, args);
             waitBytes.Bytes = args.ReturnDataBytes;
 
-            agreementHelper.SocketSend(110, SerializeConvert.RRQMBinarySerialize(waitBytes,true));
+            agreementHelper.SocketSend(110, SerializeConvert.RRQMBinarySerialize(waitBytes, true));
         }
 
         /// <summary>
@@ -434,13 +429,11 @@ namespace RRQMSocket.RPC
             }
         }
 
-       
         /// <summary>
         /// 初创建
         /// </summary>
         public void Create()
         {
-
         }
 
         /// <summary>
@@ -448,7 +441,6 @@ namespace RRQMSocket.RPC
         /// </summary>
         public void Recreate()
         {
-
         }
 
         /// <summary>
@@ -456,7 +448,6 @@ namespace RRQMSocket.RPC
         /// </summary>
         public void Destroy()
         {
-
         }
     }
 }

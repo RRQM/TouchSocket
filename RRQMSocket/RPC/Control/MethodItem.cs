@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 方法体
     /// </summary>
-    
+
     public class MethodItem
     {
         /// <summary>
@@ -32,7 +32,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 参数类型
         /// </summary>
-        internal List<Type>  ParameterTypes;
+        internal List<Type> ParameterTypes;
 
         /// <summary>
         /// 返回值类型
@@ -42,7 +42,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 参数类型
         /// </summary>
-        public List<string>  ParameterTypesString { get; internal set; }
+        public List<string> ParameterTypesString { get; internal set; }
 
         /// <summary>
         /// 是否含有Out或Ref

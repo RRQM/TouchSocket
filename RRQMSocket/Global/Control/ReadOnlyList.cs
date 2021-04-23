@@ -18,52 +18,52 @@ namespace RRQMSocket
     /// 只读
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    
-    public class ReadOnlyList<T>:IEnumerable<T>
+
+    public class ReadOnlyList<T> : IEnumerable<T>
     {
         private List<T> list = new List<T>();
 
-        internal  void Add(T block)
+        internal void Add(T block)
         {
             list.Add(block);
         }
 
-        internal  void AddRange(IEnumerable<T> collection)
+        internal void AddRange(IEnumerable<T> collection)
         {
             list.AddRange(collection);
         }
 
-        internal  void Remove(T block)
+        internal void Remove(T block)
         {
             list.Remove(block);
         }
 
-        internal  void RemoveAt(int index)
+        internal void RemoveAt(int index)
         {
             list.RemoveAt(index);
         }
 
-        internal  void RemoveAll(Predicate<T> match)
+        internal void RemoveAll(Predicate<T> match)
         {
             list.RemoveAll(match);
         }
 
-        internal  void RemoveRange(int index, int range)
+        internal void RemoveRange(int index, int range)
         {
             list.RemoveRange(index, range);
         }
 
-        internal  void Clear()
+        internal void Clear()
         {
             list.Clear();
         }
 
-        internal  void Insert(int index, T item)
+        internal void Insert(int index, T item)
         {
             list.Insert(index, item);
         }
 
-        internal  void InsertRange(int index, IEnumerable<T> collection)
+        internal void InsertRange(int index, IEnumerable<T> collection)
         {
             list.InsertRange(index, collection);
         }
@@ -74,12 +74,12 @@ namespace RRQMSocket
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator()
         {
-           return this.list.GetEnumerator();
+            return this.list.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-           return  this.list.GetEnumerator();
+            return this.list.GetEnumerator();
         }
 
         /// <summary>
@@ -87,6 +87,6 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public  T this[int index] { get { return list[index]; } }
+        public T this[int index] { get { return list[index]; } }
     }
 }

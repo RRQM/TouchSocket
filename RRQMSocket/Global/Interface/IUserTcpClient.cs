@@ -8,9 +8,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
 using System.Net;
 using System.Net.Sockets;
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket
 {

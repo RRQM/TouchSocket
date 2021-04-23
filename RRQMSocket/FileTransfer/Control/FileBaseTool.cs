@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Serialization;
 using System;
 using System.IO;
+using RRQMCore.ByteManager;
+using RRQMCore.Serialization;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -54,7 +54,7 @@ namespace RRQMSocket.FileTransfer
                 File.Delete(path);
             }
 
-            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks) ,true);
+            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
             for (int i = 0; i < dataBuffer.Length; i++)
             {
                 buffer[i] = dataBuffer[i];

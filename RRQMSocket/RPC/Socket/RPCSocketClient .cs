@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using RRQMCore.ByteManager;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
-using System;
 
 namespace RRQMSocket.RPC
 {
@@ -56,7 +56,7 @@ namespace RRQMSocket.RPC
             waitData.WaitResult.Bytes = data;
             try
             {
-                byte[] buffer = SerializeConvert.RRQMBinarySerialize(waitData.WaitResult,true);
+                byte[] buffer = SerializeConvert.RRQMBinarySerialize(waitData.WaitResult, true);
                 agreementHelper.SocketSend(110, buffer);
             }
             catch (Exception e)
@@ -98,7 +98,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock,object obj)
+        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             OnReceivedRequest?.Invoke(this, byteBlock);
         }

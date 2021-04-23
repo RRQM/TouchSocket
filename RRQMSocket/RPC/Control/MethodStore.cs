@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket.RPC
 {
@@ -33,7 +33,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 代理文件实例
         /// </summary>
-        public RPCProxyInfo ProxyInfo { get;private set; }
+        public RPCProxyInfo ProxyInfo { get; private set; }
 
         /// <summary>
         /// 获取服务类实例
@@ -139,7 +139,6 @@ namespace RRQMSocket.RPC
                         item.ParameterTypes.Add(this.MethodGetType(item.ParameterTypesString[i]));
                     }
                 }
-
             }
             this.initialized = true;
         }
@@ -154,7 +153,7 @@ namespace RRQMSocket.RPC
                 foreach (var assembly in assemblies)
                 {
                     type = assembly.GetType(typeName);
-                    if (type!=null)
+                    if (type != null)
                     {
                         return type;
                     }
@@ -163,7 +162,6 @@ namespace RRQMSocket.RPC
                 {
                     throw new RRQMRPCException($"RPC初始化时找不到{typeName}的类型");
                 }
-
             }
 
             return type;
@@ -174,7 +172,5 @@ namespace RRQMSocket.RPC
             int index = typeName.LastIndexOf(".");
             return typeName.Substring(0, index);
         }
-
-
     }
 }

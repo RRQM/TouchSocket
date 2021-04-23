@@ -18,7 +18,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 客户端RPC接口
     /// </summary>
-    public interface IRPCClient: IDisposable
+    public interface IRPCClient : IDisposable
     {
         /// <summary>
         /// 收到ByteBlock时触发

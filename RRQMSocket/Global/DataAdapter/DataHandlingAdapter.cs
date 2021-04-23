@@ -8,9 +8,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
-using System;
 
 namespace RRQMSocket
 {
@@ -54,7 +54,7 @@ namespace RRQMSocket
         {
             try
             {
-                this.ReceivedCallBack.Invoke(byteBlock,obj);
+                this.ReceivedCallBack.Invoke(byteBlock, obj);
             }
             catch (Exception ex)
             {

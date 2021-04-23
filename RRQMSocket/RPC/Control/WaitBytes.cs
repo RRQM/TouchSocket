@@ -9,11 +9,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Run;
-using System;
 
 namespace RRQMSocket.RPC
 {
-    
     internal class WaitBytes : WaitResult
     {
         internal byte[] Bytes;

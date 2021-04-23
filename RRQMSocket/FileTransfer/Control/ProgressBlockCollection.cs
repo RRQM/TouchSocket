@@ -8,9 +8,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Serialization;
 using System;
 using System.IO;
+using RRQMCore.Serialization;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -22,7 +22,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件信息
         /// </summary>
-        public FileInfo FileInfo { get;internal set; }
+        public FileInfo FileInfo { get; internal set; }
 
         /// <summary>
         /// 保存
@@ -34,7 +34,7 @@ namespace RRQMSocket.FileTransfer
             {
                 File.Delete(path);
             }
-            byte[] buffer = SerializeConvert.RRQMBinarySerialize(this,true);
+            byte[] buffer = SerializeConvert.RRQMBinarySerialize(this, true);
             using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
                 fileStream.Write(buffer, 0, buffer.Length);

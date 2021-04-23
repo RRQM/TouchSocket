@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using System;
 using System.Net.Sockets;
 using System.Text;
+using RRQMCore.ByteManager;
 
 namespace RRQMSocket
 {

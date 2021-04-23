@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -20,7 +19,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 没有传输任务异常
     /// </summary>
-    
+
     public class RRQMTransferingException : RRQMException
     {
         /// <summary>
