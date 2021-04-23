@@ -15,7 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 若汝棋茗内置TCP验证客户端
     /// </summary>
-    public class RRQMTokenTcpClient : TokenTcpClient
+    public class RRQMTokenTcpClient<Tobj> : TokenTcpClient<Tobj>
     {
         /// <summary>
         /// 构造函数
@@ -42,7 +42,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override void HandleReceivedData(ByteBlock byteBlock, Tobj obj)
         {
             OnReceivedData?.Invoke(this, byteBlock);
         }

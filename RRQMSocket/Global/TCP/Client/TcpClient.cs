@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端
     /// </summary>
-    public abstract class TcpClient : BaseSocket, IUserTcpClient, IHandleBuffer
+    public abstract class TcpClient<Tobj> : BaseSocket, IUserTcpClient<Tobj>, IHandleBuffer
     {
         /// <summary>
         /// 构造函数
@@ -36,7 +36,7 @@ namespace RRQMSocket
         /// <param name="bytePool">设置内存池实例</param>
         public TcpClient(BytePool bytePool) : base(bytePool)
         {
-            this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+            this.DataHandlingAdapter = new NormalDataHandlingAdapter<Tobj>();
         }
 
         /// <summary>
@@ -44,12 +44,12 @@ namespace RRQMSocket
         /// </summary>
         public bool Online { get { return MainSocket == null ? false : MainSocket.Connected; } }
 
-        private DataHandlingAdapter dataHandlingAdapter;
+        private DataHandlingAdapter<Tobj> dataHandlingAdapter;
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter
+        public DataHandlingAdapter<Tobj> DataHandlingAdapter
         {
             get { return dataHandlingAdapter; }
             set
@@ -125,6 +125,7 @@ namespace RRQMSocket
             Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
+                PreviewConnect(socket);
                 socket.Connect(endPoint);
                 this.MainSocket = socket;
                 Start();
@@ -133,6 +134,17 @@ namespace RRQMSocket
             {
                 throw new RRQMException(e.Message);
             }
+        }
+
+        /// <summary>
+        /// 在初始化对象后，<see cref="Connect(AddressFamily, EndPoint)"/>方法之前调用。
+        /// 可用来设置连接参数。
+        /// 可覆盖父类方法。
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void PreviewConnect(Socket socket)
+        { 
+        
         }
 
         internal void Start()
@@ -278,7 +290,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, Tobj obj);
 
         /// <summary>
         /// 发送字节流

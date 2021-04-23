@@ -15,7 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 固定长度数据处理器
     /// </summary>
-    public class FixedSizeDataHandlingAdapter : DataHandlingAdapter
+    public class FixedSizeDataHandlingAdapter<Tobj> : DataHandlingAdapter<Tobj>
     {
         /// <summary>
         /// 构造函数
@@ -104,7 +104,7 @@ namespace RRQMSocket
         {
             try
             {
-                this.GoReceived(byteBlock,null);
+                this.GoReceived(byteBlock,default);
             }
             finally
             {

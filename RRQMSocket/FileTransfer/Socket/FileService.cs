@@ -14,7 +14,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public  class FileService : TokenTcpService<FileSocketClient>, IFileService
+    public  class FileService : TokenTcpService<FileSocketClient,object>, IFileService
     {
         /// <summary>
         /// 构造函数
@@ -131,7 +131,7 @@ namespace RRQMSocket.FileTransfer
             tcpSocketClient.MaxUploadSpeed = this.MaxUploadSpeed;
             if (creatOption.NewCreat)
             {
-                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter<object>();
                 tcpSocketClient.BeforeReceiveFile = this.OnBeforeReceiveFile;
                 tcpSocketClient.SendFileFinished = this.OnSendFileFinished;
                 tcpSocketClient.BeforeSendFile = this.OnBeforeSendFile;

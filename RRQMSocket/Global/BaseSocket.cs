@@ -58,7 +58,7 @@ namespace RRQMSocket
         /// <summary>
         /// 主通信器
         /// </summary>
-        internal Socket MainSocket
+        protected internal Socket MainSocket
         {
             get { return mainSocket; }
             set
@@ -146,33 +146,9 @@ namespace RRQMSocket
             this.disposable = true;
             if (mainSocket != null)
             {
-                //try
-                //{
-                //    mainSocket.Shutdown(SocketShutdown.Both);
-                //}
-                //catch
-                //{
-
-                //}
-
                 mainSocket.Close();
                 mainSocket.Dispose();
             }
         }
-
-
-
-        ///// <summary>
-        ///// 禁用发送或接收
-        ///// </summary>
-        ///// <param name="how"></param>
-        //public virtual void Shutdown(SocketShutdown how)
-        //{
-        //    if (this.mainSocket!=null)
-        //    {
-        //        mainSocket.Shutdown(SocketShutdown.Both);
-        //    }
-           
-        //}
     }
 }
