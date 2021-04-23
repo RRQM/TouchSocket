@@ -15,7 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 普通数据处理器
     /// </summary>
-    public class NormalDataHandlingAdapter<Tobj> : DataHandlingAdapter<Tobj>
+    public class NormalDataHandlingAdapter : DataHandlingAdapter
     {
         /// <summary>
         /// 当接收到数据时处理数据
@@ -23,7 +23,7 @@ namespace RRQMSocket
         /// <param name="byteBlock">数据流</param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            this.GoReceived(byteBlock, default);
+            this.GoReceived(byteBlock,null);
         }
 
         /// <summary>

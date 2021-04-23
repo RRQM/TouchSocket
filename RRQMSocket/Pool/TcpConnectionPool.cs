@@ -21,20 +21,20 @@ namespace RRQMSocket.Pool
     /// <summary>
     /// 连接池
     /// </summary>
-    public class TcpConnectionPool<TClient, Tobj> : IConnectionPool<TClient, Tobj> where TClient : TcpClient<Tobj>
+    public class TcpConnectionPool<T> : IConnectionPool<T> where T : TcpClient
     {
         private TcpConnectionPool()
         {
             this.Logger = new Log();
-            this.ErrorClientList = new List<TClient>();
-            this.queue = new ConcurrentQueue<TClient>();
+            this.ErrorClientList = new List<T>();
+            this.queue = new ConcurrentQueue<T>();
         }
 
         /// <summary>
         /// 创建连接池
         /// </summary>
         /// <param name="capacity">容量</param>
-        public static TcpConnectionPool<TClient, Tobj> CreatConnectionPool(int capacity)
+        public static TcpConnectionPool<T> CreatConnectionPool(int capacity)
         {
             return CreatConnectionPool(capacity, new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20), null, null);
         }
@@ -45,7 +45,7 @@ namespace RRQMSocket.Pool
         /// <param name="capacity">容量</param>
         /// <param name="onClientIniCallback">当每个连接单元被初始化时回调</param>
         /// <returns></returns>
-        public static TcpConnectionPool<TClient, Tobj> CreatConnectionPool(int capacity, Action<TClient> onClientIniCallback)
+        public static TcpConnectionPool<T> CreatConnectionPool(int capacity, Action<T> onClientIniCallback)
         {
             return CreatConnectionPool(capacity, new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20), onClientIniCallback, null);
         }
@@ -58,19 +58,19 @@ namespace RRQMSocket.Pool
         /// <param name="onClientIniCallback">当每个连接单元被初始化时回调</param>
         /// <param name="args">创建单元时构造函数参数</param>
         /// <returns></returns>
-        public static TcpConnectionPool<TClient, Tobj> CreatConnectionPool(int capacity, BytePool bytePool, Action<TClient> onClientIniCallback, params object[] args)
+        public static TcpConnectionPool<T> CreatConnectionPool(int capacity, BytePool bytePool, Action<T> onClientIniCallback, params object[] args)
         {
             if (capacity < 1)
             {
                 throw new RRQMException("容量不可小于1");
             }
 
-            TcpConnectionPool<TClient, Tobj> connectionPool = new TcpConnectionPool<TClient, Tobj>();
+            TcpConnectionPool<T> connectionPool = new TcpConnectionPool<T>();
             connectionPool.BytePool = bytePool;
             connectionPool.Capacity = capacity;
             for (int i = 0; i < capacity; i++)
             {
-                TClient client = (TClient)Activator.CreateInstance(typeof(TClient), args);
+                T client = (T)Activator.CreateInstance(typeof(T), args);
                 connectionPool.queue.Enqueue(client);
                 onClientIniCallback?.Invoke(client);
             }
@@ -100,7 +100,7 @@ namespace RRQMSocket.Pool
             int successCount = 0;
             while (count < this.Capacity)
             {
-                TClient client;
+                T client;
                 if (this.queue.TryDequeue(out client))
                 {
                     try
@@ -118,7 +118,7 @@ namespace RRQMSocket.Pool
             return successCount;
         }
 
-        private ConcurrentQueue<TClient> queue;
+        private ConcurrentQueue<T> queue;
 
         /// <summary>
         /// 当池中的客户都端发生错误时
@@ -128,7 +128,7 @@ namespace RRQMSocket.Pool
         /// <summary>
         /// 发生错误的客户端列表
         /// </summary>
-        public List<TClient> ErrorClientList { get; private set; }
+        public List<T> ErrorClientList { get; private set; }
 
         /// <summary>
         /// 对象池容量
@@ -154,9 +154,9 @@ namespace RRQMSocket.Pool
         /// 获取即将在下一次通信的客户端单体
         /// </summary>
         /// <returns></returns>
-        public TClient GetNextClient()
+        public T GetNextClient()
         {
-            TClient client;
+            T client;
             this.queue.TryPeek(out client);
             return client;
         }
@@ -165,7 +165,7 @@ namespace RRQMSocket.Pool
         /// 补充成员
         /// </summary>
         /// <param name="client"></param>
-        public void Replenish(TClient client)
+        public void Replenish(T client)
         {
             this.queue.Enqueue(client);
             this.Capacity++;
@@ -209,7 +209,7 @@ namespace RRQMSocket.Pool
             int count = 0;
             while (true)
             {
-                TClient client;
+                T client;
                 if (this.queue.TryDequeue(out client))
                 {
                     try
@@ -237,7 +237,7 @@ namespace RRQMSocket.Pool
         /// </summary>
         public void Clear()
         {
-            TClient client;
+            T client;
             while (this.queue.TryDequeue(out client))
             {
                 client.Dispose();

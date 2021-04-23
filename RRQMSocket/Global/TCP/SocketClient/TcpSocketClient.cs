@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// 服务器辅助类
     /// </summary>
 
-    public abstract class TcpSocketClient<Tobj> : BaseSocket, ISocketClient<Tobj>, IHandleBuffer, IPoolObject
+    public abstract class TcpSocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
     {
         /// <summary>
         /// 构造函数
@@ -52,12 +52,12 @@ namespace RRQMSocket
         /// </summary>
         public bool Online { get { return !this.breakOut; } }
 
-        private DataHandlingAdapter<Tobj> dataHandlingAdapter;
+        private DataHandlingAdapter dataHandlingAdapter;
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public DataHandlingAdapter<Tobj> DataHandlingAdapter
+        public DataHandlingAdapter DataHandlingAdapter
         {
             get { return dataHandlingAdapter; }
             set
@@ -88,7 +88,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, Tobj obj);
+        protected abstract void HandleReceivedData(ByteBlock byteBlock,object obj);
 
         /// <summary>
         /// 发送字节流
@@ -287,7 +287,7 @@ namespace RRQMSocket
         {
             if (this.dataHandlingAdapter==null)
             {
-                this.DataHandlingAdapter = new NormalDataHandlingAdapter<Tobj>();
+                this.DataHandlingAdapter = new NormalDataHandlingAdapter();
             }
         }
 

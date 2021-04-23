@@ -18,7 +18,7 @@ namespace RRQMSocket
     /// <summary>
     /// 固定包头数据处理器
     /// </summary>
-    public class FixedHeaderDataHandlingAdapter<Tobj> : DataHandlingAdapter<Tobj>
+    public class FixedHeaderDataHandlingAdapter : DataHandlingAdapter
     {
         /// <summary>
         /// 获取或设置包头的最大值（默认为20Mb）
@@ -156,7 +156,7 @@ namespace RRQMSocket
         {
             try
             {
-                this.GoReceived(byteBlock, default);
+                this.GoReceived(byteBlock,null);
             }
             finally
             {

@@ -14,7 +14,7 @@ namespace RRQMSocket
     /// <summary>
     /// 客户端终端接口
     /// </summary>
-    public interface IUserClient<Tobj> : IClient
+    public interface IUserClient : IClient
     {
         /// <summary>
         /// 判断是否在线
@@ -24,6 +24,6 @@ namespace RRQMSocket
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        DataHandlingAdapter<Tobj> DataHandlingAdapter { get; set; }
+        DataHandlingAdapter DataHandlingAdapter { get; set; }
     }
 }

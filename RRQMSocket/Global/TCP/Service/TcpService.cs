@@ -24,7 +24,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public class TcpService<TClient, Tobj> : BaseSocket, ITcpService where TClient : TcpSocketClient<Tobj>, new()
+    public class TcpService<T> : BaseSocket, ITcpService where T : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -40,10 +40,10 @@ namespace RRQMSocket
         public TcpService(BytePool bytePool) : base(bytePool)
         {
             this.IsCheckClientAlive = true;
-            this.SocketClients = new SocketCliectCollection<TClient, Tobj>();
+            this.SocketClients = new SocketCliectCollection<T>();
             this.IDFormat = "{0}-TCP";
-           // this.clientSocketQueue = new ConcurrentQueue<Socket>();
-            this.SocketClientPool = new ObjectPool<TClient>();
+            this.clientSocketQueue = new ConcurrentQueue<Socket>();
+            this.SocketClientPool = new ObjectPool<T>();
             this.MaxCount = 10000;
         }
 
@@ -90,11 +90,11 @@ namespace RRQMSocket
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
-        public SocketCliectCollection<TClient, Tobj> SocketClients { get; private set; }
+        public SocketCliectCollection<T> SocketClients { get; private set; }
 
-        internal ObjectPool<TClient> SocketClientPool;
+        internal ObjectPool<T> SocketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
-       // private ConcurrentQueue<Socket> clientSocketQueue;
+        private ConcurrentQueue<Socket> clientSocketQueue;
         private Thread threadStartUpReceive;
         private Thread threadAccept;
 
@@ -165,7 +165,6 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    PreviewBind(socket);
                     socket.Bind(endPoint);
                     this.MainSocket = socket;
                 }
@@ -206,16 +205,6 @@ namespace RRQMSocket
             }
 
             IsBind = true;
-        }
-
-        /// <summary>
-        /// 在初始化对象后，Bind之前调用，可设置<see cref="Socket"/>参数。
-        /// 父类方法可覆盖。
-        /// </summary>
-        /// <param name="socket"></param>
-        protected virtual void PreviewBind(Socket socket)
-        { 
-        
         }
 
         /// <summary>
@@ -317,7 +306,7 @@ namespace RRQMSocket
                     ICollection<string> collection = this.SocketClients.GetTokens();
                     foreach (var token in collection)
                     {
-                        TClient client = this.SocketClients[token];
+                        T client = this.SocketClients[token];
                         if (client == null)
                         {
                             continue;
@@ -379,7 +368,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreatOption creatOption)
+        protected virtual void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption)
         {
 
         }
@@ -396,7 +385,7 @@ namespace RRQMSocket
                     return;
                 }
 
-                TClient client = this.SocketClientPool.GetObject();
+                T client = this.SocketClientPool.GetObject();
                 if (client.NewCreat)
                 {
                     client.queueGroup = queueGroup;

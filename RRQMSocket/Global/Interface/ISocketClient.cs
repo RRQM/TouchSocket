@@ -13,7 +13,7 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器辅助类接口
     /// </summary>
-    public interface ISocketClient<Tobj> : IClient
+    public interface ISocketClient : IClient
     {
         /// <summary>
         /// 用于索引的ID
@@ -33,7 +33,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        DataHandlingAdapter<Tobj> DataHandlingAdapter { get; set; }
+        DataHandlingAdapter DataHandlingAdapter { get; set; }
 
         /// <summary>
         /// 包含此辅助类的主服务器类

@@ -25,7 +25,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC客户端连接器
     /// </summary>
-    public sealed class RpcJunctor : TokenTcpClient<object>, IPoolObject
+    public sealed class RpcJunctor : TokenTcpClient, IPoolObject
     {
         /// <summary>
         /// 构造函数
@@ -39,7 +39,7 @@ namespace RRQMSocket.RPC
             this.singleWaitData.WaitResult = new WaitResult();
             this.invokeWaitData = new WaitData<RPCContext>();
             this.invokeWaitData.WaitResult = new RPCContext();
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter<object>();
+            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端终端接口
     /// </summary>
-    public interface IUserTcpClient<Tobj> : IUserClient<Tobj>
+    public interface IUserTcpClient : IUserClient
     {
         /// <summary>
         /// 连接服务器

@@ -16,7 +16,7 @@ namespace RRQMSocket
     /// <summary>
     /// 若汝棋茗内置TCP验证服务器
     /// </summary>
-    public class RRQMTokenTcpService<TClient, Tobj> : TokenTcpService<TClient, Tobj> where TClient : TcpSocketClient<Tobj>, new()
+    public class RRQMTokenTcpService<T> : TokenTcpService<T> where T : TcpSocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -36,14 +36,14 @@ namespace RRQMSocket
         /// <summary>
         /// 创建泛型T时
         /// </summary>
-        public event Action<TClient, CreatOption> CreatSocketCliect;
+        public event Action<T, CreatOption> CreatSocketCliect;
 
         /// <summary>
         /// 重写函数
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected override void OnCreatSocketCliect(TClient tcpSocketClient, CreatOption creatOption)
+        protected override void OnCreatSocketCliect(T tcpSocketClient, CreatOption creatOption)
         {
             CreatSocketCliect?.Invoke(tcpSocketClient, creatOption);
         }

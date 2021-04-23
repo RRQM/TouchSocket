@@ -20,7 +20,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// TCP RPC解释器
     /// </summary>
-    public class TcpRPCParser : TokenTcpService<RPCSocketClient,object>, IRPCParser
+    public class TcpRPCParser : TokenTcpService<RPCSocketClient>, IRPCParser
     {
         /// <summary>
         /// 构造函数
@@ -60,7 +60,7 @@ namespace RRQMSocket.RPC
             if (creatOption.NewCreat)
             {
                 tcpSocketClient.Logger = this.Logger;
-                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter<object>();
+                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 tcpSocketClient.OnReceivedRequest += this.TcpSocketClient_OnReceivedRequest;
             }
             tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);

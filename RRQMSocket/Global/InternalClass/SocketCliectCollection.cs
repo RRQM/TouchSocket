@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketCliectCollection<TClient, Tobj> : IEnumerable<TClient> where TClient : TcpSocketClient<Tobj>
+    public class SocketCliectCollection<T> : IEnumerable<T> where T : TcpSocketClient
     {
         /// <summary>
         /// 获取或设置分配ID的格式
@@ -35,9 +35,9 @@ namespace RRQMSocket
         /// </summary>
         public int Count { get { return this.tokenDic.Count; } }
 
-        private ConcurrentDictionary<string, TClient> tokenDic = new ConcurrentDictionary<string, TClient>();
+        private ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
 
-        internal void Add(TClient socketClient)
+        internal void Add(T socketClient)
         {
             if (this.tokenDic.TryAdd(socketClient.ID, socketClient))
             {
@@ -75,9 +75,9 @@ namespace RRQMSocket
             this.tokenDic.Clear();
         }
 
-        private TClient GetSocketClient(string id)
+        private T GetSocketClient(string id)
         {
-            TClient t;
+            T t;
             this.tokenDic.TryGetValue(id, out t);
             return t;
         }
@@ -101,13 +101,13 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public TClient this[string id] { get { return this.GetSocketClient(id); } }
+        public T this[string id] { get { return this.GetSocketClient(id); } }
 
         /// <summary>
         /// 用于枚举
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<TClient> GetEnumerator()
+        public IEnumerator<T> GetEnumerator()
         {
             return this.tokenDic.Values.GetEnumerator();
         }

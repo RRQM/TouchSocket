@@ -19,7 +19,7 @@ namespace RRQMSocket.Pool
     /// <summary>
     /// 连接池接口
     /// </summary>
-    public interface IConnectionPool<TClient, Tobj> : IObjectPool where TClient : IUserClient<Tobj>
+    public interface IConnectionPool<T> : IObjectPool where T : IUserClient
     {
         /// <summary>
         /// 当池中的客户都端发生错误时
@@ -44,19 +44,19 @@ namespace RRQMSocket.Pool
         /// <summary>
         /// 发生错误的客户端列表
         /// </summary>
-        List<TClient> ErrorClientList { get; }
+        List<T> ErrorClientList { get; }
 
         /// <summary>
         /// 获取即将在下一次通信的客户端单体
         /// </summary>
         /// <returns></returns>
-        TClient GetNextClient();
+        T GetNextClient();
 
         /// <summary>
         /// 补充成员
         /// </summary>
         /// <param name="client"></param>
-        void Replenish(TClient client);
+        void Replenish(T client);
 
         /// <summary>
         /// 发送字节流

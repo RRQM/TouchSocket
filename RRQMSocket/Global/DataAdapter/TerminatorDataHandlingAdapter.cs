@@ -18,7 +18,7 @@ namespace RRQMSocket
     /// <summary>
     /// 终止字符处理器
     /// </summary>
-    public class TerminatorDataHandlingAdapter<Tobj> : DataHandlingAdapter<Tobj>
+    public class TerminatorDataHandlingAdapter : DataHandlingAdapter
     {
         /// <summary>
         /// 构造函数
@@ -166,7 +166,7 @@ namespace RRQMSocket
         {
             try
             {
-                this.GoReceived(byteBlock,default);
+                this.GoReceived(byteBlock,null);
             }
             finally
             {

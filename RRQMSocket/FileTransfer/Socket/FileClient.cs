@@ -27,7 +27,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯客户端主类
     /// </summary>
-    public class FileClient : TokenTcpClient<object>, IFileClient
+    public class FileClient : TokenTcpClient, IFileClient
     {
         /// <summary>
         /// 无参数构造函数
@@ -36,7 +36,7 @@ namespace RRQMSocket.FileTransfer
         {
             this.BufferLength = 1024 * 64;
             this.TransferType = TransferType.None;
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter<object>();
+            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
 
         private string receiveDirectory = string.Empty;
