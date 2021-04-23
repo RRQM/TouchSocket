@@ -20,6 +20,7 @@ namespace RRQMSocket
     /// </summary>
     public class FixedHeaderDataHandlingAdapter : DataHandlingAdapter
     {
+
         /// <summary>
         /// 获取或设置包头的最大值（默认为20Mb）
         /// </summary>
@@ -53,7 +54,6 @@ namespace RRQMSocket
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
-
             if (agreementTempBytes != null)
             {
                 SeamPackage(buffer, r);

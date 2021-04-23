@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Timers;
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 
@@ -19,6 +20,33 @@ namespace RRQMSocket
     /// </summary>
     public abstract class DataHandlingAdapter
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        static DataHandlingAdapter()
+        {
+            Timer timer = new Timer(100);
+            timer.Elapsed += Timer_Elapsed;
+            timer.Start();
+        }
+
+        private static void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                OnInterval?.Invoke();
+            }
+            catch
+            {
+
+            }
+            
+        }
+        /// <summary>
+        /// 每隔设定时间调用一次
+        /// </summary>
+        protected static event Action OnInterval;
+       
         /// <summary>
         /// 内存池
         /// </summary>
