@@ -289,6 +289,11 @@ namespace RRQMSocket
             }
         }
 
+        //private BufferQueueGroup PopBufferQueueGroup()
+        //{ 
+        
+        //}
+
         private void StartUpReceive()
         {
             while (true)

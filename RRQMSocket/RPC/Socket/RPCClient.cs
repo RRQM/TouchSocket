@@ -140,8 +140,14 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        ///<exception cref="ArgumentNullException"></exception>
-        public void InitializedRPC(string ipHost, string verifyToken = null)
+        /// <param name="ipHost"></param>
+        /// <param name="verifyToken"></param>
+        /// <param name="typeDic"></param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="RRQMRPCException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
         {
             this.iPHost = IPHost.CreatIPHost(ipHost);
             this.verifyToken = verifyToken;
@@ -151,7 +157,7 @@ namespace RRQMSocket.RPC
             if (this.methodStore != null)
             {
                 rpcJunctor.methodStore = this.methodStore;
-                this.methodStore.InitializedType();
+                this.methodStore.InitializedType(typeDic);
                 this.rpcJunctorPool.DestroyObject(rpcJunctor);
             }
             else

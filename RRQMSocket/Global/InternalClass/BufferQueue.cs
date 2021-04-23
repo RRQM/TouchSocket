@@ -19,7 +19,26 @@ namespace RRQMSocket
     /// <summary>
     /// buffer队列
     /// </summary>
-    internal class BufferQueue : ConcurrentQueue<ClientBuffer>
+    internal class BufferQueue
     {
+        internal BufferQueue()
+        {
+            queue = new ConcurrentQueue<ClientBuffer>();
+        }
+
+        internal long processingTimes;
+
+        private ConcurrentQueue<ClientBuffer> queue;
+
+        internal void Enqueue(ClientBuffer item)
+        {
+            this.processingTimes++;
+            this.queue.Enqueue(item);
+        }
+
+        internal bool TryDequeue(out ClientBuffer result)
+        {
+           return this.queue.TryDequeue(out result);
+        }
     }
 }

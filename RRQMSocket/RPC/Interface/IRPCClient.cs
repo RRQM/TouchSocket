@@ -64,7 +64,10 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        void InitializedRPC(string ipHost, string verifyToken = null);
+        /// <param name="ipHost"></param>
+        /// <param name="verifyToken"></param>
+        /// <param name="typeDic"></param>
+        void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic=null);
 
         /// <summary>
         /// 函数式调用

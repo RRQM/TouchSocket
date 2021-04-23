@@ -57,7 +57,6 @@ namespace RRQMSocket.RPC
             codeString.AppendLine("using RRQMCore.Exceptions;");
             codeString.AppendLine("using System.Collections.Generic;");
             codeString.AppendLine("using System.Diagnostics;");
-            codeString.AppendLine("using System.Runtime.Remoting;");
             codeString.AppendLine("using System.Text;");
             codeString.AppendLine("using System.Threading.Tasks;");
 
@@ -75,18 +74,11 @@ namespace RRQMSocket.RPC
         private StringBuilder codeString;
         private string nameSpace;
         private Dictionary<Type, string> propertyDic = new Dictionary<Type, string>();
+        private Dictionary<Type, string> genericTypeDic = new Dictionary<Type, string>();
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public void AddTypeString(Type type)
+       
+        internal void AddTypeString(Type type)
         {
-            if (type.FullName == null)
-            {
-                return;
-            }
             if (type.IsByRef)
             {
                 string typeName = type.FullName.Replace("&", string.Empty);
@@ -96,6 +88,7 @@ namespace RRQMSocket.RPC
                     type = this.Assembly.GetType(typeName);
                 }
             }
+
             if (!type.IsPrimitive && type != typeof(string))
             {
                 if (type.IsArray)
@@ -108,6 +101,27 @@ namespace RRQMSocket.RPC
                     foreach (Type itemType in types)
                     {
                         AddTypeString(itemType);
+                    }
+
+                    if (listType.Contains(type.Name))
+                    {
+                        string typeInnerString = this.GetTypeFullName(types[0]);
+                        string typeString=$"{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
+                        if (!genericTypeDic.ContainsKey(type))
+                        {
+                            genericTypeDic.Add(type, typeString);
+                        }
+                       
+                    }
+                    else if (dicType.Contains(type.Name))
+                    {
+                        string keyString = this.GetTypeFullName(types[0]);
+                        string valueString = this.GetTypeFullName(types[1]);
+                        string typeString=$"{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
+                        if (!genericTypeDic.ContainsKey(type))
+                        {
+                            genericTypeDic.Add(type, typeString);
+                        }
                     }
                 }
                 else if (type.IsInterface || type.IsAbstract)
@@ -283,6 +297,10 @@ namespace RRQMSocket.RPC
             if (type.IsPrimitive || type == typeof(string))
             {
                 return type.FullName;
+            }
+            else if (listType.Contains(type.Name)||dicType.Contains(type.Name))
+            {
+               return genericTypeDic[type];
             }
             else if (propertyDic.ContainsKey(type))
             {

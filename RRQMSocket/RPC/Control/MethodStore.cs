@@ -105,12 +105,12 @@ namespace RRQMSocket.RPC
         }
 
         private bool initialized;
-
+        private TypeInitializeDic typeDic;
         internal MethodItem GetMethodItem(string methodName)
         {
-            if (!this.initialized)
+            if (!initialized)
             {
-                InitializedType();
+                InitializedType(null);
             }
             if (this.methodNamesKey != null && this.methodNamesKey.ContainsKey(methodName))
             {
@@ -122,8 +122,10 @@ namespace RRQMSocket.RPC
             }
         }
 
-        internal void InitializedType()
+        internal void InitializedType(TypeInitializeDic typeDic)
         {
+          
+            this.typeDic = typeDic;
             foreach (MethodItem item in this.methodNamesKey.Values)
             {
                 if (item.ReturnTypeString != null)
@@ -145,6 +147,10 @@ namespace RRQMSocket.RPC
 
         private Type MethodGetType(string typeName)
         {
+            if (this.typeDic!=null&&typeDic.ContainsKey(typeName))
+            {
+                return this.typeDic[typeName];
+            }
             Type type = Type.GetType(typeName);
             if (type == null)
             {

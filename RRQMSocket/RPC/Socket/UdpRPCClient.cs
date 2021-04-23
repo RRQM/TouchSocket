@@ -134,10 +134,18 @@ namespace RRQMSocket.RPC
             return null;
         }
 
+
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        public void InitializedRPC(string ipHost, string verifyToken = null)
+        /// <param name="ipHost"></param>
+        /// <param name="verifyToken"></param>
+        /// <param name="typeDic"></param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="RRQMRPCException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
         {
             if (this.udpSession.MainSocket == null)
             {
@@ -161,7 +169,7 @@ namespace RRQMSocket.RPC
                     }
                     if (this.methodStore != null)
                     {
-                        this.methodStore.InitializedType();
+                        this.methodStore.InitializedType(typeDic);
                         return;
                     }
                 }
