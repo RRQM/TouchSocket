@@ -8,13 +8,55 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 using RRQMCore.Concurrent;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 传输集合
     /// </summary>
-    public class TransferCollection<T> : ConcurrentList<T>
+    public class TransferCollection: IEnumerable<UrlFileInfo>
     {
+        internal TransferCollection()
+        {
+            list = new List<UrlFileInfo>(); 
+        }
+        private List<UrlFileInfo> list;
+
+        /// <summary>
+        /// 返回一个循环访问集合的枚举器
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<UrlFileInfo> GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
+
+        internal void Add(UrlFileInfo fileInfo)
+        {
+            this.list.Add(fileInfo);
+        }
+
+        internal bool GetFirst(out UrlFileInfo fileInfo)
+        {
+            lock (this)
+            {
+                if (this.list.Count>0)
+                {
+                    fileInfo = this.list[0];
+                    this.list.RemoveAt(0);
+                    return true;
+                }
+                fileInfo = null;
+                return false;
+            }
+        }
     }
 }

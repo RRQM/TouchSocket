@@ -8,57 +8,36 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 文件终端接口
+    /// 传输类型
     /// </summary>
-    public interface IFileClient
+    public enum TransferStatus
     {
         /// <summary>
-        /// 下载文件信息
+        /// 无下载
         /// </summary>
-        FileInfo DownloadFileInfo { get; }
+        None,
 
         /// <summary>
-        /// 上传文件信息
+        /// 上传
         /// </summary>
-        FileInfo UploadFileInfo { get; }
+        Upload,
 
         /// <summary>
-        /// 下载进度
+        /// 下载
         /// </summary>
-        float DownloadProgress { get; }
+        Download,
 
         /// <summary>
-        /// 上传进度
+        /// 暂停下载状态
         /// </summary>
-        float UploadProgress { get; }
+        PauseDownload,
 
         /// <summary>
-        /// 下载速度
+        /// 暂停上传状态
         /// </summary>
-        long DownloadSpeed { get; }
-
-        /// <summary>
-        /// 下载速度
-        /// </summary>
-        long UploadSpeed { get; }
-
-        /// <summary>
-        /// 文件传输类型
-        /// </summary>
-        TransferStatus TransferStatus { get; }
-
-        /// <summary>
-        /// 下载的文件包
-        /// </summary>
-        ProgressBlockCollection DownloadFileBlocks { get; }
-
-        /// <summary>
-        /// 上传的文件包
-        /// </summary>
-        ProgressBlockCollection UploadFileBlocks { get; }
+        PauseUpload
     }
 }

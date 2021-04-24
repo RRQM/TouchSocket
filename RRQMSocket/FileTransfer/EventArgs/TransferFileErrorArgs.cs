@@ -28,6 +28,6 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 传输类型
         /// </summary>
-        public TransferType TransferType { get; set; }
+        public TransferStatus TransferType { get; set; }
     }
 }

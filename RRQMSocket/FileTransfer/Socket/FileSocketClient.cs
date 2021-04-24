@@ -111,7 +111,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 获取传输类型
         /// </summary>
-        public TransferType TransferType { get; private set; }
+        public TransferStatus TransferStatus { get; private set; }
 
         /// <summary>
         /// 接收文件信息
@@ -260,9 +260,9 @@ namespace RRQMSocket.FileTransfer
             else
             {
                 //在这一秒中
-                switch (this.TransferType)
+                switch (this.TransferStatus)
                 {
-                    case TransferType.Upload:
+                    case TransferStatus.Upload:
                         if (this.receivedDataLength > this.maxUploadSpeed)
                         {
                             //上传饱和
@@ -272,7 +272,7 @@ namespace RRQMSocket.FileTransfer
                         }
                         break;
 
-                    case TransferType.Download:
+                    case TransferStatus.Download:
                         if (this.sendDataLength > this.maxDownloadSpeed)
                         {
                             //下载饱和
@@ -294,7 +294,7 @@ namespace RRQMSocket.FileTransfer
             {
                 waitResult.Message = string.Format("文件：“{0}”不存在", url.FileName);
                 waitResult.Status = 2;
-                this.TransferType = TransferType.None;
+                this.TransferStatus = TransferStatus.None;
             }
             else
             {
@@ -323,12 +323,12 @@ namespace RRQMSocket.FileTransfer
                 args.TargetPath = args.FileInfo.FilePath;
                 BeforeSendFile?.Invoke(this, args);
 
-                this.TransferType = TransferType.Download;
+                this.TransferStatus = TransferStatus.Download;
                 if (!args.IsPermitTransfer)
                 {
                     waitResult.Message = string.Format("服务器拒绝下载--文件：“{0}”", fileInfo.FileName);
                     waitResult.Status = 2;
-                    this.TransferType = TransferType.None;
+                    this.TransferStatus = TransferStatus.None;
                 }
                 else
                 {
@@ -364,7 +364,7 @@ namespace RRQMSocket.FileTransfer
             }
             else
             {
-                this.TransferType = TransferType.Upload;
+                this.TransferStatus = TransferStatus.Upload;
 
                 restart = this.breakpointResume ? restart : true;
                 if (!restart)
@@ -417,7 +417,7 @@ namespace RRQMSocket.FileTransfer
 
         private void DownloadBlockData(ByteBlock byteBlock, byte[] buffer)
         {
-            if (this.TransferType != TransferType.Download)
+            if (this.TransferStatus != TransferStatus.Download)
             {
                 byteBlock.Write(0);
                 return;
@@ -456,14 +456,14 @@ namespace RRQMSocket.FileTransfer
             byteBlock.Write(1);
             FileFinishedArgs args = new FileFinishedArgs();
             args.FileInfo = this.downloadFileBlocks.FileInfo;
-            this.TransferType = TransferType.None;
+            this.TransferStatus = TransferStatus.None;
             SendFileFinished?.Invoke(this, args);
             this.downloadFileBlocks = null;
         }
 
         private void UploadBlockData(ByteBlock byteBlock, ByteBlock receivedbyteBlock)
         {
-            if (this.TransferType != TransferType.Upload)
+            if (this.TransferStatus != TransferStatus.Upload)
             {
                 byteBlock.Write(4);
                 return;
@@ -742,7 +742,7 @@ namespace RRQMSocket.FileTransfer
                         try
                         {
                             this.downloadFileBlocks = null;
-                            this.TransferType = TransferType.None;
+                            this.TransferStatus = TransferStatus.None;
                             returnByteBlock.Write(1);
                         }
                         catch (Exception ex)
@@ -837,7 +837,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            if (this.TransferType == TransferType.Download)
+                            if (this.TransferStatus == TransferStatus.Download)
                             {
                                 this.MaxSpeedChanged(this.maxDownloadSpeed);
                             }

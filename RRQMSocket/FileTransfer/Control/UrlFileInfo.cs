@@ -14,13 +14,22 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件信息类
     /// </summary>
-
     public class UrlFileInfo : FileInfo
     {
         /// <summary>
         /// 重新开始
         /// </summary>
         public bool Restart { get; set; }
+
+        /// <summary>
+        /// 超时时间，默认30秒
+        /// </summary>
+        public int Timeout { get; set; } = 30;
+
+        /// <summary>
+        /// 请求传输类型
+        /// </summary>
+        public TransferType TransferType { get; set; }
 
         /// <summary>
         /// 比较
