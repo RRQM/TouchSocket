@@ -380,7 +380,7 @@ namespace RRQMSocket.FileTransfer
             FileClient fileClient = new FileClient();
             try
             {
-                IPHost iPHost = IPHost.CreatIPHost(host);
+                IPHost iPHost = new IPHost(host);
                 fileClient.Connect(iPHost, verifyToken);
 
                 if (finishedCallBack != null)
@@ -415,7 +415,7 @@ namespace RRQMSocket.FileTransfer
             FileClient fileClient = new FileClient();
             try
             {
-                IPHost iPHost = IPHost.CreatIPHost(host);
+                IPHost iPHost = new IPHost(host);
                 fileClient.Connect(iPHost, verifyToken);
                 fileClient.UploadFile(url);
                 if (finishedCallBack != null)

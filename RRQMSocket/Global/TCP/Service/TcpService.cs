@@ -129,7 +129,7 @@ namespace RRQMSocket
         /// <exception cref="Exception"></exception>
         public void Bind(int port, int threadCount = 1)
         {
-            IPHost iPHost = IPHost.CreatIPHost($"0.0.0.0:{port}");
+            IPHost iPHost =new IPHost($"0.0.0.0:{port}");
             this.Bind(iPHost, threadCount);
         }
 

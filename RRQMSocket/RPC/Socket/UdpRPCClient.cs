@@ -106,7 +106,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMTimeoutException"></exception>
         public RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null)
         {
-            this.remoteService = IPHost.CreatIPHost(ipHost).EndPoint;
+            this.remoteService =new IPHost(ipHost).EndPoint;
             int count = 0;
             while (count < 3)
             {
@@ -151,7 +151,7 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("UDP端需要先绑定本地监听端口");
             }
-            this.remoteService = IPHost.CreatIPHost(ipHost).EndPoint;
+            this.remoteService =new IPHost(ipHost).EndPoint;
             int count = 0;
             while (count < 3)
             {
@@ -468,8 +468,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="Exception"></exception>
         public void Bind(int port, int threadCount = 1)
         {
-            IPHost iPHost = IPHost.CreatIPHost($"0.0.0.0:{port}");
-            this.Bind(iPHost, threadCount);
+            this.Bind(new IPHost($"0.0.0.0:{port}"), threadCount);
         }
 
         /// <summary>

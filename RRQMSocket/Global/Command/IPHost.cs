@@ -20,62 +20,32 @@ namespace RRQMSocket
     public class IPHost
     {
         /// <summary>
-        /// 构造函数
+        /// 从字符串获取ip和port
         /// </summary>
-        private IPHost()
+        public IPHost(string ipHost)
         {
-        }
-
-        /// <summary>
-        /// 从字符串获取Host和Port
-        /// </summary>
-        /// <param name="host"></param>
-        /// <returns></returns>
-        public static IPHost CreatIPHost(string host)
-        {
-            IPHost iPHost = new IPHost();
-
-            int r = host.LastIndexOf(":");
-            iPHost.IP = host.Substring(0, r);
-            iPHost.Port = Convert.ToInt32(host.Substring(r + 1, host.Length - (r + 1)));
-            iPHost.EndPoint = new IPEndPoint(IPAddress.Parse(iPHost.IP), iPHost.Port);
-            if (iPHost.IP.Contains(":"))
+            int r = ipHost.LastIndexOf(":");
+            this.IP = ipHost.Substring(0, r);
+            this.Port = Convert.ToInt32(ipHost.Substring(r + 1, ipHost.Length - (r + 1)));
+            this.EndPoint = new IPEndPoint(IPAddress.Parse(this.IP), this.Port);
+            if (this.IP.Contains(":"))
             {
-                iPHost.AddressFamily = AddressFamily.InterNetworkV6;
+                this.AddressFamily = AddressFamily.InterNetworkV6;
             }
             else
             {
-                iPHost.AddressFamily = AddressFamily.InterNetwork;
+                this.AddressFamily = AddressFamily.InterNetwork;
             }
-
-            return iPHost;
         }
-
         /// <summary>
-        /// 从字符串获取Host
+        /// 从终结点获取ip和port
         /// </summary>
         /// <param name="endPoint"></param>
-        /// <returns></returns>
-        public static IPHost CreatIPHost(IPEndPoint endPoint)
-        {
-            IPHost iPHost = new IPHost();
-            string host = endPoint.ToString();
-            int r = host.LastIndexOf(":");
-            iPHost.IP = host.Substring(0, r);
-            iPHost.Port = Convert.ToInt32(host.Substring(r + 1, host.Length - (r + 1)));
-            iPHost.EndPoint = new IPEndPoint(IPAddress.Parse(iPHost.IP), iPHost.Port);
-            if (iPHost.IP.Contains(":"))
-            {
-                iPHost.AddressFamily = AddressFamily.InterNetworkV6;
-            }
-            else
-            {
-                iPHost.AddressFamily = AddressFamily.InterNetwork;
-            }
-
-            return iPHost;
+        public IPHost(EndPoint endPoint):this(endPoint.ToString())
+        { 
+        
         }
-
+       
         /// <summary>
         /// IP
         /// </summary>

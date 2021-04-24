@@ -126,7 +126,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMTimeoutException"></exception>
         public RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null)
         {
-            this.iPHost = IPHost.CreatIPHost(ipHost);
+            this.iPHost =new IPHost(ipHost);
             this.verifyToken = verifyToken;
             lock (this)
             {
@@ -149,7 +149,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="Exception"></exception>
         public void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
         {
-            this.iPHost = IPHost.CreatIPHost(ipHost);
+            this.iPHost =new IPHost(ipHost);
             this.verifyToken = verifyToken;
             RpcJunctor rpcJunctor = this.GetRpcJunctor();
             this.methodStore = rpcJunctor.GetMethodStore();
