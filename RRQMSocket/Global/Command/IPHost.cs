@@ -19,12 +19,15 @@ namespace RRQMSocket
     /// </summary>
     public class IPHost
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         private IPHost()
         {
         }
 
         /// <summary>
-        /// 从字符串获取Host
+        /// 从字符串获取Host和Port
         /// </summary>
         /// <param name="host"></param>
         /// <returns></returns>
@@ -32,6 +35,31 @@ namespace RRQMSocket
         {
             IPHost iPHost = new IPHost();
 
+            int r = host.LastIndexOf(":");
+            iPHost.IP = host.Substring(0, r);
+            iPHost.Port = Convert.ToInt32(host.Substring(r + 1, host.Length - (r + 1)));
+            iPHost.EndPoint = new IPEndPoint(IPAddress.Parse(iPHost.IP), iPHost.Port);
+            if (iPHost.IP.Contains(":"))
+            {
+                iPHost.AddressFamily = AddressFamily.InterNetworkV6;
+            }
+            else
+            {
+                iPHost.AddressFamily = AddressFamily.InterNetwork;
+            }
+
+            return iPHost;
+        }
+
+        /// <summary>
+        /// 从字符串获取Host
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <returns></returns>
+        public static IPHost CreatIPHost(IPEndPoint endPoint)
+        {
+            IPHost iPHost = new IPHost();
+            string host = endPoint.ToString();
             int r = host.LastIndexOf(":");
             iPHost.IP = host.Substring(0, r);
             iPHost.Port = Convert.ToInt32(host.Substring(r + 1, host.Length - (r + 1)));

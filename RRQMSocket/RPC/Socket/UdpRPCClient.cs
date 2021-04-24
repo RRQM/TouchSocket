@@ -459,22 +459,34 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
-        /// 绑定本地监听
+        /// 绑定服务
         /// </summary>
-        /// <param name="setting"></param>
-        public void Bind(BindSetting setting)
+        /// <param name="port">端口号</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void Bind(int port, int threadCount = 1)
         {
-            this.udpSession.Bind(setting);
+            IPHost iPHost = IPHost.CreatIPHost($"0.0.0.0:{port}");
+            this.Bind(iPHost, threadCount);
         }
 
         /// <summary>
-        /// 绑定本地监听
+        /// 绑定服务
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="threadCount"></param>
-        public void Bind(EndPoint endPoint, int threadCount)
+        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void Bind(IPHost iPHost, int threadCount)
         {
-            this.udpSession.Bind(endPoint, threadCount);
+            if (iPHost == null)
+            {
+                throw new ArgumentNullException("iPHost不能为空。");
+            }
+            this.Bind(iPHost.AddressFamily, iPHost.EndPoint, threadCount);
         }
 
         /// <summary>

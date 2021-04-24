@@ -92,22 +92,14 @@ namespace RRQMSocket
         /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="setting"></param>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void Connect(ConnectSetting setting)
+        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
+        public void Connect(IPHost iPHost)
         {
-            IPAddress IP = IPAddress.Parse(setting.TargetIP);
-            EndPoint endPoint = new IPEndPoint(IP, setting.TargetPort);
-            this.Connect(endPoint);
-        }
-
-        /// <summary>
-        /// 连接到服务器
-        /// </summary>
-        /// <param name="endPoint">节点</param>
-        public virtual void Connect(EndPoint endPoint)
-        {
-            this.Connect(AddressFamily.InterNetwork, endPoint);
+            if (iPHost == null)
+            {
+                throw new ArgumentNullException("iPHost不能为空。");
+            }
+            this.Connect(iPHost.AddressFamily,iPHost.EndPoint);
         }
 
         /// <summary>
@@ -372,5 +364,7 @@ namespace RRQMSocket
             }
             this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
+
+       
     }
 }

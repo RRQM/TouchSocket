@@ -22,16 +22,9 @@ namespace RRQMSocket
         /// <summary>
         /// 连接服务器
         /// </summary>
-        /// <param name="setting"></param>
+        /// <param name="iPHost"></param>
         /// <exception cref="RRQMException"></exception>
-        void Connect(ConnectSetting setting);
-
-        /// <summary>
-        /// 连接服务器
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <exception cref="RRQMException"></exception>
-        void Connect(EndPoint endPoint);
+        void Connect(IPHost iPHost);
 
         /// <summary>
         /// 连接服务器

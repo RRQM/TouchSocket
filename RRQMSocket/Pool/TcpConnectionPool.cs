@@ -77,24 +77,13 @@ namespace RRQMSocket.Pool
             return connectionPool;
         }
 
+     
         /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="setting"></param>
+        /// <param name="iPHost"></param>
         /// <returns>连接成功数</returns>
-        public int Connect(ConnectSetting setting)
-        {
-            IPAddress IP = IPAddress.Parse(setting.TargetIP);
-            EndPoint endPoint = new IPEndPoint(IP, setting.TargetPort);
-            return Connect(endPoint);
-        }
-
-        /// <summary>
-        /// 连接到服务器
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <returns>连接成功数</returns>
-        public int Connect(EndPoint endPoint)
+        public int Connect(IPHost iPHost)
         {
             int count = 0;
             int successCount = 0;
@@ -105,7 +94,7 @@ namespace RRQMSocket.Pool
                 {
                     try
                     {
-                        client.Connect(endPoint);
+                        client.Connect(iPHost);
                         successCount++;
                     }
                     finally

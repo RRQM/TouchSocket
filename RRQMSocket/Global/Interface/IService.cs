@@ -8,9 +8,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Net;
 using System.Net.Sockets;
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket
 {
@@ -22,22 +24,32 @@ namespace RRQMSocket
         /// <summary>
         /// 绑定服务
         /// </summary>
-        /// <param name="setting"></param>
-        void Bind(BindSetting setting);
+        /// <param name="port">端口号</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        void Bind(int port, int threadCount=1);
 
         /// <summary>
         /// 绑定服务
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="threadCount"></param>
-        void Bind(EndPoint endPoint, int threadCount);
+        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        void Bind(IPHost iPHost, int threadCount);
 
         /// <summary>
         /// 绑定服务
         /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
-        /// <param name="threadCount"></param>
+        /// <param name="addressFamily">寻址方案</param>
+        /// <param name="endPoint">绑定节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
         void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount);
 
         /// <summary>
