@@ -43,6 +43,18 @@ namespace RRQMSocket.FileTransfer
         {
             this.list.Add(fileInfo);
         }
+        
+        internal void Clear()
+        {
+            this.list.Clear();
+        }
+        
+        internal bool Remove(UrlFileInfo fileInfo)
+        {
+           return this.list.Remove(fileInfo);
+        }
+
+
 
         internal bool GetFirst(out UrlFileInfo fileInfo)
         {

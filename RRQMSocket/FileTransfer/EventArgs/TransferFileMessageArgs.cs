@@ -7,13 +7,22 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-
+//------------------------------------------------------------------------------
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 文件客户端助手
+    /// 文件传输消息
     /// </summary>
-    public class FileClientControler
+    public class TransferFileMessageArgs: FileEventArgs
     {
+        /// <summary>
+        /// 错误信息
+        /// </summary>
+        public string Message { get;internal set; }
+
+        /// <summary>
+        /// 传输类型
+        /// </summary>
+        public TransferType TransferType { get;internal set; }
     }
 }

@@ -74,10 +74,13 @@
 
   <ItemGroup>
     <Compile Remove="Global\Time\**" />
+    <Compile Remove="Http\**" />
     <Compile Remove="RPC\Enum\**" />
     <EmbeddedResource Remove="Global\Time\**" />
+    <EmbeddedResource Remove="Http\**" />
     <EmbeddedResource Remove="RPC\Enum\**" />
     <None Remove="Global\Time\**" />
+    <None Remove="Http\**" />
     <None Remove="RPC\Enum\**" />
   </ItemGroup>
 
@@ -100,10 +103,6 @@
 
   <ItemGroup>
     <PackageReference Include="RRQMCore" Version="1.2.18" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Http\" />
   </ItemGroup>
 
 </Project>

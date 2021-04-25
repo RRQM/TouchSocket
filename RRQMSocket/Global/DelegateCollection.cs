@@ -41,21 +41,13 @@ public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
 /// <param name="e"></param>
 public delegate void RRQMUDPByteBlockEventHandler(EndPoint remoteEndpoint, ByteBlock e);
 
-//public delegate void RRQMTokenPreviewConnectEventHandler(object sender, ByteBlock e);
-
 /// <summary>
-/// 传输文件处理
+/// 传输文件操作处理
 /// </summary>
 /// <param name="sender"></param>
 /// <param name="e"></param>
-public delegate void RRQMTransferFileEventHandler(object sender, TransferFileEventArgs e);
+public delegate void RRQMFileOperationEventHandler(object sender, FileOperationEventArgs e);
 
-/// <summary>
-/// 文件操作处理
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMFileOperationEventHandler(object sender, OperationFileEventArgs e);
 
 /// <summary>
 /// 文件处理
@@ -72,14 +64,7 @@ public delegate void RRQMFileEventHandler(object sender, FileEventArgs e);
 public delegate void RRQMSendFileEventHandler(object sender, TransferFileArgs e);
 
 /// <summary>
-/// 完成发送
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMFileFinishedEventHandler(object sender, FileFinishedArgs e);
-
-/// <summary>
-/// 传输文件错误
+/// 传输文件消息
 /// </summary>
 /// <param name="sender"></param>
 /// <param name="e"></param>

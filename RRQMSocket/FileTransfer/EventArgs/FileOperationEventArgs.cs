@@ -11,13 +11,13 @@
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 完成发送的参数
+    /// 操作文件事件类
     /// </summary>
-    public class FileFinishedArgs
+    public class FileOperationEventArgs : FilePathEventArgs
     {
         /// <summary>
-        /// 完成下载的文件
+        /// 是否允许操作
         /// </summary>
-        public FileInfo FileInfo { get; set; }
+        public bool IsPermitOperation { get; set; }
     }
 }

@@ -34,45 +34,56 @@ namespace RRQMSocket.FileTransfer
         private long maxUploadSpeed = 1024 * 1024;
 
         /// <summary>
-        /// 发送文件信息
+        /// 获取当前传输状态
         /// </summary>
-        public FileInfo DownloadFileInfo { get { return downloadFileBlocks == null ? null : downloadFileBlocks.FileInfo; } }
+        public TransferStatus TransferStatus { get; private set; }
 
         /// <summary>
-        /// 获取下载进度
+        /// 获取当前传输文件包
         /// </summary>
-        public float DownloadProgress
+        public ProgressBlockCollection FileBlocks { get { return fileBlocks == null ? null : fileBlocks; } }
+
+        /// <summary>
+        /// 获取当前传输文件信息
+        /// </summary>
+        public FileInfo TransferFileInfo { get { return fileBlocks == null ? null : fileBlocks.FileInfo; } }
+
+        /// <summary>
+        /// 获取当前传输进度
+        /// </summary>
+        public float TransferProgress
         {
             get
             {
-                if (downloadFileBlocks != null)
-                {
-                    return downloadFileBlocks.FileInfo.FileLength != 0 ? (float)sendPosition / downloadFileBlocks.FileInfo.FileLength : 0;
-                }
-                else
+                if (fileBlocks == null)
                 {
                     return 0;
                 }
+                if (fileBlocks.FileInfo != null)
+                {
+                    this.progress = fileBlocks.FileInfo.FileLength > 0 ? (float)position / fileBlocks.FileInfo.FileLength : 0;//计算下载完成进度
+                }
+                else
+                {
+                    this.progress = 0;
+                }
+                return progress <= 1 ? progress : 1;
             }
         }
 
         /// <summary>
-        /// 获取上传进度
+        /// 获取当前传输速度
         /// </summary>
-        public float UploadProgress
+        public long TransferSpeed
         {
             get
             {
-                if (uploadFileBlocks != null)
-                {
-                    return uploadFileBlocks.FileInfo.FileLength != 0 ? (float)receivePosition / uploadFileBlocks.FileInfo.FileLength : 0;
-                }
-                else
-                {
-                    return 0;
-                }
+                this.speed = tempLength;
+                tempLength = 0;
+                return speed;
             }
         }
+       
 
         /// <summary>
         /// 每秒最大下载速度（Byte）,不可小于1024
@@ -108,54 +119,6 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        /// <summary>
-        /// 获取传输类型
-        /// </summary>
-        public TransferStatus TransferStatus { get; private set; }
-
-        /// <summary>
-        /// 接收文件信息
-        /// </summary>
-        public FileInfo UploadFileInfo { get { return uploadFileBlocks == null ? null : uploadFileBlocks.FileInfo; } }
-
-        /// <summary>
-        /// 正在下载的文件包
-        /// </summary>
-        public ProgressBlockCollection DownloadFileBlocks
-        {
-            get { return downloadFileBlocks; }
-        }
-
-        /// <summary>
-        /// 正在上传的文件包
-        /// </summary>
-        public ProgressBlockCollection UploadFileBlocks
-        {
-            get { return uploadFileBlocks; }
-        }
-
-        /// <summary>
-        /// 获取下载速度
-        /// </summary>
-        public long DownloadSpeed
-        {
-            get
-            {
-                return this.sendDataLength;
-            }
-        }
-
-        /// <summary>
-        /// 获取上传速度
-        /// </summary>
-        public long UploadSpeed
-        {
-            get
-            {
-                return this.receivedDataLength;
-            }
-        }
-
         #endregion 属性
 
         #region 字段
@@ -163,14 +126,14 @@ namespace RRQMSocket.FileTransfer
         internal RRQMAgreementHelper AgreementHelper;
         internal bool breakpointResume;
         private bool bufferLengthChanged;
-        private long receivedDataLength;
-        private long sendDataLength;
-        private long sendPosition;
-        private long receivePosition;
+        private long dataTransferLength;
+        private long speed;
+        private long tempLength;
+        private float progress;
+        private long position;
         private Stopwatch stopwatch = new Stopwatch();
         private long timeTick;
-        private ProgressBlockCollection uploadFileBlocks;
-        private ProgressBlockCollection downloadFileBlocks;
+        private ProgressBlockCollection fileBlocks;
         private RRQMStream uploadFileStream;
 
         #endregion 字段
@@ -178,29 +141,19 @@ namespace RRQMSocket.FileTransfer
         #region 事件
 
         /// <summary>
-        /// 刚开始接受文件的时候
+        /// 传输文件之前
         /// </summary>
-        internal RRQMTransferFileEventHandler BeforeReceiveFile;
+        internal RRQMFileOperationEventHandler BeforeFileTransfer;
 
         /// <summary>
-        /// 开始发送文件
+        /// 当文件传输完成时
         /// </summary>
-        internal RRQMTransferFileEventHandler BeforeSendFile;
-
-        /// <summary>
-        /// 当文件接收完成
-        /// </summary>
-        internal RRQMFileFinishedEventHandler ReceiveFileFinished;
+        internal RRQMTransferFileMessageEventHandler FinishedFileTransfer;
 
         /// <summary>
         /// 当接收到系统信息的时候
         /// </summary>
         internal RRQMMessageEventHandler ReceiveSystemMes;
-
-        /// <summary>
-        /// 当文件发送完
-        /// </summary>
-        internal RRQMFileFinishedEventHandler SendFileFinished;
 
         /// <summary>
         /// 收到字节数组并返回
@@ -253,8 +206,8 @@ namespace RRQMSocket.FileTransfer
             {
                 //时间过了一秒
                 this.timeTick = GetNowTick();
-                this.receivedDataLength = 0;
-                this.sendDataLength = 0;
+                this.dataTransferLength = 0;
+                this.dataTransferLength = 0;
                 stopwatch.Restart();
             }
             else
@@ -263,7 +216,7 @@ namespace RRQMSocket.FileTransfer
                 switch (this.TransferStatus)
                 {
                     case TransferStatus.Upload:
-                        if (this.receivedDataLength > this.maxUploadSpeed)
+                        if (this.dataTransferLength > this.maxUploadSpeed)
                         {
                             //上传饱和
                             stopwatch.Stop();
@@ -273,7 +226,7 @@ namespace RRQMSocket.FileTransfer
                         break;
 
                     case TransferStatus.Download:
-                        if (this.sendDataLength > this.maxDownloadSpeed)
+                        if (this.dataTransferLength > this.maxDownloadSpeed)
                         {
                             //下载饱和
                             stopwatch.Stop();
@@ -287,27 +240,45 @@ namespace RRQMSocket.FileTransfer
 
         #region 协议函数
 
-        private void RequestDownload(ByteBlock byteBlock, FileUrl url)
+        private void RequestDownload(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
         {
+
+            FileOperationEventArgs args = new FileOperationEventArgs();
+            args.FileInfo = urlFileInfo;
+            args.IsPermitOperation = true;
+            args.TargetPath = args.FileInfo.FilePath;
+            args.TransferType = TransferType.Download;
+            this.BeforeFileTransfer?.Invoke(this, args);
+
+            string filePath = args.TargetPath;
             FileWaitResult waitResult = new FileWaitResult();
-            if (!File.Exists(url.FilePath))
+            if (!args.IsPermitOperation)
             {
-                waitResult.Message = string.Format("文件：“{0}”不存在", url.FileName);
+                waitResult.Message = string.Format("服务器拒绝下载--文件：“{0}”", filePath);
+                waitResult.Status = 2;
+                this.TransferStatus = TransferStatus.None;
+            }
+            else if (!File.Exists(urlFileInfo.FilePath))
+            {
+                waitResult.Message = string.Format("文件：“{0}”不存在", filePath);
                 waitResult.Status = 2;
                 this.TransferStatus = TransferStatus.None;
             }
             else
             {
+                this.TransferStatus = TransferStatus.Download;
+                waitResult.Message = null;
+                waitResult.Status = 1;
                 FileInfo fileInfo;
 
-                if (!TransferFileHashDictionary.GetFileInfo(url.FilePath, out fileInfo, breakpointResume))
+                if (!TransferFileHashDictionary.GetFileInfo(filePath, out fileInfo, breakpointResume))
                 {
                     fileInfo = new FileInfo();
-                    using (FileStream stream = File.OpenRead(url.FilePath))
+                    using (FileStream stream = File.OpenRead(filePath))
                     {
-                        fileInfo.FilePath = url.FilePath;
+                        fileInfo.FilePath = filePath;
                         fileInfo.FileLength = stream.Length;
-                        fileInfo.FileName = Path.GetFileName(url.FilePath);
+                        fileInfo.FileName = Path.GetFileName(filePath);
                         if (this.breakpointResume)
                         {
                             fileInfo.FileHash = FileControler.GetStreamHash(stream);
@@ -316,27 +287,9 @@ namespace RRQMSocket.FileTransfer
                     }
                 }
 
-                TransferFileEventArgs args = new TransferFileEventArgs();
-                args.FileInfo = fileInfo;
-                args.FileInfo.Flag = url.Flag;
-                args.IsPermitTransfer = true;
-                args.TargetPath = args.FileInfo.FilePath;
-                BeforeSendFile?.Invoke(this, args);
+                fileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
+                waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(fileBlocks);
 
-                this.TransferStatus = TransferStatus.Download;
-                if (!args.IsPermitTransfer)
-                {
-                    waitResult.Message = string.Format("服务器拒绝下载--文件：“{0}”", fileInfo.FileName);
-                    waitResult.Status = 2;
-                    this.TransferStatus = TransferStatus.None;
-                }
-                else
-                {
-                    waitResult.Message = null;
-                    waitResult.Status = 1;
-                    downloadFileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
-                    waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(downloadFileBlocks);
-                }
             }
 
             byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult, true));
@@ -345,14 +298,14 @@ namespace RRQMSocket.FileTransfer
         private void RequestUpload(ByteBlock byteBlock, PBCollectionTemp requestBlocks, bool restart)
         {
             FileWaitResult waitResult = new FileWaitResult();
-            TransferFileEventArgs args = new TransferFileEventArgs();
+            FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = requestBlocks.FileInfo;
             args.TargetPath = requestBlocks.FileInfo.FileName;
-            args.IsPermitTransfer = true;
-            BeforeReceiveFile?.Invoke(this, args);//触发 接收文件事件
+            args.IsPermitOperation = true;
+            this.BeforeFileTransfer?.Invoke(this, args);//触发 接收文件事件
             requestBlocks.FileInfo.FilePath = args.TargetPath;
 
-            if (!args.IsPermitTransfer)
+            if (!args.IsPermitOperation)
             {
                 waitResult.Status = 2;
                 waitResult.Message = "服务器拒绝下载";
@@ -378,8 +331,8 @@ namespace RRQMSocket.FileTransfer
                             {
                                 File.Copy(fileInfo.FilePath, requestBlocks.FileInfo.FilePath);
                             }
-                            uploadFileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
-                            foreach (var item in uploadFileBlocks)
+                           this. fileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
+                            foreach (var item in this.fileBlocks)
                             {
                                 item.Finished = true;
                             }
@@ -399,7 +352,7 @@ namespace RRQMSocket.FileTransfer
                     ProgressBlockCollection blocks = requestBlocks.ToPBCollection();
                     uploadFileStream = FileBaseTool.GetNewFileStream(ref blocks, restart);
                     blocks.FileInfo.FilePath = requestBlocks.FileInfo.FilePath;
-                    this.uploadFileBlocks = blocks;
+                    this.fileBlocks = blocks;
                     waitResult.Status = 1;
                     waitResult.Message = null;
                     waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(blocks);
@@ -426,11 +379,12 @@ namespace RRQMSocket.FileTransfer
             {
                 long position = BitConverter.ToInt64(buffer, 4);
                 long requestLength = BitConverter.ToInt64(buffer, 12);
-                if (FileBaseTool.ReadFileBytes(downloadFileBlocks.FileInfo.FilePath, position, byteBlock, 1, (int)requestLength))
+                if (FileBaseTool.ReadFileBytes(fileBlocks.FileInfo.FilePath, position, byteBlock, 1, (int)requestLength))
                 {
                     Speed.downloadSpeed += requestLength;
-                    this.sendPosition = position + requestLength;
-                    this.sendDataLength += requestLength;
+                    this.position = position + requestLength;
+                    this.tempLength += requestLength;
+                    this.dataTransferLength += requestLength;
                     if (this.bufferLengthChanged)
                     {
                         byteBlock.Buffer[0] = 3;
@@ -452,13 +406,15 @@ namespace RRQMSocket.FileTransfer
 
         private void DownloadFinished(ByteBlock byteBlock)
         {
-            TransferFileStreamDic.DisposeFileStream(this.DownloadFileInfo.FilePath);
+            TransferFileStreamDic.DisposeFileStream(this.fileBlocks.FileInfo.FilePath);
             byteBlock.Write(1);
-            FileFinishedArgs args = new FileFinishedArgs();
-            args.FileInfo = this.downloadFileBlocks.FileInfo;
+            FilePathEventArgs args = new FilePathEventArgs();
+            args.FileInfo = this.fileBlocks.FileInfo;
             this.TransferStatus = TransferStatus.None;
-            SendFileFinished?.Invoke(this, args);
-            this.downloadFileBlocks = null;
+            args.TransferType = TransferType.Download;
+            args.TargetPath = args.FileInfo.FilePath;
+            this.FinishedFileTransfer?.Invoke(this, args);
+            this.fileBlocks = null;
         }
 
         private void UploadBlockData(ByteBlock byteBlock, ByteBlock receivedbyteBlock)
@@ -476,8 +432,9 @@ namespace RRQMSocket.FileTransfer
             string mes;
             if (FileBaseTool.WriteFile(this.uploadFileStream, out mes, position, receivedbyteBlock.Buffer, 25, (int)submitLength))
             {
-                this.receivePosition = position + submitLength;
-                this.receivedDataLength += submitLength;
+                this.position = position + submitLength;
+                this.tempLength += submitLength;
+                this.dataTransferLength += submitLength;
                 Speed.uploadSpeed += submitLength;
 
                 if (this.bufferLengthChanged)
@@ -491,9 +448,9 @@ namespace RRQMSocket.FileTransfer
 
                 if (status == 1)
                 {
-                    FileProgressBlock fileProgress = this.uploadFileBlocks.FirstOrDefault(a => a.Index == index);
+                    FileProgressBlock fileProgress = this.fileBlocks.FirstOrDefault(a => a.Index == index);
                     fileProgress.Finished = true;
-                    FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.uploadFileBlocks);
+                    FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.fileBlocks);
                 }
             }
             else
@@ -505,20 +462,22 @@ namespace RRQMSocket.FileTransfer
 
         private void UploadFinished(ByteBlock byteBlock)
         {
-            TransferFileHashDictionary.AddFile(this.UploadFileInfo);
+            TransferFileHashDictionary.AddFile(this.TransferFileInfo);
             if (this.uploadFileStream != null)
             {
                 FileBaseTool.FileFinished(this.uploadFileStream);
                 this.uploadFileStream = null;
             }
-            if (this.uploadFileBlocks != null)
+            if (this.fileBlocks != null)
             {
-                TransferFileHashDictionary.AddFile(this.uploadFileBlocks.FileInfo);
-                FileFinishedArgs args = new FileFinishedArgs();
-                args.FileInfo = this.uploadFileBlocks.FileInfo;
-                ReceiveFileFinished?.Invoke(this, args);
+                TransferFileHashDictionary.AddFile(this.fileBlocks.FileInfo);
+                FilePathEventArgs args = new FilePathEventArgs();
+                args.FileInfo = this.fileBlocks.FileInfo;
+                args.TargetPath = args.FileInfo.FilePath;
+                args.TransferType = TransferType.Upload;
+                this.FinishedFileTransfer?.Invoke(this, args);
 
-                this.uploadFileBlocks = null;
+                this.fileBlocks = null;
             }
 
             byteBlock.Write(1);
@@ -526,7 +485,7 @@ namespace RRQMSocket.FileTransfer
 
         private void StopUpload(ByteBlock byteBlock)
         {
-            FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.uploadFileBlocks);
+            FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.fileBlocks);
             this.uploadFileStream.Close();
             this.uploadFileStream.Dispose();
             this.uploadFileStream = null;
@@ -548,69 +507,79 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private void RDeleteFile(ByteBlock byteBlock, FileUrl url)
+        private void RDeleteFile(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
         {
-            if (!File.Exists(url.FilePath))
-            {
-                byteBlock.Write(2);
-                return;
-            }
-            OperationFileEventArgs args = new OperationFileEventArgs();
+
+            FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = new FileInfo();
-            args.FileInfo.FilePath = url.FilePath;
-            args.FileInfo.Flag = url.Flag;
+            args.FileInfo.Copy(urlFileInfo);
+            args.TargetPath = urlFileInfo.FilePath;
             this.RequestDeleteFile?.Invoke(this, args);
+
+            string filePath = args.TargetPath;
+
             if (!args.IsPermitOperation)
             {
                 byteBlock.Write(3);
-                return;
             }
-            try
+            else if (!File.Exists(filePath))
             {
-                File.Delete(args.FileInfo.FilePath);
-                byteBlock.Write(1);
+                byteBlock.Write(2);
             }
-            catch (Exception ex)
+            else
             {
-                byteBlock.Write(4);
-                byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
+                try
+                {
+                    File.Delete(filePath);
+                    byteBlock.Write(1);
+                }
+                catch (Exception ex)
+                {
+                    byteBlock.Write(4);
+                    byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
+                }
             }
+
         }
 
-        private void RFileInfo(ByteBlock byteBlock, FileUrl url)
+        private void RFileInfo(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
         {
-            if (!File.Exists(url.FilePath))
-            {
-                byteBlock.Write(2);
-                return;
-            }
-            OperationFileEventArgs args = new OperationFileEventArgs();
+
+            FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = new FileInfo();
-            args.FileInfo.FilePath = url.FilePath;
-            args.FileInfo.Flag = url.Flag;
+            args.FileInfo.Copy(urlFileInfo);
             this.RequestFileInfo?.Invoke(this, args);
+            string filePath = args.TargetPath;
+
             if (!args.IsPermitOperation)
             {
                 byteBlock.Write(3);
-                return;
             }
-            try
+            else if (!File.Exists(filePath))
             {
-                FileInfo fileInfo = new FileInfo();
-                using (Stream stream = File.Open(args.FileInfo.FilePath, FileMode.Open))
+                byteBlock.Write(2);
+            }
+            else
+            {
+                try
                 {
-                    fileInfo.FileLength = stream.Length;
-                    fileInfo.FileName = Path.GetFileName(args.FileInfo.FilePath);
-                    fileInfo.FilePath = args.FileInfo.FilePath;
+                    FileInfo fileInfo = new FileInfo();
+                    using (Stream stream = File.Open(filePath, FileMode.Open))
+                    {
+                        fileInfo.FileLength = stream.Length;
+                        fileInfo.FileName = Path.GetFileName(filePath);
+                        fileInfo.FilePath = filePath;
+                    }
+                    byteBlock.Write(1);
+                    byteBlock.Write(SerializeConvert.RRQMBinarySerialize(fileInfo, true));
                 }
-                byteBlock.Write(1);
-                byteBlock.Write(SerializeConvert.RRQMBinarySerialize(fileInfo, true));
+                catch (Exception ex)
+                {
+                    byteBlock.Write(4);
+                    byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
+                }
             }
-            catch (Exception ex)
-            {
-                byteBlock.Write(4);
-                byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
-            }
+
         }
 
         private void SystemMessage(string mes)
@@ -714,8 +683,8 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            FileUrl url = SerializeConvert.RRQMBinaryDeserialize<FileUrl>(buffer, 4);
-                            RequestDownload(returnByteBlock, url);
+                            UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 4);
+                            RequestDownload(returnByteBlock, fileInfo);
                         }
                         catch (Exception ex)
                         {
@@ -741,7 +710,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            this.downloadFileBlocks = null;
+                            this.fileBlocks = null;
                             this.TransferStatus = TransferStatus.None;
                             returnByteBlock.Write(1);
                         }
@@ -862,8 +831,8 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            FileUrl url = SerializeConvert.RRQMBinaryDeserialize<FileUrl>(byteBlock.Buffer, 4);
-                            this.RDeleteFile(returnByteBlock, url);
+                            UrlFileInfo urlFileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(byteBlock.Buffer, 4);
+                            this.RDeleteFile(returnByteBlock, urlFileInfo);
                         }
                         catch (Exception ex)
                         {
@@ -876,8 +845,8 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            FileUrl url = SerializeConvert.RRQMBinaryDeserialize<FileUrl>(byteBlock.Buffer, 4);
-                            this.RFileInfo(returnByteBlock, url);
+                            UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(byteBlock.Buffer, 4);
+                            this.RFileInfo(returnByteBlock, fileInfo);
                         }
                         catch (Exception ex)
                         {

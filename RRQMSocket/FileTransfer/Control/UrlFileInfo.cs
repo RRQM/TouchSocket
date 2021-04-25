@@ -9,6 +9,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System.IO;
+using RRQMCore.IO;
+
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
@@ -16,6 +19,66 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public class UrlFileInfo : FileInfo
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public UrlFileInfo()
+        {
+
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="path"></param>
+        public UrlFileInfo(string path)
+        {
+            this.FilePath = path;
+            this.FileName = Path.GetFileName(path);
+        }
+        /// <summary>
+        /// 生成下载请求必要信息
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="restart"></param>
+        /// <returns></returns>
+        public static UrlFileInfo CreatDownload(string path, bool restart = false)
+        {
+            UrlFileInfo fileInfo = new UrlFileInfo();
+            fileInfo.FilePath = path;
+            fileInfo.Restart = restart;
+            fileInfo.FileName = Path.GetFileName(path);
+            fileInfo.TransferType = TransferType.Download;
+            return fileInfo;
+        }
+
+
+        /// <summary>
+        /// 生成上传请求必要信息
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="restart"></param>
+        /// <param name="breakpointResume"></param>
+        /// <returns></returns>
+        public static UrlFileInfo CreatUpload(string path, bool restart = false, bool breakpointResume = false)
+        {
+            UrlFileInfo fileInfo = new UrlFileInfo();
+            fileInfo.TransferType = TransferType.Upload;
+            using (FileStream stream = File.OpenRead(path))
+            {
+                fileInfo.Restart = restart;
+                fileInfo.FilePath = path;
+                if (breakpointResume)
+                {
+                    fileInfo.FileHash = FileControler.GetStreamHash(stream);
+                }
+                fileInfo.FileLength = stream.Length;
+                fileInfo.FileName = Path.GetFileName(path);
+            }
+
+            return fileInfo;
+        }
+
         /// <summary>
         /// 重新开始
         /// </summary>

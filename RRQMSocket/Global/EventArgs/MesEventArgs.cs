@@ -8,15 +8,17 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Event;
+
 namespace RRQMSocket
 {
     /// <summary>
     /// 消息事件
     /// </summary>
-    public class MesEventArgs
+    public class MesEventArgs:RRQMEventArgs
     {
         /// <summary>
-        ///
+        ///  构造函数
         /// </summary>
         /// <param name="mes"></param>
         public MesEventArgs(string mes)

@@ -84,24 +84,14 @@ namespace RRQMSocket.FileTransfer
         public event RRQMMessageEventHandler ReceiveSystemMes;
 
         /// <summary>
-        /// 刚开始接受文件的时候
+        /// 传输文件之前
         /// </summary>
-        public event RRQMTransferFileEventHandler BeforeReceiveFile;
+        public event RRQMFileOperationEventHandler BeforeFileTransfer;
 
         /// <summary>
-        /// 刚开始发送文件的时候
+        /// 当文件传输完成时
         /// </summary>
-        public event RRQMTransferFileEventHandler BeforeSendFile;
-
-        /// <summary>
-        /// 当文件发送完
-        /// </summary>
-        public event RRQMFileFinishedEventHandler SendFileFinished;
-
-        /// <summary>
-        /// 当文件接收完成时
-        /// </summary>
-        public event RRQMFileFinishedEventHandler ReceiveFileFinished;
+        public event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
 
         /// <summary>
         /// 收到字节数组并返回
@@ -133,11 +123,9 @@ namespace RRQMSocket.FileTransfer
             if (creatOption.NewCreat)
             {
                 tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-                tcpSocketClient.BeforeReceiveFile = this.OnBeforeReceiveFile;
-                tcpSocketClient.SendFileFinished = this.OnSendFileFinished;
-                tcpSocketClient.BeforeSendFile = this.OnBeforeSendFile;
+                tcpSocketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
+                tcpSocketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
                 tcpSocketClient.ReceiveSystemMes = this.OnReceiveSystemMes;
-                tcpSocketClient.ReceiveFileFinished = this.OnReceiveFileFinished;
                 tcpSocketClient.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
                 tcpSocketClient.RequestDeleteFile = this.OnRequestDeleteFile;
                 tcpSocketClient.RequestFileInfo = this.OnRequestFileInfo;
@@ -145,19 +133,14 @@ namespace RRQMSocket.FileTransfer
             tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
 
-        private void OnBeforeReceiveFile(object sender, TransferFileEventArgs e)
+        private void OnBeforeFileTransfer(object sender, FileOperationEventArgs e)
         {
-            this.BeforeReceiveFile?.Invoke(sender, e);
+            this.BeforeFileTransfer?.Invoke(sender, e);
         }
 
-        private void OnSendFileFinished(object sender, FileFinishedArgs e)
+        private void OnFinishedFileTransfer(object sender, TransferFileMessageArgs e)
         {
-            this.SendFileFinished?.Invoke(sender, e);
-        }
-
-        private void OnBeforeSendFile(object sender, TransferFileEventArgs e)
-        {
-            this.BeforeSendFile?.Invoke(sender, e);
+            this.FinishedFileTransfer?.Invoke(sender, e);
         }
 
         private void OnReceiveSystemMes(object sender, MesEventArgs e)
@@ -165,22 +148,18 @@ namespace RRQMSocket.FileTransfer
             this.ReceiveSystemMes?.Invoke(sender, e);
         }
 
-        private void OnReceiveFileFinished(object sender, FileFinishedArgs e)
-        {
-            this.ReceiveFileFinished?.Invoke(sender, e);
-        }
-
+      
         private void OnReceivedBytesThenReturn(object sender, BytesEventArgs e)
         {
             this.ReceivedBytesThenReturn?.Invoke(sender, e);
         }
 
-        private void OnRequestDeleteFile(object sender, OperationFileEventArgs e)
+        private void OnRequestDeleteFile(object sender, FileOperationEventArgs e)
         {
             this.RequestDeleteFile?.Invoke(sender, e);
         }
 
-        private void OnRequestFileInfo(object sender, OperationFileEventArgs e)
+        private void OnRequestFileInfo(object sender, FileOperationEventArgs e)
         {
             this.RequestFileInfo?.Invoke(sender, e);
         }
