@@ -50,20 +50,6 @@ public delegate void RRQMFileOperationEventHandler(object sender, FileOperationE
 
 
 /// <summary>
-/// 文件处理
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMFileEventHandler(object sender, FileEventArgs e);
-
-/// <summary>
-/// 发送文件
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMSendFileEventHandler(object sender, TransferFileArgs e);
-
-/// <summary>
 /// 传输文件消息
 /// </summary>
 /// <param name="sender"></param>

@@ -286,8 +286,8 @@ namespace RRQMSocket.FileTransfer
                         TransferFileHashDictionary.AddFile(fileInfo);
                     }
                 }
-
-                fileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
+                urlFileInfo.Copy(fileInfo);
+                fileBlocks = FileBaseTool.GetProgressBlockCollection(urlFileInfo,this.breakpointResume);
                 waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(fileBlocks);
 
             }
@@ -331,7 +331,7 @@ namespace RRQMSocket.FileTransfer
                             {
                                 File.Copy(fileInfo.FilePath, requestBlocks.FileInfo.FilePath);
                             }
-                           this. fileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo);
+                           this. fileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo,this.breakpointResume);
                             foreach (var item in this.fileBlocks)
                             {
                                 item.Finished = true;
@@ -548,6 +548,7 @@ namespace RRQMSocket.FileTransfer
             FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = new FileInfo();
             args.FileInfo.Copy(urlFileInfo);
+            args.TargetPath = args.FileInfo.FilePath;
             this.RequestFileInfo?.Invoke(this, args);
             string filePath = args.TargetPath;
 

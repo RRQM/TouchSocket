@@ -126,13 +126,13 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        internal static ProgressBlockCollection GetProgressBlockCollection(FileInfo fileInfo)
+        internal static ProgressBlockCollection GetProgressBlockCollection(FileInfo fileInfo, bool breakpointResume)
         {
             ProgressBlockCollection blocks = new ProgressBlockCollection();
             blocks.FileInfo = new FileInfo();
             blocks.FileInfo.Copy(fileInfo);
             long position = 0;
-            if (fileInfo.FileLength >= 100)
+            if (breakpointResume && fileInfo.FileLength >= 100)
             {
                 long blockLength = (long)(fileInfo.FileLength / 100.0);
 

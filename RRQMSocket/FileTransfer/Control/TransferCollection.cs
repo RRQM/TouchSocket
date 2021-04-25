@@ -11,6 +11,7 @@ using RRQMCore.Concurrent;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -23,6 +24,8 @@ namespace RRQMSocket.FileTransfer
         {
             list = new List<UrlFileInfo>(); 
         }
+
+        internal event RRQMMessageEventHandler OnCollectionChanged;
         private List<UrlFileInfo> list;
 
         /// <summary>
@@ -42,16 +45,29 @@ namespace RRQMSocket.FileTransfer
         internal void Add(UrlFileInfo fileInfo)
         {
             this.list.Add(fileInfo);
+            Task.Run(()=> 
+            {
+                OnCollectionChanged?.Invoke(null,new MesEventArgs("添加"));
+            });
         }
         
         internal void Clear()
         {
             this.list.Clear();
+            Task.Run(() =>
+            {
+                OnCollectionChanged?.Invoke(null, new MesEventArgs("清空"));
+            });
         }
         
         internal bool Remove(UrlFileInfo fileInfo)
         {
-           return this.list.Remove(fileInfo);
+            Task.Run(() =>
+            {
+                OnCollectionChanged?.Invoke(null, new MesEventArgs("移除"));
+            });
+            return this.list.Remove(fileInfo);
+            
         }
 
 
@@ -64,6 +80,10 @@ namespace RRQMSocket.FileTransfer
                 {
                     fileInfo = this.list[0];
                     this.list.RemoveAt(0);
+                    Task.Run(() =>
+                    {
+                        OnCollectionChanged?.Invoke(null, new MesEventArgs("进入传输"));
+                    });
                     return true;
                 }
                 fileInfo = null;

@@ -37,15 +37,9 @@ namespace RRQMSocket.FileTransfer
             this.locker = new object();
             this.FileTransferCollection = new TransferCollection();
             this.TransferStatus = TransferStatus.None;
-            client = new RRQMTokenTcpClient();
-            client.BufferLength = 1024 * 64;
-            client.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-            client.ConnectedService += this.Client_ConnectedService;
-            client.OnReceivedData += this.Client_OnReceivedData;
-            client.ConnectedService += ConnectedService;
-            client.DisconnectedService += DisconnectedService;
-        }
 
+            this.FileTransferCollection.OnCollectionChanged += this.FileTransferCollection_OnCollectionChanged; ;
+        }
 
         #region 自定义
 
@@ -150,6 +144,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public TransferCollection FileTransferCollection { get; private set; }
 
+
         private ProgressBlockCollection fileBlocks;
         private RRQMTokenTcpClient client;
         private object locker;
@@ -165,6 +160,8 @@ namespace RRQMSocket.FileTransfer
         private WaitData<ByteBlock> waitDataSend;
         private RRQMAgreementHelper AgreementHelper;
         private bool breakpointResume;
+        private string verifyToken;
+        private IPHost ipHost;
 
         /// <summary>
         /// 成功连接到服务器
@@ -195,6 +192,16 @@ namespace RRQMSocket.FileTransfer
         /// 当接收到系统信息的时候
         /// </summary>
         public event RRQMMessageEventHandler ReceiveSystemMes;
+
+        /// <summary>
+        /// 当文件传输集合更改时
+        /// </summary>
+        public event RRQMMessageEventHandler FileTransferCollectionChanged;
+
+        private void FileTransferCollection_OnCollectionChanged(object sender, MesEventArgs e)
+        {
+            this.FileTransferCollectionChanged?.Invoke(this, e);
+        }
         #endregion
 
         private void SynchronizeTransferSetting()
@@ -225,9 +232,20 @@ namespace RRQMSocket.FileTransfer
             {
                 throw new ArgumentNullException("IPHost为空");
             }
+            client = new RRQMTokenTcpClient();
+            client.BufferLength = 1024 * 64;
+            client.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            client.ConnectedService += this.Client_ConnectedService;
+            client.OnReceivedData += this.Client_OnReceivedData;
+            client.DisconnectedService += this.Client_DisconnectedService;
+
+            this.ipHost = ipHost;
+            this.verifyToken = verifyToken;
             this.client.VerifyToken = verifyToken;
             this.client.Connect(ipHost.AddressFamily, ipHost.EndPoint);
         }
+
+
 
         /// <summary>
         /// 请求传输文件
@@ -243,31 +261,34 @@ namespace RRQMSocket.FileTransfer
         {
             Task.Run(() =>
             {
-                if (this.TransferStatus == TransferStatus.None)
+                lock (locker)
                 {
-                    if (this.FileTransferCollection.GetFirst(out UrlFileInfo fileInfo))
+                    if (this.TransferStatus == TransferStatus.None)
                     {
-                        try
+                        if (this.FileTransferCollection.GetFirst(out UrlFileInfo fileInfo))
                         {
-                            if (fileInfo.TransferType == TransferType.Download)
+                            try
                             {
-                                this.DownloadFile(fileInfo);
+                                if (fileInfo.TransferType == TransferType.Download)
+                                {
+                                    this.DownloadFile(fileInfo);
+                                }
+                                else
+                                {
+                                    this.UploadFile(fileInfo);
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                this.UploadFile(fileInfo);
+                                TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                args.FileInfo = fileInfo;
+                                args.Message = ex.Message;
+                                args.TransferType = fileInfo.TransferType;
+                                this.TransferFileError?.Invoke(this, args);
+                                BeginTransfer();
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            TransferFileMessageArgs args = new TransferFileMessageArgs();
-                            args.FileInfo = fileInfo;
-                            args.Message = ex.Message;
-                            args.TransferType = fileInfo.TransferType;
-                            this.TransferFileError?.Invoke(this, args);
-                            BeginTransfer();
-                        }
 
+                        }
                     }
                 }
             });
@@ -281,7 +302,7 @@ namespace RRQMSocket.FileTransfer
         /// <returns></returns>
         public bool CancelTransfer(UrlFileInfo fileInfo)
         {
-           return this.FileTransferCollection.Remove(fileInfo);
+            return this.FileTransferCollection.Remove(fileInfo);
         }
 
         /// <summary>
@@ -350,7 +371,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     throw new RRQMTransferingException("已有传输任务在进行中");
                 }
-                ProgressBlockCollection requsetBlocks = FileBaseTool.GetProgressBlockCollection(urlFileInfo);
+                ProgressBlockCollection requsetBlocks = FileBaseTool.GetProgressBlockCollection(urlFileInfo, this.breakpointResume);
                 byte[] datas = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(requsetBlocks), true);
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
                 byteBlock.Write(BitConverter.GetBytes(urlFileInfo.Restart));
@@ -636,12 +657,14 @@ namespace RRQMSocket.FileTransfer
             if (this.TransferStatus == TransferStatus.PauseDownload)
             {
                 this.TransferStatus = TransferStatus.Download;
-                this.waitHandle.Set();
             }
             else if (this.TransferStatus == TransferStatus.PauseUpload)
             {
                 this.TransferStatus = TransferStatus.Upload;
-                this.waitHandle.WaitOne();
+            }
+            if (waitHandle != null)
+            {
+                this.waitHandle.Set();
             }
         }
 
@@ -797,10 +820,11 @@ namespace RRQMSocket.FileTransfer
                                     args.TransferType = TransferType.Download;
                                     args.Message = "请求下载文件错误";
                                     this.TransferFileError?.Invoke(this, args);
+                                    this.BeginTransfer();
                                     return;
                                 }
                             }
-                            else
+                            else if (returnByteBlock.Buffer[0] == 1 || returnByteBlock.Buffer[0] == 3)
                             {
                                 reTryCount = 0;
 
@@ -834,10 +858,21 @@ namespace RRQMSocket.FileTransfer
                                             args.Message = "文件写入错误：" + mes;
                                             this.OutDownload(true);
                                             this.TransferFileError?.Invoke(this, args);
+                                            this.BeginTransfer();
                                             return;
                                         }
                                     }
                                 }
+                            }
+                            else
+                            {
+                                TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                args.FileInfo = this.TransferFileInfo;
+                                args.TransferType = TransferType.Upload;
+                                args.Message = "服务器无此传输信息，已终止本次传输";
+                                OutDownload(false);
+                                this.TransferFileError?.Invoke(this, args);
+                                this.BeginTransfer();
                             }
 
                             if (returnByteBlock != null)
@@ -908,21 +943,47 @@ namespace RRQMSocket.FileTransfer
                             if (FileBaseTool.ReadFileBytes(this.fileBlocks.FileInfo.FilePath, this.position, byteBlock, 21, (int)submitLength))
                             {
                                 ByteBlock returnByteBlock = this.SendWait(1011, this.timeout, byteBlock);
-                                if (returnByteBlock != null && returnByteBlock.Buffer[0] != 2)
+                                if (returnByteBlock != null && returnByteBlock.Buffer.Length > 0)
                                 {
-                                    reTryCount = 0;
-                                    this.tempLength += submitLength;
-                                    this.position += submitLength;
-                                    surplusLength -= submitLength;
-
-                                    if (returnByteBlock.Buffer[0] == 3)
+                                    if (returnByteBlock.Buffer[0] == 1)
                                     {
+                                        reTryCount = 0;
+                                        this.tempLength += submitLength;
+                                        this.position += submitLength;
+                                        surplusLength -= submitLength;
+                                    }
+                                    else if (returnByteBlock.Buffer[0] == 2)
+                                    {
+                                        reTryCount++;
+                                        Logger.Debug(LogType.Message, this, $"上传文件错误，正在尝试第{reTryCount}次重试");
+                                        if (reTryCount > 10)
+                                        {
+                                            TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                            args.FileInfo = this.fileBlocks.FileInfo;
+                                            args.TransferType = TransferType.Upload;
+                                            args.Message = "上传文件错误";
+                                            this.TransferFileError?.Invoke(this, args);
+                                            this.BeginTransfer();
+                                        }
+                                    }
+                                    else if (returnByteBlock.Buffer[0] == 3)
+                                    {
+                                        reTryCount = 0;
+                                        this.tempLength += submitLength;
+                                        this.position += submitLength;
+                                        surplusLength -= submitLength;
                                         this.SynchronizeTransferSetting();
                                     }
-                                }
-                                else if (returnByteBlock != null && returnByteBlock.Buffer[0] != 4)
-                                {
-                                    return;
+                                    else 
+                                    {
+                                        TransferFileMessageArgs args = new TransferFileMessageArgs();
+                                        args.FileInfo = this.fileBlocks.FileInfo;
+                                        args.TransferType = TransferType.Upload;
+                                        args.Message = "服务器无此传输信息，已终止本次传输";
+                                        OutUpload();
+                                        this.TransferFileError?.Invoke(this, args);
+                                        this.BeginTransfer();
+                                    }
                                 }
                                 else
                                 {
@@ -935,6 +996,7 @@ namespace RRQMSocket.FileTransfer
                                         args.TransferType = TransferType.Upload;
                                         args.Message = "上传文件错误";
                                         this.TransferFileError?.Invoke(this, args);
+                                        this.BeginTransfer();
                                     }
                                 }
 
@@ -954,6 +1016,7 @@ namespace RRQMSocket.FileTransfer
                                     args.TransferType = TransferType.Upload;
                                     args.Message = "读取上传文件错误";
                                     this.TransferFileError?.Invoke(this, args);
+                                    this.BeginTransfer();
                                 }
                             }
                         }
@@ -994,6 +1057,7 @@ namespace RRQMSocket.FileTransfer
 
                         OutDownload(false);
                         this.FinishedFileTransfer?.Invoke(this, args);
+                        this.BeginTransfer();
                     }
                     resultByteBlock.SetHolding(false);
                 }
@@ -1005,6 +1069,7 @@ namespace RRQMSocket.FileTransfer
                 args.TransferType = TransferType.Download;
                 args.Message = e.Message;
                 this.TransferFileError?.Invoke(this, args);
+                this.BeginTransfer();
             }
         }
 
@@ -1027,6 +1092,7 @@ namespace RRQMSocket.FileTransfer
                         this.fileBlocks = null;
                         OutUpload();
                         this.FinishedFileTransfer?.Invoke(this, args);
+                        this.BeginTransfer();
                         break;
                     }
                     byteBlock.SetHolding(false);
@@ -1048,7 +1114,8 @@ namespace RRQMSocket.FileTransfer
             }
             this.fileBlocks = null;
             this.TransferStatus = TransferStatus.None;
-
+            this.progress = 0;
+            this.speed = 0;
             if (abort)
             {
                 ByteBlock byteBlock = this.SendWait(1003, this.timeout);
@@ -1057,6 +1124,7 @@ namespace RRQMSocket.FileTransfer
                     byteBlock.SetHolding(false);
                 }
             }
+
         }
 
         private void OutUpload()
@@ -1067,6 +1135,27 @@ namespace RRQMSocket.FileTransfer
             }
             this.fileBlocks = null;
             this.TransferStatus = TransferStatus.None;
+            this.progress = 0;
+            this.speed = 0;
+        }
+
+        private void ReConnect()
+        {
+            if (!this.client.Online)
+            {
+                this.client.Dispose();
+                this.Logger.Debug(LogType.Warning, this, $"客户端已断连，正在尝试恢复连接！！！");
+                try
+                {
+                    this.Connect(this.ipHost, this.verifyToken);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.Debug(LogType.Error, this, $"尝试恢复连接时发生错误：{ex.Message}");
+                }
+
+            }
+
         }
 
         private void Client_OnReceivedData(object sender, ByteBlock byteBlock)
@@ -1099,6 +1188,12 @@ namespace RRQMSocket.FileTransfer
         {
             AgreementHelper = new RRQMAgreementHelper(client);
             SynchronizeTransferSetting();
+            this.ConnectedService?.Invoke(this, new MesEventArgs("已连接"));
+        }
+
+        private void Client_DisconnectedService(object sender, MesEventArgs e)
+        {
+            this.DisconnectedService?.Invoke(this, new MesEventArgs("断开连接"));
         }
 
         /// <summary>
@@ -1155,15 +1250,24 @@ namespace RRQMSocket.FileTransfer
                     {
                         AgreementHelper.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Position);
                     }
+
+
                 }
                 catch
                 {
+
                 }
+
                 this.waitDataSend.Wait(waitTime * 1000);
                 ByteBlock resultByteBlock = this.waitDataSend.WaitResult;
                 this.waitDataSend.Dispose();
                 this.waitDataSend = null;
+                if (resultByteBlock == null)
+                {
+                    ReConnect();
+                }
                 return resultByteBlock;
+
             }
         }
 

@@ -85,7 +85,6 @@ namespace RRQMSocket
 
         private void DisconnectedServiceMethod(object sender, MesEventArgs e)
         {
-            this.Dispose();
             DisconnectedService?.Invoke(sender, e);
         }
 
