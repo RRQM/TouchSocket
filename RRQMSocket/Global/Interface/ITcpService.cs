@@ -9,6 +9,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
+using System.Net;
+using System.Net.Sockets;
+using RRQMCore.Exceptions;
+
 namespace RRQMSocket
 {
     /// <summary>
@@ -35,5 +40,17 @@ namespace RRQMSocket
         /// 有用户断开连接的时候
         /// </summary>
         event RRQMMessageEventHandler ClientDisconnected;
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="addressFamily">寻址方案</param>
+        /// <param name="endPoint">绑定节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <param name="concurrentAccept">高并发连接</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount,bool concurrentAccept);
     }
 }

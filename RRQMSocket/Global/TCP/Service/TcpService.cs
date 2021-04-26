@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -89,7 +90,7 @@ namespace RRQMSocket
         /// 获取当前连接的所有客户端
         /// </summary>
         public SocketCliectCollection<TClient> SocketClients { get; private set; }
-
+        private AcceptQueue acceptQueue;
         internal ObjectPool<TClient> SocketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadStartUpReceive;
@@ -129,7 +130,7 @@ namespace RRQMSocket
         /// <exception cref="Exception"></exception>
         public void Bind(int port, int threadCount = 1)
         {
-            IPHost iPHost =new IPHost($"0.0.0.0:{port}");
+            IPHost iPHost = new IPHost($"0.0.0.0:{port}");
             this.Bind(iPHost, threadCount);
         }
 
@@ -159,6 +160,21 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
         {
+            this.Bind(addressFamily, endPoint, threadCount, false);
+        }
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="addressFamily">寻址方案</param>
+        /// <param name="endPoint">绑定节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <param name="concurrentAccept">高并发连接</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount, bool concurrentAccept)
+        {
             if (this.disposable)
             {
                 throw new RRQMException("无法重新利用已释放对象");
@@ -185,12 +201,12 @@ namespace RRQMSocket
 
                 threadStartUpReceive = new Thread(StartUpReceive);
                 threadStartUpReceive.IsBackground = true;
-                threadStartUpReceive.Name = "启动接收消息线程";
+                threadStartUpReceive.Name = "CheckClientAlive";
                 threadStartUpReceive.Start();
 
                 threadAccept = new Thread(StartAccept);
                 threadAccept.IsBackground = true;
-                threadAccept.Name = "接收新客户端线程";
+                threadAccept.Name = "AcceptSocket";
                 threadAccept.Start();
 
                 bufferQueueGroups = new BufferQueueGroup[threadCount];
@@ -203,9 +219,19 @@ namespace RRQMSocket
                     bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
                     bufferQueueGroup.bufferAndClient = new BufferQueue();
                     bufferQueueGroup.Thread.IsBackground = true;
-                    bufferQueueGroup.Thread.Name = i + "号服务器处理线程";
+                    bufferQueueGroup.Thread.Name = i + "-Num Handler";
                     bufferQueueGroup.Thread.Start(bufferQueueGroup);
                 }
+
+                if (concurrentAccept)
+                {
+                    this.acceptQueue = new AcceptQueue();
+                    this.acceptQueue.Thread = new Thread(this.AcceptSocketCliect);
+                    this.acceptQueue.Thread.IsBackground = true;
+                    this.acceptQueue.Thread.Name = "AcceptSocketClient";
+                    this.acceptQueue.Thread.Start();
+                }
+
             }
             else
             {
@@ -290,7 +316,15 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = this.MainSocket.Accept();
-                    PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    if (this.acceptQueue == null)
+                    {
+                        PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    }
+                    else
+                    {
+                        this.acceptQueue.sockets.Enqueue(socket);
+                        this.acceptQueue.waitHandle.Set();
+                    }
                 }
                 catch (Exception e)
                 {
@@ -299,10 +333,33 @@ namespace RRQMSocket
             }
         }
 
-        //private BufferQueueGroup PopBufferQueueGroup()
-        //{ 
-        
-        //}
+        private void AcceptSocketCliect()
+        {
+            while (true)
+            {
+                if (this.disposable)
+                {
+                    break;
+                }
+                try
+                {
+                    if (this.acceptQueue.sockets.TryDequeue(out Socket socket))
+                    {
+                        PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    }
+                    else
+                    {
+                        this.acceptQueue.waitHandle.WaitOne();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Debug(LogType.Error, this, e.Message);
+                }
+            }
+        }
+
+
 
         private void StartUpReceive()
         {
@@ -315,15 +372,6 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    //while (this.clientSocketQueue.Count > 0)
-                    //{
-                    //    Socket socket;
-                    //    if (this.clientSocketQueue.TryDequeue(out socket))
-                    //    {
-                    //        PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
-                    //    }
-                    //}
-
                     ICollection<string> collection = this.SocketClients.GetTokens();
                     foreach (var token in collection)
                     {
@@ -457,6 +505,13 @@ namespace RRQMSocket
             {
                 item.Dispose();
             }
+
+            if (this.acceptQueue != null)
+            {
+                this.acceptQueue.Dispose();
+            }
         }
+
+
     }
 }

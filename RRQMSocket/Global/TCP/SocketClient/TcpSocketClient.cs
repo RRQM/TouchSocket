@@ -302,8 +302,18 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
-            base.Dispose();
             this.breakOut = true;
+            base.Dispose();
+        }
+
+        /// <summary>
+        /// 禁用发送或接收
+        /// </summary>
+        /// <param name="how"></param>
+        public override void Shutdown(SocketShutdown how)
+        {
+            this.breakOut = true;
+            base.Shutdown(how);
         }
     }
 }
