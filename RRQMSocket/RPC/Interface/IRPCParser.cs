@@ -23,16 +23,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         event Action<IRPCParser, RPCContext> InvokeMethod;
 
-        /// <summary>
-        /// 获取代理文件
-        /// </summary>
-        Func<string, IRPCParser, RPCProxyInfo> GetProxyInfo { get; set; }
-
-        /// <summary>
-        /// 初始化服务
-        /// </summary>
-        Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
-
+       
         /// <summary>
         /// 调用方法结束后
         /// </summary>
@@ -43,5 +34,15 @@ namespace RRQMSocket.RPC
         /// 序列化转换器
         /// </summary>
         SerializeConverter SerializeConverter { get; set; }
+
+        /// <summary>
+        /// 获取代理文件
+        /// </summary>
+        Func<string, IRPCParser, RPCProxyInfo> GetProxyInfo { get; set; }
+
+        /// <summary>
+        /// 初始化服务
+        /// </summary>
+        Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
     }
 }

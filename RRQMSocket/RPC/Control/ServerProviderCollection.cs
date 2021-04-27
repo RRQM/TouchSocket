@@ -18,7 +18,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 服务集合
     /// </summary>
-    [DebuggerDisplay("Count")]
+    [DebuggerDisplay("{Count}")]
     public class ServerProviderCollection : IEnumerable
     {
         /// <summary>
