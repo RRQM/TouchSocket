@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RRQMSocket.Http
 {
-    public enum ResponseHeaderType
+    public enum ResponseHeader
     {
         /// <summary>
         /// Cache-Control 标头，指定请求/响应链上所有缓存机制必须服从的缓存指令。

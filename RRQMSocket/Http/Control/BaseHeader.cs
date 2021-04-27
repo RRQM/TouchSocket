@@ -7,28 +7,67 @@ using System.Threading.Tasks;
 
 namespace RRQMSocket.Http
 {
+    /// <summary>
+    /// Http基础头部
+    /// </summary>
     public class BaseHeader : IDisposable
     {
+        /// <summary>
+        /// 请求体流数据
+        /// </summary>
         public ByteBlock Body { get; set; }
 
+        /// <summary>
+        /// 请求体字符数据
+        /// </summary>
         public string BodyString { get; set; }
 
+        /// <summary>
+        /// 编码方式
+        /// </summary>
         public Encoding Encoding { get; set; }
 
+        /// <summary>
+        /// 内容类型
+        /// </summary>
         public string Content_Type { get; set; }
 
+        /// <summary>
+        /// 内容长度
+        /// </summary>
         public int Content_Length { get; set; }
 
+        /// <summary>
+        /// 内容编码
+        /// </summary>
         public string Content_Encoding { get; set; }
 
+        /// <summary>
+        /// 内容语言
+        /// </summary>
         public string ContentLanguage { get; set; }
 
+        /// <summary>
+        /// 请求头集合
+        /// </summary>
         public Dictionary<string, string> Headers { get; set; }
 
-       
         /// <summary>
-        /// 不支持枚举类型约束，所以采取下列方案:)
+        /// HTTP协议版本
         /// </summary>
+        public string ProtocolVersion { get; set; }
+
+        /// <summary>
+        /// 协议名称
+        /// </summary>
+        public string Protocols { get; set; }
+
+
+        /// <summary>
+        /// 获取头集合的值
+        /// </summary>
+        /// <param name="header"></param>
+        /// <returns></returns>
         protected string GetHeaderByKey(Enum header)
         {
             var fieldName = header.GetDescription();
@@ -38,6 +77,11 @@ namespace RRQMSocket.Http
             return Headers[fieldName];
         }
 
+        /// <summary>
+        /// 获取头集合的值
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
         protected string GetHeaderByKey(string fieldName)
         {
             if (string.IsNullOrEmpty(fieldName)) return null;
@@ -47,7 +91,7 @@ namespace RRQMSocket.Http
         }
 
         /// <summary>
-        /// 不支持枚举类型约束，所以采取下列方案:)
+        /// 设置头值
         /// </summary>
         protected void SetHeaderByKey(Enum header, string value)
         {
@@ -58,6 +102,11 @@ namespace RRQMSocket.Http
             Headers[fieldName] = value;
         }
 
+        /// <summary>
+        /// 设置头值
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <param name="value"></param>
         protected void SetHeaderByKey(string fieldName, string value)
         {
             if (string.IsNullOrEmpty(fieldName)) return;
@@ -66,6 +115,9 @@ namespace RRQMSocket.Http
             Headers[fieldName] = value;
         }
 
+        /// <summary>
+        /// 释放所占资源
+        /// </summary>
         public void Dispose()
         {
             if (this.Body != null)

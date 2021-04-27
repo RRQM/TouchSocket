@@ -52,20 +52,19 @@ namespace RRQMSocket.Http
         /// </summary>
         public string URL { get; set; }
 
-        /// <summary>
-        /// HTTP协议版本
-        /// </summary>
-        public string ProtocolVersion { get; set; }
+       
 
         /// <summary>
         /// 获取时候保持连接
         /// </summary>
-        public bool KeepAlive { get;private set; }
+        public bool KeepAlive { get; private set; }
 
         /// <summary>
-        /// 从内存块中读取
+        /// 从内存中读取
         /// </summary>
-        /// <param name="byteBlock"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
         public void ReadHeaders(byte[] buffer, int offset, int length)
         {
             string data = Encoding.UTF8.GetString(buffer, offset, length);
@@ -106,26 +105,49 @@ namespace RRQMSocket.Http
             }
         }
 
+        /// <summary>
+        /// 获取头值
+        /// </summary>
+        /// <param name="header"></param>
+        /// <returns></returns>
         public string GetHeader(RequestHeaders header)
         {
             return GetHeaderByKey(header);
         }
 
+        /// <summary>
+        /// 获取头值
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
         public string GetHeader(string fieldName)
         {
             return GetHeaderByKey(fieldName);
         }
 
+        /// <summary>
+        /// 设置头值
+        /// </summary>
+        /// <param name="header"></param>
+        /// <param name="value"></param>
         public void SetHeader(RequestHeaders header, string value)
         {
             SetHeaderByKey(header, value);
         }
 
+        /// <summary>
+        /// 设置头值
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <param name="value"></param>
         public void SetHeader(string fieldName, string value)
         {
             SetHeaderByKey(fieldName, value);
         }
 
+        /// <summary>
+        /// 构建完整请求
+        /// </summary>
         public void Build()
         {
             this.BodyString = this.Body == null ? null : Encoding.UTF8.GetString(this.Body.Buffer, 0, (int)this.Body.Length);

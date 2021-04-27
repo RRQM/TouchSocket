@@ -8,21 +8,30 @@ using System.Threading.Tasks;
 
 namespace RRQMSocket.Http
 {
+    /// <summary>
+    /// Http响应
+    /// </summary>
     public class HttpResponse : BaseHeader
     {
-        public string StatusCode { get; set; }
-
-        public string Protocols { get; set; }
-
-        public string ProtocolsVersion { get; set; }
-
-        public byte[] Content { get; private set; }
-
-
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         public HttpResponse()
         {
             this.Headers = new Dictionary<string, string>();
         }
+
+        /// <summary>
+        /// 状态码
+        /// </summary>
+        public string StatusCode { get; set; }
+
+
+        /// <summary>
+        /// 内容
+        /// </summary>
+        public byte[] Content { get; private set; }
+
 
         public HttpResponse SetContent(byte[] content, Encoding encoding = null)
         {
@@ -39,7 +48,7 @@ namespace RRQMSocket.Http
             return SetContent(encoding.GetBytes(content), encoding);
         }
 
-        public string GetHeader(ResponseHeaderType header)
+        public string GetHeader(ResponseHeader header)
         {
             return GetHeaderByKey(header);
         }
@@ -49,7 +58,7 @@ namespace RRQMSocket.Http
             return GetHeaderByKey(fieldName);
         }
 
-        public void SetHeader(ResponseHeaderType header, string value)
+        public void SetHeader(ResponseHeader header, string value)
         {
             SetHeaderByKey(header, value);
         }
@@ -78,7 +87,7 @@ namespace RRQMSocket.Http
                 stringBuilder.AppendLine(this.Headers[headerkey]);
             }
             stringBuilder.AppendLine("Server: RRQMSocket");
-            stringBuilder.AppendLine("Date: " + DateTimeHelper.Now.ToGMTString("r"));
+            stringBuilder.AppendLine("Date: " + DateTime.Now.ToGMTString("r"));
             stringBuilder.AppendLine();
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
