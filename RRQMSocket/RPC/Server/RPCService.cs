@@ -202,7 +202,6 @@ namespace RRQMSocket.RPC
 
                         MethodItem methodItem = new MethodItem();
                         methodItem.Method = methodName;
-                        methodItem.SP = attribute.SP;
                         ParameterInfo[] parameters = method.GetParameters();
                         methodItem.ParameterTypes = new List<Type>();
                         for (int i = 0; i < parameters.Length; i++)

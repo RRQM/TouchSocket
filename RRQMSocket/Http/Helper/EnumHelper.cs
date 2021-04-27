@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace RRQMSocket.Http
 {
+    /// <summary>
+    /// 枚举扩展类
+    /// </summary>
     public static class EnumHelper
     {
         static ConcurrentDictionary<Enum, string> _cache = new ConcurrentDictionary<Enum, string>();
@@ -47,28 +50,7 @@ namespace RRQMSocket.Http
             return result;
         }
 
-        public static string ToNVString(this HttpStatusCode @enum)
-        {
-            return $"{(int)@enum}  {@enum.ToString()}";
-        }
-
-
-        public static byte[] ToArray(this ArraySegment<byte> source)
-        {
-            if (source.Array == null)
-            {
-                return null;
-            }
-
-            var buffer = new byte[source.Count];
-            if (buffer.Length > 0)
-            {
-                Array.Copy(source.Array, source.Offset, buffer, 0, buffer.Length);
-            }
-
-            return buffer;
-        }
-
+       
         /// <summary>
         /// 根据字符串获取枚举
         /// </summary>

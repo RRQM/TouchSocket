@@ -31,20 +31,13 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化服务
         /// </summary>
-        Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
+        Func<IRPCParser, List<MethodItem>> InitMethodServer { get;  set; }
 
         /// <summary>
         /// 调用方法结束后
         /// </summary>
         /// <param name="context"></param>
         void EndInvokeMethod(RPCContext context);
-
-        ///// <summary>
-        ///// 初始化函数映射
-        ///// </summary>
-        ///// <param name="serverMethodStore"></param>
-        ///// <param name="clientMethodStore"></param>
-        //void InitMethodStore(MethodStore serverMethodStore, MethodStore clientMethodStore);
 
         /// <summary>
         /// 序列化转换器

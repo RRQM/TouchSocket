@@ -16,13 +16,6 @@ namespace RRQMSocket.Http
     public class HttpRequest : BaseHeader
     {
         /// <summary>
-        /// 构造函数
-        /// </summary>
-        public HttpRequest()
-        {
-
-        }
-        /// <summary>
         /// url参数
         /// </summary>
         public Dictionary<string, string> Query { get; set; }
@@ -52,7 +45,7 @@ namespace RRQMSocket.Http
         /// </summary>
         public string URL { get; set; }
 
-       
+
 
         /// <summary>
         /// 获取时候保持连接
@@ -74,7 +67,15 @@ namespace RRQMSocket.Http
             var first = Regex.Split(rows[0], @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
             if (first.Length > 0) this.Method = first[0];
             if (first.Length > 1) this.URL = Uri.UnescapeDataString(first[1]);
-            if (first.Length > 2) this.ProtocolVersion = first[2];
+            if (first.Length > 2)
+            {
+                string[] ps = first[2].Split('/');
+                if (ps.Length == 2)
+                {
+                    this.Protocols = ps[0];
+                    this.ProtocolVersion = ps[1];
+                }
+            }
 
             //Request Headers
             this.Headers = GetRequestHeaders(rows);
@@ -88,7 +89,7 @@ namespace RRQMSocket.Http
                 var isUrlencoded = this.URL.Contains('?');
                 if (isUrlencoded) this.Query = GetRequestParameters(URL.Split('?')[1]);
             }
-            if (this.ProtocolVersion == "HTTP/1.1")
+            if (this.ProtocolVersion == "1.1")
             {
                 if (this.GetHeader(RequestHeaders.Connection) == "keep-alive")
                 {

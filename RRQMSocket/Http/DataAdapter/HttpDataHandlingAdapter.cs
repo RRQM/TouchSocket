@@ -9,6 +9,9 @@ using RRQMSocket;
 
 namespace RRQMSocket.Http
 {
+    /// <summary>
+    /// Http数据处理适配器
+    /// </summary>
     public class HttpDataHandlingAdapter : DataHandlingAdapter
     {
         /// <summary>

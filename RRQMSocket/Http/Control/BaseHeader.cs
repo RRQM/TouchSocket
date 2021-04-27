@@ -13,6 +13,11 @@ namespace RRQMSocket.Http
     public class BaseHeader : IDisposable
     {
         /// <summary>
+        /// 服务器版本
+        /// </summary>
+        public static readonly string ServerVersion= System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        /// <summary>
         /// 请求体流数据
         /// </summary>
         public ByteBlock Body { get; set; }

@@ -39,7 +39,7 @@ namespace RRQMSocket.RPC
         /// 获取代理文件
         /// </summary>
         public Func<string, IRPCParser, RPCProxyInfo> GetProxyInfo { get; set; }
-
+        
         /// <summary>
         /// 初始化服务
         /// </summary>
@@ -49,7 +49,7 @@ namespace RRQMSocket.RPC
         /// 序列化转换器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
-
+      
         /// <summary>
         /// 初创
         /// </summary>

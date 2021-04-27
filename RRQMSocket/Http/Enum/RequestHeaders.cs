@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace RRQMSocket.Http
 {
+    /// <summary>
+    /// 请求头枚举
+    /// </summary>
     public enum RequestHeaders
     {
         /// <summary>

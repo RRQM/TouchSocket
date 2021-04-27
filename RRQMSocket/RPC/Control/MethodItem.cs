@@ -49,9 +49,5 @@ namespace RRQMSocket.RPC
         /// </summary>
         public bool IsOutOrRef { get; internal set; }
 
-        /// <summary>
-        /// 支持调用协议
-        /// </summary>
-        public SupportProtocol SP { get; internal set; }
     }
 }
