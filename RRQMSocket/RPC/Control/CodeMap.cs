@@ -245,7 +245,7 @@ namespace RRQMSocket.RPC
                         if (method.ReturnType.Name == "Void")
                         {
                             isReturn = false;
-                            codeString.Append(string.Format("public  async void {0} ", methodName+ "Async"));
+                            codeString.Append(string.Format("public  async void {0} ", methodName + "Async"));
                         }
                         else
                         {
@@ -274,7 +274,7 @@ namespace RRQMSocket.RPC
                                 {
                                     codeString.Append(string.Format("=\"\""));
                                 }
-                                else if (defaultValue.GetType()==typeof(string))
+                                else if (defaultValue.GetType() == typeof(string))
                                 {
                                     codeString.Append(string.Format("=\"{0}\"", defaultValue));
                                 }
@@ -282,7 +282,6 @@ namespace RRQMSocket.RPC
                                 {
                                     codeString.Append(string.Format("={0}", defaultValue));
                                 }
-
                             }
                         }
 
@@ -325,7 +324,6 @@ namespace RRQMSocket.RPC
                         codeString.AppendLine("}");
                     }
                 }
-
             }
         }
     }

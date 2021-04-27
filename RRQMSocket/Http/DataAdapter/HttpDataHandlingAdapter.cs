@@ -1,11 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  源代码仓库：https://gitee.com/RRQM_Home
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
-using RRQMSocket;
+using System.Text;
 
 namespace RRQMSocket.Http
 {
@@ -34,13 +39,14 @@ namespace RRQMSocket.Http
         private ByteBlock tempByteBlock;
 
         private HttpRequest httpRequest;
+
         /// <summary>
         /// 预处理
         /// </summary>
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            string s = Encoding.UTF8.GetString(byteBlock.Buffer,0,(int)byteBlock.Length);
+            string s = Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length);
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
             if (this.tempByteBlock != null)
@@ -49,7 +55,6 @@ namespace RRQMSocket.Http
                 buffer = this.tempByteBlock.Buffer;
                 r = (int)this.tempByteBlock.Position;
             }
-
 
             if (this.httpRequest == null)
             {
@@ -62,7 +67,7 @@ namespace RRQMSocket.Http
                     if (this.httpRequest.Content_Length > 0)
                     {
                         this.httpRequest.Body = this.BytePool.GetByteBlock(this.httpRequest.Content_Length);
-                        this.httpRequest.Body.Write(buffer, index +1, r - (index + 1));
+                        this.httpRequest.Body.Write(buffer, index + 1, r - (index + 1));
                         if (this.httpRequest.Body.Length == this.httpRequest.Content_Length)
                         {
                             this.PreviewHandle(this.httpRequest);
@@ -72,7 +77,6 @@ namespace RRQMSocket.Http
                     {
                         this.PreviewHandle(this.httpRequest);
                     }
-
                 }
                 else if (r > this.MaxSize)
                 {
@@ -90,20 +94,18 @@ namespace RRQMSocket.Http
                     this.tempByteBlock = this.BytePool.GetByteBlock(r * 2);
                     this.tempByteBlock.Write(buffer, 0, r);
                 }
-
             }
             else
             {
-                if (r>=this.httpRequest.Content_Length-this.httpRequest.Body.Length)
+                if (r >= this.httpRequest.Content_Length - this.httpRequest.Body.Length)
                 {
                     this.httpRequest.Body.Write(buffer, 0, this.httpRequest.Content_Length - (int)this.httpRequest.Body.Length);
                     this.PreviewHandle(this.httpRequest);
                 }
-                
             }
         }
 
-        private void PreviewHandle(HttpRequest  httpRequest)
+        private void PreviewHandle(HttpRequest httpRequest)
         {
             this.httpRequest = null;
             try

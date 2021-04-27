@@ -9,10 +9,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.Exceptions;
 using System;
 using System.Net;
 using System.Net.Sockets;
-using RRQMCore.Exceptions;
 
 namespace RRQMSocket
 {
@@ -51,6 +51,6 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount,bool concurrentAccept);
+        void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount, bool concurrentAccept);
     }
 }

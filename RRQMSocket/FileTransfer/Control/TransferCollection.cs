@@ -7,9 +7,8 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-using RRQMCore.Concurrent;
+//------------------------------------------------------------------------------
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -18,14 +17,15 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 传输集合
     /// </summary>
-    public class TransferCollection: IEnumerable<UrlFileInfo>
+    public class TransferCollection : IEnumerable<UrlFileInfo>
     {
         internal TransferCollection()
         {
-            list = new List<UrlFileInfo>(); 
+            list = new List<UrlFileInfo>();
         }
 
         internal event RRQMMessageEventHandler OnCollectionChanged;
+
         private List<UrlFileInfo> list;
 
         /// <summary>
@@ -45,12 +45,12 @@ namespace RRQMSocket.FileTransfer
         internal void Add(UrlFileInfo fileInfo)
         {
             this.list.Add(fileInfo);
-            Task.Run(()=> 
+            Task.Run(() =>
             {
-                OnCollectionChanged?.Invoke(null,new MesEventArgs("添加"));
+                OnCollectionChanged?.Invoke(null, new MesEventArgs("添加"));
             });
         }
-        
+
         internal void Clear()
         {
             this.list.Clear();
@@ -59,7 +59,7 @@ namespace RRQMSocket.FileTransfer
                 OnCollectionChanged?.Invoke(null, new MesEventArgs("清空"));
             });
         }
-        
+
         internal bool Remove(UrlFileInfo fileInfo)
         {
             Task.Run(() =>
@@ -67,16 +67,13 @@ namespace RRQMSocket.FileTransfer
                 OnCollectionChanged?.Invoke(null, new MesEventArgs("移除"));
             });
             return this.list.Remove(fileInfo);
-            
         }
-
-
 
         internal bool GetFirst(out UrlFileInfo fileInfo)
         {
             lock (this)
             {
-                if (this.list.Count>0)
+                if (this.list.Count > 0)
                 {
                     fileInfo = this.list[0];
                     this.list.RemoveAt(0);

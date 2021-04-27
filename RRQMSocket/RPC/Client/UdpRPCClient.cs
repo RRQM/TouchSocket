@@ -8,16 +8,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
 namespace RRQMSocket.RPC
 {
@@ -106,7 +106,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMTimeoutException"></exception>
         public RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null)
         {
-            this.remoteService =new IPHost(ipHost).EndPoint;
+            this.remoteService = new IPHost(ipHost).EndPoint;
             int count = 0;
             while (count < 3)
             {
@@ -134,7 +134,6 @@ namespace RRQMSocket.RPC
             return null;
         }
 
-
         /// <summary>
         /// 初始化RPC
         /// </summary>
@@ -151,7 +150,7 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("UDP端需要先绑定本地监听端口");
             }
-            this.remoteService =new IPHost(ipHost).EndPoint;
+            this.remoteService = new IPHost(ipHost).EndPoint;
             int count = 0;
             while (count < 3)
             {

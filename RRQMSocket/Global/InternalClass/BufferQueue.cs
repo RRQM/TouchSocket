@@ -38,7 +38,7 @@ namespace RRQMSocket
 
         internal bool TryDequeue(out ClientBuffer result)
         {
-           return this.queue.TryDequeue(out result);
+            return this.queue.TryDequeue(out result);
         }
     }
 }

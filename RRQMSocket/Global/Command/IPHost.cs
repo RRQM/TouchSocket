@@ -37,15 +37,15 @@ namespace RRQMSocket
                 this.AddressFamily = AddressFamily.InterNetwork;
             }
         }
+
         /// <summary>
         /// 从终结点获取ip和port
         /// </summary>
         /// <param name="endPoint"></param>
-        public IPHost(EndPoint endPoint):this(endPoint.ToString())
-        { 
-        
+        public IPHost(EndPoint endPoint) : this(endPoint.ToString())
+        {
         }
-       
+
         /// <summary>
         /// IP
         /// </summary>

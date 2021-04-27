@@ -48,6 +48,5 @@ namespace RRQMSocket.RPC
         /// 是否含有Out或Ref
         /// </summary>
         public bool IsOutOrRef { get; internal set; }
-
     }
 }

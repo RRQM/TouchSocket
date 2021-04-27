@@ -8,11 +8,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using System;
 using System.Net;
 using System.Net.Sockets;
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 
 namespace RRQMSocket
 {
@@ -29,7 +29,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        void Bind(int port, int threadCount=1);
+        void Bind(int port, int threadCount = 1);
 
         /// <summary>
         /// 绑定服务

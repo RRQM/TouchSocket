@@ -8,11 +8,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Net.Sockets;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Pool;
+using System;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {

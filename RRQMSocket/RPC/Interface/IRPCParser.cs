@@ -31,7 +31,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化服务
         /// </summary>
-        Func<IRPCParser, List<MethodItem>> InitMethodServer { get;  set; }
+        Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
 
         /// <summary>
         /// 调用方法结束后

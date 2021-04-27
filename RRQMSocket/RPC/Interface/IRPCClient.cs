@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using System;
 
 namespace RRQMSocket.RPC
 {
@@ -67,7 +67,7 @@ namespace RRQMSocket.RPC
         /// <param name="ipHost"></param>
         /// <param name="verifyToken"></param>
         /// <param name="typeDic"></param>
-        void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic=null);
+        void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic = null);
 
         /// <summary>
         /// 函数式调用

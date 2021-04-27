@@ -8,17 +8,17 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.IO;
+using RRQMCore.Log;
+using RRQMCore.Serialization;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
-using RRQMCore.IO;
-using RRQMCore.Log;
-using RRQMCore.Serialization;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -83,7 +83,6 @@ namespace RRQMSocket.FileTransfer
                 return speed;
             }
         }
-       
 
         /// <summary>
         /// 每秒最大下载速度（Byte）,不可小于1024
@@ -242,7 +241,6 @@ namespace RRQMSocket.FileTransfer
 
         private void RequestDownload(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
         {
-
             FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = urlFileInfo;
             args.IsPermitOperation = true;
@@ -287,9 +285,8 @@ namespace RRQMSocket.FileTransfer
                     }
                 }
                 urlFileInfo.Copy(fileInfo);
-                fileBlocks = FileBaseTool.GetProgressBlockCollection(urlFileInfo,this.breakpointResume);
+                fileBlocks = FileBaseTool.GetProgressBlockCollection(urlFileInfo, this.breakpointResume);
                 waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(fileBlocks);
-
             }
 
             byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult, true));
@@ -331,7 +328,7 @@ namespace RRQMSocket.FileTransfer
                             {
                                 File.Copy(fileInfo.FilePath, requestBlocks.FileInfo.FilePath);
                             }
-                           this. fileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo,this.breakpointResume);
+                            this.fileBlocks = FileBaseTool.GetProgressBlockCollection(fileInfo, this.breakpointResume);
                             foreach (var item in this.fileBlocks)
                             {
                                 item.Finished = true;
@@ -509,7 +506,6 @@ namespace RRQMSocket.FileTransfer
 
         private void RDeleteFile(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
         {
-
             FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = new FileInfo();
             args.FileInfo.Copy(urlFileInfo);
@@ -539,12 +535,10 @@ namespace RRQMSocket.FileTransfer
                     byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
                 }
             }
-
         }
 
         private void RFileInfo(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
         {
-
             FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = new FileInfo();
             args.FileInfo.Copy(urlFileInfo);
@@ -580,7 +574,6 @@ namespace RRQMSocket.FileTransfer
                     byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
                 }
             }
-
         }
 
         private void SystemMessage(string mes)

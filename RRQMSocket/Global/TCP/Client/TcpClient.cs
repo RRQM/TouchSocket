@@ -8,13 +8,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
-using RRQMCore.Log;
 
 namespace RRQMSocket
 {
@@ -98,7 +98,7 @@ namespace RRQMSocket
             {
                 throw new ArgumentNullException("iPHost不能为空。");
             }
-            this.Connect(iPHost.AddressFamily,iPHost.EndPoint);
+            this.Connect(iPHost.AddressFamily, iPHost.EndPoint);
         }
 
         /// <summary>
@@ -363,7 +363,5 @@ namespace RRQMSocket
             }
             this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
-
-       
     }
 }

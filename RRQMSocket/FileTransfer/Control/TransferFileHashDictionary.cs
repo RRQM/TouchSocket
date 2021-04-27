@@ -8,9 +8,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.IO;
 using System.Collections.Concurrent;
 using System.IO;
-using RRQMCore.IO;
 
 namespace RRQMSocket.FileTransfer
 {

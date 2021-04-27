@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using RRQMCore.Exceptions;
 
 namespace RRQMSocket.RPC
 {
@@ -106,6 +106,7 @@ namespace RRQMSocket.RPC
 
         private bool initialized;
         private TypeInitializeDic typeDic;
+
         internal MethodItem GetMethodItem(string methodName)
         {
             if (!initialized)
@@ -124,7 +125,6 @@ namespace RRQMSocket.RPC
 
         internal void InitializedType(TypeInitializeDic typeDic)
         {
-          
             this.typeDic = typeDic;
             foreach (MethodItem item in this.methodNamesKey.Values)
             {
@@ -147,7 +147,7 @@ namespace RRQMSocket.RPC
 
         private Type MethodGetType(string typeName)
         {
-            if (this.typeDic!=null&&typeDic.ContainsKey(typeName))
+            if (this.typeDic != null && typeDic.ContainsKey(typeName))
             {
                 return this.typeDic[typeName];
             }

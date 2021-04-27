@@ -8,14 +8,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Pool;
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace RRQMSocket
 {
@@ -58,8 +58,6 @@ namespace RRQMSocket
         private BufferQueueGroup[] bufferQueueGroups;
         private SocketAsyncEventArgs recvEventArg;
         private long recivedCount;
-
-      
 
         /// <summary>
         /// 绑定UDP服务
@@ -132,8 +130,8 @@ namespace RRQMSocket
         /// <exception cref="Exception"></exception>
         public void Bind(int port, int threadCount = 1)
         {
-            IPHost iPHost =new IPHost($"0.0.0.0:{port}");
-            this.Bind(iPHost,threadCount);
+            IPHost iPHost = new IPHost($"0.0.0.0:{port}");
+            this.Bind(iPHost, threadCount);
         }
 
         /// <summary>
@@ -146,11 +144,11 @@ namespace RRQMSocket
         /// <exception cref="Exception"></exception>
         public void Bind(IPHost iPHost, int threadCount)
         {
-            if (iPHost==null)
+            if (iPHost == null)
             {
                 throw new ArgumentNullException("iPHost不能为空。");
             }
-            this.Bind(iPHost.AddressFamily,iPHost.EndPoint,threadCount);
+            this.Bind(iPHost.AddressFamily, iPHost.EndPoint, threadCount);
         }
 
         /// <summary>
@@ -304,7 +302,5 @@ namespace RRQMSocket
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
         {
         }
-
-        
     }
 }

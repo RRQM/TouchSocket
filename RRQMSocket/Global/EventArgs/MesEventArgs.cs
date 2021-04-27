@@ -15,7 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 消息事件
     /// </summary>
-    public class MesEventArgs:RRQMEventArgs
+    public class MesEventArgs : RRQMEventArgs
     {
         /// <summary>
         ///  构造函数

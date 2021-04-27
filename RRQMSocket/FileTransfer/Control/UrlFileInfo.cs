@@ -9,8 +9,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using System.IO;
 using RRQMCore.IO;
+using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -24,7 +24,6 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public UrlFileInfo()
         {
-
         }
 
         /// <summary>
@@ -36,6 +35,7 @@ namespace RRQMSocket.FileTransfer
             this.FilePath = path;
             this.FileName = Path.GetFileName(path);
         }
+
         /// <summary>
         /// 生成下载请求必要信息
         /// </summary>
@@ -51,7 +51,6 @@ namespace RRQMSocket.FileTransfer
             fileInfo.TransferType = TransferType.Download;
             return fileInfo;
         }
-
 
         /// <summary>
         /// 生成上传请求必要信息

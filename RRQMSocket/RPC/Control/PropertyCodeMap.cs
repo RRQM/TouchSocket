@@ -76,7 +76,6 @@ namespace RRQMSocket.RPC
         private Dictionary<Type, string> propertyDic = new Dictionary<Type, string>();
         private Dictionary<Type, string> genericTypeDic = new Dictionary<Type, string>();
 
-       
         internal void AddTypeString(Type type)
         {
             if (type.IsByRef)
@@ -106,18 +105,17 @@ namespace RRQMSocket.RPC
                     if (listType.Contains(type.Name))
                     {
                         string typeInnerString = this.GetTypeFullName(types[0]);
-                        string typeString=$"{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
+                        string typeString = $"{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
                         if (!genericTypeDic.ContainsKey(type))
                         {
                             genericTypeDic.Add(type, typeString);
                         }
-                       
                     }
                     else if (dicType.Contains(type.Name))
                     {
                         string keyString = this.GetTypeFullName(types[0]);
                         string valueString = this.GetTypeFullName(types[1]);
-                        string typeString=$"{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
+                        string typeString = $"{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
                         if (!genericTypeDic.ContainsKey(type))
                         {
                             genericTypeDic.Add(type, typeString);
@@ -298,9 +296,9 @@ namespace RRQMSocket.RPC
             {
                 return type.FullName;
             }
-            else if (listType.Contains(type.Name)||dicType.Contains(type.Name))
+            else if (listType.Contains(type.Name) || dicType.Contains(type.Name))
             {
-               return genericTypeDic[type];
+                return genericTypeDic[type];
             }
             else if (propertyDic.ContainsKey(type))
             {

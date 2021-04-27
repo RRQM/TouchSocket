@@ -8,13 +8,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace RRQMSocket.Pool
 {
@@ -77,7 +76,6 @@ namespace RRQMSocket.Pool
             return connectionPool;
         }
 
-     
         /// <summary>
         /// 连接到服务器
         /// </summary>

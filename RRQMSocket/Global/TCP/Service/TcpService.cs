@@ -8,16 +8,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Pool;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace RRQMSocket
 {
@@ -90,6 +89,7 @@ namespace RRQMSocket
         /// 获取当前连接的所有客户端
         /// </summary>
         public SocketCliectCollection<TClient> SocketClients { get; private set; }
+
         private AcceptQueue acceptQueue;
         internal ObjectPool<TClient> SocketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
@@ -231,7 +231,6 @@ namespace RRQMSocket
                     this.acceptQueue.Thread.Name = "AcceptSocketClient";
                     this.acceptQueue.Thread.Start();
                 }
-
             }
             else
             {
@@ -358,8 +357,6 @@ namespace RRQMSocket
                 }
             }
         }
-
-
 
         private void StartUpReceive()
         {
@@ -511,7 +508,5 @@ namespace RRQMSocket
                 this.acceptQueue.Dispose();
             }
         }
-
-
     }
 }

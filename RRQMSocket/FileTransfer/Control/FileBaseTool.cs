@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.IO;
 using RRQMCore.ByteManager;
 using RRQMCore.Serialization;
+using System;
+using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {

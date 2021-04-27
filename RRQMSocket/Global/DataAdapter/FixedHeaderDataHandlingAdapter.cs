@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using System;
 
 namespace RRQMSocket
 {
@@ -20,7 +20,6 @@ namespace RRQMSocket
     /// </summary>
     public class FixedHeaderDataHandlingAdapter : DataHandlingAdapter
     {
-
         /// <summary>
         /// 获取或设置包头的最大值（默认为20Mb）
         /// </summary>

@@ -148,7 +148,6 @@ namespace RRQMSocket.FileTransfer
             this.ReceiveSystemMes?.Invoke(sender, e);
         }
 
-      
         private void OnReceivedBytesThenReturn(object sender, BytesEventArgs e)
         {
             this.ReceivedBytesThenReturn?.Invoke(sender, e);

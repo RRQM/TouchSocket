@@ -8,10 +8,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Net;
 using RRQMCore.ByteManager;
 using RRQMSocket;
 using RRQMSocket.FileTransfer;
+using System.Net;
 
 /// <summary>
 /// 显示信息
@@ -47,7 +47,6 @@ public delegate void RRQMUDPByteBlockEventHandler(EndPoint remoteEndpoint, ByteB
 /// <param name="sender"></param>
 /// <param name="e"></param>
 public delegate void RRQMFileOperationEventHandler(object sender, FileOperationEventArgs e);
-
 
 /// <summary>
 /// 传输文件消息

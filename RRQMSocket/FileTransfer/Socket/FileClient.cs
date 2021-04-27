@@ -8,19 +8,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
-using RRQMCore.IO;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -42,7 +39,6 @@ namespace RRQMSocket.FileTransfer
         }
 
         #region 自定义
-
 
         /// <summary>
         /// 日志记录器
@@ -115,7 +111,6 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public bool Online { get { return this.client.Online; } }
 
-
         /// <summary>
         ///  获取或设置默认接收文件的存放目录
         /// </summary>
@@ -143,7 +138,6 @@ namespace RRQMSocket.FileTransfer
         /// 获取文件传输集合
         /// </summary>
         public TransferCollection FileTransferCollection { get; private set; }
-
 
         private ProgressBlockCollection fileBlocks;
         private RRQMTokenTcpClient client;
@@ -202,7 +196,8 @@ namespace RRQMSocket.FileTransfer
         {
             this.FileTransferCollectionChanged?.Invoke(this, e);
         }
-        #endregion
+
+        #endregion 自定义
 
         private void SynchronizeTransferSetting()
         {
@@ -245,8 +240,6 @@ namespace RRQMSocket.FileTransfer
             this.client.Connect(ipHost.AddressFamily, ipHost.EndPoint);
         }
 
-
-
         /// <summary>
         /// 请求传输文件
         /// </summary>
@@ -287,12 +280,10 @@ namespace RRQMSocket.FileTransfer
                                 this.TransferFileError?.Invoke(this, args);
                                 BeginTransfer();
                             }
-
                         }
                     }
                 }
             });
-
         }
 
         /// <summary>
@@ -406,7 +397,6 @@ namespace RRQMSocket.FileTransfer
                         args.IsPermitOperation = true;
                         this.BeforeFileTransfer?.Invoke(this, args);
 
-
                         requsetBlocks.FileInfo.FilePath = args.TargetPath;
                         this.fileBlocks = requsetBlocks;
 
@@ -414,7 +404,6 @@ namespace RRQMSocket.FileTransfer
                         {
                             UploadFileFinished_s();
                         });
-
                     }
                     else
                     {
@@ -601,7 +590,6 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-
         /// <summary>
         /// 发送系统消息
         /// </summary>
@@ -667,7 +655,6 @@ namespace RRQMSocket.FileTransfer
                 this.waitHandle.Set();
             }
         }
-
 
         /// <summary>
         /// 终止当前传输
@@ -974,7 +961,7 @@ namespace RRQMSocket.FileTransfer
                                         surplusLength -= submitLength;
                                         this.SynchronizeTransferSetting();
                                     }
-                                    else 
+                                    else
                                     {
                                         TransferFileMessageArgs args = new TransferFileMessageArgs();
                                         args.FileInfo = this.fileBlocks.FileInfo;
@@ -1124,7 +1111,6 @@ namespace RRQMSocket.FileTransfer
                     byteBlock.SetHolding(false);
                 }
             }
-
         }
 
         private void OutUpload()
@@ -1153,9 +1139,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     this.Logger.Debug(LogType.Error, this, $"尝试恢复连接时发生错误：{ex.Message}");
                 }
-
             }
-
         }
 
         private void Client_OnReceivedData(object sender, ByteBlock byteBlock)
@@ -1250,12 +1234,9 @@ namespace RRQMSocket.FileTransfer
                     {
                         AgreementHelper.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Position);
                     }
-
-
                 }
                 catch
                 {
-
                 }
 
                 this.waitDataSend.Wait(waitTime * 1000);
@@ -1267,7 +1248,6 @@ namespace RRQMSocket.FileTransfer
                     ReConnect();
                 }
                 return resultByteBlock;
-
             }
         }
 

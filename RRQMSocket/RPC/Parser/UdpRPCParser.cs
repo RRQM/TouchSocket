@@ -8,13 +8,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Log;
+using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using RRQMCore.ByteManager;
-using RRQMCore.Log;
-using RRQMCore.Serialization;
 
 namespace RRQMSocket.RPC
 {

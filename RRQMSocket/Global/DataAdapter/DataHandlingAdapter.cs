@@ -8,10 +8,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Timers;
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
+using System;
 
 namespace RRQMSocket
 {
@@ -38,16 +37,15 @@ namespace RRQMSocket
         //    }
         //    catch
         //    {
-
         //    }
-            
+
         //}
-        
+
         ///// <summary>
         ///// 每隔500ms调用一次
         ///// </summary>
         //protected static event Action OnInterval;
-       
+
         /// <summary>
         /// 内存池
         /// </summary>

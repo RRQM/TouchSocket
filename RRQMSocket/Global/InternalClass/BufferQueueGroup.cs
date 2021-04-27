@@ -8,9 +8,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Pool;
 using System;
 using System.Threading;
-using RRQMCore.Pool;
 
 namespace RRQMSocket
 {
@@ -42,10 +42,9 @@ namespace RRQMSocket
                     waitHandleBuffer.Set();
                     waitHandleBuffer.Dispose();
                 }
-                catch 
+                catch
                 {
                 }
-                
             }
         }
     }
