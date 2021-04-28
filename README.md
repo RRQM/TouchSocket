@@ -21,11 +21,25 @@
 </div>
 
 ## 💿描述
-&emsp;&emsp;RRQMSocket是一个整合性的、超轻量级的网络通信框架。支持C#语言系全平台（.NET Framework4.5及以上，.NET Core3.1及以上，.net standard2.0及以上），支持C#语言系全框架（WPF、Winform、Blazor、Xamarin、Mono、Unity等）。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
+&emsp;&emsp;RRQMSocket是一个整合性的、超轻量级的网络通信服务框架。它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、 **多线程处理** 、 **内存池** 、 **对象池** 等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
-&emsp;&emsp;除了基本的框架外，程序集内还开发出了一些成熟框架，目前有`Token服务器`、`文件传输框架`、`RPC框架`两种，后续还会不断更新添加其他框架，希望大家多多支持和关注。
+## 🖥支持环境
+- .NET Framework4.5及以上。
+- .NET Core3.1及以上。
+- .NET Standard2.0及以上。
 
- **对象池应用** 
+## 🥪支持框架
+- WPF
+- Winform
+- Blazor
+- Xamarin
+- Mono
+- Unity
+- 其他（即所有C#系）
+
+## 🌴RRQMSocket特点速览
+
+ **对象池** 
 
 对象池在RRQMSocket有很多应用，最主要的两个就是**连接对象池**和**处理对象池**。连接对象池就是当客户端链接时，首先会去连接对象池中找TcpSocketClient，然后没有的话，才会创建。如果哪个客户端掉线了，它的TcpSocketClient就会被回收。这也就是**ID重用**的原因。
 
@@ -35,32 +49,34 @@
 
 RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开辟了一块内存，然后均分，然后给每个会话分配一个区去接收，等收到数据以后，再复制一份，然后把数据抛出去，让外界处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后直接用于接收，等收到数据以后，直接就把这个内存块抛出去了，这样就避免了复制操作。所以，文件传输时效率才会高。当然这个操作在小数据时是没什么优势的。
 
-### 🔗联系作者
+## 🔗联系作者
 
  - [CSDN博客主页](https://blog.csdn.net/qq_40374647)
  - [哔哩哔哩视频](https://space.bilibili.com/94253567)
  - [源代码仓库主页](https://gitee.com/RRQM_Home) 
  - 交流QQ群：234762506
 
-### ✨API文档
+## ✨API文档
 
 [RRQMSocket API文档](https://gitee.com/dotnetchina/RRQMSocket/wikis/pages)
 
 （TCP、UDP、文件传输、RPC文档已完善。其他扩展件目前还在积极完善当中）
 
- ### 🖥支持环境
-- .NET Framework4.5及以上。
-- .NET Core3.1及以上。
-- .NET Standard2.0及以上。
-
-### 📦 安装
+ 
+## 📦 安装
 
 - [Nuget RRQMSocket](https://www.nuget.org/packages/RRQMSocket/)
 - [微软Nuget安装教程](https://docs.microsoft.com/zh-cn/nuget/quickstart/install-and-use-a-package-in-visual-studio)
 
+## 🍻RRQM系产品
+| 名称  | Nuget版本  | 下载  |  描述 |
+|---|---|---|---|
+| [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore)  | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/)  | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/)  | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：内存池、对象池、等待逻辑池、AppMessenger、3DES加密、Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、规范日志接口等。 |
+| [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM)  | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/)   | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/)  | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。  |
+| [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin)  | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/)   | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/)  | RRQMSkin是WPF的控件样式库，其中包含：无边框窗体、圆角窗体、水波纹按钮、输入提示筛选框、控件拖动效果、圆角图片框、弧形文字、扇形元素、指针元素、饼图、时钟。速度表盘等。  |
+
 ## 一、TCP框架
 #### 1.1 创建TCP框架
-几行代码就可以搭建出完整的TCP高性能框架，具体创建步骤详见[RRQMSocket创建高并发、高性能TCP框架](https://blog.csdn.net/qq_40374647/article/details/110679663?spm=1001.2014.3001.5501)。
 
 #### 1.2 特点
 - 简单易用。
