@@ -19,7 +19,6 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC传输类
     /// </summary>
-
     public class RPCContext : WaitResult
     {
         internal string Method;

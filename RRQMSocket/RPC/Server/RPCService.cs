@@ -36,11 +36,6 @@ namespace RRQMSocket.RPC
         public RPCParserCollection RPCParsers { get; private set; }
 
         /// <summary>
-        /// 代理令箭，当客户端获取代理文件时需验证令箭
-        /// </summary>
-        public string ProxyToken { get; set; }
-
-        /// <summary>
         /// 添加RPC解析器
         /// </summary>
         /// <param name="key"></param>
@@ -55,7 +50,7 @@ namespace RRQMSocket.RPC
 
         private void InvokeMethod(IRPCParser parser, RPCContext content)
         {
-            InstanceMethod instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
+            MethodInstance instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
             Task.Factory.StartNew(() =>
             {
                 ExecuteMethod(parser, content, instanceMethod);
@@ -77,7 +72,7 @@ namespace RRQMSocket.RPC
         /// <exception cref="RRQMRPCException"></exception>
         public void SetMethodEnable(string method, bool enable)
         {
-            InstanceMethod instance = this.serverMethodStore.GetInstanceMethod(method);
+            MethodInstance instance = this.serverMethodStore.GetInstanceMethod(method);
             if (instance == null)
             {
                 throw new RRQMRPCException("未找到该方法");
@@ -160,7 +155,7 @@ namespace RRQMSocket.RPC
             
         }
 
-        private void ExecuteMethod(IRPCParser parser, RPCContext content, InstanceMethod instanceMethod)
+        private void ExecuteMethod(IRPCParser parser, RPCContext content, MethodInstance instanceMethod)
         {
             if (instanceMethod != null)
             {

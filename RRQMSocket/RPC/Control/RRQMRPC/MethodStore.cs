@@ -23,10 +23,10 @@ namespace RRQMSocket.RPC
         internal MethodStore()
         {
             this.methodNamesKey = new Dictionary<string, MethodItem>();
-            this.serverMethodKey = new Dictionary<string, InstanceMethod>();
+            this.serverMethodKey = new Dictionary<string, MethodInstance>();
         }
 
-        private Dictionary<string, InstanceMethod> serverMethodKey;
+        private Dictionary<string, MethodInstance> serverMethodKey;
 
         private Dictionary<string, MethodItem> methodNamesKey;
 
@@ -63,12 +63,12 @@ namespace RRQMSocket.RPC
             this.ProxyInfo = proxyInfo;
         }
 
-        internal void AddInstanceMethod(InstanceMethod method)
+        internal void AddInstanceMethod(MethodInstance method)
         {
             serverMethodKey.Add(method.methodItem.Method, method);
         }
 
-        internal InstanceMethod GetInstanceMethod(string method)
+        internal MethodInstance GetInstanceMethod(string method)
         {
             if (this.serverMethodKey.ContainsKey(method))
             {
@@ -77,10 +77,10 @@ namespace RRQMSocket.RPC
             return null;
         }
 
-        internal InstanceMethod[] GetAllInstanceMethod()
+        internal MethodInstance[] GetAllInstanceMethod()
         {
-            List<InstanceMethod> instances = new List<InstanceMethod>();
-            foreach (InstanceMethod item in this.serverMethodKey.Values)
+            List<MethodInstance> instances = new List<MethodInstance>();
+            foreach (MethodInstance item in this.serverMethodKey.Values)
             {
                 instances.Add(item);
             }

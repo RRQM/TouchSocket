@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace RRQMSocket.RPC
 {
-    internal class InstanceMethod
+    internal class MethodInstance
     {
         internal ServerProvider instance;
         internal MethodInfo method;

@@ -20,106 +20,112 @@
 
 </div>
 
+<div align="center">
+
+**English | [简体中文](./README.zh-CN.md)**
+
+</div>
+
 ## 💿描述
-&emsp;&emsp;RRQMSocket是一个整合性的、超轻量级的网络通信服务框架。它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、 **多线程处理** 、 **内存池** 、 **对象池** 等特点，让使用者能够更加简单的、快速的搭建网络框架。
+&emsp;&emsp;Rrqmsocket is an integrated, ultra-lightweight network communication service framework。it has **High merging** 、 **High concurrent processing** 、 **Event subscription** 、 **Plug-in extension** 、 **Multithreading** 、 **Memory pool** 、 **Object pool** Features，Let the user more simple, fast build network framework。
 
-## 🖥支持环境
-- .NET Framework4.5及以上。
-- .NET Core3.1及以上。
-- .NET Standard2.0及以上。
+## 🖥Support environment
+- .NET Framework4.5 and above.
+- .NET Core3.1 and above.
+- .NET Standard 2.0 and above.
 
-## 🥪支持框架
+## 🥪Support framework
 - WPF
 - Winform
 - Blazor
 - Xamarin
 - Mono
 - Unity
-- 其他（即所有C#系）
+- Others (ie all C # pedics)
 
-## 🌴RRQMSocket特点速览
+## 🌴RRQMSocket Features Quick
 
- **对象池** 
+ **Object pool** 
 
-对象池在RRQMSocket有很多应用，最主要的两个就是**连接对象池**和**处理对象池**。连接对象池就是当客户端链接时，首先会去连接对象池中找TcpSocketClient，然后没有的话，才会创建。如果哪个客户端掉线了，它的TcpSocketClient就会被回收。这也就是**ID重用**的原因。
+The object pool has a lot of applications in rrqmsocket, the most important two is **Connect the target pool** and **processing object pool**. The connection target pool is when the client links, first goes to the TCPSocketClient in the Connection Object Pool, and then no words will be created. If Which client is off, its TCPSocketClient will be reclaimed. This is why **id reuses**。
 
-然后就是处理对象池，在RRQMSocket中，接收数据的线程和IOCP内核线程是分开的，也就是比如说客户端给服务器发送了1w条数据，但是服务器收到后处理起来很慢，那传统的iocp肯定会放慢接收速率，然后通知客户端的tcp窗口，发生拥塞，然后让客户端暂缓发送。但是RRQM会把收到的数据全都存起来，首先不影响iocp的接收，同时再分配多线程去处理收到的报文信息，这样就相当于一个“泄洪湖泊”，但是对内存的占比就会上升。
+Then it is to deal with the object pool. In Rrqmsocket, the thread and IOCP kernel thread to receive data are separated, that is, the client sends 1W data to the server, but the server is processed and slow, the traditional IOCP Will definitely slow down the rate, then inform the client's TCP window, congestion, then let the client suspended. However, the RRQM will save all the data, first does not affect the reception of IOCP, and then allocate multithreading to process the message information, which is equivalent to a "ventilation lake", but the proportion of memory Rise。
 
- **传统IOCP和RRQMSocket** 
+ **Traditional IOCP and RRQMSocket** 
 
-RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开辟了一块内存，然后均分，然后给每个会话分配一个区去接收，等收到数据以后，再复制一份，然后把数据抛出去，让外界处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后直接用于接收，等收到数据以后，直接就把这个内存块抛出去了，这样就避免了复制操作。所以，文件传输时效率才会高。当然这个操作在小数据时是没什么优势的。
+Rrqmsocket's IOCP and tradition are different. Take Microsoft's official as an example. It has opened up a memory, then split, and then assigns a zone to receive, wait for the data, then copy one, Then throw the data and processes the outside world. Rrqmsocket is before receiving each time, with a memory pool, then directly for receiving, wait for the data, then throwing this memory block directly, so that the replication operation is avoided. Therefore, the efficiency of the file transmission will be high. Of course, this operation is not advantageous when small data.。
 
-**数据处理适配器** 
+**Data processing adapter** 
 
-相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，我们删繁就简，轻装上阵，但是依旧功能强大。
+I believe everyone has used other Socket products, such as HPSocket, Supersocket, etc., Rrqmsocket is also drawing on the excellent design concept of other products, but the data processing adapter is one of them, but the design of other products is, we If you have easy tolerance, you will be loaded, but it is still powerful.。
 
-首先是命名，“数据处理适配器”的意思就是对数据进行**预处理**，这也就包括**发送**和**接收**两部分，其功能强大程度不言而喻。例如：我们在**处理TCP粘包**时，常规的解决思路有三种，分别为 **固定包头** 、 **固定长度** 、 **终止字符分割** ，那么这时候数据处理适配器就可以大显身手了。
+The first is naming, "Data Process Adapter" means **pre-processing**, which includes **send** and **reception** two parts, its function is strongly unpaired. For example, when we handle TCP adhesive, we have three kinds of regular solutions, which are **fixed baotou**, **fixed length**, **termination character segmentation**, then this time data processing The adapter can be bigger.。
 
-## 🔗联系作者
+## 🔗Contact the author
 
- - [CSDN博客主页](https://blog.csdn.net/qq_40374647)
- - [哔哩哔哩视频](https://space.bilibili.com/94253567)
- - [源代码仓库主页](https://gitee.com/RRQM_Home) 
- - 交流QQ群：234762506
+ - [CSDN blog homepage](https://blog.csdn.net/qq_40374647)
+ - [哩 哔 video](https://space.bilibili.com/94253567)
+ - [Source code warehouse homepage](https://gitee.com/RRQM_Home) 
+ - Communication QQ group：234762506
 
-## ✨API文档
+## ✨API documentation
 
-[RRQMSocket API文档](https://gitee.com/dotnetchina/RRQMSocket/wikis/pages)
+[RRQMSocket API documentation](https://gitee.com/dotnetchina/RRQMSocket/wikis/pages)
 
  
-## 📦 安装
+## 📦 installation
 
 - [Nuget RRQMSocket](https://www.nuget.org/packages/RRQMSocket/)
-- [微软Nuget安装教程](https://docs.microsoft.com/zh-cn/nuget/quickstart/install-and-use-a-package-in-visual-studio)
+- [Microsoft NuGet Installation Tutorial](https://docs.microsoft.com/zh-cn/nuget/quickstart/install-and-use-a-package-in-visual-studio)
 
-## 🍻RRQM系产品
-| 名称                                           | Nuget版本                                                                                                                              | 下载                                                                                              | 描述                                                                                                                                                                                          |
-|------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：<br>内存池、对象池、等待逻辑池、AppMessenger、3DES加密、<br>Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、<br>规范日志接口等。 |
-| [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。                                                                                                                                          |
-| [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含：<br>无边框窗体、圆角窗体、水波纹按钮、输入提示筛选框、控件拖动效果、<br>圆角图片框、弧形文字、扇形元素、指针元素、饼图、时钟。速度表盘等。|  
+## 🍻RRQM products
+| Name                                           | Nuget version                                                                                                                              | download                                                                                              | description                                                                                                                                                                                          |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | Rrqmcore is a library that provides the basic service function for the RRQM system, which contains: <br> Memory pool, object pool, wait logic pool, AppMessenger, 3DES encryption, <br> XML fast storage, running time measuring machine, file shortcut, high Performance sequencer, <br> Specification log interface, etc. |
+| [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM is a super-lighting MVVM framework, but the sparrow is small, and the fifty is full.                                                                                                                                          |
+| [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | Rrqmskin is the WPF control style library, which contains: <br> Bless-Box Form, Rounded Form, Water Corrugated Button, Enter Prompt Filter, Control Drag Effect, <br> Rounded Picture Box, Curved Text, Fan elements, pointer elements, pie chart, clock. Speed ​​dial, etc.               |
 
-## 💐框架速览
+## 💐Frame quick view
 
-## 一、TCP框架
-#### 1.1 创建TCP服务框架
-[RRQMSocket入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
-#### 1.2 特点
-- 简单易用。
-- 多线程处理。
-- IOCP完美设计模型，避免收到数据再复制。
-- 简单、稳定管理客户端连接，自动检验客户端活性。
-- 超简单的解决粘包、分包问题，详见[RRQMSocket解决TCP粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179?spm=1001.2014.3001.5501)。
-- 内存池设计，避免内存重复申请、释放。
-- 对象池设计，避免数据对象的申请、释放。
+## First, TCP framework
+#### 1.1 Create a TCP service framework
+[RRQMSocket Getting Started](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
+#### 1.2 feature
+- It is easy to use.
+- Multi-threaded processing.
+- IOCP perfect design model to avoid receiving data replication.
+- Simple, stable management client connection, automatically verify client activity.
+- Ultra-simple solution, bracket issues, see [RRQMSocket to solve TCP adhesive bags, sub-package issues](https://blog.csdn.net/qq_40374647/article/details/110680179?spm=1001.2014.3001.5501)。
+- Memory pool design, avoid memory repeated application, release.
+- Object pool design, avoid application, release of data objects.
 #### 1.3 Demo
 [RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
 
-## 二、Token系TCP框架
-#### 2.1 概述
-Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要功能就是对即将完成连接的客户端进行筛选，筛选手段就是验证Token，如果Token不符合规定，则直接断开连接，其他功能和Tcp服务器一致。
-#### 2.2 特点
-- 过滤不合格TCP客户端。
-- 多租户使用。
-- 客户端服务器统一ID，方便检索。
-#### 2.3 创建及使用Token系框架
-[创建及使用Token系框架](https://gitee.com/dotnetchina/RRQMSocket/wikis/3.2%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8Token%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3896799)
+## Second, TOKEN TCP Framework
+#### 2.1 Overview
+The Token system is based on a TCP server that defines a connected server. Its main function is to filter the client that is about to complete. The screen is to verify token. If the Token does not meet the regulations, disconnect, other features and TCP directly The server is consistent.
+#### 2.2 Characteristics
+- Filter unqualified TCP client.
+- Multi-tenant use.
+- The client server is unified ID, which is convenient to retrieve.
+#### 2.3 Create and use the Token framework
+[Create and use the Token framework](https://gitee.com/dotnetchina/RRQMSocket/wikis/3.2%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8Token%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3896799)
 #### 2.4 Demo
 [RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
 
 
-## 三、文件传输框架
-#### 3.1 创建文件服务器框架
+## 三、File transfer framework
+#### 3.1 Create a file server framework
 
-以下进行简单示例，详细使用见[文件传输入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/5.1%20%E6%A6%82%E8%BF%B0?sort_id=3897485)
+The following simple example, detailed use [File Transport Getting Started](https://gitee.com/dotnetchina/RRQMSocket/wikis/5.1%20%E6%A6%82%E8%BF%B0?sort_id=3897485)
 ```
  FileService fileService = new FileService();
  fileService.VerifyToken ="123ABC";
  
- fileService.BreakpointResume = true;//支持断点续传
+ fileService.BreakpointResume = true;//Support breakpoint resume
  try
  {
-     fileService.Bind(7789,2);//直接监听7789端口号。多线程，默认为1，此处设置线程数量为2
+     fileService.Bind(7789,2);//Listening directly to the 7789 port number. Multi-thread, default is 1, here settings the number of threads 2
 /* 订阅相关事件
  fileService.ClientConnected += FileService_ClientConnected;
  fileService.ClientDisconnected += FileService_ClientDisconnected;
@@ -135,68 +141,68 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
  }
 ```
 
-#### 3.2 特点
-- 简单易用。
-- 多线程处理。
-- 高性能，传输速度可达500Mb/s。
-- 超简单的传输限速设置，1k-10Gb 无级调节。
-- 超简单的传输速度、传输进度获取。
-- 随心所欲的暂停、继续、停止传输。
-- 系统化的权限管理，让敏感文件只允许私有化下载。
-- 随时发送消息，让客户端和服务器交流不延迟。
-- 基于事件驱动，让每一步操作尽在掌握。
-- 可视化的文件块流，可以实现像迅雷一样的填充式进度条。
-- 超简单的断点续传设置，为大文件传输保驾护航。
-- 无状态上传断点续传设置，让同一个文件，在不同客户端之间接力上传。
-- 已经上传的文件，再次上传时，可实现快速上传。
-- 极少的GC释放。
+#### 3.2 Characteristics
+- It is easy to use.
+- Multi-threaded processing.
+- High performance, the transmission speed can reach 500MB / s.
+- Ultra-simple transmission speed limit setting, 1K-10GB stepless adjustment.
+- Ultra-simple transmission speed, transmission progress acquisition.
+- Suspend, continue, continue to transfer.
+- Systematic privilege management allows sensitive files to allow only privatization downloads.
+- Send messages at any time to allow clients and server communication.
+- Based on event driver, let each step are in progress.
+- Visual file stream can realize a filling progress bar like Thunder.
+- Super simple breakpoint renewal settings are escorted for large files.
+- Unless the breakpoint renewal is set, let the same file, connect the power between the different clients.
+- Uploaded files, upload it again, fast uploading.
+- Extreme GC release.
 
-#### 3.3 Demo示例
- **Demo位置：** [RRQMSocket.FileTransfer.Demo](https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo)
+#### 3.3 Demo example
+ **Demo location:** [RRQMSocket.FileTransfer.Demo](https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo)
 
- **说明：** 可以看到，图一正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到346Mb/s，这是因为服务器和客户端在同一电脑上，磁盘性能限制导致的。其次，GC基本上没有释放，性能非常强悍，图二是下载文件，性能依旧非常强悍。
+ **Description:** It can be seen that Figure 1 is uploading a Window system image file, approximately 4.2GB, the transfer speed has reached 346MB / s because the server and client are on the same computer, which is caused by disk performance limits. Second, GC basically has no release, the performance is very powerful, Figure 2 is the download document, the performance is still very powerful.
 
-![上传文件](https://images.gitee.com/uploads/images/2021/0409/190350_92a2ad36_8553710.png "上传文件")
-![下载文件](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "下载文件")
+![upload files](https://images.gitee.com/uploads/images/2021/0409/190350_92a2ad36_8553710.png "upload files")
+![download file](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "download file")
 
 
-## 四、RPC框架
-#### 4.1 创建RPC服务
-新建类文件，继承于ServerProvider，并将其中公共方法标识为RRQMRPCMethod即可。
+## Fourth, RPC framework
+#### 4.1 Creating an RPC Service
+New class files, inherited to serverProvider, and identify the public method to RRQMRPCMETHOD.
 ```
 public class Server: ServerProvider
 {
     [RRQMRPCMethod]
     public string TestOne(string str)
     {
-        return "若汝棋茗";
+        return "RRQM";
     }
  }
 ```
-#### 4.2 启动RPC服务
+#### 4.2 Start RPC service
 
-[启动RPC服务说明](https://gitee.com/dotnetchina/RRQMSocket/wikis/6.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E5%90%AF%E5%8A%A8RPC%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3904370)
+[Start RPC Service Description](https://gitee.com/dotnetchina/RRQMSocket/wikis/6.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E5%90%AF%E5%8A%A8RPC%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3904370)
 
-#### 4.3 特点
-- 简单易用。
-- 多线程处理。
-- 高性能，在保证送达但不返回的情况下，10w次调用用时0.8s，在返回的情况下，用时3.9s。
-- 支持TCP、UDP等不同的协议调用相同服务。
-- 支持指定服务异步执行。
-- 支持权限管理，让非法调用死在萌芽时期。
-- 全自动 **代码生成** ，可使用系统编译成dll调用，也可以使用插件生成代理调用。
-- 代理方法会生成异步方法，支持客户端异步调用。
-- **支持out、ref** ，参数设定默认值等。
-- 随心所欲的序列化方式，除了自带的[超轻量级二进制序列化](https://blog.csdn.net/qq_40374647/article/details/114178244?spm=1001.2014.3001.5501)、xml序列化外，用户可以自己随意使用其他序列化。
-- 支持编译式调用，也支持方法名+参数式调用。
-- **全异常反馈** ，服务里发生的异常，会一字不差的反馈到客户端。
-- 超简单、自由的**回调方式** 。
+#### 4.3 Characteristics
+- Simple and easy.
+- Multi-threaded processing.
+- High performance, when the delivery but does not return, 10W times is 0.8s, and in the case of returning, it is used in 3.9 s.
+- Support for different protocol calls such as TCP, UDP.
+- Support the designated service asynchronous execution.
+- Support permission management, let illegal calls die in the germination period.
+- Fully automatic ** code generation **, you can use the system to compile into a DLL call, you can also use the plug-in to generate a proxy call.
+- Agent method generates asynchronous methods to support client asynchronous calls.
+- ** Supports OUT, REF **, parameter setting defaults, etc.
+- Sequence in the heart, in addition to their own [ultra-lightweight binary serialization](https://blog.csdn.net/qq_40374647/article/details/114178244?spm=1001.2014.3001.5501)、Outside XML serialization, users can use other serialization themselves.
+- Support compiling calls, also support method name + parameter call.
+- **Full exception feedback** ，The exception that occurs in the service, will be referred to in the word to the client.
+- Super simple, free ** callback mode **.
 
-#### 4.3 Demo示例
- **Demo位置：** [RRQMSocket.RPC.Demo](https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo)
+#### 4.3 Demo example
+ **Demo location:** [RRQMSocket.RPC.Demo](https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo)
 
- **说明：** 
-图一、图二、图三分别为`UDP无反馈调用`、`TCP有反馈调用`、`TCP连接池有反馈调用`。调用次数均为10w次，调用性能非常nice。在无反馈中，吞吐量达14.28w，在有反馈中达2.72w，简直秒杀WCF（WCF使用http协议，在本机测试吞吐量为310）
+ **Description:** 
+Figure 1, Figure 2, Figure 3 respectively `udp no feedback call`,` TCP has feedback calls`, `TCP connection pool has feedback calls. The number of calls is 10W, and the call performance is very Nice. In no feedback, throughput is 14.28W, in the feedback of 2.72W, simply spike WCF (WCF uses HTTP protocol, in this machine test throughput 310)
 
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191343_e5827d04_8553710.png "屏幕截图.png")
 
@@ -205,19 +211,19 @@ public class Server: ServerProvider
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191531_d7f0a8d4_8553710.png "屏幕截图.png")
 
 
-## 致谢
+## Thank you
 
-谢谢大家对我的支持，如果还有其他问题，请加群QQ：234762506讨论。
+Thank you for your support, if there are other problems, please add group QQ: 234762506.
 
 
-## 💕 支持本项目
-您的支持就是我不懈努力的动力。打赏时请一定留下您的称呼。
+## 💕 Support this project
+Your support is the driving force for my unremitting efforts. Please leave your name when you reward.
 
- **赞助总金额:366.6￥** 
+ **Sponsorship total amount: 366.6 ¥** 
 
-**赞助名单：** 
+**Sponsored list:** 
 
-（以下排名只按照打赏时间顺序）
+(The following ranking is only in the order of rewards)
 
 > 1.Bobo Joker
 

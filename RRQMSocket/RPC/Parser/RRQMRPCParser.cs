@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
-    public class RRQMRPCParser : RPCParser
+    /// <summary>
+    /// RRQM内置解析器
+    /// </summary>
+    public abstract class RRQMRPCParser : RPCParser
     {
 
         private MethodStore serverMethodStore;
@@ -23,16 +26,35 @@ namespace RRQMSocket.RPC
         /// </summary>
         public Version RPCVersion { get; set; }
 
+        /// <summary>
+        /// RPC编译器
+        /// </summary>
+        public IRPCCompiler RPCCompiler { get; set; }
+
+        /// <summary>
+        /// 获取生成的代理代码
+        /// </summary>
+        public CellCode[] Codes { get; private set; }
+
+        /// <summary>
+        /// 代理令箭，当客户端获取代理文件时需验证令箭
+        /// </summary>
+        public string ProxyToken { get; set; }
+
+        /// <summary>
+        /// 初始化服务
+        /// </summary>
+        /// <param name="serverProviders"></param>
         protected override void InitializeServers(ServerProviderCollection serverProviders)
         {
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
-            string nameSpace =string.IsNullOrEmpty(this.NameSpace) ? "RRQMRPC" : $"RRQMRPC.{this.NameSpace}";
+            string nameSpace = string.IsNullOrEmpty(this.NameSpace) ? "RRQMRPC" : $"RRQMRPC.{this.NameSpace}";
             List<string> refs = new List<string>();
 
             PropertyCodeMap propertyCode = new PropertyCodeMap(serverProviders.SingleAssembly, nameSpace);
-            string assemblyName=$"{nameSpace}.dll";
-           
+            string assemblyName = $"{nameSpace}.dll";
+
             Dictionary<string, List<MethodInfo>> classAndMethods = new Dictionary<string, List<MethodInfo>>();
 
             foreach (ServerProvider instance in serverProviders)
@@ -94,7 +116,7 @@ namespace RRQMSocket.RPC
                             throw new RRQMRPCKeyException($"方法键为{methodName}的方法已经注册");
                         }
 
-                        InstanceMethod instanceOfMethod = new InstanceMethod();
+                        MethodInstance instanceOfMethod = new MethodInstance();
                         instanceOfMethod.instance = instance;
                         instanceOfMethod.method = method;
                         instanceOfMethod.methodItem = methodItem;
@@ -104,8 +126,8 @@ namespace RRQMSocket.RPC
                 }
             }
 
-            InstanceMethod[] instances = this.serverMethodStore.GetAllInstanceMethod();
-            foreach (InstanceMethod item in instances)
+            MethodInstance[] instances = this.serverMethodStore.GetAllInstanceMethod();
+            foreach (MethodInstance item in instances)
             {
                 MethodItem clientMethodItem = new MethodItem();
                 clientMethodItem.IsOutOrRef = item.methodItem.IsOutOrRef;
@@ -141,13 +163,13 @@ namespace RRQMSocket.RPC
             propertyCellCode.CodeType = CodeType.ClassArgs;
             propertyCellCode.Code = propertyCode.GetPropertyCode();
             codes.Add(propertyCellCode);
-            string assemblyInfo = CodeMap.GetAssemblyInfo(nameSpace, setting.Version);
+            string assemblyInfo = CodeMap.GetAssemblyInfo(nameSpace, this.RPCVersion);
             this.RPCVersion = CodeMap.Version;
 
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
             proxyInfo.AssemblyName = assemblyName;
             proxyInfo.Version = this.RPCVersion.ToString();
-            if (compiler != null)
+            if (this.RPCCompiler != null)
             {
                 List<string> codesString = new List<string>();
                 foreach (var item in codes)
@@ -155,12 +177,14 @@ namespace RRQMSocket.RPC
                     codesString.Add(item.Code);
                 }
                 codesString.Add(assemblyInfo);
-                proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codesString.ToArray(), refs);
+                proxyInfo.AssemblyData = this.RPCCompiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
             proxyInfo.Codes = codes;
             this.serverMethodStore.SetProxyInfo(proxyInfo);
 
-            return codes.ToArray();
+            this.Codes = codes.ToArray();
         }
+
+
     }
 }

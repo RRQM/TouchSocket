@@ -16,7 +16,6 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 方法体
     /// </summary>
-
     public class MethodItem
     {
         /// <summary>
