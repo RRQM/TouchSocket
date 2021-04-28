@@ -49,6 +49,12 @@
 
 RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开辟了一块内存，然后均分，然后给每个会话分配一个区去接收，等收到数据以后，再复制一份，然后把数据抛出去，让外界处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后直接用于接收，等收到数据以后，直接就把这个内存块抛出去了，这样就避免了复制操作。所以，文件传输时效率才会高。当然这个操作在小数据时是没什么优势的。
 
+**数据处理适配器** 
+
+相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，我们删繁就简，轻装上阵，但是依旧功能强大。
+
+首先是命名，“数据处理适配器”的意思就是对数据进行**预处理**，这也就包括**发送**和**接收**两部分，其功能强大程度不言而喻。例如：我们在**处理TCP粘包**时，常规的解决思路有三种，分别为 **固定包头** 、 **固定长度** 、 **终止字符分割** ，那么这时候数据处理适配器就可以大显身手了。
+
 ## 🔗联系作者
 
  - [CSDN博客主页](https://blog.csdn.net/qq_40374647)
@@ -86,16 +92,48 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 - 超简单的解决粘包、分包问题，详见[RRQMSocket解决TCP粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179?spm=1001.2014.3001.5501)。
 - 内存池设计，避免内存重复申请、释放。
 - 对象池设计，避免数据对象的申请、释放。
+#### 1.3 Demo
+[RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
 
-
-## 二、Token系服务器
+## 二、Token系TCP框架
 #### 2.1 概述
 Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要功能就是对即将完成连接的客户端进行筛选，筛选手段就是验证Token，如果Token不符合规定，则直接断开连接，其他功能和Tcp服务器一致。
+#### 2.2 特点
+- 过滤不合格TCP客户端。
+- 多租户使用。
+- 客户端服务器统一ID，方便检索。
+#### 2.3 创建及使用Token系框架
+[创建及使用Token系框架](https://gitee.com/dotnetchina/RRQMSocket/wikis/3.2%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8Token%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3896799)
+#### 2.4 Demo
+[RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
 
 
 ## 三、文件传输框架
 #### 3.1 创建文件服务器框架
-几行代码就可以搭建出完整的高性能文件传输框架，具体创建步骤详见[RRQMSocket创建文件传输、大文件续传框架](https://blog.csdn.net/qq_40374647/article/details/100546120?spm=1001.2014.3001.5501)。
+
+以下进行简单示例，详细使用见[文件传输入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/5.1%20%E6%A6%82%E8%BF%B0?sort_id=3897485)
+```
+ FileService fileService = new FileService();
+ fileService.VerifyToken ="123ABC";
+ 
+ fileService.BreakpointResume = true;//支持断点续传
+ try
+ {
+     fileService.Bind(7789,2);//直接监听7789端口号。多线程，默认为1，此处设置线程数量为2
+/* 订阅相关事件
+ fileService.ClientConnected += FileService_ClientConnected;
+ fileService.ClientDisconnected += FileService_ClientDisconnected;
+
+ fileService.BeforeTransfer += FileService_BeforeTransfer ;
+ fileService.FinishedTransfer += FileService_FinishedTransfer ;
+ fileService.ReceiveSystemMes += FileService_ReceiveSystemMes;
+*/
+ }
+ catch (Exception ex)
+ {
+     MessageBox.Show(ex.Message);
+ }
+```
 
 #### 3.2 特点
 - 简单易用。
@@ -120,24 +158,39 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 
 ![上传文件](https://images.gitee.com/uploads/images/2021/0409/190350_92a2ad36_8553710.png "上传文件")
 ![下载文件](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "下载文件")
-## 四、RPC框架
-#### 4.1 创建RPC框架
-几行代码就可以搭建出完整的高性能文件传输框架，具体创建步骤详见[RRQMSocket创建RPC高性能微框架，支持任意序列化、out及ref](https://blog.csdn.net/qq_40374647/article/details/109143243?spm=1001.2014.3001.5501)。
 
-#### 4.2 特点
+
+## 四、RPC框架
+#### 4.1 创建RPC服务
+新建类文件，继承于ServerProvider，并将其中公共方法标识为RRQMRPCMethod即可。
+```
+public class Server: ServerProvider
+{
+    [RRQMRPCMethod]
+    public string TestOne(string str)
+    {
+        return "若汝棋茗";
+    }
+ }
+```
+#### 4.2 启动RPC服务
+
+[启动RPC服务说明](https://gitee.com/dotnetchina/RRQMSocket/wikis/6.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E5%90%AF%E5%8A%A8RPC%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3904370)
+
+#### 4.3 特点
 - 简单易用。
 - 多线程处理。
 - 高性能，在保证送达但不返回的情况下，10w次调用用时0.8s，在返回的情况下，用时3.9s。
 - 支持TCP、UDP等不同的协议调用相同服务。
 - 支持指定服务异步执行。
 - 支持权限管理，让非法调用死在萌芽时期。
-- 全自动代码生成，可使用系统编译，也可以自己使用源代码编译。
+- 全自动 **代码生成** ，可使用系统编译成dll调用，也可以使用插件生成代理调用。
 - 代理方法会生成异步方法，支持客户端异步调用。
-- 支持out、ref，参数设定默认值等。
+- **支持out、ref** ，参数设定默认值等。
 - 随心所欲的序列化方式，除了自带的[超轻量级二进制序列化](https://blog.csdn.net/qq_40374647/article/details/114178244?spm=1001.2014.3001.5501)、xml序列化外，用户可以自己随意使用其他序列化。
 - 支持编译式调用，也支持方法名+参数式调用。
-- 全异常反馈，服务里发生的异常，会一字不差的反馈到客户端。
-- 超简单的回调方式。
+- **全异常反馈** ，服务里发生的异常，会一字不差的反馈到客户端。
+- 超简单、自由的**回调方式** 。
 
 #### 4.3 Demo示例
  **Demo位置：** [RRQMSocket.RPC.Demo](https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo)
@@ -151,7 +204,6 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191531_d7f0a8d4_8553710.png "屏幕截图.png")
 
-🤝 如何贡献
 
 ## 致谢
 
