@@ -8,15 +8,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Reflection;
+using System;
 
 namespace RRQMSocket.RPC
 {
-    internal class MethodInstance
+    /// <summary>
+    /// RPC方法标记属性类
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method,AllowMultiple = true,Inherited =true)]
+    public abstract class RPCMethodAttribute : Attribute
     {
-        internal ServerProvider instance;
-        internal MethodInfo method;
-        internal MethodItem methodItem;
-        internal bool isEnable;
+       
     }
 }

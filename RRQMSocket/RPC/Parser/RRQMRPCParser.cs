@@ -117,10 +117,10 @@ namespace RRQMSocket.RPC
                         }
 
                         MethodInstance instanceOfMethod = new MethodInstance();
-                        instanceOfMethod.instance = instance;
-                        instanceOfMethod.method = method;
-                        instanceOfMethod.methodItem = methodItem;
-                        instanceOfMethod.isEnable = true;
+                        instanceOfMethod.Provider = instance;
+                        instanceOfMethod.Method = method;
+                        instanceOfMethod.MethodItem = methodItem;
+                        instanceOfMethod.IsEnable = true;
                         serverMethodStore.AddInstanceMethod(instanceOfMethod);
                     }
                 }
@@ -130,13 +130,13 @@ namespace RRQMSocket.RPC
             foreach (MethodInstance item in instances)
             {
                 MethodItem clientMethodItem = new MethodItem();
-                clientMethodItem.IsOutOrRef = item.methodItem.IsOutOrRef;
-                clientMethodItem.Method = item.methodItem.Method;
-                clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.methodItem.ReturnType);
+                clientMethodItem.IsOutOrRef = item.MethodItem.IsOutOrRef;
+                clientMethodItem.Method = item.MethodItem.Method;
+                clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.MethodItem.ReturnType);
                 clientMethodItem.ParameterTypesString = new List<string>();
-                for (int i = 0; i < item.methodItem.ParameterTypes.Count; i++)
+                for (int i = 0; i < item.MethodItem.ParameterTypes.Count; i++)
                 {
-                    clientMethodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(item.methodItem.ParameterTypes[i]));
+                    clientMethodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(item.MethodItem.ParameterTypes[i]));
                 }
                 clientMethodStore.AddMethodItem(clientMethodItem);
             }

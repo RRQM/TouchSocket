@@ -49,9 +49,9 @@ namespace RRQMSocket.RPC
             List<ServerProvider> providers = new List<ServerProvider>();
             foreach (var item in serverMethodKey.Values)
             {
-                if (!providers.Contains(item.instance))
+                if (!providers.Contains(item.Provider))
                 {
-                    providers.Add(item.instance);
+                    providers.Add(item.Provider);
                 }
             }
 
@@ -65,7 +65,7 @@ namespace RRQMSocket.RPC
 
         internal void AddInstanceMethod(MethodInstance method)
         {
-            serverMethodKey.Add(method.methodItem.Method, method);
+            serverMethodKey.Add(method.MethodItem.Method, method);
         }
 
         internal MethodInstance GetInstanceMethod(string method)
