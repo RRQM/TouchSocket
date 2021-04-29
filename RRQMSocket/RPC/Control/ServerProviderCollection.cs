@@ -19,7 +19,7 @@ namespace RRQMSocket.RPC
     /// 服务集合
     /// </summary>
     [DebuggerDisplay("{Count}")]
-    public class ServerProviderCollection : IEnumerable
+    public class ServerProviderCollection : IEnumerable<ServerProvider>, IEnumerable
     {
         /// <summary>
         /// 服务数量
@@ -50,7 +50,13 @@ namespace RRQMSocket.RPC
         /// 返回枚举
         /// </summary>
         /// <returns></returns>
-        public IEnumerator GetEnumerator()
+        IEnumerator<ServerProvider> IEnumerable<ServerProvider>.GetEnumerator()
+        {
+            return this.servers.GetEnumerator();
+        }
+
+       
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return this.servers.GetEnumerator();
         }

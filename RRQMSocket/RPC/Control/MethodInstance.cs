@@ -27,11 +27,6 @@ namespace RRQMSocket.RPC
         /// </summary>
         public MethodInfo Method { get; internal set; }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public MethodItem MethodItem { get; internal set; }
-
         /// <summary>
         /// RPC属性集合
         /// </summary>

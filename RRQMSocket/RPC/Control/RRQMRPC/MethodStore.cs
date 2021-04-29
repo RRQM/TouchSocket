@@ -35,28 +35,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public RPCProxyInfo ProxyInfo { get; private set; }
 
-        /// <summary>
-        /// 获取服务类实例
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="RRQMException"></exception>
-        public ServerProvider[] GetServerProviders()
-        {
-            if (this.serverMethodKey == null)
-            {
-                throw new RRQMException("serverMethodKey为空");
-            }
-            List<ServerProvider> providers = new List<ServerProvider>();
-            foreach (var item in serverMethodKey.Values)
-            {
-                if (!providers.Contains(item.Provider))
-                {
-                    providers.Add(item.Provider);
-                }
-            }
-
-            return providers.ToArray();
-        }
+       
 
         internal void SetProxyInfo(RPCProxyInfo proxyInfo)
         {

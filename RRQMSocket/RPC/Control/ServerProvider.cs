@@ -29,8 +29,8 @@ namespace RRQMSocket.RPC
         /// 若是想放弃本次执行，请抛出<see cref="RRQMAbandonRPCException"/>
         /// </summary>
         /// <param name="parser"></param>
-        /// <param name="methodItem"></param>
-        protected internal virtual void RPCEnter(IRPCParser parser, MethodItem methodItem)
+        /// <param name="methodInvoker"></param>
+        protected internal virtual void RPCEnter(RPCParser parser, MethodInvoker  methodInvoker)
         {
         }
 
@@ -38,8 +38,8 @@ namespace RRQMSocket.RPC
         /// 执行RPC发生错误
         /// </summary>
         /// <param name="parser"></param>
-        /// <param name="methodItem"></param>
-        protected internal virtual void RPCError(IRPCParser parser, MethodItem methodItem)
+        /// <param name="methodInvoker"></param>
+        protected internal virtual void RPCError(RPCParser parser, MethodInvoker methodInvoker)
         {
         }
 
@@ -47,8 +47,8 @@ namespace RRQMSocket.RPC
         /// RPC方法执行完成
         /// </summary>
         /// <param name="parser"></param>
-        /// <param name="methodItem"></param>
-        protected internal virtual void RPCLeave(IRPCParser parser, MethodItem methodItem)
+        /// <param name="methodInvoker"></param>
+        protected internal virtual void RPCLeave(RPCParser parser, MethodInvoker methodInvoker )
         {
         }
     }

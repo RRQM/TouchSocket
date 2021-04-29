@@ -28,8 +28,10 @@ namespace RRQMSocket.RPC
         {
             this.ServerProviders = new ServerProviderCollection();
             this.RPCParsers = new RPCParserCollection();
+            this.methodMap = new MethodMap();
         }
 
+        private MethodMap methodMap;
         /// <summary>
         /// 获取RPC解析器集合
         /// </summary>
@@ -40,46 +42,40 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="key"></param>
         /// <param name="parser"></param>
-        public void AddRPCParser(string key, IRPCParser parser)
+        public void AddRPCParser(string key, RPCParser parser)
         {
             this.RPCParsers.Add(key, parser);
-            parser.InvokeMethod += InvokeMethod;
-            parser.GetProxyInfo = this.GetProxyInfo;
-            parser.InitMethodServer = this.InitMethodServer;
+            parser.RPCService = this;
+            parser.RRQMExecuteMethod = ExecuteMethod;
         }
 
-        private void InvokeMethod(IRPCParser parser, RPCContext content)
-        {
-            MethodInstance instanceMethod = this.serverMethodStore.GetInstanceMethod(content.Method);
-            Task.Factory.StartNew(() =>
-            {
-                ExecuteMethod(parser, content, instanceMethod);
-            });
-        }
-
-
+       
+        /// <summary>
+        /// 获取函数实例
+        /// </summary>
+        public MethodInstance[] MethodInstances { get;private set; }
 
         /// <summary>
         /// 获取服务实例
         /// </summary>
         public ServerProviderCollection ServerProviders { get; private set; }
 
-        /// <summary>
-        /// 设置服务方法可用性
-        /// </summary>
-        /// <param name="method">方法名</param>
-        /// <param name="enable">可用性</param>
-        /// <exception cref="RRQMRPCException"></exception>
-        public void SetMethodEnable(string method, bool enable)
-        {
-            MethodInstance instance = this.serverMethodStore.GetInstanceMethod(method);
-            if (instance == null)
-            {
-                throw new RRQMRPCException("未找到该方法");
-            }
-            instance.GetHashCode
-            instance.IsEnable = enable;
-        }
+        ///// <summary>
+        ///// 设置服务方法可用性
+        ///// </summary>
+        ///// <param name="method">方法名</param>
+        ///// <param name="enable">可用性</param>
+        ///// <exception cref="RRQMRPCException"></exception>
+        //public void SetMethodEnable(string method, bool enable)
+        //{
+        //    MethodInstance instance = this.serverMethodStore.GetInstanceMethod(method);
+        //    if (instance == null)
+        //    {
+        //        throw new RRQMRPCException("未找到该方法");
+        //    }
+        //    instance.GetHashCode
+        //    instance.IsEnable = enable;
+        //}
 
         /// <summary>
         /// 注册服务
@@ -119,18 +115,6 @@ namespace RRQMSocket.RPC
             this.RegistService(serverProvider);
             return serverProvider;
         }
-
-        ///// <summary>
-        ///// 开启RPC服务
-        ///// </summary>
-        ///// <param name="setting">设置</param>
-        ///// <exception cref="RRQMRPCKeyException">RPC方法注册异常</exception>
-        ///// <exception cref="RRQMRPCException">RPC异常</exception>
-        ///// <returns>返回源代码</returns>
-        //public CellCode[] OpenRPCServer(RPCServerSetting setting)
-        //{
-        //    return OpenRPCServer(setting, null);
-        //}
 
         /// <summary>
         /// 开启RPC服务
@@ -175,94 +159,81 @@ namespace RRQMSocket.RPC
                         methodInstance.Provider = instance;
                         methodInstance.Method = method;
                         methodInstance.RPCAttributes = attributes.ToArray();
-                        methodInstances.Add(methodInstance);
+                        if (method.ReturnType == typeof(void))
+                        {
+                            if (method.GetParameters().Length == 0)
+                            {
+                                methodInstance.MetadataToken = ++nullReturnNullParameters;
+                            }
+                            else
+                            {
+                                methodInstance.MetadataToken = ++nullReturnExistParameters;
+                            }
+                        }
+                        else
+                        {
+                            if (method.GetParameters().Length == 0)
+                            {
+                                methodInstance.MetadataToken = ++ExistReturnNullParameters;
+                            }
+                            else
+                            {
+                                methodInstance.MetadataToken = ++ExistReturnExistParameters;
+                            }
+                        }
                         
+                        methodInstances.Add(methodInstance);
+                        this.methodMap.Add(methodInstance);
                     }
                 }
             }
 
+            this.MethodInstances = methodInstances.ToArray();
+
+            foreach (var parser in this.RPCParsers)
+            {
+                parser.RRQMInitializeServers(this.MethodInstances);
+            }
         }
 
-        private void ExecuteMethod(IRPCParser parser, RPCContext content, MethodInstance instanceMethod)
+        private void ExecuteMethod(RPCParser parser, MethodInvoker methodInvoker)
         {
-            if (instanceMethod != null)
+            if (this.methodMap.TryGet(methodInvoker.MethodToken,out MethodInstance methodInstance))
             {
-                if (instanceMethod.IsEnable)
+                try
                 {
-                    ServerProvider instance = instanceMethod.Provider;
-                    try
-                    {
-                        MethodItem methodItem = instanceMethod.MethodItem;
-                        object[] parameters = null;
-                        if (content.ParametersBytes != null)
-                        {
-                            parameters = new object[content.ParametersBytes.Count];
-                            for (int i = 0; i < parameters.Length; i++)
-                            {
-                                parameters[i] = parser.SerializeConverter.DeserializeParameter(content.ParametersBytes[i], methodItem.ParameterTypes[i]);
-                            }
-                        }
-
-                        instance.RPCEnter(parser, methodItem);
-                        MethodInfo method = instanceMethod.Method;
-                        content.ReturnParameterBytes = parser.SerializeConverter.SerializeParameter(method.Invoke(instance, parameters));
-                        content.Status = 1;
-                        content.Message = null;
-                        if (!instanceMethod.MethodItem.IsOutOrRef)
-                        {
-                            content.ParametersBytes = null;
-                        }
-                        else
-                        {
-                            List<byte[]> datas = new List<byte[]>();
-                            foreach (object parameter in parameters)
-                            {
-                                datas.Add(parser.SerializeConverter.SerializeParameter(parameter));
-                            }
-                            content.ParametersBytes = datas;
-                        }
-                        instance.RPCLeave(parser, instanceMethod.MethodItem);
-                    }
-                    catch (RRQMAbandonRPCException e)
-                    {
-                        if (!e.Feedback)
-                        {
-                            return;
-                        }
-                        content.Status = 4;
-                        content.Message = "函数被阻止执行，信息：" + e.Message;
-                    }
-                    catch (TargetInvocationException e)
-                    {
-                        content.Status = 2;
-                        if (e.InnerException != null)
-                        {
-                            content.Message = "函数内部发生异常，信息：" + e.InnerException.Message;
-                        }
-                        else
-                        {
-                            content.Message = "函数内部发生异常，信息：未知";
-                        }
-                        instance.RPCError(parser, instanceMethod.MethodItem);
-                    }
-                    catch (Exception e)
-                    {
-                        content.Status = 2;
-                        content.Message = e.Message;
-                        instance.RPCError(parser, instanceMethod.MethodItem);
-                    }
+                    methodInstance.Provider.RPCEnter(parser, methodInvoker);
+                    methodInvoker.ReturnParameter = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
+                    methodInstance.Provider.RPCLeave(parser, methodInvoker);
+                    methodInvoker.Status = InvokeStatus.Success;
                 }
-                else
+                catch (RRQMAbandonRPCException e)
                 {
-                    content.Status = 3;
+                    methodInvoker.Status =  InvokeStatus.Abort;
+                    methodInvoker.StatusMessage = "函数被阻止执行，信息：" + e.Message;
+                }
+                catch (TargetInvocationException e)
+                {
+                    methodInvoker.Status =  InvokeStatus.InvocationException;
+                    if (e.InnerException != null)
+                    {
+                        methodInvoker.StatusMessage = "函数内部发生异常，信息：" + e.InnerException.Message;
+                    }
+                    else
+                    {
+                        methodInvoker.StatusMessage = "函数内部发生异常，信息：未知";
+                    }
+                    methodInstance.Provider.RPCError(parser, methodInvoker);
+                }
+                catch (Exception e)
+                {
+                    methodInvoker.Status =  InvokeStatus.Exception;
+                    methodInvoker.StatusMessage = e.Message;
+                    methodInstance.Provider.RPCError(parser, methodInvoker);
                 }
             }
-            else
-            {
-                content.Status = 2;
-            }
-
-            parser.EndInvokeMethod(content);
+         
+            parser.RRQMEndInvokeMethod(methodInvoker);
         }
 
         /// <summary>
@@ -291,15 +262,7 @@ namespace RRQMSocket.RPC
             return proxyInfo;
         }
 
-        /// <summary>
-        /// 初始化服务
-        /// </summary>
-        /// <param name="parser"></param>
-        /// <returns></returns>
-        protected virtual List<MethodItem> InitMethodServer(IRPCParser parser)
-        {
-            return this.clientMethodStore.GetAllMethodItem();
-        }
+        
 
         /// <summary>
         /// 释放资源

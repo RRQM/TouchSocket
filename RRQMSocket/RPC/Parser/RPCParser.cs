@@ -11,20 +11,48 @@ namespace RRQMSocket.RPC
     /// </summary>
     public abstract class RPCParser
     {
+       
         /// <summary>
         /// 序列化转换器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
-        internal void RRQMInitializeServers(ServerProviderCollection serverProviders)
+        /// <summary>
+        /// 包含此解析器的服务器实例
+        /// </summary>
+        public RPCService RPCService { get;internal set; }
+
+        internal Action<RPCParser, MethodInvoker> RRQMExecuteMethod;
+
+        internal void RRQMInitializeServers(MethodInstance[] methodInstances)
         {
-            InitializeServers(serverProviders);
+            InitializeServers(methodInstances);
+        }
+        
+        internal void RRQMEndInvokeMethod(MethodInvoker methodInvoker)
+        {
+            EndInvokeMethod(methodInvoker);
         }
 
         /// <summary>
         /// 初始化服务
         /// </summary>
-        /// <param name="serverProviders"></param>
-        protected abstract void InitializeServers(ServerProviderCollection serverProviders);
+        /// <param name="methodInstances"></param>
+        protected abstract void InitializeServers(MethodInstance[] methodInstances);
+
+        /// <summary>
+        /// 在函数调用完成后调用
+        /// </summary>
+        /// <param name="methodInvoker"></param>
+        protected abstract void EndInvokeMethod(MethodInvoker methodInvoker);
+
+        /// <summary>
+        /// 执行函数
+        /// </summary>
+        /// <param name="methodInvoker"></param>
+        protected void ExecuteMethod(MethodInvoker methodInvoker)
+        {
+            RRQMExecuteMethod?.Invoke(this, methodInvoker);
+        }
     }
 }

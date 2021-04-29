@@ -20,7 +20,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// TCP RPC解释器
     /// </summary>
-    public class TcpRPCParser : TokenTcpService<RPCSocketClient>, IRPCParser
+    public class TcpRPCParser : RRQMRPCParser
     {
         /// <summary>
         /// 构造函数
@@ -28,7 +28,11 @@ namespace RRQMSocket.RPC
         public TcpRPCParser()
         {
             this.SerializeConverter = new BinarySerializeConverter();
+            this.tcpService = new RRQMTokenTcpService<RPCSocketClient>();
+
         }
+
+        private RRQMTokenTcpService<RPCSocketClient> tcpService;
 
         /// <summary>
         /// 调用方法
@@ -45,10 +49,6 @@ namespace RRQMSocket.RPC
         /// </summary>
         public Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
 
-        /// <summary>
-        /// 序列化转换器
-        /// </summary>
-        public SerializeConverter SerializeConverter { get; set; }
 
         /// <summary>
         /// 初创
