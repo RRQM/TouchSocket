@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
         private MethodStore serverMethodStore;
         private MethodStore clientMethodStore;
 
-        private ServerStore
+        private ServerStore serverStore;
 
         /// <summary>
         /// 获取或设置代理源文件命名空间
@@ -48,7 +48,7 @@ namespace RRQMSocket.RPC
         /// 初始化服务
         /// </summary>
         /// <param name="methodInstances"></param>
-        protected override void InitializeServers(MethodInstance[] methodInstances)
+        protected sealed override void InitializeServers(MethodInstance[] methodInstances)
         {
             this.serverMethodStore = new MethodStore();
             this.clientMethodStore = new MethodStore();
@@ -68,6 +68,7 @@ namespace RRQMSocket.RPC
                         string methodName = attribute.MethodKey == null || attribute.MethodKey.Trim().Length == 0 ? method.Name : attribute.MethodKey;
 
                         MethodItem methodItem = new MethodItem();
+                        methodItem.MethodToken = methodInstance.MethodToken;
                         methodItem.Method = methodName;
                         ParameterInfo[] parameters = method.GetParameters();
                         methodItem.ParameterTypes = new List<Type>();
@@ -106,12 +107,8 @@ namespace RRQMSocket.RPC
                             throw new RRQMRPCKeyException($"方法键为{methodName}的方法已经注册");
                         }
 
-                        MethodInstance instanceOfMethod = new MethodInstance();
-                        instanceOfMethod.Provider = instance;
-                        instanceOfMethod.Method = method;
-                        instanceOfMethod.MethodItem = methodItem;
-                        instanceOfMethod.IsEnable = true;
-                        serverMethodStore.AddInstanceMethod(instanceOfMethod);
+                       
+                        break;
                     }
                 }
             }
@@ -139,7 +136,7 @@ namespace RRQMSocket.RPC
                         string methodName = attribute.MethodKey == null || attribute.MethodKey.Trim().Length == 0 ? method.Name : attribute.MethodKey;
 
                         MethodItem methodItem = new MethodItem();
-                        methodItem.Method = methodName;
+                        methodItem.MethodToken = methodName;
                         ParameterInfo[] parameters = method.GetParameters();
                         methodItem.ParameterTypes = new List<Type>();
                         for (int i = 0; i < parameters.Length; i++)
@@ -192,7 +189,7 @@ namespace RRQMSocket.RPC
             {
                 MethodItem clientMethodItem = new MethodItem();
                 clientMethodItem.IsOutOrRef = item.MethodItem.IsOutOrRef;
-                clientMethodItem.Method = item.MethodItem.Method;
+                clientMethodItem.MethodToken = item.MethodItem.Method;
                 clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.MethodItem.ReturnType);
                 clientMethodItem.ParameterTypesString = new List<string>();
                 for (int i = 0; i < item.MethodItem.ParameterTypes.Count; i++)

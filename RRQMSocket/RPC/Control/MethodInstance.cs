@@ -8,6 +8,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Reflection;
 
 namespace RRQMSocket.RPC
@@ -33,9 +34,19 @@ namespace RRQMSocket.RPC
         public RPCMethodAttribute[] RPCAttributes { get; internal set; }
 
         /// <summary>
-        /// 元数据标识
+        /// 方法唯一令箭
         /// </summary>
-        public int MetadataToken { get; internal set; }
+        public int MethodToken { get; internal set; }
+
+        /// <summary>
+        /// 返回值类型，无返回值时为Null
+        /// </summary>
+        public Type RetuenType { get; internal set; }
+
+        /// <summary>
+        /// 参数类型集合，已处理out及ref，无参数时为空集合，
+        /// </summary>
+        public Type[] ParameterTypes { get; set; }
 
         /// <summary>
         /// 

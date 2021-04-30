@@ -14,6 +14,6 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 服务键映射
         /// </summary>
-        public Dictionary<string,int> ServerKeyToToken { get;internal set; }
+        public Dictionary<string,MethodItem> tokenToMethodItem { get;internal set; }
     }
 }

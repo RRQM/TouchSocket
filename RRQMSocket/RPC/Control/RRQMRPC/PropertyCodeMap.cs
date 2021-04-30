@@ -310,19 +310,6 @@ namespace RRQMSocket.RPC
             }
         }
 
-        internal Type GetRefOutType(Type type)
-        {
-            string typeName = type.FullName.Replace("&", string.Empty);
-            type = Type.GetType(typeName);
-            if (type == null)
-            {
-                type = this.Assembly.GetType(typeName);
-                if (type == null)
-                {
-                    throw new RRQMRPCException($"未能识别类型{typeName}");
-                }
-            }
-            return type;
-        }
+        
     }
 }

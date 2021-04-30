@@ -145,7 +145,7 @@ namespace RRQMSocket.RPC
             {
                 MethodItem methodItem = methodStore.GetMethodItem(method);
 
-                invokeWaitData.WaitResult.Method = methodItem.Method;
+                invokeWaitData.WaitResult.Method = methodItem.MethodToken;
 
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(1024);
                 if (invokeOption == null)
@@ -248,7 +248,7 @@ namespace RRQMSocket.RPC
             lock (locker)
             {
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
-                invokeWaitData.WaitResult.Method = methodItem.Method;
+                invokeWaitData.WaitResult.Method = methodItem.MethodToken;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 if (invokeOption == null)
                 {

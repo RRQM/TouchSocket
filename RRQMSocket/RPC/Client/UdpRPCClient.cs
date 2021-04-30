@@ -349,7 +349,7 @@ namespace RRQMSocket.RPC
                 this.singleWaitData.WaitResult = null;
                 RPCContext context = new RPCContext();
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
-                context.Method = methodItem.Method;
+                context.Method = methodItem.MethodToken;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 if (invokeOption == null)
                 {
@@ -408,7 +408,7 @@ namespace RRQMSocket.RPC
                 this.singleWaitData.WaitResult = null;
                 RPCContext context = new RPCContext();
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
-                context.Method = methodItem.Method;
+                context.Method = methodItem.MethodToken;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 if (invokeOption == null)
                 {

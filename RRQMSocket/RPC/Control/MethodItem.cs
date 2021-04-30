@@ -19,6 +19,11 @@ namespace RRQMSocket.RPC
     public class MethodItem
     {
         /// <summary>
+        /// 方法唯一标识
+        /// </summary>
+        public int MethodToken { get; internal set; } 
+        
+        /// <summary>
         /// 方法名
         /// </summary>
         public string Method { get; internal set; }

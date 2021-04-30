@@ -20,7 +20,7 @@ namespace RRQMSocket.RPC
 
         internal void Add(MethodInstance methodInstance)
         {
-            this.methodMap.Add(methodInstance.MetadataToken, methodInstance);
+            this.methodMap.Add(methodInstance.MethodToken, methodInstance);
         }
 
         internal bool TryGet(int methodToken, out MethodInstance methodInstance)

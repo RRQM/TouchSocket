@@ -159,26 +159,39 @@ namespace RRQMSocket.RPC
                         methodInstance.Provider = instance;
                         methodInstance.Method = method;
                         methodInstance.RPCAttributes = attributes.ToArray();
+
+                        ParameterInfo[] parameters = method.GetParameters();
+                        List<Type> types = new List<Type>();
+                        foreach (var  parameter in parameters)
+                        {
+                            types.Add(parameter.ParameterType.GetRefOutType());
+                        }
+                        methodInstance.ParameterTypes = types.ToArray();
+
                         if (method.ReturnType == typeof(void))
                         {
-                            if (method.GetParameters().Length == 0)
+                            methodInstance.RetuenType = null;
+
+                            if (parameters.Length == 0)
                             {
-                                methodInstance.MetadataToken = ++nullReturnNullParameters;
+                                methodInstance.MethodToken = ++nullReturnNullParameters;
                             }
                             else
                             {
-                                methodInstance.MetadataToken = ++nullReturnExistParameters;
+                                methodInstance.MethodToken = ++nullReturnExistParameters;
                             }
                         }
                         else
                         {
-                            if (method.GetParameters().Length == 0)
+                            methodInstance.RetuenType = method.ReturnType;
+
+                            if (parameters.Length == 0)
                             {
-                                methodInstance.MetadataToken = ++ExistReturnNullParameters;
+                                methodInstance.MethodToken = ++ExistReturnNullParameters;
                             }
                             else
                             {
-                                methodInstance.MetadataToken = ++ExistReturnExistParameters;
+                                methodInstance.MethodToken = ++ExistReturnExistParameters;
                             }
                         }
                         
