@@ -9,10 +9,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace RRQMSocket.RPC
@@ -36,6 +39,21 @@ namespace RRQMSocket.RPC
         /// 获取或设置日志记录器
         /// </summary>
         public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
+
+        /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public override sealed BytePool BytePool { get { return this.tcpService.BytePool; } }
+
+        /// <summary>
+        /// 获取或设置缓存大小
+        /// </summary>
+        public int BufferLength { get { return this.tcpService.BufferLength; } set { this.tcpService.BufferLength = value; } }
+
+        /// <summary>
+        /// 获取绑定状态
+        /// </summary>
+        public override bool IsBind => this.tcpService.IsBind;
 
         private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, CreatOption creatOption)
         {
@@ -95,7 +113,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.InitMethodServer?.Invoke(this), true));
+                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this), true));
                         }
                         catch (Exception e)
                         {
@@ -119,11 +137,13 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
-        /// 调用结束
+        /// 在调用结束后调用
         /// </summary>
-        /// <param name="context"></param>
-        public void EndInvokeMethod(RPCContext context)
+        /// <param name="methodInvoker"></param>
+        /// <param name="methodInstance"></param>
+        protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
+            RPCContext context = (RPCContext)methodInvoker.Flag;
             if (context.Feedback == 0)
             {
                 return;
@@ -131,6 +151,28 @@ namespace RRQMSocket.RPC
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             try
             {
+                if (methodInstance.MethodToken < 50000000)
+                {
+                    context.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(methodInvoker.ReturnParameter);
+                }
+                else
+                {
+                    context.ReturnParameterBytes = null;
+                }
+
+                if (methodInstance.IsByRef)
+                {
+                    context.ParametersBytes = new List<byte[]>();
+                    foreach (var item in methodInvoker.Parameters)
+                    {
+                        context.ParametersBytes.Add(this.SerializeConverter.SerializeParameter(item));
+                    }
+                }
+                else
+                {
+                    context.ParametersBytes = null;
+                }
+
                 context.Serialize(byteBlock);
                 ((RPCSocketClient)context.Flag).agreementHelper.SocketSend(101, byteBlock);
             }
@@ -144,9 +186,46 @@ namespace RRQMSocket.RPC
             }
         }
 
-        protected override void EndInvokeMethod(MethodInvoker methodInvoker)
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="port">端口号</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public override void Bind(int port, int threadCount = 1)
         {
-           
+            this.tcpService.Bind(port,threadCount);
+        }
+
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public override void Bind(IPHost iPHost, int threadCount)
+        {
+            this.tcpService.Bind(iPHost, threadCount);
+        }
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="addressFamily">寻址方案</param>
+        /// <param name="endPoint">绑定节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public override void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
+        {
+            this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
     }
 }

@@ -12,11 +12,6 @@ namespace RRQMSocket.RPC
     public class MethodInvoker
     {
         /// <summary>
-        /// 函数标识
-        /// </summary>
-        public int MethodToken { get; set; }
-
-        /// <summary>
         /// 返回值
         /// </summary>
         public object ReturnParameter { get; set; }
@@ -29,11 +24,16 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 获取调用状态
         /// </summary>
-        public InvokeStatus  Status { get;internal set; }
+        public InvokeStatus  Status { get; set; }
 
         /// <summary>
         /// 状态消息
         /// </summary>
-        public string StatusMessage { get; internal  set; }
+        public string StatusMessage { get;  set; }
+       
+        /// <summary>
+        /// 可以传递其他类型的数据容器
+        /// </summary>
+        public object Flag { get; set; }
     }
 }

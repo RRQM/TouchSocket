@@ -218,9 +218,9 @@ namespace RRQMSocket.RPC
             }
         }
 
-        private void ExecuteMethod(RPCParser parser, MethodInvoker methodInvoker)
+        private void ExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            if (this.MethodMap.TryGet(methodInvoker.MethodToken, out MethodInstance methodInstance))
+            if (methodInvoker.Status == InvokeStatus.UnRun)
             {
                 try
                 {
@@ -255,7 +255,7 @@ namespace RRQMSocket.RPC
                 }
             }
 
-            parser.RRQMEndInvokeMethod(methodInvoker);
+            parser.RRQMEndInvokeMethod(methodInvoker, methodInstance);
         }
 
 

@@ -17,6 +17,11 @@ namespace RRQMSocket.RPC
         UnRun,
 
         /// <summary>
+        /// 未找到服务
+        /// </summary>
+        UnFound,
+
+        /// <summary>
         /// 成功调用
         /// </summary>
         Success,

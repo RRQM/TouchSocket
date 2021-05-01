@@ -1,6 +1,10 @@
-﻿using System;
+﻿using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,12 +14,9 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RRQM内置解析器
     /// </summary>
-    public abstract class RRQMRPCParser : RPCParser
+    public abstract class RRQMRPCParser : RPCParser,IService
     {
-
-
         private MethodStore clientMethodStore;
-
 
         /// <summary>
         /// 获取或设置代理源文件命名空间
@@ -46,6 +47,16 @@ namespace RRQMSocket.RPC
         /// 获取代理文件实例
         /// </summary>
         public RPCProxyInfo ProxyInfo { get; private set; }
+        
+        /// <summary>
+        /// 获取绑定状态
+        /// </summary>
+        public abstract bool IsBind { get; }
+
+        /// <summary>
+        /// 内存池实例
+        /// </summary>
+        public abstract BytePool BytePool { get; }
 
 
         /// <summary>
@@ -93,16 +104,30 @@ namespace RRQMSocket.RPC
                 {
                     if (att is RRQMRPCMethodAttribute attribute)
                     {
-                        MethodItem clientMethodItem = new MethodItem();
-                        clientMethodItem.IsOutOrRef = methodInstance.IsByRef;
-                        clientMethodItem.MethodToken = methodInstance.MethodToken;
-                        clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(methodInstance.ReturnType);
-                        clientMethodItem.ParameterTypesString = new List<string>();
+                        MethodItem methodItem = new MethodItem();
+                        methodItem.IsOutOrRef = methodInstance.IsByRef;
+                        methodItem.MethodToken = methodInstance.MethodToken;
+                        if (methodInstance.ReturnType!=null)
+                        {
+                            methodItem.ReturnTypeString = propertyCode.GetTypeFullName(methodInstance.ReturnType);
+                        }
+                       
+                        methodItem.ParameterTypesString = new List<string>();
+                        methodItem.Method = attribute.MethodKey == null || attribute.MethodKey.Trim().Length == 0 ? methodInstance.Method.Name : attribute.MethodKey;
+
                         for (int i = 0; i < methodInstance.ParameterTypes.Length; i++)
                         {
-                            clientMethodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(methodInstance.ParameterTypes[i]));
+                            methodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(methodInstance.ParameterTypes[i]));
                         }
-                        clientMethodStore.AddMethodItem(clientMethodItem);
+                        try
+                        {
+                            clientMethodStore.AddMethodItem(methodItem);
+                        }
+                        catch 
+                        {
+                            throw new RRQMRPCKeyException($"方法键为{methodItem.Method}的服务已注册");
+                        }
+                       
 
                         string className = methodInstance.Provider.GetType().Name;
                         if (!classAndMethods.ContainsKey(className))
@@ -192,6 +217,7 @@ namespace RRQMSocket.RPC
         protected virtual void ExecuteContext(RPCContext context)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
+            methodInvoker.Flag = context;
             if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
             {
                 object[] ps = new object[methodInstance.ParameterTypes.Length];
@@ -201,12 +227,57 @@ namespace RRQMSocket.RPC
                 }
                 methodInvoker.Parameters = ps;
 
+                this.ExecuteMethod(methodInvoker, methodInstance);
             }
             else
             {
-                methodInvoker.Status = InvokeStatus.Exception;
+                methodInvoker.Status = InvokeStatus.UnFound;
+                this.ExecuteMethod(methodInvoker,null);
             }
-            this.ExecuteMethod(methodInvoker);
+           
         }
+
+        /// <summary>
+        /// 获取已注册服务条目
+        /// </summary>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        protected virtual List<MethodItem> GetRegisteredMethodItems(RPCParser parser)
+        {
+           return this.clientMethodStore.GetAllMethodItem();
+        }
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="port">端口号</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+       public abstract void Bind(int port, int threadCount = 1);
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public abstract void Bind(IPHost iPHost, int threadCount);
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="addressFamily">寻址方案</param>
+        /// <param name="endPoint">绑定节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public abstract void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount);
+
+      
     }
 }

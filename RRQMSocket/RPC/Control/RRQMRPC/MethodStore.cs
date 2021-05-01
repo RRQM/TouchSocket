@@ -23,35 +23,25 @@ namespace RRQMSocket.RPC
         internal MethodStore()
         {
             this.tokenToMethodItem = new Dictionary<int, MethodItem>();
+            this.methodKeyToMethodItem = new Dictionary<string, MethodItem>();
         }
 
         private  Dictionary<int, MethodItem> tokenToMethodItem;
-
-        /// <summary>
-        /// 代理文件实例
-        /// </summary>
-        public RPCProxyInfo ProxyInfo { get; private set; }
-
-       
-
-        internal void SetProxyInfo(RPCProxyInfo proxyInfo)
-        {
-            this.ProxyInfo = proxyInfo;
-        }
+        private  Dictionary<string, MethodItem> methodKeyToMethodItem;
 
         internal void AddMethodItem(MethodItem methodItem)
         {
             tokenToMethodItem.Add(methodItem.MethodToken, methodItem);
+            methodKeyToMethodItem.Add(methodItem.Method, methodItem);
         }
 
         internal List<MethodItem> GetAllMethodItem()
         {
             List<MethodItem> mTs = new List<MethodItem>();
-            foreach (var item in methodNamesKey.Values)
+            foreach (var item in tokenToMethodItem.Values)
             {
                 mTs.Add(item);
             }
-
             return mTs;
         }
 
@@ -64,9 +54,9 @@ namespace RRQMSocket.RPC
             {
                 InitializedType(null);
             }
-            if (this.methodNamesKey != null && this.methodNamesKey.ContainsKey(methodName))
+            if (this.methodKeyToMethodItem != null && this.methodKeyToMethodItem.ContainsKey(methodName))
             {
-                return this.methodNamesKey[methodName];
+                return this.methodKeyToMethodItem[methodName];
             }
             else
             {
@@ -77,7 +67,7 @@ namespace RRQMSocket.RPC
         internal void InitializedType(TypeInitializeDic typeDic)
         {
             this.typeDic = typeDic;
-            foreach (MethodItem item in this.methodNamesKey.Values)
+            foreach (MethodItem item in this.methodKeyToMethodItem.Values)
             {
                 if (item.ReturnTypeString != null)
                 {

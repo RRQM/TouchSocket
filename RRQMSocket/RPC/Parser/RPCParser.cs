@@ -27,16 +27,16 @@ namespace RRQMSocket.RPC
         /// </summary>
         public RPCService RPCService { get;internal set; }
 
-        internal Action<RPCParser, MethodInvoker> RRQMExecuteMethod;
+        internal Action<RPCParser, MethodInvoker,MethodInstance> RRQMExecuteMethod;
 
         internal void RRQMInitializeServers(MethodInstance[] methodInstances)
         {
             InitializeServers(methodInstances);
         }
         
-        internal void RRQMEndInvokeMethod(MethodInvoker methodInvoker)
+        internal void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            EndInvokeMethod(methodInvoker);
+            EndInvokeMethod(methodInvoker, methodInstance);
         } 
         
         internal void RRQMSetMethodMap(MethodMap  methodMap)
@@ -54,15 +54,17 @@ namespace RRQMSocket.RPC
         /// 在函数调用完成后调用
         /// </summary>
         /// <param name="methodInvoker"></param>
-        protected abstract void EndInvokeMethod(MethodInvoker methodInvoker);
+        /// <param name="methodInstance"></param>
+        protected abstract void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
         /// 执行函数
         /// </summary>
         /// <param name="methodInvoker"></param>
-        protected void ExecuteMethod(MethodInvoker methodInvoker)
+        /// <param name="methodInstance"></param>
+        protected void ExecuteMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            RRQMExecuteMethod?.Invoke(this, methodInvoker);
+            RRQMExecuteMethod?.Invoke(this, methodInvoker, methodInstance);
         }
     }
 }
