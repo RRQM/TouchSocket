@@ -21,28 +21,16 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// UDP RPC解释器
     /// </summary>
-    public class UdpRPCParser : UdpSession, IRPCParser
+    public class UdpRPCParser : RPCParser,IService
     {
         /// <summary>
-        /// 调用方法
+        /// 构造函数
         /// </summary>
-        public event Action<IRPCParser, RPCContext> InvokeMethod;
-
-        /// <summary>
-        /// 获取代理文件
-        /// </summary>
-        public Func<string, IRPCParser, RPCProxyInfo> GetProxyInfo { get; set; }
-
-        /// <summary>
-        /// 初始化服务
-        /// </summary>
-        public Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
-
-        /// <summary>
-        /// 序列化转换器
-        /// </summary>
-        public SerializeConverter SerializeConverter { get; set; }
-
+        public UdpRPCParser()
+        {
+            this.udpSession = new RRQMUdpSession();
+        }
+        private RRQMUdpSession udpSession;
         /// <summary>
         /// 调用结束
         /// </summary>

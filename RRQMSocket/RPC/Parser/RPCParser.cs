@@ -9,7 +9,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC解析器
     /// </summary>
-    public abstract class RPCParser
+    public abstract class RPCParser:IDisposable
     {
        
         /// <summary>
@@ -66,5 +66,10 @@ namespace RRQMSocket.RPC
         {
             RRQMExecuteMethod?.Invoke(this, methodInvoker, methodInstance);
         }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public abstract void Dispose();
     }
 }

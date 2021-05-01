@@ -267,6 +267,11 @@ namespace RRQMSocket.RPC
         /// </summary>
         public void Dispose()
         {
+            foreach (var item in this.RPCParsers)
+            {
+                item.Dispose();
+            }
+            this.RPCParsers = null;
         }
     }
 }

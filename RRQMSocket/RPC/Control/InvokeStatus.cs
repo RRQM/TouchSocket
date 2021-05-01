@@ -22,6 +22,11 @@ namespace RRQMSocket.RPC
         UnFound,
 
         /// <summary>
+        /// 不可用
+        /// </summary>
+        UnEnable,
+
+        /// <summary>
         /// 成功调用
         /// </summary>
         Success,

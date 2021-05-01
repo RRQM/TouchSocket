@@ -151,28 +151,69 @@ namespace RRQMSocket.RPC
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             try
             {
-                if (methodInstance.MethodToken < 50000000)
+                switch (methodInvoker.Status)
                 {
-                    context.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(methodInvoker.ReturnParameter);
-                }
-                else
-                {
-                    context.ReturnParameterBytes = null;
-                }
+                    case InvokeStatus.UnRun:
+                        {
 
-                if (methodInstance.IsByRef)
-                {
-                    context.ParametersBytes = new List<byte[]>();
-                    foreach (var item in methodInvoker.Parameters)
-                    {
-                        context.ParametersBytes.Add(this.SerializeConverter.SerializeParameter(item));
-                    }
-                }
-                else
-                {
-                    context.ParametersBytes = null;
-                }
+                            break;
+                        }
+                        
+                    case InvokeStatus.UnFound:
+                        {
+                            context.Status = 2;
+                            break;
+                        }
+                    case InvokeStatus.Success:
+                        {
+                            if (methodInstance.MethodToken > 50000000)
+                            {
+                                context.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(methodInvoker.ReturnParameter);
+                            }
+                            else
+                            {
+                                context.ReturnParameterBytes = null;
+                            }
 
+                            if (methodInstance.IsByRef)
+                            {
+                                context.ParametersBytes = new List<byte[]>();
+                                foreach (var item in methodInvoker.Parameters)
+                                {
+                                    context.ParametersBytes.Add(this.SerializeConverter.SerializeParameter(item));
+                                }
+                            }
+                            else
+                            {
+                                context.ParametersBytes = null;
+                            }
+
+                            context.Status = 1;
+                            break;
+                        }
+                    case InvokeStatus.Abort:
+                        {
+                            context.Status = 4;
+                            context.Message = methodInvoker.StatusMessage;
+                            break;
+                        } 
+                    case InvokeStatus.UnEnable:
+                        {
+                            context.Status = 3;
+                            break;
+                        }
+                    case InvokeStatus.InvocationException:
+                        {
+                            break;
+                        }
+                    case InvokeStatus.Exception:
+                        {
+                            break;
+                        }
+                    default:
+                        break;
+                }
+              
                 context.Serialize(byteBlock);
                 ((RPCSocketClient)context.Flag).agreementHelper.SocketSend(101, byteBlock);
             }
