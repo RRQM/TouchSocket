@@ -28,10 +28,14 @@ namespace RRQMSocket.RPC
         {
             this.ServerProviders = new ServerProviderCollection();
             this.RPCParsers = new RPCParserCollection();
-            this.methodMap = new MethodMap();
+            this.MethodMap = new MethodMap();
         }
 
-        private MethodMap methodMap;
+        /// <summary>
+        /// 获取函数映射图实例
+        /// </summary>
+        public MethodMap MethodMap { get; private set; }
+
         /// <summary>
         /// 获取RPC解析器集合
         /// </summary>
@@ -47,13 +51,14 @@ namespace RRQMSocket.RPC
             this.RPCParsers.Add(key, parser);
             parser.RPCService = this;
             parser.RRQMExecuteMethod = ExecuteMethod;
+            parser.RRQMSetMethodMap(this.MethodMap);
         }
 
-       
+
         /// <summary>
         /// 获取函数实例
         /// </summary>
-        public MethodInstance[] MethodInstances { get;private set; }
+        public MethodInstance[] MethodInstances { get; private set; }
 
         /// <summary>
         /// 获取服务实例
@@ -159,10 +164,10 @@ namespace RRQMSocket.RPC
                         methodInstance.Provider = instance;
                         methodInstance.Method = method;
                         methodInstance.RPCAttributes = attributes.ToArray();
-                        
+
                         ParameterInfo[] parameters = method.GetParameters();
                         List<Type> types = new List<Type>();
-                        foreach (var  parameter in parameters)
+                        foreach (var parameter in parameters)
                         {
                             types.Add(parameter.ParameterType.GetRefOutType());
                             if (parameter.ParameterType.IsByRef)
@@ -198,9 +203,9 @@ namespace RRQMSocket.RPC
                                 methodInstance.MethodToken = ++ExistReturnExistParameters;
                             }
                         }
-                        
+
                         methodInstances.Add(methodInstance);
-                        this.methodMap.Add(methodInstance);
+                        this.MethodMap.Add(methodInstance);
                     }
                 }
             }
@@ -215,7 +220,7 @@ namespace RRQMSocket.RPC
 
         private void ExecuteMethod(RPCParser parser, MethodInvoker methodInvoker)
         {
-            if (this.methodMap.TryGet(methodInvoker.MethodToken,out MethodInstance methodInstance))
+            if (this.MethodMap.TryGet(methodInvoker.MethodToken, out MethodInstance methodInstance))
             {
                 try
                 {
@@ -226,12 +231,12 @@ namespace RRQMSocket.RPC
                 }
                 catch (RRQMAbandonRPCException e)
                 {
-                    methodInvoker.Status =  InvokeStatus.Abort;
+                    methodInvoker.Status = InvokeStatus.Abort;
                     methodInvoker.StatusMessage = "函数被阻止执行，信息：" + e.Message;
                 }
                 catch (TargetInvocationException e)
                 {
-                    methodInvoker.Status =  InvokeStatus.InvocationException;
+                    methodInvoker.Status = InvokeStatus.InvocationException;
                     if (e.InnerException != null)
                     {
                         methodInvoker.StatusMessage = "函数内部发生异常，信息：" + e.InnerException.Message;
@@ -244,42 +249,18 @@ namespace RRQMSocket.RPC
                 }
                 catch (Exception e)
                 {
-                    methodInvoker.Status =  InvokeStatus.Exception;
+                    methodInvoker.Status = InvokeStatus.Exception;
                     methodInvoker.StatusMessage = e.Message;
                     methodInstance.Provider.RPCError(parser, methodInvoker);
                 }
             }
-         
+
             parser.RRQMEndInvokeMethod(methodInvoker);
         }
 
-        /// <summary>
-        /// 获取代理文件
-        /// </summary>
-        /// <param name="proxyToken"></param>
-        /// <param name="parser"></param>
-        /// <returns></returns>
-        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken, IRPCParser parser)
-        {
-            RPCProxyInfo proxyInfo = new RPCProxyInfo();
-            if (this.ProxyToken == proxyToken)
-            {
-                proxyInfo.AssemblyData = this.serverMethodStore.ProxyInfo.AssemblyData;
-                proxyInfo.AssemblyName = this.serverMethodStore.ProxyInfo.AssemblyName;
-                proxyInfo.Codes = this.serverMethodStore.ProxyInfo.Codes;
-                proxyInfo.Version = this.serverMethodStore.ProxyInfo.Version;
-                proxyInfo.Status = 1;
-            }
-            else
-            {
-                proxyInfo.Status = 2;
-                proxyInfo.Message = "令箭不正确";
-            }
 
-            return proxyInfo;
-        }
 
-        
+
 
         /// <summary>
         /// 释放资源

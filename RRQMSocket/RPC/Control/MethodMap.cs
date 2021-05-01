@@ -23,7 +23,13 @@ namespace RRQMSocket.RPC
             this.methodMap.Add(methodInstance.MethodToken, methodInstance);
         }
 
-        internal bool TryGet(int methodToken, out MethodInstance methodInstance)
+        /// <summary>
+        /// 通过methodToken获取函数实例
+        /// </summary>
+        /// <param name="methodToken"></param>
+        /// <param name="methodInstance"></param>
+        /// <returns></returns>
+        public bool TryGet(int methodToken, out MethodInstance methodInstance)
         {
             if (this.methodMap.ContainsKey(methodToken))
             {

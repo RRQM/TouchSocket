@@ -21,7 +21,7 @@ namespace RRQMSocket.RPC
     /// </summary>
     public class RPCContext : WaitResult
     {
-        internal string Method;
+        internal int MethodToken;
         internal byte Feedback;
         internal byte[] ReturnParameterBytes;
         internal object Flag;
@@ -32,7 +32,7 @@ namespace RRQMSocket.RPC
             byteBlock.Write(BitConverter.GetBytes(this.Sign));
             byteBlock.Write(this.Status);
             byteBlock.Write(this.Feedback);
-
+            byteBlock.Write(BitConverter.GetBytes(this.MethodToken));
             if (this.Message != null)
             {
                 byte[] mesBytes = Encoding.UTF8.GetBytes(this.Message);
@@ -44,16 +44,6 @@ namespace RRQMSocket.RPC
                 byteBlock.Write(0);
             }
 
-            if (this.Method != null)
-            {
-                byte[] meBytes = Encoding.UTF8.GetBytes(this.Method);
-                byteBlock.Write((byte)meBytes.Length);
-                byteBlock.Write(meBytes);
-            }
-            else
-            {
-                byteBlock.Write(0);
-            }
 
             if (this.ReturnParameterBytes != null)
             {
@@ -96,14 +86,12 @@ namespace RRQMSocket.RPC
             offset += 1;
             context.Feedback = buffer[offset];
             offset += 1;
+            context.MethodToken = BitConverter.ToInt32(buffer, offset);
+            offset += 4;
             int lenMes = buffer[offset];
             offset += 1;
             context.Message = Encoding.UTF8.GetString(buffer, offset, lenMes);
             offset += lenMes;
-            int lenMet = buffer[offset];
-            offset += 1;
-            context.Method = Encoding.UTF8.GetString(buffer, offset, lenMet);
-            offset += lenMet;
             int lenRet = BitConverter.ToInt32(buffer, offset);
             offset += 4;
             if (lenRet > 0)

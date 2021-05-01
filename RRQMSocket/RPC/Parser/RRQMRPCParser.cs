@@ -13,10 +13,10 @@ namespace RRQMSocket.RPC
     public abstract class RRQMRPCParser : RPCParser
     {
 
-      
+
         private MethodStore clientMethodStore;
 
-      
+
         /// <summary>
         /// 获取或设置代理源文件命名空间
         /// </summary>
@@ -45,7 +45,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 获取代理文件实例
         /// </summary>
-        public RPCProxyInfo ProxyInfo { get;private set; }
+        public RPCProxyInfo ProxyInfo { get; private set; }
 
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace RRQMSocket.RPC
         /// <param name="methodInstances"></param>
         protected sealed override void InitializeServers(MethodInstance[] methodInstances)
         {
-           
+
             this.clientMethodStore = new MethodStore();
             string nameSpace = string.IsNullOrEmpty(this.NameSpace) ? "RRQMRPC" : $"RRQMRPC.{this.NameSpace}";
             List<string> refs = new List<string>();
@@ -63,13 +63,13 @@ namespace RRQMSocket.RPC
             string assemblyName = $"{nameSpace}.dll";
 
 
-            foreach (MethodInstance  methodInstance in methodInstances)
+            foreach (MethodInstance methodInstance in methodInstances)
             {
                 foreach (RPCMethodAttribute att in methodInstance.RPCAttributes)
                 {
-                    if (att is RRQMRPCMethodAttribute attribute )
+                    if (att is RRQMRPCMethodAttribute attribute)
                     {
-                        if (methodInstance.ReturnType!=null)
+                        if (methodInstance.ReturnType != null)
                         {
                             refs.Add(methodInstance.ReturnType.Assembly.Location);
                             propertyCode.AddTypeString(methodInstance.ReturnType);
@@ -79,7 +79,7 @@ namespace RRQMSocket.RPC
                             refs.Add(type.Assembly.Location);
                             propertyCode.AddTypeString(type);
                         }
-                       
+
                         break;
                     }
                 }
@@ -107,7 +107,7 @@ namespace RRQMSocket.RPC
                         string className = methodInstance.Provider.GetType().Name;
                         if (!classAndMethods.ContainsKey(className))
                         {
-                            classAndMethods.Add(className,new List<MethodInfo>());
+                            classAndMethods.Add(className, new List<MethodInfo>());
                         }
                         classAndMethods[className].Add(methodInstance.Method);
                         break;
@@ -154,9 +154,59 @@ namespace RRQMSocket.RPC
                 proxyInfo.AssemblyData = this.RPCCompiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
             proxyInfo.Codes = codes;
-            this.ProxyInfo=proxyInfo;
+            this.ProxyInfo = proxyInfo;
 
             this.Codes = codes.ToArray();
+        }
+
+        /// <summary>
+        /// 获取代理文件
+        /// </summary>
+        /// <param name="proxyToken"></param>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken, RPCParser parser)
+        {
+            RPCProxyInfo proxyInfo = new RPCProxyInfo();
+            if (this.ProxyToken == proxyToken)
+            {
+                proxyInfo.AssemblyData = this.ProxyInfo.AssemblyData;
+                proxyInfo.AssemblyName = this.ProxyInfo.AssemblyName;
+                proxyInfo.Codes = this.ProxyInfo.Codes;
+                proxyInfo.Version = this.ProxyInfo.Version;
+                proxyInfo.Status = 1;
+            }
+            else
+            {
+                proxyInfo.Status = 2;
+                proxyInfo.Message = "令箭不正确";
+            }
+
+            return proxyInfo;
+        }
+
+        /// <summary>
+        /// 执行内容
+        /// </summary>
+        /// <param name="context"></param>
+        protected virtual void ExecuteContext(RPCContext context)
+        {
+            MethodInvoker methodInvoker = new MethodInvoker();
+            if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
+            {
+                object[] ps = new object[methodInstance.ParameterTypes.Length];
+                for (int i = 0; i < context.ParametersBytes.Count; i++)
+                {
+                    ps[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                }
+                methodInvoker.Parameters = ps;
+
+            }
+            else
+            {
+                methodInvoker.Status = InvokeStatus.Exception;
+            }
+            this.ExecuteMethod(methodInvoker);
         }
     }
 }

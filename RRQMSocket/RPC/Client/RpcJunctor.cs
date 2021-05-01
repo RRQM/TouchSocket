@@ -145,7 +145,7 @@ namespace RRQMSocket.RPC
             {
                 MethodItem methodItem = methodStore.GetMethodItem(method);
 
-                invokeWaitData.WaitResult.Method = methodItem.MethodToken;
+                invokeWaitData.WaitResult.MethodToken = methodItem.MethodToken;
 
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(1024);
                 if (invokeOption == null)
@@ -196,7 +196,7 @@ namespace RRQMSocket.RPC
                     }
                     else if (context.Status == 4)
                     {
-                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.Method}");
+                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.MethodToken}");
                     }
                     if (methodItem.IsOutOrRef)
                     {
@@ -248,7 +248,7 @@ namespace RRQMSocket.RPC
             lock (locker)
             {
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
-                invokeWaitData.WaitResult.Method = methodItem.MethodToken;
+                invokeWaitData.WaitResult.MethodToken = methodItem.MethodToken;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 if (invokeOption == null)
                 {
@@ -297,7 +297,7 @@ namespace RRQMSocket.RPC
                     }
                     else if (context.Status == 4)
                     {
-                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.Method}");
+                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.MethodToken}");
                     }
                     if (methodItem.IsOutOrRef)
                     {

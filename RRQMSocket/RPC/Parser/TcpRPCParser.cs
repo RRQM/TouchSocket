@@ -50,21 +50,6 @@ namespace RRQMSocket.RPC
 
         private RRQMTokenTcpService<RPCSocketClient> tcpService;
 
-        /// <summary>
-        /// 调用方法
-        /// </summary>
-        public event Action<IRPCParser, RPCContext> InvokeMethod;
-
-        /// <summary>
-        /// 获取代理文件
-        /// </summary>
-        public Func<string, IRPCParser, RPCProxyInfo> GetProxyInfo { get; set; }
-
-        /// <summary>
-        /// 初始化服务
-        /// </summary>
-        public Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
-
         private void TcpSocketClient_OnReceivedRequest(object sender, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
@@ -83,7 +68,7 @@ namespace RRQMSocket.RPC
                             {
                                 proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
                             }
-                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo?.Invoke(proxyToken, this), true));
+                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo(proxyToken, this), true));
                         }
                         catch (Exception e)
                         {
@@ -98,7 +83,7 @@ namespace RRQMSocket.RPC
                         {
                             RPCContext content = RPCContext.Deserialize(buffer, 4);
                             content.Flag = sender;
-                            InvokeMethod?.Invoke(this, content);
+                            this.ExecuteContext(content);
                         }
                         catch (Exception e)
                         {

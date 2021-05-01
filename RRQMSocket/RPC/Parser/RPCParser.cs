@@ -18,6 +18,11 @@ namespace RRQMSocket.RPC
         public SerializeConverter SerializeConverter { get; set; }
 
         /// <summary>
+        /// 获取函数映射图
+        /// </summary>
+        protected MethodMap MethodMap { get;private set; }
+
+        /// <summary>
         /// 包含此解析器的服务器实例
         /// </summary>
         public RPCService RPCService { get;internal set; }
@@ -32,6 +37,11 @@ namespace RRQMSocket.RPC
         internal void RRQMEndInvokeMethod(MethodInvoker methodInvoker)
         {
             EndInvokeMethod(methodInvoker);
+        } 
+        
+        internal void RRQMSetMethodMap(MethodMap  methodMap)
+        {
+            this.MethodMap = methodMap;
         }
 
         /// <summary>
