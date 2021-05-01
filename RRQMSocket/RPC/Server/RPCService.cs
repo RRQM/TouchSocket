@@ -159,18 +159,22 @@ namespace RRQMSocket.RPC
                         methodInstance.Provider = instance;
                         methodInstance.Method = method;
                         methodInstance.RPCAttributes = attributes.ToArray();
-
+                        
                         ParameterInfo[] parameters = method.GetParameters();
                         List<Type> types = new List<Type>();
                         foreach (var  parameter in parameters)
                         {
                             types.Add(parameter.ParameterType.GetRefOutType());
+                            if (parameter.ParameterType.IsByRef)
+                            {
+                                methodInstance.IsByRef = true;
+                            }
                         }
                         methodInstance.ParameterTypes = types.ToArray();
 
                         if (method.ReturnType == typeof(void))
                         {
-                            methodInstance.RetuenType = null;
+                            methodInstance.ReturnType = null;
 
                             if (parameters.Length == 0)
                             {
@@ -183,7 +187,7 @@ namespace RRQMSocket.RPC
                         }
                         else
                         {
-                            methodInstance.RetuenType = method.ReturnType;
+                            methodInstance.ReturnType = method.ReturnType;
 
                             if (parameters.Length == 0)
                             {

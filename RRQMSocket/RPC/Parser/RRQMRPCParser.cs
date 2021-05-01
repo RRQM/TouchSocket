@@ -13,11 +13,10 @@ namespace RRQMSocket.RPC
     public abstract class RRQMRPCParser : RPCParser
     {
 
-        private MethodStore serverMethodStore;
+      
         private MethodStore clientMethodStore;
 
-        private ServerStore serverStore;
-
+      
         /// <summary>
         /// 获取或设置代理源文件命名空间
         /// </summary>
@@ -43,14 +42,19 @@ namespace RRQMSocket.RPC
         /// </summary>
         public string ProxyToken { get; set; }
 
-       
+        /// <summary>
+        /// 获取代理文件实例
+        /// </summary>
+        public RPCProxyInfo ProxyInfo { get;private set; }
+
+
         /// <summary>
         /// 初始化服务
         /// </summary>
         /// <param name="methodInstances"></param>
         protected sealed override void InitializeServers(MethodInstance[] methodInstances)
         {
-            this.serverMethodStore = new MethodStore();
+           
             this.clientMethodStore = new MethodStore();
             string nameSpace = string.IsNullOrEmpty(this.NameSpace) ? "RRQMRPC" : $"RRQMRPC.{this.NameSpace}";
             List<string> refs = new List<string>();
@@ -58,55 +62,23 @@ namespace RRQMSocket.RPC
             PropertyCodeMap propertyCode = new PropertyCodeMap(this.RPCService.ServerProviders.SingleAssembly, nameSpace);
             string assemblyName = $"{nameSpace}.dll";
 
+
             foreach (MethodInstance  methodInstance in methodInstances)
             {
                 foreach (RPCMethodAttribute att in methodInstance.RPCAttributes)
                 {
                     if (att is RRQMRPCMethodAttribute attribute )
                     {
-                        MethodInfo method = methodInstance.Method;
-                        string methodName = attribute.MethodKey == null || attribute.MethodKey.Trim().Length == 0 ? method.Name : attribute.MethodKey;
-
-                        MethodItem methodItem = new MethodItem();
-                        methodItem.MethodToken = methodInstance.MethodToken;
-                        methodItem.Method = methodName;
-                        ParameterInfo[] parameters = method.GetParameters();
-                        methodItem.ParameterTypes = new List<Type>();
-                        for (int i = 0; i < parameters.Length; i++)
+                        if (methodInstance.ReturnType!=null)
                         {
-                            if (parameters[i].ParameterType.IsByRef)
-                            {
-                                methodItem.IsOutOrRef = true;
-                            }
-
-                            if (parameters[i].ParameterType.FullName != null)
-                            {
-                                refs.Add(parameters[i].ParameterType.Assembly.Location);
-                            }
-                            propertyCode.AddTypeString(parameters[i].ParameterType);
-
-                            if (parameters[i].ParameterType.FullName.Contains("&"))
-                            {
-                                methodItem.ParameterTypes.Add(propertyCode.GetRefOutType(parameters[i].ParameterType));
-                            }
-                            else
-                            {
-                                methodItem.ParameterTypes.Add(parameters[i].ParameterType);
-                            }
+                            refs.Add(methodInstance.ReturnType.Assembly.Location);
+                            propertyCode.AddTypeString(methodInstance.ReturnType);
                         }
-
-                        refs.Add(method.ReturnType.Assembly.Location);
-                        propertyCode.AddTypeString(method.ReturnType);
-                        methodItem.ReturnType = method.ReturnType;
-                        try
+                        foreach (var type in methodInstance.ParameterTypes)
                         {
-                            serverMethodStore.AddMethodItem(methodItem);
+                            refs.Add(type.Assembly.Location);
+                            propertyCode.AddTypeString(type);
                         }
-                        catch (Exception)
-                        {
-                            throw new RRQMRPCKeyException($"方法键为{methodName}的方法已经注册");
-                        }
-
                        
                         break;
                     }
@@ -115,88 +87,32 @@ namespace RRQMSocket.RPC
 
             Dictionary<string, List<MethodInfo>> classAndMethods = new Dictionary<string, List<MethodInfo>>();
 
-            foreach (ServerProvider instance in this.RPCService.ServerProviders)
+            foreach (MethodInstance methodInstance in methodInstances)
             {
-                if (!classAndMethods.Keys.Contains(instance.GetType().Name))
+                foreach (RPCMethodAttribute att in methodInstance.RPCAttributes)
                 {
-                    classAndMethods.Add(instance.GetType().Name, new List<MethodInfo>());
-                }
-                MethodInfo[] methodInfos = instance.GetType().GetMethods();
-                foreach (MethodInfo method in methodInfos)
-                {
-                    if (method.IsGenericMethod)
+                    if (att is RRQMRPCMethodAttribute attribute)
                     {
-                        throw new RRQMRPCException("RPC方法中不支持泛型参数");
-                    }
-                    RRQMRPCMethodAttribute attribute = method.GetCustomAttribute<RRQMRPCMethodAttribute>();
-                    if (attribute != null)
-                    {
-                        classAndMethods[instance.GetType().Name].Add(method);
-
-                        string methodName = attribute.MethodKey == null || attribute.MethodKey.Trim().Length == 0 ? method.Name : attribute.MethodKey;
-
-                        MethodItem methodItem = new MethodItem();
-                        methodItem.MethodToken = methodName;
-                        ParameterInfo[] parameters = method.GetParameters();
-                        methodItem.ParameterTypes = new List<Type>();
-                        for (int i = 0; i < parameters.Length; i++)
+                        MethodItem clientMethodItem = new MethodItem();
+                        clientMethodItem.IsOutOrRef = methodInstance.IsByRef;
+                        clientMethodItem.MethodToken = methodInstance.MethodToken;
+                        clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(methodInstance.ReturnType);
+                        clientMethodItem.ParameterTypesString = new List<string>();
+                        for (int i = 0; i < methodInstance.ParameterTypes.Length; i++)
                         {
-                            if (parameters[i].ParameterType.IsByRef)
-                            {
-                                methodItem.IsOutOrRef = true;
-                            }
-
-                            if (parameters[i].ParameterType.FullName != null)
-                            {
-                                refs.Add(parameters[i].ParameterType.Assembly.Location);
-                            }
-                            propertyCode.AddTypeString(parameters[i].ParameterType);
-
-                            if (parameters[i].ParameterType.FullName.Contains("&"))
-                            {
-                                methodItem.ParameterTypes.Add(propertyCode.GetRefOutType(parameters[i].ParameterType));
-                            }
-                            else
-                            {
-                                methodItem.ParameterTypes.Add(parameters[i].ParameterType);
-                            }
+                            clientMethodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(methodInstance.ParameterTypes[i]));
                         }
+                        clientMethodStore.AddMethodItem(clientMethodItem);
 
-                        refs.Add(method.ReturnType.Assembly.Location);
-                        propertyCode.AddTypeString(method.ReturnType);
-                        methodItem.ReturnType = method.ReturnType;
-                        try
+                        string className = methodInstance.Provider.GetType().Name;
+                        if (!classAndMethods.ContainsKey(className))
                         {
-                            serverMethodStore.AddMethodItem(methodItem);
+                            classAndMethods.Add(className,new List<MethodInfo>());
                         }
-                        catch (Exception)
-                        {
-                            throw new RRQMRPCKeyException($"方法键为{methodName}的方法已经注册");
-                        }
-
-                        MethodInstance instanceOfMethod = new MethodInstance();
-                        instanceOfMethod.Provider = instance;
-                        instanceOfMethod.Method = method;
-                        instanceOfMethod.MethodItem = methodItem;
-                        instanceOfMethod.IsEnable = true;
-                        serverMethodStore.AddInstanceMethod(instanceOfMethod);
+                        classAndMethods[className].Add(methodInstance.Method);
+                        break;
                     }
                 }
-            }
-
-            MethodInstance[] instances = this.serverMethodStore.GetAllInstanceMethod();
-            foreach (MethodInstance item in instances)
-            {
-                MethodItem clientMethodItem = new MethodItem();
-                clientMethodItem.IsOutOrRef = item.MethodItem.IsOutOrRef;
-                clientMethodItem.MethodToken = item.MethodItem.Method;
-                clientMethodItem.ReturnTypeString = propertyCode.GetTypeFullName(item.MethodItem.ReturnType);
-                clientMethodItem.ParameterTypesString = new List<string>();
-                for (int i = 0; i < item.MethodItem.ParameterTypes.Count; i++)
-                {
-                    clientMethodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(item.MethodItem.ParameterTypes[i]));
-                }
-                clientMethodStore.AddMethodItem(clientMethodItem);
             }
 
             CodeMap.Namespace = nameSpace;
@@ -238,7 +154,7 @@ namespace RRQMSocket.RPC
                 proxyInfo.AssemblyData = this.RPCCompiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
             proxyInfo.Codes = codes;
-            this.serverMethodStore.SetProxyInfo(proxyInfo);
+            this.ProxyInfo=proxyInfo;
 
             this.Codes = codes.ToArray();
         }

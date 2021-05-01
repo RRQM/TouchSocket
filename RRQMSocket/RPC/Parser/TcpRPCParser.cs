@@ -29,7 +29,23 @@ namespace RRQMSocket.RPC
         {
             this.SerializeConverter = new BinarySerializeConverter();
             this.tcpService = new RRQMTokenTcpService<RPCSocketClient>();
+            this.tcpService.CreatSocketCliect += this.TcpService_CreatSocketCliect;
+        }
 
+        /// <summary>
+        /// 获取或设置日志记录器
+        /// </summary>
+        public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
+
+        private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, CreatOption creatOption)
+        {
+            if (creatOption.NewCreat)
+            {
+                tcpSocketClient.Logger = this.Logger;
+                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+                tcpSocketClient.OnReceivedRequest += this.TcpSocketClient_OnReceivedRequest;
+            }
+            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
 
         private RRQMTokenTcpService<RPCSocketClient> tcpService;
@@ -48,23 +64,6 @@ namespace RRQMSocket.RPC
         /// 初始化服务
         /// </summary>
         public Func<IRPCParser, List<MethodItem>> InitMethodServer { get; set; }
-
-
-        /// <summary>
-        /// 初创
-        /// </summary>
-        /// <param name="tcpSocketClient"></param>
-        /// <param name="creatOption"></param>
-        protected override void OnCreatSocketCliect(RPCSocketClient tcpSocketClient, CreatOption creatOption)
-        {
-            if (creatOption.NewCreat)
-            {
-                tcpSocketClient.Logger = this.Logger;
-                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-                tcpSocketClient.OnReceivedRequest += this.TcpSocketClient_OnReceivedRequest;
-            }
-            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
-        }
 
         private void TcpSocketClient_OnReceivedRequest(object sender, ByteBlock byteBlock)
         {
@@ -158,6 +157,11 @@ namespace RRQMSocket.RPC
             {
                 byteBlock.Dispose();
             }
+        }
+
+        protected override void EndInvokeMethod(MethodInvoker methodInvoker)
+        {
+           
         }
     }
 }

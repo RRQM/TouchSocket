@@ -41,12 +41,18 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 返回值类型，无返回值时为Null
         /// </summary>
-        public Type RetuenType { get; internal set; }
+        public Type ReturnType { get; internal set; }
 
         /// <summary>
         /// 参数类型集合，已处理out及ref，无参数时为空集合，
         /// </summary>
-        public Type[] ParameterTypes { get; set; }
+        public Type[] ParameterTypes { get; internal set; }
+
+
+        /// <summary>
+        /// 是否有引用类型
+        /// </summary>
+        public bool IsByRef { get; internal set; }
 
         /// <summary>
         /// 
