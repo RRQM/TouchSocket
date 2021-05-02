@@ -14,6 +14,7 @@ using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 
 namespace RRQMSocket.RPC
@@ -21,7 +22,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// UDP RPC解释器
     /// </summary>
-    public class UdpRPCParser : RPCParser,IService
+    public class UdpRPCParser : RRQMRPCParser,IService
     {
         /// <summary>
         /// 构造函数
@@ -29,22 +30,10 @@ namespace RRQMSocket.RPC
         public UdpRPCParser()
         {
             this.udpSession = new RRQMUdpSession();
-        }
-        private RRQMUdpSession udpSession;
-        /// <summary>
-        /// 调用结束
-        /// </summary>
-        /// <param name="context"></param>
-        public void EndInvokeMethod(RPCContext context)
-        {
+            this.udpSession.OnReceivedData += this.UdpSession_OnReceivedData;
         }
 
-        /// <summary>
-        /// 接收处理数据
-        /// </summary>
-        /// <param name="remoteEndPoint"></param>
-        /// <param name="byteBlock"></param>
-        protected override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        private void UdpSession_OnReceivedData(EndPoint remoteEndpoint, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
@@ -61,7 +50,7 @@ namespace RRQMSocket.RPC
                             {
                                 proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
                             }
-                            this.UDPSend(100, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo?.Invoke(proxyToken, this), true));
+                            this.UDPSend(100, remoteEndpoint, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo(proxyToken, this), true));
                         }
                         catch (Exception e)
                         {
@@ -75,11 +64,11 @@ namespace RRQMSocket.RPC
                         try
                         {
                             RPCContext content = RPCContext.Deserialize(buffer, 4);
-                            content.Flag = remoteEndPoint;
-                            this.InvokeMethod?.Invoke(this, content);
+                            content.Flag = remoteEndpoint;
+                            this.ExecuteContext(content);
                             if (content.Feedback != 0)
                             {
-                                this.UDPSend(101, remoteEndPoint, new byte[0]);
+                                this.UDPSend(101, remoteEndpoint, new byte[0]);
                             }
                         }
                         catch (Exception e)
@@ -92,7 +81,7 @@ namespace RRQMSocket.RPC
                     {
                         try
                         {
-                            UDPSend(102, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.InitMethodServer?.Invoke(this), true));
+                            UDPSend(102, remoteEndpoint, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this), true));
                         }
                         catch (Exception e)
                         {
@@ -101,8 +90,36 @@ namespace RRQMSocket.RPC
                         break;
                     }
             }
+
         }
 
+        private RRQMUdpSession udpSession;
+
+
+        /// <summary>
+        /// 获取或设置日志记录仪
+        /// </summary>
+        public ILog Logger { get { return this.udpSession.Logger; } set { this.udpSession.Logger = value; } }
+
+        /// <summary>
+        /// 获取绑定状态
+        /// </summary>
+        public override bool IsBind => this.udpSession.IsBind;
+
+        /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public override BytePool BytePool => this.udpSession.BytePool;
+
+        /// <summary>
+        /// 调用结束
+        /// </summary>
+        /// <param name="context"></param>
+        public void EndInvokeMethod(RPCContext context)
+        {
+        }
+
+     
         private void UDPSend(int agreement, EndPoint endPoint, byte[] buffer, int offset, int length)
         {
             ByteBlock byteBlock = this.BytePool.GetByteBlock(length + 4);
@@ -110,7 +127,7 @@ namespace RRQMSocket.RPC
             {
                 byteBlock.Write(BitConverter.GetBytes(agreement));
                 byteBlock.Write(buffer, offset, length);
-                this.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, endPoint);
+                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, endPoint);
             }
             finally
             {
@@ -121,6 +138,31 @@ namespace RRQMSocket.RPC
         private void UDPSend(int agreement, EndPoint endPoint, byte[] buffer)
         {
             this.UDPSend(agreement, endPoint, buffer, 0, buffer.Length);
+        }
+
+        public override void Bind(int port, int threadCount = 1)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Bind(IPHost iPHost, int threadCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }
