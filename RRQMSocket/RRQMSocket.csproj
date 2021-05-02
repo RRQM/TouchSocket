@@ -85,12 +85,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="RPC\Socket\RPCClient.cs" />
-		<Compile Update="RPC\Socket\RPCService.cs" />
-		<Compile Update="RPC\Socket\RRQMTcpSocketClient .cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Include="LICENSE">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
