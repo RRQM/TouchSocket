@@ -11,6 +11,7 @@ namespace RRQMSocket.RPC
     /// </summary>
     public abstract class RPCParser:IDisposable
     {
+
         /// <summary>
         /// 获取函数映射图
         /// </summary>

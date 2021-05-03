@@ -24,7 +24,7 @@ namespace RRQMSocket
         /// <summary>
         /// 收到消息
         /// </summary>
-        public Action<ByteBlock, object> OnReceived { get; set; }
+        public Action<RRQMSocketClient, ByteBlock, object> OnReceived { get; set; }
 
         /// <summary>
         /// 处理数据
@@ -33,7 +33,7 @@ namespace RRQMSocket
         /// <param name="obj"></param>
         protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            this.OnReceived?.Invoke(byteBlock, obj);
+            this.OnReceived?.Invoke(this,byteBlock, obj);
         }
     }
 }

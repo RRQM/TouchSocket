@@ -208,5 +208,10 @@ namespace RRQMSocket.Http
 
             return pairs;
         }
+
+        /// <summary>
+        /// 传递标识
+        /// </summary>
+        public object Flag { get; set; }
     }
 }

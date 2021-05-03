@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 
 namespace RRQMSocket.RPC.WebApi
 {
@@ -29,8 +30,8 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public WebApiParser()
         {
-            tcpService = new RRQMTcpService<RRQMSocketClient>();
-
+            this.tcpService = new RRQMTcpService<RRQMSocketClient>();
+            this.routeMap = new RouteMap();
             this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
         }
 
@@ -49,7 +50,7 @@ namespace RRQMSocket.RPC.WebApi
         }
 
 
-
+        private RouteMap routeMap;
         private RRQMTcpService<RRQMSocketClient> tcpService;
 
         /// <summary>
@@ -113,10 +114,16 @@ namespace RRQMSocket.RPC.WebApi
             this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
-        private void OnReceived(ByteBlock byteBlock, object obj)
+        private void OnReceived(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             HttpRequest httpRequest = (HttpRequest)obj;
-           
+            if (this.routeMap.TryGet(httpRequest.URL, out MethodInstance methodInstance))
+            {
+                MethodInvoker methodInvoker = new MethodInvoker();
+                httpRequest.Flag = socketClient;
+                methodInvoker.Flag = httpRequest;
+                this.ExecuteMethod(methodInvoker, methodInstance);
+            }
         }
 
         /// <summary>
@@ -126,7 +133,28 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="methodInstance"></param>
         protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            
+            HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
+            RRQMSocketClient socketClient = (RRQMSocketClient)httpRequest.Flag;
+
+            HttpResponse httpResponse = new HttpResponse();
+            httpResponse.FromText("若汝棋茗");
+
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+
+            try
+            {
+                httpResponse.Build(byteBlock);
+                socketClient.Send(byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+
+            if (!httpRequest.KeepAlive)
+            {
+                socketClient.Shutdown(SocketShutdown.Both);
+            }
         }
 
         /// <summary>
@@ -135,7 +163,51 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="methodInstances"></param>
         protected override void InitializeServers(MethodInstance[] methodInstances)
         {
-            
+            foreach (var methodInstance in methodInstances)
+            {
+                if ((typeof(ControllerBase).IsAssignableFrom(methodInstance.Provider.GetType())))
+                {
+                    string controllerName;
+                    RouteAttribute classAtt = methodInstance.Provider.GetType().GetCustomAttribute<RouteAttribute>(false);
+                    if (classAtt == null || string.IsNullOrEmpty(classAtt.Template))
+                    {
+                        controllerName = methodInstance.Provider.GetType().Name;
+                    }
+                    else
+                    {
+                        controllerName = classAtt.Template.Replace("{controller}", methodInstance.Provider.GetType().Name);
+                    }
+
+                    foreach (var att in methodInstance.RPCAttributes)
+                    {
+                        if (att is RouteAttribute attribute)
+                        {
+                            string actionUrl;
+
+                            if (controllerName.Contains("{action}"))
+                            {
+                                actionUrl = controllerName.Replace("{action}", methodInstance.Method.Name);
+                            }
+                            else
+                            {
+                                if (string.IsNullOrEmpty(attribute.Template))
+                                {
+                                    actionUrl = $"{controllerName}/{methodInstance.Method.Name}";
+                                }
+                                else
+                                {
+                                    actionUrl = $"{controllerName}/{attribute.Template.Replace("{action}", methodInstance.Method.Name)}";
+                                }
+                            }
+
+                            this.routeMap.Add(actionUrl, methodInstance);
+
+                        }
+                    }
+                }
+
+
+            }
         }
 
         /// <summary>

@@ -35,5 +35,24 @@ namespace RRQMSocket
 
             return s.ToArray();
         }
+
+        /// <summary>
+        /// 只按最后一个匹配项分割
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="split"></param>
+        /// <returns></returns>
+        public static string[] SplitLast(this string str, char split)
+        {
+            List<string> s = new List<string>();
+            int index = str.LastIndexOf(split);
+            if (index > 0)
+            {
+                s.Add(str.Substring(0, index).Trim());
+                s.Add(str.Substring(index + 1, str.Length - index - 1).Trim());
+            }
+
+            return s.ToArray();
+        }
     }
 }
