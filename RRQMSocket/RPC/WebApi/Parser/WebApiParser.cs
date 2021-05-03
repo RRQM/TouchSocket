@@ -8,29 +8,142 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+using RRQMSocket.Http;
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 
 namespace RRQMSocket.RPC.WebApi
 {
     /// <summary>
     /// WebApi解析器
     /// </summary>
-    public class WebApiParser : RPCParser
+    public sealed class WebApiParser : RPCParser, IService
     {
-        public override void Dispose()
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public WebApiParser()
         {
-            throw new NotImplementedException();
+            tcpService = new RRQMTcpService<RRQMSocketClient>();
+
+            this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
         }
 
+        /// <summary>
+        /// 在初次接收时
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="creatOption"></param>
+        private void OnCreatSocketCliect(RRQMSocketClient socketClient, CreatOption creatOption)
+        {
+            if (creatOption.NewCreat)
+            {
+                socketClient.OnReceived = OnReceived;
+                socketClient.DataHandlingAdapter = new Http.HttpDataHandlingAdapter(this.BufferLength);
+            }
+        }
+
+
+
+        private RRQMTcpService<RRQMSocketClient> tcpService;
+
+        /// <summary>
+        /// 获取绑定状态
+        /// </summary>
+        public bool IsBind => this.tcpService.IsBind;
+
+        /// <summary>
+        /// 获取或设置缓存大小
+        /// </summary>
+        public int BufferLength { get { return this.tcpService.BufferLength; } set { this.tcpService.BufferLength = value; } }
+
+        /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public BytePool BytePool => this.tcpService.BytePool;
+
+        /// <summary>
+        /// 获取或设置日志记录器
+        /// </summary>
+        public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="port">端口号</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void Bind(int port, int threadCount = 1)
+        {
+            this.tcpService.Bind(port, threadCount);
+        }
+
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void Bind(IPHost iPHost, int threadCount)
+        {
+            this.tcpService.Bind(iPHost, threadCount);
+        }
+
+        /// <summary>
+        /// 绑定服务
+        /// </summary>
+        /// <param name="addressFamily">寻址方案</param>
+        /// <param name="endPoint">绑定节点</param>
+        /// <param name="threadCount">多线程数量</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
+        {
+            this.tcpService.Bind(addressFamily, endPoint, threadCount);
+        }
+
+        private void OnReceived(ByteBlock byteBlock, object obj)
+        {
+            HttpRequest httpRequest = (HttpRequest)obj;
+           
+        }
+
+        /// <summary>
+        /// 结束调用
+        /// </summary>
+        /// <param name="methodInvoker"></param>
+        /// <param name="methodInstance"></param>
         protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            throw new NotImplementedException();
+            
         }
 
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        /// <param name="methodInstances"></param>
         protected override void InitializeServers(MethodInstance[] methodInstances)
         {
-            throw new NotImplementedException();
+            
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public override void Dispose()
+        {
+            this.tcpService.Dispose();
         }
     }
 }

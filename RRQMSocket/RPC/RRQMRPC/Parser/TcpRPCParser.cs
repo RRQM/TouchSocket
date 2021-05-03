@@ -23,7 +23,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TCP RPC解释器
     /// </summary>
-    public class TcpRPCParser : RRQMRPCParser
+    public sealed class TcpRPCParser : RRQMRPCParser
     {
         /// <summary>
         /// 构造函数
