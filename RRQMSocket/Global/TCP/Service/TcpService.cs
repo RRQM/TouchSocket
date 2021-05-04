@@ -3,7 +3,8 @@
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  源代码仓库：https://gitee.com/RRQM_Home
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -362,7 +363,7 @@ namespace RRQMSocket
         {
             while (true)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(10);
                 if (disposable)
                 {
                     break;
@@ -372,21 +373,19 @@ namespace RRQMSocket
                     ICollection<string> collection = this.SocketClients.GetTokens();
                     foreach (var token in collection)
                     {
-                        TClient client = this.SocketClients[token];
-                        if (client == null)
+                        if (this.SocketClients.TryGetSocketClient(token,out TClient client))
                         {
-                            continue;
-                        }
-                        if (client.breakOut)
-                        {
-                            ClientDisconnectedMethod(client, new MesEventArgs("断开连接"));
-                            client.Dispose();
-                            this.SocketClientPool.DestroyObject(client);
-                            this.SocketClients.Remove(token);
-                        }
-                        else if (this.IsCheckClientAlive)
-                        {
-                            client.SendOnline();
+                            if (client.breakOut)
+                            {
+                                ClientDisconnectedMethod(client, new MesEventArgs("断开连接"));
+                                client.Dispose();
+                                this.SocketClients.Remove(token);
+                                this.SocketClientPool.DestroyObject(client);
+                            }
+                            else if (this.IsCheckClientAlive)
+                            {
+                                client.SendOnline();
+                            }
                         }
                     }
                 }

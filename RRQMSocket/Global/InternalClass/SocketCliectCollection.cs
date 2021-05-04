@@ -3,7 +3,8 @@
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  源代码仓库：https://gitee.com/RRQM_Home
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -47,26 +48,17 @@ namespace RRQMSocket
 
         internal string GetDefaultID()
         {
-            lock (this)
-            {
-                return string.Format(IDFormat, number++);
-            }
+            return string.Format(IDFormat, number++);
         }
 
         internal ICollection<string> GetTokens()
         {
-            return tokenDic.Keys;
+            return this.tokenDic.Keys ;
         }
 
         internal void Remove(string token)
         {
-            while (!this.tokenDic.TryRemove(token, out _))
-            {
-                if (!this.tokenDic.ContainsKey(token))
-                {
-                    break;
-                }
-            }
+            this.tokenDic.TryRemove(token,out _);
         }
 
         internal void Clear()
@@ -74,11 +66,15 @@ namespace RRQMSocket
             this.tokenDic.Clear();
         }
 
-        private T GetSocketClient(string id)
+        /// <summary>
+        /// 尝试获取实例
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="socketClient"></param>
+        /// <returns></returns>
+        public bool TryGetSocketClient(string id, out T socketClient)
         {
-            T t;
-            this.tokenDic.TryGetValue(id, out t);
-            return t;
+            return this.tokenDic.TryGetValue(id, out socketClient);
         }
 
         /// <summary>
@@ -100,7 +96,15 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public T this[string id] { get { return this.GetSocketClient(id); } }
+        public T this[string id]
+        {
+            get
+            {
+                T t;
+                this.TryGetSocketClient(id, out t);
+                return t;
+            }
+        }
 
         /// <summary>
         /// 用于枚举

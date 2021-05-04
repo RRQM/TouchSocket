@@ -3,7 +3,8 @@
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  源代码仓库：https://gitee.com/RRQM_Home
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -761,7 +762,7 @@ namespace RRQMSocket.FileTransfer
             args.TargetPath = blocks.FileInfo.FilePath;
             args.TransferType = TransferType.Upload;
             args.IsPermitOperation = true;
-            this.BeforeFileTransfer(this, args);//触发接收文件事件
+            this.BeforeFileTransfer?.Invoke(this, args);
             blocks.FileInfo.FilePath = args.TargetPath;
             this.fileBlocks = blocks;
 
