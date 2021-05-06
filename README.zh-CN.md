@@ -16,7 +16,7 @@
 
 <div align="center">
 
-日月之行，若出其中；星汉灿烂，若出其里。
+合抱之木，生于毫末；九层之台，起于垒土。
 
 </div>
 <div align="center">
@@ -44,21 +44,19 @@
 
 ## 🌴RRQMSocket特点速览
 
- **对象池** 
+ **1.对象池** 
 
 对象池在RRQMSocket有很多应用，最主要的两个就是**连接对象池**和**处理对象池**。连接对象池就是当客户端链接时，首先会去连接对象池中找TcpSocketClient，然后没有的话，才会创建。如果哪个客户端掉线了，它的TcpSocketClient就会被回收。这也就是**ID重用**的原因。
 
 然后就是处理对象池，在RRQMSocket中，接收数据的线程和IOCP内核线程是分开的，也就是比如说客户端给服务器发送了1w条数据，但是服务器收到后处理起来很慢，那传统的iocp肯定会放慢接收速率，然后通知客户端的tcp窗口，发生拥塞，然后让客户端暂缓发送。但是RRQM会把收到的数据全都存起来，首先不影响iocp的接收，同时再分配多线程去处理收到的报文信息，这样就相当于一个“泄洪湖泊”，但是对内存的占比就会上升。
 
- **传统IOCP和RRQMSocket** 
+ **2.传统IOCP和RRQMSocket** 
 
 RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开辟了一块内存，然后均分，然后给每个会话分配一个区去接收，等收到数据以后，再复制一份，然后把数据抛出去，让外界处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后直接用于接收，等收到数据以后，直接就把这个内存块抛出去了，这样就避免了复制操作。所以，文件传输时效率才会高。当然这个操作在小数据时是没什么优势的。
 
-**数据处理适配器** 
+**3.数据处理适配器** 
 
-相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，我们删繁就简，轻装上阵，但是依旧功能强大。
-
-首先是命名，“数据处理适配器”的意思就是对数据进行**预处理**，这也就包括**发送**和**接收**两部分，其功能强大程度不言而喻。例如：我们在**处理TCP粘包**时，常规的解决思路有三种，分别为 **固定包头** 、 **固定长度** 、 **终止字符分割** ，那么这时候数据处理适配器就可以大显身手了。
+相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，RRQMSocket的功能更加强大，您可以使用它来进行数据预处理，可以解决粘包、分包的问题，当然也可以用来解析其他协议，例如解析HTTP、FTP等。
 
 ## 🔗联系作者
 
@@ -85,8 +83,7 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 |                [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin)                | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/)                               | RRQMSkin是WPF的控件样式库，其中包含：无边框窗体、圆角窗体、水波纹按钮、输入提示筛选框、控件拖动效果、圆角图片框、弧形文字、扇形元素、指针元素、饼图、时钟。速度表盘等。           |
 | [RRQMSocket.FileTransfer](https://gitee.com/RRQM_OS/RRQMSocket.FileTransfer) | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | RRQMSocket.FileTransfer是一个轻量级文件传输框架，您可以用它传输任意大小的文件，它可以完美支持断点续传、快速上传、传输限速等。在实时测试中，它的传输速率可达500Mb/s。              |
 |         [RRQMSocket.Http](https://gitee.com/RRQM_OS/RRQMSocket.Http)         | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.Http)](https://www.nuget.org/packages/RRQMSocket.Http/)                 | 这是一个能够简单解析HTTP的扩展库，能够为RRQMSocket扩展解析HTTP的能力。                                                                                                            |
-## 创建TCP服务框架
-[RRQMSocket入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
+
 #### 特点
 - 简单易用。
 - 多线程处理。
@@ -97,6 +94,11 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 - 对象池设计，避免数据对象的申请、释放。
 ####  Demo
 [RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
+
+## 创建TCP服务框架
+[RRQMSocket入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
+
+
 
 ## 二、Token系TCP框架
 #### 2.1 概述
