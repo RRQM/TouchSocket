@@ -59,7 +59,7 @@ namespace RRQMSocket
         /// <summary>
         /// 主通信器
         /// </summary>
-        protected internal Socket MainSocket
+        public Socket MainSocket
         {
             get { return mainSocket; }
             internal set

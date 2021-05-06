@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMSocket;
-using RRQMSocket.FileTransfer;
 using System.Net;
 
 /// <summary>
@@ -42,16 +41,3 @@ public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
 /// <param name="e"></param>
 public delegate void RRQMUDPByteBlockEventHandler(EndPoint remoteEndpoint, ByteBlock e);
 
-/// <summary>
-/// 传输文件操作处理
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMFileOperationEventHandler(object sender, FileOperationEventArgs e);
-
-/// <summary>
-/// 传输文件消息
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMTransferFileMessageEventHandler(object sender, TransferFileMessageArgs e);

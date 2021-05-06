@@ -256,7 +256,7 @@ namespace RRQMSocket
         /// <summary>
         /// 等待接收
         /// </summary>
-        internal virtual void WaitReceive()
+        protected virtual void WaitReceive()
         {
         }
 

@@ -4,22 +4,16 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>4.0.12.0</Version>
+		<Version>4.0.13.0</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-    <PackageTags>iocp,tcp,socket</PackageTags>
-		<Description>此次文件传输为重构版，更新幅度较大，谨慎更新。具体更新内容详细请阅读API文档。
-            
-程序集介绍：
-      RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
+        <PackageTags>IOCP,TCP,UDP,Socket</PackageTags>
+		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
-     目前有文件传输框架、RPC框架两种，后续还会不断更新添加其他框架，希望大家多多支持和关注。
-API 文档：https://gitee.com/dotnetchina/RRQMSocket/wikis/pages
-TCP框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.Demo
-文件传输框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo
-RPC框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
-
-		</Description>
+Introduction: RRQMSocket is an integrated, ultra-lightweight network communication framework.It has the characteristics of high concurrency, event subscription, plug-in extension, automatic activity detection, multi-threading and so on, so that users can more easily and quickly build the network framework.
+   
+API：https://gitee.com/dotnetchina/RRQMSocket/wikis/pages
+Demo：https://gitee.com/RRQM_OS/RRQMSocket.Demo		</Description>
 		<PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -68,16 +62,6 @@ RPC框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
 		<DocumentationFile>bin\Release\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Compile Remove="Global\Time\**" />
-		<Compile Remove="RPC\Enum\**" />
-		<EmbeddedResource Remove="Global\Time\**" />
-		<EmbeddedResource Remove="RPC\Enum\**" />
-		<None Remove="Global\Time\**" />
-		<None Remove="RPC\Enum\**" />
-	</ItemGroup>
-
 	<ItemGroup>
 		<None Include="LICENSE">
 			<Pack>True</Pack>
@@ -90,7 +74,7 @@ RPC框架Demo：https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RRQMCore" Version="1.2.18" />
+		<PackageReference Include="RRQMCore" Version="1.2.19" />
 	</ItemGroup>
 
 </Project>
