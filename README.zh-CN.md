@@ -78,18 +78,18 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 - [微软Nuget安装教程](https://docs.microsoft.com/zh-cn/nuget/quickstart/install-and-use-a-package-in-visual-studio)
 
 ## 🍻RRQM系产品
-| 名称                                           | Nuget版本                                                                                                                              | 下载                                                                                              | 描述                                                                                                                                                                                          |
-|------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：<br>内存池、对象池、等待逻辑池、AppMessenger、3DES加密、<br>Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、<br>规范日志接口等。 |
-| [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。                                                                                                                                          |
-| [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含：<br>无边框窗体、圆角窗体、水波纹按钮、输入提示筛选框、控件拖动效果、<br>圆角图片框、弧形文字、扇形元素、指针元素、饼图、时钟。速度表盘等。|  
+|                                     名称                                     |                                                               下载                                                              |                                                                                          描述                                                                                         |
+|:----------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|                [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore)                |                [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/)                | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：内存池、对象池、等待逻辑池、AppMessenger、3DES加密、<br>Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、规范日志接口等。 |
+|                [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM)                |                [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/)                |                                                                  RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。                                                                 |
+|                [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin)                |                [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/)                |      RRQMSkin是WPF的控件样式库，其中包含：无边框窗体、圆角窗体、水波纹按钮、输入提示筛选框、控件拖动效果、<br>圆角图片框、弧形文字、扇形元素、指针元素、饼图、时钟。速度表盘等。      |
+| [RRQMSocket.FileTransfer](https://gitee.com/RRQM_OS/RRQMSocket.FileTransfer) | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) |          RRQMSocket.FileTransfer是一个轻量级文件传输框架，您可以用它传输任意大小的文件，它可以完美支持断点续传、快速上传、传输限速等。在实时测试中，它的传输速率可达500Mb/s。         |
+|         [RRQMSocket.Http](https://gitee.com/RRQM_OS/RRQMSocket.Http)         |         [![Download](https://img.shields.io/nuget/dt/RRQMSocket.Http)](https://www.nuget.org/packages/RRQMSocket.Http/)         |                                                         这是一个能够简单解析HTTP的扩展库，能够为RRQMSocket扩展解析HTTP的能力。                                                        |
 
-## 💐框架速览
 
-## 一、TCP框架
-#### 1.1 创建TCP服务框架
+## 创建TCP服务框架
 [RRQMSocket入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
-#### 1.2 特点
+#### 特点
 - 简单易用。
 - 多线程处理。
 - IOCP完美设计模型，避免收到数据再复制。
@@ -97,7 +97,7 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 - 超简单的解决粘包、分包问题，详见[RRQMSocket解决TCP粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179?spm=1001.2014.3001.5501)。
 - 内存池设计，避免内存重复申请、释放。
 - 对象池设计，避免数据对象的申请、释放。
-#### 1.3 Demo
+####  Demo
 [RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
 
 ## 二、Token系TCP框架
@@ -111,104 +111,6 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 [创建及使用Token系框架](https://gitee.com/dotnetchina/RRQMSocket/wikis/3.2%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8Token%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3896799)
 #### 2.4 Demo
 [RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
-
-
-## 三、文件传输框架
-#### 3.1 创建文件服务器框架
-
-以下进行简单示例，详细使用见[文件传输入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/5.1%20%E6%A6%82%E8%BF%B0?sort_id=3897485)
-```
- FileService fileService = new FileService();
- fileService.VerifyToken ="123ABC";
- 
- fileService.BreakpointResume = true;//支持断点续传
- try
- {
-     fileService.Bind(7789,2);//直接监听7789端口号。多线程，默认为1，此处设置线程数量为2
-/* 订阅相关事件
- fileService.ClientConnected += FileService_ClientConnected;
- fileService.ClientDisconnected += FileService_ClientDisconnected;
-
- fileService.BeforeTransfer += FileService_BeforeTransfer ;
- fileService.FinishedTransfer += FileService_FinishedTransfer ;
- fileService.ReceiveSystemMes += FileService_ReceiveSystemMes;
-*/
- }
- catch (Exception ex)
- {
-     MessageBox.Show(ex.Message);
- }
-```
-
-#### 3.2 特点
-- 简单易用。
-- 多线程处理。
-- 高性能，传输速度可达500Mb/s。
-- 超简单的传输限速设置，1k-10Gb 无级调节。
-- 超简单的传输速度、传输进度获取。
-- 随心所欲的暂停、继续、停止传输。
-- 系统化的权限管理，让敏感文件只允许私有化下载。
-- 随时发送消息，让客户端和服务器交流不延迟。
-- 基于事件驱动，让每一步操作尽在掌握。
-- 可视化的文件块流，可以实现像迅雷一样的填充式进度条。
-- 超简单的断点续传设置，为大文件传输保驾护航。
-- 无状态上传断点续传设置，让同一个文件，在不同客户端之间接力上传。
-- 已经上传的文件，再次上传时，可实现快速上传。
-- 极少的GC释放。
-
-#### 3.3 Demo示例
- **Demo位置：** [RRQMSocket.FileTransfer.Demo](https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo)
-
- **说明：** 可以看到，图一正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到346Mb/s，这是因为服务器和客户端在同一电脑上，磁盘性能限制导致的。其次，GC基本上没有释放，性能非常强悍，图二是下载文件，性能依旧非常强悍。
-
-![上传文件](https://images.gitee.com/uploads/images/2021/0409/190350_92a2ad36_8553710.png "上传文件")
-![下载文件](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "下载文件")
-
-
-## 四、RPC框架
-#### 4.1 创建RPC服务
-新建类文件，继承于ServerProvider，并将其中公共方法标识为RRQMRPCMethod即可。
-```
-public class Server: ServerProvider
-{
-    [RRQMRPCMethod]
-    public string TestOne(string str)
-    {
-        return "若汝棋茗";
-    }
- }
-```
-#### 4.2 启动RPC服务
-
-[启动RPC服务说明](https://gitee.com/dotnetchina/RRQMSocket/wikis/6.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E5%90%AF%E5%8A%A8RPC%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3904370)
-
-#### 4.3 特点
-- 简单易用。
-- 多线程处理。
-- 高性能，在保证送达但不返回的情况下，10w次调用用时0.8s，在返回的情况下，用时3.9s。
-- 支持TCP、UDP等不同的协议调用相同服务。
-- 支持指定服务异步执行。
-- 支持权限管理，让非法调用死在萌芽时期。
-- 全自动 **代码生成** ，可使用系统编译成dll调用，也可以使用插件生成代理调用。
-- 代理方法会生成异步方法，支持客户端异步调用。
-- **支持out、ref** ，参数设定默认值等。
-- 随心所欲的序列化方式，除了自带的[超轻量级二进制序列化](https://blog.csdn.net/qq_40374647/article/details/114178244?spm=1001.2014.3001.5501)、xml序列化外，用户可以自己随意使用其他序列化。
-- 支持编译式调用，也支持方法名+参数式调用。
-- **全异常反馈** ，服务里发生的异常，会一字不差的反馈到客户端。
-- 超简单、自由的**回调方式** 。
-
-#### 4.3 Demo示例
- **Demo位置：** [RRQMSocket.RPC.Demo](https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo)
-
- **说明：** 
-图一、图二、图三分别为`UDP无反馈调用`、`TCP有反馈调用`、`TCP连接池有反馈调用`。调用次数均为10w次，调用性能非常nice。在无反馈中，吞吐量达14.28w，在有反馈中达2.72w，简直秒杀WCF（WCF使用http协议，在本机测试吞吐量为310）
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191343_e5827d04_8553710.png "屏幕截图.png")
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191501_abec9e45_8553710.png "屏幕截图.png")
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191531_d7f0a8d4_8553710.png "屏幕截图.png")
-
 
 ## 致谢
 
