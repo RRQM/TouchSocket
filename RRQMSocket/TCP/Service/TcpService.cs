@@ -109,6 +109,11 @@ namespace RRQMSocket
         /// </summary>
         public event RRQMMessageEventHandler ClientDisconnected;
 
+        /// <summary>
+        /// 创建泛型T时
+        /// </summary>
+        public event Action<TClient, CreatOption> CreatSocketCliect;
+
         internal void ClientConnectedMethod(object sender, MesEventArgs e)
         {
             ClientConnected?.Invoke(sender, e);
@@ -435,6 +440,7 @@ namespace RRQMSocket
         /// <param name="creatOption"></param>
         protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreatOption creatOption)
         {
+            CreatSocketCliect?.Invoke(tcpSocketClient, creatOption);
         }
 
         internal virtual void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)

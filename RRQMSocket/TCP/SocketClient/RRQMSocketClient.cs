@@ -25,7 +25,7 @@ namespace RRQMSocket
         /// <summary>
         /// 收到消息
         /// </summary>
-        public Action<RRQMSocketClient, ByteBlock, object> OnReceived { get; set; }
+        internal Action<RRQMSocketClient, ByteBlock, object> OnReceived;
 
         /// <summary>
         /// 处理数据
