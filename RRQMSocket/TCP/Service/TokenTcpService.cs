@@ -122,7 +122,6 @@ namespace RRQMSocket
                                         this.SocketClients.Add(client);
                                     }
 
-
                                     byteBlock.Write(1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
                                     socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);

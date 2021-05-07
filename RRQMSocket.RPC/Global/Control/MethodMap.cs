@@ -9,12 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -27,6 +22,7 @@ namespace RRQMSocket.RPC
         {
             this.methodMap = new Dictionary<int, MethodInstance>();
         }
+
         private Dictionary<int, MethodInstance> methodMap;
 
         internal void Add(MethodInstance methodInstance)

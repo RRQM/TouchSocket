@@ -12,10 +12,8 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
-using RRQMCore.Serialization;
 using RRQMSocket.Http;
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -51,7 +49,6 @@ namespace RRQMSocket.RPC.WebApi
                 socketClient.DataHandlingAdapter = new Http.HttpDataHandlingAdapter(this.BufferLength);
             }
         }
-
 
         private RouteMap routeMap;
         private RRQMTcpService tcpService;
@@ -99,7 +96,6 @@ namespace RRQMSocket.RPC.WebApi
             this.tcpService.Bind(port, threadCount);
         }
 
-
         /// <summary>
         /// 绑定服务
         /// </summary>
@@ -138,7 +134,6 @@ namespace RRQMSocket.RPC.WebApi
             {
                 if (methodInstance.IsEnable)
                 {
-                   
                 }
                 else
                 {
@@ -163,8 +158,9 @@ namespace RRQMSocket.RPC.WebApi
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
             RRQMSocketClient socketClient = (RRQMSocketClient)httpRequest.Flag;
 
-            HttpResponse httpResponse
+            HttpResponse httpResponse = this.ResultConverter.OnResultConverter(methodInvoker, methodInstance);
 
+            httpResponse.ProtocolVersion = httpRequest.ProtocolVersion;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
 
             try
@@ -182,7 +178,6 @@ namespace RRQMSocket.RPC.WebApi
                 socketClient.Shutdown(SocketShutdown.Both);
             }
         }
-
 
         /// <summary>
         /// 初始化
@@ -228,7 +223,6 @@ namespace RRQMSocket.RPC.WebApi
                             }
 
                             this.routeMap.Add(actionUrl, methodInstance);
-
                         }
                     }
                 }

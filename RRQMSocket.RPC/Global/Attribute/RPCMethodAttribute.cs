@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC方法属性基类
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method,AllowMultiple = true,Inherited =true)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public abstract class RPCMethodAttribute : Attribute
     {
         /// <summary>

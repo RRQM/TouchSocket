@@ -13,12 +13,9 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -74,21 +71,18 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public abstract BytePool BytePool { get; }
 
-
         /// <summary>
         /// 初始化服务
         /// </summary>
         /// <param name="methodInstances"></param>
         protected sealed override void InitializeServers(MethodInstance[] methodInstances)
         {
-
             this.clientMethodStore = new MethodStore();
             string nameSpace = string.IsNullOrEmpty(this.NameSpace) ? "RRQMRPC" : $"RRQMRPC.{this.NameSpace}";
             List<string> refs = new List<string>();
 
             PropertyCodeMap propertyCode = new PropertyCodeMap(this.RPCService.ServerProviders.SingleAssembly, nameSpace);
             string assemblyName = $"{nameSpace}.dll";
-
 
             foreach (MethodInstance methodInstance in methodInstances)
             {
@@ -143,7 +137,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             throw new RRQMRPCKeyException($"方法键为{methodItem.Method}的服务已注册");
                         }
-
 
                         string className = methodInstance.Provider.GetType().Name;
                         if (!classAndMethods.ContainsKey(className))
@@ -257,7 +250,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 methodInvoker.Status = InvokeStatus.UnFound;
                 this.ExecuteMethod(methodInvoker, null);
             }
-
         }
 
         /// <summary>
@@ -300,7 +292,5 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
         public abstract void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount);
-
-
     }
 }

@@ -10,8 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
-using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -115,18 +113,16 @@ namespace RRQMSocket.Http
         {
             StringBuilder stringBuilder = new StringBuilder();
             if (!string.IsNullOrEmpty(StatusCode))
-                stringBuilder.AppendLine($"HTTP/1.1 {StatusCode}");
+                stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {StatusCode}");
             if (!string.IsNullOrEmpty(this.Content_Type))
                 stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
-            if (this.Content_Length > 0)
-                stringBuilder.AppendLine("Content-Length: " + this.Content_Length);
+            stringBuilder.AppendLine("Content-Length: " + this.Content_Length);
             foreach (var headerkey in this.Headers.Keys)
             {
                 stringBuilder.Append($"{headerkey}: ");
                 stringBuilder.AppendLine(this.Headers[headerkey]);
             }
-            stringBuilder.AppendLine($"Server: RRQMSocket.Http {ServerVersion}");
-            stringBuilder.AppendLine("Date: " + DateTime.Now.ToGMTString("r"));
+
             stringBuilder.AppendLine();
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }

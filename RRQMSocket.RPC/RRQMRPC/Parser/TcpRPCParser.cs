@@ -161,10 +161,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                 {
                     case InvokeStatus.Ready:
                         {
-
                             break;
                         }
-                        
+
                     case InvokeStatus.UnFound:
                         {
                             context.Status = 2;
@@ -202,7 +201,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             context.Status = 4;
                             context.Message = methodInvoker.StatusMessage;
                             break;
-                        } 
+                        }
                     case InvokeStatus.UnEnable:
                         {
                             context.Status = 3;
@@ -219,7 +218,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     default:
                         break;
                 }
-              
+
                 context.Serialize(byteBlock);
                 ((RPCSocketClient)context.Flag).agreementHelper.SocketSend(101, byteBlock);
             }
@@ -233,7 +232,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-
         /// <summary>
         /// 绑定服务
         /// </summary>
@@ -244,9 +242,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="Exception"></exception>
         public override void Bind(int port, int threadCount = 1)
         {
-            this.tcpService.Bind(port,threadCount);
+            this.tcpService.Bind(port, threadCount);
         }
-
 
         /// <summary>
         /// 绑定服务

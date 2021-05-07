@@ -378,7 +378,7 @@ namespace RRQMSocket
                     ICollection<string> collection = this.SocketClients.GetTokens();
                     foreach (var token in collection)
                     {
-                        if (this.SocketClients.TryGetSocketClient(token,out TClient client))
+                        if (this.SocketClients.TryGetSocketClient(token, out TClient client))
                         {
                             if (client.breakOut)
                             {

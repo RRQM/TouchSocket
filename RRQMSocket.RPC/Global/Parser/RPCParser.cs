@@ -10,42 +10,37 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// RPC解析器
     /// </summary>
-    public abstract class RPCParser:IDisposable
+    public abstract class RPCParser : IDisposable
     {
-
         /// <summary>
         /// 获取函数映射图
         /// </summary>
-        protected MethodMap MethodMap { get;private set; }
+        protected MethodMap MethodMap { get; private set; }
 
         /// <summary>
         /// 包含此解析器的服务器实例
         /// </summary>
-        public RPCService RPCService { get;internal set; }
+        public RPCService RPCService { get; internal set; }
 
-        internal Action<RPCParser, MethodInvoker,MethodInstance> RRQMExecuteMethod;
+        internal Action<RPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod;
 
         internal void RRQMInitializeServers(MethodInstance[] methodInstances)
         {
             InitializeServers(methodInstances);
         }
-        
+
         internal void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             EndInvokeMethod(methodInvoker, methodInstance);
-        } 
-        
-        internal void RRQMSetMethodMap(MethodMap  methodMap)
+        }
+
+        internal void RRQMSetMethodMap(MethodMap methodMap)
         {
             this.MethodMap = methodMap;
         }

@@ -22,8 +22,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 方法唯一标识
         /// </summary>
-        public int MethodToken { get; internal set; } 
-        
+        public int MethodToken { get; internal set; }
+
         /// <summary>
         /// 方法名
         /// </summary>

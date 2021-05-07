@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -27,8 +26,8 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.methodKeyToMethodItem = new Dictionary<string, MethodItem>();
         }
 
-        private  Dictionary<int, MethodItem> tokenToMethodItem;
-        private  Dictionary<string, MethodItem> methodKeyToMethodItem;
+        private Dictionary<int, MethodItem> tokenToMethodItem;
+        private Dictionary<string, MethodItem> methodKeyToMethodItem;
 
         internal void AddMethodItem(MethodItem methodItem)
         {

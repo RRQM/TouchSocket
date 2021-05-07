@@ -53,12 +53,12 @@ namespace RRQMSocket
 
         internal ICollection<string> GetTokens()
         {
-            return this.tokenDic.Keys ;
+            return this.tokenDic.Keys;
         }
 
         internal void Remove(string token)
         {
-            this.tokenDic.TryRemove(token,out _);
+            this.tokenDic.TryRemove(token, out _);
         }
 
         internal void Clear()

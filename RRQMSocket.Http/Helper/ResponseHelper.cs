@@ -9,6 +9,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Helper;
+using System;
 using System.IO;
 
 namespace RRQMSocket.Http
@@ -36,8 +38,7 @@ namespace RRQMSocket.Http
 
             var content = File.ReadAllBytes(fileName);
             response.SetContent(content);
-            response.StatusCode = "200";
-            return response;
+            return response.FromSuccess();
         }
 
         /// <summary>
@@ -50,8 +51,7 @@ namespace RRQMSocket.Http
         {
             response.SetContent(xmlText);
             response.Content_Type = "text/xml";
-            response.StatusCode = "200";
-            return response;
+            return response.FromSuccess();
         }
 
         /// <summary>
@@ -64,8 +64,7 @@ namespace RRQMSocket.Http
         {
             response.SetContent(jsonText);
             response.Content_Type = "text/json";
-            response.StatusCode = "200";
-            return response;
+            return response.FromSuccess();
         }
 
         /// <summary>
@@ -78,7 +77,20 @@ namespace RRQMSocket.Http
         {
             response.SetContent(text);
             response.Content_Type = "text/plain";
+
+            return response.FromSuccess();
+        }
+
+        /// <summary>
+        /// 返回成功
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public static HttpResponse FromSuccess(this HttpResponse response)
+        {
             response.StatusCode = "200";
+            response.SetHeader(ResponseHeader.Server, $"RRQMSocket.Http {HttpResponse.ServerVersion}");
+            response.SetHeader(ResponseHeader.Date, DateTime.Now.ToGMTString("r"));
             return response;
         }
     }

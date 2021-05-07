@@ -48,7 +48,7 @@ namespace RRQMSocket.RPC
         /// 参数类型集合，已处理out及ref，无参数时为空集合，
         /// </summary>
         public Type[] ParameterTypes { get; internal set; }
-        
+
         /// <summary>
         /// 参数集合
         /// </summary>

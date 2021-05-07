@@ -9,11 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -35,13 +30,13 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 获取调用状态
         /// </summary>
-        public InvokeStatus  Status { get; set; }
+        public InvokeStatus Status { get; set; }
 
         /// <summary>
         /// 状态消息
         /// </summary>
-        public string StatusMessage { get;  set; }
-       
+        public string StatusMessage { get; set; }
+
         /// <summary>
         /// 可以传递其他类型的数据容器
         /// </summary>

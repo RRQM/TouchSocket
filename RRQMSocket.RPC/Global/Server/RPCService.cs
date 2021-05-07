@@ -9,12 +9,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using RRQMCore.Helper;
 
 namespace RRQMSocket.RPC
 {
@@ -56,7 +56,6 @@ namespace RRQMSocket.RPC
             parser.RRQMSetMethodMap(this.MethodMap);
         }
 
-
         /// <summary>
         /// 获取函数实例
         /// </summary>
@@ -83,7 +82,6 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("未找到该方法");
             }
-
         }
 
         /// <summary>
@@ -149,7 +147,6 @@ namespace RRQMSocket.RPC
 
             foreach (ServerProvider instance in this.ServerProviders)
             {
-
                 MethodInfo[] methodInfos = instance.GetType().GetMethods();
                 foreach (MethodInfo method in methodInfos)
                 {
@@ -160,7 +157,6 @@ namespace RRQMSocket.RPC
                     IEnumerable<RPCMethodAttribute> attributes = method.GetCustomAttributes<RPCMethodAttribute>(true);
                     if (attributes.Count() > 0)
                     {
-
                         MethodInstance methodInstance = new MethodInstance();
                         methodInstance.Provider = instance;
                         methodInstance.Method = method;
@@ -241,12 +237,11 @@ namespace RRQMSocket.RPC
             {
                 ExecuteMethod(parser, methodInvoker, methodInstance);
             }
-
         }
 
         private void ExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            if (methodInvoker.Status == InvokeStatus.Ready&&methodInstance!=null)
+            if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
             {
                 try
                 {

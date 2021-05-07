@@ -56,7 +56,6 @@ namespace RRQMSocket.RPC
             return this.servers.GetEnumerator();
         }
 
-       
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.servers.GetEnumerator();

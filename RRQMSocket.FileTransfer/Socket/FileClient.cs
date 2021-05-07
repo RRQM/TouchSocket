@@ -445,12 +445,12 @@ namespace RRQMSocket.FileTransfer
                 fileClient.FinishedFileTransfer += (object sender, TransferFileMessageArgs e) => { fileClient.Dispose(); };
                 fileClient.BeforeFileTransfer += (object sender, FileOperationEventArgs e) =>
                 {
-                    if (e.TransferType== TransferType.Download)
+                    if (e.TransferType == TransferType.Download)
                     {
                         e.TargetPath = Path.Combine(receiveDir == null ? "" : receiveDir, e.FileInfo.FileName);
                     }
                 };
-                UrlFileInfo fileInfo= UrlFileInfo.CreatDownload(filePath,restart);
+                UrlFileInfo fileInfo = UrlFileInfo.CreatDownload(filePath, restart);
                 fileInfo.Timeout = waitTime;
                 fileClient.RequestTransfer(fileInfo);
                 return fileClient;
@@ -485,7 +485,7 @@ namespace RRQMSocket.FileTransfer
                 }
                 fileClient.FinishedFileTransfer += (object sender, TransferFileMessageArgs e) => { fileClient.Dispose(); };
 
-                UrlFileInfo fileInfo = UrlFileInfo.CreatUpload(filePath, restart,fileClient.BreakpointResume);
+                UrlFileInfo fileInfo = UrlFileInfo.CreatUpload(filePath, restart, fileClient.BreakpointResume);
                 fileClient.UploadFile(fileInfo);
                 return fileClient;
             }

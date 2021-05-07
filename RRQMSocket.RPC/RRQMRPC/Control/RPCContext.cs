@@ -45,7 +45,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 byteBlock.Write(0);
             }
 
-
             if (this.ReturnParameterBytes != null)
             {
                 byteBlock.Write(BitConverter.GetBytes(this.ReturnParameterBytes.Length));

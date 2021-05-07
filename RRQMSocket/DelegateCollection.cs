@@ -40,4 +40,3 @@ public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
 /// <param name="remoteEndpoint"></param>
 /// <param name="e"></param>
 public delegate void RRQMUDPByteBlockEventHandler(EndPoint remoteEndpoint, ByteBlock e);
-

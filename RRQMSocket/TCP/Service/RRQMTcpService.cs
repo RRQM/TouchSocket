@@ -17,7 +17,7 @@ namespace RRQMSocket
     /// <summary>
     /// 若汝棋茗内置TCP验证服务器
     /// </summary>
-    public  class RRQMTcpService : TcpService<RRQMSocketClient>
+    public class RRQMTcpService : TcpService<RRQMSocketClient>
     {
         /// <summary>
         /// 构造函数
@@ -59,7 +59,7 @@ namespace RRQMSocket
 
         private void OnReceive(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
-            this.OnReceived?.Invoke(socketClient,byteBlock,obj);
+            this.OnReceived?.Invoke(socketClient, byteBlock, obj);
         }
     }
 }

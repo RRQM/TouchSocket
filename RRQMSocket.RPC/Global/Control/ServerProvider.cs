@@ -25,13 +25,13 @@ namespace RRQMSocket.RPC
         /// </summary>
         public RPCService RPCService { get; internal set; }
 
-        internal void RPC(int index,RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        internal void RPC(int index, RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             switch (index)
             {
                 case 1:
                     {
-                        RPCEnter(parser,methodInvoker,methodInstance);
+                        RPCEnter(parser, methodInvoker, methodInstance);
                         break;
                     }
                 case 2:
@@ -54,7 +54,7 @@ namespace RRQMSocket.RPC
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        protected  virtual void RPCEnter(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        protected virtual void RPCEnter(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
         }
 
@@ -64,7 +64,7 @@ namespace RRQMSocket.RPC
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        protected  virtual void RPCError(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        protected virtual void RPCError(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
         }
 
@@ -74,7 +74,7 @@ namespace RRQMSocket.RPC
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        protected  virtual void RPCLeave(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        protected virtual void RPCLeave(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
         }
     }

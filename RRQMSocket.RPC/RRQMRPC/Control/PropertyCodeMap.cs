@@ -310,7 +310,5 @@ namespace RRQMSocket.RPC.RRQMRPC
                 return type.FullName;
             }
         }
-
-        
     }
 }

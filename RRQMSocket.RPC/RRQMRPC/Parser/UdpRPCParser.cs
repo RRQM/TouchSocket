@@ -14,7 +14,6 @@ using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Serialization;
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -24,7 +23,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// UDP RPC解释器
     /// </summary>
-    public class UdpRPCParser : RRQMRPCParser,IService
+    public class UdpRPCParser : RRQMRPCParser, IService
     {
         /// <summary>
         /// 构造函数
@@ -92,7 +91,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                     }
             }
-
         }
 
         private RRQMUdpSession udpSession;
@@ -160,7 +158,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.udpSession.Bind(port, threadCount);
         }
 
-
         /// <summary>
         /// 绑定服务
         /// </summary>
@@ -188,7 +185,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.udpSession.Bind(addressFamily, endPoint, threadCount);
         }
 
-       
         /// <summary>
         /// 释放资源
         /// </summary>
