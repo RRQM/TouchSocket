@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net45;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+    <ApplicationIcon>RRQM.ico</ApplicationIcon>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
+    <Version>1.0.0.0</Version>
+    <Company>若汝棋茗</Company>
+    <Copyright>Copyright © 2021 若汝棋茗</Copyright>
+    <Description>
+      更新时间：2021.04.02
+      更新简介:RPC发布
+
+      RRQMSocket.RPC是一个轻量级RPC框架，支持TCP和UDP两种传输层协议调用。
+      主要的特色功能：
+      1.多线程工作。
+      2.代码自动生成。
+      3.支持多协议调用。
+      4.支持ref、out返回。
+      5.支持调用权限检测。
+      6.支持调用异常反馈。
+      7.支持回调。
+      8.支持指定服务异步调用。
+      9.性能卓著。
+      在CanFeedback模式下，10w次调用用时3.8s。
+      在NoFeedback模式下，10w次调用用时0.9s。
+      性能非常卓著。
+
+      Demo：https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
+    </Description>
+    <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket.RPC</PackageProjectUrl>
+    <PackageIconUrl></PackageIconUrl>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <PackageIcon>RRQM.png</PackageIcon>
+    <Authors>若汝棋茗</Authors>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageTags>RPC;TCP;UDP;IOCP</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\RRQMSocket.RPC.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\RRQMSocket.RPC.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+    <DocumentationFile>bin\Debug\net45\RRQMSocket.RPC.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+    <DocumentationFile>bin\Release\net45\RRQMSocket.RPC.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.RPC.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp3.1\RRQMSocket.RPC.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="RRQM.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RRQMSocket.Http\RRQMSocket.Http.csproj" />
+  </ItemGroup>
+</Project>

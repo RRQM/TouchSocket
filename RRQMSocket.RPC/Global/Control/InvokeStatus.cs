@@ -1,0 +1,60 @@
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RRQMSocket.RPC
+{
+    /// <summary>
+    /// 调用状态
+    /// </summary>
+    public enum InvokeStatus
+    {
+        /// <summary>
+        /// 就绪
+        /// </summary>
+        Ready,
+
+        /// <summary>
+        /// 未找到服务
+        /// </summary>
+        UnFound,
+
+        /// <summary>
+        /// 不可用
+        /// </summary>
+        UnEnable,
+
+        /// <summary>
+        /// 成功调用
+        /// </summary>
+        Success,
+
+        /// <summary>
+        /// 终止执行
+        /// </summary>
+        Abort,
+
+        /// <summary>
+        /// 调用内部异常
+        /// </summary>
+        InvocationException,
+
+        /// <summary>
+        /// 其他异常
+        /// </summary>
+        Exception
+    }
+}
