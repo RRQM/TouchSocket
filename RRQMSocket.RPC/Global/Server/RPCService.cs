@@ -83,7 +83,7 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("未找到该方法");
             }
-           
+
         }
 
         /// <summary>
@@ -230,29 +230,29 @@ namespace RRQMSocket.RPC
 
         private void PreviewExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            if (methodInstance.Async)
+            if (methodInstance != null && methodInstance.Async)
             {
                 Task.Run(() =>
                 {
-                    ExecuteMethod(parser,methodInvoker,methodInstance);
+                    ExecuteMethod(parser, methodInvoker, methodInstance);
                 });
             }
             else
             {
                 ExecuteMethod(parser, methodInvoker, methodInstance);
             }
-           
+
         }
 
         private void ExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            if (methodInvoker.Status == InvokeStatus.Ready)
+            if (methodInvoker.Status == InvokeStatus.Ready&&methodInstance!=null)
             {
                 try
                 {
-                    methodInstance.Provider.RPC(1,parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
                     methodInvoker.ReturnParameter = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
-                    methodInstance.Provider.RPC(3,parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPC(3, parser, methodInvoker, methodInstance);
                     methodInvoker.Status = InvokeStatus.Success;
                 }
                 catch (RRQMAbandonRPCException e)
@@ -271,13 +271,13 @@ namespace RRQMSocket.RPC
                     {
                         methodInvoker.StatusMessage = "函数内部发生异常，信息：未知";
                     }
-                    methodInstance.Provider.RPC(1,parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
                 }
                 catch (Exception e)
                 {
                     methodInvoker.Status = InvokeStatus.Exception;
                     methodInvoker.StatusMessage = e.Message;
-                    methodInstance.Provider.RPC(1,parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
                 }
             }
 

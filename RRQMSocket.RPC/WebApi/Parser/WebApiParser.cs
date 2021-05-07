@@ -12,6 +12,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using RRQMCore.Serialization;
 using RRQMSocket.Http;
 using System;
 using System.Collections.Generic;
@@ -31,9 +32,11 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public WebApiParser()
         {
+            this.ResultConverter = new XmlResultConverter();
             this.tcpService = new RRQMTcpService();
             this.routeMap = new RouteMap();
             this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
+            this.tcpService.OnReceived += this.OnReceived;
         }
 
         /// <summary>
@@ -52,6 +55,11 @@ namespace RRQMSocket.RPC.WebApi
 
         private RouteMap routeMap;
         private RRQMTcpService tcpService;
+
+        /// <summary>
+        /// 响应数据转化器
+        /// </summary>
+        public ResultConverter ResultConverter { get; set; }
 
         /// <summary>
         /// 获取当前服务通信器
@@ -90,7 +98,7 @@ namespace RRQMSocket.RPC.WebApi
         {
             this.tcpService.Bind(port, threadCount);
         }
-         
+
 
         /// <summary>
         /// 绑定服务
@@ -122,13 +130,27 @@ namespace RRQMSocket.RPC.WebApi
         private void OnReceived(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             HttpRequest httpRequest = (HttpRequest)obj;
+            MethodInvoker methodInvoker = new MethodInvoker();
+            httpRequest.Flag = socketClient;
+            methodInvoker.Flag = httpRequest;
+
             if (this.routeMap.TryGet(httpRequest.URL, out MethodInstance methodInstance))
             {
-                MethodInvoker methodInvoker = new MethodInvoker();
-                httpRequest.Flag = socketClient;
-                methodInvoker.Flag = httpRequest;
-                this.ExecuteMethod(methodInvoker, methodInstance);
+                if (methodInstance.IsEnable)
+                {
+                   
+                }
+                else
+                {
+                    methodInvoker.Status = InvokeStatus.UnEnable;
+                }
             }
+            else
+            {
+                methodInvoker.Status = InvokeStatus.UnFound;
+            }
+
+            this.ExecuteMethod(methodInvoker, methodInstance);
         }
 
         /// <summary>
@@ -141,8 +163,7 @@ namespace RRQMSocket.RPC.WebApi
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
             RRQMSocketClient socketClient = (RRQMSocketClient)httpRequest.Flag;
 
-            HttpResponse httpResponse = new HttpResponse();
-            httpResponse.FromText("若汝棋茗");
+            HttpResponse httpResponse
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
 
@@ -161,6 +182,7 @@ namespace RRQMSocket.RPC.WebApi
                 socketClient.Shutdown(SocketShutdown.Both);
             }
         }
+
 
         /// <summary>
         /// 初始化

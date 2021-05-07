@@ -60,6 +60,6 @@ API：https://gitee.com/dotnetchina/RRQMSocket/wikis/pages	</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMSocket" Version="4.0.15" />
+	  <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
 	</ItemGroup>
 </Project>
