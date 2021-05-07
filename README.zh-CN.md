@@ -26,12 +26,13 @@
 </div>
 
 ## 💿描述
-|名称| Nuget(版本包)| 描述|
-|:---:|---|----|
-| RRQMSocket | [![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket/) | **RRQMSocket**是一个整合性的、超轻量级的网络通信服务框架。它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、 **多线程处理** 、 **内存池** 、 **对象池** 等特点，让使用者能够更加简单的、快速的搭建网络框架。 |
-| RRQMSocket.FileTransfer | [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | RRQMSocket.FileTransfer是一个高性能的文件传输框架，您可以用它传输**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。在实时测试中，它的传输速率可达500Mb/s。|
-| RRQMSocket.RPC| [![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC/)| 暂未上线|
-| RRQMSocket.Http| [![NuGet version (RRQMSocket.Http)](https://img.shields.io/nuget/v/RRQMSocket.Http.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.Http/) | RRQMSocket.Http是一个能够简单解析Http的服务组件，能够快速响应Http服务请求。|
+|名称|版本（Nuget Version）|下载（Nuget Download）|描述|
+|:---:|---|---|---|
+|RRQMSocket| [![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket/)                                        | [![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/) | **RRQMSocket**是一个整合性的、超轻量级的网络通信服务框架。它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、 **多线程处理** 、 **内存池** 、 **对象池** 等特点，让使用者能够更加简单的、快速的搭建网络框架。               |
+| RRQMSocket.FileTransfer | [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | RRQMSocket.FileTransfer是一个高性能的文件传输框架，您可以用它传输**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。在实时测试中，它的传输速率可达500Mb/s。 |
+|      RRQMSocket.RPC     | [![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC/)                            | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC)](https://www.nuget.org/packages/RRQMSocket.RPC/) | 暂未上线|
+| RRQMSocket.Http | [![NuGet version (RRQMSocket.Http)](https://img.shields.io/nuget/v/RRQMSocket.Http.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.Http/)                         | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.Http)](https://www.nuget.org/packages/RRQMSocket.Http/) | RRQMSocket.Http是一个能够简单解析Http的服务组件，能够快速响应Http服务请求。                                                                                                                                                                          |
+
 ## 🖥支持环境
 - .NET Framework4.5及以上。
 - .NET Core3.1及以上。
