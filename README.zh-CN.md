@@ -59,15 +59,9 @@
 RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开辟了一块内存，然后均分，然后给每个会话分配一个区去接收，等收到数据以后，再复制一份，然后把数据抛出去，让外界处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后直接用于接收，等收到数据以后，直接就把这个内存块抛出去了，这样就避免了复制操作。所以，文件传输时效率才会高。当然这个操作在小数据时是没什么优势的。
 
 **数据处理适配器** 
-<<<<<<< HEAD
 
 相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，我们删繁就简，轻装上阵，但是依旧功能强大。
 
-=======
-
-相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，我们删繁就简，轻装上阵，但是依旧功能强大。
-
->>>>>>> f38601227e750ea0711adc78feab36f9a0e0778c
 首先是命名，“数据处理适配器”的意思就是对数据进行**预处理**，这也就包括**发送**和**接收**两部分，其功能强大程度不言而喻。例如：我们在**处理TCP粘包**时，常规的解决思路有三种，分别为 **固定包头** 、 **固定长度** 、 **终止字符分割** ，那么这时候数据处理适配器就可以大显身手了。
 
 ## 🔗联系作者
@@ -88,11 +82,7 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 - [微软Nuget安装教程](https://docs.microsoft.com/zh-cn/nuget/quickstart/install-and-use-a-package-in-visual-studio)
 
 ## 🍻RRQM系产品
-<<<<<<< HEAD
 | 名称                                           | Nuget版本                                                                                                                              | 下          1231231231313载                                                                                              | 描述                                                                                                                                                                                          |
-=======
-| 名称                                           | Nuget版本                                                                                                                              | 下载                                                                                              | 描述                                                                                                                                                                                          |
->>>>>>> f38601227e750ea0711adc78feab36f9a0e0778c
 |------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：<br>内存池、对象池、等待逻辑池、AppMessenger、3DES加密、<br>Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、<br>规范日志接口等。 |
 | [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。                                                                                                                                          |
