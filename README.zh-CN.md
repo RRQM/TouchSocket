@@ -80,7 +80,7 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 
 ## ✨API文档
 
-[RRQMSocket API文档](https://gitee.com/dotnetchina/RRQMSocket/wikis/pages)
+[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages)
 
  
 ## 📦 安装
