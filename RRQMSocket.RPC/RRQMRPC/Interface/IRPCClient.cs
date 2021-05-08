@@ -60,7 +60,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null);
+        RPCProxyInfo GetProxyInfo(IPHost ipHost, string verifyToken = null, string proxyToken = null);
 
         /// <summary>
         /// 初始化RPC
@@ -68,7 +68,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="ipHost"></param>
         /// <param name="verifyToken"></param>
         /// <param name="typeDic"></param>
-        void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic = null);
+        void InitializedRPC(IPHost ipHost, string verifyToken = null, TypeInitializeDic typeDic = null);
 
         /// <summary>
         /// 函数式调用

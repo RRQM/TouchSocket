@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -37,8 +38,8 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.methodStore = new MethodStore();
             this.singleWaitData = new WaitData<WaitResult>();
             this.singleWaitData.WaitResult = new WaitResult();
-            this.invokeWaitData = new WaitData<RPCContext>();
-            this.invokeWaitData.WaitResult = new RPCContext();
+            this.invokeWaitData = new WaitData<RpcContext>();
+            this.invokeWaitData.WaitResult = new RpcContext();
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
 
@@ -57,13 +58,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         internal SerializeConverter SerializeConverter { get; set; }
 
+        internal Func<RpcContext, RpcContext> ExecuteCallBack;
+
         /// <summary>
         /// 是否新创建
         /// </summary>
         public bool NewCreat { get; set; }
 
         private WaitData<WaitResult> singleWaitData;
-        private WaitData<RPCContext> invokeWaitData;
+        private WaitData<RpcContext> invokeWaitData;
         internal MethodStore methodStore;
         private RPCProxyInfo proxyFile;
         private RRQMAgreementHelper agreementHelper;
@@ -181,7 +184,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 {
                     invokeWaitData.Wait(invokeOption.WaitTime * 1000);
 
-                    RPCContext context = invokeWaitData.WaitResult;
+                    RpcContext context = invokeWaitData.WaitResult;
                     invokeWaitData.Dispose();
                     if (context.Status == 0)
                     {
@@ -281,7 +284,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 if (invokeOption.Feedback)
                 {
                     invokeWaitData.Wait(invokeOption.WaitTime * 1000);
-                    RPCContext context = invokeWaitData.WaitResult;
+                    RpcContext context = invokeWaitData.WaitResult;
                     invokeWaitData.Dispose();
 
                     if (context.Status == 0)
@@ -368,7 +371,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RPCContext result = RPCContext.Deserialize(buffer, 4);
+                            RpcContext result = RpcContext.Deserialize(buffer, 4);
                             this.invokeWaitData.Set(result);
                         }
                         catch (Exception e)
@@ -397,7 +400,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 110:/*反向函数调用返回*/
+                case 110:/*数据返回*/
                     {
                         try
                         {
@@ -425,6 +428,30 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             block.Dispose();
                         }
+                        break;
+                    }
+                case 112:/*反向函数调用返回*/
+                    {
+                        Task.Run(() =>
+                        {
+                            RpcContext rpcContext = RpcContext.Deserialize(byteBlock.Buffer, 4);
+                            ByteBlock block = this.BytePool.GetByteBlock(this.BufferLength);
+                            try
+                            {
+                                rpcContext = this.ExecuteCallBack?.Invoke(rpcContext);
+                                rpcContext.Serialize(block);
+                                agreementHelper.SocketSend(112, block);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Debug(LogType.Error, this, $"错误代码: 112, 错误详情:{e.Message}");
+                            }
+                            finally
+                            {
+                                block.Dispose();
+                            }
+                        });
+
                         break;
                     }
             }

@@ -4,31 +4,16 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>1.0.0.0</Version>
+    <Version>1.0.2.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
-    <Description>
-      更新时间：2021.04.02
-      更新简介:RPC发布
+    <Description>介绍：这是一个高性能的RPC微服务框架，支持异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
 
-      RRQMSocket.RPC是一个轻量级RPC框架，支持TCP和UDP两种传输层协议调用。
-      主要的特色功能：
-      1.多线程工作。
-      2.代码自动生成。
-      3.支持多协议调用。
-      4.支持ref、out返回。
-      5.支持调用权限检测。
-      6.支持调用异常反馈。
-      7.支持回调。
-      8.支持指定服务异步调用。
-      9.性能卓著。
-      在CanFeedback模式下，10w次调用用时3.8s。
-      在NoFeedback模式下，10w次调用用时0.9s。
-      性能非常卓著。
+Description: This is a high-performance RPC microservice framework that supports asynchronous invocation, permission management, error status return, service callbacks, and more.When the no-load function is executed, it takes only 3.8 seconds for 100,000 calls, and 0.9 seconds for no return state.
 
-      Demo：https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo
-    </Description>
-    <PackageProjectUrl>https://gitee.com/RRQM_Home/RRQMSocket.RPC</PackageProjectUrl>
+Demo：https://gitee.com/RRQM_OS/RRQMSocket.RPC.Demo
+API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
+    <PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <PackageIcon>RRQM.png</PackageIcon>
@@ -81,6 +66,6 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RRQMSocket.Http\RRQMSocket.Http.csproj" />
+    <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
   </ItemGroup>
 </Project>

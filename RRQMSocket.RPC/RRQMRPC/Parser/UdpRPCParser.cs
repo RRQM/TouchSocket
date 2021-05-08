@@ -64,7 +64,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RPCContext content = RPCContext.Deserialize(buffer, 4);
+                            RpcContext content = RpcContext.Deserialize(buffer, 4);
                             content.Flag = remoteEndpoint;
                             this.ExecuteContext(content);
                             if (content.Feedback != 0)

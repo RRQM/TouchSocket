@@ -223,7 +223,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 执行内容
         /// </summary>
         /// <param name="context"></param>
-        protected virtual void ExecuteContext(RPCContext context)
+        protected virtual void ExecuteContext(RpcContext context)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Flag = context;

@@ -105,7 +105,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RPCContext content = RPCContext.Deserialize(buffer, 4);
+                            RpcContext content = RpcContext.Deserialize(buffer, 4);
                             content.Flag = sender;
                             this.ExecuteContext(content);
                         }
@@ -127,7 +127,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 110:/*函数式调用返回*/
+                case 110:/*数据返回*/
                     {
                         try
                         {
@@ -136,6 +136,18 @@ namespace RRQMSocket.RPC.RRQMRPC
                         catch (Exception e)
                         {
                             Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
+                        }
+                        break;
+                    } 
+                case 112:/*函数式调用返回*/
+                    {
+                        try
+                        {
+                            ((RPCSocketClient)sender).Agreement_112(buffer, r);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 112, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -149,7 +161,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodInstance"></param>
         protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            RPCContext context = (RPCContext)methodInvoker.Flag;
+            RpcContext context = (RpcContext)methodInvoker.Flag;
             if (context.Feedback == 0)
             {
                 return;
@@ -270,6 +282,46 @@ namespace RRQMSocket.RPC.RRQMRPC
         public override void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
         {
             this.tcpService.Bind(addressFamily, endPoint, threadCount);
+        }
+
+        /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <typeparam name="T">返回值</typeparam>
+        /// <param name="iDToken">ID</param>
+        /// <param name="methodToken">函数唯一标识</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public T CallBack<T>(string iDToken,int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
+            {
+               return socketClient.CallBack<T>(methodToken, invokeOption, parameters);
+            }
+            else
+            {
+                throw new RRQMRPCException("未找到该客户端");
+            }
+        }
+
+        /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <param name="iDToken">ID</param>
+        /// <param name="methodToken">函数唯一标识</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        public void CallBack(string iDToken,int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
+            {
+                socketClient.CallBack(methodToken, invokeOption, parameters);
+            }
+            else
+            {
+                throw new RRQMRPCException("未找到该客户端");
+            }
         }
 
         /// <summary>

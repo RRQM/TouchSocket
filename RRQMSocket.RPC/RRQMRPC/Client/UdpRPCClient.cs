@@ -105,9 +105,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null)
+        public RPCProxyInfo GetProxyInfo(IPHost ipHost, string verifyToken = null, string proxyToken = null)
         {
-            this.remoteService = new IPHost(ipHost).EndPoint;
+            this.remoteService = ipHost.EndPoint;
             int count = 0;
             while (count < 3)
             {
@@ -145,13 +145,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        public void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
+        public void InitializedRPC(IPHost ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
         {
             if (this.udpSession.MainSocket == null)
             {
                 throw new RRQMRPCException("UDP端需要先绑定本地监听端口");
             }
-            this.remoteService = new IPHost(ipHost).EndPoint;
+            this.remoteService = ipHost.EndPoint;
             int count = 0;
             while (count < 3)
             {
@@ -348,7 +348,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             lock (this)
             {
                 this.singleWaitData.WaitResult = null;
-                RPCContext context = new RPCContext();
+                RpcContext context = new RpcContext();
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
                 context.MethodToken = methodItem.MethodToken;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -407,7 +407,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             lock (this)
             {
                 this.singleWaitData.WaitResult = null;
-                RPCContext context = new RPCContext();
+                RpcContext context = new RpcContext();
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
                 context.MethodToken = methodItem.MethodToken;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);

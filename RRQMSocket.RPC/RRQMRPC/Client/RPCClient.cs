@@ -13,8 +13,12 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Pool;
+using RRQMCore.Serialization;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -35,6 +39,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.SerializeConverter = serializeConverter;
             this.methodStore = new MethodStore();
             this.Logger = new Log();
+            this.ServerProviders = new ServerProviderCollection();
         }
 
         private string verifyToken;
@@ -109,6 +114,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public static ConcurrentDictionary<string, RPCClient> RPCCacheDic { get { return rpcDic; } }
 
+        /// <summary>
+        /// 获取反向RPC服务实例
+        /// </summary>
+        public ServerProviderCollection ServerProviders { get; private set; }
+
+        /// <summary>
+        /// 获取反向RPC映射图
+        /// </summary>
+        public MethodMap MethodMap { get;private set; }
+
         private static ConcurrentDictionary<string, RPCClient> rpcDic = new ConcurrentDictionary<string, RPCClient>();
         private IPHost iPHost;
         private bool _disposed;
@@ -125,9 +140,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public RPCProxyInfo GetProxyInfo(string ipHost, string verifyToken = null, string proxyToken = null)
+        public RPCProxyInfo GetProxyInfo(IPHost ipHost, string verifyToken = null, string proxyToken = null)
         {
-            this.iPHost = new IPHost(ipHost);
+            this.iPHost = ipHost;
             this.verifyToken = verifyToken;
             lock (this)
             {
@@ -135,6 +150,95 @@ namespace RRQMSocket.RPC.RRQMRPC
                 this.proxyFile = rpcJunctor.GetProxyInfo(proxyToken);
                 this.rpcJunctorPool.DestroyObject(rpcJunctor);
                 return this.proxyFile;
+            }
+        }
+
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <param name="serverProvider"></param>
+        public void RegistService(ServerProvider serverProvider)
+        {
+            this.ServerProviders.Add(serverProvider);
+        }
+
+        /// <summary>
+        /// 开启反向RPC服务
+        /// </summary>
+        public void OpenCallBackRPCServer()
+        {
+            if (this.ServerProviders.Count == 0)
+            {
+                throw new RRQMRPCException("已注册服务数量为0");
+            }
+
+
+            this.MethodMap = new MethodMap();
+
+            foreach (ServerProvider instance in this.ServerProviders)
+            {
+                MethodInfo[] methodInfos = instance.GetType().GetMethods();
+                foreach (MethodInfo method in methodInfos)
+                {
+                    if (method.IsGenericMethod)
+                    {
+                        throw new RRQMRPCException("RPC方法中不支持泛型参数");
+                    }
+                    RRQMRPCCallBackMethodAttribute attribute = method.GetCustomAttribute<RRQMRPCCallBackMethodAttribute>();
+                   
+                    if (attribute!=null)
+                    {
+                        MethodInstance methodInstance = new MethodInstance();
+                        methodInstance.MethodToken = attribute.MethodToken;
+                        methodInstance.Provider = instance;
+                        methodInstance.Method = method;
+                        methodInstance.RPCAttributes = new RPCMethodAttribute[] { attribute };
+                        methodInstance.IsEnable = true;
+                        methodInstance.Parameters = method.GetParameters();
+                        if (typeof(Task).IsAssignableFrom(method.ReturnType))
+                        {
+                            methodInstance.Async = true;
+                        }
+
+                        ParameterInfo[] parameters = method.GetParameters();
+                        List<Type> types = new List<Type>();
+                        foreach (var parameter in parameters)
+                        {
+                            if (parameter.ParameterType.IsByRef)
+                            {
+                                throw new RRQMRPCException("反向RPC方法不支持out或ref");
+                            }
+                            types.Add(parameter.ParameterType);
+                        }
+                        methodInstance.ParameterTypes = types.ToArray();
+
+                        if (method.ReturnType == typeof(void))
+                        {
+                            methodInstance.ReturnType = null;
+                        }
+                        else
+                        {
+                            if (methodInstance.Async)
+                            {
+                                methodInstance.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                            }
+                            else
+                            {
+                                methodInstance.ReturnType = method.ReturnType;
+                            }
+                        }
+
+                        try
+                        {
+                            this.MethodMap.Add(methodInstance);
+                        }
+                        catch 
+                        {
+                            throw new RRQMRPCKeyException("MethodToken必须唯一");
+                        }
+                       
+                    }
+                }
             }
         }
 
@@ -148,9 +252,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        public void InitializedRPC(string ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
+        public void InitializedRPC(IPHost ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
         {
-            this.iPHost = new IPHost(ipHost);
+            this.iPHost = ipHost;
             this.verifyToken = verifyToken;
             RpcJunctor rpcJunctor = this.GetRpcJunctor();
             this.methodStore = rpcJunctor.GetMethodStore();
@@ -234,6 +338,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         rpcJunctor.Connect(this.iPHost.AddressFamily, this.iPHost.EndPoint);
                         rpcJunctor.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
                         rpcJunctor.ReceivedByteBlock = this.OnReceivedByteBlock;
+                        rpcJunctor.ExecuteCallBack = this.OnExecuteCallBack;
                         rpcJunctor.Logger = this.logger;
                         rpcJunctor.SerializeConverter = this.SerializeConverter;
                         rpcJunctor.methodStore = this.methodStore;
@@ -283,25 +388,65 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.ReceivedByteBlock?.Invoke(sender, e);
         }
 
+        private RpcContext OnExecuteCallBack(RpcContext rpcContext)
+        {
+            if (this.MethodMap != null)
+            {
+                if (this.MethodMap.TryGet(rpcContext.MethodToken, out MethodInstance methodInstance))
+                {
+                    try
+                    {
+                        object[] ps = new object[rpcContext.ParametersBytes.Count];
+                        for (int i = 0; i < rpcContext.ParametersBytes.Count; i++)
+                        {
+                            ps[i] = SerializeConvert.RRQMBinaryDeserialize(rpcContext.ParametersBytes[i],0,methodInstance.ParameterTypes[i]);
+                        }
+                        object result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
+                        if (result!=null)
+                        {
+                            rpcContext.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(result,true);
+                        }
+                        rpcContext.Status = 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        rpcContext.Status = 4;
+                        rpcContext.Message = ex.Message;
+                    }
+                }
+                else
+                {
+                    rpcContext.Status = 2;
+                }
+            }
+            else
+            {
+                rpcContext.Status = 3;
+            }
+
+            rpcContext.ParametersBytes = null;
+            return rpcContext;
+        }
+
         /// <summary>
         /// 快捷调用RPC
         /// </summary>
-        /// <param name="host">IP及端口</param>
+        /// <param name="iPHost">IP及端口</param>
         /// <param name="methodKey">函数键</param>
         /// <param name="verifyToken">验证Token</param>
         /// <param name="invokeOption">调用设置</param>
         /// <param name="parameters">参数</param>
-        public static void CallRPC(string host, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
+        public static void CallRPC(string iPHost, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
         {
             RPCClient client;
-            if (rpcDic.TryGetValue(host, out client))
+            if (rpcDic.TryGetValue(iPHost, out client))
             {
                 client.RPCInvoke(methodKey, ref parameters, invokeOption);
                 return;
             }
             client = new RPCClient();
-            client.InitializedRPC(host, verifyToken);
-            rpcDic.TryAdd(host, client);
+            client.InitializedRPC(new IPHost(iPHost), verifyToken);
+            rpcDic.TryAdd(iPHost, client);
             client.RPCInvoke(methodKey, ref parameters, invokeOption);
         }
 
@@ -309,22 +454,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 快捷调用RPC
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="host">IP及端口</param>
+        /// <param name="iPHost">IP及端口</param>
         /// <param name="methodKey">函数键</param>
         /// <param name="verifyToken">验证Token</param>
         /// <param name="invokeOption">调用设置</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public static T CallRPC<T>(string host, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
+        public static T CallRPC<T>(string iPHost, string methodKey, string verifyToken = null, InvokeOption invokeOption = null, params object[] parameters)
         {
             RPCClient client;
-            if (rpcDic.TryGetValue(host, out client))
+            if (rpcDic.TryGetValue(iPHost, out client))
             {
                 return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
             }
             client = new RPCClient();
-            client.InitializedRPC(host, verifyToken);
-            rpcDic.TryAdd(host, client);
+            client.InitializedRPC(new IPHost(iPHost), verifyToken);
+            rpcDic.TryAdd(iPHost, client);
             return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
         }
 

@@ -20,7 +20,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC传输类
     /// </summary>
-    public class RPCContext : WaitResult
+    public class RpcContext : WaitResult
     {
         internal int MethodToken;
         internal byte Feedback;
@@ -77,9 +77,9 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        internal static RPCContext Deserialize(byte[] buffer, int offset)
+        internal static RpcContext Deserialize(byte[] buffer, int offset)
         {
-            RPCContext context = new RPCContext();
+            RpcContext context = new RpcContext();
             context.Sign = BitConverter.ToInt32(buffer, offset);
             offset += 4;
             context.Status = buffer[offset];
