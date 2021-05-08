@@ -191,7 +191,7 @@ public class Server: ServerProvider
 ```
 #### 4.2 启动RPC服务
 
-[启动RPC服务说明](https://gitee.com/dotnetchina/RRQMSocket/wikis/6.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E5%90%AF%E5%8A%A8RPC%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3904370)
+[启动RPC服务说明](https://gitee.com/RRQM_OS/RRQM/wikis/6.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E5%90%AF%E5%8A%A8RPC%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3984501)
 
 #### 4.3 特点
 - 简单易用。
