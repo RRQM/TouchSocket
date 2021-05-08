@@ -163,14 +163,11 @@ namespace RRQMSocket.RPC
                         methodInstance.RPCAttributes = attributes.ToArray();
                         methodInstance.IsEnable = true;
                         methodInstance.Parameters = method.GetParameters();
-                        foreach (var attribute in attributes)
+                        if (typeof(Task).IsAssignableFrom(method.ReturnType))
                         {
-                            if (attribute.Async)
-                            {
-                                methodInstance.Async = true;
-                                break;
-                            }
+                            methodInstance.Async = true;
                         }
+                       
                         ParameterInfo[] parameters = method.GetParameters();
                         List<Type> types = new List<Type>();
                         foreach (var parameter in parameters)
@@ -198,7 +195,15 @@ namespace RRQMSocket.RPC
                         }
                         else
                         {
-                            methodInstance.ReturnType = method.ReturnType;
+                            if (methodInstance.Async)
+                            {
+                                methodInstance.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                            }
+                            else
+                            {
+                                methodInstance.ReturnType = method.ReturnType;
+                            }
+                           
 
                             if (parameters.Length == 0)
                             {
@@ -230,23 +235,32 @@ namespace RRQMSocket.RPC
             {
                 Task.Run(() =>
                 {
-                    ExecuteMethod(parser, methodInvoker, methodInstance);
+                    ExecuteMethod(true,parser, methodInvoker, methodInstance);
                 });
             }
             else
             {
-                ExecuteMethod(parser, methodInvoker, methodInstance);
+                ExecuteMethod(false,parser, methodInvoker, methodInstance);
             }
         }
 
-        private void ExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        private void ExecuteMethod(bool isAsync,RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
             {
                 try
                 {
                     methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
-                    methodInvoker.ReturnParameter = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
+                    if (isAsync)
+                    {
+                        dynamic task= methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
+                        task.Wait();
+                        methodInvoker.ReturnParameter = task.Result;
+                    }
+                    else
+                    {
+                        methodInvoker.ReturnParameter = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
+                    }
                     methodInstance.Provider.RPC(3, parser, methodInvoker, methodInstance);
                     methodInvoker.Status = InvokeStatus.Success;
                 }

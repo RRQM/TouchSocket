@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -281,6 +282,10 @@ namespace RRQMSocket.RPC.RRQMRPC
             else if (type == typeof(void))
             {
                 return null;
+            }
+            else if (typeof(Task).IsAssignableFrom(type))
+            {
+                type = type.GetGenericArguments()[0];
             }
 
             if (type.IsByRef)

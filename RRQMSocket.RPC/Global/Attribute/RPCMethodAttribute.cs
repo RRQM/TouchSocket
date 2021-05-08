@@ -19,9 +19,5 @@ namespace RRQMSocket.RPC
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public abstract class RPCMethodAttribute : Attribute
     {
-        /// <summary>
-        /// 是否异步执行
-        /// </summary>
-        public bool Async { get; set; }
     }
 }

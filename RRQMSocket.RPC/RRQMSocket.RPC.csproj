@@ -78,6 +78,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\RRQMSocket.Http\RRQMSocket.Http.csproj" />
   </ItemGroup>
 </Project>
