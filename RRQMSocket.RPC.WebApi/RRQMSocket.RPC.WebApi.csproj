@@ -81,4 +81,9 @@
 		<ProjectReference Include="..\RRQMSocket.Http\RRQMSocket.Http.csproj" />
 		<ProjectReference Include="..\RRQMSocket.RPC\RRQMSocket.RPC.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="RRQMCore">
+	    <HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 </Project>

@@ -194,7 +194,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                         methodInstance.Method = method;
                         methodInstance.RPCAttributes = new RPCMethodAttribute[] { attribute };
                         methodInstance.IsEnable = true;
-                        methodInstance.Parameters = method.GetParameters();
+                        ParameterInfo[] parameterInfos = method.GetParameters();
+                        methodInstance.Parameters = new ReadOnlyDictionary<string, ParameterInfo>();
+                        foreach (var parameterInfo in parameterInfos)
+                        {
+                            methodInstance.Parameters.Add(parameterInfo.Name, parameterInfo);
+                        }
                         if (typeof(Task).IsAssignableFrom(method.ReturnType))
                         {
                             methodInstance.Async = true;

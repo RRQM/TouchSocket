@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace RRQMSocket.RPC
@@ -50,9 +51,9 @@ namespace RRQMSocket.RPC
         public Type[] ParameterTypes { get; internal set; }
 
         /// <summary>
-        /// 参数集合
+        /// 以参数名为键的参数集合
         /// </summary>
-        public ParameterInfo[] Parameters { get; internal set; }
+        public ReadOnlyDictionary<string, ParameterInfo> Parameters { get; internal set; }
 
         /// <summary>
         /// 是否异步执行

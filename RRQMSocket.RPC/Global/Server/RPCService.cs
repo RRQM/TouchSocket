@@ -162,12 +162,18 @@ namespace RRQMSocket.RPC
                         methodInstance.Method = method;
                         methodInstance.RPCAttributes = attributes.ToArray();
                         methodInstance.IsEnable = true;
-                        methodInstance.Parameters = method.GetParameters();
+                        ParameterInfo[] parameterInfos = method.GetParameters();
+                        methodInstance.Parameters = new ReadOnlyDictionary<string, ParameterInfo>();
+                        foreach (var parameterInfo in parameterInfos)
+                        { 
+                            methodInstance.Parameters.Add(parameterInfo.Name, parameterInfo);
+                        }
+
                         if (typeof(Task).IsAssignableFrom(method.ReturnType))
                         {
                             methodInstance.Async = true;
                         }
-                       
+
                         ParameterInfo[] parameters = method.GetParameters();
                         List<Type> types = new List<Type>();
                         foreach (var parameter in parameters)
@@ -203,7 +209,7 @@ namespace RRQMSocket.RPC
                             {
                                 methodInstance.ReturnType = method.ReturnType;
                             }
-                           
+
 
                             if (parameters.Length == 0)
                             {
@@ -235,16 +241,16 @@ namespace RRQMSocket.RPC
             {
                 Task.Run(() =>
                 {
-                    ExecuteMethod(true,parser, methodInvoker, methodInstance);
+                    ExecuteMethod(true, parser, methodInvoker, methodInstance);
                 });
             }
             else
             {
-                ExecuteMethod(false,parser, methodInvoker, methodInstance);
+                ExecuteMethod(false, parser, methodInvoker, methodInstance);
             }
         }
 
-        private void ExecuteMethod(bool isAsync,RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        private void ExecuteMethod(bool isAsync, RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
             {
@@ -253,7 +259,7 @@ namespace RRQMSocket.RPC
                     methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
                     if (isAsync)
                     {
-                        dynamic task= methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
+                        dynamic task = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
                         task.Wait();
                         methodInvoker.ReturnParameter = task.Result;
                     }

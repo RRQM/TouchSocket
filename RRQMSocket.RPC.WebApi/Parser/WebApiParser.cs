@@ -85,6 +85,11 @@ namespace RRQMSocket.RPC.WebApi
         public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
 
         /// <summary>
+        /// 获取路由映射图
+        /// </summary>
+        public RouteMap RouteMap { get { return this.routeMap; } }
+
+        /// <summary>
         /// 绑定服务
         /// </summary>
         /// <param name="port">端口号</param>
@@ -135,7 +140,10 @@ namespace RRQMSocket.RPC.WebApi
             {
                 if (methodInstance.IsEnable)
                 {
+                    foreach (var item in httpRequest.Query)
+                    {
 
+                    }
                 }
                 else
                 {
@@ -199,7 +207,7 @@ namespace RRQMSocket.RPC.WebApi
                     }
                     else
                     {
-                        controllerName = classAtt.Template.Replace("{controller}", methodInstance.Provider.GetType().Name);
+                        controllerName = classAtt.Template.Replace("[controller]", methodInstance.Provider.GetType().Name);
                     }
 
                     foreach (var att in methodInstance.RPCAttributes)
@@ -208,9 +216,9 @@ namespace RRQMSocket.RPC.WebApi
                         {
                             string actionUrl;
 
-                            if (controllerName.Contains("{action}"))
+                            if (controllerName.Contains("[action]"))
                             {
-                                actionUrl = controllerName.Replace("{action}", methodInstance.Method.Name);
+                                actionUrl = controllerName.Replace("[action]", methodInstance.Method.Name);
                             }
                             else
                             {
@@ -220,7 +228,7 @@ namespace RRQMSocket.RPC.WebApi
                                 }
                                 else
                                 {
-                                    actionUrl = $"{controllerName}/{attribute.Template.Replace("{action}", methodInstance.Method.Name)}";
+                                    actionUrl = $"{controllerName}/{attribute.Template.Replace("[action]", methodInstance.Method.Name)}";
                                 }
                             }
 
