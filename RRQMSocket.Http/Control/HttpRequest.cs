@@ -34,14 +34,9 @@ namespace RRQMSocket.Http
         public Dictionary<string, string> Forms { get; set; }
 
         /// <summary>
-        /// request 参数
-        /// </summary>
-        public Dictionary<string, string> Parmas { get; set; }
-
-        /// <summary>
         /// URL参数
         /// </summary>
-        public Dictionary<string, string> Params { get; private set; }
+        public Dictionary<string, string> Params { get; set; }
 
         /// <summary>
         /// HTTP请求方式
@@ -52,6 +47,11 @@ namespace RRQMSocket.Http
         /// HTTP(S)地址
         /// </summary>
         public string URL { get; set; }
+
+        /// <summary>
+        /// 相对路径（不含参数）
+        /// </summary>
+        public string RelativeURL { get; set; }
 
         /// <summary>
         /// 获取时候保持连接
@@ -72,7 +72,11 @@ namespace RRQMSocket.Http
             //Request URL & Method & Version
             var first = Regex.Split(rows[0], @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
             if (first.Length > 0) this.Method = first[0];
-            if (first.Length > 1) this.URL = Uri.UnescapeDataString(first[1]);
+            if (first.Length > 1)
+            {
+                this.URL = Uri.UnescapeDataString(first[1]);
+                this.RelativeURL = first[1].Split('?')[0];
+            } 
             if (first.Length > 2)
             {
                 string[] ps = first[2].Split('/');
@@ -160,10 +164,11 @@ namespace RRQMSocket.Http
             this.BodyString = this.Body == null ? null : Encoding.UTF8.GetString(this.Body.Buffer, 0, (int)this.Body.Length);
             if (this.Method == "POST")
             {
-                var contentType = GetHeader(RequestHeaders.ContentType);
-                var isUrlencoded = contentType == @"application/x-www-form-urlencoded";
-
-                if (isUrlencoded) this.Params = GetRequestParameters(this.BodyString);
+                this.Content_Type = GetHeader(RequestHeaders.ContentType);
+                if (this.Content_Type == @"application/x-www-form-urlencoded")
+                {
+                    this.Params = GetRequestParameters(this.BodyString);
+                } 
             }
         }
 

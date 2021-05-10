@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Helper;
 using RRQMCore.Log;
 using RRQMSocket.Http;
 using System;
@@ -31,7 +32,7 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public WebApiParser()
         {
-            this.ResultConverter = new XmlResultConverter();
+            this.ApiDataConverter = new XmlDataConverter();
             this.tcpService = new RRQMTcpService();
             this.routeMap = new RouteMap();
             this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
@@ -55,9 +56,9 @@ namespace RRQMSocket.RPC.WebApi
         private RRQMTcpService tcpService;
 
         /// <summary>
-        /// 响应数据转化器
+        /// 数据转化器
         /// </summary>
-        public ResultConverter ResultConverter { get; set; }
+        public ApiDataConverter ApiDataConverter { get; set; }
 
         /// <summary>
         /// 获取当前服务通信器
@@ -136,13 +137,46 @@ namespace RRQMSocket.RPC.WebApi
             httpRequest.Flag = socketClient;
             methodInvoker.Flag = httpRequest;
 
-            if (this.routeMap.TryGet(httpRequest.URL, out MethodInstance methodInstance))
+            if (this.routeMap.TryGet(httpRequest.RelativeURL, out MethodInstance methodInstance))
             {
                 if (methodInstance.IsEnable)
                 {
-                    foreach (var item in httpRequest.Query)
+                    try
                     {
+                        methodInvoker.Parameters = new object[methodInstance.Parameters.Length];
+                        switch (httpRequest.Method)
+                        {
+                            case "GET":
+                                {
+                                    if (httpRequest.Query != null)
+                                    {
+                                        for (int i = 0; i < methodInstance.Parameters.Length; i++)
+                                        {
+                                            if (httpRequest.Query.TryGetValue(methodInstance.ParameterNames[i], out string value))
+                                            {
+                                                methodInvoker.Parameters[i] = value.ParseToType(methodInstance.ParameterTypes[i]);
+                                            }
+                                            else
+                                            {
+                                                methodInvoker.Parameters[i] = methodInstance.ParameterTypes[i].GetDefault();
+                                            }
+                                        }
 
+                                    }
+                                    break;
+                                }
+                            case "POST":
+                                {
+                                    this.ApiDataConverter.OnPost(httpRequest, ref methodInvoker, methodInstance);
+                                    break;
+                                }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        methodInvoker.Status = InvokeStatus.Exception;
+                        methodInvoker.StatusMessage = ex.Message;
+                        this.Logger.Debug(LogType.Error, ex.Message, ex.StackTrace);
                     }
                 }
                 else
@@ -168,7 +202,7 @@ namespace RRQMSocket.RPC.WebApi
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
             RRQMSocketClient socketClient = (RRQMSocketClient)httpRequest.Flag;
 
-            HttpResponse httpResponse = this.ResultConverter.OnResultConverter(methodInvoker, methodInstance);
+            HttpResponse httpResponse = this.ApiDataConverter.OnResult(methodInvoker, methodInstance);
 
             httpResponse.ProtocolVersion = httpRequest.ProtocolVersion;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -214,6 +248,10 @@ namespace RRQMSocket.RPC.WebApi
                     {
                         if (att is RouteAttribute attribute)
                         {
+                            if (methodInstance.IsByRef)
+                            {
+                                throw new RRQMRPCException("WebApi服务中不允许有out及ref关键字");
+                            }
                             string actionUrl;
 
                             if (controllerName.Contains("[action]"))

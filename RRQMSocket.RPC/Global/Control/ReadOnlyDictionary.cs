@@ -27,12 +27,12 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 值集合
         /// </summary>
-        public IEnumerable<TValue> Values { get { return this.dic.Values; } }
+        public ICollection<TValue> Values { get { return this.dic.Values; } }
         
         /// <summary>
         /// 键集合
         /// </summary>
-        public IEnumerable<TKey> Keys { get { return this.dic.Keys; } }
+        public ICollection<TKey> Keys { get { return this.dic.Keys; } }
 
         internal void Add(TKey key, TValue value)
         {

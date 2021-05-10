@@ -47,7 +47,6 @@ namespace RRQMSocket.Http
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            string s = Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length);
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
             if (this.tempByteBlock != null)
@@ -63,7 +62,7 @@ namespace RRQMSocket.Http
                 if (index > 0)
                 {
                     this.httpRequest = new HttpRequest();
-                    this.httpRequest.ReadHeaders(buffer, 0, r);
+                    this.httpRequest.ReadHeaders(buffer, 0, index);
 
                     if (this.httpRequest.Content_Length > 0)
                     {

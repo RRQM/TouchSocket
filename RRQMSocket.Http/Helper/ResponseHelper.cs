@@ -20,38 +20,39 @@ namespace RRQMSocket.Http
     /// </summary>
     public static class ResponseHelper
     {
-        /// <summary>
-        /// 从文件
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static HttpResponse FromFile(this HttpResponse response, string fileName)
-        {
-            if (!File.Exists(fileName))
-            {
-                response.SetContent("<html><body><h1>404 -RRQM Not Found</h1></body></html>");
-                response.StatusCode = "404";
-                response.Content_Type = "text/html";
-                return response;
-            }
+        ///// <summary>
+        ///// 从文件
+        ///// </summary>
+        ///// <param name="response"></param>
+        ///// <param name="fileName"></param>
+        ///// <returns></returns>
+        //public static HttpResponse FromFile(this HttpResponse response, string fileName)
+        //{
+        //    if (!File.Exists(fileName))
+        //    {
+        //        response.SetContent("<html><body><h1>404 -RRQM Not Found</h1></body></html>");
+        //        response.StatusCode = "404";
+        //        response.Content_Type = "text/html";
+        //        return response;
+        //    }
 
-            var content = File.ReadAllBytes(fileName);
-            response.SetContent(content);
-            return response.FromSuccess();
-        }
+        //    var content = File.ReadAllBytes(fileName);
+        //    response.SetContent(content);
+        //    return response.FromSuccess();
+        //}
 
         /// <summary>
         /// 从Xml格式
         /// </summary>
         /// <param name="response"></param>
         /// <param name="xmlText"></param>
+        /// <param name="statusCode"></param>
         /// <returns></returns>
-        public static HttpResponse FromXML(this HttpResponse response, string xmlText)
+        public static HttpResponse FromXML(this HttpResponse response, string xmlText, string statusCode = "200")
         {
             response.SetContent(xmlText);
             response.Content_Type = "text/xml";
-            return response.FromSuccess();
+            return response.FromSuccess(statusCode);
         }
 
         /// <summary>
@@ -59,36 +60,39 @@ namespace RRQMSocket.Http
         /// </summary>
         /// <param name="response"></param>
         /// <param name="jsonText"></param>
+        /// <param name="statusCode"></param>
         /// <returns></returns>
-        public static HttpResponse FromJson(this HttpResponse response, string jsonText)
+        public static HttpResponse FromJson(this HttpResponse response, string jsonText, string statusCode = "200")
         {
             response.SetContent(jsonText);
             response.Content_Type = "text/json";
-            return response.FromSuccess();
+            return response.FromSuccess(statusCode);
         }
 
         /// <summary>
         /// 从文本
         /// </summary>
         /// <param name="response"></param>
+        /// <param name="statusCode"></param>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static HttpResponse FromText(this HttpResponse response, string text)
+        public static HttpResponse FromText(this HttpResponse response,  string text,string statusCode = "200")
         {
             response.SetContent(text);
             response.Content_Type = "text/plain";
 
-            return response.FromSuccess();
+            return response.FromSuccess(statusCode);
         }
 
         /// <summary>
         /// 返回成功
         /// </summary>
         /// <param name="response"></param>
+        /// <param name="statusCode"></param>
         /// <returns></returns>
-        public static HttpResponse FromSuccess(this HttpResponse response)
+        public static HttpResponse FromSuccess(this HttpResponse response,string statusCode="200")
         {
-            response.StatusCode = "200";
+            response.StatusCode = statusCode;
             response.SetHeader(ResponseHeader.Server, $"RRQMSocket.Http {HttpResponse.ServerVersion}");
             response.SetHeader(ResponseHeader.Date, DateTime.Now.ToGMTString("r"));
             return response;

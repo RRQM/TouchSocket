@@ -15,7 +15,7 @@ namespace RRQMSocket.RPC.WebApi
     /// <summary>
     /// Api结果转化器
     /// </summary>
-    public abstract class ResultConverter
+    public abstract class ApiDataConverter
     {
         /// <summary>
         /// 在调用完成时转换结果
@@ -23,6 +23,14 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public abstract HttpResponse OnResultConverter(MethodInvoker methodInvoker, MethodInstance methodInstance);
+        public abstract HttpResponse OnResult(MethodInvoker methodInvoker, MethodInstance methodInstance);
+
+        /// <summary>
+        /// 在调用时
+        /// </summary>
+        /// <param name="httpRequest"></param>
+        /// <param name="methodInvoker"></param>
+        /// <param name="methodInstance"></param>
+        public abstract void OnPost(HttpRequest httpRequest,ref MethodInvoker methodInvoker, MethodInstance methodInstance);
     }
 }

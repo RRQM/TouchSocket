@@ -4,7 +4,7 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>1.0.2.0</Version>
+    <Version>1.0.3.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>介绍：这是一个高性能的RPC微服务框架，支持异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
@@ -64,8 +64,6 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
+    <PackageReference Include="RRQMSocket" Version="4.0.16" />
   </ItemGroup>
 </Project>

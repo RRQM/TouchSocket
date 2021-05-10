@@ -51,9 +51,14 @@ namespace RRQMSocket.RPC
         public Type[] ParameterTypes { get; internal set; }
 
         /// <summary>
-        /// 以参数名为键的参数集合
+        /// 参数集合
         /// </summary>
-        public ReadOnlyDictionary<string, ParameterInfo> Parameters { get; internal set; }
+        public ParameterInfo[] Parameters { get; internal set; }
+
+        /// <summary>
+        /// 参数名集合
+        /// </summary>
+        public string[] ParameterNames { get; internal set; }
 
         /// <summary>
         /// 是否异步执行
