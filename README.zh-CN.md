@@ -99,9 +99,7 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 ## 💐框架速览
 
 ## 一、TCP框架
-#### 1.1 创建TCP服务框架
-[RRQMSocket入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
-#### 1.2 特点
+#### 1.1 特点
 - 简单易用。
 - 多线程处理。
 - IOCP完美设计模型，避免收到数据再复制。
@@ -109,6 +107,9 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 - 超简单的解决粘包、分包问题，详见[RRQMSocket解决TCP粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179?spm=1001.2014.3001.5501)。
 - 内存池设计，避免内存重复申请、释放。
 - 对象池设计，避免数据对象的申请、释放。
+#### 1.1 创建TCP服务框架
+[RRQMSocket入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
+
 #### 1.3 Demo
 [RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
 
