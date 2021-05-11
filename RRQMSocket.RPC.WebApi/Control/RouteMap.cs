@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Collections;
 using System.Collections.Generic;
 
 namespace RRQMSocket.RPC.WebApi
@@ -16,7 +17,7 @@ namespace RRQMSocket.RPC.WebApi
     /// <summary>
     /// 路由映射图
     /// </summary>
-    public class RouteMap
+    public class RouteMap: IEnumerable<KeyValuePair<string, MethodInstance>>
     {
         internal RouteMap()
         {
@@ -29,6 +30,11 @@ namespace RRQMSocket.RPC.WebApi
         {
             this.routeMap.Add(routeUrl, methodInstance);
         }
+
+        /// <summary>
+        /// 路由路径集合
+        /// </summary>
+        public IEnumerable<string> Urls { get { return this.routeMap.Keys; } }
 
         /// <summary>
         /// 通过routeUrl获取函数实例
@@ -45,6 +51,20 @@ namespace RRQMSocket.RPC.WebApi
             }
             methodInstance = null;
             return false;
+        }
+
+        /// <summary>
+        /// 返回迭代器
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<KeyValuePair<string, MethodInstance>> GetEnumerator()
+        {
+           return this.routeMap.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.routeMap.GetEnumerator();
         }
     }
 }
