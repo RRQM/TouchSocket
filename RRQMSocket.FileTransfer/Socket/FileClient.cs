@@ -650,7 +650,8 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 恢复传输
         /// </summary>
-        public void ResumeTransfer()
+        /// <returns>是否有任务成功继续</returns>
+        public bool ResumeTransfer()
         {
             if (this.TransferStatus == TransferStatus.PauseDownload)
             {
@@ -660,9 +661,18 @@ namespace RRQMSocket.FileTransfer
             {
                 this.TransferStatus = TransferStatus.Upload;
             }
+            else
+            {
+                return false;
+            }
             if (waitHandle != null)
             {
                 this.waitHandle.Set();
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -1104,6 +1114,7 @@ namespace RRQMSocket.FileTransfer
             if (this.waitHandle != null)
             {
                 this.waitHandle.Dispose();
+                this.waitHandle = null;
             }
             if (this.downloadFileStream != null)
             {
@@ -1128,6 +1139,7 @@ namespace RRQMSocket.FileTransfer
             if (this.waitHandle != null)
             {
                 this.waitHandle.Dispose();
+                this.waitHandle = null;
             }
             this.fileBlocks = null;
             this.TransferStatus = TransferStatus.None;
