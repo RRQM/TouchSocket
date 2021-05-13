@@ -15,10 +15,13 @@ using RRQMCore.Helper;
 using RRQMCore.Log;
 using RRQMSocket.Http;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace RRQMSocket.RPC.XmlRpc
 {
@@ -33,7 +36,7 @@ namespace RRQMSocket.RPC.XmlRpc
         public XmlRpcParser()
         {
             this.tcpService = new RRQMTcpService();
-            this.actionMap = new  ActionMap();
+            this.actionMap = new ActionMap();
             this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
             this.tcpService.OnReceived += this.OnReceived;
         }
@@ -47,7 +50,7 @@ namespace RRQMSocket.RPC.XmlRpc
         {
             if (creatOption.NewCreat)
             {
-                socketClient.DataHandlingAdapter = new Http.HttpDataHandlingAdapter(this.BufferLength);
+                socketClient.DataHandlingAdapter = new HttpDataHandlingAdapter(this.BufferLength);
             }
         }
 
@@ -132,38 +135,64 @@ namespace RRQMSocket.RPC.XmlRpc
             httpRequest.Flag = socketClient;
             methodInvoker.Flag = httpRequest;
 
-            if (this.actionMap.TryGet(httpRequest.RelativeURL, out MethodInstance methodInstance))
+            XmlDocument xml = new XmlDocument();
+            xml.LoadXml(httpRequest.BodyString);
+            XmlNode methodName = xml.SelectSingleNode("methodCall/methodName");
+            string actionKey = methodName.InnerText;
+
+            if (this.actionMap.TryGet(actionKey, out MethodInstance methodInstance))
             {
                 if (methodInstance.IsEnable)
                 {
                     try
                     {
-                        methodInvoker.Parameters = new object[methodInstance.Parameters.Length];
-                        switch (httpRequest.Method)
+                        List<object> ps = new List<object>();
+                        XmlNode paramsNode = xml.SelectSingleNode("methodCall/params");
+                        foreach (XmlNode paramNode in paramsNode.ChildNodes)
                         {
-                            case "GET":
-                                {
-                                    if (httpRequest.Query != null)
+                            XmlNode valueNode = paramNode.FirstChild.FirstChild;
+                            switch (valueNode.Name)
+                            {
+                                case "boolean":
                                     {
-                                        for (int i = 0; i < methodInstance.Parameters.Length; i++)
-                                        {
-                                            if (httpRequest.Query.TryGetValue(methodInstance.ParameterNames[i], out string value))
-                                            {
-                                                methodInvoker.Parameters[i] = value.ParseToType(methodInstance.ParameterTypes[i]);
-                                            }
-                                            else
-                                            {
-                                                methodInvoker.Parameters[i] = methodInstance.ParameterTypes[i].GetDefault();
-                                            }
-                                        }
-
+                                        ps.Add(bool.Parse(valueNode.InnerText));
+                                        break;
                                     }
-                                    break;
-                                }
-                            case "POST":
-                                {
-                                    break;
-                                }
+                                case "i4":
+                                case "int":
+                                    {
+                                        ps.Add(int.Parse(valueNode.InnerText));
+                                        break;
+                                    }
+                                case "double":
+                                    {
+                                        ps.Add(double.Parse(valueNode.InnerText));
+                                        break;
+                                    }
+                                case "dateTime.iso8601":
+                                    {
+                                        ps.Add(DateTime.Parse(valueNode.InnerText));
+                                        break;
+                                    }
+                                case "base64":
+                                    {
+                                        ps.Add(valueNode.InnerText);
+                                        break;
+                                    }
+                                case "struct":
+                                    {
+                                       
+                                        
+                                        ps.Add(valueNode.InnerText);
+                                        break;
+                                    }
+                                default:
+                                case "string":
+                                    {
+                                        ps.Add(valueNode.InnerText);
+                                        break;
+                                    }
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -196,7 +225,7 @@ namespace RRQMSocket.RPC.XmlRpc
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
             RRQMSocketClient socketClient = (RRQMSocketClient)httpRequest.Flag;
 
-            HttpResponse httpResponse =new HttpResponse();
+            HttpResponse httpResponse = new HttpResponse();
 
             httpResponse.ProtocolVersion = httpRequest.ProtocolVersion;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -233,7 +262,7 @@ namespace RRQMSocket.RPC.XmlRpc
                         {
                             throw new RRQMRPCException("XmlRpc服务中不允许有out及ref关键字");
                         }
-                        string actionKey=string.IsNullOrEmpty(attribute.ActionKey)?methodInstance.Method.Name:attribute.ActionKey;
+                        string actionKey = string.IsNullOrEmpty(attribute.ActionKey) ? $"{methodInstance.Provider.GetType().Name}.{methodInstance.Method.Name}" : attribute.ActionKey;
 
                         this.actionMap.Add(actionKey, methodInstance);
                     }
