@@ -148,6 +148,7 @@ namespace RRQMSocket.RPC.XmlRpc
                     {
                         List<object> ps = new List<object>();
                         XmlNode paramsNode = xml.SelectSingleNode("methodCall/params");
+                        int index = 0;
                         foreach (XmlNode paramNode in paramsNode.ChildNodes)
                         {
                             XmlNode valueNode = paramNode.FirstChild.FirstChild;
@@ -181,8 +182,14 @@ namespace RRQMSocket.RPC.XmlRpc
                                     }
                                 case "struct":
                                     {
-                                       
-                                        
+                                        Type type = methodInstance.ParameterTypes[index];
+                                        object instance = Activator.CreateInstance(type);
+                                        foreach (XmlNode memberNode in valueNode.ChildNodes)
+                                        {
+                                            string name = memberNode.SelectSingleNode("name").InnerText;
+                                            PropertyInfo property = type.GetProperty(name);
+                                            //property.SetValue(instance,);
+                                        }
                                         ps.Add(valueNode.InnerText);
                                         break;
                                     }
@@ -193,6 +200,7 @@ namespace RRQMSocket.RPC.XmlRpc
                                         break;
                                     }
                             }
+                            index++;
                         }
                     }
                     catch (Exception ex)
@@ -214,6 +222,11 @@ namespace RRQMSocket.RPC.XmlRpc
 
             this.ExecuteMethod(methodInvoker, methodInstance);
         }
+
+        //private object GetValue()
+        //{ 
+
+        //}
 
         /// <summary>
         /// 结束调用
