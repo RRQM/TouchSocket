@@ -143,98 +143,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns>服务器返回结果</returns>
-        public T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption)
+        public T RPCInvoke<T>(string method, InvokeOption invokeOption = null, params object[] parameters)
         {
-            lock (locker)
+            object result = this.Invoke(method,  invokeOption,ref parameters);
+            if (result != null)
             {
-                MethodItem methodItem = methodStore.GetMethodItem(method);
-
-                invokeWaitData.WaitResult.MethodToken = methodItem.MethodToken;
-
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                if (invokeOption == null)
-                {
-                    invokeOption = InvokeOption.CanFeedback;
-                }
-                try
-                {
-                    if (invokeOption.Feedback)
-                    {
-                        invokeWaitData.WaitResult.Feedback = 1;
-                    }
-                    List<byte[]> datas = new List<byte[]>();
-                    foreach (object parameter in parameters)
-                    {
-                        datas.Add(this.SerializeConverter.SerializeParameter(parameter));
-                    }
-                    invokeWaitData.WaitResult.ParametersBytes = datas;
-                    invokeWaitData.WaitResult.Serialize(byteBlock);
-
-                    agreementHelper.SocketSend(101, byteBlock);
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMException(e.Message);
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
-                if (invokeOption.Feedback)
-                {
-                    invokeWaitData.Wait(invokeOption.WaitTime * 1000);
-
-                    RpcContext context = invokeWaitData.WaitResult;
-                    invokeWaitData.Dispose();
-                    if (context.Status == 0)
-                    {
-                        throw new RRQMTimeoutException("等待结果超时");
-                    }
-                    else if (context.Status == 2)
-                    {
-                        throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
-                    }
-                    else if (context.Status == 3)
-                    {
-                        throw new RRQMRPCException("该方法已被禁用");
-                    }
-                    else if (context.Status == 4)
-                    {
-                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.MethodToken}");
-                    }
-                    if (methodItem.IsOutOrRef)
-                    {
-                        try
-                        {
-                            for (int i = 0; i < parameters.Length; i++)
-                            {
-                                parameters[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodItem.ParameterTypes[i]);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            throw new RRQMException(e.Message);
-                        }
-                    }
-                    else
-                    {
-                        parameters = null;
-                    }
-
-                    try
-                    {
-                        return (T)this.SerializeConverter.DeserializeParameter(context.ReturnParameterBytes, methodItem.ReturnType);
-                    }
-                    catch (Exception e)
-                    {
-                        throw new RRQMException(e.Message);
-                    }
-                }
-                else
-                {
-                    return default(T);
-                }
+                return (T)result;
             }
+            return default(T);
         }
 
         /// <summary>
@@ -247,7 +163,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void RPCInvoke(string method, ref object[] parameters, InvokeOption invokeOption)
+        public void RPCInvoke(string method, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            this.Invoke(method,  invokeOption,ref parameters);
+        }
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">函数名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public object Invoke(string method, InvokeOption invokeOption, ref object[] parameters)
         {
             lock (locker)
             {
@@ -321,10 +252,19 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         parameters = null;
                     }
+                    try
+                    {
+                        return this.SerializeConverter.DeserializeParameter(context.ReturnParameterBytes, methodItem.ReturnType);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RRQMException(e.Message);
+                    }
                 }
                 else
                 {
                     invokeWaitData.Dispose();
+                    return null;
                 }
             }
         }

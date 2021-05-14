@@ -116,7 +116,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                 foreach (MethodInfo method in Methods)
                 {
                     bool isReturn;
-                    bool isOutOrRef = false;
+                    bool isOut = false;
+                    bool isRef = false;
                     string methodName = method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey;
 
                     if (method.ReturnType.Name == "Void")
@@ -141,13 +142,15 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         if (parameters[i].ParameterType.Name.Contains("&"))
                         {
-                            isOutOrRef = true;
+                           
                             if (parameters[i].IsOut)
                             {
+                                isOut = true;
                                 codeString.Append(string.Format("out {0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
                             }
                             else
                             {
+                                isRef = true;
                                 codeString.Append(string.Format("ref {0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
                             }
                         }
@@ -156,7 +159,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             codeString.Append(string.Format("{0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
                         }
 
-                        if (parameters[i].DefaultValue != System.DBNull.Value)
+                        if (parameters[i].HasDefaultValue)
                         {
                             object defaultValue = parameters[i].DefaultValue;
                             if (defaultValue == null)
@@ -211,30 +214,42 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (isReturn)
                     {
-                        codeString.Append(string.Format("{0} returnData=Client.RPCInvoke<{0}>", this.GetName(method.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=({0})Client.Invoke", this.GetName(method.ReturnType)));
                         codeString.Append("(");
                         codeString.Append(string.Format("\"{0}\"", methodName));
-                        codeString.AppendLine(",ref parameters,invokeOption);");
+                        codeString.AppendLine(",invokeOption,ref parameters);");
                     }
                     else
                     {
-                        codeString.Append("Client.RPCInvoke(");
+                        codeString.Append("Client.Invoke(");
                         codeString.Append(string.Format("\"{0}\"", methodName));
-                        codeString.AppendLine(",ref parameters,invokeOption);");
+                        codeString.AppendLine(",invokeOption,ref parameters);");
+                    }
+                    if (isOut||isRef)
+                    {
+                        codeString.AppendLine("if(parameters!=null)");
+                        codeString.AppendLine("{");
+                        for (int i = 0; i < parameters.Length; i++)
+                        {
+                            codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, this.GetName(parameters[i].ParameterType), i));
+                        }
+                        codeString.AppendLine("}");
+                        if (isOut)
+                        {
+                            codeString.AppendLine("else");
+                            codeString.AppendLine("{");
+                            for (int i = 0; i < parameters.Length; i++)
+                            {
+                                if (parameters[i].IsOut)
+                                {
+                                    codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, this.GetName(parameters[i].ParameterType)));
+                                }
+                            }
+                            codeString.AppendLine("}");
+                        }
+                       
                     }
 
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, this.GetName(parameters[i].ParameterType)));
-                    }
-
-                    codeString.AppendLine("if(parameters!=null)");
-                    codeString.AppendLine("{");
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, this.GetName(parameters[i].ParameterType), i));
-                    }
-                    codeString.AppendLine("}");
                     if (isReturn)
                     {
                         codeString.AppendLine("return returnData;");
@@ -242,7 +257,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     codeString.AppendLine("}");
 
-                    if (!isOutOrRef)//没有out或者ref
+                    if (!isOut&&!isRef)//没有out或者ref
                     {
                         if (method.ReturnType.Name == "Void")
                         {

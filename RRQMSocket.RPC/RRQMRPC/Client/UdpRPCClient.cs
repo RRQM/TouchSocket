@@ -343,7 +343,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns>服务器返回结果</returns>
-        public T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption)
+        public T RPCInvoke<T>(string method, InvokeOption invokeOption = null, params object[] parameters)
         {
             lock (this)
             {
@@ -402,7 +402,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void RPCInvoke(string method, ref object[] parameters, InvokeOption invokeOption)
+        public void RPCInvoke(string method, InvokeOption invokeOption = null, params object[] parameters)
         {
             lock (this)
             {
@@ -447,6 +447,66 @@ namespace RRQMSocket.RPC.RRQMRPC
                         throw new RRQMTimeoutException("等待结果超时");
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns>服务器返回结果,此处永久返回null</returns>
+        public object Invoke(string method, InvokeOption invokeOption, ref object[] parameters)
+        {
+            lock (this)
+            {
+                this.singleWaitData.WaitResult = null;
+                RpcContext context = new RpcContext();
+                MethodItem methodItem = this.methodStore.GetMethodItem(method);
+                context.MethodToken = methodItem.MethodToken;
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                if (invokeOption == null)
+                {
+                    invokeOption = InvokeOption.NoFeedback;
+                }
+                try
+                {
+                    if (invokeOption.Feedback)
+                    {
+                        context.Feedback = 1;
+                    }
+                    List<byte[]> datas = new List<byte[]>();
+                    foreach (object parameter in parameters)
+                    {
+                        datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    }
+                    context.ParametersBytes = datas;
+                    context.Serialize(byteBlock);
+
+                    UDPSend(101, byteBlock);
+                }
+                catch (Exception e)
+                {
+                    throw new RRQMException(e.Message);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+                if (invokeOption.Feedback)
+                {
+                    this.singleWaitData.Wait(invokeOption.WaitTime * 1000);
+                    if (this.singleWaitData.WaitResult == null)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                }
+                return null;
             }
         }
 
