@@ -25,7 +25,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// 集群RPC客户端
     /// </summary>
-    public sealed class RPCClient : IRPCClient
+    public  class RPCClient : IRPCClient
     {
         /// <summary>
         /// 构造函数
@@ -122,7 +122,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 获取反向RPC映射图
         /// </summary>
-        public MethodMap MethodMap { get;private set; }
+        public MethodMap MethodMap { get; private set; }
 
         private static ConcurrentDictionary<string, RPCClient> rpcDic = new ConcurrentDictionary<string, RPCClient>();
         private IPHost iPHost;
@@ -185,8 +185,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                         throw new RRQMRPCException("RPC方法中不支持泛型参数");
                     }
                     RRQMRPCCallBackMethodAttribute attribute = method.GetCustomAttribute<RRQMRPCCallBackMethodAttribute>();
-                   
-                    if (attribute!=null)
+
+                    if (attribute != null)
                     {
                         MethodInstance methodInstance = new MethodInstance();
                         methodInstance.MethodToken = attribute.MethodToken;
@@ -238,11 +238,11 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             this.MethodMap.Add(methodInstance);
                         }
-                        catch 
+                        catch
                         {
                             throw new RRQMRPCKeyException("MethodToken必须唯一");
                         }
-                       
+
                     }
                 }
             }
@@ -288,12 +288,12 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns>服务器返回结果</returns>
-        public T RPCInvoke<T>(string method, ref object[] parameters, InvokeOption invokeOption)
+        public T RPCInvoke<T>(string method, InvokeOption invokeOption = null, params object[] parameters)
         {
             RpcJunctor rpcJunctor = this.GetRpcJunctor();
             try
             {
-                return rpcJunctor.RPCInvoke<T>(method, ref parameters, invokeOption);
+                return rpcJunctor.RPCInvoke<T>(method, invokeOption, parameters);
             }
             finally
             {
@@ -311,12 +311,35 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void RPCInvoke(string method, ref object[] parameters, InvokeOption invokeOption)
+        public void RPCInvoke(string method, InvokeOption invokeOption = null, params object[] parameters)
         {
             RpcJunctor rpcJunctor = this.GetRpcJunctor();
             try
             {
-                rpcJunctor.RPCInvoke(method, ref parameters, invokeOption);
+                rpcJunctor.RPCInvoke(method, invokeOption, parameters);
+            }
+            finally
+            {
+                this.rpcJunctorPool.DestroyObject(rpcJunctor);
+            }
+        }
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns>服务器返回结果</returns>
+        public object Invoke(string method, InvokeOption invokeOption, ref object[] parameters)
+        {
+            RpcJunctor rpcJunctor = this.GetRpcJunctor();
+            try
+            {
+                return rpcJunctor.Invoke(method,  invokeOption,ref parameters);
             }
             finally
             {
@@ -405,12 +428,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                         object[] ps = new object[rpcContext.ParametersBytes.Count];
                         for (int i = 0; i < rpcContext.ParametersBytes.Count; i++)
                         {
-                            ps[i] = SerializeConvert.RRQMBinaryDeserialize(rpcContext.ParametersBytes[i],0,methodInstance.ParameterTypes[i]);
+                            ps[i] = SerializeConvert.RRQMBinaryDeserialize(rpcContext.ParametersBytes[i], 0, methodInstance.ParameterTypes[i]);
                         }
                         object result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
-                        if (result!=null)
+                        if (result != null)
                         {
-                            rpcContext.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(result,true);
+                            rpcContext.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(result, true);
                         }
                         rpcContext.Status = 1;
                     }
@@ -447,13 +470,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             RPCClient client;
             if (rpcDic.TryGetValue(iPHost, out client))
             {
-                client.RPCInvoke(methodKey, ref parameters, invokeOption);
+                client.RPCInvoke(methodKey,  invokeOption,parameters);
                 return;
             }
             client = new RPCClient();
             client.InitializedRPC(new IPHost(iPHost), verifyToken);
             rpcDic.TryAdd(iPHost, client);
-            client.RPCInvoke(methodKey, ref parameters, invokeOption);
+            client.RPCInvoke(methodKey, invokeOption, parameters);
         }
 
         /// <summary>
@@ -471,12 +494,12 @@ namespace RRQMSocket.RPC.RRQMRPC
             RPCClient client;
             if (rpcDic.TryGetValue(iPHost, out client))
             {
-                return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
+                return client.RPCInvoke<T>(methodKey, invokeOption, parameters);
             }
             client = new RPCClient();
             client.InitializedRPC(new IPHost(iPHost), verifyToken);
             rpcDic.TryAdd(iPHost, client);
-            return client.RPCInvoke<T>(methodKey, ref parameters, invokeOption);
+            return client.RPCInvoke<T>(methodKey, invokeOption, parameters);
         }
 
         /// <summary>
