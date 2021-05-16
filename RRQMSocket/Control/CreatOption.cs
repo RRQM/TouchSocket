@@ -21,7 +21,7 @@ namespace RRQMSocket
         /// 判断该T是否为新建对象，
         /// true：首次创建。false：从对象池获得
         /// </summary>
-        public bool NewCreat { get; internal set; }
+        public bool NewCreate { get; internal set; }
 
         /// <summary>
         /// 获取或设置该T的ID
