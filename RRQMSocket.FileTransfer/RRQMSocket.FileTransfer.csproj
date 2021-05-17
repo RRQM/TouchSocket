@@ -65,7 +65,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RRQMSocket" Version="4.0.16" />
+    <PackageReference Include="RRQMSocket" Version="4.0.17" />
   </ItemGroup>
 
 </Project>

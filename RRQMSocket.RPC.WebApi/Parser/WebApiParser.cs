@@ -46,7 +46,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="creatOption"></param>
         private void OnCreatSocketCliect(RRQMSocketClient socketClient, CreatOption creatOption)
         {
-            if (creatOption.NewCreat)
+            if (creatOption.NewCreate)
             {
                 socketClient.DataHandlingAdapter = new Http.HttpDataHandlingAdapter(this.BufferLength);
             }

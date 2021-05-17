@@ -121,7 +121,7 @@ namespace RRQMSocket.FileTransfer
             tcpSocketClient.breakpointResume = this.BreakpointResume;
             tcpSocketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             tcpSocketClient.MaxUploadSpeed = this.MaxUploadSpeed;
-            if (creatOption.NewCreat)
+            if (creatOption.NewCreate)
             {
                 tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 tcpSocketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;

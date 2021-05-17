@@ -7,14 +7,15 @@
 		<Version>1.0.0</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Description>
-			介绍：这是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过该组件直接创建WebApi服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持路由、Get传参、Post传参等。
+		<Description>介绍：这是一个扩展于RRQMSocket.RPC的XmlRpc组件，可以通过该组件直接创建XmlRpc服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持XmlRpc全功能。
 
-			RRQMSocket.rPC is a WebAPI component that extends RRQMSocket.rPC. You can directly create a WebAPI service parser through this component, so that the Web end and mobile end can call RPC functions across languages.The function supports routing, GET, POST, etc.
+Introduction：This is an XMLRPC component that extends RRQMSocket.rpc. You can create an XMLRPC service parser directly from this component, allowing both Web and mobile users to call RPC functions across languages.  Features support the full functionality of XMLRPC.  
 
-			Demo：https://gitee.com/RRQM_OS/RRQMBox
-			API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
-		</Description>
+更新说明：
+初次版本发布。
+			
+Demo：https://gitee.com/RRQM_OS/RRQMBox
+API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -22,7 +23,7 @@
 		<Authors>若汝棋茗</Authors>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageTags>WebApi</PackageTags>
+		<PackageTags>RPC;XmlRpc;Socket</PackageTags>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -66,6 +67,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="RRQMSocket.Http" Version="1.0.2" />
-		<PackageReference Include="RRQMSocket.RPC" Version="1.0.3" />
+		<PackageReference Include="RRQMSocket.RPC" Version="1.0.6" />
 	</ItemGroup>
 </Project>
