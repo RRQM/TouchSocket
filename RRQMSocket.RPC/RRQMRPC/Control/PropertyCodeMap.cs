@@ -15,6 +15,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using RRQMCore.Helper;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -82,12 +83,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             if (type.IsByRef)
             {
-                string typeName = type.FullName.Replace("&", string.Empty);
-                type = Type.GetType(typeName);
-                if (type == null)
-                {
-                    type = this.Assembly.GetType(typeName);
-                }
+                type = type.GetRefOutType();
             }
 
             if (!type.IsPrimitive && type != typeof(string))
@@ -107,7 +103,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     if (listType.Contains(type.Name))
                     {
                         string typeInnerString = this.GetTypeFullName(types[0]);
-                        string typeString = $"{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
+                        string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
                         if (!genericTypeDic.ContainsKey(type))
                         {
                             genericTypeDic.Add(type, typeString);
@@ -117,7 +113,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         string keyString = this.GetTypeFullName(types[0]);
                         string valueString = this.GetTypeFullName(types[1]);
-                        string typeString = $"{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
+                        string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
                         if (!genericTypeDic.ContainsKey(type))
                         {
                             genericTypeDic.Add(type, typeString);
@@ -286,6 +282,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             else if (typeof(Task).IsAssignableFrom(type))
             {
                 type = type.GetGenericArguments()[0];
+            }
+            else if (type.IsArray)
+            {
+                Type elementType = type.GetElementType();
+                return this.GetTypeFullName(elementType) + "[]";
             }
 
             if (type.IsByRef)

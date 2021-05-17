@@ -76,7 +76,7 @@ namespace RRQMSocket
         /// <summary>
         /// 是否为新建对象
         /// </summary>
-        public bool NewCreat { get; set; }
+        public bool NewCreate { get; set; }
 
         /// <summary>
         /// 标记

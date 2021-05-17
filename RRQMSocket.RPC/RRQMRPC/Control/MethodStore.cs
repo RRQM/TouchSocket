@@ -12,6 +12,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -86,11 +87,26 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.initialized = true;
         }
 
+        const string list = "System.Collections.Generic.List";
+        const string dictionary = "System.Collections.Generic.Dictionary";
         private Type MethodGetType(string typeName)
         {
             if (this.typeDic != null && typeDic.ContainsKey(typeName))
             {
                 return this.typeDic[typeName];
+            }
+
+            if (typeName.Contains(list))
+            {
+                Type elementType = MethodGetType(typeName.Replace(list, string.Empty).Replace("<", string.Empty).Replace(">", string.Empty));
+                return typeof(List<>).MakeGenericType(elementType);
+            }
+            else if (typeName.Contains(dictionary))
+            {
+                string[] elementTypeStrings = typeName.Replace(dictionary, string.Empty).Replace("<", string.Empty).Replace(">", string.Empty).Split(',');
+                Type elementType1 = MethodGetType(elementTypeStrings[0]);
+                Type elementType2 = MethodGetType(elementTypeStrings[1]);
+                return typeof(Dictionary<,>).MakeGenericType(elementType1, elementType2);
             }
             Type type = Type.GetType(typeName);
             if (type == null)
@@ -114,10 +130,5 @@ namespace RRQMSocket.RPC.RRQMRPC
             return type;
         }
 
-        private string GetAssemblyName(string typeName)
-        {
-            int index = typeName.LastIndexOf(".");
-            return typeName.Substring(0, index);
-        }
     }
 }

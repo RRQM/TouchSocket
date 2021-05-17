@@ -4,13 +4,18 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>4.0.16.0</Version>
+		<Version>4.0.17.0</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
         <PackageTags>IOCP,TCP,UDP,Socket</PackageTags>
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
 Introduction: RRQMSocket is an integrated, ultra-lightweight network communication framework.It has the characteristics of high concurrency, event subscription, plug-in extension, automatic activity detection, multi-threading and so on, so that users can more easily and quickly build the network framework.
+
+更新说明：
+修改：部分单词拼写错误。
+修改：TcpClient类修改为普通类，可直接实例化使用。
+增加：TcpClient类OnReceived事件。
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
 Demo：https://gitee.com/RRQM_OS/RRQMSocket.Demo	</Description>
@@ -74,7 +79,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMSocket.Demo	</Description>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RRQMCore" Version="1.2.20" />
+		<PackageReference Include="RRQMCore" Version="1.2.22" />
 	</ItemGroup>
 
 </Project>

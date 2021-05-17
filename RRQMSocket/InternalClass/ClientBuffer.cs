@@ -21,7 +21,7 @@ namespace RRQMSocket
         internal ByteBlock byteBlock;
         internal EndPoint endPoint;
 
-        public bool NewCreat { get; set; }
+        public bool NewCreate { get; set; }
 
         public void Create()
         {

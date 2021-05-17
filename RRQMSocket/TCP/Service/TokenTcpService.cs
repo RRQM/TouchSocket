@@ -94,7 +94,7 @@ namespace RRQMSocket
                                 {
                                     TClient client = this.SocketClientPool.GetObject();
                                     client.Flag = verifyOption.Flag;
-                                    if (client.NewCreat)
+                                    if (client.NewCreate)
                                     {
                                         client.queueGroup = queueGroup;
                                         client.Service = this;
@@ -104,11 +104,11 @@ namespace RRQMSocket
                                     client.BufferLength = this.BufferLength;
 
                                     CreatOption creatOption = new CreatOption();
-                                    creatOption.NewCreat = client.NewCreat;
+                                    creatOption.NewCreate = client.NewCreate;
 
                                     lock (this)
                                     {
-                                        if (client.NewCreat)
+                                        if (client.NewCreate)
                                         {
                                             creatOption.ID = this.SocketClients.GetDefaultID();
                                         }

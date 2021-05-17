@@ -63,7 +63,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 是否新创建
         /// </summary>
-        public bool NewCreat { get; set; }
+        public bool NewCreate { get; set; }
 
         private WaitData<WaitResult> singleWaitData;
         private WaitData<RpcContext> invokeWaitData;

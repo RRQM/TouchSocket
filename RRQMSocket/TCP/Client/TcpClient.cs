@@ -79,6 +79,11 @@ namespace RRQMSocket
         /// </summary>
         public event RRQMMessageEventHandler DisconnectedService;
 
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        public event Action<TcpClient, ByteBlock, object> OnReceived;
+
         private void ConnectedServiceMethod(object sender, MesEventArgs e)
         {
             ConnectedService?.Invoke(sender, e);
@@ -274,11 +279,15 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 处理已接收到的数据
+        /// 处理已接收到的数据。
+        /// 覆盖父类方法将不触发OnReceived事件。
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+        protected virtual void HandleReceivedData(ByteBlock byteBlock, object obj)
+        {
+            this.OnReceived?.Invoke(this,byteBlock,obj);
+        }
 
         /// <summary>
         /// 发送字节流

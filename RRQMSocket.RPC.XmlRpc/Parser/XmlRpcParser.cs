@@ -16,6 +16,7 @@ using RRQMCore.Log;
 using RRQMSocket.Http;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
@@ -223,10 +224,10 @@ namespace RRQMSocket.RPC.XmlRpc
             this.ExecuteMethod(methodInvoker, methodInstance);
         }
 
-        //private object GetValue()
-        //{ 
+        private object GetValue()
+        {
 
-        //}
+        }
 
         /// <summary>
         /// 结束调用

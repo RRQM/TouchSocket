@@ -63,7 +63,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, CreatOption creatOption)
         {
-            if (creatOption.NewCreat)
+            if (creatOption.NewCreate)
             {
                 tcpSocketClient.Logger = this.Logger;
                 tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();

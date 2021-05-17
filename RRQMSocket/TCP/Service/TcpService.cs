@@ -456,7 +456,7 @@ namespace RRQMSocket
                 }
 
                 TClient client = this.SocketClientPool.GetObject();
-                if (client.NewCreat)
+                if (client.NewCreate)
                 {
                     client.queueGroup = queueGroup;
                     client.Service = this;
@@ -468,8 +468,8 @@ namespace RRQMSocket
                 client.BufferLength = this.BufferLength;
 
                 CreatOption creatOption = new CreatOption();
-                creatOption.NewCreat = client.NewCreat;
-                if (client.NewCreat)
+                creatOption.NewCreate = client.NewCreate;
+                if (client.NewCreate)
                 {
                     creatOption.ID = this.SocketClients.GetDefaultID();
                 }
