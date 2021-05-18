@@ -101,7 +101,9 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 
 ## 一、TCP框架
 ### 1.1 创建服务器
+
 **创建原生TcpService**
+
 使用原生TcpService的话，必须创建并指定辅助类，示例中创建MyTcpSocketClient辅助类，继承于TcpSocketClient即可。TcpService自由度更大，可在辅助类中直接处理数据，每个辅助类实例一一对应远程客户端，开发层次比较清晰。
 
 ```CSharp
@@ -167,7 +169,9 @@ public class MyTcpSocketClient : TcpSocketClient
 }
 
 ```
+
 **创建RRQMTcpService**
+
 RRQMTcpService是对TcpService的简单封装，指定辅助类为RRQMSocketClient，在辅助类中不做任何数据处理，仅将数据在RRQMTcpService中抛出。
 
 ```CSharp
@@ -309,24 +313,14 @@ public class MyTcpSocketClient : TcpSocketClient
 #### 1.4 Demo
 [RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
 
-## 二、Token系TCP框架
-#### 2.1 概述
-Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要功能就是对即将完成连接的客户端进行筛选，筛选手段就是验证Token，如果Token不符合规定，则直接断开连接，其他功能和Tcp服务器一致。
-#### 2.2 特点
-- 过滤不合格TCP客户端。
-- 多租户使用。
-- 客户端服务器统一ID，方便检索。
-#### 2.3 创建及使用Token系框架
-[创建及使用Token系框架](https://gitee.com/dotnetchina/RRQMSocket/wikis/3.2%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8Token%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3896799)
-#### 2.4 Demo
-[RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
 
+## 二、文件传输框架
 
-## 三、文件传输框架
-#### 3.1 创建文件服务器框架
+### 2.1 创建文件服务器
 
 以下进行简单示例，详细使用见[文件传输入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/5.1%20%E6%A6%82%E8%BF%B0?sort_id=3897485)
-```
+
+```Csharp
  FileService fileService = new FileService();
  fileService.VerifyToken ="123ABC";
  
@@ -349,7 +343,35 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
  }
 ```
 
-#### 3.2 特点
+### 2.2 传输文件
+
+先初始化客户端。
+
+```Csharp
+
+FileClient fileClient = new FileClient();
+//订阅事件
+//fileClient.TransferFileError += FileClient_TransferFileError;
+//fileClient.BeforeFileTransfer += this.FileClient_BeforeFileTransfer; ;
+//fileClient.FinishedFileTransfer += this.FileClient_FinishedFileTransfer; ;
+//fileClient.DisconnectedService += FileClient_DisConnectedService;
+//fileClient.ReceiveSystemMes += this.FileClient_ReceiveSystemMes;
+//fileClient.ConnectedService += this.FileClient_ConnectedService;
+//fileClient.FileTransferCollectionChanged += this.FileClient_FileTransferCollectionChanged;
+fileClient.Connect(new IPHost("127.0.0.1:7789"));//连接服务器。
+
+```
+
+然后调用**RequestTransfer**进行传输文件。此方法即可上传，也可下载。请求成功后会将传输排入队列，然后依次传输。
+
+```Csharp
+fileClient.RequestTransfer();
+```
+
+
+
+#### 2.3 特点
+
 - 简单易用。
 - 多线程处理。
 - 高性能，传输速度可达500Mb/s。
@@ -365,8 +387,9 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 - 已经上传的文件，再次上传时，可实现快速上传。
 - 极少的GC释放。
 
-#### 3.3 Demo示例
- **Demo位置：** [RRQMSocket.FileTransfer.Demo](https://gitee.com/RRQM_Home/RRQMSocket.FileTransfer.Demo)
+#### 2.4 Demo示例
+
+ **Demo位置：** [RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
 
  **说明：** 可以看到，图一正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到346Mb/s，这是因为服务器和客户端在同一电脑上，磁盘性能限制导致的。其次，GC基本上没有释放，性能非常强悍，图二是下载文件，性能依旧非常强悍。
 
@@ -374,7 +397,7 @@ Token系服务器是基于Tcp服务器一款限定连接的服务器，其主要
 ![下载文件](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "下载文件")
 
 
-## 四、RPC框架
+## 三、RPC框架
 #### 4.1 创建RPC服务
 新建类文件，继承于ServerProvider，并将其中公共方法标识为RRQMRPCMethod即可。
 ```
