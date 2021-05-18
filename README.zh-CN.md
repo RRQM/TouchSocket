@@ -316,9 +316,26 @@ public class MyTcpSocketClient : TcpSocketClient
 
 ## 二、文件传输框架
 
-### 2.1 创建文件服务器
+### 2.1 特点
 
-以下进行简单示例，详细使用见[文件传输入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/5.1%20%E6%A6%82%E8%BF%B0?sort_id=3897485)
+- 简单易用。
+- 多线程处理。
+- 高性能，传输速度可达500Mb/s。
+- 超简单的传输限速设置，1k-10Gb 无级调节。
+- 超简单的传输速度、传输进度获取。
+- 随心所欲的暂停、继续、停止传输。
+- 系统化的权限管理，让敏感文件只允许私有化下载。
+- 随时发送消息，让客户端和服务器交流不延迟。
+- 基于事件驱动，让每一步操作尽在掌握。
+- 可视化的文件块流，可以实现像迅雷一样的填充式进度条。
+- 超简单的断点续传设置，为大文件传输保驾护航。
+- 无状态上传断点续传设置，让同一个文件，在不同客户端之间接力上传。
+- 已经上传的文件，再次上传时，可实现快速上传。
+- 极少的GC释放。
+
+### 2.2 创建文件服务器
+
+以下进行简单示例，详细使用见[文件传输入门](https://gitee.com/RRQM_OS/RRQM/wikis/pages)
 
 ```Csharp
  FileService fileService = new FileService();
@@ -343,7 +360,7 @@ public class MyTcpSocketClient : TcpSocketClient
  }
 ```
 
-### 2.2 传输文件
+### 2.3 传输文件
 
 先初始化客户端。
 
@@ -362,32 +379,55 @@ fileClient.Connect(new IPHost("127.0.0.1:7789"));//连接服务器。
 
 ```
 
-然后调用**RequestTransfer**进行传输文件。此方法即可上传，也可下载。请求成功后会将传输排入队列，然后依次传输。
+调用**RequestTransfer**进行传输文件。此方法可**上传**，也可**下载**。请求成功后会将传输排入队列，然后依次传输。
 
+**上传**
 ```Csharp
-fileClient.RequestTransfer();
+
+//restart属性可以自由设定。
+//breakpointResume也可自由指定，但最好是从fileClient获取属性。
+UrlFileInfo urlFileInfo = UrlFileInfo.CreatUpload("C:/1.txt", restart: true, breakpointResume: this.fileClient.BreakpointResume);
+fileClient.RequestTransfer(urlFileInfo);
 ```
 
+**下载**
+```Csharp
 
+//restart属性可以自由设定。
+UrlFileInfo urlFileInfo = UrlFileInfo.CreatDownload("C:/1.txt", restart: true);
+fileClient.RequestTransfer(urlFileInfo);
+```
 
-#### 2.3 特点
+### 2.4 属性获取
 
-- 简单易用。
-- 多线程处理。
-- 高性能，传输速度可达500Mb/s。
-- 超简单的传输限速设置，1k-10Gb 无级调节。
-- 超简单的传输速度、传输进度获取。
-- 随心所欲的暂停、继续、停止传输。
-- 系统化的权限管理，让敏感文件只允许私有化下载。
-- 随时发送消息，让客户端和服务器交流不延迟。
-- 基于事件驱动，让每一步操作尽在掌握。
-- 可视化的文件块流，可以实现像迅雷一样的填充式进度条。
-- 超简单的断点续传设置，为大文件传输保驾护航。
-- 无状态上传断点续传设置，让同一个文件，在不同客户端之间接力上传。
-- 已经上传的文件，再次上传时，可实现快速上传。
-- 极少的GC释放。
+- **TransferSpeed**：获取传输速度
+- **TransferProgress**：获取传输进度
+- **TransferFileInfo**：获取正在传输的文件信息
+- **TransferStatus**：获取传输状态
+- **BreakpointResume**：获取是否支持断点续传（该属性与服务器同步）
+- **ReceiveDirectory**：获取或设置接收文件夹
+- **FileTransferCollection**：获取传输文件集合
 
-#### 2.4 Demo示例
+### 2.5 功能方法
+
+```Csharp
+fileClient.PauseTransfer();//暂停传输
+fileClient.ResumeTransfer();//恢复传输
+
+foreach (var item in fileClient.FileTransferCollection)
+{
+    fileClient.CancelTransfer(item);//从传输列表中获得传输信息，然后取消该传输任务
+    break;
+}
+
+fileClient.StopThisTransfer();//停止当前下载
+fileClient.StopAllTransfer();//停止所有下载
+fileClient.SendSystemMessage("RRQM");//发送系统消息
+fileClient.SendBytesWaitReturn(new byte[10],0,10);//发生字节数组并等待返回
+
+```
+
+#### 2.6 Demo示例
 
  **Demo位置：** [RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
 
@@ -398,23 +438,12 @@ fileClient.RequestTransfer();
 
 
 ## 三、RPC框架
-#### 4.1 创建RPC服务
-新建类文件，继承于ServerProvider，并将其中公共方法标识为RRQMRPCMethod即可。
-```
-public class Server: ServerProvider
-{
-    [RRQMRPCMethod]
-    public string TestOne(string str)
-    {
-        return "若汝棋茗";
-    }
- }
-```
-#### 4.2 启动RPC服务
 
-[启动RPC服务说明](https://gitee.com/RRQM_OS/RRQM/wikis/6.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E5%90%AF%E5%8A%A8RPC%E6%9C%8D%E5%8A%A1%E5%99%A8?sort_id=3984501)
+RPC框架是所有远程过程调用的微服务管理平台，在该平台的托管下，使多种协议、多种序列化方式调用成为可能。目前可使用RRQMRPC、WebApi、XmlRpc共同调用。
 
-#### 4.3 特点
+### 3.1 RRQMRPC
+
+**特点**
 - 简单易用。
 - 多线程处理。
 - 高性能，在保证送达但不返回的情况下，10w次调用用时0.8s，在返回的情况下，用时3.9s。
@@ -429,8 +458,55 @@ public class Server: ServerProvider
 - **全异常反馈** ，服务里发生的异常，会一字不差的反馈到客户端。
 - 超简单、自由的**回调方式** 。
 
+**创建RRQMRPC服务器**
+
+新建类文件，继承于ServerProvider，并将其中**公共方法**标识为**RRQMRPCMethod**即可。
+```Csharp
+public class Server: ServerProvider
+{
+    [RRQMRPCMethod]
+    public string TestOne(string str)
+    {
+        return "若汝棋茗";
+    }
+ }
+```
+**启动RRQMRPC服务器**
+
+```Csharp
+RPCService rpcService = new RPCService();
+rpcService.RegistAllService();//注册所有服务
+
+TcpRPCParser tcpRPCParser = new TcpRPCParser();
+tcpRPCParser.SerializeConverter = new BinarySerializeConverter();
+tcpRPCParser.Bind(7789, 5);
+tcpRPCParser.NameSpace = "RRQMTest";
+Console.WriteLine("TCP解析器添加完成");
+
+rpcService.AddRPCParser("TcpParser", tcpRPCParser);
+
+rpcService.OpenRPCServer();
+Console.WriteLine("RPC启动完成");
+
+Console.ReadKey();
+
+```
+
+**客户端引用**
+
+首先得下载[RRQMRPCVSIX插件](https://gitee.com/RRQM_OS/RRQMRPCVSIX/releases)，然后安装插件，成功后右击**任意项目**即可看见“**重新引用RRQMRPC**”条目。
+
+<img src="https://i.loli.net/2021/05/18/xkr8caGp6eUql7d.jpg" width = "350" height = "200" alt="图片名称" align=center />
+
+然后点击，**弹出窗口**，输入**IP及端口**，点击确认，即可**下载完成引用**，此时会在项目下生成RRQMRPC文件夹，里面含有代理文件。
+
+<img src="https://i.loli.net/2021/05/18/V5gMDnv9k3etG6U.jpg" width = "300" height = "200" alt="图片名称" align=center />
+
+**创建客户端**
+
+
 #### 4.3 Demo示例
- **Demo位置：** [RRQMSocket.RPC.Demo](https://gitee.com/RRQM_Home/RRQMSocket.RPC.Demo)
+ **Demo位置：** [RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
 
  **说明：** 
 图一、图二、图三分别为`UDP无反馈调用`、`TCP有反馈调用`、`TCP连接池有反馈调用`。调用次数均为10w次，调用性能非常nice。在无反馈中，吞吐量达14.28w，在有反馈中达2.72w，简直秒杀WCF（WCF使用http协议，在本机测试吞吐量为310）
