@@ -261,12 +261,49 @@ Console.WriteLine("发送成功");
 - **FixedHeaderDataHandlingAdapter**固定包头TCP报文处理器
 - **HttpDataHandlingAdapter**解析Http处理器（需安装RRQMSocket.Http）
 
-**使用**
+**客户端使用**
 
-客户端
+客户端比较简单，直接对其赋值即可。
+
+```CSharp
+client.DataHandlingAdapter = new NormalDataHandlingAdapter();//数据处理适配器，可用于处理粘包、解析对象。
+```
+
+**服务器使用**
+
+在服务器使用适配器时，必须保证每个**TcpSocketClient**都拥有一个**单独实例**的适配器，所以可以订阅**CreatSocketCliect**事件，然后又因为RRQMSocket中有连接对象池，所以最好进行**新创建判断**，然后再创建实例化，避免多次实例化赋值带来的性能问题。
 
 
+```CSharp
+ private static void Service_CreatSocketCliect(RRQMSocketClient arg1, CreatOption arg2)
+ {
+     if (arg2.NewCreate)
+     {
+         arg1.DataHandlingAdapter = new NormalDataHandlingAdapter();
+     }
+ }
 
+```
+如果是**自定义继承**的TcpSocketClient，可以重写**Create**方法。
+
+**注意：在构造函数内赋值适配器无效，会被Create方法覆盖**
+
+```CSharp
+public class MyTcpSocketClient : TcpSocketClient
+{
+    /// <summary>
+    /// 初次创建对象，效应相当于构造函数，但是调用时机在构造函数之后，可覆盖父类方法
+    /// </summary>
+    public override void Create()
+    {
+        this.DataHandlingAdapter = new NormalDataHandlingAdapter();//普通TCP报文处理器
+        //this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();//固定包头TCP报文处理器
+        //this.DataHandlingAdapter = new FixedSizeDataHandlingAdapter(1024);//固定长度TCP报文处理器
+        //this.DataHandlingAdapter = new TerminatorDataHandlingAdapter(1024, "\r\n");//终止字符TCP报文处理器
+    }
+}
+
+```
 
 
 #### 1.4 Demo
