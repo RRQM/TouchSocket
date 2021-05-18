@@ -22,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP客户端
     /// </summary>
-    public abstract class TokenTcpClient : TcpClient
+    public  class TokenTcpClient : TcpClient
     {
         /// <summary>
         /// 构造函数

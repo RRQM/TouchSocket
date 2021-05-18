@@ -16,7 +16,7 @@
 
 <div align="center">
 
-日月之行，若出其中；星汉灿烂，若出其里。
+合抱之木，生于毫末；九层之台，起于垒土。
 
 </div>
 <div align="center">
@@ -32,7 +32,8 @@
 | RRQMSocket.FileTransfer | [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | RRQMSocket.FileTransfer是一个高性能的文件传输框架，您可以用它传输**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。在实时测试中，它的传输速率可达500Mb/s。 |
 |RRQMSocket.RPC | [![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC/)                            | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC)](https://www.nuget.org/packages/RRQMSocket.RPC/) | RRQMSocket.RPC是一个超轻量、高性能、可扩展的微服务框架，目前已完成开发RRQMRPC部分，该部分使用RRQM专属协议，支持客户端异步调用，服务端异步触发、以及out和ref关键字，函数回调等。在调用效率上也是非常强悍，在调用空载函数，且返回状态时，10w次调用仅用时3.8秒，不返回状态用时0.9s。其他扩展调用扩展协议目前已开发WebApi，后续还会支持JsonRPC，XmlRPC等。|
 |RRQMSocket.RPC.WebApi | [![NuGet version (RRQMSocket.RPC.WebApi)](https://img.shields.io/nuget/v/RRQMSocket.RPC.WebApi.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC.WebApi/)| [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC.WebApi)](https://www.nuget.org/packages/RRQMSocket.RPC.WebApi/) | RRQMSocket.RPC.WebApi是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过该组件创建WebApi服务解析器，让桌面端、Web端、移动端可以跨语言调用RPC函数。功能支持路由、Get传参、Post传参等。|
-| RRQMSocket.Http | [![NuGet version (RRQMSocket.Http)](https://img.shields.io/nuget/v/RRQMSocket.Http.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.Http/)                         | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.Http)](https://www.nuget.org/packages/RRQMSocket.Http/) | RRQMSocket.Http是一个能够简单解析Http的服务组件，能够快速响应Http服务请求。                                                                                                                                                                          |
+|RRQMSocket.RPC.XmlRpc | [![NuGet version (RRQMSocket.RPC.XmlRpc)](https://img.shields.io/nuget/v/RRQMSocket.RPC.XmlRpc.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC.XmlRpc/)| [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC.XmlRpc)](https://www.nuget.org/packages/RRQMSocket.RPC.XmlRpc/) | RRQMSocket.RPC.XmlRpc是一个扩展于RRQMSocket.RPC的XmlRpc组件，可以通过该组件创建XmlRpc服务解析器，完美支持XmlRpc数据类型，类型嵌套，Array等，也能与CookComputing.XmlRpcV2完美对接。不限Web，Android等平台。|
+| RRQMSocket.Http | [![NuGet version (RRQMSocket.Http)](https://img.shields.io/nuget/v/RRQMSocket.Http.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.Http/)                         | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.Http)](https://www.nuget.org/packages/RRQMSocket.Http/) | RRQMSocket.Http是一个能够简单解析Http的服务组件，能够快速响应Http服务请求。|
 
 ## 🖥支持环境
 - .NET Framework4.5及以上。
@@ -56,7 +57,7 @@
 
 然后就是处理对象池，在RRQMSocket中，接收数据的线程和IOCP内核线程是分开的，也就是比如说客户端给服务器发送了1w条数据，但是服务器收到后处理起来很慢，那传统的iocp肯定会放慢接收速率，然后通知客户端的tcp窗口，发生拥塞，然后让客户端暂缓发送。但是在RRQMSocket中会把收到的数据通过队列全都存起来，首先不影响iocp的接收，同时再分配线程去处理收到的报文信息，这样就相当于一个“泄洪湖泊”，能很大程度的提高处理数据的能力。
 
-#### 2.多线程*
+#### 2.多线程
 
 由于有**处理对象池**的存在，使多线程处理变得简单。在客户端连接完成时，会自动分配该客户端辅助类（TcpSocketClient）的消息处理逻辑线程，假如服务器线程数量为10，则第一个连接的客户端会被分配到0号线程中，第二个连接将被分配到1号线程中，以此类推，循环分配。当某个客户端收到数据时，会将数据排入当前线程所独自拥有的队列当中，并唤醒线程执行。
 
@@ -92,26 +93,184 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 ## 🍻RRQM系产品
 | 名称| 版本（Nuget Version）|下载（Nuget Download）| 描述 |
 |------|----------|-------------|-------|
-| [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：内存池、对象池、等待逻辑池、AppMessenger、3DES加密、Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、规范日志接口等。 |
-| [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。                                                                                                                                          |
-| [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含： **无边框窗体** 、 **圆角窗体** 、 **水波纹按钮** 、 **输入提示筛选框** 、 **控件拖动效果** 、圆角图片框、 **弧形文字** 、 **扇形元素** 、 **指针元素** 、 **饼图** 、 **时钟** 、 **速度表盘** 等。|  
+| [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、**高性能序列化器**、**规范日志接口**等。 |
+| [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。|
+| [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含： **无边框窗体** 、 **圆角窗体** 、 **水波纹按钮** 、 **输入提示筛选框** 、 **控件拖动效果** 、**圆角图片框**、 **弧形文字** 、 **扇形元素** 、 **指针元素** 、 **饼图** 、 **时钟** 、 **速度表盘** 等。|  
 
-## 💐框架速览
+## 💐快速入门
 
 ## 一、TCP框架
-#### 1.1 特点
-- 简单易用。
-- 多线程处理。
-- IOCP完美设计模型，避免收到数据再复制。
-- 简单、稳定管理客户端连接，自动检验客户端活性。
-- 超简单的解决粘包、分包问题，详见[RRQMSocket解决TCP粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179?spm=1001.2014.3001.5501)。
-- 内存池设计，避免内存重复申请、释放。
-- 对象池设计，避免数据对象的申请、释放。
-#### 1.1 创建TCP服务框架
-[RRQMSocket入门](https://gitee.com/dotnetchina/RRQMSocket/wikis/2.3%20%E5%88%9B%E5%BB%BA%E3%80%81%E4%BD%BF%E7%94%A8TcpService?sort_id=3897349)
+### 1.1 创建服务器
+**创建原生TcpService**
+使用原生TcpService的话，必须创建并指定辅助类，示例中创建MyTcpSocketClient辅助类，继承于TcpSocketClient即可。TcpService自由度更大，可在辅助类中直接处理数据，每个辅助类实例一一对应远程客户端，开发层次比较清晰。
 
-#### 1.3 Demo
-[RRQMSocket.Demo](https://gitee.com/RRQM_Home/RRQMSocket.Demo)
+```CSharp
+TcpService<MyTcpSocketClient> service = new TcpService<MyTcpSocketClient>();
+
+//订阅事件
+//service.ClientConnected += Service_ClientConnected;//订阅连接事件
+//service.ClientDisconnected += Service_ClientDisconnected;//订阅断开连接事件
+//service.CreatSocketCliect += Service_CreatSocketCliect;//订阅创建辅助类事件，可直接设置其他属性。
+
+//属性设置
+service.IsCheckClientAlive = true;//使用空包检验活性，不会对数据有任何影响。
+service.BufferLength = 1024;//设置缓存池大小，该数值在框架中经常用于申请ByteBlock，所以该值会影响内存池效率。
+service.IDFormat = "TcpSocketClient_{0}";//设置分配ID的格式， 格式必须符合字符串格式，至少包含一个补位， 初始值为“{0}-TCP”
+service.Logger = new Log();//设置内部日志记录器，默认日志是控制台输出。
+service.MaxCount = 1000;//设置最大连接数，可动态设置，当已连接数超过设置数值时，将主动断开客户端。
+
+//属性读取
+string ipAndPort = service.Name;//获取Ip及端口号
+string ip = service.IP;//获取IP
+int port = service.Port;//获取端口号
+MyTcpSocketClient socketClient = service.SocketClients["TcpSocketClient_1"];//通过ID获取辅助类，查找未知会抛出异常
+service.SocketClients.TryGetSocketClient("TcpSocketClient_1",out socketClient);//通过ID获取辅助类
+
+//方法
+service.Bind(7789, 2);//绑定监听，可绑定Ipv6，可监听所有地址。
+bool isExist = service.SocketClientExist("TcpSocketClient_1");//使用该方法判断ID对应的TcpSocketClient是否在线。
+
+Console.WriteLine("TcpService绑定成功");
+
+```
+
+```CSharp
+public class MyTcpSocketClient : TcpSocketClient
+{
+    /// <summary>
+    /// 初次创建对象，效应相当于构造函数，但是调用时机在构造函数之后，可覆盖父类方法
+    /// </summary>
+    public override void Create()
+    {
+        this.DataHandlingAdapter = new NormalDataHandlingAdapter();//普通TCP报文处理器
+        //this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();//固定包头TCP报文处理器
+        //this.DataHandlingAdapter = new FixedSizeDataHandlingAdapter(1024);//固定长度TCP报文处理器
+        //this.DataHandlingAdapter = new TerminatorDataHandlingAdapter(1024, "\r\n");//终止字符TCP报文处理器
+        //this.DataHandlingAdapter = new MyTestDataHandingAdopter();//自定义处理器
+    }
+
+    private int count;
+
+    protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
+    {
+        count++;
+        if (count % 1 == 0)
+        {
+            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length);
+            Console.WriteLine($"已接收到信息：{mes},第{count}条");
+        }
+        if (this.Online)
+        {
+            this.Send(byteBlock);//回传消息
+        }
+    }
+}
+
+```
+**创建RRQMTcpService**
+RRQMTcpService是对TcpService的简单封装，指定辅助类为RRQMSocketClient，在辅助类中不做任何数据处理，仅将数据在RRQMTcpService中抛出。
+
+```CSharp
+RRQMTcpService service = new RRQMTcpService();
+//service.CreatSocketCliect += Service_CreatSocketCliect1;//在初创辅助类时，可指定数据处理适配器。
+//service.OnReceived += Service_OnReceived;//可直接订阅收到数据事件。
+
+//方法
+service.Bind(7789, 2);//绑定监听，可绑定Ipv6，可监听所有地址。
+
+Console.WriteLine("RRQMTcpService绑定成功");
+
+```
+
+**创建TokenTcpService**
+
+TokenTcpService是继承于TcpService的功能扩展服务器，该服务器的主要功能是通过验证“口令”对连接的客户端进行筛选，及时的将**不允许连接**、**恶意连接**、**不安全连接**的客户端拒之门外，也可以实现**租户模式**。
+
+```CSharp
+TokenTcpService<MyTcpSocketClient> service = new TokenTcpService<MyTcpSocketClient>();
+service.VerifyToken = "ABC";
+
+//方法
+service.Bind(7789, 2);//绑定监听，可绑定Ipv6，可监听所有地址。
+
+Console.WriteLine("TokenTcpService绑定成功");
+
+```
+
+**注意：** 使用该服务器必须遵循连接协议，或使用专属客户端（TokenTcpClient）连接。
+
+### 1.2 创建客户端
+
+**创建TcpClient**
+
+TcpClient可与任意服务器进行连接、收发，处理数据，也可以更加方便的处理粘包和分包，亦或者解析数据结构。
+
+```CSharp
+TcpClient client = new TcpClient();
+
+//属性
+client.BufferLength = 1024;//设置缓存池大小，该数值在框架中经常用于申请ByteBlock，所以该值会影响内存池效率。
+client.Logger = new Log();//设置内部日志记录器，默认日志是控制台输出。
+client.DataHandlingAdapter = new NormalDataHandlingAdapter();//数据处理适配器，可用于处理粘包、解析对象。
+
+//事件
+//client.ConnectedService += Client_ConnectedService;
+//client.DisconnectedService += Client_DisconnectedService;
+//client.OnReceived += Client_OnReceived;
+
+//方法
+client.Connect(new IPHost("127.0.0.1:7789"));//连接
+Console.WriteLine("连接成功");
+client.Send(Encoding.UTF8.GetBytes("若汝棋茗"));//发送数据
+Console.WriteLine("发送成功");
+
+```
+
+**创建TokenTcpClient**
+
+```CSharp
+TokenTcpClient client = new TokenTcpClient();
+
+//属性
+client.VerifyToken="ABC";//设置链接口令。
+client.BufferLength = 1024;//设置缓存池大小，该数值在框架中经常用于申请ByteBlock，所以该值会影响内存池效率。
+client.Logger = new Log();//设置内部日志记录器，默认日志是控制台输出。
+client.DataHandlingAdapter = new NormalDataHandlingAdapter();//数据处理适配器，可用于处理粘包、解析对象。
+
+//事件
+//client.ConnectedService += Client_ConnectedService;
+//client.DisconnectedService += Client_DisconnectedService;
+//client.OnReceived += Client_OnReceived;
+
+//方法
+client.Connect(new IPHost("127.0.0.1:7789"));//连接
+Console.WriteLine("连接成功");
+client.Send(Encoding.UTF8.GetBytes("若汝棋茗"));//发送数据
+Console.WriteLine("发送成功");
+
+```
+### 1.3 数据处理适配器
+
+数据处理适配器的主要作用就是对发送、接收的数据进行封装和解析。在RRQMSocket中，可以利用数据处理适配器解决**粘包**、**分包**问题，也能**解析Http**数据报文。
+
+**类型**
+
+- **NormalDataHandlingAdapter**普通TCP报文处理器
+- **FixedSizeDataHandlingAdapter**固定长度TCP报文处理器
+- **TerminatorDataHandlingAdapter**终止字符TCP报文处理器
+- **FixedHeaderDataHandlingAdapter**固定包头TCP报文处理器
+- **HttpDataHandlingAdapter**解析Http处理器（需安装RRQMSocket.Http）
+
+**使用**
+
+客户端
+
+
+
+
+
+#### 1.4 Demo
+[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
 
 ## 二、Token系TCP框架
 #### 2.1 概述

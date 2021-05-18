@@ -22,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端
     /// </summary>
-    public abstract class TcpClient : BaseSocket, IUserTcpClient, IHandleBuffer
+    public  class TcpClient : BaseSocket, IUserTcpClient, IHandleBuffer
     {
         /// <summary>
         /// 构造函数
