@@ -134,7 +134,7 @@ namespace RRQMSocket.RPC.WebApi
         {
             HttpRequest httpRequest = (HttpRequest)obj;
             MethodInvoker methodInvoker = new MethodInvoker();
-            httpRequest.Flag = socketClient;
+            methodInvoker.Caller = socketClient;
             methodInvoker.Flag = httpRequest;
 
             if (this.routeMap.TryGet(httpRequest.RelativeURL, out MethodInstance methodInstance))
@@ -200,7 +200,7 @@ namespace RRQMSocket.RPC.WebApi
         protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
-            RRQMSocketClient socketClient = (RRQMSocketClient)httpRequest.Flag;
+            RRQMSocketClient socketClient = (RRQMSocketClient)methodInvoker.Caller;
 
             HttpResponse httpResponse = this.ApiDataConverter.OnResult(methodInvoker, methodInstance);
 

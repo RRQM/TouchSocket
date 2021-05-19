@@ -4,12 +4,15 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<Description>介绍：这是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过该组件直接创建WebApi服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持路由、Get传参、Post传参等。
 
 RRQMSocket.rPC is a WebAPI component that extends RRQMSocket.rPC. You can directly create a WebAPI service parser through this component, so that the Web end and mobile end can call RPC functions across languages.The function supports routing, GET, POST, etc.
+
+更新说明：
+优化：调用逻辑。
 
 Demo：https://gitee.com/RRQM_OS/RRQMBox
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
@@ -64,6 +67,6 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="RRQMSocket.Http" Version="1.0.2" />
-	  <PackageReference Include="RRQMSocket.RPC" Version="1.0.6" />
+	  <PackageReference Include="RRQMSocket.RPC" Version="1.0.7" />
 	</ItemGroup>
 </Project>
