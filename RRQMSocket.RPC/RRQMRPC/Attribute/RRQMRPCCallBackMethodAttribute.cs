@@ -19,7 +19,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class RRQMRPCCallBackMethodAttribute : RPCMethodAttribute
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

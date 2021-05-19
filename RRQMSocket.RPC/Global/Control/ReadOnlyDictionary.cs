@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -28,7 +27,7 @@ namespace RRQMSocket.RPC
         /// 值集合
         /// </summary>
         public ICollection<TValue> Values { get { return this.dic.Values; } }
-        
+
         /// <summary>
         /// 键集合
         /// </summary>
@@ -60,9 +59,9 @@ namespace RRQMSocket.RPC
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool TryGetValue(TKey key,out TValue value)
+        public bool TryGetValue(TKey key, out TValue value)
         {
-           return this.dic.TryGetValue(key,out value);
+            return this.dic.TryGetValue(key, out value);
         }
 
         /// <summary>

@@ -11,19 +11,14 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
-using RRQMCore.Helper;
 using RRQMCore.Log;
 using RRQMSocket.Http;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Globalization;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace RRQMSocket.RPC.XmlRpc
@@ -135,7 +130,7 @@ namespace RRQMSocket.RPC.XmlRpc
         {
             HttpRequest httpRequest = (HttpRequest)obj;
             MethodInvoker methodInvoker = new MethodInvoker();
-            httpRequest.Flag = socketClient;
+            methodInvoker.Caller = socketClient;
             methodInvoker.Flag = httpRequest;
 
             XmlDocument xml = new XmlDocument();
@@ -247,7 +242,7 @@ namespace RRQMSocket.RPC.XmlRpc
         protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
-            RRQMSocketClient socketClient = (RRQMSocketClient)httpRequest.Flag;
+            RRQMSocketClient socketClient = (RRQMSocketClient)methodInvoker.Caller;
 
             HttpResponse httpResponse = new HttpResponse();
 
@@ -374,7 +369,6 @@ namespace RRQMSocket.RPC.XmlRpc
                     object oValue = propertyInfo.GetValue(value);
                     this.CreatResponse(xml, oValueElement, oValue);
                 }
-
             }
         }
 

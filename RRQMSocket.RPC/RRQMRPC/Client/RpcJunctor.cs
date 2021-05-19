@@ -145,7 +145,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns>服务器返回结果</returns>
         public T RPCInvoke<T>(string method, InvokeOption invokeOption = null, params object[] parameters)
         {
-            object result = this.Invoke(method,  invokeOption,ref parameters);
+            object result = this.Invoke(method, invokeOption, ref parameters);
             if (result != null)
             {
                 return (T)result;
@@ -165,7 +165,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMException"></exception>
         public void RPCInvoke(string method, InvokeOption invokeOption = null, params object[] parameters)
         {
-            this.Invoke(method,  invokeOption,ref parameters);
+            this.Invoke(method, invokeOption, ref parameters);
         }
 
         /// <summary>

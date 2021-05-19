@@ -22,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端
     /// </summary>
-    public  class TcpClient : BaseSocket, IUserTcpClient, IHandleBuffer
+    public class TcpClient : BaseSocket, IUserTcpClient, IHandleBuffer
     {
         /// <summary>
         /// 构造函数
@@ -286,7 +286,7 @@ namespace RRQMSocket
         /// <param name="obj"></param>
         protected virtual void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            this.OnReceived?.Invoke(this,byteBlock,obj);
+            this.OnReceived?.Invoke(this, byteBlock, obj);
         }
 
         /// <summary>

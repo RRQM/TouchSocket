@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Helper;
 using RRQMCore.Log;
 using System;
 using System.IO;
@@ -18,7 +19,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Json;
 using System.Text;
-using RRQMCore.Helper;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
@@ -128,7 +128,7 @@ namespace RRQMSocket.RPC.JsonRpc
         private void OnReceived(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Flag = socketClient;
+            methodInvoker.Caller = socketClient;
             MethodInstance methodInstance = null;
             try
             {
@@ -139,6 +139,7 @@ namespace RRQMSocket.RPC.JsonRpc
                 }
                 else if (methodInstance.IsEnable)
                 {
+                    methodInvoker.Flag = context;
                     methodInvoker.Parameters = context.@params;
                 }
                 else
@@ -154,7 +155,6 @@ namespace RRQMSocket.RPC.JsonRpc
             this.ExecuteMethod(methodInvoker, methodInstance);
         }
 
-
         /// <summary>
         /// 结束调用
         /// </summary>
@@ -162,9 +162,26 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="methodInstance"></param>
         protected sealed override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
+            ISocketClient socketClient = (ISocketClient)methodInvoker.Caller;
 
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            this.BuildResponseByteBlock(byteBlock, methodInvoker, (RpcRequestContext)methodInvoker.Flag);
+            if (socketClient.Online)
+            {
+                try
+                {
+                    socketClient.Send(byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.Debug(LogType.Error, this, ex.Message);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
         }
-
 
         /// <summary>
         /// 初始化
@@ -192,7 +209,6 @@ namespace RRQMSocket.RPC.JsonRpc
                         {
                             throw new RRQMRPCException($"函数键为{actionKey}的方法已注册。");
                         }
-
                     }
                 }
             }
@@ -238,11 +254,35 @@ namespace RRQMSocket.RPC.JsonRpc
             return context;
         }
 
-        protected virtual 
+        /// <summary>
+        /// 构建响应数据
+        /// </summary>
+        /// <param name="responseByteBlock"></param>
+        /// <param name="methodInvoker"></param>
+        /// <param name="context"></param>
+        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, MethodInvoker methodInvoker, RpcRequestContext context)
+        {
+            if (string.IsNullOrEmpty(context.id))
+            {
+                return;
+            }
+
+            if (methodInvoker.ReturnParameter != null)
+            {
+                this.WriteObject(responseByteBlock, methodInvoker.ReturnParameter);
+            }
+        }
+
         private object ReadObject(Type type, Stream stream)
         {
-            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(typeof(RpcRequestContext));
+            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(type);
             return deseralizer.ReadObject(stream);
+        }
+
+        private void WriteObject(Stream stream, object obj)
+        {
+            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(obj.GetType());
+            deseralizer.WriteObject(stream, obj);
         }
 
         /// <summary>

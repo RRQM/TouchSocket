@@ -25,7 +25,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// 集群RPC客户端
     /// </summary>
-    public  class RPCClient : IRPCClient
+    public class RPCClient : IRPCClient
     {
         /// <summary>
         /// 构造函数
@@ -172,7 +172,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 throw new RRQMRPCException("已注册服务数量为0");
             }
 
-
             this.MethodMap = new MethodMap();
 
             foreach (ServerProvider instance in this.ServerProviders)
@@ -242,7 +241,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             throw new RRQMRPCKeyException("MethodToken必须唯一");
                         }
-
                     }
                 }
             }
@@ -323,6 +321,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 this.rpcJunctorPool.DestroyObject(rpcJunctor);
             }
         }
+
         /// <summary>
         /// 函数式调用
         /// </summary>
@@ -339,7 +338,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcJunctor rpcJunctor = this.GetRpcJunctor();
             try
             {
-                return rpcJunctor.Invoke(method,  invokeOption,ref parameters);
+                return rpcJunctor.Invoke(method, invokeOption, ref parameters);
             }
             finally
             {
@@ -470,7 +469,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RPCClient client;
             if (rpcDic.TryGetValue(iPHost, out client))
             {
-                client.RPCInvoke(methodKey,  invokeOption,parameters);
+                client.RPCInvoke(methodKey, invokeOption, parameters);
                 return;
             }
             client = new RPCClient();

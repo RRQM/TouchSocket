@@ -76,7 +76,7 @@ namespace RRQMSocket.Http
             {
                 this.URL = Uri.UnescapeDataString(first[1]);
                 this.RelativeURL = first[1].Split('?')[0];
-            } 
+            }
             if (first.Length > 2)
             {
                 string[] ps = first[2].Split('/');
@@ -168,7 +168,7 @@ namespace RRQMSocket.Http
                 if (this.Content_Type == @"application/x-www-form-urlencoded")
                 {
                     this.Params = GetRequestParameters(this.BodyString);
-                } 
+                }
             }
         }
 

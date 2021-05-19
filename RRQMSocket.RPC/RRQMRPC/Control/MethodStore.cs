@@ -12,7 +12,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -87,8 +86,9 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.initialized = true;
         }
 
-        const string list = "System.Collections.Generic.List";
-        const string dictionary = "System.Collections.Generic.Dictionary";
+        private const string list = "System.Collections.Generic.List";
+        private const string dictionary = "System.Collections.Generic.Dictionary";
+
         private Type MethodGetType(string typeName)
         {
             if (this.typeDic != null && typeDic.ContainsKey(typeName))
@@ -129,6 +129,5 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             return type;
         }
-
     }
 }

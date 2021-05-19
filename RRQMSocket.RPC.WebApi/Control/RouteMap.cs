@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.WebApi
     /// <summary>
     /// 路由映射图
     /// </summary>
-    public class RouteMap: IEnumerable<KeyValuePair<string, MethodInstance>>
+    public class RouteMap : IEnumerable<KeyValuePair<string, MethodInstance>>
     {
         internal RouteMap()
         {
@@ -59,7 +59,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <returns></returns>
         public IEnumerator<KeyValuePair<string, MethodInstance>> GetEnumerator()
         {
-           return this.routeMap.GetEnumerator();
+            return this.routeMap.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

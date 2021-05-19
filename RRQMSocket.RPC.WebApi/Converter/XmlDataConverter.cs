@@ -50,13 +50,12 @@ namespace RRQMSocket.RPC.WebApi
                     }
                 case "application/xml":
                     {
-                        if (methodInstance.Parameters.Length>0)
+                        if (methodInstance.Parameters.Length > 0)
                         {
                             for (int i = 0; i < methodInstance.Parameters.Length; i++)
                             {
-                                if (i==0)
+                                if (i == 0)
                                 {
-
                                     methodInvoker.Parameters[i] = SerializeConvert.XmlDeserializeFromBytes(httpRequest.Body.ToArray(), methodInstance.ParameterTypes[0]);
                                 }
                                 else

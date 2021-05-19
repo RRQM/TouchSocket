@@ -210,7 +210,6 @@ namespace RRQMSocket.RPC
                                 methodInstance.ReturnType = method.ReturnType;
                             }
 
-
                             if (parameters.Length == 0)
                             {
                                 methodInstance.MethodToken = ++ExistReturnNullParameters;

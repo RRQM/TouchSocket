@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.XmlRpc
     /// <summary>
     /// 服务映射图
     /// </summary>
-    public class ActionMap: IEnumerable<KeyValuePair<string, MethodInstance>>
+    public class ActionMap : IEnumerable<KeyValuePair<string, MethodInstance>>
     {
         internal ActionMap()
         {
@@ -59,7 +59,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <returns></returns>
         public IEnumerator<KeyValuePair<string, MethodInstance>> GetEnumerator()
         {
-           return this.actionMap.GetEnumerator();
+            return this.actionMap.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

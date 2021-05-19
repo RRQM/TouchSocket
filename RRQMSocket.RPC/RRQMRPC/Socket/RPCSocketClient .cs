@@ -49,7 +49,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             WaitBytes waitBytes = SerializeConvert.RRQMBinaryDeserialize<WaitBytes>(buffer, 4);
             this.waitHandles.SetRun(waitBytes.Sign, waitBytes);
         }
-        
+
         /// <summary>
         /// 等待字节返回
         /// </summary>
@@ -57,7 +57,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="r"></param>
         internal void Agreement_112(byte[] buffer, int r)
         {
-            RpcContext rpcContext = RpcContext.Deserialize(buffer,4);
+            RpcContext rpcContext = RpcContext.Deserialize(buffer, 4);
 
             this.invokeWaitData.Set(rpcContext);
         }
@@ -139,7 +139,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     List<byte[]> datas = new List<byte[]>();
                     foreach (object parameter in parameters)
                     {
-                        datas.Add(SerializeConvert.RRQMBinarySerialize(parameter,true));
+                        datas.Add(SerializeConvert.RRQMBinarySerialize(parameter, true));
                     }
                     invokeWaitData.WaitResult.ParametersBytes = datas;
                     invokeWaitData.WaitResult.Serialize(byteBlock);
@@ -176,7 +176,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         throw new RRQMRPCException($"调用异常，信息：{context.Message}");
                     }
-                    
+
                     try
                     {
                         return SerializeConvert.RRQMBinaryDeserialize<T>(context.ReturnParameterBytes, 0);
@@ -191,8 +191,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     return default(T);
                 }
             }
-        } 
-        
+        }
+
         /// <summary>
         /// 回调RPC
         /// </summary>
@@ -219,7 +219,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     List<byte[]> datas = new List<byte[]>();
                     foreach (object parameter in parameters)
                     {
-                        datas.Add(SerializeConvert.RRQMBinarySerialize(parameter,true));
+                        datas.Add(SerializeConvert.RRQMBinarySerialize(parameter, true));
                     }
                     invokeWaitData.WaitResult.ParametersBytes = datas;
                     invokeWaitData.WaitResult.Serialize(byteBlock);

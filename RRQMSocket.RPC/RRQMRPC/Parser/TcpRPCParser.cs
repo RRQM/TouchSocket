@@ -137,7 +137,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
                         }
                         break;
-                    } 
+                    }
                 case 112:/*函数式调用返回*/
                     {
                         try
@@ -292,11 +292,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="invokeOption">调用设置</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public T CallBack<T>(string iDToken,int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        public T CallBack<T>(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
             if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
             {
-               return socketClient.CallBack<T>(methodToken, invokeOption, parameters);
+                return socketClient.CallBack<T>(methodToken, invokeOption, parameters);
             }
             else
             {
@@ -311,7 +311,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodToken">函数唯一标识</param>
         /// <param name="invokeOption">调用设置</param>
         /// <param name="parameters">参数</param>
-        public void CallBack(string iDToken,int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        public void CallBack(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
             if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
             {

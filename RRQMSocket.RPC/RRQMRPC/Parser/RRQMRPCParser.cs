@@ -224,7 +224,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="context"></param>
         /// <param name="caller"></param>
-        protected virtual void ExecuteContext(RpcContext context,object caller)
+        protected virtual void ExecuteContext(RpcContext context, object caller)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = caller;

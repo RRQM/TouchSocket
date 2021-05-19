@@ -142,7 +142,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         if (parameters[i].ParameterType.Name.Contains("&"))
                         {
-                           
                             if (parameters[i].IsOut)
                             {
                                 isOut = true;
@@ -225,7 +224,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         codeString.Append(string.Format("\"{0}\"", methodName));
                         codeString.AppendLine(",invokeOption,ref parameters);");
                     }
-                    if (isOut||isRef)
+                    if (isOut || isRef)
                     {
                         codeString.AppendLine("if(parameters!=null)");
                         codeString.AppendLine("{");
@@ -247,7 +246,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                             }
                             codeString.AppendLine("}");
                         }
-                       
                     }
 
                     if (isReturn)
@@ -257,7 +255,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     codeString.AppendLine("}");
 
-                    if (!isOut&&!isRef)//没有out或者ref
+                    if (!isOut && !isRef)//没有out或者ref
                     {
                         if (method.ReturnType.Name == "Void")
                         {

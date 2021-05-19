@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Helper;
 using System;
-using System.IO;
 
 namespace RRQMSocket.Http
 {
@@ -76,7 +75,7 @@ namespace RRQMSocket.Http
         /// <param name="statusCode"></param>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static HttpResponse FromText(this HttpResponse response,  string text,string statusCode = "200")
+        public static HttpResponse FromText(this HttpResponse response, string text, string statusCode = "200")
         {
             response.SetContent(text);
             response.Content_Type = "text/plain";
@@ -90,7 +89,7 @@ namespace RRQMSocket.Http
         /// <param name="response"></param>
         /// <param name="statusCode"></param>
         /// <returns></returns>
-        public static HttpResponse FromSuccess(this HttpResponse response,string statusCode="200")
+        public static HttpResponse FromSuccess(this HttpResponse response, string statusCode = "200")
         {
             response.StatusCode = statusCode;
             response.SetHeader(ResponseHeader.Server, $"RRQMSocket.Http {HttpResponse.ServerVersion}");

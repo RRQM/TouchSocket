@@ -32,6 +32,6 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="httpRequest"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public abstract void OnPost(HttpRequest httpRequest,ref MethodInvoker methodInvoker, MethodInstance methodInstance);
+        public abstract void OnPost(HttpRequest httpRequest, ref MethodInvoker methodInvoker, MethodInstance methodInstance);
     }
 }

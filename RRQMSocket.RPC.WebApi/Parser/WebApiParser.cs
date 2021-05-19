@@ -18,7 +18,6 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.WebApi
 {
@@ -161,7 +160,6 @@ namespace RRQMSocket.RPC.WebApi
                                                 methodInvoker.Parameters[i] = methodInstance.ParameterTypes[i].GetDefault();
                                             }
                                         }
-
                                     }
                                     break;
                                 }
