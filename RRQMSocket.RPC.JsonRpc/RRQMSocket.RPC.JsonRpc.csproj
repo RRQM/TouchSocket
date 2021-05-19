@@ -70,6 +70,6 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
+	  <PackageReference Include="RRQMSocket.RPC" Version="1.0.6" />
 	</ItemGroup>
 </Project>

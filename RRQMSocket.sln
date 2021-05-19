@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.WebApi", "RR
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.XmlRpc", "RRQMSocket.RPC.XmlRpc\RRQMSocket.RPC.XmlRpc.csproj", "{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RRQMSocket.JsonRpc", "RRQMSocket.Json\RRQMSocket.JsonRpc.csproj", "{9E5DDC4E-4C72-4AD0-B3FF-404391B8B2CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.JsonRpc", "RRQMSocket.RPC.JsonRpc\RRQMSocket.RPC.JsonRpc.csproj", "{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +47,10 @@ Global
 		{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9E5DDC4E-4C72-4AD0-B3FF-404391B8B2CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9E5DDC4E-4C72-4AD0-B3FF-404391B8B2CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9E5DDC4E-4C72-4AD0-B3FF-404391B8B2CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9E5DDC4E-4C72-4AD0-B3FF-404391B8B2CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

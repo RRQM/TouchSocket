@@ -11,33 +11,33 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace RRQMSocket.RPC.XmlRpc
+namespace RRQMSocket.RPC.JsonRpc
 {
     /// <summary>
     /// 适用于XmlRpc的标记
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class XmlRpcAttribute : RPCMethodAttribute
+    public sealed class JsonRpcAttribute : RPCMethodAttribute
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public XmlRpcAttribute()
+        public JsonRpcAttribute()
         {
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="actionKey"></param>
-        public XmlRpcAttribute(string actionKey)
+        /// <param name="methodKey"></param>
+        public JsonRpcAttribute(string methodKey)
         {
-            this.ActionKey = actionKey;
+            this.MethodKey = methodKey;
         }
 
         /// <summary>
         /// 服务唯一标识
         /// </summary>
-        public string ActionKey { get; private set; }
+        public string MethodKey { get; private set; }
     }
 }
