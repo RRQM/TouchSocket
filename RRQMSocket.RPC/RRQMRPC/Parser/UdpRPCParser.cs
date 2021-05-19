@@ -65,8 +65,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             RpcContext content = RpcContext.Deserialize(buffer, 4);
-                            content.Flag = remoteEndpoint;
-                            this.ExecuteContext(content);
+                            this.ExecuteContext(content, remoteEndpoint);
                             if (content.Feedback != 0)
                             {
                                 this.UDPSend(101, remoteEndpoint, new byte[0]);

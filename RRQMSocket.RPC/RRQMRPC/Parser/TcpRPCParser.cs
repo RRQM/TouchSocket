@@ -106,8 +106,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             RpcContext content = RpcContext.Deserialize(buffer, 4);
-                            content.Flag = sender;
-                            this.ExecuteContext(content);
+                            this.ExecuteContext(content, sender);
                         }
                         catch (Exception e)
                         {
@@ -232,7 +231,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
 
                 context.Serialize(byteBlock);
-                ((RPCSocketClient)context.Flag).agreementHelper.SocketSend(101, byteBlock);
+                ((RPCSocketClient)methodInvoker.Caller).agreementHelper.SocketSend(101, byteBlock);
             }
             catch (Exception ex)
             {

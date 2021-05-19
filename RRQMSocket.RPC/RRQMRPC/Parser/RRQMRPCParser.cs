@@ -223,9 +223,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 执行内容
         /// </summary>
         /// <param name="context"></param>
-        protected virtual void ExecuteContext(RpcContext context)
+        /// <param name="caller"></param>
+        protected virtual void ExecuteContext(RpcContext context,object caller)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
+            methodInvoker.Caller = caller;
             methodInvoker.Flag = context;
             if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
             {

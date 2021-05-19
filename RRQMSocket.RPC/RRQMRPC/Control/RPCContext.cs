@@ -25,7 +25,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal int MethodToken;
         internal byte Feedback;
         internal byte[] ReturnParameterBytes;
-        internal object Flag;
         internal List<byte[]> ParametersBytes;
 
         internal void Serialize(ByteBlock byteBlock)

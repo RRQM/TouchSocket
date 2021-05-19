@@ -18,6 +18,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using RRQMCore.Helper;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
@@ -215,9 +216,18 @@ namespace RRQMSocket.RPC.JsonRpc
                     for (int i = 0; i < context.@params.Length; i++)
                     {
                         string s = context.@params[i].ToString();
-                        MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(s));
-                        memoryStream.Seek(0, SeekOrigin.Begin);
-                        context.@params[i] = ReadObject(methodInstance.ParameterTypes[i], memoryStream);
+
+                        Type type = methodInstance.ParameterTypes[i];
+                        if (type.IsPrimitive || type == typeof(string))
+                        {
+                            context.@params[i] = s.ParseToType(type);
+                        }
+                        else
+                        {
+                            MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(s));
+                            memoryStream.Seek(0, SeekOrigin.Begin);
+                            context.@params[i] = ReadObject(type, memoryStream);
+                        }
                     }
                 }
             }
@@ -228,6 +238,7 @@ namespace RRQMSocket.RPC.JsonRpc
             return context;
         }
 
+        protected virtual 
         private object ReadObject(Type type, Stream stream)
         {
             DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(typeof(RpcRequestContext));

@@ -41,5 +41,10 @@ namespace RRQMSocket.RPC
         /// 可以传递其他类型的数据容器
         /// </summary>
         public object Flag { get; set; }
+
+        /// <summary>
+        /// 此函数执行者
+        /// </summary>
+        public object Caller { get; set; }
     }
 }
