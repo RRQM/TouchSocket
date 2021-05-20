@@ -22,7 +22,7 @@ namespace RRQMSocket
         internal BufferQueue bufferAndClient;
         internal EventWaitHandle waitHandleBuffer;
         internal bool isWait; 
-
+         
         public void Dispose()
         {
             if (clientBufferPool != null)
