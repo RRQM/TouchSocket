@@ -425,7 +425,8 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    queueGroup.waitHandleBuffer.WaitOne();
+                    //queueGroup.isWait = true;
+                    //queueGroup.waitHandleBuffer.WaitOne(10);
                 }
             }
         }

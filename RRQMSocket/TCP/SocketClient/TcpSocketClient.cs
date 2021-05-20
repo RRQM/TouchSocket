@@ -211,8 +211,11 @@ namespace RRQMSocket
                     clientBuffer.client = this;
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                    queueGroup.waitHandleBuffer.Set();
 
+                    //if (queueGroup.isWait)
+                    //{
+                    //    queueGroup.waitHandleBuffer.Set();
+                    //}
                     try
                     {
                         WaitReceive();
