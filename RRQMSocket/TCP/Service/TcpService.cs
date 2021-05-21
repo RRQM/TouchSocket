@@ -221,7 +221,7 @@ namespace RRQMSocket
                     BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                     bufferQueueGroups[i] = bufferQueueGroup;
                     bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                    bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(this.maxCount * 10);//处理用户的消息
+                    bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(this.maxCount);//处理用户的消息
                     bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
                     bufferQueueGroup.bufferAndClient = new BufferQueue();
                     bufferQueueGroup.Thread.IsBackground = true;
@@ -420,13 +420,13 @@ namespace RRQMSocket
                     finally
                     {
                         queueGroup.clientBufferPool.DestroyObject(clientBuffer);
-                        clientBuffer.byteBlock.Dispose();
                     }
                 }
                 else
                 {
-                    //queueGroup.isWait = true;
-                    //queueGroup.waitHandleBuffer.WaitOne(10);
+                    queueGroup.isWait = true;
+                    queueGroup.waitHandleBuffer.WaitOne();
+                    queueGroup.isWait = false;
                 }
             }
         }

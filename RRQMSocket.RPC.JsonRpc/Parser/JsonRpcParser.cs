@@ -36,6 +36,7 @@ namespace RRQMSocket.RPC.JsonRpc
             this.actionMap = new ActionMap();
             this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
             this.tcpService.OnReceived += this.OnReceived;
+            this.JsonConverter = new DataContractJsonConverter();
         }
 
         /// <summary>
@@ -84,6 +85,11 @@ namespace RRQMSocket.RPC.JsonRpc
         /// 获取或设置日志记录器
         /// </summary>
         public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
+
+        /// <summary>
+        /// Json转换器
+        /// </summary>
+        public JsonConverter JsonConverter { get; set; }
 
         /// <summary>
         /// 绑定服务
@@ -164,8 +170,53 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             ISocketClient socketClient = (ISocketClient)methodInvoker.Caller;
 
+            RpcResponseContext context = new RpcResponseContext();
+            context.id = ((RpcRequestContext)methodInvoker.Flag).id;
+            context.result = methodInvoker.ReturnParameter;
+            error error = new error();
+            context.error = error;
+
+            switch (methodInvoker.Status)
+            {
+                case InvokeStatus.Success:
+                    {
+                        context.error = null;
+                        break;
+                    }
+                case InvokeStatus.UnFound:
+                    {
+                        error.code = -32601;
+                        error.message = "函数未找到";
+                        break;
+                    }
+                case InvokeStatus.UnEnable:
+                    {
+                        error.code = -32601;
+                        error.message = "函数已被禁用";
+                        break;
+                    }
+                case InvokeStatus.Abort:
+                    {
+                        error.code = -32601;
+                        error.message = "函数已被中断执行";
+                        break;
+                    }
+                case InvokeStatus.InvocationException:
+                    {
+                        error.code = -32603;
+                        error.message = "函数内部异常";
+                        break;
+                    }
+                case InvokeStatus.Exception:
+                    {
+                        error.code = -32602;
+                        error.message = methodInvoker.StatusMessage;
+                        break;
+                    }
+            }
+
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-            this.BuildResponseByteBlock(byteBlock, methodInvoker, (RpcRequestContext)methodInvoker.Flag);
+            this.BuildResponseByteBlock(byteBlock, context);
             if (socketClient.Online)
             {
                 try
@@ -222,8 +273,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <returns></returns>
         protected virtual RpcRequestContext BuildRequestContext(ByteBlock byteBlock, out MethodInstance methodInstance)
         {
-            byteBlock.Seek(0, SeekOrigin.Begin);
-            RpcRequestContext context = (RpcRequestContext)ReadObject(typeof(RpcRequestContext), byteBlock);
+            RpcRequestContext context = (RpcRequestContext)this.JsonConverter.Deserialize(Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length),typeof(RpcRequestContext));
 
             if (this.actionMap.TryGet(context.method, out methodInstance))
             {
@@ -240,9 +290,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         else
                         {
-                            MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(s));
-                            memoryStream.Seek(0, SeekOrigin.Begin);
-                            context.@params[i] = ReadObject(type, memoryStream);
+                            context.@params[i] = this.JsonConverter.Deserialize(s, type);
                         }
                     }
                 }
@@ -258,31 +306,14 @@ namespace RRQMSocket.RPC.JsonRpc
         /// 构建响应数据
         /// </summary>
         /// <param name="responseByteBlock"></param>
-        /// <param name="methodInvoker"></param>
-        /// <param name="context"></param>
-        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, MethodInvoker methodInvoker, RpcRequestContext context)
+        /// <param name="responseContext"></param>
+        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, RpcResponseContext responseContext)
         {
-            if (string.IsNullOrEmpty(context.id))
+            if (string.IsNullOrEmpty(responseContext.id))
             {
                 return;
             }
-
-            if (methodInvoker.ReturnParameter != null)
-            {
-                this.WriteObject(responseByteBlock, methodInvoker.ReturnParameter);
-            }
-        }
-
-        private object ReadObject(Type type, Stream stream)
-        {
-            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(type);
-            return deseralizer.ReadObject(stream);
-        }
-
-        private void WriteObject(Stream stream, object obj)
-        {
-            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(obj.GetType());
-            deseralizer.WriteObject(stream, obj);
+            this.JsonConverter.Serialize(responseByteBlock, responseContext);
         }
 
         /// <summary>

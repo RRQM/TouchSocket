@@ -212,10 +212,10 @@ namespace RRQMSocket
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
 
-                    //if (queueGroup.isWait)
-                    //{
-                    //    queueGroup.waitHandleBuffer.Set();
-                    //}
+                    if (queueGroup.isWait)
+                    {
+                        queueGroup.waitHandleBuffer.Set();
+                    }
                     try
                     {
                         WaitReceive();

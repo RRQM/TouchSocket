@@ -9,34 +9,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Pool;
-using System.Net;
+using System;
+using System.IO;
 
-namespace RRQMSocket
+namespace RRQMSocket.RPC.JsonRpc
 {
-    internal class ClientBuffer : IPoolObject
+    /// <summary>
+    /// Json序列化转换器
+    /// </summary>
+    public abstract class JsonConverter
     {
-        internal IHandleBuffer client;
-        internal ByteBlock byteBlock;
-        internal EndPoint endPoint;
+        /// <summary>
+        /// 序列化
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public abstract void Serialize(Stream stream,object parameter);
 
-        public bool NewCreate { get; set; }
-
-        public void Create()
-        {
-        }
-
-        public void Destroy()
-        {
-            this.client = null;
-            this.byteBlock.Dispose();
-            this.byteBlock = null;
-            this.endPoint = null;
-        }
-
-        public void Recreate()
-        {
-        }
+        /// <summary>
+        /// 反序列化
+        /// </summary>
+        /// <param name="jsonString"></param>
+        /// <param name="parameterType"></param>
+        /// <returns></returns>
+        public abstract object Deserialize(string jsonString, Type parameterType);
     }
 }

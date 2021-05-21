@@ -13,10 +13,6 @@ using System;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
     /// 序列化转换器
     /// </summary>

@@ -333,6 +333,7 @@ namespace RRQMSocket
             {
                 throw new RRQMNotConnectedException("该实例已断开");
             }
+
             try
             {
                 int r = 0;

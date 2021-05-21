@@ -9,34 +9,38 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Pool;
-using System.Net;
 
-namespace RRQMSocket
+using System.Runtime.Serialization;
+
+namespace RRQMSocket.RPC.JsonRpc
 {
-    internal class ClientBuffer : IPoolObject
+#pragma warning disable CS1591
+    /// <summary>
+    /// JsonRpc响应器
+    /// </summary>
+    [DataContract]
+    public class RpcResponseContext
     {
-        internal IHandleBuffer client;
-        internal ByteBlock byteBlock;
-        internal EndPoint endPoint;
+        [DataMember]
+        public object result;
 
-        public bool NewCreate { get; set; }
+        [DataMember]
+        public error error;
 
-        public void Create()
-        {
-        }
+        [DataMember]
+        public string id;
+    }
 
-        public void Destroy()
-        {
-            this.client = null;
-            this.byteBlock.Dispose();
-            this.byteBlock = null;
-            this.endPoint = null;
-        }
+    /// <summary>
+    /// 错误
+    /// </summary>
+    [DataContract]
+    public class error
+    {
+        [DataMember]
+        public int code;
 
-        public void Recreate()
-        {
-        }
+        [DataMember]
+        public string message;
     }
 }
