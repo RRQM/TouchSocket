@@ -65,7 +65,7 @@ namespace RRQMSocket
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行发送
         /// </summary>
-        internal Action<byte[], int, int> SendCallBack { get; set; }
+        internal Action<byte[], int, int, bool> SendCallBack { get; set; }
 
         /// <summary>
         /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock,object)"/>处理数据
@@ -96,7 +96,8 @@ namespace RRQMSocket
         /// <param name="buffer">数据</param>
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
-        protected abstract void PreviewSend(byte[] buffer, int offset, int length);
+        /// <param name="isAsync">是否使用IOCP发送</param>
+        protected abstract void PreviewSend(byte[] buffer, int offset, int length, bool isAsync);
 
         /// <summary>
         /// 发送已经经过预先处理后的数据
@@ -104,9 +105,10 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected void GoSend(byte[] buffer, int offset, int length)
+        /// <param name="isAsync">是否使用IOCP发送</param>
+        protected void GoSend(byte[] buffer, int offset, int length, bool isAsync)
         {
-            this.SendCallBack.Invoke(buffer, offset, length);
+            this.SendCallBack.Invoke(buffer, offset, length, isAsync);
         }
 
         internal void Received(ByteBlock byteBlock)
@@ -114,9 +116,9 @@ namespace RRQMSocket
             this.PreviewReceived(byteBlock);
         }
 
-        internal void Send(byte[] buffer, int offset, int length)
+        internal void Send(byte[] buffer, int offset, int length, bool isAsync)
         {
-            this.PreviewSend(buffer, offset, length);
+            this.PreviewSend(buffer, offset, length, isAsync);
         }
     }
 }

@@ -53,5 +53,34 @@ namespace RRQMSocket
         /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>
         void Send(ByteBlock byteBlock);
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void SendAsync(byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void SendAsync(byte[] buffer);
+
+        /// <summary>
+        /// IOCP发送流中的有效数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void SendAsync(ByteBlock byteBlock);
     }
 }

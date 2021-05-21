@@ -119,7 +119,8 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length)
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
             int dataLen = length - offset;
             if (dataLen > this.FixedSize)
@@ -132,7 +133,7 @@ namespace RRQMSocket
             {
                 byteBlock.Buffer[i] = 0;
             }
-            this.GoSend(byteBlock.Buffer, 0, this.FixedSize);
+            this.GoSend(byteBlock.Buffer, 0, this.FixedSize,isAsync);
             byteBlock.Dispose();
         }
     }

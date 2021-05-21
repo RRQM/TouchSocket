@@ -33,9 +33,10 @@ namespace RRQMSocket
         /// <param name="buffer">数据</param>
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length)
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
-            this.GoSend(buffer, offset, length);
+            this.GoSend(buffer, offset, length,isAsync);
         }
     }
 }

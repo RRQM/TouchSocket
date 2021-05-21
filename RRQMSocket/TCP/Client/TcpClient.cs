@@ -67,7 +67,8 @@ namespace RRQMSocket
         }
 
         private BufferQueueGroup queueGroup;
-        private SocketAsyncEventArgs eventArgs;
+        private SocketAsyncEventArgs receiveEventArgs;
+        private SocketAsyncEventArgs sendEventArgs;
 
         /// <summary>
         /// 成功连接到服务器
@@ -153,8 +154,10 @@ namespace RRQMSocket
             queueGroup.Thread.IsBackground = true;
             queueGroup.Thread.Name = "客户端处理线程";
             queueGroup.Thread.Start();
-            this.eventArgs = new SocketAsyncEventArgs();
-            this.eventArgs.Completed += EventArgs_Completed;
+            this.sendEventArgs = new SocketAsyncEventArgs();
+            this.sendEventArgs.Completed+= EventArgs_Completed;
+            this.receiveEventArgs = new SocketAsyncEventArgs();
+            this.receiveEventArgs.Completed += EventArgs_Completed;
             BeginReceive();
             ConnectedServiceMethod(this, new MesEventArgs("SuccessConnection"));
         }
@@ -167,11 +170,11 @@ namespace RRQMSocket
             try
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                this.eventArgs.UserToken = byteBlock;
-                this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                if (!this.MainSocket.ReceiveAsync(this.eventArgs))
+                this.receiveEventArgs.UserToken = byteBlock;
+                this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                if (!this.MainSocket.ReceiveAsync(this.receiveEventArgs))
                 {
-                    ProcessReceived(this.eventArgs);
+                    ProcessReceived(this.receiveEventArgs);
                 }
             }
             catch
@@ -187,6 +190,10 @@ namespace RRQMSocket
                 if (e.LastOperation == SocketAsyncOperation.Receive)
                 {
                     ProcessReceived(e);
+                }
+                else if (e.LastOperation == SocketAsyncOperation.Send)
+                {
+
                 }
                 else
                 {
@@ -324,10 +331,49 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
-            this.dataHandlingAdapter.Send(buffer, offset, length);
+            this.dataHandlingAdapter.Send(buffer, offset, length,false);
         }
 
-        private void Sent(byte[] buffer, int offset, int length)
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(byte[] buffer, int offset, int length)
+        {
+            this.dataHandlingAdapter.Send(buffer, offset, length, true);
+        }
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(byte[] buffer)
+        {
+            this.SendAsync(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// IOCP发送流中的有效数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(ByteBlock byteBlock)
+        {
+            this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
+        }
+
+        private void Sent(byte[] buffer, int offset, int length,bool isAsync)
         {
             if (!this.Online)
             {

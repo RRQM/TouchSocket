@@ -181,13 +181,14 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length)
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
             int dataLen = length - offset + this.terminatorCode.Length;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);
             byteBlock.Write(this.terminatorCode);
-            this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Position);
+            this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Position,isAsync);
             byteBlock.Dispose();
         }
     }
