@@ -33,5 +33,19 @@ namespace RRQMSocket
         /// <param name="addressFamily"></param>
         /// <param name="endPoint"></param>
         void Connect(AddressFamily addressFamily, EndPoint endPoint);
+
+        /// <summary>
+        /// 异步连接服务器
+        /// </summary>
+        /// <param name="iPHost"></param>
+        /// <exception cref="RRQMException"></exception>
+        void  ConnectAsync(IPHost iPHost);
+
+        /// <summary>
+        /// 异步连接服务器
+        /// </summary>
+        /// <param name="addressFamily"></param>
+        /// <param name="endPoint"></param>
+        void ConnectAsync(AddressFamily addressFamily, EndPoint endPoint);
     }
 }

@@ -91,6 +91,11 @@ namespace RRQMSocket
         /// </summary>
         public SocketCliectCollection<TClient> SocketClients { get; private set; }
 
+        /// <summary>
+        /// 挂起连接队列的最大长度。
+        /// </summary>
+        public int Backlog { get; set; } = 30;
+
         private AcceptQueue acceptQueue;
         internal ObjectPool<TClient> SocketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
@@ -203,7 +208,7 @@ namespace RRQMSocket
                     throw new RRQMException(e.Message);
                 }
 
-                MainSocket.Listen(30);
+                MainSocket.Listen(this.Backlog);
 
                 threadStartUpReceive = new Thread(StartUpReceive);
                 threadStartUpReceive.IsBackground = true;

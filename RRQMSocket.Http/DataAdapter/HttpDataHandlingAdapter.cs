@@ -125,9 +125,10 @@ namespace RRQMSocket.Http
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length)
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
-            this.GoSend(buffer, offset, length);
+            this.GoSend(buffer, offset, length,isAsync);
         }
     }
 }

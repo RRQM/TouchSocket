@@ -15,7 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 客户端终端接口
     /// </summary>
-    public interface IUserClient : IClient
+    public interface IUserClient : ITcpClient
     {
         /// <summary>
         /// 判断是否在线

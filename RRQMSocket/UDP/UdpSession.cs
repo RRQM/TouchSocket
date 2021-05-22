@@ -57,7 +57,7 @@ namespace RRQMSocket
         public long RecivedCount { get { return this.recivedCount; } }
 
         private BufferQueueGroup[] bufferQueueGroups;
-        private SocketAsyncEventArgs recvEventArg;
+        private SocketAsyncEventArgs recviveEventArg; 
         private long recivedCount;
 
         /// <summary>
@@ -86,13 +86,13 @@ namespace RRQMSocket
                     socket.Bind(endPoint);
                     this.MainSocket = socket;
 
-                    this.recvEventArg = new SocketAsyncEventArgs();
-                    this.recvEventArg.Completed += this.RecvEventArg_Completed;
+                    this.recviveEventArg = new SocketAsyncEventArgs();
+                    this.recviveEventArg.Completed += this.IO_Completed;
                     ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    this.recvEventArg.UserToken = byteBlock;
-                    this.recvEventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    this.recvEventArg.RemoteEndPoint = endPoint;
-                    this.MainSocket.ReceiveFromAsync(this.recvEventArg);
+                    this.recviveEventArg.UserToken = byteBlock;
+                    this.recviveEventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                    this.recviveEventArg.RemoteEndPoint = endPoint;
+                    this.MainSocket.ReceiveFromAsync(this.recviveEventArg);
                 }
                 catch (Exception e)
                 {
@@ -162,11 +162,15 @@ namespace RRQMSocket
         {
         }
 
-        private void RecvEventArg_Completed(object sender, SocketAsyncEventArgs e)
+        private void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
             if (e.LastOperation == SocketAsyncOperation.ReceiveFrom)
             {
                 ProcessReceive(e);
+            }
+            else if (e.LastOperation == SocketAsyncOperation.SendTo)
+            {
+                ProcessSend(e);
             }
         }
 
@@ -174,7 +178,7 @@ namespace RRQMSocket
         {
             if (!this.disposable)
             {
-                if (this.recvEventArg.SocketError == SocketError.Success)
+                if (this.recviveEventArg.SocketError == SocketError.Success)
                 {
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.Position = e.BytesTransferred;
@@ -189,11 +193,27 @@ namespace RRQMSocket
                     ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-                    if (!this.MainSocket.ReceiveFromAsync(this.recvEventArg))
+                    if (!this.MainSocket.ReceiveFromAsync(this.recviveEventArg))
                     {
                         ProcessReceive(e);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 发送完成时处理函数
+        /// </summary>
+        /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
+        private void ProcessSend(SocketAsyncEventArgs e)
+        {
+            if (e.SocketError == SocketError.Success)
+            {
+                e.Dispose();
+            }
+            else
+            {
+                this.Logger.Debug(LogType.Error, this, "异步发送错误。");
             }
         }
 
@@ -280,6 +300,52 @@ namespace RRQMSocket
         public void Send(ByteBlock byteBlock)
         {
             this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
+        }
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(byte[] buffer, int offset, int length)
+        {
+            SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
+            sendEventArgs.Completed += this.IO_Completed;
+            sendEventArgs.SetBuffer(buffer, offset, length);
+            sendEventArgs.RemoteEndPoint = this.DefaultRemotePoint;
+
+            if (!this.MainSocket.SendToAsync(sendEventArgs))
+            {
+                this.ProcessSend(sendEventArgs);
+            }
+        }
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(byte[] buffer)
+        {
+            this.SendAsync(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// IOCP发送流中的有效数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(ByteBlock byteBlock)
+        {
+            this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
         /// <summary>

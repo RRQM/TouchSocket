@@ -23,6 +23,11 @@ namespace RRQMSocket
     public interface ITcpService : IService
     {
         /// <summary>
+        /// 挂起连接队列的最大长度。
+        /// </summary>
+        int Backlog { get; set; }
+
+        /// <summary>
         /// 获取或设置最大可连接数
         /// </summary>
         int MaxCount { get; set; }

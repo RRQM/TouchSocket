@@ -14,7 +14,7 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器辅助类接口
     /// </summary>
-    public interface ISocketClient : IClient
+    public interface ISocketClient : ITcpClient
     {
         /// <summary>
         /// 用于索引的ID

@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
 
 namespace RRQMSocket
 {
@@ -133,8 +134,30 @@ namespace RRQMSocket
             {
                 byteBlock.Buffer[i] = 0;
             }
-            this.GoSend(byteBlock.Buffer, 0, this.FixedSize,isAsync);
-            byteBlock.Dispose();
+
+            try
+            {
+                byteBlock.SetLength(this.FixedSize);
+                if (isAsync)
+                {
+                    byte[] data = byteBlock.ToArray();
+                    this.GoSend(data, 0, data.Length, isAsync);//使用ByteBlock时不能异步发送
+                }
+                else
+                {
+                    this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Length, isAsync);
+                }
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+           
+            
         }
     }
 }

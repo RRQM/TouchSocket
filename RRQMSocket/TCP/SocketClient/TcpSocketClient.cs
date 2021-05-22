@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Log;
 using RRQMCore.Pool;
 using System;
 using System.Net.Sockets;
@@ -28,14 +29,14 @@ namespace RRQMSocket
         /// </summary>
         public TcpSocketClient()
         {
-            this.eventArgs = new SocketAsyncEventArgs();
-            this.eventArgs.Completed += this.EventArgs_Completed;
+            this.receiveEventArgs = new SocketAsyncEventArgs();
+            this.receiveEventArgs.Completed += this.EventArgs_Completed;
         }
 
         internal bool breakOut;
         internal BufferQueueGroup queueGroup;
         private bool isBeginReceive;
-        private SocketAsyncEventArgs eventArgs;
+        private SocketAsyncEventArgs receiveEventArgs; 
 
         /// <summary>
         /// 包含此辅助类的主服务器类
@@ -113,7 +114,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
-            this.dataHandlingAdapter.Send(buffer, offset, length);
+            this.dataHandlingAdapter.Send(buffer, offset, length,false);
         }
 
         /// <summary>
@@ -128,7 +129,45 @@ namespace RRQMSocket
             this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
-        private void Sent(byte[] buffer, int offset, int length)
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(byte[] buffer, int offset, int length)
+        {
+            this.dataHandlingAdapter.Send(buffer, offset, length, true);
+        }
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(byte[] buffer)
+        {
+            this.SendAsync(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// IOCP发送流中的有效数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(ByteBlock byteBlock)
+        {
+            this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
+        }
+
+        private void Sent(byte[] buffer, int offset, int length, bool isAsync)
         {
             if (!this.Online)
             {
@@ -136,16 +175,31 @@ namespace RRQMSocket
             }
             try
             {
-                int r = 0;
-                while (length > 0)
+                if (isAsync)
                 {
-                    r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
-                    if (r == 0 && length > 0)
+                    SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
+                    sendEventArgs.Completed += EventArgs_Completed;
+                    sendEventArgs.SetBuffer(buffer, offset, length);
+                    sendEventArgs.RemoteEndPoint = this.MainSocket.RemoteEndPoint;
+                    if (!this.MainSocket.SendAsync(sendEventArgs))
                     {
-                        throw new RRQMException("发送数据不完全");
+                        // 同步发送时处理发送完成事件
+                        this.ProcessSend(sendEventArgs);
                     }
-                    offset += r;
-                    length -= r;
+                }
+                else
+                {
+                    int r = 0;
+                    while (length > 0)
+                    {
+                        r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                        if (r == 0 && length > 0)
+                        {
+                            throw new RRQMException("发送数据不完全");
+                        }
+                        offset += r;
+                        length -= r;
+                    }
                 }
             }
             catch (Exception e)
@@ -164,11 +218,11 @@ namespace RRQMSocket
                 try
                 {
                     ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    this.eventArgs.UserToken = byteBlock;
-                    this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    if (!MainSocket.ReceiveAsync(this.eventArgs))
+                    this.receiveEventArgs.UserToken = byteBlock;
+                    this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                    if (!MainSocket.ReceiveAsync(this.receiveEventArgs))
                     {
-                        ProcessReceived(this.eventArgs);
+                        ProcessReceived(this.receiveEventArgs);
                     }
                 }
                 catch
@@ -186,6 +240,10 @@ namespace RRQMSocket
                 if (e.LastOperation == SocketAsyncOperation.Receive)
                 {
                     ProcessReceived(e);
+                }
+                else if (e.LastOperation == SocketAsyncOperation.Send)
+                {
+                    ProcessSend(e);
                 }
                 else
                 {
@@ -238,6 +296,22 @@ namespace RRQMSocket
                 {
                     this.breakOut = true;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 发送完成时处理函数
+        /// </summary>
+        /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
+        private void ProcessSend(SocketAsyncEventArgs e)
+        {
+            if (e.SocketError == SocketError.Success)
+            {
+                e.Dispose();
+            }
+            else
+            {
+                this.Logger.Debug(LogType.Error, this, "异步发送错误。");
             }
         }
 
@@ -314,10 +388,13 @@ namespace RRQMSocket
         /// 禁用发送或接收
         /// </summary>
         /// <param name="how"></param>
-        public override void Shutdown(SocketShutdown how)
+        public void Shutdown(SocketShutdown how)
         {
             this.breakOut = true;
-            base.Shutdown(how);
+            if (this.MainSocket != null)
+            {
+                MainSocket.Shutdown(how);
+            }
         }
     }
 }

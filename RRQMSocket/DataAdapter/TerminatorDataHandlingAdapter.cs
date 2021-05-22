@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -188,8 +189,28 @@ namespace RRQMSocket
             ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);
             byteBlock.Write(this.terminatorCode);
-            this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Position,isAsync);
-            byteBlock.Dispose();
+
+            try
+            {
+                if (isAsync)
+                {
+                    byte[] data = byteBlock.ToArray();
+                    this.GoSend(data, 0, data.Length, isAsync);//使用ByteBlock时不能异步发送
+                }
+                else
+                {
+                    this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Length, isAsync);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+
         }
     }
 }

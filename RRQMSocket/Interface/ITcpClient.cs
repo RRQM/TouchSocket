@@ -9,26 +9,24 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
+
 namespace RRQMSocket
 {
     /// <summary>
-    /// Socket基接口
+    /// TCP客户端接口
     /// </summary>
-    public interface ISocket
+    public interface ITcpClient : IClient
     {
         /// <summary>
-        /// IP
+        /// 禁用发送或接收
         /// </summary>
-        string IP { get; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        int Port { get; }
-
-        /// <summary>
-        /// 获取连接的唯一标识
-        /// </summary>
-        string Name { get; }
+        /// <param name="how"></param>
+        void Shutdown(SocketShutdown how);
     }
 }
