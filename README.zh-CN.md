@@ -28,11 +28,12 @@
 ## 💿描述
 |名称|版本（Nuget Version）|下载（Nuget Download）|描述|
 |:---:|---|---|---|
-|RRQMSocket| [![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket/)                                        | [![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/) | **RRQMSocket**是一个整合性的、超轻量级的网络通信服务框架。它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、 **多线程处理** 、 **内存池** 、 **对象池** 等特点，让使用者能够更加简单的、快速的搭建网络框架。|
+|RRQMSocket| [![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket/)                                        | [![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/) | **RRQMSocket**是一个整合性的、超轻量级的网络通信服务框架。它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、 **多线程处理** 、 **内存池** 、 **对象池** 等特点，让使用者能够更加简单的、快速的搭建网络框架。在发送效率上，同步发送可达**20w/s**，异步发送可达**60w/s**。服务器在接收、处理效率上因**线程数量**而定。|
 | RRQMSocket.FileTransfer | [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) | RRQMSocket.FileTransfer是一个高性能的文件传输框架，您可以用它传输**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。在实时测试中，它的传输速率可达500Mb/s。 |
-|RRQMSocket.RPC | [![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC/)                            | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC)](https://www.nuget.org/packages/RRQMSocket.RPC/) | RRQMSocket.RPC是一个超轻量、高性能、可扩展的微服务框架，目前已完成开发RRQMRPC部分，该部分使用RRQM专属协议，支持客户端异步调用，服务端异步触发、以及out和ref关键字，函数回调等。在调用效率上也是非常强悍，在调用空载函数，且返回状态时，10w次调用仅用时3.8秒，不返回状态用时0.9s。其他扩展调用扩展协议目前已开发WebApi，后续还会支持JsonRPC，XmlRPC等。|
+|RRQMSocket.RPC | [![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC/)                            | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC)](https://www.nuget.org/packages/RRQMSocket.RPC/) | RRQMSocket.RPC是一个超轻量、高性能、可扩展的微服务管理平台框架，目前已完成开发**RRQMRPC**、**XmlRpc**、**JsonRpc**、**WebApi**部分。**RRQMRPC**部分使用RRQM专属协议，支持客户端**异步调用**，服务端**异步触发**、以及**out**和**ref**关键字，**函数回调**等。在调用效率上也是非常强悍，在调用空载函数，且返回状态时，**10w**次调用仅用时**3.8**秒，不返回状态用时**0.9**秒。其他协议调用性能详看性能评测。|
 |RRQMSocket.RPC.WebApi | [![NuGet version (RRQMSocket.RPC.WebApi)](https://img.shields.io/nuget/v/RRQMSocket.RPC.WebApi.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC.WebApi/)| [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC.WebApi)](https://www.nuget.org/packages/RRQMSocket.RPC.WebApi/) | RRQMSocket.RPC.WebApi是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过该组件创建WebApi服务解析器，让桌面端、Web端、移动端可以跨语言调用RPC函数。功能支持路由、Get传参、Post传参等。|
 |RRQMSocket.RPC.XmlRpc | [![NuGet version (RRQMSocket.RPC.XmlRpc)](https://img.shields.io/nuget/v/RRQMSocket.RPC.XmlRpc.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC.XmlRpc/)| [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC.XmlRpc)](https://www.nuget.org/packages/RRQMSocket.RPC.XmlRpc/) | RRQMSocket.RPC.XmlRpc是一个扩展于RRQMSocket.RPC的XmlRpc组件，可以通过该组件创建XmlRpc服务解析器，完美支持XmlRpc数据类型，类型嵌套，Array等，也能与CookComputing.XmlRpcV2完美对接。不限Web，Android等平台。|
+|RRQMSocket.RPC.JsonRpc | [![NuGet version (RRQMSocket.RPC.JsonRpc)](https://img.shields.io/nuget/v/RRQMSocket.RPC.JsonRpc.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.RPC.JsonRpc/)| [![Download](https://img.shields.io/nuget/dt/RRQMSocket.RPC.JsonRpc)](https://www.nuget.org/packages/RRQMSocket.RPC.JsonRpc/) | RRQMSocket.RPC.JsonRpc是一个扩展于RRQMSocket.RPC的JsonRpc组件，可以通过该组件创建JsonRpc服务解析器，支持JsonRpc全部功能，可与Web，Android等平台无缝对接。|
 | RRQMSocket.Http | [![NuGet version (RRQMSocket.Http)](https://img.shields.io/nuget/v/RRQMSocket.Http.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket.Http/)                         | [![Download](https://img.shields.io/nuget/dt/RRQMSocket.Http)](https://www.nuget.org/packages/RRQMSocket.Http/) | RRQMSocket.Http是一个能够简单解析Http的服务组件，能够快速响应Http服务请求。|
 
 ## 🖥支持环境
@@ -51,25 +52,25 @@
 
 ## 🌴RRQMSocket特点速览
 
-#### 1.对象池
+#### 对象池
 
 对象池在RRQMSocket有很多应用，最主要的两个就是**连接对象池**和**处理对象池**。连接对象池就是当客户端成功连接时，首先会去连接对象池中找TcpSocketClient，然后没有的话，才会创建。如果哪个客户端掉线了，它的TcpSocketClient就会被回收。这也就是**ID重用**的原因。
 
 然后就是处理对象池，在RRQMSocket中，接收数据的线程和IOCP内核线程是分开的，也就是比如说客户端给服务器发送了1w条数据，但是服务器收到后处理起来很慢，那传统的iocp肯定会放慢接收速率，然后通知客户端的tcp窗口，发生拥塞，然后让客户端暂缓发送。但是在RRQMSocket中会把收到的数据通过队列全都存起来，首先不影响iocp的接收，同时再分配线程去处理收到的报文信息，这样就相当于一个“泄洪湖泊”，能很大程度的提高处理数据的能力。
 
-#### 2.多线程
+#### 多线程
 
 由于有**处理对象池**的存在，使多线程处理变得简单。在客户端连接完成时，会自动分配该客户端辅助类（TcpSocketClient）的消息处理逻辑线程，假如服务器线程数量为10，则第一个连接的客户端会被分配到0号线程中，第二个连接将被分配到1号线程中，以此类推，循环分配。当某个客户端收到数据时，会将数据排入当前线程所独自拥有的队列当中，并唤醒线程执行。
 
-#### 3.传统IOCP和RRQMSocket
+#### 传统IOCP和RRQMSocket
 
-RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开辟了一块内存，然后均分，然后给每个会话分配一个区去接收，等收到数据以后，再复制一份，然后把数据抛出去，让外界处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后直接用于接收，等收到数据以后，直接就把这个内存块抛出去了，这样就避免了复制操作。所以，文件传输时效率才会高。当然这个操作在小数据时是没什么优势的。
+RRQMSocket的IOCP和传统也不一样的，以微软官方为例，使用MemoryBuffer开辟一块内存，然后均分，然后给每个会话分配一个区接收，等收到数据以后，再复制一份，然后把复制的数据抛出处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后直接用于接收，等收到数据以后，直接就把这个内存块抛出去了，这样就避免了**复制操作**，虽然只是细小的设计，但是在传输**1000w**次**64kb**的数据时，性能相差了**10倍**。所以也是基于此，文件传输时效率才会高。
 
-#### 4.数据处理适配器
+#### 数据处理适配器
 
 相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，RRQMSocket的适配器功能更加强大，它可以无视真实的数据，而模拟出想要的数据，例如：可以对数据进行预处理，从而解决数据分包。粘包的问题，也可以直接解析HTTP协议，经过适配器处理后传回一个HttpRequest对象等。
 
-#### 5.粘包、分包解决
+#### 粘包、分包解决
 
 在RRQMSocket中处理TCP粘包、分包问题是非常简单的。只需要更改不同的**数据处理适配器**即可。例如：使用**固定包头**，只需要给TcpSocketClient和TcpClient赋值**FixedHeaderDataHandlingAdapter**的实例即可。同样对应的处理器也有**固定长度** 、 **终止字符分割** 等。
 
@@ -101,18 +102,20 @@ RRQMSocket的IOCP和传统也不一样的，就以微软官方为例，它是开
 
 ## 一、TCP框架
 ### 1.1 创建服务器
+详细过程请阅读[API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages)，以下仅简单示例。
 
-**创建原生TcpService**
+**创建RRQMTcpService**
 
-使用原生TcpService的话，必须创建并指定辅助类，示例中创建MyTcpSocketClient辅助类，继承于TcpSocketClient即可。TcpService自由度更大，可在辅助类中直接处理数据，每个辅助类实例一一对应远程客户端，开发层次比较清晰。
+RRQMTcpService是对TcpService的简单封装，指定辅助类为RRQMSocketClient，在辅助类中不做任何数据处理，仅将数据在RRQMTcpService中抛出。
 
 ```CSharp
-TcpService<MyTcpSocketClient> service = new TcpService<MyTcpSocketClient>();
+RRQMTcpService service = new RRQMTcpService();
 
 //订阅事件
 //service.ClientConnected += Service_ClientConnected;//订阅连接事件
 //service.ClientDisconnected += Service_ClientDisconnected;//订阅断开连接事件
 //service.CreatSocketCliect += Service_CreatSocketCliect;//订阅创建辅助类事件，可直接设置其他属性。
+//service.OnReceived += Service_OnReceived;//可直接订阅收到数据事件。
 
 //属性设置
 service.IsCheckClientAlive = true;//使用空包检验活性，不会对数据有任何影响。
@@ -121,70 +124,13 @@ service.IDFormat = "TcpSocketClient_{0}";//设置分配ID的格式， 格式必�
 service.Logger = new Log();//设置内部日志记录器，默认日志是控制台输出。
 service.MaxCount = 1000;//设置最大连接数，可动态设置，当已连接数超过设置数值时，将主动断开客户端。
 
-//属性读取
-string ipAndPort = service.Name;//获取Ip及端口号
-string ip = service.IP;//获取IP
-int port = service.Port;//获取端口号
-MyTcpSocketClient socketClient = service.SocketClients["TcpSocketClient_1"];//通过ID获取辅助类，查找未知会抛出异常
-service.SocketClients.TryGetSocketClient("TcpSocketClient_1",out socketClient);//通过ID获取辅助类
-
-//方法
-service.Bind(7789, 2);//绑定监听，可绑定Ipv6，可监听所有地址。
-bool isExist = service.SocketClientExist("TcpSocketClient_1");//使用该方法判断ID对应的TcpSocketClient是否在线。
-
-Console.WriteLine("TcpService绑定成功");
-
-```
-
-```CSharp
-public class MyTcpSocketClient : TcpSocketClient
-{
-    /// <summary>
-    /// 初次创建对象，效应相当于构造函数，但是调用时机在构造函数之后，可覆盖父类方法
-    /// </summary>
-    public override void Create()
-    {
-        this.DataHandlingAdapter = new NormalDataHandlingAdapter();//普通TCP报文处理器
-        //this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();//固定包头TCP报文处理器
-        //this.DataHandlingAdapter = new FixedSizeDataHandlingAdapter(1024);//固定长度TCP报文处理器
-        //this.DataHandlingAdapter = new TerminatorDataHandlingAdapter(1024, "\r\n");//终止字符TCP报文处理器
-        //this.DataHandlingAdapter = new MyTestDataHandingAdopter();//自定义处理器
-    }
-
-    private int count;
-
-    protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
-    {
-        count++;
-        if (count % 1 == 0)
-        {
-            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length);
-            Console.WriteLine($"已接收到信息：{mes},第{count}条");
-        }
-        if (this.Online)
-        {
-            this.Send(byteBlock);//回传消息
-        }
-    }
-}
-
-```
-
-**创建RRQMTcpService**
-
-RRQMTcpService是对TcpService的简单封装，指定辅助类为RRQMSocketClient，在辅助类中不做任何数据处理，仅将数据在RRQMTcpService中抛出。
-
-```CSharp
-RRQMTcpService service = new RRQMTcpService();
-//service.CreatSocketCliect += Service_CreatSocketCliect1;//在初创辅助类时，可指定数据处理适配器。
-//service.OnReceived += Service_OnReceived;//可直接订阅收到数据事件。
-
 //方法
 service.Bind(7789, 2);//绑定监听，可绑定Ipv6，可监听所有地址。
 
 Console.WriteLine("RRQMTcpService绑定成功");
 
 ```
+
 
 **创建TokenTcpService**
 
@@ -439,7 +385,7 @@ fileClient.SendBytesWaitReturn(new byte[10],0,10);//发生字节数组并等待�
 
 ## 三、RPC框架
 
-RPC框架是所有远程过程调用的微服务管理平台，在该平台的托管下，使多种协议、多种序列化方式调用成为可能。目前可使用RRQMRPC、WebApi、XmlRpc共同调用。
+RPC框架是所有远程过程调用的微服务管理平台，在该平台的托管下，使多种协议、多种序列化方式调用成为可能。目前可使用RRQMRPC、WebApi、XmlRpc、JsonRpc共同调用。
 
 ### 3.1 RRQMRPC
 
@@ -458,7 +404,7 @@ RPC框架是所有远程过程调用的微服务管理平台，在该平台的�
 - **全异常反馈** ，服务里发生的异常，会一字不差的反馈到客户端。
 - 超简单、自由的**回调方式** 。
 
-**创建RRQMRPC服务器**
+#### 创建RRQMRPC服务器
 
 新建类文件，继承于ServerProvider，并将其中**公共方法**标识为**RRQMRPCMethod**即可。
 ```Csharp
@@ -471,7 +417,7 @@ public class Server: ServerProvider
     }
  }
 ```
-**启动RRQMRPC服务器**
+#### 启动RRQMRPC服务器
 
 ```Csharp
 RPCService rpcService = new RPCService();
@@ -492,7 +438,7 @@ Console.ReadKey();
 
 ```
 
-**客户端引用**
+#### 客户端引用
 
 首先得下载[RRQMRPCVSIX插件](https://gitee.com/RRQM_OS/RRQMRPCVSIX/releases)，然后安装插件，成功后右击**任意项目**即可看见“**重新引用RRQMRPC**”条目。
 
@@ -502,11 +448,19 @@ Console.ReadKey();
 
 <img src="https://i.loli.net/2021/05/18/V5gMDnv9k3etG6U.jpg" width = "300" height = "200" alt="图片名称" align=center />
 
-**创建客户端**
+#### 创建客户端
 
+```Csharp
+RPCClient client = new RPCClient();
 
-#### 4.3 Demo示例
- **Demo位置：** [RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
+client.InitializedRPC(new IPHost("127.0.0.1:7789"));
+
+Server server = new Server(client);
+
+string mes=server.TestOne("RRQM");//调用
+```
+
+#### RRQMRPC性能测试
 
  **说明：** 
 图一、图二、图三分别为`UDP无反馈调用`、`TCP有反馈调用`、`TCP连接池有反馈调用`。调用次数均为10w次，调用性能非常nice。在无反馈中，吞吐量达14.28w，在有反馈中达2.72w，简直秒杀WCF（WCF使用http协议，在本机测试吞吐量为310）
@@ -516,6 +470,149 @@ Console.ReadKey();
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191501_abec9e45_8553710.png "屏幕截图.png")
 
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191531_d7f0a8d4_8553710.png "屏幕截图.png")
+
+#### 示例Demo
+
+[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
+
+
+### 3.2 WebApi
+
+WebApi功能，目前仅仅适用于Api调用，不具备MVC全部功能。
+
+#### 特点
+- 多线程处理。
+- 高性能，100个客户端，10w次调用，仅用时17s。
+- **全异常反馈** ，服务里发生的异常，会一字不差的反馈到客户端。
+- 支持大部分路由规则。
+
+#### 创建WebApi服务器
+
+新建类文件，继承于**ServerProvider**，使用**Rount**属性指定路由规则，同时将其中**公共方法**标识为**Route**即可。同时也可制定路由规则。
+
+```Csharp
+[Route("/[controller]/[action]")]
+public class Server: ServerProvider
+{
+    [Route]
+    public string TestOne(string str)
+    {
+        return "若汝棋茗";
+    }
+ }
+```
+#### 启动WebApi服务器
+
+```Csharp
+RPCService rpcService = new RPCService();
+rpcService.RegistAllService();//注册所有服务
+
+WebApiParser webApiParser = new WebApiParser();
+webApiParser.Bind(7792, 5);
+Console.WriteLine("webApiParser解析器添加完成");
+
+rpcService.AddRPCParser("webApiParser", webApiParser);
+
+rpcService.OpenRPCServer();
+Console.WriteLine("RPC启动完成");
+
+Console.ReadKey();
+
+```
+
+此时即可使用PostManagent测试，也可以直接使用浏览器访问。
+
+**注意：默认数据格式是xml，如需Json，请详看说明文档。**
+
+#### 性能测试
+
+![](https://i.loli.net/2021/05/23/vZj8EnSYA1aehH7.jpg)
+
+### 3.3 XmlRpc
+
+完美支持XmlRpc数据类型，类型嵌套，Array等。
+
+#### 创建XmlRpc服务器
+
+新建类文件，继承于**ServerProvider**，同时将其中**公共方法**标识为**XmlRpc**即可。
+
+```Csharp
+public class Server: ServerProvider
+{
+    [XmlRpc]
+    public string TestOne(string str)
+    {
+        return "若汝棋茗";
+    }
+ }
+```
+#### 启动XmlRpc服务器
+
+```Csharp
+RPCService rpcService = new RPCService();
+rpcService.RegistAllService();//注册所有服务
+
+XmlRpcParser xmlRpcParser = new XmlRpcParser();
+xmlRpcParser.Bind(7793, 5);
+Console.WriteLine("xmlRpcParser解析器添加完成");
+
+rpcService.AddRPCParser("xmlRpcParser", xmlRpcParser);
+
+rpcService.OpenRPCServer();
+Console.WriteLine("RPC启动完成");
+
+Console.ReadKey();
+
+```
+
+此时即可使用CookComputing.XmlRpcV2测试。
+
+### 3.4 JsonRpc
+
+#### 创建JsonRpc服务器
+
+新建类文件，继承于**ServerProvider**，同时将其中**公共方法**标识为**JsonRpc**即可。
+
+```Csharp
+public class Server: ServerProvider
+{
+    [JsonRpc]
+    public string TestOne(string str)
+    {
+        return "若汝棋茗";
+    }
+ }
+```
+#### 启动XmlRpc服务器
+
+```Csharp
+RPCService rpcService = new RPCService();
+rpcService.RegistAllService();//注册所有服务
+
+JsonRpcParser jsonRpcParser = new JsonRpcParser();
+jsonRpcParser.Bind(7793, 5);
+Console.WriteLine("jsonRpcParser解析器添加完成");
+
+rpcService.AddRPCParser("jsonRpcParser", jsonRpcParser);
+
+rpcService.OpenRPCServer();
+Console.WriteLine("RPC启动完成");
+
+Console.ReadKey();
+
+```
+
+此时即可使用Json格式数据调用RPC。
+
+```Csharp
+TcpClient tcpClient = new TcpClient();
+//tcpClient.OnReceived += TcpClient_OnReceived;//接收返回数据。
+tcpClient.Connect(new IPHost("127.0.0.1:7793"));
+
+tcpClient.Send(Encoding.UTF8.GetBytes("{\"jsonrpc\":\"2.0\",\"method\":\"TestOne\",\"params\":[5],\"id\":1}\r\n"));//此处必须包含“\r\n”。
+
+
+```
 
 
 ## 致谢
