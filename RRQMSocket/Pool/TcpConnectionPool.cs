@@ -109,7 +109,7 @@ namespace RRQMSocket.Pool
         private ConcurrentQueue<T> queue;
 
         /// <summary>
-        /// 当池中的客户都端发生错误时
+        /// 当池中的客户端发生错误时
         /// </summary>
         public event RRQMMessageEventHandler OnClientError;
 

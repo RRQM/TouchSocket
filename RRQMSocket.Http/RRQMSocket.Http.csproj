@@ -4,12 +4,15 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>1.0.2</Version>
+		<Version>1.0.3</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<Description>介绍：这是一个能够简单解析HTTP的扩展库，能够为RRQMSocket扩展解析HTTP的能力。
 
 RRQMSocket is an extension library that can easily parse HTTP. The RRQMSocket extension has the ability to parse HTTP.
+
+更新说明：
+修改：适配器参数
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
@@ -62,6 +65,6 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
+	  <PackageReference Include="RRQMSocket" Version="4.0.20" />
 	</ItemGroup>
 </Project>

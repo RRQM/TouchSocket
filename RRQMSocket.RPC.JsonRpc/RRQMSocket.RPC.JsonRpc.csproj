@@ -7,19 +7,15 @@
 		<Version>1.0.0</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Description>
-			介绍：这是一个高性能的RPC微服务框架，支持异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
+		<Description>介绍：这是一个扩展于RRQMSocket.RPC的JsonRpc组件，可以通过该组件直接创建JsonRpc服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持JsonRpc全功能。
 
-			Description: This is a high-performance RPC microservice framework that supports asynchronous invocation, permission management, error status return, service callbacks, and more.When the no-load function is executed, it takes only 3.8 seconds for 100,000 calls, and 0.9 seconds for no return state.
+Introduction:This is a JSONRPC component that extends RRQMSocket.rpc. You can create a JSONRPC service parser directly through this component, so that the Web side and mobile side can call RPC functions across languages. Features support JSONRPC full functionality.
 
-			更新说明：
-			修改：部分单词拼写错误。
-			优化：List，Dictionary数据不再需要手动注册。
-			修复：对数组数据生成错误的Bug。
+更新说明：
+初代版本发布
 
-			Demo：https://gitee.com/RRQM_OS/RRQMBox
-			API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
-		</Description>
+Demo：https://gitee.com/RRQM_OS/RRQMBox
+API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -27,7 +23,7 @@
 		<Authors>若汝棋茗</Authors>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<PackageTags>Json;Socket;IOCP</PackageTags>
+		<PackageTags>JsonRpc;Socket;IOCP</PackageTags>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -70,6 +66,6 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\RRQMSocket.RPC\RRQMSocket.RPC.csproj" />
+	  <PackageReference Include="RRQMSocket.RPC" Version="1.0.7" />
 	</ItemGroup>
 </Project>
