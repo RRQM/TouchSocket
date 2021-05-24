@@ -44,23 +44,7 @@ namespace RRQMSocket
         public void SocketSend(int agreement, string text)
         {
             byte[] data = Encoding.UTF8.GetBytes(text == null ? string.Empty : text);
-            int dataLen = data.Length + 8;
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
-            byte[] lenBytes = BitConverter.GetBytes(dataLen);
-            byte[] agreementBytes = BitConverter.GetBytes(agreement);
-
-            byteBlock.Write(lenBytes);
-            byteBlock.Write(agreementBytes);
-
-            byteBlock.Write(data, 0, data.Length);
-            try
-            {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            this.SocketSend(agreement,data);
         }
 
         /// <summary>
@@ -69,21 +53,7 @@ namespace RRQMSocket
         /// <param name="agreement"></param>
         public void SocketSend(int agreement)
         {
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(8);
-            byte[] lenBytes = BitConverter.GetBytes(8);
-            byte[] agreementBytes = BitConverter.GetBytes(agreement);
-
-            byteBlock.Write(lenBytes);
-            byteBlock.Write(agreementBytes);
-
-            try
-            {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            this.SocketSend(agreement,string.Empty);
         }
 
         /// <summary>
@@ -94,23 +64,7 @@ namespace RRQMSocket
         public void SocketSend(int agreement, int number)
         {
             byte[] data = BitConverter.GetBytes(number);
-            int dataLen = data.Length + 8;
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
-            byte[] lenBytes = BitConverter.GetBytes(dataLen);
-            byte[] agreementBytes = BitConverter.GetBytes(agreement);
-
-            byteBlock.Write(lenBytes);
-            byteBlock.Write(agreementBytes);
-
-            byteBlock.Write(data, 0, data.Length);
-            try
-            {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            this.SocketSend(agreement, data);
         }
 
         /// <summary>
@@ -120,16 +74,54 @@ namespace RRQMSocket
         /// <param name="dataBuffer"></param>
         public void SocketSend(int agreement, byte[] dataBuffer)
         {
-            byte[] data = dataBuffer;
-            int dataLen = data.Length + 8;
+            this.SocketSend(agreement, dataBuffer,0,dataBuffer.Length);
+        }
+
+        /// <summary>
+        /// 发送协议流
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="dataByteBlock"></param>
+        public void SocketSend(int agreement, ByteBlock dataByteBlock)
+        {
+            this.SocketSend(agreement, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
+        }
+
+        /// <summary>
+        /// 发送字节
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="status"></param>
+        /// <param name="dataBuffer"></param>
+        public void SocketSend(int agreement, byte status, byte[] dataBuffer)
+        {
+            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataBuffer.Length+1);
+
+            byteBlock.Write(status);
+            byteBlock.Write(dataBuffer);
+            try
+            {
+                this.SocketSend(agreement,byteBlock.Buffer,0,(int)byteBlock.Length);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 发送流
+        /// </summary>
+        /// <param name="dataByteBlock"></param>
+        public void SocketSend(ByteBlock dataByteBlock)
+        {
+            int dataLen = (int)dataByteBlock.Position + 4;
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
-            byte[] agreementBytes = BitConverter.GetBytes(agreement);
 
             byteBlock.Write(lenBytes);
-            byteBlock.Write(agreementBytes);
 
-            byteBlock.Write(data, 0, data.Length);
+            byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Position);
             try
             {
                 this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
@@ -158,84 +150,6 @@ namespace RRQMSocket
             byteBlock.Write(agreementBytes);
 
             byteBlock.Write(dataBuffer, offset, length);
-            try
-            {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 发送协议流
-        /// </summary>
-        /// <param name="agreement"></param>
-        /// <param name="dataByteBlock"></param>
-        public void SocketSend(int agreement, ByteBlock dataByteBlock)
-        {
-            int dataLen = (int)dataByteBlock.Length + 8;
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
-            byte[] lenBytes = BitConverter.GetBytes(dataLen);
-            byte[] agreementBytes = BitConverter.GetBytes(agreement);
-
-            byteBlock.Write(lenBytes);
-            byteBlock.Write(agreementBytes);
-
-            byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
-            try
-            {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 发送字节
-        /// </summary>
-        /// <param name="agreement"></param>
-        /// <param name="status"></param>
-        /// <param name="dataBuffer"></param>
-        public void SocketSend(int agreement, byte status, byte[] dataBuffer)
-        {
-            byte[] data = dataBuffer;
-            int dataLen = data.Length + 5;
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
-            byte[] lenBytes = BitConverter.GetBytes(dataLen);
-            byte[] agreementBytes = BitConverter.GetBytes(agreement);
-
-            byteBlock.Write(lenBytes);
-            byteBlock.Write(status);
-            byteBlock.Write(agreementBytes);
-
-            byteBlock.Write(data, 0, data.Length);
-            try
-            {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 发送流
-        /// </summary>
-        /// <param name="dataByteBlock"></param>
-        public void SocketSend(ByteBlock dataByteBlock)
-        {
-            int dataLen = (int)dataByteBlock.Position + 4;
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
-            byte[] lenBytes = BitConverter.GetBytes(dataLen);
-
-            byteBlock.Write(lenBytes);
-
-            byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Position);
             try
             {
                 this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
