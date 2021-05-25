@@ -101,7 +101,11 @@ namespace RRQMSocket
             byteBlock.Write(dataBuffer);
             try
             {
-                this.SocketSend(agreement,byteBlock.Buffer,0,(int)byteBlock.Length);
+                this.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Length);
+            }
+            catch(Exception ex)
+            {
+                throw ex;
             }
             finally
             {
