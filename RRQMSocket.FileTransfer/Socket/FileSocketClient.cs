@@ -256,13 +256,13 @@ namespace RRQMSocket.FileTransfer
             FileWaitResult waitResult = new FileWaitResult();
             if (!args.IsPermitOperation)
             {
-                waitResult.Message = string.Format("服务器拒绝下载--文件：“{0}”", filePath);
+                waitResult.Message = string.IsNullOrEmpty(args.Message) ? "服务器拒绝下载" : args.Message;
                 waitResult.Status = 2;
                 this.TransferStatus = TransferStatus.None;
             }
             else if (!File.Exists(urlFileInfo.FilePath))
             {
-                waitResult.Message = string.Format("文件：“{0}”不存在", filePath);
+                waitResult.Message = string.Format("文件不存在", filePath);
                 waitResult.Status = 2;
                 this.TransferStatus = TransferStatus.None;
             }
@@ -309,7 +309,7 @@ namespace RRQMSocket.FileTransfer
             if (!args.IsPermitOperation)
             {
                 waitResult.Status = 2;
-                waitResult.Message = "服务器拒绝下载";
+                waitResult.Message =string.IsNullOrEmpty(args.Message)? "服务器拒绝上传":args.Message;
             }
             else if (FileControler.FileIsOpen(requestBlocks.FileInfo.FilePath))
             {
