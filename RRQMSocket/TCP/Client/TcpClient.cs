@@ -325,7 +325,6 @@ namespace RRQMSocket
                     }
                     finally
                     {
-                        clientBuffer.byteBlock.Dispose();
                         this.queueGroup.clientBufferPool.DestroyObject(clientBuffer);
                     }
                 }
