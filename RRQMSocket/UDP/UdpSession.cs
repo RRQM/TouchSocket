@@ -240,7 +240,6 @@ namespace RRQMSocket
                     finally
                     {
                         queueGroup.clientBufferPool.DestroyObject(clientBuffer);
-                        clientBuffer.byteBlock.Dispose();
                     }
                 }
                 else

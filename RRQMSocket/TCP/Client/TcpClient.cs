@@ -44,7 +44,7 @@ namespace RRQMSocket
         /// <summary>
         /// 判断是否已连接
         /// </summary>
-        public bool Online { get { return MainSocket == null ? false : MainSocket.Connected; } }
+        public virtual bool Online { get { return MainSocket == null ? false : MainSocket.Connected; } }
 
         private DataHandlingAdapter dataHandlingAdapter;
 

@@ -39,6 +39,13 @@ namespace RRQMSocket
         {
         }
 
+        /// <summary>
+        /// 判断是否已连接
+        /// </summary>
+        public override bool Online { get { return online; } }
+
+        private bool online;
+
         private string verifyToken = "rrqm";
 
         /// <summary>
@@ -110,6 +117,7 @@ namespace RRQMSocket
                             {
                                 this.ID = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
                                 Start();
+                                this.online = true;
                                 return;
                             }
                             else if (byteBlock.Buffer[0] == 2)

@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>4.0.22</Version>
+		<Version>4.0.22.1</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
         <PackageTags>IOCP,TCP,UDP,Socket</PackageTags>
@@ -13,7 +13,9 @@
 Introduction: RRQMSocket is an integrated, ultra-lightweight network communication framework.It has the characteristics of high concurrency, event subscription, plug-in extension, automatic activity detection, multi-threading and so on, so that users can more easily and quickly build the network framework.
 
 更新说明：
-紧急修复：由于内存池重复释放而导致的客户端发送数据异常。
+修复：UDP接收异常。
+修复：Token客户端Online属性异常。
+
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
 Demo：https://gitee.com/RRQM_OS/RRQMSocket.Demo</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
