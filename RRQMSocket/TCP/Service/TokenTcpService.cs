@@ -99,6 +99,7 @@ namespace RRQMSocket
                                         client.queueGroup = queueGroup;
                                         client.Service = this;
                                         client.BytePool = this.BytePool;
+                                        client.Logger = this.Logger;
                                     }
                                     client.MainSocket = socket;
                                     client.BufferLength = this.BufferLength;
