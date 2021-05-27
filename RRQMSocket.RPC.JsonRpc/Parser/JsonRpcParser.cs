@@ -136,16 +136,17 @@ namespace RRQMSocket.RPC.JsonRpc
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = socketClient;
             MethodInstance methodInstance = null;
+            RpcRequestContext context = null;
             try
             {
-                RpcRequestContext context = this.BuildRequestContext(byteBlock, out methodInstance);
+                this.BuildRequestContext(byteBlock, out methodInstance, out context);
+
                 if (methodInstance == null)
                 {
                     methodInvoker.Status = InvokeStatus.UnFound;
                 }
                 else if (methodInstance.IsEnable)
                 {
-                    methodInvoker.Flag = context;
                     methodInvoker.Parameters = context.@params;
                 }
                 else
@@ -158,6 +159,9 @@ namespace RRQMSocket.RPC.JsonRpc
                 methodInvoker.Status = InvokeStatus.Exception;
                 methodInvoker.StatusMessage = ex.Message;
             }
+
+            methodInvoker.Flag = context;
+
             this.ExecuteMethod(methodInvoker, methodInstance);
         }
 
@@ -270,15 +274,20 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="byteBlock">数据</param>
         /// <param name="methodInstance">调用服务实例</param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        protected virtual RpcRequestContext BuildRequestContext(ByteBlock byteBlock, out MethodInstance methodInstance)
+        protected virtual void BuildRequestContext(ByteBlock byteBlock, out MethodInstance methodInstance, out RpcRequestContext context)
         {
-            RpcRequestContext context = (RpcRequestContext)this.JsonConverter.Deserialize(Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length),typeof(RpcRequestContext));
+            context = (RpcRequestContext)this.JsonConverter.Deserialize(Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length), typeof(RpcRequestContext));
 
             if (this.actionMap.TryGet(context.method, out methodInstance))
             {
                 if (context.@params != null)
                 {
+                    if (context.@params.Length != methodInstance.ParameterTypes.Length)
+                    {
+                        throw new RRQMRPCException("调用参数计数不匹配");
+                    }
                     for (int i = 0; i < context.@params.Length; i++)
                     {
                         string s = context.@params[i].ToString();
@@ -299,7 +308,6 @@ namespace RRQMSocket.RPC.JsonRpc
             {
                 methodInstance = null;
             }
-            return context;
         }
 
         /// <summary>
