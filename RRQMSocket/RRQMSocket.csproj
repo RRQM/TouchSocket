@@ -77,7 +77,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMSocket.Demo</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="1.2.23" />
+	  <PackageReference Include="RRQMCore" Version="1.2.24" />
 	</ItemGroup>
 
 </Project>

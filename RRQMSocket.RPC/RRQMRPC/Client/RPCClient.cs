@@ -507,6 +507,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public void Dispose()
         {
             this._disposed = true;
+
             while (true)
             {
                 RpcJunctor rpcJunctor = this.rpcJunctorPool.GetObject();

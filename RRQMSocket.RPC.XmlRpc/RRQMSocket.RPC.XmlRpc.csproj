@@ -66,9 +66,7 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="1.2.23" />
-	  <PackageReference Include="RRQMSocket" Version="4.0.22" />
-	  <PackageReference Include="RRQMSocket.Http" Version="1.0.4" />
-	  <PackageReference Include="RRQMSocket.RPC" Version="1.0.9" />
+	  <ProjectReference Include="..\RRQMSocket.Http\RRQMSocket.Http.csproj" />
+	  <ProjectReference Include="..\RRQMSocket.RPC\RRQMSocket.RPC.csproj" />
 	</ItemGroup>
 </Project>

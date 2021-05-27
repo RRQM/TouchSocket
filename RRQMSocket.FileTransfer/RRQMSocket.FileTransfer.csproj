@@ -68,7 +68,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RRQMSocket" Version="4.0.22" />
+    <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
   </ItemGroup>
 
 </Project>
