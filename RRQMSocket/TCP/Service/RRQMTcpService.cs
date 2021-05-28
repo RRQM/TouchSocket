@@ -47,7 +47,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected sealed override void OnCreatSocketCliect(RRQMSocketClient tcpSocketClient, CreatOption creatOption)
+        protected sealed override void OnCreatSocketCliect(RRQMSocketClient tcpSocketClient, CreateOption creatOption)
         {
             if (creatOption.NewCreate)
             {

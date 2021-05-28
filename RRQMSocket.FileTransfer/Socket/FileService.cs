@@ -116,7 +116,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient, CreatOption creatOption)
+        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient, CreateOption creatOption)
         {
             tcpSocketClient.breakpointResume = this.BreakpointResume;
             tcpSocketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;

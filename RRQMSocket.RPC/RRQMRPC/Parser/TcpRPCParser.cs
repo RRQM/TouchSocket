@@ -61,7 +61,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public override bool IsBind => this.tcpService.IsBind;
 
-        private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, CreatOption creatOption)
+        private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, CreateOption creatOption)
         {
             if (creatOption.NewCreate)
             {

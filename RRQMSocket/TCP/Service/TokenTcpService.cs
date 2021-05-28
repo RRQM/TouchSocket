@@ -63,11 +63,11 @@ namespace RRQMSocket
 
         internal override void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
-            Task.Factory.StartNew(async () =>
+            Task.Factory.StartNew((Func<Task>)(async () =>
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
-                while (waitCount < VerifyTimeout * 1000 / 20)
+                while (waitCount < this.VerifyTimeout * 1000 / 20)
                 {
                     if (socket.Available > 0)
                     {
@@ -104,7 +104,21 @@ namespace RRQMSocket
                                     client.MainSocket = socket;
                                     client.BufferLength = this.BufferLength;
 
+
+/* 项目“RRQMSocket (netcoreapp3.1)”的未合并的更改
+在此之前:
                                     CreatOption creatOption = new CreatOption();
+在此之后:
+                                    CreatOption creatOption = new RRQMSocket.CreatOption();
+*/
+
+/* 项目“RRQMSocket (netstandard2.0)”的未合并的更改
+在此之前:
+                                    CreatOption creatOption = new CreatOption();
+在此之后:
+                                    CreatOption creatOption = new RRQMSocket.CreatOption();
+*/
+                                    CreateOption creatOption = new CreateOption();
                                     creatOption.NewCreate = client.NewCreate;
 
                                     lock (this)
@@ -117,7 +131,7 @@ namespace RRQMSocket
                                         {
                                             creatOption.ID = client.ID;
                                         }
-                                        OnCreatSocketCliect(client, creatOption);
+                                        base.OnCreatSocketCliect(client, creatOption);
                                         client.ID = creatOption.ID;
 
                                         this.SocketClients.Add(client);
@@ -160,7 +174,7 @@ namespace RRQMSocket
 
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Dispose();
-            });
+            }));
         }
 
         /// <summary>

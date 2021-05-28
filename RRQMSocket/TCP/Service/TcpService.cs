@@ -117,7 +117,7 @@ namespace RRQMSocket
         /// <summary>
         /// 创建泛型T时
         /// </summary>
-        public event Action<TClient, CreatOption> CreatSocketCliect;
+        public event Action<TClient, CreateOption> CreatSocketCliect;
 
         internal void ClientConnectedMethod(object sender, MesEventArgs e)
         {
@@ -444,7 +444,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreatOption creatOption)
+        protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreateOption creatOption)
         {
             CreatSocketCliect?.Invoke(tcpSocketClient, creatOption);
         }
@@ -473,7 +473,7 @@ namespace RRQMSocket
                 client.MainSocket = socket;
                 client.BufferLength = this.BufferLength;
 
-                CreatOption creatOption = new CreatOption();
+                CreateOption creatOption = new CreateOption();
                 creatOption.NewCreate = client.NewCreate;
                 if (client.NewCreate)
                 {

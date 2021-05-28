@@ -43,7 +43,7 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="creatOption"></param>
-        private void OnCreatSocketCliect(RRQMSocketClient socketClient, CreatOption creatOption)
+        private void OnCreatSocketCliect(RRQMSocketClient socketClient, CreateOption creatOption)
         {
             if (creatOption.NewCreate)
             {

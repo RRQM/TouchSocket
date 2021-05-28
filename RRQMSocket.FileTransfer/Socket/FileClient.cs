@@ -35,7 +35,7 @@ namespace RRQMSocket.FileTransfer
             this.locker = new object();
             this.FileTransferCollection = new TransferCollection();
             this.TransferStatus = TransferStatus.None;
-            client = new RRQMTokenTcpClient();
+            client = new TokenTcpClient();
             this.FileTransferCollection.OnCollectionChanged += this.FileTransferCollection_OnCollectionChanged; ;
         }
 
@@ -141,7 +141,7 @@ namespace RRQMSocket.FileTransfer
         public TransferCollection FileTransferCollection { get; private set; }
 
         private ProgressBlockCollection fileBlocks;
-        private RRQMTokenTcpClient client;
+        private TokenTcpClient client;
         private object locker;
         private string receiveDirectory = string.Empty;
         private bool disposable;
@@ -231,7 +231,7 @@ namespace RRQMSocket.FileTransfer
             client.BufferLength = 1024 * 64;
             client.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             client.ConnectedService += this.Client_ConnectedService;
-            client.OnReceivedData += this.Client_OnReceivedData;
+            client.OnReceived += this.Client_OnReceived;
             client.DisconnectedService += this.Client_DisconnectedService;
 
             this.ipHost = ipHost;
@@ -239,6 +239,8 @@ namespace RRQMSocket.FileTransfer
             this.client.VerifyToken = verifyToken;
             this.client.Connect(ipHost.AddressFamily, ipHost.EndPoint);
         }
+
+       
 
         /// <summary>
         /// 请求传输文件
@@ -1164,7 +1166,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private void Client_OnReceivedData(object sender, ByteBlock byteBlock)
+        private void Client_OnReceived(TcpClient arg1, ByteBlock byteBlock, object arg3)
         {
             if (byteBlock.Length > 16)
             {

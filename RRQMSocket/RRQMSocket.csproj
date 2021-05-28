@@ -77,7 +77,9 @@ Demo：https://gitee.com/RRQM_OS/RRQMSocket.Demo</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="1.2.24" />
+	  <Reference Include="RRQMCore">
+	    <HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 </Project>
