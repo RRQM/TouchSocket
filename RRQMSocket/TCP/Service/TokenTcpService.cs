@@ -173,7 +173,7 @@ namespace RRQMSocket
             {
                 verifyOption.Accept = true;
             }
-            else
+            else 
             {
                 verifyOption.ErrorMessage = "Token不受理";
             }
