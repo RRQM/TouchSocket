@@ -39,62 +39,35 @@ namespace RRQMSocket
         /// <param name="bytePool">内存池实例</param>
         public TcpService(BytePool bytePool) : base(bytePool)
         {
-            this.IsCheckClientAlive = true;
             this.SocketClients = new SocketCliectCollection<TClient>();
-            this.IDFormat = "{0}-TCP";
             this.SocketClientPool = new ObjectPool<TClient>();
-            this.MaxCount = 10000;
         }
 
         /// <summary>
-        /// 获取或设置分配ID的格式，
-        /// 格式必须符合字符串格式，至少包含一个补位，
-        /// 初始值为“{0}-TCP”
+        /// 获取分配ID的格式，
         /// </summary>
-        public string IDFormat { get { return this.SocketClients.IDFormat; } set { this.SocketClients.IDFormat = value; } }
-
-        /// <summary>
-        /// 获取绑定状态
-        /// </summary>
-        public bool IsBind { get; private set; }
+        public string IDFormat { get; private set; }
 
         /// <summary>
         /// 检验客户端活性（避免异常而导致的失活）
         /// </summary>
-        public bool IsCheckClientAlive { get; set; }
-
-        private int maxCount;
+        public bool IsCheckClientAlive { get; private set; }
 
         /// <summary>
         /// 最大可连接数
         /// </summary>
-        public int MaxCount
-        {
-            get { return maxCount; }
-            set
-            {
-                this.SocketClientPool.Capacity = value;
-
-                if (this.bufferQueueGroups != null && this.bufferQueueGroups.Length > 0)
-                {
-                    foreach (var item in this.bufferQueueGroups)
-                    {
-                        item.clientBufferPool.Capacity = value / this.bufferQueueGroups.Length;
-                    }
-                }
-                maxCount = value;
-            }
-        }
+        public int MaxCount { get; private set; }
 
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
         public SocketCliectCollection<TClient> SocketClients { get; private set; }
 
+
         /// <summary>
-        /// 挂起连接队列的最大长度。
+        /// 服务器状态
         /// </summary>
-        public int Backlog { get; set; } = 30;
+        public ServerState ServerState { get; private set; }
 
         private AcceptQueue acceptQueue;
         internal ObjectPool<TClient> SocketClientPool;
@@ -518,6 +491,21 @@ namespace RRQMSocket
             {
                 this.acceptQueue.Dispose();
             }
+        }
+
+        public void Setup<T>(T serverConfig) where T : TcpServerConfig
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Start()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Stop()
+        {
+            throw new NotImplementedException();
         }
     }
 }

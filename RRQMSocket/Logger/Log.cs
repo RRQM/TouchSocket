@@ -25,10 +25,9 @@ namespace RRQMSocket
         /// <param name="logType"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>
-        /// <param name="stackTrace"></param>
-        public void Debug(LogType logType, object source, string message, string stackTrace)
+        public void Debug(LogType logType, object source, string message)
         {
-            Console.WriteLine($"错误：类型：{logType}，消息：{message}，堆：{stackTrace}");
+            Console.WriteLine($"类型：{logType}，消息：{message}");
         }
 
         /// <summary>
@@ -37,9 +36,10 @@ namespace RRQMSocket
         /// <param name="logType"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>
-        public void Debug(LogType logType, object source, string message)
+        /// <param name="exception"></param>
+        public void Debug(LogType logType, object source, string message, Exception exception)
         {
-            Console.WriteLine($"错误：类型：{logType}，消息：{message}");
+            Console.WriteLine($"类型：{logType}，消息：{message}，堆：{exception.StackTrace}");
         }
     }
 }

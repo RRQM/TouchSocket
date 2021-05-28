@@ -3,32 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RRQMCore.Log;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 服务器状态
+    /// 服务器配置
     /// </summary>
-    public enum ServerState
+    public class ServerConfig : IServerConfig
     {
         /// <summary>
-        /// 无状态，指示为初建
+        /// 多线程数量
         /// </summary>
-        None,
+        public int ThreadCount { get; set; } = 1;
 
         /// <summary>
-        /// 正在运行
+        /// IP和端口号
         /// </summary>
-        Running,
+        public IPHost IPHost { get; set; }
 
         /// <summary>
-        /// 已停止
+        /// 日志记录器
         /// </summary>
-        Stopped,
-
-        /// <summary>
-        /// 已释放
-        /// </summary>
-        Disposed
+        public ILog Logger { get; set; } = new Log();
     }
 }

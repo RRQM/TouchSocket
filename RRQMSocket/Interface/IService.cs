@@ -20,46 +20,37 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器接口
     /// </summary>
-    public interface IService
+    public interface IService:IDisposable
     {
         /// <summary>
-        /// 绑定服务
+        /// 服务器状态
         /// </summary>
-        /// <param name="port">端口号</param>
-        /// <param name="threadCount">多线程数量</param>
+        ServerState ServerState { get; }
+
+        /// <summary>
+        /// 配置服务器
+        /// </summary>
+        /// <param name="serverConfig">配置</param>
+        /// <exception cref="RRQMException"></exception>
+        void Setup<T>(T serverConfig)where T:ServerConfig;
+
+        /// <summary>
+        /// 启动
+        /// </summary>
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        void Bind(int port, int threadCount = 1);
+        void Start();
 
         /// <summary>
-        /// 绑定服务
+        /// 停止
         /// </summary>
-        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
-        /// <param name="threadCount">多线程数量</param>
         /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        void Bind(IPHost iPHost, int threadCount);
+        void Stop();
 
+        
         /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="addressFamily">寻址方案</param>
-        /// <param name="endPoint">绑定节点</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount);
-
-        /// <summary>
-        /// 获取绑定状态
-        /// </summary>
-        bool IsBind { get; }
-
-        /// <summary>
-        /// 内存池实例
+        /// 可用内存池实例
         /// </summary>
         BytePool BytePool { get; }
     }

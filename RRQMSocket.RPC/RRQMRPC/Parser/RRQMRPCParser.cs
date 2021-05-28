@@ -294,5 +294,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
         public abstract void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount);
+
     }
 }

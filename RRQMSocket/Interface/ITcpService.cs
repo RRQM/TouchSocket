@@ -23,19 +23,14 @@ namespace RRQMSocket
     public interface ITcpService : IService
     {
         /// <summary>
-        /// 挂起连接队列的最大长度。
-        /// </summary>
-        int Backlog { get; set; }
-
-        /// <summary>
         /// 获取或设置最大可连接数
         /// </summary>
-        int MaxCount { get; set; }
+        int MaxCount { get; }
 
         /// <summary>
         /// 检验客户端活性（避免异常而导致的失活）
         /// </summary>
-        bool IsCheckClientAlive { get; set; }
+        bool IsCheckClientAlive { get;}
 
         /// <summary>
         /// 客户端成功连接时
@@ -46,17 +41,5 @@ namespace RRQMSocket
         /// 有用户断开连接的时候
         /// </summary>
         event RRQMMessageEventHandler ClientDisconnected;
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="addressFamily">寻址方案</param>
-        /// <param name="endPoint">绑定节点</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <param name="concurrentAccept">高并发连接</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount, bool concurrentAccept);
     }
 }

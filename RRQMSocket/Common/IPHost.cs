@@ -48,6 +48,13 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 从端口号创建
+        /// </summary>
+        /// <param name="port"></param>
+        public IPHost(int port) : this($"0.0.0.0:{port}")
+        {
+        }
+        /// <summary>
         /// IP
         /// </summary>
         public string IP { get; private set; }
@@ -66,5 +73,14 @@ namespace RRQMSocket
         /// 终结点
         /// </summary>
         public EndPoint EndPoint { get; private set; }
+
+        /// <summary>
+        /// 返回对象字符串
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return EndPoint == null ? null : EndPoint.ToString();
+        }
     }
 }
