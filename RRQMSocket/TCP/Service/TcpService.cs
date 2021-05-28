@@ -493,10 +493,7 @@ namespace RRQMSocket
             }
         }
 
-        public void Setup<T>(T serverConfig) where T : TcpServerConfig
-        {
-            throw new NotImplementedException();
-        }
+      
 
         public void Start()
         {
@@ -504,6 +501,13 @@ namespace RRQMSocket
         }
 
         public void Stop()
+        {
+            this.Setup(new ServerConfig().CreateTcpServerConfig());
+
+            throw new NotImplementedException();
+        }
+
+        public void Setup(IServerConfig serverConfig)
         {
             throw new NotImplementedException();
         }

@@ -32,7 +32,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="serverConfig">配置</param>
         /// <exception cref="RRQMException"></exception>
-        void Setup<T>(T serverConfig)where T:ServerConfig;
+        void Setup(IServerConfig serverConfig);
 
         /// <summary>
         /// 启动

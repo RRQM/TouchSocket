@@ -1,30 +1,30 @@
-﻿using System;
+﻿using RRQMCore.Log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RRQMCore.Log;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 服务器配置
     /// </summary>
-    public  class ServerConfig : IServerConfig
+    public interface IServerConfig
     {
         /// <summary>
         /// 多线程数量
         /// </summary>
-        public int ThreadCount { get; set; } = 1;
+        int ThreadCount { get; set; }
 
         /// <summary>
         /// IP和端口号
         /// </summary>
-        public IPHost IPHost { get; set; }
+        IPHost IPHost { get; set; }
 
         /// <summary>
         /// 日志记录器
         /// </summary>
-        public ILog Logger { get; set; } = new Log();
+        ILog Logger { get; set; }
     }
 }
