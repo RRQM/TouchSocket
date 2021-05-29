@@ -22,23 +22,7 @@ namespace RRQMSocket
 
     public abstract class BaseSocket : ISocket, IDisposable
     {
-        /// <summary>
-        ///构造函数
-        /// </summary>
-        public BaseSocket() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool">内存池实例</param>
-        public BaseSocket(BytePool bytePool)
-        {
-            this.Logger = new Log();
-            this.BytePool = bytePool;
-        }
-
+       
         /// <summary>
         /// 心跳检测包
         /// </summary>
@@ -64,38 +48,9 @@ namespace RRQMSocket
             get { return mainSocket; }
             internal set
             {
-                if (value == null)
-                {
-                    this.Name = null;
-                    this.IP = null;
-                    this.Port = -1;
-                    return;
-                }
-
                 mainSocket = value;
-                if (mainSocket.Connected && mainSocket.RemoteEndPoint != null)
-                {
-                    this.Name = mainSocket.RemoteEndPoint.ToString();
-                }
-                else if (mainSocket.IsBound && mainSocket.LocalEndPoint != null)
-                {
-                    this.Name = mainSocket.LocalEndPoint.ToString();
-                }
-                else
-                {
-                    return;
-                }
-
-                int r = this.Name.LastIndexOf(":");
-                this.IP = this.Name.Substring(0, r);
-                this.Port = Convert.ToInt32(this.Name.Substring(r + 1, this.Name.Length - (r + 1)));
             }
         }
-
-        /// <summary>
-        /// 获取内存池实例
-        /// </summary>
-        public BytePool BytePool { get; internal set; }
 
         /// <summary>
         /// 远程连接地址名

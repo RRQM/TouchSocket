@@ -23,21 +23,7 @@ namespace RRQMSocket
     /// </summary>
     public class TokenTcpService<TClient> : TcpService<TClient> where TClient : TcpSocketClient, new()
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public TokenTcpService() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool">内存池实例</param>
-        public TokenTcpService(BytePool bytePool) : base(bytePool)
-        {
-        }
-
+       
         private string verifyToken = "rrqm";
 
         /// <summary>
@@ -92,32 +78,17 @@ namespace RRQMSocket
                                 }
                                 else
                                 {
-                                    TClient client = this.SocketClientPool.GetObject();
+                                    TClient client = this.socketClientPool.GetObject();
                                     client.Flag = verifyOption.Flag;
                                     if (client.NewCreate)
                                     {
                                         client.queueGroup = queueGroup;
                                         client.Service = this;
-                                        client.BytePool = this.BytePool;
                                         client.Logger = this.Logger;
                                     }
                                     client.MainSocket = socket;
                                     client.BufferLength = this.BufferLength;
 
-
-/* 项目“RRQMSocket (netcoreapp3.1)”的未合并的更改
-在此之前:
-                                    CreatOption creatOption = new CreatOption();
-在此之后:
-                                    CreatOption creatOption = new RRQMSocket.CreatOption();
-*/
-
-/* 项目“RRQMSocket (netstandard2.0)”的未合并的更改
-在此之前:
-                                    CreatOption creatOption = new CreatOption();
-在此之后:
-                                    CreatOption creatOption = new RRQMSocket.CreatOption();
-*/
                                     CreateOption creatOption = new CreateOption();
                                     creatOption.NewCreate = client.NewCreate;
 

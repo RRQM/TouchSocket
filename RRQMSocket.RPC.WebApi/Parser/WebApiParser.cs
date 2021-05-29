@@ -24,7 +24,7 @@ namespace RRQMSocket.RPC.WebApi
     /// <summary>
     /// WebApi解析器
     /// </summary>
-    public sealed class WebApiParser : RPCParser, IService
+    public sealed class WebApiParser : RPCParser
     {
         /// <summary>
         /// 构造函数
@@ -64,10 +64,7 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public RRQMTcpService Service { get { return this.tcpService; } }
 
-        /// <summary>
-        /// 获取绑定状态
-        /// </summary>
-        public bool IsBind => this.tcpService.IsBind;
+        
 
         /// <summary>
         /// 获取或设置缓存大小
@@ -99,7 +96,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <exception cref="Exception"></exception>
         public void Bind(int port, int threadCount = 1)
         {
-            this.tcpService.Bind(port, threadCount);
+            //this.tcpService.Bind(port, threadCount);
         }
 
         /// <summary>
@@ -112,7 +109,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <exception cref="Exception"></exception>
         public void Bind(IPHost iPHost, int threadCount)
         {
-            this.tcpService.Bind(iPHost, threadCount);
+            //this.tcpService.Bind(iPHost, threadCount);
         }
 
         /// <summary>
@@ -126,7 +123,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <exception cref="Exception"></exception>
         public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
         {
-            this.tcpService.Bind(addressFamily, endPoint, threadCount);
+            //this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
         private void OnReceived(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)
@@ -174,7 +171,7 @@ namespace RRQMSocket.RPC.WebApi
                     {
                         methodInvoker.Status = InvokeStatus.Exception;
                         methodInvoker.StatusMessage = ex.Message;
-                        this.Logger.Debug(LogType.Error, ex.Message, ex.StackTrace);
+                        this.Logger.Debug(LogType.Error,this, ex.Message, ex);
                     }
                 }
                 else

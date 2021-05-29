@@ -10,12 +10,22 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器配置
     /// </summary>
-    public  class ServerConfig : IServerConfig
+    public class ServerConfig : IServerConfig
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ServerConfig()
+        {
+            this.ThreadCount = 10;
+            this.Logger = new Log();
+            this.BytePoolMaxSize = 1024 * 1024 * 512;
+            this.BytePoolMaxBlockSize = 1024 * 1024 * 20;
+        }
         /// <summary>
         /// 多线程数量
         /// </summary>
-        public int ThreadCount { get; set; } = 1;
+        public int ThreadCount { get; set; }
 
         /// <summary>
         /// IP和端口号
@@ -25,6 +35,16 @@ namespace RRQMSocket
         /// <summary>
         /// 日志记录器
         /// </summary>
-        public ILog Logger { get; set; } = new Log();
+        public ILog Logger { get; set; }
+
+        /// <summary>
+        /// 内存池最大尺寸
+        /// </summary>
+        public long BytePoolMaxSize { get; set; }
+
+        /// <summary>
+        /// 内存池块最大尺寸
+        /// </summary>
+        public int BytePoolMaxBlockSize { get; set; }
     }
 }

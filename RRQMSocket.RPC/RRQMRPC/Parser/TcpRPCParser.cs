@@ -56,10 +56,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public int BufferLength { get { return this.tcpService.BufferLength; } set { this.tcpService.BufferLength = value; } }
 
-        /// <summary>
-        /// 获取绑定状态
-        /// </summary>
-        public override bool IsBind => this.tcpService.IsBind;
+        ///// <summary>
+        ///// 获取绑定状态
+        ///// </summary>
+        //public override bool IsBind => this.tcpService.IsBind;
 
         private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, CreateOption creatOption)
         {
@@ -253,7 +253,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="Exception"></exception>
         public override void Bind(int port, int threadCount = 1)
         {
-            this.tcpService.Bind(port, threadCount);
+            //this.tcpService.Bind(port, threadCount);
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="Exception"></exception>
         public override void Bind(IPHost iPHost, int threadCount)
         {
-            this.tcpService.Bind(iPHost, threadCount);
+            //this.tcpService.Bind(iPHost, threadCount);
         }
 
         /// <summary>
@@ -280,7 +280,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="Exception"></exception>
         public override void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
         {
-            this.tcpService.Bind(addressFamily, endPoint, threadCount);
+            //this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
         /// <summary>

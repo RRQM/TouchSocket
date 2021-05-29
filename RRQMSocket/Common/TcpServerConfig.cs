@@ -23,11 +23,6 @@ namespace RRQMSocket
         public int MaxCount { get; set; } = 10000;
 
         /// <summary>
-        /// 检验客户端活性（避免异常而导致的失活），默认为true
-        /// </summary>
-        public bool IsCheckClientAlive { get; set; } = true;
-
-        /// <summary>
         /// 获取或设置分配ID的格式，
         /// 格式必须符合字符串格式，至少包含一个补位，
         /// 默认为“{0}-TCP”

@@ -35,6 +35,13 @@ namespace RRQMSocket
         void Setup(IServerConfig serverConfig);
 
         /// <summary>
+        /// 配置服务器
+        /// </summary>
+        /// <param name="port"></param>
+        /// <exception cref="RRQMException"></exception>
+        void Setup(int port);
+
+        /// <summary>
         /// 启动
         /// </summary>
         /// <exception cref="RRQMException"></exception>
@@ -48,10 +55,5 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         void Stop();
 
-        
-        /// <summary>
-        /// 可用内存池实例
-        /// </summary>
-        BytePool BytePool { get; }
     }
 }

@@ -23,7 +23,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// UDP RPC解释器
     /// </summary>
-    public class UdpRPCParser : RRQMRPCParser, IService
+    public class UdpRPCParser : RRQMRPCParser
     {
         /// <summary>
         /// 构造函数
@@ -104,10 +104,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public ILog Logger { get { return this.udpSession.Logger; } set { this.udpSession.Logger = value; } }
 
-        /// <summary>
-        /// 获取绑定状态
-        /// </summary>
-        public override bool IsBind => this.udpSession.IsBind;
+        ///// <summary>
+        ///// 获取绑定状态
+        ///// </summary>
+        //public override bool IsBind => this.udpSession.IsBind;
 
         /// <summary>
         /// 获取内存池实例

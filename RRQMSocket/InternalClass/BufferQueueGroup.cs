@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using RRQMCore.Pool;
 using System;
 using System.Threading;
@@ -21,8 +22,8 @@ namespace RRQMSocket
         internal ObjectPool<ClientBuffer> clientBufferPool;
         internal BufferQueue bufferAndClient;
         internal EventWaitHandle waitHandleBuffer;
-        internal bool isWait; 
-         
+        internal bool isWait;
+        internal BytePool bytePool;
         public void Dispose()
         {
             if (clientBufferPool != null)

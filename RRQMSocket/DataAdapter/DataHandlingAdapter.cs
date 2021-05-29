@@ -88,7 +88,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                Logger.Debug(LogType.Error, this, ex.Message, ex.StackTrace);
+                Logger.Debug(LogType.Error, this, ex.Message, ex);
             }
         }
 

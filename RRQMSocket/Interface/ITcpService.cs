@@ -23,14 +23,14 @@ namespace RRQMSocket
     public interface ITcpService : IService
     {
         /// <summary>
-        /// 获取或设置最大可连接数
+        /// 获取最大可连接数
         /// </summary>
         int MaxCount { get; }
 
         /// <summary>
-        /// 检验客户端活性（避免异常而导致的失活）
+        /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
-        bool IsCheckClientAlive { get;}
+        int ClearInterval { get; }
 
         /// <summary>
         /// 客户端成功连接时

@@ -25,7 +25,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// UDP协议客户端
     /// </summary>
-    public class UdpRPCClient : IRPCClient, IService
+    public class UdpRPCClient : IRPCClient
     {
         /// <summary>
         /// 构造函数

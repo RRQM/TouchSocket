@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQM内置解析器
     /// </summary>
-    public abstract class RRQMRPCParser : RPCParser, IService
+    public abstract class RRQMRPCParser : RPCParser
     {
         private MethodStore clientMethodStore;
 
@@ -61,10 +61,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public RPCProxyInfo ProxyInfo { get; private set; }
 
-        /// <summary>
-        /// 获取绑定状态
-        /// </summary>
-        public abstract bool IsBind { get; }
+        ///// <summary>
+        ///// 获取绑定状态
+        ///// </summary>
+        //public abstract bool IsBind { get; }
 
         /// <summary>
         /// 内存池实例

@@ -26,5 +26,15 @@ namespace RRQMSocket
         /// 日志记录器
         /// </summary>
         ILog Logger { get; set; }
+
+        /// <summary>
+        /// 内存池最大尺寸
+        /// </summary>
+        long BytePoolMaxSize { get; set; }
+
+        /// <summary>
+        /// 内存池块最大尺寸
+        /// </summary>
+        int BytePoolMaxBlockSize { get; set; }
     }
 }

@@ -85,6 +85,11 @@ namespace RRQMSocket
         public object Flag { get; set; }
 
         /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public BytePool BytePool { get { return this.queueGroup.bytePool; } }
+
+        /// <summary>
         /// 处理已接收到的数据
         /// </summary>
         /// <param name="byteBlock"></param>

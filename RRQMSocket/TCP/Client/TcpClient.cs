@@ -36,9 +36,10 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="bytePool">设置内存池实例</param>
-        public TcpClient(BytePool bytePool) : base(bytePool)
+        public TcpClient(BytePool bytePool) 
         {
             this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+            this.BytePool = bytePool;
         }
 
         /// <summary>
@@ -66,6 +67,11 @@ namespace RRQMSocket
                 }
             }
         }
+
+        /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public BytePool BytePool { get; private set; }
 
         private BufferQueueGroup queueGroup;
         private SocketAsyncEventArgs receiveEventArgs;

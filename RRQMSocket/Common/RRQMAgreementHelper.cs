@@ -24,11 +24,11 @@ namespace RRQMSocket
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="baseSocket"></param>
-        public RRQMAgreementHelper(BaseSocket baseSocket)
+        /// <param name="client"></param>
+        public RRQMAgreementHelper(IClient client)
         {
-            this.mainSocket = baseSocket.MainSocket;
-            this.bytePool = baseSocket.BytePool;
+            this.mainSocket = client.MainSocket;
+            this.bytePool = client.BytePool;
         }
 
         private Socket mainSocket;
@@ -44,7 +44,7 @@ namespace RRQMSocket
         public void SocketSend(int agreement, string text)
         {
             byte[] data = Encoding.UTF8.GetBytes(text == null ? string.Empty : text);
-            this.SocketSend(agreement,data);
+            this.SocketSend(agreement, data);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace RRQMSocket
         /// <param name="agreement"></param>
         public void SocketSend(int agreement)
         {
-            this.SocketSend(agreement,string.Empty);
+            this.SocketSend(agreement, string.Empty);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace RRQMSocket
         /// <param name="dataBuffer"></param>
         public void SocketSend(int agreement, byte[] dataBuffer)
         {
-            this.SocketSend(agreement, dataBuffer,0,dataBuffer.Length);
+            this.SocketSend(agreement, dataBuffer, 0, dataBuffer.Length);
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace RRQMSocket
         /// <param name="dataBuffer"></param>
         public void SocketSend(int agreement, byte status, byte[] dataBuffer)
         {
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataBuffer.Length+1);
+            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataBuffer.Length + 1);
 
             byteBlock.Write(status);
             byteBlock.Write(dataBuffer);
@@ -103,7 +103,7 @@ namespace RRQMSocket
             {
                 this.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Length);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }

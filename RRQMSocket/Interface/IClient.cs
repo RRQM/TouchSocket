@@ -12,6 +12,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using System;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
@@ -20,6 +21,11 @@ namespace RRQMSocket
     /// </summary>
     public interface IClient : IDisposable
     {
+        /// <summary>
+        /// 主通信器
+        /// </summary>
+        Socket MainSocket { get; }
+
         /// <summary>
         /// 内存池实例
         /// </summary>

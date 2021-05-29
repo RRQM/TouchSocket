@@ -20,21 +20,6 @@ namespace RRQMSocket
     public class RRQMTcpService : TcpService<RRQMSocketClient>
     {
         /// <summary>
-        /// 构造函数
-        /// </summary>
-        public RRQMTcpService() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool">内存池实例</param>
-        public RRQMTcpService(BytePool bytePool) : base(bytePool)
-        {
-        }
-
-        /// <summary>
         /// 处理数据
         /// </summary>
         public event Action<RRQMSocketClient, ByteBlock, object> OnReceived;

@@ -36,9 +36,10 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="bytePool"></param>
-        public UdpSession(BytePool bytePool) : base(bytePool)
+        public UdpSession(BytePool bytePool)
         {
-            this.BufferLength = 1024 * 64;
+            this.BufferLength = 1024;
+            this.BytePool = bytePool;
         }
 
         /// <summary>
@@ -55,6 +56,10 @@ namespace RRQMSocket
         /// 已接收数据次数
         /// </summary>
         public long RecivedCount { get { return this.recivedCount; } }
+
+        public ServerState ServerState => throw new NotImplementedException();
+
+        public BytePool BytePool { get; private set; }
 
         private BufferQueueGroup[] bufferQueueGroups;
         private SocketAsyncEventArgs recviveEventArg; 
@@ -367,6 +372,26 @@ namespace RRQMSocket
 
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
         {
+        }
+
+        public void Setup(IServerConfig serverConfig)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Setup(int port)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Start()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Stop()
+        {
+            throw new NotImplementedException();
         }
     }
 }
