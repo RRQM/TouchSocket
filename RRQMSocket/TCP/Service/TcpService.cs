@@ -114,7 +114,7 @@ namespace RRQMSocket
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
-            if (this.serverState == ServerState.None)
+            if (this.serverState == ServerState.None || this.serverState == ServerState.Stopped)
             {
                 try
                 {
@@ -137,7 +137,7 @@ namespace RRQMSocket
 
                 threadAccept = new Thread(StartAccept);
                 threadAccept.IsBackground = true;
-                threadAccept.Name = "AcceptSocket";
+                threadAccept.Name = "AcceptClient";
                 threadAccept.Start();
 
                 bufferQueueGroups = new BufferQueueGroup[this.serverConfig.ThreadCount];
@@ -155,11 +155,6 @@ namespace RRQMSocket
                     bufferQueueGroup.Thread.Start(bufferQueueGroup);
                 }
             }
-            else
-            {
-                throw new RRQMException("重复绑定");
-            }
-
             this.serverState = ServerState.Running;
         }
 
@@ -168,8 +163,20 @@ namespace RRQMSocket
         /// </summary>
         public void Stop()
         {
+            base.Dispose();
+            foreach (var item in this.SocketClients)
+            {
+                item.Dispose();
+            }
 
+            this.SocketClients.Clear();
 
+            foreach (var item in bufferQueueGroups)
+            {
+                item.Dispose();
+            }
+
+            this.serverState = ServerState.Stopped;
         }
 
         /// <summary>
@@ -420,18 +427,8 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
-            base.Dispose();
-            foreach (var item in this.SocketClients)
-            {
-                item.Dispose();
-            }
-
-            this.SocketClients.Clear();
-
-            foreach (var item in bufferQueueGroups)
-            {
-                item.Dispose();
-            }
+            this.Stop();
+            this.serverState = ServerState.Disposed;
         }
     }
 }
