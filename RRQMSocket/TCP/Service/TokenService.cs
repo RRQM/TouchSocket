@@ -21,31 +21,27 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public class TokenTcpService<TClient> : TcpService<TClient> where TClient : TcpSocketClient, new()
+    public class TokenService<TClient> : TcpService<TClient> where TClient : TcpSocketClient, new()
     {
-       
-        private string verifyToken = "rrqm";
+
+        private TokenServerConfig serverConfig;
 
         /// <summary>
-        /// 连接令箭,当为null或空时，重置为默认值“rrqm”
+        /// 连接令箭
         /// </summary>
         public string VerifyToken
         {
-            get { return verifyToken; }
-            set
-            {
-                if (value == null || value == string.Empty)
-                {
-                    value = "rrqm";
-                }
-                verifyToken = value;
-            }
+            get { return serverConfig==null?"rrqm":serverConfig.VerifyToken; }
         }
 
         /// <summary>
-        /// 获取或设置验证超时时间,默认为3秒；
+        /// 验证超时时间,默认为3秒
         /// </summary>
-        public int VerifyTimeout { get; set; } = 3;
+        public int VerifyTimeout
+        {
+            get { return serverConfig == null ? 3 : serverConfig.VerifyTimeout; }
+        }
+
 
         internal override void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {

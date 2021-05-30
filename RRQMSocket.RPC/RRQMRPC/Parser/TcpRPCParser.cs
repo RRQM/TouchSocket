@@ -32,7 +32,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public TcpRPCParser()
         {
             this.SerializeConverter = new BinarySerializeConverter();
-            this.tcpService = new TokenTcpService<RPCSocketClient>();
+            this.tcpService = new TokenService<RPCSocketClient>();
             this.tcpService.CreatSocketCliect += this.TcpService_CreatSocketCliect;
         }
 
@@ -44,7 +44,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 获取通信实例
         /// </summary>
-        public TokenTcpService<RPCSocketClient> Service => this.tcpService;
+        public TokenService<RPCSocketClient> Service => this.tcpService;
 
         /// <summary>
         /// 获取内存池实例
@@ -72,7 +72,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
 
-        private TokenTcpService<RPCSocketClient> tcpService;
+        private TokenService<RPCSocketClient> tcpService;
 
         private void TcpSocketClient_OnReceivedRequest(object sender, ByteBlock byteBlock)
         {

@@ -71,6 +71,11 @@ namespace RRQMSocket
             get { return serverState; }
         }
 
+        /// <summary>
+        /// 获取默认内存池
+        /// </summary>
+        public BytePool BytePool { get { return this.bufferQueueGroups[0].bytePool; } }
+
         internal ObjectPool<TClient> socketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadClearClient;
@@ -110,10 +115,20 @@ namespace RRQMSocket
         /// </summary>
         public void Start()
         {
+            if (this.serverConfig == null)
+            {
+                throw new RRQMException("配置文件为空");
+            }
+            else
+            {
+                this.maxCount = this.serverConfig.MaxCount;
+                this.clearInterval = this.serverConfig.ClearInterval;
+            }
             if (this.serverState == ServerState.Disposed)
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
+
             if (this.serverState == ServerState.None || this.serverState == ServerState.Stopped)
             {
                 try

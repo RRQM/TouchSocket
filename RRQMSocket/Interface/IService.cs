@@ -23,6 +23,11 @@ namespace RRQMSocket
     public interface IService:IDisposable
     {
         /// <summary>
+        /// 获取默认内存池实例
+        /// </summary>
+        BytePool BytePool { get;}
+
+        /// <summary>
         /// 服务器状态
         /// </summary>
         ServerState ServerState { get; }

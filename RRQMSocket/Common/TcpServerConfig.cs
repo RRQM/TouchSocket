@@ -28,5 +28,10 @@ namespace RRQMSocket
         /// 默认为“{0}-TCP”
         /// </summary>
         public string IDFormat { get; set; } = "{0}-TCP";
+
+        /// <summary>
+        /// 获取或设置清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
+        /// </summary>
+        public int ClearInterval { get; set; } = 60;
     }
 }
