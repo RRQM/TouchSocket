@@ -17,7 +17,7 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器辅助类
     /// </summary>
-    public sealed class RRQMSocketClient : TcpSocketClient
+    public sealed class RRQMSocketClient : SocketClient
     {
         /// <summary>
         /// 收到消息

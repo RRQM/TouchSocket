@@ -61,6 +61,8 @@ namespace RRQMSocket
 
         public BytePool BytePool { get; private set; }
 
+        public IServerConfig ServerConfig => throw new NotImplementedException();
+
         private BufferQueueGroup[] bufferQueueGroups;
         private SocketAsyncEventArgs recviveEventArg; 
         private long recivedCount;

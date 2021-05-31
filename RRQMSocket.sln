@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.XmlRpc", "RR
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.JsonRpc", "RRQMSocket.RPC.JsonRpc\RRQMSocket.RPC.JsonRpc.csproj", "{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{5ED5E4A4-D629-40B2-B67A-3FF4E669D5C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5ED5E4A4-D629-40B2-B67A-3FF4E669D5C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ED5E4A4-D629-40B2-B67A-3FF4E669D5C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ED5E4A4-D629-40B2-B67A-3FF4E669D5C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ED5E4A4-D629-40B2-B67A-3FF4E669D5C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

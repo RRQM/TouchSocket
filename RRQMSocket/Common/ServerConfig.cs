@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RRQMCore.Dependency;
 using RRQMCore.Log;
 
 namespace RRQMSocket
@@ -10,7 +11,7 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器配置
     /// </summary>
-    public class ServerConfig : IServerConfig
+    public class ServerConfig :RRQMDependencyObject, IServerConfig
     {
         /// <summary>
         /// 构造函数
@@ -46,5 +47,16 @@ namespace RRQMSocket
         /// 内存池块最大尺寸
         /// </summary>
         public int BytePoolMaxBlockSize { get; set; }
+
+
+
+        /// <summary>
+        /// 构建配置
+        /// </summary>
+        /// <returns></returns>
+        public virtual IServerConfig Build()
+        {
+            return this;
+        }
     }
 }

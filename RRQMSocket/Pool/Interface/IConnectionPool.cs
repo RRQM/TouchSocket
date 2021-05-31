@@ -20,7 +20,7 @@ namespace RRQMSocket.Pool
     /// <summary>
     /// 连接池接口
     /// </summary>
-    public interface IConnectionPool<T> : IObjectPool where T : IUserClient
+    public interface IConnectionPool<T> : IObjectPool where T : IUserTcpClient
     {
         /// <summary>
         /// 当池中的客户都端发生错误时

@@ -24,7 +24,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public class TcpService<TClient> : BaseSocket, ITcpService where TClient : TcpSocketClient, new()
+    public class TcpService<TClient> : BaseSocket, ITcpService where TClient : SocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -76,11 +76,18 @@ namespace RRQMSocket
         /// </summary>
         public BytePool BytePool { get { return this.bufferQueueGroups[0].bytePool; } }
 
+
+        private IServerConfig serverConfig;
+        /// <summary>
+        /// 获取服务器配置
+        /// </summary>
+        public virtual IServerConfig ServerConfig { get { return serverConfig; } }
+
         internal ObjectPool<TClient> socketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadClearClient;
         private Thread threadAccept;
-        private TcpServerConfig serverConfig;
+        private int backlog;
         #region 事件
 
         /// <summary>
@@ -115,15 +122,6 @@ namespace RRQMSocket
         /// </summary>
         public virtual void Start()
         {
-            if (this.serverConfig == null)
-            {
-                throw new RRQMException("配置文件为空");
-            }
-            else
-            {
-                this.maxCount = this.serverConfig.MaxCount;
-                this.clearInterval = this.serverConfig.ClearInterval;
-            }
             if (this.serverState == ServerState.Disposed)
             {
                 throw new RRQMException("无法重新利用已释放对象");
@@ -143,7 +141,7 @@ namespace RRQMSocket
                     throw new RRQMException(e.Message);
                 }
 
-                MainSocket.Listen(this.serverConfig.Backlog);
+                MainSocket.Listen(backlog);
 
                 threadClearClient = new Thread(ClearClient);
                 threadClearClient.IsBackground = true;
@@ -171,6 +169,29 @@ namespace RRQMSocket
                 }
             }
             this.serverState = ServerState.Running;
+        }
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="config"></param>
+        protected virtual void LoadConfig(IServerConfig config)
+        {
+            if (this.serverConfig == null)
+            {
+                throw new RRQMException("配置文件为空");
+            }
+            else if (config is TcpServerConfig serverConfig)
+            {
+                this.serverConfig = serverConfig;
+                this.maxCount = serverConfig.MaxCount;
+                this.clearInterval = serverConfig.ClearInterval;
+                this.backlog = serverConfig.Backlog;
+            }
+            else
+            {
+                throw new RRQMException($"适用于此处的配置应当继承自{nameof(TcpServerConfig)}");
+            }
         }
 
         /// <summary>
@@ -203,6 +224,7 @@ namespace RRQMSocket
             if (serverConfig is TcpServerConfig config)
             {
                 this.serverConfig = config;
+                this.LoadConfig(this.serverConfig);
             }
             else
             {
@@ -216,19 +238,9 @@ namespace RRQMSocket
         /// <param name="port"></param>
         public virtual void Setup(int port)
         {
-            if (this.serverConfig == null)
-            {
-                this.serverConfig = new TcpServerConfig();
-                this.serverConfig.IPHost = new IPHost(port);
-            }
-            else if (this.serverConfig.IPHost == null)
-            {
-                this.serverConfig.IPHost = new IPHost(port);
-            }
-            else
-            {
-                this.serverConfig.IPHost = new IPHost($"{this.serverConfig.IPHost}:{port}");
-            }
+            TcpServerConfig serverConfig = new TcpServerConfig();
+            serverConfig.IPHost = new IPHost(port);
+            this.Setup(serverConfig);
         }
 
         /// <summary>

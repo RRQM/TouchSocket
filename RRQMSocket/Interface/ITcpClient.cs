@@ -24,6 +24,16 @@ namespace RRQMSocket
     public interface ITcpClient : IClient
     {
         /// <summary>
+        /// 判断是否在线
+        /// </summary>
+        bool Online { get; }
+
+        /// <summary>
+        /// 数据处理适配器
+        /// </summary>
+        DataHandlingAdapter DataHandlingAdapter { get; set; }
+
+        /// <summary>
         /// 禁用发送或接收
         /// </summary>
         /// <param name="how"></param>

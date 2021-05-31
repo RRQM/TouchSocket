@@ -26,7 +26,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 已接收的客户端
     /// </summary>
-    public sealed class FileSocketClient : TcpSocketClient, IFileService, IFileClient
+    public sealed class FileSocketClient : SocketClient, IFileService, IFileClient
     {
         #region 属性
 

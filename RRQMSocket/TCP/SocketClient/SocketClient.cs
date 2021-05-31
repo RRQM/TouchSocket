@@ -22,12 +22,12 @@ namespace RRQMSocket
     /// 服务器辅助类
     /// </summary>
 
-    public abstract class TcpSocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
+    public abstract class SocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TcpSocketClient()
+        public SocketClient()
         {
             this.receiveEventArgs = new SocketAsyncEventArgs();
             this.receiveEventArgs.Completed += this.EventArgs_Completed;

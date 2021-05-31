@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketCliectCollection<T> : IEnumerable<T> where T : TcpSocketClient
+    public class SocketCliectCollection<T> : IEnumerable<T> where T : SocketClient
     {
         /// <summary>
         /// 获取或设置分配ID的格式

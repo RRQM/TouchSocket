@@ -21,7 +21,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC服务器辅助类
     /// </summary>
-    public sealed class RPCSocketClient : TcpSocketClient
+    public sealed class RPCSocketClient : SocketClient
     {
         /// <summary>
         /// 构造函数

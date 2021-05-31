@@ -47,6 +47,5 @@ namespace RRQMSocket
                 verifyTimeout = value; 
             }
         }
-
     }
 }

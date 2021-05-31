@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
@@ -21,28 +22,51 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public class TokenService<TClient> : TcpService<TClient> where TClient : TcpSocketClient, new()
+    public class TokenService<TClient> : TcpService<TClient> where TClient : SocketClient, new()
     {
-
-        private TokenServerConfig serverConfig;
-
+        private string verifyToken;
         /// <summary>
         /// 连接令箭
         /// </summary>
         public string VerifyToken
         {
-            get { return serverConfig==null?"rrqm":serverConfig.VerifyToken; }
+            get { return verifyToken; }
         }
 
+        private int verifyTimeout;
         /// <summary>
         /// 验证超时时间,默认为3秒
         /// </summary>
         public int VerifyTimeout
         {
-            get { return serverConfig == null ? 3 : serverConfig.VerifyTimeout; }
+            get { return verifyTimeout; }
         }
 
+       
+        public override void Setup(int port)
+        {
+            TokenServerConfig serverConfig = new TokenServerConfig();
+            serverConfig.IPHost = new IPHost(port);
+            this.Setup(serverConfig);
+        }
 
+        /// <summary>
+        /// 载入配置
+        /// </summary>
+        /// <param name="config"></param>
+        protected override void LoadConfig(IServerConfig config)
+        {
+            if (config is TokenServerConfig serverConfig)
+            {
+                base.LoadConfig(config);
+                this.verifyTimeout = serverConfig.VerifyTimeout;
+                this.verifyToken = serverConfig.VerifyToken;
+            }
+            else
+            {
+                throw new RRQMException($"适用于此处的配置应当继承自{nameof(TokenServerConfig)}");
+            }
+        }
         internal override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
             Task.Run(async () =>
@@ -150,11 +174,11 @@ namespace RRQMSocket
         /// <param name="verifyOption"></param>
         protected virtual void OnVerifyToken(VerifyOption verifyOption)
         {
-            if (verifyOption.Token == this.serverConfig.VerifyToken)
+            if (verifyOption.Token == this.verifyToken)
             {
                 verifyOption.Accept = true;
             }
-            else 
+            else
             {
                 verifyOption.ErrorMessage = "Token不受理";
             }

@@ -27,16 +27,6 @@ namespace RRQMSocket
         object Flag { get; set; }
 
         /// <summary>
-        /// 判断是否在线
-        /// </summary>
-        bool Online { get; }
-
-        /// <summary>
-        /// 数据处理适配器
-        /// </summary>
-        DataHandlingAdapter DataHandlingAdapter { get; set; }
-
-        /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
         IService Service { get; }

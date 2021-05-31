@@ -33,6 +33,11 @@ namespace RRQMSocket
         ServerState ServerState { get; }
 
         /// <summary>
+        /// 获取服务器配置
+        /// </summary>
+        IServerConfig ServerConfig { get; }
+
+        /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="serverConfig">配置</param>
