@@ -34,7 +34,7 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             this.tcpService = new RRQMTcpService();
             this.actionMap = new ActionMap();
-            this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
+            this.tcpService.CreateSocketCliect += this.OnCreatSocketCliect;
             this.tcpService.OnReceived += this.OnReceived;
             this.JsonConverter = new DataContractJsonConverter();
         }

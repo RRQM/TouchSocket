@@ -96,7 +96,7 @@ namespace RRQMSocket
         /// <summary>
         /// 创建泛型T时
         /// </summary>
-        public event Action<TClient, CreateOption> CreatSocketCliect;
+        public event Action<TClient, CreateOption> CreateSocketCliect;
 
         internal void ClientConnectedMethod(object sender, MesEventArgs e)
         {
@@ -113,7 +113,7 @@ namespace RRQMSocket
         /// <summary>
         /// 启动服务
         /// </summary>
-        public void Start()
+        public virtual void Start()
         {
             if (this.serverConfig == null)
             {
@@ -176,7 +176,7 @@ namespace RRQMSocket
         /// <summary>
         /// 停止服务器
         /// </summary>
-        public void Stop()
+        public virtual void Stop()
         {
             base.Dispose();
             foreach (var item in this.SocketClients)
@@ -198,7 +198,7 @@ namespace RRQMSocket
         /// 配置服务器
         /// </summary>
         /// <param name="serverConfig"></param>
-        public void Setup(IServerConfig serverConfig)
+        public virtual void Setup(IServerConfig serverConfig)
         {
             if (serverConfig is TcpServerConfig config)
             {
@@ -214,16 +214,20 @@ namespace RRQMSocket
         /// 配置服务器
         /// </summary>
         /// <param name="port"></param>
-        public void Setup(int port)
+        public virtual void Setup(int port)
         {
             if (this.serverConfig == null)
             {
                 this.serverConfig = new TcpServerConfig();
                 this.serverConfig.IPHost = new IPHost(port);
             }
+            else if (this.serverConfig.IPHost == null)
+            {
+                this.serverConfig.IPHost = new IPHost(port);
+            }
             else
             {
-
+                this.serverConfig.IPHost = new IPHost($"{this.serverConfig.IPHost}:{port}");
             }
         }
 
@@ -302,7 +306,7 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = this.MainSocket.Accept();
-                    PreviewCreatSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    PreviewCreateSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
                 }
                 catch (Exception e)
                 {
@@ -382,16 +386,16 @@ namespace RRQMSocket
         /// 成功连接后创建（或从对象池中获得）辅助类,
         /// 用户可以在该方法中再进行自定义设置，
         /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
-        /// 例如事件等，请先判断CreatOption.NewCreat值再做处理。
+        /// 例如事件等，请先判断CreatOption.NewCreate值再做处理。
         /// </summary>
         /// <param name="tcpSocketClient"></param>
-        /// <param name="creatOption"></param>
-        protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreateOption creatOption)
+        /// <param name="createOption"></param>
+        protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreateOption createOption)
         {
-            CreatSocketCliect?.Invoke(tcpSocketClient, creatOption);
+            CreateSocketCliect?.Invoke(tcpSocketClient, createOption);
         }
 
-        internal virtual void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
+        internal virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
             try
             {

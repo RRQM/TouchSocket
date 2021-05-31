@@ -35,7 +35,7 @@ namespace RRQMSocket.RPC.XmlRpc
         {
             this.tcpService = new RRQMTcpService();
             this.actionMap = new ActionMap();
-            this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
+            this.tcpService.CreateSocketCliect += this.OnCreatSocketCliect;
             this.tcpService.OnReceived += this.OnReceived;
         }
 

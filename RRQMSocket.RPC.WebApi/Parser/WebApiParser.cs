@@ -34,7 +34,7 @@ namespace RRQMSocket.RPC.WebApi
             this.ApiDataConverter = new XmlDataConverter();
             this.tcpService = new RRQMTcpService();
             this.routeMap = new RouteMap();
-            this.tcpService.CreatSocketCliect += this.OnCreatSocketCliect;
+            this.tcpService.CreateSocketCliect += this.OnCreatSocketCliect;
             this.tcpService.OnReceived += this.OnReceived;
         }
 

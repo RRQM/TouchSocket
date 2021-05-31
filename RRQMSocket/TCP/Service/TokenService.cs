@@ -43,9 +43,9 @@ namespace RRQMSocket
         }
 
 
-        internal override void PreviewCreatSocketCliect(Socket socket, BufferQueueGroup queueGroup)
+        internal override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
-            Task.Factory.StartNew((Func<Task>)(async () =>
+            Task.Run(async () =>
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
@@ -136,12 +136,12 @@ namespace RRQMSocket
                         }
                     }
                     waitCount++;
-                    await Task.Delay(20);
+                    await Task.Delay(10);
                 }
 
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Dispose();
-            }));
+            });
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace RRQMSocket
         /// <param name="verifyOption"></param>
         protected virtual void OnVerifyToken(VerifyOption verifyOption)
         {
-            if (verifyOption.Token == this.verifyToken)
+            if (verifyOption.Token == this.serverConfig.VerifyToken)
             {
                 verifyOption.Accept = true;
             }

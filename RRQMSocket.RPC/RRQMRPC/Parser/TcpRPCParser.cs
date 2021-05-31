@@ -33,7 +33,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             this.SerializeConverter = new BinarySerializeConverter();
             this.tcpService = new TokenService<RPCSocketClient>();
-            this.tcpService.CreatSocketCliect += this.TcpService_CreatSocketCliect;
+            this.tcpService.CreateSocketCliect += this.TcpService_CreatSocketCliect;
         }
 
         /// <summary>
