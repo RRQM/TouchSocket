@@ -20,21 +20,6 @@ namespace RRQMSocket
     public sealed class RRQMUdpSession : UdpSession
     {
         /// <summary>
-        /// 构造函数
-        /// </summary>
-        public RRQMUdpSession() : base(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool"></param>
-        public RRQMUdpSession(BytePool bytePool) : base(bytePool)
-        {
-        }
-
-        /// <summary>
         /// 当收到数据时
         /// </summary>
         public event RRQMUDPByteBlockEventHandler OnReceivedData;

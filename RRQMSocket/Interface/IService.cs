@@ -35,14 +35,14 @@ namespace RRQMSocket
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        IServerConfig ServerConfig { get; }
+        ServerConfig ServerConfig { get; }
 
         /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="serverConfig">配置</param>
         /// <exception cref="RRQMException"></exception>
-        void Setup(IServerConfig serverConfig);
+        void Setup(ServerConfig serverConfig);
 
         /// <summary>
         /// 配置服务器

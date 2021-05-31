@@ -42,30 +42,15 @@ namespace RRQMSocket
             get { return verifyTimeout; }
         }
 
-       
-        public override void Setup(int port)
-        {
-            TokenServerConfig serverConfig = new TokenServerConfig();
-            serverConfig.IPHost = new IPHost(port);
-            this.Setup(serverConfig);
-        }
-
         /// <summary>
         /// 载入配置
         /// </summary>
-        /// <param name="config"></param>
-        protected override void LoadConfig(IServerConfig config)
+        /// <param name="serverConfig"></param>
+        protected override void LoadConfig(ServerConfig serverConfig)
         {
-            if (config is TokenServerConfig serverConfig)
-            {
-                base.LoadConfig(config);
-                this.verifyTimeout = serverConfig.VerifyTimeout;
-                this.verifyToken = serverConfig.VerifyToken;
-            }
-            else
-            {
-                throw new RRQMException($"适用于此处的配置应当继承自{nameof(TokenServerConfig)}");
-            }
+            base.LoadConfig(serverConfig);
+            this.verifyTimeout = (int)serverConfig.GetValue(TokenServerConfig.VerifyTimeoutProperty);
+            this.verifyToken = (string)serverConfig.GetValue(TokenServerConfig.VerifyTokenProperty);
         }
         internal override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {

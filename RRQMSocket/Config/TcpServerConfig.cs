@@ -27,7 +27,7 @@ namespace RRQMSocket
         public static readonly DependencyProperty BacklogProperty =
             DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServerConfig), 30);
 
-
+        
 
         /// <summary>
         /// 最大可连接数，默认为10000

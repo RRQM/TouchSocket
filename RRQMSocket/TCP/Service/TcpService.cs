@@ -74,14 +74,14 @@ namespace RRQMSocket
         /// <summary>
         /// 获取默认内存池
         /// </summary>
-        public BytePool BytePool { get { return this.bufferQueueGroups[0].bytePool; } }
+        public BytePool BytePool { get { return BytePool.Default; } }
 
 
-        private IServerConfig serverConfig;
+        private ServerConfig serverConfig;
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        public virtual IServerConfig ServerConfig { get { return serverConfig; } }
+        public virtual ServerConfig ServerConfig { get { return serverConfig; } }
 
         internal ObjectPool<TClient> socketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
@@ -126,14 +126,14 @@ namespace RRQMSocket
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
-
+            IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
             if (this.serverState == ServerState.None || this.serverState == ServerState.Stopped)
             {
                 try
                 {
-                    Socket socket = new Socket(this.serverConfig.IPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                     PreviewBind(socket);
-                    socket.Bind(this.serverConfig.IPHost.EndPoint);
+                    socket.Bind(iPHost.EndPoint);
                     this.MainSocket = socket;
                 }
                 catch (Exception e)
@@ -174,24 +174,16 @@ namespace RRQMSocket
         /// <summary>
         /// 加载配置
         /// </summary>
-        /// <param name="config"></param>
-        protected virtual void LoadConfig(IServerConfig config)
+        /// <param name="serverConfig"></param>
+        protected virtual void LoadConfig(ServerConfig serverConfig)
         {
-            if (this.serverConfig == null)
+            if (serverConfig == null)
             {
                 throw new RRQMException("配置文件为空");
             }
-            else if (config is TcpServerConfig serverConfig)
-            {
-                this.serverConfig = serverConfig;
-                this.maxCount = serverConfig.MaxCount;
-                this.clearInterval = serverConfig.ClearInterval;
-                this.backlog = serverConfig.Backlog;
-            }
-            else
-            {
-                throw new RRQMException($"适用于此处的配置应当继承自{nameof(TcpServerConfig)}");
-            }
+            this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty); 
+            this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
+            this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
         }
 
         /// <summary>
@@ -219,17 +211,10 @@ namespace RRQMSocket
         /// 配置服务器
         /// </summary>
         /// <param name="serverConfig"></param>
-        public virtual void Setup(IServerConfig serverConfig)
+        public virtual void Setup(ServerConfig serverConfig)
         {
-            if (serverConfig is TcpServerConfig config)
-            {
-                this.serverConfig = config;
-                this.LoadConfig(this.serverConfig);
-            }
-            else
-            {
-                throw new RRQMException($"适用于此处的配置应当继承自{nameof(TcpServerConfig)}");
-            }
+            this.serverConfig = serverConfig;
+            this.LoadConfig(this.serverConfig);
         }
 
         /// <summary>
@@ -239,7 +224,7 @@ namespace RRQMSocket
         public virtual void Setup(int port)
         {
             TcpServerConfig serverConfig = new TcpServerConfig();
-            serverConfig.IPHost = new IPHost(port);
+            serverConfig.BindIPHost = new IPHost(port);
             this.Setup(serverConfig);
         }
 

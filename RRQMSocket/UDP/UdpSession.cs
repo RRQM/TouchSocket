@@ -25,139 +25,48 @@ namespace RRQMSocket
     /// </summary>
     public abstract class UdpSession : BaseSocket, IService, IClient, IHandleBuffer
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public UdpSession() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool"></param>
-        public UdpSession(BytePool bytePool)
-        {
-            this.BufferLength = 1024;
-            this.BytePool = bytePool;
-        }
-
-        /// <summary>
-        /// 获取绑定状态
-        /// </summary>
-        public bool IsBind { get; private set; }
-
+        private EndPoint defaultRemotePoint;
         /// <summary>
         /// 默认远程节点
         /// </summary>
-        public EndPoint DefaultRemotePoint { get; set; }
+        public EndPoint DefaultRemotePoint
+        {
+            get { return defaultRemotePoint; }
+        }
 
         /// <summary>
         /// 已接收数据次数
         /// </summary>
         public long RecivedCount { get { return this.recivedCount; } }
 
-        public ServerState ServerState => throw new NotImplementedException();
 
-        public BytePool BytePool { get; private set; }
+        private ServerState serverState;
+        /// <summary>
+        /// 获取服务器状态
+        /// </summary>
+        public ServerState ServerState
+        {
+            get { return serverState; }
+        }
 
-        public IServerConfig ServerConfig => throw new NotImplementedException();
+
+        /// <summary>
+        /// 获取默认内存池
+        /// </summary>
+        public BytePool BytePool { get { return BytePool.Default; } }
+
+        private ServerConfig serverConfig;
+        /// <summary>
+        /// 获取配置
+        /// </summary>
+        public ServerConfig ServerConfig
+        {
+            get { return serverConfig; }
+        }
 
         private BufferQueueGroup[] bufferQueueGroups;
-        private SocketAsyncEventArgs recviveEventArg; 
+        private SocketAsyncEventArgs recviveEventArg;
         private long recivedCount;
-
-        /// <summary>
-        /// 绑定UDP服务
-        /// </summary>
-        /// <param name="addressFamily">寻址方案，支持IPv6</param>
-        /// <param name="endPoint">节点</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
-        {
-            if (this.disposable)
-            {
-                throw new RRQMException("无法重新利用已释放对象");
-            }
-            if (threadCount < 1)
-            {
-                throw new RRQMException("逻辑线程数量不能小于1");
-            }
-            if (!IsBind)
-            {
-                try
-                {
-                    Socket socket = new Socket(addressFamily, SocketType.Dgram, ProtocolType.Udp);
-                    PreviewBind(socket);
-                    socket.Bind(endPoint);
-                    this.MainSocket = socket;
-
-                    this.recviveEventArg = new SocketAsyncEventArgs();
-                    this.recviveEventArg.Completed += this.IO_Completed;
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    this.recviveEventArg.UserToken = byteBlock;
-                    this.recviveEventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    this.recviveEventArg.RemoteEndPoint = endPoint;
-                    this.MainSocket.ReceiveFromAsync(this.recviveEventArg);
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMException(e.Message);
-                }
-
-                bufferQueueGroups = new BufferQueueGroup[threadCount];
-                for (int i = 0; i < threadCount; i++)
-                {
-                    BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
-                    bufferQueueGroups[i] = bufferQueueGroup;
-                    bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                    bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(10000);//处理用户的消息
-                    bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                    bufferQueueGroup.bufferAndClient = new BufferQueue();
-                    bufferQueueGroup.Thread.IsBackground = true;
-                    bufferQueueGroup.Thread.Name = i + "号服务器处理线程";
-                    bufferQueueGroup.Thread.Start(bufferQueueGroup);
-                }
-            }
-            else
-            {
-                throw new RRQMException("重复绑定");
-            }
-
-            IsBind = true;
-        }
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="port">端口号</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Bind(int port, int threadCount = 1)
-        {
-            IPHost iPHost = new IPHost($"0.0.0.0:{port}");
-            this.Bind(iPHost, threadCount);
-        }
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Bind(IPHost iPHost, int threadCount)
-        {
-            if (iPHost == null)
-            {
-                throw new ArgumentNullException("iPHost不能为空。");
-            }
-            this.Bind(iPHost.AddressFamily, iPHost.EndPoint, threadCount);
-        }
 
         /// <summary>
         /// 在Socket初始化对象后，Bind之前调用。
@@ -256,6 +165,7 @@ namespace RRQMSocket
             }
         }
 
+        #region 发送
         /// <summary>
         /// 发送
         /// </summary>
@@ -287,7 +197,7 @@ namespace RRQMSocket
             {
                 throw new RRQMException("默认终结点为空");
             }
-            this.SendTo(buffer, offset, length, this.DefaultRemotePoint);
+            this.SendTo(buffer, offset, length, this.defaultRemotePoint);
         }
 
         /// <summary>
@@ -322,7 +232,7 @@ namespace RRQMSocket
             SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
             sendEventArgs.Completed += this.IO_Completed;
             sendEventArgs.SetBuffer(buffer, offset, length);
-            sendEventArgs.RemoteEndPoint = this.DefaultRemotePoint;
+            sendEventArgs.RemoteEndPoint = this.defaultRemotePoint;
 
             if (!this.MainSocket.SendToAsync(sendEventArgs))
             {
@@ -354,18 +264,7 @@ namespace RRQMSocket
             this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
-        /// <summary>
-        /// 关闭服务器并释放服务器资源
-        /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            foreach (var item in bufferQueueGroups)
-            {
-                item.Dispose();
-            }
-        }
+        #endregion
 
         private void HandleBuffer(ClientBuffer clientBuffer)
         {
@@ -376,24 +275,115 @@ namespace RRQMSocket
         {
         }
 
-        public void Setup(IServerConfig serverConfig)
+        /// <summary>
+        /// 配置服务
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        public void Setup(ServerConfig serverConfig)
         {
-            throw new NotImplementedException();
+            this.serverConfig = serverConfig;
+            this.LoadConfig(this.serverConfig);
         }
 
+        /// <summary>
+        /// 通过端口配置
+        /// </summary>
+        /// <param name="port"></param>
         public void Setup(int port)
         {
-            throw new NotImplementedException();
+            UdpServerConfig serverConfig = new UdpServerConfig();
+            serverConfig.BindIPHost = new IPHost(port);
+            this.Setup(serverConfig);
+        }
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        protected virtual void LoadConfig(ServerConfig serverConfig)
+        {
+            if (serverConfig == null)
+            {
+                throw new RRQMException("配置文件为空");
+            }
+            this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpServerConfig.DefaultRemotePointProperty);
         }
 
+        /// <summary>
+        /// 启动服务
+        /// </summary>
         public void Start()
         {
-            throw new NotImplementedException();
+            if (this.serverState == ServerState.Disposed)
+            {
+                throw new RRQMException("无法重新利用已释放对象");
+            }
+            IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
+            bool useBind = (bool)this.serverConfig.GetValue(UdpServerConfig.UseBindProperty);
+            if (useBind)
+            {
+                if (this.serverState == ServerState.None || this.serverState == ServerState.Stopped)
+                {
+                    try
+                    {
+                        Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                        PreviewBind(socket);
+                        socket.Bind(iPHost.EndPoint);
+                        this.MainSocket = socket;
+
+                        this.recviveEventArg = new SocketAsyncEventArgs();
+                        this.recviveEventArg.Completed += this.IO_Completed;
+                        ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                        this.recviveEventArg.UserToken = byteBlock;
+                        this.recviveEventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                        this.recviveEventArg.RemoteEndPoint = iPHost.EndPoint;
+                        this.MainSocket.ReceiveFromAsync(this.recviveEventArg);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RRQMException(e.Message);
+                    }
+
+                    bufferQueueGroups = new BufferQueueGroup[serverConfig.ThreadCount];
+                    for (int i = 0; i < serverConfig.ThreadCount; i++)
+                    {
+                        BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
+                        bufferQueueGroups[i] = bufferQueueGroup;
+                        bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
+                        bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(10000);//处理用户的消息
+                        bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
+                        bufferQueueGroup.bufferAndClient = new BufferQueue();
+                        bufferQueueGroup.Thread.IsBackground = true;
+                        bufferQueueGroup.Thread.Name = i + "-Num Handler";
+                        bufferQueueGroup.Thread.Start(bufferQueueGroup);
+                    }
+                }
+            }
+
+
+            this.serverState = ServerState.Running;
         }
 
+        /// <summary>
+        /// 停止服务器
+        /// </summary>
         public void Stop()
         {
-            throw new NotImplementedException();
+            base.Dispose();
+
+            foreach (var item in bufferQueueGroups)
+            {
+                item.Dispose();
+            }
+            this.serverState = ServerState.Stopped;
+        }
+
+        /// <summary>
+        /// 关闭服务器并释放服务器资源
+        /// </summary>
+        public override void Dispose()
+        {
+            this.Stop();
+            this.serverState = ServerState.Disposed;
         }
     }
 }

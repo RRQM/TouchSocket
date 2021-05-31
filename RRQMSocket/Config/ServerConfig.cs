@@ -11,7 +11,7 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器配置
     /// </summary>
-    public class ServerConfig : RRQMDependencyObject, IServerConfig
+    public class ServerConfig : RRQMDependencyObject
     {
         /// <summary>
         /// 多线程数量
@@ -27,22 +27,6 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ThreadCountProperty =
             DependencyProperty.Register("ThreadCount", typeof(int), typeof(ServerConfig), 10);
-
-
-        /// <summary>
-        /// IP和端口号
-        /// </summary>
-        public IPHost IPHost
-        {
-            get { return (IPHost)GetValue(IPHostProperty); }
-            set { SetValue(IPHostProperty, value); }
-        }
-
-        /// <summary>
-        /// IP和端口号依赖属性
-        /// </summary>
-        public static readonly DependencyProperty IPHostProperty =
-            DependencyProperty.Register("IPHost", typeof(IPHost), typeof(ServerConfig), null);
 
 
         /// <summary>
@@ -62,6 +46,22 @@ namespace RRQMSocket
 
 
         /// <summary>
+        /// IP和端口号
+        /// </summary>
+        public IPHost BindIPHost
+        {
+            get { return (IPHost)GetValue(BindIPHostProperty); }
+            set { SetValue(BindIPHostProperty, value); }
+        }
+
+        /// <summary>
+        /// IP和端口号依赖属性
+        /// </summary>
+        public static readonly DependencyProperty BindIPHostProperty =
+            DependencyProperty.Register("BindIPHost", typeof(IPHost), typeof(ServerConfig), null);
+
+
+        /// <summary>
         /// 内存池最大尺寸
         /// </summary>
         public long BytePoolMaxSize
@@ -74,7 +74,7 @@ namespace RRQMSocket
         /// 内存池最大尺寸依赖属性
         /// </summary>
         public static readonly DependencyProperty BytePoolMaxSizeProperty =
-            DependencyProperty.Register("BytePoolMaxSize", typeof(long), typeof(ServerConfig), 1024 * 1024 * 512);
+            DependencyProperty.Register("BytePoolMaxSize", typeof(long), typeof(ServerConfig), 1024 * 1024 * 512L);
 
 
         /// <summary>
