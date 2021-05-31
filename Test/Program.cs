@@ -14,9 +14,11 @@ namespace Test
         {
             TokenService<MySocketClient> tokenService = new TokenService<MySocketClient>();
 
-            var config = new ServerConfig()
-                .CreateTcpServerConfig()
-                .Build();
+            var config = new ServerConfig();
+            config.SetValue(ServerConfig.IPHostProperty, new IPHost(7789));
+            config.SetValue(TcpServerConfig.MaxCountProperty, 10000);
+            config.SetValue(TokenServerConfig.VerifyTokenProperty,"123TT");
+
             tokenService.Setup(config);
             tokenService.Start();
         }
