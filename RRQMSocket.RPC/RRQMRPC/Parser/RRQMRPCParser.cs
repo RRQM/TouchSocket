@@ -61,11 +61,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public RPCProxyInfo ProxyInfo { get; private set; }
 
-        ///// <summary>
-        ///// 获取绑定状态
-        ///// </summary>
-        //public abstract bool IsBind { get; }
-
         /// <summary>
         /// 内存池实例
         /// </summary>
@@ -263,37 +258,5 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             return this.clientMethodStore.GetAllMethodItem();
         }
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="port">端口号</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public abstract void Bind(int port, int threadCount = 1);
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public abstract void Bind(IPHost iPHost, int threadCount);
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="addressFamily">寻址方案</param>
-        /// <param name="endPoint">绑定节点</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public abstract void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount);
-
     }
 }

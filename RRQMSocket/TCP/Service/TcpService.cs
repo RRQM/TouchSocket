@@ -81,7 +81,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        public virtual ServerConfig ServerConfig { get { return serverConfig; } }
+        public ServerConfig ServerConfig { get { return serverConfig; } }
 
         internal ObjectPool<TClient> socketClientPool;
         private BufferQueueGroup[] bufferQueueGroups;
@@ -127,6 +127,10 @@ namespace RRQMSocket
                 throw new RRQMException("无法重新利用已释放对象");
             }
             IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
+            if (iPHost==null)
+            {
+                throw new RRQMException("IPHost为空，无法绑定");
+            }
             if (this.serverState == ServerState.None || this.serverState == ServerState.Stopped)
             {
                 try
@@ -184,6 +188,9 @@ namespace RRQMSocket
             this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty); 
             this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
             this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
+            this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
+            this.BufferLength = (int)serverConfig.GetValue(ServerConfig.BufferLengthProperty);
+            this.socketClients.IDFormat= (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
         }
 
         /// <summary>

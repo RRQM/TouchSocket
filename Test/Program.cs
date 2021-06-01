@@ -19,6 +19,11 @@ namespace Test
             config.SetValue(ServerConfig.BindIPHostProperty, new IPHost(7789))
                 .SetValue(TcpServerConfig.MaxCountProperty, 10000)
                 .SetValue(TokenServerConfig.VerifyTokenProperty, "123TT");
+
+            var config1 = new TcpServerConfig();
+            config1.BindIPHost = new IPHost(7789);
+            config1.MaxCount = 10000;
+            config1.ClearInterval = 60;
            
             tokenService.Setup(config);
             tokenService.Start();

@@ -237,7 +237,7 @@ namespace RRQMSocket.FileTransfer
             this.ipHost = ipHost;
             this.verifyToken = verifyToken;
             this.client.VerifyToken = verifyToken;
-            this.client.Connect(ipHost.AddressFamily, ipHost.EndPoint);
+            this.client.Connect(ipHost);
         }
 
        

@@ -28,13 +28,6 @@ namespace RRQMSocket
         void Connect(IPHost iPHost);
 
         /// <summary>
-        /// 连接服务器
-        /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
-        void Connect(AddressFamily addressFamily, EndPoint endPoint);
-
-        /// <summary>
         /// 异步连接服务器
         /// </summary>
         /// <param name="iPHost"></param>
@@ -42,10 +35,8 @@ namespace RRQMSocket
         void  ConnectAsync(IPHost iPHost);
 
         /// <summary>
-        /// 异步连接服务器
+        /// 仅发送，即不会开启接收线程。
         /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
-        void ConnectAsync(AddressFamily addressFamily, EndPoint endPoint);
+        bool OnlySend { get; set; }
     }
 }

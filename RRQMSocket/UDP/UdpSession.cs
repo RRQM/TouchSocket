@@ -317,10 +317,15 @@ namespace RRQMSocket
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
-            IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
+           
             bool useBind = (bool)this.serverConfig.GetValue(UdpServerConfig.UseBindProperty);
             if (useBind)
             {
+                IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
+                if (iPHost == null)
+                {
+                    throw new RRQMException("IPHost为空，无法绑定");
+                }
                 if (this.serverState == ServerState.None || this.serverState == ServerState.Stopped)
                 {
                     try
@@ -358,8 +363,6 @@ namespace RRQMSocket
                     }
                 }
             }
-
-
             this.serverState = ServerState.Running;
         }
 

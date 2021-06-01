@@ -91,10 +91,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public string ID => null;
 
-        /// <summary>
-        /// 绑定状态
-        /// </summary>
-        public bool IsBind => this.udpSession.IsBind;
+       
 
         /// <summary>
         /// 获取远程服务器RPC服务文件
@@ -516,47 +513,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         public void Dispose()
         {
             this.udpSession.Dispose();
-        }
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="port">端口号</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Bind(int port, int threadCount = 1)
-        {
-            this.Bind(new IPHost($"0.0.0.0:{port}"), threadCount);
-        }
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Bind(IPHost iPHost, int threadCount)
-        {
-            if (iPHost == null)
-            {
-                throw new ArgumentNullException("iPHost不能为空。");
-            }
-            this.Bind(iPHost.AddressFamily, iPHost.EndPoint, threadCount);
-        }
-
-        /// <summary>
-        /// 绑定本地监听
-        /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
-        /// <param name="threadCount"></param>
-        public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
-        {
-            this.udpSession.Bind(addressFamily, endPoint, threadCount);
         }
     }
 }

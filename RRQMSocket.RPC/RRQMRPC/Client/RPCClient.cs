@@ -363,7 +363,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     rpcJunctor.VerifyToken = this.verifyToken;
                     try
                     {
-                        rpcJunctor.Connect(this.iPHost.AddressFamily, this.iPHost.EndPoint);
+                        rpcJunctor.Connect(this.iPHost);
                         rpcJunctor.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
                         rpcJunctor.ReceivedByteBlock = this.OnReceivedByteBlock;
                         rpcJunctor.ExecuteCallBack = this.OnExecuteCallBack;

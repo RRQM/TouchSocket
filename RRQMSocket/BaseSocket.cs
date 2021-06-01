@@ -19,7 +19,6 @@ namespace RRQMSocket
     /// <summary>
     /// 通讯基类
     /// </summary>
-
     public abstract class BaseSocket : ISocket, IDisposable
     {
        

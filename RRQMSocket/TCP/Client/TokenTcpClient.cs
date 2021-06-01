@@ -74,14 +74,14 @@ namespace RRQMSocket
         /// </summary>
         public int VerifyTimeout { get; set; } = 3;
 
+
         /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
+        /// <param name="iPHost"></param>
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public override void Connect(AddressFamily addressFamily, EndPoint endPoint)
+        public override void Connect(IPHost iPHost)
         {
             if (this.disposable)
             {
@@ -91,9 +91,9 @@ namespace RRQMSocket
 
             try
             {
-                Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
+                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 PreviewConnect(socket);
-                socket.Connect(endPoint);
+                socket.Connect(iPHost.EndPoint);
                 this.MainSocket = socket;
                 this.MainSocket.Send(Encoding.UTF8.GetBytes(this.VerifyToken == null ? string.Empty : this.VerifyToken));
             }
@@ -103,7 +103,7 @@ namespace RRQMSocket
             }
 
             int waitCount = 0;
-            while (waitCount < VerifyTimeout * 1000 / 20)
+            while (waitCount < VerifyTimeout * 1000 / 10)
             {
                 if (this.MainSocket.Available > 0)
                 {
@@ -136,7 +136,7 @@ namespace RRQMSocket
                     }
                 }
                 waitCount++;
-                Thread.Sleep(20);
+                Thread.Sleep(10);
             }
 
             throw new RRQMTimeoutException("验证Token超时");

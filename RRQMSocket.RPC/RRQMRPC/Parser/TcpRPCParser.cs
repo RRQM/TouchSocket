@@ -244,46 +244,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="port">端口号</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public override void Bind(int port, int threadCount = 1)
-        {
-            //this.tcpService.Bind(port, threadCount);
-        }
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public override void Bind(IPHost iPHost, int threadCount)
-        {
-            //this.tcpService.Bind(iPHost, threadCount);
-        }
-
-        /// <summary>
-        /// 绑定服务
-        /// </summary>
-        /// <param name="addressFamily">寻址方案</param>
-        /// <param name="endPoint">绑定节点</param>
-        /// <param name="threadCount">多线程数量</param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public override void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
-        {
-            //this.tcpService.Bind(addressFamily, endPoint, threadCount);
-        }
-
-        /// <summary>
         /// 回调RPC
         /// </summary>
         /// <typeparam name="T">返回值</typeparam>

@@ -122,13 +122,12 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 链接
+        /// 连接
         /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
-        public override void Connect(AddressFamily addressFamily, EndPoint endPoint)
+        /// <param name="iPHost"></param>
+        public override void Connect(IPHost iPHost)
         {
-            base.Connect(addressFamily, endPoint);
+            base.Connect(iPHost);
             this.agreementHelper = new RRQMAgreementHelper(this);
         }
 

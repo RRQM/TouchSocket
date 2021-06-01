@@ -91,5 +91,23 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty BytePoolMaxBlockSizeProperty =
             DependencyProperty.Register("BytePoolMaxBlockSize", typeof(int), typeof(ServerConfig), 1024 * 1024 * 20);
+
+
+        /// <summary>
+        /// 缓存池容量
+        /// </summary>
+        public int BufferLength
+        {
+            get { return (int)GetValue(BufferLengthProperty); }
+            set { SetValue(BufferLengthProperty, value); }
+        }
+
+        /// <summary>
+        /// 缓存池容量
+        /// </summary>
+        public static readonly DependencyProperty BufferLengthProperty =
+            DependencyProperty.Register("BufferLength", typeof(int), typeof(ServerConfig), 1024);
+
+
     }
 }

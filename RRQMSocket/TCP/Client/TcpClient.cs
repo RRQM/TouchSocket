@@ -23,7 +23,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端
     /// </summary>
-    public class TcpClient : BaseSocket, IUserTcpClient,IClient, IHandleBuffer
+    public class TcpClient : BaseSocket, IUserTcpClient, IClient, IHandleBuffer
     {
         /// <summary>
         /// 构造函数
@@ -36,7 +36,7 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="bytePool">设置内存池实例</param>
-        public TcpClient(BytePool bytePool) 
+        public TcpClient(BytePool bytePool)
         {
             this.DataHandlingAdapter = new NormalDataHandlingAdapter();
             this.BytePool = bytePool;
@@ -68,10 +68,21 @@ namespace RRQMSocket
             }
         }
 
+
         /// <summary>
         /// 获取内存池实例
         /// </summary>
         public BytePool BytePool { get; private set; }
+
+        private bool onlySend;
+        /// <summary>
+        /// 仅发送，即不会开启接收线程。
+        /// </summary>
+        public bool OnlySend
+        {
+            get { return onlySend; }
+            set { onlySend = value; }
+        }
 
         private BufferQueueGroup queueGroup;
         private SocketAsyncEventArgs receiveEventArgs;
@@ -110,44 +121,26 @@ namespace RRQMSocket
         /// 连接到服务器
         /// </summary>
         /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
-        public void Connect(IPHost iPHost)
+        public virtual void Connect(IPHost iPHost)
         {
             if (iPHost == null)
             {
                 throw new ArgumentNullException("iPHost不能为空。");
             }
-            this.Connect(iPHost.AddressFamily, iPHost.EndPoint);
-        }
-
-        /// <summary>
-        /// 连接到服务器
-        /// </summary>
-        /// <param name="addressFamily">寻址方案，支持IPv6</param>
-        /// <param name="endPoint">节点</param>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void Connect(AddressFamily addressFamily, EndPoint endPoint)
-        {
-            if (this.disposable)
+            if (!this.Online)
             {
-                throw new RRQMException("无法重新利用已释放对象");
-            }
-
-            if (this.Online)
-            {
-                throw new RRQMException("重复连接");
-            }
-
-            try
-            {
-                Socket socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp);
-                PreviewConnect(socket);
-                socket.Connect(endPoint);
-                this.MainSocket = socket;
-                Start();
-            }
-            catch (Exception e)
-            {
-                throw new RRQMException(e.Message);
+                try
+                {
+                    Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    PreviewConnect(socket);
+                    socket.Connect(iPHost.EndPoint);
+                    this.MainSocket = socket;
+                    Start();
+                }
+                catch (Exception e)
+                {
+                    throw new RRQMException(e.Message);
+                }
             }
         }
 
@@ -159,20 +152,15 @@ namespace RRQMSocket
         {
             await Task.Run(() =>
             {
-                this.Connect(iPHost);
-            });
-        }
+                try
+                {
+                    this.Connect(iPHost);
+                }
+                catch (Exception ex)
+                {
 
-        /// <summary>
-        /// 异步连接服务器
-        /// </summary>
-        /// <param name="addressFamily"></param>
-        /// <param name="endPoint"></param>
-        public async void ConnectAsync(AddressFamily addressFamily, EndPoint endPoint)
-        {
-           await Task.Run(()=> 
-            {
-                this.Connect(addressFamily,endPoint);
+                }
+                
             });
         }
 
@@ -188,18 +176,21 @@ namespace RRQMSocket
 
         internal void Start()
         {
-            queueGroup = new BufferQueueGroup();
-            queueGroup.Thread = new Thread(HandleBuffer);//处理用户的消息
-            queueGroup.waitHandleBuffer = new AutoResetEvent(false);
-            queueGroup.bufferAndClient = new BufferQueue();
-            queueGroup.clientBufferPool = new RRQMCore.Pool.ObjectPool<ClientBuffer>();
-            queueGroup.Thread.IsBackground = true;
-            queueGroup.Thread.Name = "客户端处理线程";
-            queueGroup.Thread.Start();
+            if (!this.onlySend)
+            {
+                queueGroup = new BufferQueueGroup();
+                queueGroup.Thread = new Thread(HandleBuffer);//处理用户的消息
+                queueGroup.waitHandleBuffer = new AutoResetEvent(false);
+                queueGroup.bufferAndClient = new BufferQueue();
+                queueGroup.clientBufferPool = new RRQMCore.Pool.ObjectPool<ClientBuffer>();
+                queueGroup.Thread.IsBackground = true;
+                queueGroup.Thread.Name = "客户端处理线程";
+                queueGroup.Thread.Start();
 
-            this.receiveEventArgs = new SocketAsyncEventArgs();
-            this.receiveEventArgs.Completed += EventArgs_Completed;
-            BeginReceive();
+                this.receiveEventArgs = new SocketAsyncEventArgs();
+                this.receiveEventArgs.Completed += EventArgs_Completed;
+                BeginReceive();
+            }
             ConnectedServiceMethod(this, new MesEventArgs("SuccessConnection"));
         }
 
@@ -503,6 +494,6 @@ namespace RRQMSocket
             this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
 
-       
+
     }
 }

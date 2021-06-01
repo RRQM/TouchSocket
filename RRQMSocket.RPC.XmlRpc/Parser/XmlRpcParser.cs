@@ -123,7 +123,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <exception cref="Exception"></exception>
         public void Bind(AddressFamily addressFamily, EndPoint endPoint, int threadCount)
         {
-            /// this.tcpService.Bind(addressFamily, endPoint, threadCount);
+            // this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
         private void OnReceived(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)

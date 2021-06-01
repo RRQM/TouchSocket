@@ -87,7 +87,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取内存池实例
         /// </summary>
-        public BytePool BytePool { get { return this.queueGroup.bytePool; } }
+        public BytePool BytePool { get { return this.queueGroup==null?null: this.queueGroup.bytePool; } }
 
         /// <summary>
         /// 处理已接收到的数据
