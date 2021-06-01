@@ -172,6 +172,8 @@ namespace RRQMSocket
                     bufferQueueGroup.Thread.Start(bufferQueueGroup);
                 }
             }
+            this.IP = iPHost.IP;
+            this.Port = iPHost.Port;
             this.serverState = ServerState.Running;
         }
 
@@ -420,6 +422,7 @@ namespace RRQMSocket
                 }
 
                 client.MainSocket = socket;
+                client.ReadIpPort();
                 client.BufferLength = this.BufferLength;
 
                 CreateOption creatOption = new CreateOption();

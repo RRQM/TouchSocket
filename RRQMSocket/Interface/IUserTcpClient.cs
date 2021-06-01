@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
+using System;
 using System.Net;
 using System.Net.Sockets;
 
@@ -31,8 +32,9 @@ namespace RRQMSocket
         /// 异步连接服务器
         /// </summary>
         /// <param name="iPHost"></param>
+        /// <param name="callback"></param>
         /// <exception cref="RRQMException"></exception>
-        void  ConnectAsync(IPHost iPHost);
+        void  ConnectAsync(IPHost iPHost, Action<AsyncResult> callback = null);
 
         /// <summary>
         /// 仅发送，即不会开启接收线程。

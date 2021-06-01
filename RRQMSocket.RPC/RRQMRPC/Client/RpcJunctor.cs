@@ -26,7 +26,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC客户端连接器
     /// </summary>
-    public sealed class RpcJunctor : TokenTcpClient, IPoolObject
+    public sealed class RpcJunctor : TokenClient, IPoolObject
     {
         /// <summary>
         /// 构造函数

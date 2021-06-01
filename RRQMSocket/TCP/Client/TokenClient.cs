@@ -22,12 +22,12 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP客户端
     /// </summary>
-    public class TokenTcpClient : TcpClient
+    public class TokenClient : TcpClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TokenTcpClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
+        public TokenClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
         {
         }
 
@@ -35,7 +35,7 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="bytePool">设置内存池实例</param>
-        public TokenTcpClient(BytePool bytePool) : base(bytePool)
+        public TokenClient(BytePool bytePool) : base(bytePool)
         {
         }
 

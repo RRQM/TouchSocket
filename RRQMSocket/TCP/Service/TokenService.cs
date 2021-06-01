@@ -58,7 +58,7 @@ namespace RRQMSocket
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
-                while (waitCount < this.VerifyTimeout * 1000 / 20)
+                while (waitCount < this.VerifyTimeout * 1000 / 10)
                 {
                     if (socket.Available > 0)
                     {
@@ -92,6 +92,7 @@ namespace RRQMSocket
                                         client.Logger = this.Logger;
                                     }
                                     client.MainSocket = socket;
+                                    client.ReadIpPort();
                                     client.BufferLength = this.BufferLength;
 
                                     CreateOption creatOption = new CreateOption();

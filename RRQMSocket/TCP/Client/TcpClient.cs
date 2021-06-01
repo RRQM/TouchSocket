@@ -39,7 +39,7 @@ namespace RRQMSocket
         public TcpClient(BytePool bytePool)
         {
             this.DataHandlingAdapter = new NormalDataHandlingAdapter();
-            this.BytePool = bytePool;
+            this.bytePool = bytePool;
         }
 
         /// <summary>
@@ -68,11 +68,15 @@ namespace RRQMSocket
             }
         }
 
-
+        private BytePool bytePool;
         /// <summary>
         /// 获取内存池实例
         /// </summary>
-        public BytePool BytePool { get; private set; }
+        public BytePool BytePool
+        {
+            get { return bytePool; }
+        }
+
 
         private bool onlySend;
         /// <summary>
@@ -107,16 +111,6 @@ namespace RRQMSocket
         /// </summary>
         public event Action<TcpClient, ByteBlock, object> OnReceived;
 
-        private void ConnectedServiceMethod(object sender, MesEventArgs e)
-        {
-            ConnectedService?.Invoke(sender, e);
-        }
-
-        private void DisconnectedServiceMethod(object sender, MesEventArgs e)
-        {
-            DisconnectedService?.Invoke(sender, e);
-        }
-
         /// <summary>
         /// 连接到服务器
         /// </summary>
@@ -148,19 +142,32 @@ namespace RRQMSocket
         /// 异步连接服务器
         /// </summary>
         /// <param name="iPHost"></param>
-        public async void ConnectAsync(IPHost iPHost)
+        /// <param name="callback"></param>
+        public async void ConnectAsync(IPHost iPHost, Action<AsyncResult> callback = null)
         {
             await Task.Run(() =>
             {
                 try
                 {
                     this.Connect(iPHost);
+                    if (callback != null)
+                    {
+                        AsyncResult result = new AsyncResult();
+                        result.Status = true;
+                        callback.Invoke(result);
+                    }
                 }
                 catch (Exception ex)
                 {
-
+                    if (callback != null)
+                    {
+                        AsyncResult result = new AsyncResult();
+                        result.Status = false;
+                        result.Message = ex.Message;
+                        callback.Invoke(result);
+                    }
                 }
-                
+
             });
         }
 
@@ -176,6 +183,7 @@ namespace RRQMSocket
 
         internal void Start()
         {
+            this.ReadIpPort();
             if (!this.onlySend)
             {
                 queueGroup = new BufferQueueGroup();
@@ -191,7 +199,7 @@ namespace RRQMSocket
                 this.receiveEventArgs.Completed += EventArgs_Completed;
                 BeginReceive();
             }
-            ConnectedServiceMethod(this, new MesEventArgs("SuccessConnection"));
+            this.ConnectedService?.Invoke(this, new MesEventArgs("SuccessConnection"));
         }
 
         /// <summary>
@@ -201,7 +209,7 @@ namespace RRQMSocket
         {
             try
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
                 this.receiveEventArgs.UserToken = byteBlock;
                 this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
                 if (!this.MainSocket.ReceiveAsync(this.receiveEventArgs))
@@ -209,9 +217,9 @@ namespace RRQMSocket
                     ProcessReceived(this.receiveEventArgs);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                this.DisconnectedService?.Invoke(this, new MesEventArgs(ex.Message));
             }
         }
 
@@ -229,12 +237,12 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                    this.DisconnectedService?.Invoke(this, new MesEventArgs("BreakOut"));
                 }
             }
             catch (Exception ex)
             {
-                DisconnectedServiceMethod(this, new MesEventArgs(ex.Message));
+                this.DisconnectedService?.Invoke(this, new MesEventArgs(ex.Message));
             }
         }
 
@@ -269,7 +277,7 @@ namespace RRQMSocket
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
                     queueGroup.waitHandleBuffer.Set();
 
-                    ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                    ByteBlock newByteBlock = this.bytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 
@@ -280,7 +288,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    DisconnectedServiceMethod(this, new MesEventArgs("BreakOut"));
+                    this.DisconnectedService?.Invoke(this, new MesEventArgs("BreakOut"));
                 }
             }
         }

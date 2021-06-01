@@ -12,6 +12,14 @@ namespace RRQMSocket
     /// </summary>
     public class AsyncResult
     {
-       
+        /// <summary>
+        /// 异步状态
+        /// </summary>
+        public bool Status { get; set; }
+
+        /// <summary>
+        /// 消息
+        /// </summary>
+        public string Message { get; set; }
     }
 }

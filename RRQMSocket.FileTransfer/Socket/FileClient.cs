@@ -35,7 +35,7 @@ namespace RRQMSocket.FileTransfer
             this.locker = new object();
             this.FileTransferCollection = new TransferCollection();
             this.TransferStatus = TransferStatus.None;
-            client = new TokenTcpClient();
+            client = new TokenClient();
             this.FileTransferCollection.OnCollectionChanged += this.FileTransferCollection_OnCollectionChanged; ;
         }
 
@@ -141,7 +141,7 @@ namespace RRQMSocket.FileTransfer
         public TransferCollection FileTransferCollection { get; private set; }
 
         private ProgressBlockCollection fileBlocks;
-        private TokenTcpClient client;
+        private TokenClient client;
         private object locker;
         private string receiveDirectory = string.Empty;
         private bool disposable;

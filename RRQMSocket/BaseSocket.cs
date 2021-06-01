@@ -94,6 +94,37 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 读取Name、IP、Port
+        /// </summary>
+        public void ReadIpPort()
+        {
+            if (mainSocket == null)
+            {
+                this.Name = null;
+                this.IP = null;
+                this.Port = -1;
+                return;
+            }
+
+            if (mainSocket.Connected && mainSocket.RemoteEndPoint != null)
+            {
+                this.Name = mainSocket.RemoteEndPoint.ToString();
+            }
+            else if (mainSocket.IsBound && mainSocket.LocalEndPoint != null)
+            {
+                this.Name = mainSocket.LocalEndPoint.ToString();
+            }
+            else
+            {
+                return;
+            }
+
+            int r = this.Name.LastIndexOf(":");
+            this.IP = this.Name.Substring(0, r);
+            this.Port = Convert.ToInt32(this.Name.Substring(r + 1, this.Name.Length - (r + 1)));
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public virtual void Dispose()
