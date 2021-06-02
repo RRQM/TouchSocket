@@ -40,10 +40,11 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 从终结点获取ip和port
+        /// 从IPAddress和端口号
         /// </summary>
-        /// <param name="endPoint"></param>
-        public IPHost(EndPoint endPoint) : this(endPoint.ToString())
+        /// <param name="iPAddress"></param>
+        /// <param name="port"></param>
+        public IPHost(IPAddress iPAddress,int port) : this($"{iPAddress}:{port}")
         {
         }
 

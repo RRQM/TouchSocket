@@ -14,7 +14,7 @@ namespace RRQMSocket
     public class TcpServerConfig : ServerConfig
     {
         /// <summary>
-        /// 挂起连接队列的最大长度。默认为30
+        /// 挂起连接队列的最大长度。默认为100
         /// </summary>
         public int Backlog
         {
@@ -25,7 +25,7 @@ namespace RRQMSocket
         /// 挂起连接队列的最大长度
         /// </summary>
         public static readonly DependencyProperty BacklogProperty =
-            DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServerConfig), 30);
+            DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServerConfig), 100);
 
         
 

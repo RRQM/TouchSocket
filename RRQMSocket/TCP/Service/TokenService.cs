@@ -15,6 +15,7 @@ using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RRQMSocket
@@ -54,104 +55,101 @@ namespace RRQMSocket
         }
         internal override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
-            Task.Run(async () =>
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            int waitCount = 0;
+            while (waitCount < this.VerifyTimeout * 1000 / 10)
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                int waitCount = 0;
-                while (waitCount < this.VerifyTimeout * 1000 / 10)
+                if (socket.Available > 0)
                 {
-                    if (socket.Available > 0)
+                    try
                     {
-                        try
+                        int r = socket.Receive(byteBlock.Buffer);
+
+                        VerifyOption verifyOption = new VerifyOption();
+                        verifyOption.Token = Encoding.UTF8.GetString(byteBlock.Buffer, 0, r);
+                        this.OnVerifyToken(verifyOption);
+
+                        if (verifyOption.Accept)
                         {
-                            int r = socket.Receive(byteBlock.Buffer);
-
-                            VerifyOption verifyOption = new VerifyOption();
-                            verifyOption.Token = Encoding.UTF8.GetString(byteBlock.Buffer, 0, r);
-                            this.OnVerifyToken(verifyOption);
-
-                            if (verifyOption.Accept)
+                            if (this.SocketClients.Count > this.MaxCount)
                             {
-                                if (this.SocketClients.Count > this.MaxCount)
-                                {
-                                    byteBlock.Write(3);
-                                    this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
-                                    socket.Send(byteBlock.Buffer, 0, 1, SocketFlags.None);
-                                    socket.Shutdown(SocketShutdown.Both);
-                                    socket.Dispose();
-                                    return;
-                                }
-                                else
-                                {
-                                    TClient client = this.socketClientPool.GetObject();
-                                    client.Flag = verifyOption.Flag;
-                                    if (client.NewCreate)
-                                    {
-                                        client.queueGroup = queueGroup;
-                                        client.Service = this;
-                                        client.Logger = this.Logger;
-                                    }
-                                    client.MainSocket = socket;
-                                    client.ReadIpPort();
-                                    client.BufferLength = this.BufferLength;
-
-                                    CreateOption creatOption = new CreateOption();
-                                    creatOption.NewCreate = client.NewCreate;
-
-                                    lock (this)
-                                    {
-                                        if (client.NewCreate)
-                                        {
-                                            creatOption.ID = this.SocketClients.GetDefaultID();
-                                        }
-                                        else
-                                        {
-                                            creatOption.ID = client.ID;
-                                        }
-                                        base.OnCreatSocketCliect(client, creatOption);
-                                        client.ID = creatOption.ID;
-
-                                        this.SocketClients.Add(client);
-                                    }
-
-                                    byteBlock.Write(1);
-                                    byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
-                                    socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
-
-                                    client.BeginReceive();
-                                    ClientConnectedMethod(client, null);
-
-                                    return;
-                                }
+                                byteBlock.Write(3);
+                                this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
+                                socket.Send(byteBlock.Buffer, 0, 1, SocketFlags.None);
+                                socket.Shutdown(SocketShutdown.Both);
+                                socket.Dispose();
+                                return;
                             }
                             else
                             {
-                                byteBlock.Write(2);
-                                if (verifyOption.ErrorMessage != null)
+                                TClient client = this.socketClientPool.GetObject();
+                                client.Flag = verifyOption.Flag;
+                                if (client.NewCreate)
                                 {
-                                    byteBlock.Write(Encoding.UTF8.GetBytes(verifyOption.ErrorMessage));
+                                    client.queueGroup = queueGroup;
+                                    client.Service = this;
+                                    client.Logger = this.Logger;
                                 }
+                                client.MainSocket = socket;
+                                client.ReadIpPort();
+                                client.BufferLength = this.BufferLength;
+
+                               
+                                lock (locker)
+                                {
+                                    CreateOption creatOption = new CreateOption();
+                                    creatOption.NewCreate = client.NewCreate;
+                                    if (client.NewCreate)
+                                    {
+                                        creatOption.ID = this.SocketClients.GetDefaultID();
+                                    }
+                                    else
+                                    {
+                                        creatOption.ID = client.ID;
+                                    }
+                                    base.OnCreatSocketCliect(client, creatOption);
+                                    client.ID = creatOption.ID;
+
+                                    this.SocketClients.Add(client);
+                                }
+
+                                byteBlock.Write(1);
+                                byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
                                 socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
-                                socket.Shutdown(SocketShutdown.Both);
-                                socket.Dispose();
+
+                                client.BeginReceive();
+                                ClientConnectedMethod(client, null);
+
+                                return;
                             }
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Logger.Debug(LogType.Error, this, $"在验证客户端连接时发生错误，信息：{ex.Message}");
-                        }
-                        finally
-                        {
-                            byteBlock.Dispose();
+                            byteBlock.Write(2);
+                            if (verifyOption.ErrorMessage != null)
+                            {
+                                byteBlock.Write(Encoding.UTF8.GetBytes(verifyOption.ErrorMessage));
+                            }
+                            socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
+                            socket.Shutdown(SocketShutdown.Both);
+                            socket.Dispose();
                         }
                     }
-                    waitCount++;
-                    await Task.Delay(10);
+                    catch (Exception ex)
+                    {
+                        Logger.Debug(LogType.Error, this, $"在验证客户端连接时发生错误，信息：{ex.Message}");
+                    }
+                    finally
+                    {
+                        byteBlock.Dispose();
+                    }
                 }
+                waitCount++;
+                Thread.Sleep(10);
+            }
 
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Dispose();
-            });
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Dispose();
         }
 
         /// <summary>

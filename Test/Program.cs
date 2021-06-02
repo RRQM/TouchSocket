@@ -27,6 +27,7 @@ namespace Test
            
             tokenService.Setup(config);
             tokenService.Start();
+
         }
     }
     class MySocketClient : SocketClient

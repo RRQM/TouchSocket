@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -312,20 +313,24 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = this.MainSocket.Accept();
-                    PreviewCreateSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    Task.Run(()=>
+                    {
+                        PreviewCreateSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    });
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Logger.Debug(LogType.Error, this, e.Message);
+                    Logger.Debug(LogType.Error, this, ex.Message,ex);
                 }
             }
         }
 
         private void ClearClient()
         {
+            int tick = 0;
             while (true)
             {
-                Thread.Sleep(10);
+                Thread.Sleep(1000);
                 if (disposable)
                 {
                     break;
@@ -346,7 +351,7 @@ namespace RRQMSocket
                             }
                             else
                             {
-                                client.SendOnline();
+                               // client.SendOnline();
                             }
                         }
                     }
@@ -425,20 +430,23 @@ namespace RRQMSocket
                 client.ReadIpPort();
                 client.BufferLength = this.BufferLength;
 
-                CreateOption creatOption = new CreateOption();
-                creatOption.NewCreate = client.NewCreate;
-                if (client.NewCreate)
+                lock (locker)
                 {
-                    creatOption.ID = this.SocketClients.GetDefaultID();
-                }
-                else
-                {
-                    creatOption.ID = client.ID;
-                }
-                OnCreatSocketCliect(client, creatOption);
-                client.ID = creatOption.ID;
+                    CreateOption creatOption = new CreateOption();
+                    creatOption.NewCreate = client.NewCreate;
+                    if (client.NewCreate)
+                    {
+                        creatOption.ID = this.SocketClients.GetDefaultID();
+                    }
+                    else
+                    {
+                        creatOption.ID = client.ID;
+                    }
+                    OnCreatSocketCliect(client, creatOption);
+                    client.ID = creatOption.ID;
 
-                this.SocketClients.Add(client);
+                    this.SocketClients.Add(client);
+                }
                 client.BeginReceive();
                 ClientConnectedMethod(client, null);
             }

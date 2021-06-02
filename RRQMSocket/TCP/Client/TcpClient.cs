@@ -88,9 +88,19 @@ namespace RRQMSocket
             set { onlySend = value; }
         }
 
+        //private bool useSeparateThreadSend;
+        ///// <summary>
+        ///// 在异步发送时，使用独立线程发送
+        ///// </summary>
+        //public bool UseSeparateThreadSend
+        //{
+        //    get { return useSeparateThreadSend; }
+        //    set { useSeparateThreadSend = value; }
+        //}
+
+
         private BufferQueueGroup queueGroup;
         private SocketAsyncEventArgs receiveEventArgs;
-
         /// <summary>
         /// 标识是否处于断开连接
         /// </summary>
@@ -198,6 +208,7 @@ namespace RRQMSocket
                 this.receiveEventArgs = new SocketAsyncEventArgs();
                 this.receiveEventArgs.Completed += EventArgs_Completed;
                 BeginReceive();
+                //this.SeparateThreadSend();
             }
             this.ConnectedService?.Invoke(this, new MesEventArgs("SuccessConnection"));
         }
@@ -351,6 +362,30 @@ namespace RRQMSocket
             this.OnReceived?.Invoke(this, byteBlock, obj);
         }
 
+        ///// <summary>
+        ///// 在异步发送时，使用独立线程发送
+        ///// </summary>
+        //private void SeparateThreadSend()
+        //{
+        //    if (this.useSeparateThreadSend)
+        //    {
+        //        if (this.asyncSender != null)
+        //        {
+        //            this.asyncSender.Dispose();
+        //        }
+        //        this.asyncSender = new AsyncSender();
+        //        this.asyncSender.Load(this.MainSocket, this.MainSocket.RemoteEndPoint);
+        //    }
+        //    else
+        //    {
+        //        if (this.asyncSender != null)
+        //        {
+        //            this.asyncSender.Dispose();
+        //            this.asyncSender = null;
+        //        }
+        //    }
+        //}
+
         /// <summary>
         /// 发送字节流
         /// </summary>
@@ -434,39 +469,33 @@ namespace RRQMSocket
                 throw new RRQMNotConnectedException("该实例已断开");
             }
 
-            try
+            if (isAsync)
             {
-                if (isAsync)
+                SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
+                sendEventArgs.Completed += EventArgs_Completed;
+                sendEventArgs.SetBuffer(buffer, offset, length);
+                sendEventArgs.RemoteEndPoint = this.MainSocket.RemoteEndPoint;
+                if (!this.MainSocket.SendAsync(sendEventArgs))
                 {
-                    SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
-                    sendEventArgs.Completed += EventArgs_Completed;
-                    sendEventArgs.SetBuffer(buffer, offset, length);
-                    sendEventArgs.RemoteEndPoint = this.MainSocket.RemoteEndPoint;
-                    if (!this.MainSocket.SendAsync(sendEventArgs))
-                    {
-                        // 同步发送时处理发送完成事件
-                        this.ProcessSend(sendEventArgs);
-                    }
-                }
-                else
-                {
-                    int r = 0;
-                    while (length > 0)
-                    {
-                        r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
-                        if (r == 0 && length > 0)
-                        {
-                            throw new RRQMException("发送数据不完全");
-                        }
-                        offset += r;
-                        length -= r;
-                    }
+                    // 同步发送时处理发送完成事件
+                    this.ProcessSend(sendEventArgs);
                 }
             }
-            catch (Exception e)
+            else
             {
-                throw new RRQMException(e.Message);
+                int r = 0;
+                while (length > 0)
+                {
+                    r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                    if (r == 0 && length > 0)
+                    {
+                        throw new RRQMException("发送数据不完全");
+                    }
+                    offset += r;
+                    length -= r;
+                }
             }
+
         }
 
         /// <summary>
