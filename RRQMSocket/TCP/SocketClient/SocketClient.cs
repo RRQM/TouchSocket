@@ -36,8 +36,10 @@ namespace RRQMSocket
 
         internal bool breakOut;
         internal BufferQueueGroup queueGroup;
+        internal long lastTick;
         private bool isBeginReceive;
-        private SocketAsyncEventArgs receiveEventArgs; 
+        private SocketAsyncEventArgs receiveEventArgs;
+        
 
         /// <summary>
         /// 包含此辅助类的主服务器类
@@ -223,6 +225,7 @@ namespace RRQMSocket
             {
                 try
                 {
+                    this.lastTick = DateTime.Now.Ticks / 10000000;
                     ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                     this.receiveEventArgs.UserToken = byteBlock;
                     this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
@@ -268,6 +271,7 @@ namespace RRQMSocket
             {
                 if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
+                    this.lastTick = DateTime.Now.Ticks;
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.Position = e.BytesTransferred;
                     byteBlock.SetLength(e.BytesTransferred);
@@ -286,7 +290,7 @@ namespace RRQMSocket
                     }
                     catch (Exception ex)
                     {
-                        this.Logger.Debug(RRQMCore.Log.LogType.Error, this, ex.Message);
+                        this.Logger.Debug(LogType.Error, this, ex.Message);
                     }
 
                     ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -324,13 +328,9 @@ namespace RRQMSocket
         /// <summary>
         /// 测试是否在线
         /// </summary>
-        internal void SendOnline()
+        internal void GetTimeout(int time,long nowTick)
         {
-            try
-            {
-                MainSocket.Send(heartPackage, SocketFlags.None);
-            }
-            catch
+            if (nowTick-this.lastTick>time)
             {
                 this.breakOut = true;
             }

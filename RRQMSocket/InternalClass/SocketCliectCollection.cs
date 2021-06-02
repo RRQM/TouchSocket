@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace RRQMSocket
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketCliectCollection<T> : IEnumerable<T> where T : SocketClient
+    public class SocketCliectCollection<T>:IDisposable where T : SocketClient
     {
         /// <summary>
         /// 获取或设置分配ID的格式
@@ -61,11 +62,6 @@ namespace RRQMSocket
             this.tokenDic.TryRemove(token, out _);
         }
 
-        internal void Clear()
-        {
-            this.tokenDic.Clear();
-        }
-
         /// <summary>
         /// 尝试获取实例
         /// </summary>
@@ -91,6 +87,8 @@ namespace RRQMSocket
             return false;
         }
 
+       
+
         /// <summary>
         /// 获取SocketClient
         /// </summary>
@@ -107,17 +105,19 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 用于枚举
+        /// 释放客户端
         /// </summary>
-        /// <returns></returns>
-        public IEnumerator<T> GetEnumerator()
+        public void Dispose()
         {
-            return this.tokenDic.Values.GetEnumerator();
+            foreach (var item in this.tokenDic.Keys)
+            {
+                if (this.tokenDic.TryGetValue(item,out T value))
+                {
+                    value.Dispose();
+                }
+            }
+            this.tokenDic.Clear();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.tokenDic.Values.GetEnumerator();
-        }
     }
 }

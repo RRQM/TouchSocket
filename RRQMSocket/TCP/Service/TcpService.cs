@@ -128,7 +128,7 @@ namespace RRQMSocket
                 throw new RRQMException("无法重新利用已释放对象");
             }
             IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
-            if (iPHost==null)
+            if (iPHost == null)
             {
                 throw new RRQMException("IPHost为空，无法绑定");
             }
@@ -188,12 +188,12 @@ namespace RRQMSocket
             {
                 throw new RRQMException("配置文件为空");
             }
-            this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty); 
+            this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty);
             this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
             this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
             this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
             this.BufferLength = (int)serverConfig.GetValue(ServerConfig.BufferLengthProperty);
-            this.socketClients.IDFormat= (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
+            this.socketClients.IDFormat = (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
         }
 
         /// <summary>
@@ -202,12 +202,8 @@ namespace RRQMSocket
         public virtual void Stop()
         {
             base.Dispose();
-            foreach (var item in this.SocketClients)
-            {
-                item.Dispose();
-            }
 
-            this.SocketClients.Clear();
+            this.SocketClients.Dispose();
 
             foreach (var item in bufferQueueGroups)
             {
@@ -313,21 +309,20 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = this.MainSocket.Accept();
-                    Task.Run(()=>
+                    Task.Run(() =>
                     {
                         PreviewCreateSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
                     });
                 }
                 catch (Exception ex)
                 {
-                    Logger.Debug(LogType.Error, this, ex.Message,ex);
+                    Logger.Debug(LogType.Error, this, ex.Message, ex);
                 }
             }
         }
 
         private void ClearClient()
         {
-            int tick = 0;
             while (true)
             {
                 Thread.Sleep(1000);
@@ -337,21 +332,26 @@ namespace RRQMSocket
                 }
                 else
                 {
+                    long tick = DateTime.Now.Ticks / 10000000;
                     ICollection<string> collection = this.SocketClients.GetTokens();
                     foreach (var token in collection)
                     {
                         if (this.SocketClients.TryGetSocketClient(token, out TClient client))
                         {
+                            client.GetTimeout(this.clearInterval, tick);
                             if (client.breakOut)
                             {
-                                ClientDisconnectedMethod(client, new MesEventArgs("断开连接"));
-                                client.Dispose();
-                                this.SocketClients.Remove(token);
-                                this.socketClientPool.DestroyObject(client);
-                            }
-                            else
-                            {
-                               // client.SendOnline();
+                                try
+                                {
+                                    client.Dispose();
+                                    this.SocketClients.Remove(token);
+                                    this.socketClientPool.DestroyObject(client);
+                                    ClientDisconnectedMethod(client, new MesEventArgs("breakOut"));
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Debug(LogType.Error, this, $"在检验客户端时发生错误，信息：{ex.Message}");
+                                }
                             }
                         }
                     }
@@ -450,9 +450,9 @@ namespace RRQMSocket
                 client.BeginReceive();
                 ClientConnectedMethod(client, null);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Debug(LogType.Error, this, $"在接收客户端时发生错误，信息：{e.Message}");
+                Logger.Debug(LogType.Error, this, $"在接收客户端时发生错误，信息：{ex.Message}");
             }
         }
 

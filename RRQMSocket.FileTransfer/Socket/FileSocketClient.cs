@@ -601,8 +601,7 @@ namespace RRQMSocket.FileTransfer
         /// <returns></returns>
         private long GetNowTick()
         {
-            long tick = (long)(DateTime.Now.Ticks / 10000000.0);
-            return tick;
+            return DateTime.Now.Ticks / 10000000;
         }
 
         /// <summary>
