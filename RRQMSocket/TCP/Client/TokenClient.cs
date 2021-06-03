@@ -25,21 +25,6 @@ namespace RRQMSocket
     public class TokenClient : TcpClient
     {
         /// <summary>
-        /// 构造函数
-        /// </summary>
-        public TokenClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool">设置内存池实例</param>
-        public TokenClient(BytePool bytePool) : base(bytePool)
-        {
-        }
-
-        /// <summary>
         /// 判断是否已连接
         /// </summary>
         public override bool Online { get { return online; } }
@@ -49,19 +34,11 @@ namespace RRQMSocket
         private string verifyToken = "rrqm";
 
         /// <summary>
-        /// 验证令箭,当为null或空时，重置为默认值“rrqm”
+        /// 验证令箭
         /// </summary>
         public string VerifyToken
         {
             get { return verifyToken; }
-            set
-            {
-                if (value == null || value == string.Empty)
-                {
-                    value = "rrqm";
-                }
-                verifyToken = value;
-            }
         }
 
         /// <summary>
@@ -69,20 +46,34 @@ namespace RRQMSocket
         /// </summary>
         public string ID { get; private set; }
 
+
+        private int verifyTimeout;
         /// <summary>
-        /// 获取或设置验证超时时间,默认为3秒；
+        /// 验证超时时间,默认为3秒；
         /// </summary>
-        public int VerifyTimeout { get; set; } = 3;
+        public int VerifyTimeout
+        {
+            get { return verifyTimeout; }
+        }
 
 
         /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="iPHost"></param>
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public override void Connect(IPHost iPHost)
+        public override void Connect()
         {
+            if (this.clientConfig == null)
+            {
+                throw new ArgumentNullException("配置文件不能为空。");
+            }
+            IPHost iPHost = this.clientConfig.RemoteIPHost;
+            if (iPHost == null)
+            {
+                throw new ArgumentNullException("iPHost不能为空。");
+            }
+
             if (this.disposable)
             {
                 throw new RRQMException("无法重新利用已释放对象");
@@ -140,6 +131,17 @@ namespace RRQMSocket
             }
 
             throw new RRQMTimeoutException("验证Token超时");
+        }
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        protected override void LoadConfig(TcpClientConfig clientConfig)
+        {
+            base.LoadConfig(clientConfig);
+            this.verifyToken = (string)clientConfig.GetValue(TokenClientConfig.VerifyTokenProperty);
+            this.verifyTimeout = (int)clientConfig.GetValue(TokenClientConfig.VerifyTimeoutProperty);
         }
     }
 }

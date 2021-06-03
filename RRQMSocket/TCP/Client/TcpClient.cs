@@ -26,23 +26,6 @@ namespace RRQMSocket
     public class TcpClient : BaseSocket, IUserTcpClient, IClient, IHandleBuffer
     {
         /// <summary>
-        /// 构造函数
-        /// </summary>
-        public TcpClient() : this(new BytePool(1024 * 1024 * 1000, 1024 * 1024 * 20))
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytePool">设置内存池实例</param>
-        public TcpClient(BytePool bytePool)
-        {
-            this.DataHandlingAdapter = new NormalDataHandlingAdapter();
-            this.bytePool = bytePool;
-        }
-
-        /// <summary>
         /// 判断是否已连接
         /// </summary>
         public virtual bool Online { get { return MainSocket == null ? false : MainSocket.Connected; } }
@@ -57,14 +40,8 @@ namespace RRQMSocket
             get { return dataHandlingAdapter; }
             set
             {
+                this.SetDataHandlingAdapter(value);
                 dataHandlingAdapter = value;
-                if (dataHandlingAdapter != null)
-                {
-                    dataHandlingAdapter.BytePool = this.BytePool;
-                    dataHandlingAdapter.Logger = this.Logger;
-                    dataHandlingAdapter.ReceivedCallBack = this.HandleReceivedData;
-                    dataHandlingAdapter.SendCallBack = this.Sent;
-                }
             }
         }
 
@@ -85,8 +62,19 @@ namespace RRQMSocket
         public bool OnlySend
         {
             get { return onlySend; }
-            set { onlySend = value; }
         }
+        /// <summary>
+        /// 客户端配置
+        /// </summary>
+        protected TcpClientConfig clientConfig;
+        /// <summary>
+        /// 客户端配置
+        /// </summary>
+        public TcpClientConfig ClientConfig
+        {
+            get { return clientConfig; }
+        }
+
 
         //private bool useSeparateThreadSend;
         ///// <summary>
@@ -122,11 +110,52 @@ namespace RRQMSocket
         public event Action<TcpClient, ByteBlock, object> OnReceived;
 
         /// <summary>
+        /// 配置服务器
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        /// <exception cref="RRQMException"></exception>
+        public void Setup(TcpClientConfig clientConfig)
+        {
+            this.clientConfig = clientConfig;
+            this.LoadConfig(this.clientConfig);
+        }
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        protected virtual void LoadConfig(TcpClientConfig clientConfig)
+        {
+            if (clientConfig == null)
+            {
+                throw new RRQMException("配置文件为空");
+            }
+            this.Logger = (ILog)clientConfig.GetValue(RRQMConfig.LoggerProperty);
+            this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
+            this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
+            this.onlySend = clientConfig.OnlySend;
+            if (clientConfig.BytePool != null)
+            {
+                clientConfig.BytePool.MaxSize = clientConfig.BytePoolMaxSize;
+                clientConfig.BytePool.MaxBlockSize = clientConfig.BytePoolMaxBlockSize;
+                this.bytePool = clientConfig.BytePool;
+            }
+            else
+            {
+                throw new ArgumentNullException("内存池不能为空");
+            }
+        }
+
+        /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="iPHost">ip和端口号，格式如“127.0.0.1:7789”。IP可输入Ipv6</param>
-        public virtual void Connect(IPHost iPHost)
+        public virtual void Connect()
         {
+            if (this.clientConfig == null)
+            {
+                throw new ArgumentNullException("配置文件不能为空。");
+            }
+            IPHost iPHost = this.clientConfig.RemoteIPHost;
             if (iPHost == null)
             {
                 throw new ArgumentNullException("iPHost不能为空。");
@@ -151,15 +180,14 @@ namespace RRQMSocket
         /// <summary>
         /// 异步连接服务器
         /// </summary>
-        /// <param name="iPHost"></param>
         /// <param name="callback"></param>
-        public async void ConnectAsync(IPHost iPHost, Action<AsyncResult> callback = null)
+        public async void ConnectAsync(Action<AsyncResult> callback = null)
         {
             await Task.Run(() =>
             {
                 try
                 {
-                    this.Connect(iPHost);
+                    this.Connect();
                     if (callback != null)
                     {
                         AsyncResult result = new AsyncResult();
@@ -191,6 +219,17 @@ namespace RRQMSocket
         {
         }
 
+        private void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            if (dataHandlingAdapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            dataHandlingAdapter.BytePool = this.bytePool;
+            dataHandlingAdapter.Logger = this.Logger;
+            dataHandlingAdapter.ReceivedCallBack = this.HandleReceivedData;
+            dataHandlingAdapter.SendCallBack = this.Sent;
+        }
         internal void Start()
         {
             this.ReadIpPort();
@@ -277,7 +316,7 @@ namespace RRQMSocket
                         while (!byteBlock.Using)
                         {
                             byteBlock.Dispose();
-                            byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                            byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
                         }
                         byteBlock.Write(buffer);
                     }

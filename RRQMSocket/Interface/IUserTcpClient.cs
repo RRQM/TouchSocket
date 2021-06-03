@@ -19,26 +19,16 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端终端接口
     /// </summary>
-    public interface IUserTcpClient:ITcpClient
+    public interface IUserTcpClient:ITcpClient, IUserClient
     {
-        /// <summary>
-        /// 连接服务器
-        /// </summary>
-        /// <param name="iPHost"></param>
-        /// <exception cref="RRQMException"></exception>
-        void Connect(IPHost iPHost);
-
-        /// <summary>
-        /// 异步连接服务器
-        /// </summary>
-        /// <param name="iPHost"></param>
-        /// <param name="callback"></param>
-        /// <exception cref="RRQMException"></exception>
-        void  ConnectAsync(IPHost iPHost, Action<AsyncResult> callback = null);
-
         /// <summary>
         /// 仅发送，即不会开启接收线程。
         /// </summary>
-        bool OnlySend { get; set; }
+        bool OnlySend { get;}
+
+        /// <summary>
+        /// 客户端配置
+        /// </summary>
+        TcpClientConfig ClientConfig { get; }
     }
 }

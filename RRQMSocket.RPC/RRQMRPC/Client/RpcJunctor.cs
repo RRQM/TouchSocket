@@ -31,8 +31,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="bytePool"></param>
-        public RpcJunctor(BytePool bytePool) : base(bytePool)
+        public RpcJunctor()
         {
             this.SerializeConverter = new BinarySerializeConverter();
             this.methodStore = new MethodStore();
@@ -40,7 +39,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.singleWaitData.WaitResult = new WaitResult();
             this.invokeWaitData = new WaitData<RpcContext>();
             this.invokeWaitData.WaitResult = new RpcContext();
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
 
         /// <summary>
@@ -70,6 +68,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal MethodStore methodStore;
         private RPCProxyInfo proxyFile;
         private RRQMAgreementHelper agreementHelper;
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        protected override void LoadConfig(TcpClientConfig clientConfig)
+        {
+            base.LoadConfig(clientConfig);
+            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+        }
 
         /// <summary>
         /// 获取函数注册
@@ -124,10 +132,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 连接
         /// </summary>
-        /// <param name="iPHost"></param>
-        public override void Connect(IPHost iPHost)
+        public override void Connect()
         {
-            base.Connect(iPHost);
+            base.Connect();
             this.agreementHelper = new RRQMAgreementHelper(this);
         }
 

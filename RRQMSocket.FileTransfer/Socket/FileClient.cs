@@ -25,7 +25,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯客户端主类
     /// </summary>
-    public class FileClient : IFileClient, IDisposable
+    public class FileClient : IFileClient,IUserClient, IDisposable
     {
         /// <summary>
         /// 无参数构造函数
@@ -37,6 +37,10 @@ namespace RRQMSocket.FileTransfer
             this.TransferStatus = TransferStatus.None;
             client = new TokenClient();
             this.FileTransferCollection.OnCollectionChanged += this.FileTransferCollection_OnCollectionChanged; ;
+
+            client.ConnectedService += this.Client_ConnectedService;
+            client.OnReceived += this.Client_OnReceived;
+            client.DisconnectedService += this.Client_DisconnectedService;
         }
 
         #region 自定义
@@ -200,6 +204,39 @@ namespace RRQMSocket.FileTransfer
 
         #endregion 自定义
 
+        /// <summary>
+        /// 连接服务器
+        /// </summary>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        public void Connect()
+        {
+            this.client.Connect();
+        }
+
+        /// <summary>
+        /// 连接服务器
+        /// </summary>
+        /// <param name="callback">回调</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        public void ConnectAsync(Action<AsyncResult> callback = null)
+        {
+            this.client.ConnectAsync(callback);
+        }
+
+        /// <summary>
+        /// 配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        public void Setup(TcpClientConfig clientConfig)
+        {
+            this.client.Setup(clientConfig);
+            client.BufferLength = 1024 * 64;
+            client.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+        }
         private void SynchronizeTransferSetting()
         {
             ByteBlock byteBlock = this.SendWait(1020, this.timeout);
@@ -214,33 +251,7 @@ namespace RRQMSocket.FileTransfer
             byteBlock.SetHolding(false);
         }
 
-        /// <summary>
-        /// 连接服务器
-        /// </summary>
-        /// <param name="ipHost"></param>
-        /// <param name="verifyToken"></param>
-        /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        public void Connect(IPHost ipHost, string verifyToken = null)
-        {
-            if (ipHost == null)
-            {
-                throw new ArgumentNullException("IPHost为空");
-            }
-            client.BufferLength = 1024 * 64;
-            client.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-            client.ConnectedService += this.Client_ConnectedService;
-            client.OnReceived += this.Client_OnReceived;
-            client.DisconnectedService += this.Client_DisconnectedService;
-
-            this.ipHost = ipHost;
-            this.verifyToken = verifyToken;
-            this.client.VerifyToken = verifyToken;
-            this.client.Connect(ipHost);
-        }
-
-       
+      
 
         /// <summary>
         /// 请求传输文件
@@ -1294,5 +1305,7 @@ namespace RRQMSocket.FileTransfer
             this.progress = 0;
             this.speed = 0;
         }
+
+       
     }
 }
