@@ -107,7 +107,7 @@ namespace RRQMSocket
                                     {
                                         creatOption.ID = client.ID;
                                     }
-                                    base.OnCreatSocketCliect(client, creatOption);
+                                    this.OnCreatSocketCliect(client, creatOption);
                                     client.ID = creatOption.ID;
 
                                     this.SocketClients.Add(client);

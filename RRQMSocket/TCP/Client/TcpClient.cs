@@ -38,11 +38,7 @@ namespace RRQMSocket
         public DataHandlingAdapter DataHandlingAdapter
         {
             get { return dataHandlingAdapter; }
-            set
-            {
-                this.SetDataHandlingAdapter(value);
-                dataHandlingAdapter = value;
-            }
+            set { this.SetDataHandlingAdapter(value); }
         }
 
         private BytePool bytePool;
@@ -130,10 +126,6 @@ namespace RRQMSocket
             {
                 throw new RRQMException("配置文件为空");
             }
-            this.Logger = (ILog)clientConfig.GetValue(RRQMConfig.LoggerProperty);
-            this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
-            this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
-            this.onlySend = clientConfig.OnlySend;
             if (clientConfig.BytePool != null)
             {
                 clientConfig.BytePool.MaxSize = clientConfig.BytePoolMaxSize;
@@ -144,6 +136,11 @@ namespace RRQMSocket
             {
                 throw new ArgumentNullException("内存池不能为空");
             }
+            this.Logger = (ILog)clientConfig.GetValue(RRQMConfig.LoggerProperty);
+            this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
+            this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
+            this.onlySend = clientConfig.OnlySend;
+
         }
 
         /// <summary>
@@ -221,14 +218,15 @@ namespace RRQMSocket
 
         private void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
-            if (dataHandlingAdapter == null)
+            if (adapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
             }
-            dataHandlingAdapter.BytePool = this.bytePool;
-            dataHandlingAdapter.Logger = this.Logger;
-            dataHandlingAdapter.ReceivedCallBack = this.HandleReceivedData;
-            dataHandlingAdapter.SendCallBack = this.Sent;
+            adapter.BytePool = this.bytePool;
+            adapter.Logger = this.Logger;
+            adapter.ReceivedCallBack = this.HandleReceivedData;
+            adapter.SendCallBack = this.Sent;
+            this.dataHandlingAdapter = adapter;
         }
         internal void Start()
         {

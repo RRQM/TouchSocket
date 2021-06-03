@@ -53,21 +53,35 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+       
+        private bool breakpointResume;
         /// <summary>
         /// 是否支持断点续传
         /// </summary>
-        public bool BreakpointResume { get; set; }
+        public bool BreakpointResume
+        {
+            get { return breakpointResume; }
+        }
 
+        private long maxDownloadSpeed;
         /// <summary>
         /// 最大下载速度
         /// </summary>
-        public long MaxDownloadSpeed { get; set; } = 1024 * 1024;
+        public long MaxDownloadSpeed
+        {
+            get { return maxDownloadSpeed; }
+            set { maxUploadSpeed = value; }
+        }
 
+        private long maxUploadSpeed;
         /// <summary>
         /// 最大上传速度
         /// </summary>
-        public long MaxUploadSpeed { get; set; } = 1024 * 1024;
-
+        public long MaxUploadSpeed
+        {
+            get { return maxUploadSpeed; }
+            set { maxUploadSpeed = value; }
+        }
         #endregion 属性
 
         #region 字段
@@ -112,11 +126,23 @@ namespace RRQMSocket.FileTransfer
         #endregion 事件
 
         /// <summary>
+        /// 载入配置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        protected override void LoadConfig(ServerConfig serverConfig)
+        {
+            base.LoadConfig(serverConfig);
+            this.breakpointResume = (bool)serverConfig.GetValue(FileServiceConfig.BreakpointResumeProperty);
+            this.maxDownloadSpeed = (long)serverConfig.GetValue(FileServiceConfig.MaxDownloadSpeedProperty);
+            this.maxUploadSpeed = (long)serverConfig.GetValue(FileServiceConfig.MaxUploadSpeedProperty);
+        }
+
+        /// <summary>
         /// 创建完成FileSocketClient
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected override void OnCreatSocketCliect(FileSocketClient tcpSocketClient, CreateOption creatOption)
+        protected sealed override void OnCreatSocketCliect(FileSocketClient tcpSocketClient, CreateOption creatOption)
         {
             tcpSocketClient.breakpointResume = this.BreakpointResume;
             tcpSocketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;

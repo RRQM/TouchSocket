@@ -224,7 +224,51 @@ namespace RRQMSocket
         /// <exception cref="RRQMNotConnectedException"></exception>
         /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id, byte[] buffer)
+        public virtual void SendAsync(string id, byte[] buffer)
+        {
+            this.SendAsync(id, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(string id, byte[] buffer, int offset, int length)
+        {
+            this.SocketClients[id].SendAsync(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(string id, ByteBlock byteBlock)
+        {
+            this.SendAsync(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public  virtual void Send(string id, byte[] buffer)
         {
             this.Send(id, buffer, 0, buffer.Length);
         }
@@ -467,7 +511,7 @@ namespace RRQMSocket
                     {
                         creatOption.ID = client.ID;
                     }
-                    OnCreatSocketCliect(client, creatOption);
+                    this.OnCreatSocketCliect(client, creatOption);
                     client.ID = creatOption.ID;
 
                     this.SocketClients.Add(client);
@@ -502,10 +546,14 @@ namespace RRQMSocket
         {
             base.Dispose();
             this.SocketClients.Dispose();
-            foreach (var item in bufferQueueGroups)
+            if (bufferQueueGroups!=null)
             {
-                item.Dispose();
+                foreach (var item in bufferQueueGroups)
+                {
+                    item.Dispose();
+                }
             }
+            
             this.serverState = ServerState.Disposed;
         }
     }

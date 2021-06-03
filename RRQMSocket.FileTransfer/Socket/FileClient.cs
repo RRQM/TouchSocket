@@ -117,12 +117,11 @@ namespace RRQMSocket.FileTransfer
         public bool Online { get { return this.client.Online; } }
 
         /// <summary>
-        ///  获取或设置默认接收文件的存放目录
+        /// 默认接收文件的存放目录
         /// </summary>
         public string ReceiveDirectory
         {
             get { return receiveDirectory; }
-            set { receiveDirectory = value == null ? string.Empty : value; }
         }
 
         private int timeout = 10;
@@ -159,7 +158,6 @@ namespace RRQMSocket.FileTransfer
         private WaitData<ByteBlock> waitDataSend;
         private RRQMAgreementHelper AgreementHelper;
         private bool breakpointResume;
-        private string verifyToken;
         private IPHost ipHost;
 
         /// <summary>
@@ -236,7 +234,10 @@ namespace RRQMSocket.FileTransfer
             this.client.Setup(clientConfig);
             client.BufferLength = 1024 * 64;
             client.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            this.receiveDirectory = (string)clientConfig.GetValue(FileClientConfig.ReceiveDirectoryProperty);
+            this.ipHost= (IPHost)clientConfig.GetValue(TcpClientConfig.RemoteIPHostProperty);
         }
+       
         private void SynchronizeTransferSetting()
         {
             ByteBlock byteBlock = this.SendWait(1020, this.timeout);
@@ -250,8 +251,6 @@ namespace RRQMSocket.FileTransfer
             this.client.BufferLength = transferSetting.bufferLength;
             byteBlock.SetHolding(false);
         }
-
-      
 
         /// <summary>
         /// 请求传输文件
@@ -448,9 +447,11 @@ namespace RRQMSocket.FileTransfer
             FileClient fileClient = new FileClient();
             try
             {
-                IPHost iPHost = new IPHost(host);
-                fileClient.Connect(iPHost, verifyToken);
+                var config = new FileClientConfig();
+                config.SetValue(TcpClientConfig.RemoteIPHostProperty, new IPHost(host))
+                    .SetValue(TokenClientConfig.VerifyTokenProperty, verifyToken);
 
+                fileClient.Setup(config);
                 if (finishedCallBack != null)
                 {
                     fileClient.FinishedFileTransfer += finishedCallBack;
@@ -489,8 +490,11 @@ namespace RRQMSocket.FileTransfer
             FileClient fileClient = new FileClient();
             try
             {
-                IPHost iPHost = new IPHost(host);
-                fileClient.Connect(iPHost, verifyToken);
+                var config = new FileClientConfig();
+                config.SetValue(TcpClientConfig.RemoteIPHostProperty, new IPHost(host))
+                    .SetValue(TokenClientConfig.VerifyTokenProperty, verifyToken);
+
+                fileClient.Setup(config);
 
                 if (finishedCallBack != null)
                 {
@@ -1168,7 +1172,7 @@ namespace RRQMSocket.FileTransfer
                 this.Logger.Debug(LogType.Warning, this, $"客户端已断连，正在尝试恢复连接！！！");
                 try
                 {
-                    this.Connect(this.ipHost, this.verifyToken);
+                    this.Connect();
                 }
                 catch (Exception ex)
                 {
