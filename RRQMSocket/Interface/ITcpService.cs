@@ -20,7 +20,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP系列服务器接口
     /// </summary>
-    public interface ITcpService : IService
+    public interface ITcpService<TClient> : IService where TClient : ISocketClient, new()
     {
         /// <summary>
         /// 获取最大可连接数
@@ -41,5 +41,20 @@ namespace RRQMSocket
         /// 有用户断开连接的时候
         /// </summary>
         event RRQMMessageEventHandler ClientDisconnected;
+
+        /// <summary>
+        /// 根据ID判断SocketClient是否存在
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool SocketClientExist(string id);
+
+        /// <summary>
+        /// 尝试获取TClient
+        /// </summary>
+        /// <param name="id">ID</param>
+        /// <param name="socketClient">TClient</param>
+        /// <returns></returns>
+        bool TryGetSocketClient(string id, out TClient socketClient);
     }
 }

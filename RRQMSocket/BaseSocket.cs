@@ -132,7 +132,6 @@ namespace RRQMSocket
             this.disposable = true;
             if (mainSocket != null)
             {
-                mainSocket.Close();
                 mainSocket.Dispose();
             }
         }
