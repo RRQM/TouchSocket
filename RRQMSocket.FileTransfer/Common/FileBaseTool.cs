@@ -24,78 +24,32 @@ namespace RRQMSocket.FileTransfer
     {
         #region Methods
 
-        /// <summary>
-        /// 创建流文件
-        /// </summary>
-        /// <param name="blocks"></param>
-        /// <param name="restart"></param>
-        /// <returns></returns>
-        internal static RRQMStream GetNewFileStream(ref ProgressBlockCollection blocks, bool restart)
-        {
-            RRQMStream stream;
-            string path = blocks.FileInfo.FilePath + ".rrqm";
-            byte[] buffer = new byte[1024 * 1024];
-
-            if (File.Exists(path) && !restart)
-            {
-                stream = new RRQMStream(path, FileMode.Open, FileAccess.ReadWrite);
-                stream.Read(buffer, 0, buffer.Length);
-                PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(buffer);
-                if (readBlocks.FileInfo.FileHash != null && blocks.FileInfo.FileHash != null && readBlocks.FileInfo.FileHash == blocks.FileInfo.FileHash)
-                {
-                    blocks = readBlocks.ToPBCollection();
-                    stream.fileInfo = blocks.FileInfo;
-                    return stream;
-                }
-                stream.Dispose();
-            }
-
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-
-            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
-            for (int i = 0; i < dataBuffer.Length; i++)
-            {
-                buffer[i] = dataBuffer[i];
-            }
-
-            stream = new RRQMStream(path, FileMode.Create, FileAccess.ReadWrite);
-            stream.fileInfo = blocks.FileInfo;
-            stream.Position = 0;
-            stream.Write(buffer, 0, buffer.Length);
-            stream.Flush();
-            return stream;
-        }
 
         internal static void SaveProgressBlockCollection(RRQMStream stream, ProgressBlockCollection blocks)
         {
-            byte[] buffer = new byte[1024 * 1024];
-            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
-            for (int i = 0; i < dataBuffer.Length; i++)
+            if (stream.RRQMFileStream != null && stream.RRQMFileStream.CanWrite)
             {
-                buffer[i] = dataBuffer[i];
+                stream.RRQMFileStream.Position = 0;
+                byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
+                stream.RRQMFileStream.Write(dataBuffer, 0, dataBuffer.Length);
+                stream.RRQMFileStream.Flush();
             }
-            stream.Position = 0;
-            stream.Write(buffer, 0, buffer.Length);
-            stream.Flush();
         }
 
         internal static bool WriteFile(RRQMStream stream, out string mes, long streamPosition, byte[] buffer, int offset, int length)
         {
             try
             {
-                if (stream == null || !stream.CanWrite)
+                if (stream != null && stream.TempFileStream.CanWrite)
                 {
-                    mes = "流已释放";
-                    return false;
+                    stream.TempFileStream.Position = streamPosition;
+                    stream.TempFileStream.Write(buffer, offset, length);
+                    stream.TempFileStream.Flush();
+                    mes = null;
+                    return true;
                 }
-                stream.Position = streamPosition + 1024 * 1024;
-                stream.Write(buffer, offset, length);
-                stream.Flush();
-                mes = null;
-                return true;
+                mes = "流不可写";
+                return false;
             }
             catch (Exception ex)
             {
@@ -106,24 +60,18 @@ namespace RRQMSocket.FileTransfer
 
         internal static void FileFinished(RRQMStream stream)
         {
-            stream.Position = 1024 * 1024;
-            using (FileStream fileStream = new FileStream(stream.fileInfo.FilePath, FileMode.Create, FileAccess.Write))
-            {
-                byte[] buffer = new byte[1024 * 10];
-                while (true)
-                {
-                    int r = stream.Read(buffer, 0, buffer.Length);
-                    if (r == 0)
-                    {
-                        stream.Dispose();
-                        break;
-                    }
-                    fileStream.Write(buffer, 0, r);
-                }
-            }
+            stream.Dispose();
             if (File.Exists(stream.fileInfo.FilePath + ".rrqm"))
             {
                 File.Delete(stream.fileInfo.FilePath + ".rrqm");
+            }
+            if (File.Exists(stream.fileInfo.FilePath))
+            {
+                File.Delete(stream.fileInfo.FilePath);
+            }
+            if (File.Exists(stream.fileInfo.FilePath + ".temp"))
+            {
+                File.Move(stream.fileInfo.FilePath + ".temp", stream.fileInfo.FilePath);
             }
         }
 
@@ -177,6 +125,7 @@ namespace RRQMSocket.FileTransfer
             if (r == length)
             {
                 byteBlock.Position = offset + length;
+                byteBlock.SetLength(offset + length);
                 return true;
             }
             return false;

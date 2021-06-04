@@ -22,14 +22,8 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP客户端
     /// </summary>
-    public class TokenClient : TcpClient
+    public abstract class TokenClient : TcpClient
     {
-        /// <summary>
-        /// 判断是否已连接
-        /// </summary>
-        public override bool Online { get { return online; } }
-
-        private bool online;
 
         private string verifyToken = "rrqm";
 
@@ -79,6 +73,10 @@ namespace RRQMSocket
                 throw new RRQMException("无法重新利用已释放对象");
             }
 
+            if (this.Online)
+            {
+                return;
+            }
 
             try
             {
@@ -108,7 +106,6 @@ namespace RRQMSocket
                             {
                                 this.ID = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
                                 Start();
-                                this.online = true;
                                 return;
                             }
                             else if (byteBlock.Buffer[0] == 2)

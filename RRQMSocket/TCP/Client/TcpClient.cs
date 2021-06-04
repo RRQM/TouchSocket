@@ -23,12 +23,13 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端
     /// </summary>
-    public class TcpClient : BaseSocket, IUserTcpClient, IClient, IHandleBuffer
+    public abstract class TcpClient : BaseSocket, IUserTcpClient, IClient, IHandleBuffer
     {
         /// <summary>
         /// 判断是否已连接
         /// </summary>
-        public virtual bool Online { get { return MainSocket == null ? false : MainSocket.Connected; } }
+        public virtual bool Online { get { return this.online; } }
+        private bool online;
 
         private DataHandlingAdapter dataHandlingAdapter;
 
@@ -82,13 +83,8 @@ namespace RRQMSocket
         //    set { useSeparateThreadSend = value; }
         //}
 
-
         private BufferQueueGroup queueGroup;
         private SocketAsyncEventArgs receiveEventArgs;
-        /// <summary>
-        /// 标识是否处于断开连接
-        /// </summary>
-        protected bool disconnect;
 
         /// <summary>
         /// 成功连接到服务器
@@ -99,11 +95,6 @@ namespace RRQMSocket
         /// 断开连接
         /// </summary>
         public event RRQMMessageEventHandler DisconnectedService;
-
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        public event Action<TcpClient, ByteBlock, object> OnReceived;
 
         /// <summary>
         /// 配置服务器
@@ -247,7 +238,7 @@ namespace RRQMSocket
                 BeginReceive();
                 //this.SeparateThreadSend();
             }
-            this.ConnectedService?.Invoke(this, new MesEventArgs("SuccessConnection"));
+            this.OnConnectedService(new MesEventArgs());
         }
 
         /// <summary>
@@ -267,7 +258,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.DisconnectedService?.Invoke(this, new MesEventArgs(ex.Message));
+                this.OnDisconnectedService(new MesEventArgs(ex.Message));
             }
         }
 
@@ -285,12 +276,12 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    this.DisconnectedService?.Invoke(this, new MesEventArgs("BreakOut"));
+                    this.OnDisconnectedService(new MesEventArgs("BreakOut"));
                 }
             }
             catch (Exception ex)
             {
-                this.DisconnectedService?.Invoke(this, new MesEventArgs(ex.Message));
+                this.OnDisconnectedService(new MesEventArgs(ex.Message));
             }
         }
 
@@ -336,7 +327,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    this.DisconnectedService?.Invoke(this, new MesEventArgs("BreakOut"));
+                    this.OnDisconnectedService(new MesEventArgs("BreakOut"));
                 }
             }
         }
@@ -361,7 +352,7 @@ namespace RRQMSocket
         {
             while (true)
             {
-                if (disposable)
+                if (disposable||!this.online)
                 {
                     break;
                 }
@@ -394,10 +385,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected virtual void HandleReceivedData(ByteBlock byteBlock, object obj)
-        {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
-        }
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
 
         ///// <summary>
         ///// 在异步发送时，使用独立线程发送
@@ -548,6 +536,26 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnConnectedService(MesEventArgs e)
+        {
+            this.online = true;
+            this.ConnectedService?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnectedService(MesEventArgs e)
+        {
+            this.online = false;
+            this.DisconnectedService?.Invoke(this, e);
+        }
+
+        /// <summary>
         /// 断开链接并释放资源
         /// </summary>
         public override void Dispose()
@@ -568,6 +576,20 @@ namespace RRQMSocket
             this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
 
-
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        public virtual void Disconnect()
+        {
+            if (MainSocket != null)
+            {
+                MainSocket.Dispose();
+            }
+            if (this.queueGroup != null)
+            {
+                this.queueGroup.Dispose();
+            }
+            this.OnDisconnectedService(new MesEventArgs("Disconnect"));
+        }
     }
 }

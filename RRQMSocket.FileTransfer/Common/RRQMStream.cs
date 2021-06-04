@@ -9,16 +9,84 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.IO;
+using RRQMCore.Serialization;
 
 namespace RRQMSocket.FileTransfer
 {
-    internal class RRQMStream : FileStream
+    internal class RRQMStream:IDisposable
     {
-        internal RRQMStream(string path, FileMode mode, FileAccess access) : base(path, mode, access)
+        internal static RRQMStream GetRQMStream(ref ProgressBlockCollection blocks, bool restart, bool breakpoint)
         {
+            RRQMStream stream = new RRQMStream();
+            stream.fileInfo = blocks.FileInfo;
+            string rrqmPath = blocks.FileInfo.FilePath + ".rrqm";
+            string tempPath = blocks.FileInfo.FilePath + ".temp";
+
+            if (File.Exists(rrqmPath) && File.Exists(tempPath) && !restart && breakpoint)
+            {
+                PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(File.ReadAllBytes(rrqmPath));
+                if (readBlocks.FileInfo.FileHash != null && blocks.FileInfo.FileHash != null && readBlocks.FileInfo.FileHash == blocks.FileInfo.FileHash)
+                {
+                    stream.tempFileStream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite);
+                    stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Open, FileAccess.ReadWrite);
+                    blocks = readBlocks.ToPBCollection();
+
+                    return stream;
+                }
+            }
+
+            if (File.Exists(rrqmPath))
+            {
+                File.Delete(rrqmPath);
+            }
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
+            if (breakpoint)
+            {
+                byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
+                stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Create, FileAccess.ReadWrite);
+                stream.rrqmFileStream.Write(dataBuffer,0,dataBuffer.Length);
+                stream.rrqmFileStream.Flush();
+            }
+
+            stream.tempFileStream = new FileStream(tempPath, FileMode.Create, FileAccess.ReadWrite);
+            return stream;
         }
 
+       
         internal FileInfo fileInfo;
+
+        private FileStream rrqmFileStream;
+
+        public FileStream RRQMFileStream
+        {
+            get { return rrqmFileStream; }
+        }
+
+        private FileStream tempFileStream;
+
+        public FileStream TempFileStream
+        {
+            get { return tempFileStream; }
+        }
+
+        public void Dispose()
+        {
+            if (this.rrqmFileStream!=null)
+            {
+                this.rrqmFileStream.Dispose();
+                this.rrqmFileStream = null;
+            }
+            if (this.tempFileStream != null)
+            {
+                this.tempFileStream.Dispose();
+                this.tempFileStream = null;
+            }
+        }
+
     }
 }

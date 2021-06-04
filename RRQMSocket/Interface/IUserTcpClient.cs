@@ -30,5 +30,10 @@ namespace RRQMSocket
         /// 客户端配置
         /// </summary>
         TcpClientConfig ClientConfig { get; }
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        void Disconnect();
     }
 }

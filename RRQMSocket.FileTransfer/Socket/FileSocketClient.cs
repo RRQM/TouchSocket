@@ -135,7 +135,6 @@ namespace RRQMSocket.FileTransfer
         private long timeTick;
         private ProgressBlockCollection fileBlocks;
         private RRQMStream uploadFileStream;
-
         #endregion 字段
 
         #region 事件
@@ -351,7 +350,7 @@ namespace RRQMSocket.FileTransfer
                 try
                 {
                     ProgressBlockCollection blocks = requestBlocks.ToPBCollection();
-                    uploadFileStream = FileBaseTool.GetNewFileStream(ref blocks, restart);
+                    uploadFileStream = RRQMStream.GetRQMStream(ref blocks, restart,this.breakpointResume);
                     blocks.FileInfo.FilePath = requestBlocks.FileInfo.FilePath;
                     this.fileBlocks = blocks;
                     waitResult.Status = 1;
@@ -487,7 +486,6 @@ namespace RRQMSocket.FileTransfer
         private void StopUpload(ByteBlock byteBlock)
         {
             FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.fileBlocks);
-            this.uploadFileStream.Close();
             this.uploadFileStream.Dispose();
             this.uploadFileStream = null;
             byteBlock.Write(1);
@@ -625,27 +623,18 @@ namespace RRQMSocket.FileTransfer
         /// <exception cref="RRQMException"></exception>
         public void SendSystemMes(string mes)
         {
-            if (mes == null || mes == string.Empty)
+            if (string.IsNullOrEmpty(mes))
             {
                 throw new RRQMException("消息不可为空");
             }
             byte[] datas = Encoding.UTF8.GetBytes(mes);
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length + 12);
             try
             {
-                byteBlock.Write(BitConverter.GetBytes(1000));
-                byteBlock.Write(BitConverter.GetBytes(1000));
-                byteBlock.Write(BitConverter.GetBytes(1000));
-                byteBlock.Write(datas);
-                AgreementHelper.SocketSend(1000, byteBlock);
+                AgreementHelper.SocketSend(1000, datas);
             }
             catch (Exception ex)
             {
                 throw new RRQMException(ex.Message);
-            }
-            finally
-            {
-                byteBlock.Dispose();
             }
         }
 
@@ -659,6 +648,7 @@ namespace RRQMSocket.FileTransfer
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
             int agreement = BitConverter.ToInt32(buffer, 0);
+            int returnAgreement;
             ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             switch (agreement)
             {
@@ -674,6 +664,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
                 case 1001:
@@ -687,7 +678,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -701,6 +692,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
                 case 1003://停止下载
@@ -715,6 +707,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
                 case 1004:
@@ -727,6 +720,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -742,7 +736,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -756,7 +750,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -770,6 +764,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
                 case 1013:
@@ -782,7 +777,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -796,6 +791,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -821,6 +817,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -835,6 +832,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
                         break;
                     }
 
@@ -849,13 +847,19 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
+                        returnAgreement = 999;
+                        break;
+                    }
+                default:
+                    {
+                        returnAgreement = 0;
                         break;
                     }
             }
 
             try
             {
-                this.AgreementHelper.SocketSend(returnByteBlock);
+                this.AgreementHelper.SocketSend(returnAgreement,returnByteBlock);
             }
             catch (Exception ex)
             {
@@ -868,7 +872,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        ///
+        ///  重置
         /// </summary>
         public override void Recreate()
         {
