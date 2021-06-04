@@ -32,7 +32,6 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public FileClient()
         {
-            this.locker = new object();
             this.FileTransferCollection = new TransferCollection();
             this.TransferStatus = TransferStatus.None;
             this.FileTransferCollection.OnCollectionChanged += this.FileTransferCollection_OnCollectionChanged;
@@ -41,7 +40,8 @@ namespace RRQMSocket.FileTransfer
         #region 自定义
 
         /// <summary>
-        /// 获取支持短点续传状态
+        /// 获取支持短点续传状态，
+        /// 该属性与服务器同步
         /// </summary>
         public bool BreakpointResume { get { return breakpointResume; } }
 
@@ -136,7 +136,6 @@ namespace RRQMSocket.FileTransfer
         private WaitData<ByteBlock> waitDataSend;
         private RRQMAgreementHelper AgreementHelper;
         private bool breakpointResume;
-        private IPHost ipHost;
         private bool stop;
 
         /// <summary>
@@ -194,7 +193,6 @@ namespace RRQMSocket.FileTransfer
             this.BufferLength = 1024 * 64;
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             this.receiveDirectory = (string)clientConfig.GetValue(FileClientConfig.ReceiveDirectoryProperty);
-            this.ipHost = (IPHost)clientConfig.GetValue(TcpClientConfig.RemoteIPHostProperty);
         }
 
         private void SynchronizeTransferSetting()
@@ -1221,6 +1219,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+        
 
         /// <summary>
         /// 释放资源

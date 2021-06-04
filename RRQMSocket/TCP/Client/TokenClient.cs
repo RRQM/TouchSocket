@@ -35,11 +35,14 @@ namespace RRQMSocket
             get { return verifyToken; }
         }
 
+        private string id;
         /// <summary>
         /// 获取服务器分配的ID
         /// </summary>
-        public string ID { get; private set; }
-
+        public string ID
+        {
+            get { return id; }
+        }
 
         private int verifyTimeout;
         /// <summary>
@@ -49,7 +52,6 @@ namespace RRQMSocket
         {
             get { return verifyTimeout; }
         }
-
 
         /// <summary>
         /// 连接到服务器
@@ -104,7 +106,7 @@ namespace RRQMSocket
                         {
                             if (byteBlock.Buffer[0] == 1)
                             {
-                                this.ID = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
+                                this.id = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
                                 Start();
                                 return;
                             }

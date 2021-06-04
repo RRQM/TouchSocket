@@ -28,7 +28,7 @@ namespace RRQMSocket
         /// <summary>
         /// 判断是否已连接
         /// </summary>
-        public virtual bool Online { get { return this.online; } }
+        public  bool Online { get { return this.online; } }
         private bool online;
 
         private DataHandlingAdapter dataHandlingAdapter;
