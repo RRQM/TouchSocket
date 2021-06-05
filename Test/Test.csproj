@@ -52,6 +52,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RRQMSocket.FileTransfer\RRQMSocket.FileTransfer.csproj">
+      <Project>{717fb0f1-3da3-4a70-9502-8baa8a949672}</Project>
+      <Name>RRQMSocket.FileTransfer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj">
       <Project>{2869a094-bbb1-4f15-a54d-581bc927e92e}</Project>
       <Name>RRQMSocket</Name>

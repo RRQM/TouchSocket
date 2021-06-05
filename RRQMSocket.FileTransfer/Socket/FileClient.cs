@@ -1065,7 +1065,17 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-      
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public sealed override void Send(byte[] buffer, int offset, int length)
+        {
+            this.AgreementHelper.SocketSend(1030,buffer,offset,length);
+        }
+
         /// <summary>
         /// 发送Byte数组，并等待返回
         /// </summary>
@@ -1219,27 +1229,6 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-            if (this.TransferStatus == TransferStatus.Download)
-            {
-                this.OutDownload(true);
-            }
-            else if (this.TransferStatus == TransferStatus.Upload)
-            {
-                this.OutUpload();
-            }
-            this.TransferStatus = TransferStatus.None;
-            this.progress = 0;
-            this.speed = 0;
-        }
-
         /// <summary>
         /// 处理数据
         /// </summary>
@@ -1274,6 +1263,25 @@ namespace RRQMSocket.FileTransfer
                 default:
                     break;
             }
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+            if (this.TransferStatus == TransferStatus.Download)
+            {
+                this.OutDownload(true);
+            }
+            else if (this.TransferStatus == TransferStatus.Upload)
+            {
+                this.OutUpload();
+            }
+            this.TransferStatus = TransferStatus.None;
+            this.progress = 0;
+            this.speed = 0;
         }
     }
 }

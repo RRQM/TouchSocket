@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RRQMCore.Dependency;
+using RRQMCore.Exceptions;
 using RRQMCore.Log;
 
 namespace RRQMSocket

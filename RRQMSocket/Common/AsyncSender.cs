@@ -8,14 +8,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using RRQMCore.ByteManager;
+using RRQMCore.Log;
 
 namespace RRQMSocket
 {
-    internal class AsyncSender:IDisposable
+    internal class AsyncSender : IDisposable
     {
         internal AsyncSender()
         {
-            byteBlockQueue = new ConcurrentQueue<ByteBlock>();
+            asyncBytes = new ConcurrentQueue<AsyncByte>();
             waitHandle = new AutoResetEvent(false);
             sendEventArgs = new SocketAsyncEventArgs();
             sendEventArgs.Completed += this.SendEventArgs_Completed;
@@ -29,9 +30,10 @@ namespace RRQMSocket
         private Thread sendThread;
         private EventWaitHandle waitHandle;
         private bool dispose;
-        private ConcurrentQueue<ByteBlock> byteBlockQueue;
+        private ConcurrentQueue<AsyncByte> asyncBytes;
         private Socket socket;
         private bool sending;
+        private ILog logger;
 
         private void SendEventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
@@ -41,18 +43,7 @@ namespace RRQMSocket
             }
             else
             {
-                try
-                {
-                    ((ByteBlock)e.UserToken).SetHolding(false);
-                }
-                catch
-                {
-
-                }
-                finally
-                {
-                    this.waitHandle.Set();
-                }
+                this.waitHandle.Set();
             }
         }
         /// <summary>
@@ -63,10 +54,9 @@ namespace RRQMSocket
         {
             try
             {
-                ((ByteBlock)e.UserToken).SetHolding(false);
                 if (e.SocketError != SocketError.Success)
                 {
-                    //this.Logger.Debug(LogType.Error, this, "异步发送错误。");
+                    this.logger.Debug(LogType.Error, this, "异步发送错误。");
                 }
             }
             catch
@@ -83,42 +73,56 @@ namespace RRQMSocket
         {
             while (!this.dispose)
             {
-                this.waitHandle.WaitOne();
-                if (this.byteBlockQueue.TryDequeue(out ByteBlock byteBlock))
+                if (!this.sending && this.asyncBytes.TryDequeue(out AsyncByte asyncByte))
                 {
                     this.sending = true;
-                    this.sendEventArgs.UserToken = byteBlock;
-                    this.sendEventArgs.SetBuffer(byteBlock.Buffer, 0, (int)byteBlock.Length);
+                    this.sendEventArgs.SetBuffer(asyncByte.buffer, asyncByte.offset, asyncByte.length);
                     if (!this.socket.SendAsync(this.sendEventArgs))
                     {
                         // 同步发送时处理发送完成事件
                         this.ProcessSend(sendEventArgs);
                     }
+                    this.waitHandle.WaitOne();
+                    lock (this)
+                    {
+                        this.sending = false;
+                    }
+                   
                 }
                 else
                 {
-                    this.sending = false;
+                    this.waitHandle.WaitOne();
+                    lock (this)
+                    {
+                        this.sending = false;
+                    }
                 }
             }
         }
 
-        public void AsyncSend(ByteBlock byteBlock)
+        public void AsyncSend(byte[] buffer, int offset, int length)
         {
-            if (byteBlock!=null)
+            AsyncByte asyncByte = new AsyncByte();
+            asyncByte.buffer = buffer;
+            asyncByte.offset = offset;
+            asyncByte.length = length;
+            this.asyncBytes.Enqueue(asyncByte);
+            lock (this)
             {
-                byteBlock.SetHolding(true);
-                this.byteBlockQueue.Enqueue(byteBlock);
                 if (!this.sending)
                 {
                     this.waitHandle.Set();
                 }
             }
+            
+
         }
 
-        public void Load(Socket socket,EndPoint endPoint)
+        public void Load(Socket socket, EndPoint endPoint, ILog logger)
         {
             this.socket = socket;
             this.sendEventArgs.RemoteEndPoint = endPoint;
+            this.logger = logger;
         }
 
         public void Dispose()

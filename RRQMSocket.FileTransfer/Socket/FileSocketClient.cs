@@ -643,7 +643,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
@@ -681,7 +681,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1002:
                     {
                         try
@@ -723,7 +722,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1010:
                     {
                         try
@@ -739,7 +737,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1011:
                     {
                         try
@@ -753,7 +750,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1012:
                     {
                         try
@@ -780,7 +776,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1014:
                     {
                         try
@@ -794,7 +789,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1020:
                     {
                         try
@@ -820,7 +814,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1021:
                     {
                         try
@@ -835,7 +828,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-
                 case 1022:
                     {
                         try
