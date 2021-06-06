@@ -23,7 +23,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public class TokenService<TClient> : TcpService<TClient> where TClient : SocketClient, new()
+    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : SocketClient, new()
     {
         private string verifyToken;
         /// <summary>
@@ -57,7 +57,7 @@ namespace RRQMSocket
         {
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             int waitCount = 0;
-            while (waitCount < this.VerifyTimeout * 1000 / 10)
+            while (waitCount < this.VerifyTimeout * 1000 / 100)
             {
                 if (socket.Available > 0)
                 {
@@ -145,7 +145,7 @@ namespace RRQMSocket
                     }
                 }
                 waitCount++;
-                Thread.Sleep(10);
+                Thread.Sleep(100);
             }
 
             socket.Shutdown(SocketShutdown.Both);

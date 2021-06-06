@@ -9,21 +9,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using System;
+
 namespace RRQMSocket
 {
     /// <summary>
-    ///
+    /// 服务器辅助类
     /// </summary>
-    public class BytesEventArgs
+    public sealed class SimpleSocketClient : SocketClient
     {
         /// <summary>
-        /// 字节数组
+        /// 收到消息
         /// </summary>
-        public byte[] ReceivedDataBytes { get; set; }
+        internal Action<SimpleSocketClient, ByteBlock, object> OnReceived;
 
         /// <summary>
-        /// 返回字节
+        /// 处理数据
         /// </summary>
-        public byte[] ReturnDataBytes { get; set; }
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        {
+            this.OnReceived?.Invoke(this, byteBlock, obj);
+        }
     }
 }

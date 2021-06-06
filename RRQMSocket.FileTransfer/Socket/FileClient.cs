@@ -134,9 +134,14 @@ namespace RRQMSocket.FileTransfer
         private Thread thread_Transfer;
         private EventWaitHandle waitHandle;
         private WaitData<ByteBlock> waitDataSend;
-        private RRQMAgreementHelper AgreementHelper;
+        private RRQMAgreementHelper agreementHelper;
         private bool breakpointResume;
         private bool stop;
+
+        /// <summary>
+        /// 收到字节
+        /// </summary>
+        public event RRQMBytesEventHandler ReceivedBytes;
 
         /// <summary>
         /// 传输文件之前
@@ -179,7 +184,7 @@ namespace RRQMSocket.FileTransfer
         public override void Connect()
         {
             base.Connect();
-            AgreementHelper = new RRQMAgreementHelper(this);
+            agreementHelper = new RRQMAgreementHelper(this);
             SynchronizeTransferSetting();
         }
 
@@ -1073,7 +1078,18 @@ namespace RRQMSocket.FileTransfer
         /// <param name="length"></param>
         public sealed override void Send(byte[] buffer, int offset, int length)
         {
-            this.AgreementHelper.SocketSend(1030,buffer,offset,length);
+            this.agreementHelper.SocketSend(1030,buffer,offset,length);
+        }
+
+        /// <summary>
+        /// 发送数据，依然采用会同步
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public override void SendAsync(byte[] buffer, int offset, int length)
+        {
+            this.agreementHelper.SocketSend(1030, buffer, offset, length);
         }
 
         /// <summary>
@@ -1091,10 +1107,10 @@ namespace RRQMSocket.FileTransfer
             ByteBlock resultByteBlock = this.SendWait(1014, this.timeout, byteBlock);
             if (resultByteBlock != null)
             {
-                if (resultByteBlock.Buffer[0] == 1)
+                if (resultByteBlock.Buffer[4] == 1)
                 {
-                    byte[] buffer = new byte[resultByteBlock.Position - 1];
-                    resultByteBlock.Position = 1;
+                    byte[] buffer = new byte[resultByteBlock.Position - 5];
+                    resultByteBlock.Position = 5;
                     resultByteBlock.Read(buffer, 0, buffer.Length);
                     resultByteBlock.SetHolding(false);
                     return buffer;
@@ -1124,11 +1140,11 @@ namespace RRQMSocket.FileTransfer
                 {
                     if (byteBlock == null)
                     {
-                        AgreementHelper.SocketSend(agreement);
+                        agreementHelper.SocketSend(agreement);
                     }
                     else
                     {
-                        AgreementHelper.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                        agreementHelper.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Length);
                     }
                 }
                 catch
@@ -1258,6 +1274,22 @@ namespace RRQMSocket.FileTransfer
                         {
                             this.ReceiveSystemMes?.Invoke(this, new MesEventArgs(Encoding.UTF8.GetString(byteBlock.Buffer, 4, (int)byteBlock.Length - 4)));
                         });
+                        break;
+                    }
+                case 1030:
+                    {
+                        try
+                        {
+                            BytesEventArgs args = new BytesEventArgs();
+                            args.ReceivedDataBytes = new byte[byteBlock.Length - 4];
+                            byteBlock.Position = 4;
+                            byteBlock.Read(args.ReceivedDataBytes);
+                            this.ReceivedBytes?.Invoke(this, args);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
                         break;
                     }
                 default:

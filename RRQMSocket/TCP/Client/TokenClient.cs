@@ -94,7 +94,7 @@ namespace RRQMSocket
             }
 
             int waitCount = 0;
-            while (waitCount < VerifyTimeout * 1000 / 10)
+            while (waitCount < VerifyTimeout * 1000 / 100)
             {
                 if (this.MainSocket.Available > 0)
                 {
@@ -112,10 +112,12 @@ namespace RRQMSocket
                             }
                             else if (byteBlock.Buffer[0] == 2)
                             {
+                                this.MainSocket.Dispose();
                                 throw new RRQMException(Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1));
                             }
                             else if (byteBlock.Buffer[0] == 3)
                             {
+                                this.MainSocket.Dispose();
                                 throw new RRQMException("连接数量已达到服务器设定最大值");
                             }
                         }
@@ -126,7 +128,7 @@ namespace RRQMSocket
                     }
                 }
                 waitCount++;
-                Thread.Sleep(10);
+                Thread.Sleep(100);
             }
 
             throw new RRQMTimeoutException("验证Token超时");

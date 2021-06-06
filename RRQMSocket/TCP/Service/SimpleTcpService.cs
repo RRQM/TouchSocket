@@ -17,12 +17,20 @@ namespace RRQMSocket
     /// <summary>
     /// 若汝棋茗内置TCP验证服务器
     /// </summary>
-    public class RRQMTcpService : TcpService<RRQMSocketClient>
+    public class SimpleTcpService : TcpService<SimpleSocketClient>
     {
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event Action<RRQMSocketClient, ByteBlock, object> OnReceived;
+        public event Action<SimpleSocketClient, ByteBlock, object> Received;
+       
+        /// <summary>
+        /// 成功连接后创建（或从对象池中获得）辅助类,
+        /// 用户可以在该方法中再进行自定义设置，
+        /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
+        /// 例如事件等，请先判断CreatOption.NewCreat值再做处理。
+        /// </summary>
+        public event Action<SimpleSocketClient, CreateOption> CreatSocketCliect;
 
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
@@ -32,19 +40,18 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected sealed override void OnCreatSocketCliect(RRQMSocketClient tcpSocketClient, CreateOption creatOption)
+        protected  override void OnCreatSocketCliect(SimpleSocketClient tcpSocketClient, CreateOption creatOption)
         {
+            this.CreatSocketCliect?.Invoke(tcpSocketClient,creatOption);
             if (creatOption.NewCreate)
             {
                 tcpSocketClient.OnReceived = this.OnReceive;
             }
-
-            base.OnCreatSocketCliect(tcpSocketClient, creatOption);
         }
 
-        private void OnReceive(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)
+        private void OnReceive(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
-            this.OnReceived?.Invoke(socketClient, byteBlock, obj);
+            this.Received?.Invoke(socketClient, byteBlock, obj);
         }
     }
 }

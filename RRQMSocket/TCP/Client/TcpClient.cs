@@ -131,7 +131,6 @@ namespace RRQMSocket
             this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
             this.onlySend = clientConfig.OnlySend;
             this.separateThreadSend = clientConfig.SeparateThreadSend;
-
         }
 
         /// <summary>
@@ -246,6 +245,7 @@ namespace RRQMSocket
                 }
                 this.asyncSender = new AsyncSender();
                 this.asyncSender.Load(this.MainSocket, this.MainSocket.RemoteEndPoint, this.Logger);
+                this.asyncSender.SetBufferLength((int)this.clientConfig.GetValue(TcpClientConfig.SeparateThreadSendBufferLengthProperty));
             }
             this.OnConnectedService(new MesEventArgs());
         }
@@ -556,6 +556,11 @@ namespace RRQMSocket
             if (this.queueGroup != null)
             {
                 this.queueGroup.Dispose();
+            }
+            if (this.asyncSender != null)
+            {
+                this.asyncSender.Dispose();
+                this.asyncSender = null;
             }
         }
 

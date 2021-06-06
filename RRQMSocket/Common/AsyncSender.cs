@@ -26,14 +26,14 @@ namespace RRQMSocket
             this.sendThread.Start();
         }
 
-        private SocketAsyncEventArgs sendEventArgs;
-        private Thread sendThread;
-        private EventWaitHandle waitHandle;
-        private bool dispose;
-        private ConcurrentQueue<AsyncByte> asyncBytes;
+        private readonly SocketAsyncEventArgs sendEventArgs;
+        private readonly Thread sendThread;
+        private readonly EventWaitHandle waitHandle;
+        private readonly ConcurrentQueue<AsyncByte> asyncBytes;
         private Socket socket;
         private bool sending;
         private ILog logger;
+        private bool dispose;
 
         private void SendEventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
@@ -43,7 +43,10 @@ namespace RRQMSocket
             }
             else
             {
-                this.waitHandle.Set();
+                if (!dispose)
+                {
+                    this.waitHandle.Set();
+                }
             }
         }
         /// <summary>
@@ -65,7 +68,10 @@ namespace RRQMSocket
             }
             finally
             {
-                this.waitHandle.Set();
+                if (!dispose)
+                {
+                    this.waitHandle.Set();
+                }
             }
         }
 
@@ -73,31 +79,85 @@ namespace RRQMSocket
         {
             while (!this.dispose)
             {
-                if (!this.sending && this.asyncBytes.TryDequeue(out AsyncByte asyncByte))
+                try
                 {
-                    this.sending = true;
-                    this.sendEventArgs.SetBuffer(asyncByte.buffer, asyncByte.offset, asyncByte.length);
-                    if (!this.socket.SendAsync(this.sendEventArgs))
+                    if (this.tryGet(out AsyncByte asyncByte))
                     {
-                        // 同步发送时处理发送完成事件
-                        this.ProcessSend(sendEventArgs);
+                        this.sending = true;
+                        this.sendEventArgs.SetBuffer(asyncByte.buffer, asyncByte.offset, asyncByte.length);
+                        if (!this.socket.SendAsync(this.sendEventArgs))
+                        {
+                            // 同步发送时处理发送完成事件
+                            this.ProcessSend(sendEventArgs);
+                        }
+                        else
+                        {
+                            this.waitHandle.WaitOne();
+                        }
+
                     }
-                    this.waitHandle.WaitOne();
-                    lock (this)
+                    else
                     {
                         this.sending = false;
+                        this.waitHandle.WaitOne();
                     }
-                   
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Debug(LogType.Error, this, "异步发送错误。", ex);
+                }
+
+            }
+        }
+
+        byte[] buffer = new byte[1024 * 1024];
+        internal void SetBufferLength(int len)
+        {
+            this.buffer = new byte[len];
+        }
+        private bool tryGet(out AsyncByte asyncByteDe)
+        {
+            int len = 0;
+            int surLen = buffer.Length;
+            while (true)
+            {
+                if (this.asyncBytes.TryPeek(out AsyncByte asyncB))
+                {
+                    if (surLen > asyncB.length)
+                    {
+                        if (this.asyncBytes.TryDequeue(out AsyncByte asyncByte))
+                        {
+                            Array.Copy(asyncByte.buffer, asyncByte.offset, buffer, len, asyncByte.length);
+                            len += asyncByte.length;
+                            surLen -= asyncByte.length;
+                        }
+                    }
+                    else if (asyncB.length > buffer.Length)
+                    {
+                        if (len > 0)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            asyncByteDe = asyncB;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 else
                 {
-                    this.waitHandle.WaitOne();
-                    lock (this)
-                    {
-                        this.sending = false;
-                    }
+                    break;
                 }
             }
+            asyncByteDe = new AsyncByte();
+            asyncByteDe.buffer = buffer;
+            asyncByteDe.length = len;
+            return true;
         }
 
         public void AsyncSend(byte[] buffer, int offset, int length)
@@ -107,15 +167,10 @@ namespace RRQMSocket
             asyncByte.offset = offset;
             asyncByte.length = length;
             this.asyncBytes.Enqueue(asyncByte);
-            lock (this)
+            if (!this.sending)
             {
-                if (!this.sending)
-                {
-                    this.waitHandle.Set();
-                }
+                this.waitHandle.Set();
             }
-            
-
         }
 
         public void Load(Socket socket, EndPoint endPoint, ILog logger)

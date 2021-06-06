@@ -94,6 +94,22 @@ namespace RRQMSocket
             DependencyProperty.Register("SeparateThreadSend", typeof(bool), typeof(TcpClientConfig), false);
 
 
+        /// <summary>
+        /// 独立线程发送缓存区
+        /// </summary>
+        public int SeparateThreadSendBufferLength
+        {
+            get { return (int)GetValue(SeparateThreadSendBufferLengthProperty); }
+            set { SetValue(SeparateThreadSendBufferLengthProperty, value); }
+        }
+
+        /// <summary>
+        /// 独立线程发送缓存区
+        /// </summary>
+        public static readonly DependencyProperty SeparateThreadSendBufferLengthProperty =
+            DependencyProperty.Register("SeparateThreadSendBufferLength", typeof(int), typeof(TcpClientConfig), 1024);
+
+
 
     }
 }

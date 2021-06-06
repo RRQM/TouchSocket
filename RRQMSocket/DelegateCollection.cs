@@ -21,13 +21,6 @@ using System.Net;
 public delegate void RRQMMessageEventHandler(object sender, MesEventArgs e);
 
 /// <summary>
-/// 字节数据
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMBytesEventHandler(object sender, BytesEventArgs e);
-
-/// <summary>
 /// ByteBlock
 /// </summary>
 /// <param name="sender"></param>

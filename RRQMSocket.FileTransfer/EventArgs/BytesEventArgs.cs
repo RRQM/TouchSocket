@@ -9,29 +9,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using System;
+using RRQMCore.Event;
 
-namespace RRQMSocket
+namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 服务器辅助类
+    /// 字节事件
     /// </summary>
-    public sealed class RRQMSocketClient : SocketClient
+    public class BytesEventArgs:RRQMEventArgs
     {
         /// <summary>
-        /// 收到消息
+        /// 字节数组
         /// </summary>
-        internal Action<RRQMSocketClient, ByteBlock, object> OnReceived;
-
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
-        {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
-        }
+        public byte[] ReceivedDataBytes { get;internal set; }
     }
 }

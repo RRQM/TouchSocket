@@ -25,7 +25,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public class TcpService<TClient> : BaseSocket, ITcpService<TClient> where TClient : SocketClient, new()
+    public abstract class TcpService<TClient> : BaseSocket, ITcpService<TClient> where TClient : SocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -78,7 +78,6 @@ namespace RRQMSocket
         /// </summary>
         public BytePool BytePool { get { return BytePool.Default; } }
 
-
         private ServerConfig serverConfig;
         /// <summary>
         /// 获取服务器配置
@@ -105,11 +104,6 @@ namespace RRQMSocket
         /// 有用户断开连接的时候
         /// </summary>
         public event RRQMMessageEventHandler ClientDisconnected;
-
-        /// <summary>
-        /// 创建泛型T时
-        /// </summary>
-        public event Action<TClient, CreateOption> CreateSocketCliect;
 
         internal void ClientConnectedMethod(object sender, MesEventArgs e)
         {
@@ -470,10 +464,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="createOption"></param>
-        protected virtual void OnCreatSocketCliect(TClient tcpSocketClient, CreateOption createOption)
-        {
-            CreateSocketCliect?.Invoke(tcpSocketClient, createOption);
-        }
+        protected abstract void OnCreatSocketCliect(TClient tcpSocketClient, CreateOption createOption);
 
         internal virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {

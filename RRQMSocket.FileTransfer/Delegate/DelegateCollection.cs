@@ -25,4 +25,18 @@ namespace RRQMSocket.FileTransfer
     /// <param name="sender"></param>
     /// <param name="e"></param>
     public delegate void RRQMTransferFileMessageEventHandler(object sender, TransferFileMessageArgs e);
+
+    /// <summary>
+    /// 字节数据
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public delegate void RRQMBytesEventHandler(object sender, BytesEventArgs e);
+
+    /// <summary>
+    /// 字节数据
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public delegate void RRQMReturnBytesEventHandler(object sender, ReturnBytesEventArgs e);
 }

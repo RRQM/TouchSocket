@@ -157,7 +157,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 收到字节数组并返回
         /// </summary>
-        internal RRQMBytesEventHandler ReceivedBytesThenReturn;
+        internal RRQMReturnBytesEventHandler ReceivedBytesThenReturn;
+
+        /// <summary>
+        /// 收到字节
+        /// </summary>
+        internal RRQMBytesEventHandler ReceivedBytes;
 
         /// <summary>
         /// 请求删除文件
@@ -493,9 +498,9 @@ namespace RRQMSocket.FileTransfer
 
         private void ReturnBytes(ByteBlock byteBlock, ByteBlock receivedByteBlock, int length)
         {
-            BytesEventArgs args = new BytesEventArgs();
+            ReturnBytesEventArgs args = new ReturnBytesEventArgs();
             byte[] buffer = new byte[length];
-            byteBlock.Position = 4;
+            receivedByteBlock.Position = 4;
             receivedByteBlock.Read(buffer, 0, buffer.Length);
             args.ReceivedDataBytes = buffer;
             ReceivedBytesThenReturn?.Invoke(this, args);
@@ -611,9 +616,20 @@ namespace RRQMSocket.FileTransfer
         /// <exception cref="RRQMNotConnectedException"></exception>
         /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public override void Send(byte[] buffer, int offset, int length)
+        public sealed override void Send(byte[] buffer, int offset, int length)
         {
-            throw new RRQMException("不允许发送自由数据");
+            this.AgreementHelper.SocketSend(1030,buffer,offset,length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public override void SendAsync(byte[] buffer, int offset, int length)
+        {
+            this.AgreementHelper.SocketSend(1030, buffer, offset, length);
         }
 
         /// <summary>
@@ -841,6 +857,22 @@ namespace RRQMSocket.FileTransfer
                         }
                         returnAgreement = 999;
                         break;
+                    }
+                case 1030:
+                    {
+                        try
+                        {
+                            BytesEventArgs args = new BytesEventArgs();
+                            args.ReceivedDataBytes = new byte[byteBlock.Length-4];
+                            byteBlock.Position = 4;
+                            byteBlock.Read(args.ReceivedDataBytes);
+                            this.ReceivedBytes.Invoke(this, args);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        return;
                     }
                 default:
                     {
