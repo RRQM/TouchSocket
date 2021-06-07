@@ -32,8 +32,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         public TcpRPCParser()
         {
             this.SerializeConverter = new BinarySerializeConverter();
-            this.tcpService = new TokenService<RPCSocketClient>();
-            this.tcpService.CreateSocketCliect += this.TcpService_CreatSocketCliect;
+            this.tcpService = new RRQMService();
+            this.tcpService.Received += this.OnReceived;
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 获取通信实例
         /// </summary>
-        public TokenService<RPCSocketClient> Service => this.tcpService;
+        public RRQMService Service => this.tcpService;
 
         /// <summary>
         /// 获取内存池实例
@@ -61,20 +61,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         ///// </summary>
         //public override bool IsBind => this.tcpService.IsBind;
 
-        private void TcpService_CreatSocketCliect(RPCSocketClient tcpSocketClient, CreateOption creatOption)
-        {
-            if (creatOption.NewCreate)
-            {
-                tcpSocketClient.Logger = this.Logger;
-                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-                tcpSocketClient.OnReceivedRequest += this.TcpSocketClient_OnReceivedRequest;
-            }
-            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
-        }
+        private RRQMService tcpService;
 
-        private TokenService<RPCSocketClient> tcpService;
-
-        private void TcpSocketClient_OnReceivedRequest(object sender, ByteBlock byteBlock)
+        private void OnReceived(RPCSocketClient socketClient, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
@@ -86,7 +75,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RPCSocketClient socketClient = (RPCSocketClient)sender;
                             string proxyToken = null;
                             if (r - 4 > 0)
                             {
@@ -106,7 +94,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             RpcContext content = RpcContext.Deserialize(buffer, 4);
-                            this.ExecuteContext(content, sender);
+                            this.ExecuteContext(content, socketClient);
                         }
                         catch (Exception e)
                         {
@@ -118,7 +106,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            ((RPCSocketClient)sender).agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this), true));
+                            socketClient.agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this), true));
                         }
                         catch (Exception e)
                         {
@@ -130,7 +118,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            ((RPCSocketClient)sender).Agreement_110(buffer, r);
+                            socketClient.Agreement_110(buffer, r);
                         }
                         catch (Exception e)
                         {
@@ -142,7 +130,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            ((RPCSocketClient)sender).Agreement_112(buffer, r);
+                            socketClient.Agreement_112(buffer, r);
                         }
                         catch (Exception e)
                         {

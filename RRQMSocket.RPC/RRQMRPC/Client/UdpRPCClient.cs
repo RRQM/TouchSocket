@@ -57,11 +57,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 收到字节数组并返回
-        /// </summary>
-        public event RRQMBytesEventHandler ReceivedBytesThenReturn;
-
-        /// <summary>
         /// 收到ByteBlock时触发
         /// </summary>
         public event RRQMByteBlockEventHandler ReceivedByteBlock;
@@ -175,17 +170,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             throw new RRQMTimeoutException("连接初始化超时");
         }
 
-        private void Agreement_110(byte[] buffer, int r)
-        {
-            WaitBytes waitBytes = SerializeConvert.RRQMBinaryDeserialize<WaitBytes>(buffer, 4);
-            BytesEventArgs args = new BytesEventArgs();
-            args.ReceivedDataBytes = waitBytes.Bytes;
-            this.ReceivedBytesThenReturn?.Invoke(this, args);
-            waitBytes.Bytes = args.ReturnDataBytes;
-            byte[] data = SerializeConvert.RRQMBinarySerialize(waitBytes, true);
-            UDPSend(110, data, 0, data.Length);
-        }
-
         private void UdpSession_OnReceivedData(EndPoint remoteEndpoint, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
@@ -237,18 +221,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         catch (Exception e)
                         {
                             Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                case 110:/*反向函数调用返回*/
-                    {
-                        try
-                        {
-                            Agreement_110(buffer, r);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
                         }
                         break;
                     }

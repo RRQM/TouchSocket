@@ -33,7 +33,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.invokeWaitData.WaitResult = new RpcContext();
         }
 
-        internal event RRQMByteBlockEventHandler OnReceivedRequest;
+        internal Action<RPCSocketClient,ByteBlock> Received;
 
         private RRQMWaitHandle<WaitBytes> waitHandles;
         private WaitData<RpcContext> invokeWaitData;
@@ -267,7 +267,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="obj"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            OnReceivedRequest?.Invoke(this, byteBlock);
+            Received?.Invoke(this, byteBlock);
         }
     }
 }

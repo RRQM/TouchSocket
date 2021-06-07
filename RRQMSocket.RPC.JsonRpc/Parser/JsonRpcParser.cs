@@ -32,10 +32,10 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcParser()
         {
-            this.tcpService = new RRQMTcpService();
+            this.tcpService = new SimpleTcpService();
             this.actionMap = new ActionMap();
             this.tcpService.CreateSocketCliect += this.OnCreatSocketCliect;
-            this.tcpService.OnReceived += this.OnReceived;
+            this.tcpService.Received += this.OnReceived;
             this.JsonConverter = new DataContractJsonConverter();
         }
 
@@ -44,7 +44,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="creatOption"></param>
-        private void OnCreatSocketCliect(RRQMSocketClient socketClient, CreateOption creatOption)
+        private void OnCreatSocketCliect(SimpleSocketClient socketClient, CreateOption creatOption)
         {
             if (creatOption.NewCreate)
             {
@@ -52,7 +52,7 @@ namespace RRQMSocket.RPC.JsonRpc
             }
         }
 
-        private RRQMTcpService tcpService;
+        private SimpleTcpService tcpService;
 
         /// <summary>
         /// 函数键映射图
@@ -64,7 +64,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 获取当前服务通信器
         /// </summary>
-        public RRQMTcpService Service { get { return this.tcpService; } }
+        public SimpleTcpService Service { get { return this.tcpService; } }
 
         ///// <summary>
         ///// 获取绑定状态
@@ -131,7 +131,7 @@ namespace RRQMSocket.RPC.JsonRpc
             //this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
-        private void OnReceived(RRQMSocketClient socketClient, ByteBlock byteBlock, object obj)
+        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = socketClient;

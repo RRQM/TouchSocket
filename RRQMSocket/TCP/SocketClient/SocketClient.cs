@@ -225,7 +225,7 @@ namespace RRQMSocket
             {
                 try
                 {
-                    this.lastTick = DateTime.Now.Ticks / 10000000;
+                    this.lastTick = DateTime.Now.Ticks;
                     ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                     this.receiveEventArgs.UserToken = byteBlock;
                     this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
@@ -330,7 +330,7 @@ namespace RRQMSocket
         /// </summary>
         internal void GetTimeout(int time,long nowTick)
         {
-            if (nowTick-this.lastTick>time)
+            if (nowTick-this.lastTick/ 10000000 > time)
             {
                 this.breakOut = true;
             }

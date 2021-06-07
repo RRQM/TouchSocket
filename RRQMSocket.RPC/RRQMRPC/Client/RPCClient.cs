@@ -354,12 +354,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 if (this.rpcJunctorPool.FreeSize < this.Capacity)
                 {
-                    rpcJunctor = new RpcJunctor(this.BytePool);
-                    rpcJunctor.VerifyToken = this.verifyToken;
+                    rpcJunctor = new RpcJunctor();
+                    var config = new TcpClientConfig();
+                    config.SetValue(TokenClientConfig.VerifyTokenProperty,this.verifyToken)
+                        .SetValue(TokenClientConfig.RemoteIPHostProperty,this.iPHost);
                     try
                     {
-                        rpcJunctor.Connect(this.iPHost);
-                        rpcJunctor.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
+                        rpcJunctor.Connect();
                         rpcJunctor.ReceivedByteBlock = this.OnReceivedByteBlock;
                         rpcJunctor.ExecuteCallBack = this.OnExecuteCallBack;
                         rpcJunctor.Logger = this.logger;

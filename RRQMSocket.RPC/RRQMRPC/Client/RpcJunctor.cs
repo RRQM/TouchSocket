@@ -42,11 +42,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 收到字节数组并返回
-        /// </summary>
-        internal RRQMBytesEventHandler ReceivedBytesThenReturn;
-
-        /// <summary>
         /// 收到ByteBlock时触发
         /// </summary>
         internal RRQMByteBlockEventHandler ReceivedByteBlock;
@@ -275,17 +270,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        private void Agreement_110(byte[] buffer, int r)
-        {
-            WaitBytes waitBytes = SerializeConvert.RRQMBinaryDeserialize<WaitBytes>(buffer, 4);
-            BytesEventArgs args = new BytesEventArgs();
-            args.ReceivedDataBytes = waitBytes.Bytes;
-            this.ReceivedBytesThenReturn?.Invoke(this, args);
-            waitBytes.Bytes = args.ReturnDataBytes;
-
-            agreementHelper.SocketSend(110, SerializeConvert.RRQMBinarySerialize(waitBytes, true));
-        }
-
         /// <summary>
         /// 处理已接收到的数据
         /// </summary>
@@ -343,18 +327,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         catch (Exception e)
                         {
                             Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                case 110:/*数据返回*/
-                    {
-                        try
-                        {
-                            Agreement_110(buffer, r);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
                         }
                         break;
                     }

@@ -464,7 +464,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="createOption"></param>
-        protected abstract void OnCreatSocketCliect(TClient tcpSocketClient, CreateOption createOption);
+        protected abstract void OnCreateSocketCliect(TClient tcpSocketClient, CreateOption createOption);
 
         internal virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
@@ -502,7 +502,7 @@ namespace RRQMSocket
                     {
                         creatOption.ID = client.ID;
                     }
-                    this.OnCreatSocketCliect(client, creatOption);
+                    this.OnCreateSocketCliect(client, creatOption);
                     client.ID = creatOption.ID;
 
                     this.SocketClients.Add(client);
