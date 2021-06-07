@@ -14,7 +14,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TcpRPCClient
     /// </summary>
-    public class TcpRPCClient:IUserClient,IRPCClient
+    public class TcpRPCClient : IUserClient, IRPCClient
     {
         /// <summary>
         /// 构造函数
@@ -48,11 +48,20 @@ namespace RRQMSocket.RPC.RRQMRPC
             get { return methodMap; }
         }
 
-        public string ID => throw new NotImplementedException();
+        /// <summary>
+        /// 获取ID
+        /// </summary>
+        public string ID => this.client.ID;
 
-        public ILog Logger { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        public ILog Logger { get => this.client.Logger; set => this.client.Logger=value; }
 
-        public BytePool BytePool => throw new NotImplementedException();
+        /// <summary>
+        /// 内存池
+        /// </summary>
+        public BytePool BytePool => this.client.BytePool;
 
         private RRQMWaitHandle<RpcContext> waitHandle;
         private WaitData<WaitResult> singleWaitData;
@@ -60,15 +69,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         private RPCProxyInfo proxyFile;
         private RRQMAgreementHelper agreementHelper;
         private SimpleTokenClient client;
-        /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="clientConfig"></param>
-        protected override void LoadConfig(TcpClientConfig clientConfig)
-        {
-            base.LoadConfig(clientConfig);
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-        }
 
         /// <summary>
         /// 获取函数注册
@@ -77,21 +77,18 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMRPCException"></exception>
         internal MethodStore GetMethodStore()
         {
-            this.agreementHelper = new RRQMAgreementHelper(this);
-            lock (locker)
+            this.agreementHelper = new RRQMAgreementHelper(this.client);
+            try
             {
-                try
-                {
-                    this.methodStore = null;
-                    agreementHelper.SocketSend(102);
-                    this.singleWaitData.Wait(1000 * 10);
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMRPCException(e.Message);
-                }
-                return this.methodStore;
+                this.methodStore = null;
+                agreementHelper.SocketSend(102);
+                this.singleWaitData.Wait(1000 * 10);
             }
+            catch (Exception e)
+            {
+                throw new RRQMRPCException(e.Message);
+            }
+            return this.methodStore;
         }
 
         /// <summary>
@@ -103,67 +100,28 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMTimeoutException"></exception>
         public RPCProxyInfo GetProxyInfo(string proxyToken)
         {
-            lock (locker)
-            {
-                agreementHelper.SocketSend(100, proxyToken);
-                this.singleWaitData.Wait(1000 * 100);
+            agreementHelper.SocketSend(100, proxyToken);
+            this.singleWaitData.Wait(1000 * 100);
 
-                if (this.proxyFile == null)
-                {
-                    throw new RRQMTimeoutException("获取引用文件超时");
-                }
-                else if (this.proxyFile.Status == 2)
-                {
-                    throw new RRQMRPCException(this.proxyFile.Message);
-                }
-                return this.proxyFile;
+            if (this.proxyFile == null)
+            {
+                throw new RRQMTimeoutException("获取引用文件超时");
             }
+            else if (this.proxyFile.Status == 2)
+            {
+                throw new RRQMRPCException(this.proxyFile.Message);
+            }
+            return this.proxyFile;
         }
 
         /// <summary>
         /// 连接
         /// </summary>
-        public override void Connect()
+        public void Connect()
         {
-            base.Connect();
-            this.agreementHelper = new RRQMAgreementHelper(this);
+            this.client.Connect();
+            this.agreementHelper = new RRQMAgreementHelper(this.client);
         }
-
-        ///// <summary>
-        ///// 函数式调用
-        ///// </summary>
-        ///// <param name="method">方法名</param>
-        ///// <param name="parameters">参数</param>
-        ///// <param name="invokeOption"></param>
-        ///// <exception cref="RRQMTimeoutException"></exception>
-        ///// <exception cref="RRQMSerializationException"></exception>
-        ///// <exception cref="RRQMRPCInvokeException"></exception>
-        ///// <exception cref="RRQMException"></exception>
-        ///// <returns>服务器返回结果</returns>
-        //public T RPCInvoke<T>(string method, InvokeOption invokeOption = null, params object[] parameters)
-        //{
-        //    object result = this.Invoke(method, invokeOption, ref parameters);
-        //    if (result != null)
-        //    {
-        //        return (T)result;
-        //    }
-        //    return default(T);
-        //}
-
-        ///// <summary>
-        ///// 函数式调用
-        ///// </summary>
-        ///// <param name="method">函数名</param>
-        ///// <param name="parameters">参数</param>
-        ///// <param name="invokeOption"></param>
-        ///// <exception cref="RRQMTimeoutException"></exception>
-        ///// <exception cref="RRQMSerializationException"></exception>
-        ///// <exception cref="RRQMRPCInvokeException"></exception>
-        ///// <exception cref="RRQMException"></exception>
-        //public void RPCInvoke(string method, InvokeOption invokeOption = null, params object[] parameters)
-        //{
-        //    this.Invoke(method, invokeOption, ref parameters);
-        //}
 
         /// <summary>
         /// RPC调用，无返回值时请设置T为<see cref="Nullable"/>。
@@ -297,7 +255,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             RpcContext result = RpcContext.Deserialize(buffer, 4);
-                            this.waitHandle.SetRun(result.Sign,result);
+                            this.waitHandle.SetRun(result.Sign, result);
                         }
                         catch (Exception e)
                         {

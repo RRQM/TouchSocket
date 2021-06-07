@@ -111,7 +111,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            socketClient.agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this), true));
+                            socketClient.agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this,socketClient.ID), true));
                         }
                         catch (Exception e)
                         {

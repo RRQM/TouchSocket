@@ -253,8 +253,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 获取已注册服务条目
         /// </summary>
         /// <param name="parser"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
-        protected virtual List<MethodItem> GetRegisteredMethodItems(RPCParser parser)
+        protected virtual List<MethodItem> GetRegisteredMethodItems(RPCParser parser,string id)
         {
             return this.clientMethodStore.GetAllMethodItem();
         }

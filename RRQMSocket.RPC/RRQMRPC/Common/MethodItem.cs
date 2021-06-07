@@ -37,17 +37,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 参数类型
         /// </summary>
-        internal List<Type> ParameterTypes;
+        internal Type[] ParameterTypes;
 
-        /// <summary>
-        /// 返回值类型
-        /// </summary>
-        public string ReturnTypeString { get; internal set; }
-
-        /// <summary>
-        /// 参数类型
-        /// </summary>
-        public List<string> ParameterTypesString { get; internal set; }
 
         /// <summary>
         /// 是否含有Out或Ref
