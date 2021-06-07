@@ -37,7 +37,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         private EndPoint remoteService;
         private MethodStore methodStore;
         private WaitData<WaitResult> singleWaitData;
-        private RRQMUdpSession udpSession;
+        private SimpleUdpSession udpSession;
         private RPCProxyInfo proxyFile;
         private WaitResult waitResult;
 
@@ -52,8 +52,8 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.Logger = new Log();
             this.singleWaitData = new WaitData<WaitResult>();
             this.BytePool = bytePool;
-            this.udpSession = new RRQMUdpSession();
-            this.udpSession.OnReceivedData += this.UdpSession_OnReceivedData;
+            this.udpSession = new SimpleUdpSession();
+            this.udpSession.Received += this.UdpSession_OnReceivedData;
         }
 
         /// <summary>

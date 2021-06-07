@@ -24,7 +24,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TCP RPC解释器
     /// </summary>
-    public sealed class TcpRPCParser : RRQMRPCParser
+    public sealed class TcpRPCParser : RRQMRPCParser, IService
     {
         /// <summary>
         /// 构造函数
@@ -32,36 +32,41 @@ namespace RRQMSocket.RPC.RRQMRPC
         public TcpRPCParser()
         {
             this.SerializeConverter = new BinarySerializeConverter();
-            this.tcpService = new RRQMService();
-            this.tcpService.Received += this.OnReceived;
+            this.service = new RRQMService();
+            this.service.Received += this.OnReceived;
         }
 
         /// <summary>
         /// 获取或设置日志记录器
         /// </summary>
-        public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
+        public ILog Logger { get { return this.service.Logger; } set { this.service.Logger = value; } }
 
         /// <summary>
         /// 获取通信实例
         /// </summary>
-        public RRQMService Service => this.tcpService;
+        public RRQMService Service => this.service;
 
         /// <summary>
         /// 获取内存池实例
         /// </summary>
-        public override sealed BytePool BytePool { get { return this.tcpService.BytePool; } }
+        public override sealed BytePool BytePool { get { return this.service.BytePool; } }
 
         /// <summary>
         /// 获取或设置缓存大小
         /// </summary>
-        public int BufferLength { get { return this.tcpService.BufferLength; } set { this.tcpService.BufferLength = value; } }
+        public int BufferLength { get { return this.service.BufferLength; } set { this.service.BufferLength = value; } }
 
-        ///// <summary>
-        ///// 获取绑定状态
-        ///// </summary>
-        //public override bool IsBind => this.tcpService.IsBind;
+        /// <summary>
+        /// 服务状态
+        /// </summary>
+        public ServerState ServerState => this.service.ServerState;
 
-        private RRQMService tcpService;
+        /// <summary>
+        /// 服务配置
+        /// </summary>
+        public ServerConfig ServerConfig => this.service.ServerConfig;
+
+        private RRQMService service;
 
         private void OnReceived(RPCSocketClient socketClient, ByteBlock byteBlock)
         {
@@ -272,11 +277,46 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// 设置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        public void Setup(ServerConfig serverConfig)
+        {
+            this.service.Setup(serverConfig);
+        }
+
+        /// <summary>
+        /// 设置
+        /// </summary>
+        /// <param name="port"></param>
+        public void Setup(int port)
+        {
+            this.service.Setup(port);
+        }
+
+        /// <summary>
+        /// 启动
+        /// </summary>
+        public void Start()
+        {
+            this.service.Start();
+        }
+
+        /// <summary>
+        /// 停止
+        /// </summary>
+        public void Stop()
+        {
+            this.service.Stop();
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public override void Dispose()
         {
-            this.tcpService.Dispose();
+            this.service.Dispose();
         }
+
     }
 }

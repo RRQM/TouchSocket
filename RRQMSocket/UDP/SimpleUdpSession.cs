@@ -17,12 +17,12 @@ namespace RRQMSocket
     /// <summary>
     /// 若汝棋茗内置UDP会话
     /// </summary>
-    public sealed class RRQMUdpSession : UdpSession
+    public sealed class SimpleUdpSession : UdpSession
     {
         /// <summary>
         /// 当收到数据时
         /// </summary>
-        public event RRQMUDPByteBlockEventHandler OnReceivedData;
+        public event RRQMUDPByteBlockEventHandler Received;
 
         /// <summary>
         /// 处理数据
@@ -31,7 +31,7 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         protected override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
-            OnReceivedData?.Invoke(remoteEndPoint, byteBlock);
+            Received?.Invoke(remoteEndPoint, byteBlock);
         }
     }
 }

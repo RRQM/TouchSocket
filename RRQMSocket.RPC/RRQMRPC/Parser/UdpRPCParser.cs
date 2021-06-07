@@ -23,15 +23,15 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// UDP RPC解释器
     /// </summary>
-    public class UdpRPCParser : RRQMRPCParser
+    public class UdpRPCParser : RRQMRPCParser,IService
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         public UdpRPCParser()
         {
-            this.udpSession = new RRQMUdpSession();
-            this.udpSession.OnReceivedData += this.UdpSession_OnReceivedData;
+            this.udpSession = new SimpleUdpSession();
+            this.udpSession.Received += this.UdpSession_OnReceivedData;
         }
 
         private void UdpSession_OnReceivedData(EndPoint remoteEndpoint, ByteBlock byteBlock)
@@ -92,27 +92,32 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        private RRQMUdpSession udpSession;
+        private SimpleUdpSession udpSession;
 
         /// <summary>
         /// 获取通信实例
         /// </summary>
-        public RRQMUdpSession Session => this.udpSession;
+        public SimpleUdpSession Session => this.udpSession;
 
         /// <summary>
         /// 获取或设置日志记录仪
         /// </summary>
         public ILog Logger { get { return this.udpSession.Logger; } set { this.udpSession.Logger = value; } }
 
-        ///// <summary>
-        ///// 获取绑定状态
-        ///// </summary>
-        //public override bool IsBind => this.udpSession.IsBind;
-
         /// <summary>
         /// 获取内存池实例
         /// </summary>
         public override BytePool BytePool => this.udpSession.BytePool;
+
+        /// <summary>
+        /// 服务器状态
+        /// </summary>
+        public ServerState ServerState => this.udpSession.ServerState;
+
+        /// <summary>
+        /// 服务器配置
+        /// </summary>
+        public ServerConfig ServerConfig => this.udpSession.ServerConfig;
 
         /// <summary>
         /// 调用结束
@@ -142,6 +147,41 @@ namespace RRQMSocket.RPC.RRQMRPC
         private void UDPSend(int agreement, EndPoint endPoint, byte[] buffer)
         {
             this.UDPSend(agreement, endPoint, buffer, 0, buffer.Length);
+        }
+
+        
+        /// <summary>
+        /// 设置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        public void Setup(ServerConfig serverConfig)
+        {
+            this.udpSession.Setup(serverConfig);
+        }
+
+        /// <summary>
+        /// 设置
+        /// </summary>
+        /// <param name="port"></param>
+        public void Setup(int port)
+        {
+            this.udpSession.Setup(port);
+        }
+
+        /// <summary>
+        /// 启动
+        /// </summary>
+        public void Start()
+        {
+            this.udpSession.Start();
+        }
+
+        /// <summary>
+        /// 停止
+        /// </summary>
+        public void Stop()
+        {
+            this.udpSession.Stop();
         }
 
         /// <summary>
