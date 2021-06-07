@@ -165,15 +165,9 @@ namespace RRQMSocket.FileTransfer
         internal RRQMBytesEventHandler ReceivedBytes;
 
         /// <summary>
-        /// 请求删除文件
+        /// 调用操作
         /// </summary>
-        internal RRQMFileOperationEventHandler RequestDeleteFile;
-
-        /// <summary>
-        /// 请求文件信息
-        /// </summary>
-        internal RRQMFileOperationEventHandler RequestFileInfo;
-
+        internal Action<FileSocketClient,ByteBlock,ByteBlock> CallOperation;
         #endregion 事件
 
         private void MaxSpeedChanged(long speed)
@@ -496,7 +490,7 @@ namespace RRQMSocket.FileTransfer
             byteBlock.Write(1);
         }
 
-        private void ReturnBytes(ByteBlock byteBlock, ByteBlock receivedByteBlock, int length)
+        private void ReceivedBytesAndReturn(ByteBlock byteBlock, ByteBlock receivedByteBlock, int length)
         {
             ReturnBytesEventArgs args = new ReturnBytesEventArgs();
             byte[] buffer = new byte[length];
@@ -508,78 +502,6 @@ namespace RRQMSocket.FileTransfer
             if (args.ReturnDataBytes != null)
             {
                 byteBlock.Write(args.ReturnDataBytes);
-            }
-        }
-
-        private void RDeleteFile(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
-        {
-            FileOperationEventArgs args = new FileOperationEventArgs();
-            args.FileInfo = new FileInfo();
-            args.FileInfo.Copy(urlFileInfo);
-            args.TargetPath = urlFileInfo.FilePath;
-            this.RequestDeleteFile?.Invoke(this, args);
-
-            string filePath = args.TargetPath;
-
-            if (!args.IsPermitOperation)
-            {
-                byteBlock.Write(3);
-            }
-            else if (!File.Exists(filePath))
-            {
-                byteBlock.Write(2);
-            }
-            else
-            {
-                try
-                {
-                    File.Delete(filePath);
-                    byteBlock.Write(1);
-                }
-                catch (Exception ex)
-                {
-                    byteBlock.Write(4);
-                    byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
-                }
-            }
-        }
-
-        private void RFileInfo(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
-        {
-            FileOperationEventArgs args = new FileOperationEventArgs();
-            args.FileInfo = new FileInfo();
-            args.FileInfo.Copy(urlFileInfo);
-            args.TargetPath = args.FileInfo.FilePath;
-            this.RequestFileInfo?.Invoke(this, args);
-            string filePath = args.TargetPath;
-
-            if (!args.IsPermitOperation)
-            {
-                byteBlock.Write(3);
-            }
-            else if (!File.Exists(filePath))
-            {
-                byteBlock.Write(2);
-            }
-            else
-            {
-                try
-                {
-                    FileInfo fileInfo = new FileInfo();
-                    using (Stream stream = File.Open(filePath, FileMode.Open))
-                    {
-                        fileInfo.FileLength = stream.Length;
-                        fileInfo.FileName = Path.GetFileName(filePath);
-                        fileInfo.FilePath = filePath;
-                    }
-                    byteBlock.Write(1);
-                    byteBlock.Write(SerializeConvert.RRQMBinarySerialize(fileInfo, true));
-                }
-                catch (Exception ex)
-                {
-                    byteBlock.Write(4);
-                    byteBlock.Write(Encoding.UTF8.GetBytes(ex.Message));
-                }
             }
         }
 
@@ -627,7 +549,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public override void SendAsync(byte[] buffer, int offset, int length)
+        public sealed override void SendAsync(byte[] buffer, int offset, int length)
         {
             this.AgreementHelper.SocketSend(1030, buffer, offset, length);
         }
@@ -796,7 +718,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            ReturnBytes(returnByteBlock, byteBlock, r - 4);
+                            ReceivedBytesAndReturn(returnByteBlock, byteBlock, r - 4);
                         }
                         catch (Exception ex)
                         {
@@ -830,34 +752,6 @@ namespace RRQMSocket.FileTransfer
                         returnAgreement = 999;
                         break;
                     }
-                case 1021:
-                    {
-                        try
-                        {
-                            UrlFileInfo urlFileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(byteBlock.Buffer, 4);
-                            this.RDeleteFile(returnByteBlock, urlFileInfo);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1022:
-                    {
-                        try
-                        {
-                            UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(byteBlock.Buffer, 4);
-                            this.RFileInfo(returnByteBlock, fileInfo);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
                 case 1030:
                     {
                         try
@@ -873,6 +767,19 @@ namespace RRQMSocket.FileTransfer
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
                         return;
+                    }
+                case 1040:
+                    {
+                        try
+                        {
+                            this.CallOperation.Invoke(this, byteBlock,returnByteBlock);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 999;
+                        break;
                     }
                 default:
                     {

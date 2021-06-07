@@ -27,11 +27,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         event RRQMByteBlockEventHandler ReceivedByteBlock;
 
         /// <summary>
-        /// 收到字节数组并返回
-        /// </summary>
-        event RRQMBytesEventHandler ReceivedBytesThenReturn;
-
-        /// <summary>
         /// 获取ID
         /// </summary>
         string ID { get; }

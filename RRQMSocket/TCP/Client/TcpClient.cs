@@ -222,6 +222,7 @@ namespace RRQMSocket
         internal void Start()
         {
             this.ReadIpPort();
+            this.OnConnectedService(new MesEventArgs());
             if (!this.onlySend)
             {
                 queueGroup = new BufferQueueGroup();
@@ -247,7 +248,6 @@ namespace RRQMSocket
                 this.asyncSender.Load(this.MainSocket, this.MainSocket.RemoteEndPoint, this.Logger);
                 this.asyncSender.SetBufferLength((int)this.clientConfig.GetValue(TcpClientConfig.SeparateThreadSendBufferLengthProperty));
             }
-            this.OnConnectedService(new MesEventArgs());
         }
 
         /// <summary>

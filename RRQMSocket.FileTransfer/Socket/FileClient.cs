@@ -15,6 +15,7 @@ using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -25,7 +26,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯客户端主类
     /// </summary>
-    public class FileClient :TokenClient, IFileClient, IDisposable
+    public class FileClient : TokenClient, IFileClient, IDisposable
     {
         /// <summary>
         /// 无参数构造函数
@@ -96,7 +97,6 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-
         /// <summary>
         /// 默认接收文件的存放目录
         /// </summary>
@@ -159,11 +159,6 @@ namespace RRQMSocket.FileTransfer
         public event RRQMTransferFileMessageEventHandler TransferFileError;
 
         /// <summary>
-        /// 当接收到系统信息的时候
-        /// </summary>
-        public event RRQMMessageEventHandler ReceiveSystemMes;
-
-        /// <summary>
         /// 当文件传输集合更改时
         /// </summary>
         public event RRQMMessageEventHandler FileTransferCollectionChanged;
@@ -194,6 +189,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="clientConfig"></param>
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
+            clientConfig.OnlySend = false;
             base.LoadConfig(clientConfig);
             this.BufferLength = 1024 * 64;
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
@@ -391,143 +387,57 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 请求删除文件
+        /// 调用操作
         /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="FileNotFoundException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public void RequestDelete(UrlFileInfo fileInfo)
+        /// <typeparam name="T"></typeparam>
+        /// <param name="opeartionName"></param>
+        /// <param name="waitTime"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public T CallOperation<T>(string opeartionName, int waitTime = 5, params object[] parameters)
         {
-            lock (locker)
+            OperationContext context = new OperationContext();
+            context.OperationName = opeartionName;
+            context.ParametersBytes = new List<byte[]>();
+            foreach (var item in parameters)
             {
-                if (!this.Online)
-                {
-                    throw new RRQMException("未连接服务器");
-                }
-                byte[] datas = SerializeConvert.RRQMBinarySerialize(fileInfo, true);
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
-                byteBlock.Write(datas);
-                try
-                {
-                    ByteBlock returnByteBlock = this.SendWait(1021, this.timeout, byteBlock);
-                    if (returnByteBlock == null || returnByteBlock.Length == 0)
-                    {
-                        throw new RRQMTimeoutException("等待结果超时");
-                    }
-                    returnByteBlock.Position = 4;
-                    byte[] returnData = new byte[returnByteBlock.Length - 4];
-                    returnByteBlock.Read(returnData);
-                    returnByteBlock.SetHolding(false);
-                    if (returnData[0] == 1)
-                    {
-                        return;
-                    }
-                    else if (returnData[0] == 2)
-                    {
-                        throw new FileNotFoundException("未找到该文件路径");
-                    }
-                    else if (returnData[0] == 3)
-                    {
-                        throw new RRQMException("服务器拒绝操作");
-                    }
-                    else if (returnData[0] == 4)
-                    {
-                        throw new RRQMException(Encoding.UTF8.GetString(returnData, 1, returnData.Length - 1));
-                    }
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
+                context.ParametersBytes.Add(SerializeConvert.RRQMBinarySerialize(item, true));
             }
-        }
-
-        /// <summary>
-        /// 请求获取文件信息
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="FileNotFoundException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public FileInfo RequestFileInfo(UrlFileInfo fileInfo)
-        {
-            lock (locker)
-            {
-                if (!this.Online)
-                {
-                    throw new RRQMException("未连接服务器");
-                }
-                byte[] datas = SerializeConvert.RRQMBinarySerialize(fileInfo, true);
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
-                byteBlock.Write(datas);
-                try
-                {
-                    ByteBlock returnByteBlock = this.SendWait(1022, this.timeout, byteBlock);
-                    if (returnByteBlock == null)
-                    {
-                        throw new RRQMTimeoutException("等待结果超时");
-                    }
-                    returnByteBlock.Position = 4;
-                    byte[] returnData = new byte[returnByteBlock.Length - 4];
-                    returnByteBlock.Read(returnData);
-                    returnByteBlock.SetHolding(false);
-                    if (returnData[0] == 1)
-                    {
-                        return SerializeConvert.RRQMBinaryDeserialize<FileInfo>(returnData, 1);
-                    }
-                    else if (returnData[0] == 2)
-                    {
-                        throw new FileNotFoundException("未找到该文件路径");
-                    }
-                    else if (returnData[0] == 3)
-                    {
-                        throw new RRQMException("服务器拒绝操作");
-                    }
-                    else if (returnData[0] == 4)
-                    {
-                        throw new RRQMException(Encoding.UTF8.GetString(returnData, 1, returnData.Length - 1));
-                    }
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 发送系统消息
-        /// </summary>
-        /// <param name="Text">文本</param>
-        ///<exception cref="RRQMException"></exception>
-        public void SendSystemMessage(string Text)
-        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            context.Serialize(byteBlock);
             try
             {
-                byte[] datas = Encoding.UTF8.GetBytes(Text);
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
-
-                try
+                ByteBlock returnBlock = this.SendWait(1040, waitTime, byteBlock);
+                if (returnBlock != null)
                 {
-                    byteBlock.Write(datas);
-                    ByteBlock returnByteBlock = this.SendWait(1000, this.timeout, byteBlock);
-                    if (returnByteBlock != null)
+                    OperationContext operationContext = OperationContext.Deserialize(returnBlock.Buffer, 4);
+                    if (operationContext.Status == 1)
                     {
-                        returnByteBlock.SetHolding(false);
+                        if (typeof(T) != typeof(Nullable))
+                        {
+                            return SerializeConvert.RRQMBinaryDeserialize<T>(operationContext.ReturnParameterBytes, 0);
+                        }
+                        return default;
+                    }
+                    else
+                    {
+                        throw new RRQMException(operationContext.Message);
                     }
                 }
-                finally
+                else
                 {
-                    byteBlock.Dispose();
+                    throw new RRQMTimeoutException("操作超时");
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                throw new RRQMException(e.Message);
+                throw ex;
             }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+
         }
 
         /// <summary>
@@ -1078,7 +988,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="length"></param>
         public sealed override void Send(byte[] buffer, int offset, int length)
         {
-            this.agreementHelper.SocketSend(1030,buffer,offset,length);
+            this.agreementHelper.SocketSend(1030, buffer, offset, length);
         }
 
         /// <summary>
@@ -1087,43 +997,9 @@ namespace RRQMSocket.FileTransfer
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public override void SendAsync(byte[] buffer, int offset, int length)
+        public sealed override void SendAsync(byte[] buffer, int offset, int length)
         {
             this.agreementHelper.SocketSend(1030, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 发送Byte数组，并等待返回
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="waitTime"></param>
-        /// <returns></returns>
-        public byte[] SendBytesWaitReturn(byte[] data, int offset, int length, int waitTime = 3)
-        {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(length - offset);
-            byteBlock.Write(data, offset, length);
-            ByteBlock resultByteBlock = this.SendWait(1014, this.timeout, byteBlock);
-            if (resultByteBlock != null)
-            {
-                if (resultByteBlock.Buffer[4] == 1)
-                {
-                    byte[] buffer = new byte[resultByteBlock.Position - 5];
-                    resultByteBlock.Position = 5;
-                    resultByteBlock.Read(buffer, 0, buffer.Length);
-                    resultByteBlock.SetHolding(false);
-                    return buffer;
-                }
-                else
-                {
-                    throw new RRQMException("未知错误");
-                }
-            }
-            else
-            {
-                throw new RRQMException("未知错误");
-            }
         }
 
         private ByteBlock SendWait(int agreement, int waitTime, ByteBlock byteBlock = null)
@@ -1268,28 +1144,23 @@ namespace RRQMSocket.FileTransfer
                         }
                         break;
                     }
-                case 1000:
+                case 1030:
                     {
                         Task.Run(() =>
                         {
-                            this.ReceiveSystemMes?.Invoke(this, new MesEventArgs(Encoding.UTF8.GetString(byteBlock.Buffer, 4, (int)byteBlock.Length - 4)));
+                            try
+                            {
+                                BytesEventArgs args = new BytesEventArgs();
+                                args.ReceivedDataBytes = new byte[byteBlock.Length - 4];
+                                byteBlock.Position = 4;
+                                byteBlock.Read(args.ReceivedDataBytes);
+                                this.ReceivedBytes?.Invoke(this, args);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            }
                         });
-                        break;
-                    }
-                case 1030:
-                    {
-                        try
-                        {
-                            BytesEventArgs args = new BytesEventArgs();
-                            args.ReceivedDataBytes = new byte[byteBlock.Length - 4];
-                            byteBlock.Position = 4;
-                            byteBlock.Read(args.ReceivedDataBytes);
-                            this.ReceivedBytes?.Invoke(this, args);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
                         break;
                     }
                 default:

@@ -10,6 +10,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System.Reflection;
+using RRQMCore.ByteManager;
+using RRQMCore.Serialization;
+
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
@@ -23,6 +27,7 @@ namespace RRQMSocket.FileTransfer
         public FileService()
         {
             this.BufferLength = 1024 * 64;
+            this.operationMap = new OperationMap();
         }
 
         #region 属性
@@ -53,7 +58,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-       
+
         private bool breakpointResume;
         /// <summary>
         /// 是否支持断点续传
@@ -88,7 +93,7 @@ namespace RRQMSocket.FileTransfer
 
         private long downloadSpeed;
         private long uploadSpeed;
-
+        private OperationMap operationMap;
         #endregion 字段
 
         #region 事件
@@ -117,18 +122,28 @@ namespace RRQMSocket.FileTransfer
         /// 收到字节
         /// </summary>
         public event RRQMBytesEventHandler ReceivedBytes;
-
-        /// <summary>
-        /// 请求删除文件
-        /// </summary>
-        public event RRQMFileOperationEventHandler RequestDeleteFile;
-
-        /// <summary>
-        /// 请求文件信息
-        /// </summary>
-        public event RRQMFileOperationEventHandler RequestFileInfo;
-
         #endregion 事件
+
+        /// <summary>
+        /// 注册操作
+        /// </summary>
+        /// <param name="operation"></param>
+        public void RegisterOperation(IOperation operation)
+        {
+            MethodInfo[] methods = operation.GetType().GetMethods();
+            foreach (var mathod in methods)
+            {
+                OperationAttribute attribute = mathod.GetCustomAttribute<OperationAttribute>();
+                if (attribute != null)
+                {
+                    string key = string.IsNullOrEmpty(attribute.OperationName) ? mathod.Name : attribute.OperationName;
+                    OperationEntity entity = new OperationEntity();
+                    entity.instance = operation;
+                    entity.methodInfo = mathod;
+                    operationMap.Add(key, entity);
+                }
+            }
+        }
 
         /// <summary>
         /// 载入配置
@@ -159,9 +174,8 @@ namespace RRQMSocket.FileTransfer
                 tcpSocketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
                 tcpSocketClient.ReceiveSystemMes = this.OnReceiveSystemMes;
                 tcpSocketClient.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
-                tcpSocketClient.RequestDeleteFile = this.OnRequestDeleteFile;
-                tcpSocketClient.RequestFileInfo = this.OnRequestFileInfo;
                 tcpSocketClient.ReceivedBytes = this.OnReceivedBytes;
+                tcpSocketClient.CallOperation = this.OnCallOperation;
             }
             tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
@@ -185,20 +199,47 @@ namespace RRQMSocket.FileTransfer
         {
             this.ReceivedBytesThenReturn?.Invoke(sender, e);
         }
-        
+
         private void OnReceivedBytes(object sender, BytesEventArgs e)
         {
             this.ReceivedBytes?.Invoke(sender, e);
         }
 
-        private void OnRequestDeleteFile(object sender, FileOperationEventArgs e)
+        private void OnCallOperation(FileSocketClient sender, ByteBlock  byteBlock,ByteBlock returnBlock)
         {
-            this.RequestDeleteFile?.Invoke(sender, e);
-        }
+            OperationContext context = OperationContext.Deserialize(byteBlock.Buffer, 4);
+            if (this.operationMap.TryGet(context.OperationName, out OperationEntity entity))
+            {
+                try
+                {
+                    ParameterInfo[] parameters = entity.methodInfo.GetParameters();
+                    object[] ps = new object[parameters.Length];
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        ps[i] = SerializeConvert.RRQMBinaryDeserialize(context.ParametersBytes[i], 0, parameters[i].ParameterType);
+                    }
 
-        private void OnRequestFileInfo(object sender, FileOperationEventArgs e)
-        {
-            this.RequestFileInfo?.Invoke(sender, e);
+                    object returnObj = entity.methodInfo.Invoke(entity.instance, ps);
+                    context.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(returnObj, true);
+                    context.Status = 1;
+                }
+                catch (System.Exception ex)
+                {
+                    context.ParametersBytes = null;
+                    context.ReturnParameterBytes = null;
+                    context.Status = 2;
+                    context.Message = ex.Message;
+                }
+                
+            }
+            else
+            {
+                context.ParametersBytes = null;
+                context.ReturnParameterBytes = null;
+                context.Status = 2;
+                context.Message = "无此操作";
+            }
+            context.Serialize(returnBlock);
         }
     }
 }

@@ -45,11 +45,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         private string verifyToken;
 
         /// <summary>
-        /// 收到字节数组并返回
-        /// </summary>
-        public event RRQMBytesEventHandler ReceivedBytesThenReturn;
-
-        /// <summary>
         /// 收到ByteBlock时触发
         /// </summary>
         public event RRQMByteBlockEventHandler ReceivedByteBlock;
@@ -404,11 +399,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 tryCount = 0;
                 return rpcJunctor;
             }
-        }
-
-        private void OnReceivedBytesThenReturn(object sender, BytesEventArgs e)
-        {
-            this.ReceivedBytesThenReturn?.Invoke(sender, e);
         }
 
         private void OnReceivedByteBlock(object sender, ByteBlock e)
