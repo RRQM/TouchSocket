@@ -30,17 +30,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         public string Method { get; internal set; }
 
         /// <summary>
-        /// 返回值类型
-        /// </summary>
-        internal Type ReturnType;
-
-        /// <summary>
-        /// 参数类型
-        /// </summary>
-        internal Type[] ParameterTypes;
-
-
-        /// <summary>
         /// 是否含有Out或Ref
         /// </summary>
         public bool IsOutOrRef { get; internal set; }

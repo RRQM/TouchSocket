@@ -11,7 +11,7 @@ namespace RRQMSocket
     /// <summary>
     /// TcpClient配置
     /// </summary>
-    public class TcpClientConfig : RRQMConfig
+    public class TcpClientConfig : ClientConfig
     {
         /// <summary>
         /// 数据处理适配器

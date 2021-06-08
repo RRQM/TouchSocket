@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -29,10 +30,34 @@ namespace RRQMSocket.RPC.RRQMRPC
         private Dictionary<int, MethodItem> tokenToMethodItem;
         private Dictionary<string, MethodItem> methodKeyToMethodItem;
 
-        internal void AddMethodItem(MethodItem methodItem)
+        /// <summary>
+        /// 添加
+        /// </summary>
+        /// <param name="methodItem"></param>
+        public void AddMethodItem(MethodItem methodItem)
         {
             tokenToMethodItem.Add(methodItem.MethodToken, methodItem);
             methodKeyToMethodItem.Add(methodItem.Method, methodItem);
+        }
+
+        /// <summary>
+        /// 获取所有
+        /// </summary>
+        /// <returns></returns>
+        public List<MethodItem> GetAllMethodItem()
+        {
+            return this.tokenToMethodItem.Values.ToList();
+        }
+
+        /// <summary>
+        /// 获取函数服务
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="methodItem"></param>
+        /// <returns></returns>
+        public bool TryGetMethodItem(string method,out MethodItem  methodItem)
+        {
+            return methodKeyToMethodItem.TryGetValue(method,out methodItem);
         }
     }
 }

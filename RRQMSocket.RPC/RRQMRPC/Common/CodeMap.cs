@@ -211,18 +211,30 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                     codeString.AppendLine("};");
 
+                    codeString.Append($"Type[] types = new Type[]");
+                    codeString.Append("{");
+                    foreach (ParameterInfo parameter in parameters)
+                    {
+                        codeString.Append($"typeof({this.GetName(parameter.ParameterType)})");
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(",");
+                        }
+                    }
+                    codeString.AppendLine("};");
+
                     if (isReturn)
                     {
-                        codeString.Append(string.Format("{0} returnData=({0})Client.Invoke", this.GetName(method.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetName(method.ReturnType)));
                         codeString.Append("(");
                         codeString.Append(string.Format("\"{0}\"", methodName));
-                        codeString.AppendLine(",invokeOption,ref parameters);");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
                     }
                     else
                     {
                         codeString.Append("Client.Invoke(");
                         codeString.Append(string.Format("\"{0}\"", methodName));
-                        codeString.AppendLine(",invokeOption,ref parameters);");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
                     }
                     if (isOut || isRef)
                     {

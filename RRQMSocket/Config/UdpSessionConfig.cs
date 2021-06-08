@@ -11,7 +11,7 @@ namespace RRQMSocket
     /// <summary>
     /// UDP服务器配置
     /// </summary>
-    public class UdpServerConfig : ServerConfig
+    public class UdpSessionConfig : ServerConfig
     {
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace RRQMSocket
         /// 默认远程节点
         /// </summary>
         public static readonly DependencyProperty DefaultRemotePointProperty =
-            DependencyProperty.Register("DefaultRemotePoint", typeof(EndPoint), typeof(UdpServerConfig), null);
+            DependencyProperty.Register("DefaultRemotePoint", typeof(EndPoint), typeof(UdpSessionConfig), null);
 
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace RRQMSocket
         /// 使用绑定
         /// </summary>
         public static readonly DependencyProperty UseBindProperty =
-            DependencyProperty.Register("UseBind", typeof(bool), typeof(UdpServerConfig), false);
+            DependencyProperty.Register("UseBind", typeof(bool), typeof(UdpSessionConfig), false);
 
 
 

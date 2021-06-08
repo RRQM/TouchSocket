@@ -32,9 +32,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.invokeWaitData = new WaitData<RpcContext>();
             this.invokeWaitData.WaitResult = new RpcContext();
         }
-
         internal Action<RPCSocketClient,ByteBlock> Received;
-
         private RRQMWaitHandle<WaitBytes> waitHandles;
         private WaitData<RpcContext> invokeWaitData;
         internal RRQMAgreementHelper agreementHelper;

@@ -24,27 +24,27 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public abstract class RRQMRPCParser : RPCParser
     {
-        private MethodStore clientMethodStore;
+        private MethodStore methodStore;
 
         /// <summary>
         /// 序列化转换器
         /// </summary>
-        public SerializeConverter SerializeConverter { get; set; }
+        public SerializeConverter SerializeConverter { get; protected set; }
 
         /// <summary>
-        /// 获取或设置代理源文件命名空间
+        /// 代理源文件命名空间
         /// </summary>
-        public string NameSpace { get; set; }
+        public string NameSpace { get; protected set; }
 
         /// <summary>
         /// RPC代理版本
         /// </summary>
-        public Version RPCVersion { get; set; }
+        public Version RPCVersion { get; protected set; }
 
         /// <summary>
         /// RPC编译器
         /// </summary>
-        public IRPCCompiler RPCCompiler { get; set; }
+        public IRPCCompiler RPCCompiler { get;protected set; }
 
         /// <summary>
         /// 获取生成的代理代码
@@ -54,7 +54,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭
         /// </summary>
-        public string ProxyToken { get; set; }
+        public string ProxyToken { get;protected set; }
 
         /// <summary>
         /// 获取代理文件实例
@@ -66,13 +66,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public abstract BytePool BytePool { get; }
 
+      
         /// <summary>
         /// 初始化服务
         /// </summary>
         /// <param name="methodInstances"></param>
         protected sealed override void InitializeServers(MethodInstance[] methodInstances)
         {
-            this.clientMethodStore = new MethodStore();
+            this.methodStore = new MethodStore();
             string nameSpace = string.IsNullOrEmpty(this.NameSpace) ? "RRQMRPC" : $"RRQMRPC.{this.NameSpace}";
             List<string> refs = new List<string>();
 
@@ -112,21 +113,11 @@ namespace RRQMSocket.RPC.RRQMRPC
                         MethodItem methodItem = new MethodItem();
                         methodItem.IsOutOrRef = methodInstance.IsByRef;
                         methodItem.MethodToken = methodInstance.MethodToken;
-                        if (methodInstance.ReturnType != null)
-                        {
-                            methodItem.ReturnTypeString = propertyCode.GetTypeFullName(methodInstance.ReturnType);
-                        }
 
-                        methodItem.ParameterTypesString = new List<string>();
-                        methodItem.Method = attribute.MethodKey == null || attribute.MethodKey.Trim().Length == 0 ? methodInstance.Method.Name : attribute.MethodKey;
-
-                        for (int i = 0; i < methodInstance.ParameterTypes.Length; i++)
-                        {
-                            methodItem.ParameterTypesString.Add(propertyCode.GetTypeFullName(methodInstance.ParameterTypes[i]));
-                        }
+                        methodItem.Method =string.IsNullOrEmpty(attribute.MethodKey)? methodInstance.Method.Name : attribute.MethodKey;
                         try
                         {
-                            clientMethodStore.AddMethodItem(methodItem);
+                            methodStore.AddMethodItem(methodItem);
                         }
                         catch
                         {
@@ -257,7 +248,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         protected virtual List<MethodItem> GetRegisteredMethodItems(RPCParser parser,string id)
         {
-            return this.clientMethodStore.GetAllMethodItem();
+            return this.methodStore.GetAllMethodItem();
         }
+
     }
 }

@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMRPCMethodAttribute() : this(null, SupportProtocol.TCP | SupportProtocol.UDP)
+        public RRQMRPCMethodAttribute()
         {
         }
 
@@ -30,29 +30,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 构造函数
         /// </summary>
         /// <param name="methodKey">指定函数键</param>
-        public RRQMRPCMethodAttribute(string methodKey) : this(methodKey, SupportProtocol.TCP | SupportProtocol.UDP)
+        public RRQMRPCMethodAttribute(string methodKey)
         {
         }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodKey">指定函数键</param>
-        /// <param name="sp">支持调用协议</param>
-        public RRQMRPCMethodAttribute(string methodKey = null, SupportProtocol sp = SupportProtocol.TCP | SupportProtocol.UDP)
-        {
-            this.MethodKey = methodKey;
-            this.SP = sp;
-        }
-
+        
         /// <summary>
         /// 注册键
         /// </summary>
         public string MethodKey { get; private set; }
 
-        /// <summary>
-        /// 支持调用协议
-        /// </summary>
-        public SupportProtocol SP { get; private set; }
     }
 }

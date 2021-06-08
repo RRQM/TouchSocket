@@ -10,7 +10,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// 通信器
     /// </summary>
-    public class RRQMService : TokenService<RPCSocketClient>
+    public class TcpRPCService : TokenService<RPCSocketClient>
     {
         internal Action<RPCSocketClient, ByteBlock> Received;
 

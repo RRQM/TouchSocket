@@ -14,15 +14,13 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TcpRPCClient
     /// </summary>
-    public class TcpRPCClient : IUserClient, IRPCClient
+    public class TcpRPCClient : TokenClient, IRPCClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         public TcpRPCClient()
         {
-            this.client = new SimpleTokenClient();
-            this.SerializeConverter = new BinarySerializeConverter();
             this.methodStore = new MethodStore();
             this.singleWaitData = new WaitData<WaitResult>();
             this.singleWaitData.WaitResult = new WaitResult();
@@ -48,60 +46,20 @@ namespace RRQMSocket.RPC.RRQMRPC
             get { return methodMap; }
         }
 
-        /// <summary>
-        /// 获取ID
-        /// </summary>
-        public string ID => this.client.ID;
-
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        public ILog Logger { get => this.client.Logger; set => this.client.Logger=value; }
-
-        /// <summary>
-        /// 内存池
-        /// </summary>
-        public BytePool BytePool => this.client.BytePool;
-
         private RRQMWaitHandle<RpcContext> waitHandle;
         private WaitData<WaitResult> singleWaitData;
-        internal MethodStore methodStore;
+        private MethodStore methodStore;
         private RPCProxyInfo proxyFile;
         private RRQMAgreementHelper agreementHelper;
-        private SimpleTokenClient client;
-
-        /// <summary>
-        /// 获取函数注册
-        /// </summary>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="RRQMRPCException"></exception>
-        internal MethodStore GetMethodStore()
-        {
-            this.agreementHelper = new RRQMAgreementHelper(this.client);
-            try
-            {
-                this.methodStore = null;
-                agreementHelper.SocketSend(102);
-                this.singleWaitData.Wait(1000 * 10);
-            }
-            catch (Exception e)
-            {
-                throw new RRQMRPCException(e.Message);
-            }
-            return this.methodStore;
-        }
-
         /// <summary>
         /// 获取远程服务器RPC服务文件
         /// </summary>
-        /// <param name="proxyToken">代理令箭</param>
-        /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public RPCProxyInfo GetProxyInfo(string proxyToken)
+        public RPCProxyInfo GetProxyInfo()
         {
-            agreementHelper.SocketSend(100, proxyToken);
-            this.singleWaitData.Wait(1000 * 100);
+            agreementHelper.SocketSend(100, (string)this.ClientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty));
+            this.singleWaitData.Wait(1000 * 10);
 
             if (this.proxyFile == null)
             {
@@ -115,27 +73,23 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 连接
+        /// RPC调用
         /// </summary>
-        public void Connect()
-        {
-            this.client.Connect();
-            this.agreementHelper = new RRQMAgreementHelper(this.client);
-        }
-
-        /// <summary>
-        /// RPC调用，无返回值时请设置T为<see cref="Nullable"/>。
-        /// </summary>
-        /// <param name="method">函数名</param>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
-        /// <param name="invokeOption"></param>
+        /// <param name="types"></param>
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters)
+        /// <returns></returns>
+        public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters,Type[] types)
         {
-            MethodItem methodItem = this.methodStore.GetMethodItem(method);
+            if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
+            {
+                throw new RRQMException($"服务名为{method}的服务未找到注册信息");
+            }
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData();
             waitData.WaitResult.MethodToken = methodItem.MethodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -194,7 +148,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         for (int i = 0; i < parameters.Length; i++)
                         {
-                            parameters[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodItem.ParameterTypes[i]);
+                            parameters[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], types[i]);
                         }
                     }
                     catch (Exception e)
@@ -208,7 +162,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 try
                 {
-                    return (T)this.SerializeConverter.DeserializeParameter(context.ReturnParameterBytes, methodItem.ReturnType);
+                    return (T)this.SerializeConverter.DeserializeParameter(context.ReturnParameterBytes, typeof(T));
                 }
                 catch (Exception e)
                 {
@@ -224,7 +178,230 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 处理已接收到的数据
+        /// RPC调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="types"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
+        {
+            if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
+            {
+                throw new RRQMException($"服务名为{method}的服务未找到注册信息");
+            }
+            WaitData<RpcContext> waitData = this.waitHandle.GetWaitData();
+            waitData.WaitResult.MethodToken = methodItem.MethodToken;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            if (invokeOption == null)
+            {
+                invokeOption = InvokeOption.CanFeedback;
+            }
+            try
+            {
+                if (invokeOption.Feedback)
+                {
+                    waitData.WaitResult.Feedback = 1;
+                }
+                List<byte[]> datas = new List<byte[]>();
+                foreach (object parameter in parameters)
+                {
+                    datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                }
+                waitData.WaitResult.ParametersBytes = datas;
+                waitData.WaitResult.Serialize(byteBlock);
+                agreementHelper.SocketSend(101, byteBlock);
+            }
+            catch (Exception e)
+            {
+                throw new RRQMException(e.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+            if (invokeOption.Feedback)
+            {
+                waitData.Wait(invokeOption.WaitTime * 1000);
+                RpcContext context = waitData.WaitResult;
+                waitData.Dispose();
+
+                if (context.Status == 0)
+                {
+                    throw new RRQMTimeoutException("等待结果超时");
+                }
+                else if (context.Status == 2)
+                {
+                    throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
+                }
+                else if (context.Status == 3)
+                {
+                    throw new RRQMRPCException("该方法已被禁用");
+                }
+                else if (context.Status == 4)
+                {
+                    throw new RRQMRPCException($"服务器已阻止本次行为，信息：{context.MethodToken}");
+                }
+                if (methodItem.IsOutOrRef)
+                {
+                    try
+                    {
+                        for (int i = 0; i < parameters.Length; i++)
+                        {
+                            parameters[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], types[i]);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RRQMException(e.Message);
+                    }
+                }
+                else
+                {
+                    parameters = null;
+                }
+            }
+            else
+            {
+                waitData.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// RPC调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
+        /// <param name="parameters">参数</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Invoke(string method, InvokeOption invokeOption, params object[] parameters)
+        {
+            Type[] types = new Type[parameters.Length];
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                types[i] = parameters[i].GetType();
+            }
+            this.Invoke(method, invokeOption, ref parameters, types);
+        }
+
+        /// <summary>
+        /// RPC调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
+        /// <param name="parameters">参数</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns></returns>
+        public T Invoke<T>(string method, InvokeOption invokeOption, params object[] parameters)
+        {
+            Type[] types = new Type[parameters.Length];
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                types[i] = parameters[i].GetType();
+            }
+            return this.Invoke<T>(method, invokeOption, ref parameters, types);
+        }
+
+        private RpcContext OnExecuteCallBack(RpcContext rpcContext)
+        {
+            if (this.methodMap != null)
+            {
+                if (this.methodMap.TryGet(rpcContext.MethodToken, out MethodInstance methodInstance))
+                {
+                    try
+                    {
+                        object[] ps = new object[rpcContext.ParametersBytes.Count];
+                        for (int i = 0; i < rpcContext.ParametersBytes.Count; i++)
+                        {
+                            ps[i] = SerializeConvert.RRQMBinaryDeserialize(rpcContext.ParametersBytes[i], 0, methodInstance.ParameterTypes[i]);
+                        }
+                        object result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
+                        if (result != null)
+                        {
+                            rpcContext.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(result, true);
+                        }
+                        rpcContext.Status = 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        rpcContext.Status = 4;
+                        rpcContext.Message = ex.Message;
+                    }
+                }
+                else
+                {
+                    rpcContext.Status = 2;
+                }
+            }
+            else
+            {
+                rpcContext.Status = 3;
+            }
+
+            rpcContext.ParametersBytes = null;
+            return rpcContext;
+        }
+
+        /// <summary>
+        /// 连接
+        /// </summary>
+        public override void Connect()
+        {
+            lock (this)
+            {
+                base.Connect();
+                this.agreementHelper = new RRQMAgreementHelper(this);
+                try
+                {
+                    this.methodStore = null;
+                    agreementHelper.SocketSend(102);
+                }
+                catch (Exception e)
+                {
+                    throw new RRQMRPCException(e.Message);
+                }
+                this.singleWaitData.Wait(1000 * 10);
+                if (this.methodStore == null)
+                {
+                    throw new RRQMRPCException("初始化超时");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 初始化RPC
+        /// </summary>
+        public void InitializedRPC()
+        {
+            if (!this.Online)
+            {
+                this.Connect();
+            }
+        }
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        protected override void LoadConfig(TcpClientConfig clientConfig)
+        {
+            base.LoadConfig(clientConfig);
+            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            this.SerializeConverter = (SerializeConverter)clientConfig.GetValue(TcpRPCClientConfig.SerializeConverterProperty);
+        }
+
+        /// <summary>
+        /// 收到信息
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
@@ -327,85 +504,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
             }
         }
-
-        private RpcContext OnExecuteCallBack(RpcContext rpcContext)
-        {
-            if (this.methodMap != null)
-            {
-                if (this.methodMap.TryGet(rpcContext.MethodToken, out MethodInstance methodInstance))
-                {
-                    try
-                    {
-                        object[] ps = new object[rpcContext.ParametersBytes.Count];
-                        for (int i = 0; i < rpcContext.ParametersBytes.Count; i++)
-                        {
-                            ps[i] = SerializeConvert.RRQMBinaryDeserialize(rpcContext.ParametersBytes[i], 0, methodInstance.ParameterTypes[i]);
-                        }
-                        object result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
-                        if (result != null)
-                        {
-                            rpcContext.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(result, true);
-                        }
-                        rpcContext.Status = 1;
-                    }
-                    catch (Exception ex)
-                    {
-                        rpcContext.Status = 4;
-                        rpcContext.Message = ex.Message;
-                    }
-                }
-                else
-                {
-                    rpcContext.Status = 2;
-                }
-            }
-            else
-            {
-                rpcContext.Status = 3;
-            }
-
-            rpcContext.ParametersBytes = null;
-            return rpcContext;
-        }
-
-        public void ConnectAsync(Action<AsyncResult> callback = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Setup(TcpClientConfig clientConfig)
-        {
-            throw new NotImplementedException();
-        }
-
-        public RPCProxyInfo GetProxyInfo(IPHost ipHost, string verifyToken = null, string proxyToken = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void InitializedRPC(IPHost ipHost, string verifyToken = null, TypeInitializeDic typeDic = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RPCInvoke(string method, InvokeOption invokeOption = null, params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        public T RPCInvoke<T>(string method, InvokeOption invokeOption = null, params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object Invoke(string method, InvokeOption invokeOption, ref object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
     }
 }
+

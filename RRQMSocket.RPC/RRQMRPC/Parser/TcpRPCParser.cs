@@ -24,16 +24,27 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TCP RPC解释器
     /// </summary>
-    public sealed class TcpRPCParser : RRQMRPCParser, IService
+    public class TcpRPCParser : RRQMRPCParser, ITcpService<RPCSocketClient>
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         public TcpRPCParser()
         {
-            this.SerializeConverter = new BinarySerializeConverter();
-            this.service = new RRQMService();
+            this.service = new TcpRPCService();
             this.service.Received += this.OnReceived;
+            this.service.ClientConnected += this.Service_ClientConnected;
+            this.service.ClientDisconnected += this.Service_ClientDisconnected;
+        }
+
+        private void Service_ClientDisconnected(object sender, MesEventArgs e)
+        {
+            this.ClientDisconnected?.Invoke(sender, e);
+        }
+
+        private void Service_ClientConnected(object sender, MesEventArgs e)
+        {
+            this.ClientConnected?.Invoke(service, e);
         }
 
         /// <summary>
@@ -44,7 +55,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 获取通信实例
         /// </summary>
-        public RRQMService Service => this.service;
+        public TcpRPCService Service => this.service;
 
         /// <summary>
         /// 获取内存池实例
@@ -66,7 +77,27 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public ServerConfig ServerConfig => this.service.ServerConfig;
 
-        private RRQMService service;
+        /// <summary>
+        /// 最大连接数
+        /// </summary>
+        public int MaxCount => this.service.MaxCount;
+
+        /// <summary>
+        /// 清理间隔
+        /// </summary>
+        public int ClearInterval => this.service.ClearInterval;
+
+        private TcpRPCService service;
+
+        /// <summary>
+        /// 连接
+        /// </summary>
+        public event RRQMMessageEventHandler ClientConnected;
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        public event RRQMMessageEventHandler ClientDisconnected;
 
         private void OnReceived(RPCSocketClient socketClient, ByteBlock byteBlock)
         {
@@ -111,7 +142,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            socketClient.agreementHelper.SocketSend(102, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this,socketClient.ID), true));
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this, socketClient.ID), true);
+                            socketClient.agreementHelper.SocketSend(102, data);
                         }
                         catch (Exception e)
                         {
@@ -283,6 +315,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         public void Setup(ServerConfig serverConfig)
         {
             this.service.Setup(serverConfig);
+            this.SerializeConverter = (SerializeConverter)serverConfig.GetValue(RRQMRPCParserConfig.SerializeConverterProperty);
+            this.NameSpace = (string)serverConfig.GetValue(RRQMRPCParserConfig.NameSpaceProperty);
+            this.RPCVersion = (Version)serverConfig.GetValue(RRQMRPCParserConfig.RPCVersionProperty);
+            this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(RRQMRPCParserConfig.RPCCompilerProperty);
+            this.ProxyToken = (string)serverConfig.GetValue(RRQMRPCParserConfig.ProxyTokenProperty);
         }
 
         /// <summary>
@@ -318,5 +355,25 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.service.Dispose();
         }
 
+        /// <summary>
+        /// 判断Client是否在线
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool SocketClientExist(string id)
+        {
+            return this.service.SocketClientExist(id);
+        }
+
+        /// <summary>
+        /// 尝试获取Tclient
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="socketClient"></param>
+        /// <returns></returns>
+        public bool TryGetSocketClient(string id, out RPCSocketClient socketClient)
+        {
+            return this.service.TryGetSocketClient(id, out socketClient);
+        }
     }
 }

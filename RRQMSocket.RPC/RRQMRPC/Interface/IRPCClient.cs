@@ -44,26 +44,21 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 序列化生成器
         /// </summary>
-        SerializeConverter SerializeConverter { get; set; }
+        SerializeConverter SerializeConverter { get;}
+
 
         /// <summary>
         /// 获取远程服务器RPC服务文件
         /// </summary>
-        /// <param name="ipHost">IP和端口</param>
-        /// <param name="verifyToken">连接验证</param>
-        /// <param name="proxyToken">代理令箭</param>
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        RPCProxyInfo GetProxyInfo(IPHost ipHost, string verifyToken = null, string proxyToken = null);
+        RPCProxyInfo GetProxyInfo();
 
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        /// <param name="ipHost"></param>
-        /// <param name="verifyToken"></param>
-        /// <param name="typeDic"></param>
-        void InitializedRPC(IPHost ipHost, string verifyToken = null, TypeInitializeDic typeDic = null);
+        void InitializedRPC();
 
         /// <summary>
         /// 函数式调用
@@ -75,7 +70,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        void RPCInvoke(string method, InvokeOption invokeOption = null, params object[] parameters);
+        void Invoke(string method, InvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
         /// 函数式调用
@@ -88,19 +83,33 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns>服务器返回结果</returns>
-        T RPCInvoke<T>(string method, InvokeOption invokeOption = null, params object[] parameters);
+        T Invoke<T>(string method, InvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
         /// 函数式调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="parameters">参数</param>
+        /// <param name="types"></param>
         /// <param name="invokeOption">RPC调用设置</param>
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns>服务器返回结果</returns>
-        object Invoke(string method, InvokeOption invokeOption, ref object[] parameters);
+        T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types);
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="types"></param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types);
     }
 }

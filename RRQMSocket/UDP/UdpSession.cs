@@ -291,7 +291,7 @@ namespace RRQMSocket
         /// <param name="port"></param>
         public void Setup(int port)
         {
-            UdpServerConfig serverConfig = new UdpServerConfig();
+            UdpSessionConfig serverConfig = new UdpSessionConfig();
             serverConfig.BindIPHost = new IPHost(port);
             this.Setup(serverConfig);
         }
@@ -305,7 +305,7 @@ namespace RRQMSocket
             {
                 throw new RRQMException("配置文件为空");
             }
-            this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpServerConfig.DefaultRemotePointProperty);
+            this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpSessionConfig.DefaultRemotePointProperty);
         }
 
         /// <summary>
@@ -318,7 +318,7 @@ namespace RRQMSocket
                 throw new RRQMException("无法重新利用已释放对象");
             }
            
-            bool useBind = (bool)this.serverConfig.GetValue(UdpServerConfig.UseBindProperty);
+            bool useBind = (bool)this.serverConfig.GetValue(UdpSessionConfig.UseBindProperty);
             if (useBind)
             {
                 IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
