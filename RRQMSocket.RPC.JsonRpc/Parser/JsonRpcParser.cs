@@ -25,6 +25,10 @@ namespace RRQMSocket.RPC.JsonRpc
     /// </summary>
     public class JsonRpcParser : RPCParser
     {
+        private ActionMap actionMap;
+
+        private SimpleTcpService tcpService;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -38,36 +42,9 @@ namespace RRQMSocket.RPC.JsonRpc
         }
 
         /// <summary>
-        /// 在初次接收时
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="creatOption"></param>
-        private void OnCreatSocketCliect(SimpleSocketClient socketClient, CreateOption creatOption)
-        {
-            if (creatOption.NewCreate)
-            {
-                socketClient.DataHandlingAdapter = new TerminatorDataHandlingAdapter(this.BufferLength, "\r\n");
-            }
-        }
-
-        private SimpleTcpService tcpService;
-
-        /// <summary>
         /// 函数键映射图
         /// </summary>
         public ActionMap ActionMap { get { return this.actionMap; } }
-
-        private ActionMap actionMap;
-
-        /// <summary>
-        /// 获取当前服务通信器
-        /// </summary>
-        public SimpleTcpService Service { get { return this.tcpService; } }
-
-        ///// <summary>
-        ///// 获取绑定状态
-        ///// </summary>
-        //public bool IsBind => this.tcpService.IsBind;
 
         /// <summary>
         /// 获取或设置缓存大小
@@ -80,14 +57,19 @@ namespace RRQMSocket.RPC.JsonRpc
         public BytePool BytePool => this.tcpService.BytePool;
 
         /// <summary>
+        /// Json转换器
+        /// </summary>
+        public JsonConverter JsonConverter { get; set; }
+
+        /// <summary>
         /// 获取或设置日志记录器
         /// </summary>
         public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
 
         /// <summary>
-        /// Json转换器
+        /// 获取当前服务通信器
         /// </summary>
-        public JsonConverter JsonConverter { get; set; }
+        public SimpleTcpService Service { get { return this.tcpService; } }
 
         /// <summary>
         /// 绑定服务
@@ -129,38 +111,67 @@ namespace RRQMSocket.RPC.JsonRpc
             //this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
-        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public override void Dispose()
         {
-            MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Caller = socketClient;
-            MethodInstance methodInstance = null;
-            RpcRequestContext context = null;
-            try
-            {
-                this.BuildRequestContext(byteBlock, out methodInstance, out context);
+            this.tcpService.Dispose();
+        }
 
-                if (methodInstance == null)
+        /// <summary>
+        /// 构建请求内容
+        /// </summary>
+        /// <param name="byteBlock">数据</param>
+        /// <param name="methodInstance">调用服务实例</param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        protected virtual void BuildRequestContext(ByteBlock byteBlock, out MethodInstance methodInstance, out RpcRequestContext context)
+        {
+            context = (RpcRequestContext)this.JsonConverter.Deserialize(Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length), typeof(RpcRequestContext));
+
+            if (this.actionMap.TryGet(context.method, out methodInstance))
+            {
+                if (context.@params != null)
                 {
-                    methodInvoker.Status = InvokeStatus.UnFound;
-                }
-                else if (methodInstance.IsEnable)
-                {
-                    methodInvoker.Parameters = context.@params;
-                }
-                else
-                {
-                    methodInvoker.Status = InvokeStatus.UnEnable;
+                    if (context.@params.Length != methodInstance.ParameterTypes.Length)
+                    {
+                        throw new RRQMRPCException("调用参数计数不匹配");
+                    }
+                    for (int i = 0; i < context.@params.Length; i++)
+                    {
+                        string s = context.@params[i].ToString();
+
+                        Type type = methodInstance.ParameterTypes[i];
+                        if (type.IsPrimitive || type == typeof(string))
+                        {
+                            context.@params[i] = s.ParseToType(type);
+                        }
+                        else
+                        {
+                            context.@params[i] = this.JsonConverter.Deserialize(s, type);
+                        }
+                    }
                 }
             }
-            catch (Exception ex)
+            else
             {
-                methodInvoker.Status = InvokeStatus.Exception;
-                methodInvoker.StatusMessage = ex.Message;
+                methodInstance = null;
             }
+        }
 
-            methodInvoker.Flag = context;
-
-            this.ExecuteMethod(methodInvoker, methodInstance);
+        /// <summary>
+        /// 构建响应数据
+        /// </summary>
+        /// <param name="responseByteBlock"></param>
+        /// <param name="responseContext"></param>
+        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, RpcResponseContext responseContext)
+        {
+            if (string.IsNullOrEmpty(responseContext.id))
+            {
+                return;
+            }
+            this.JsonConverter.Serialize(responseByteBlock, responseContext);
         }
 
         /// <summary>
@@ -239,8 +250,9 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 初始化
         /// </summary>
+        /// <param name="providers"></param>
         /// <param name="methodInstances"></param>
-        protected sealed override void InitializeServers(MethodInstance[] methodInstances)
+        protected sealed override void InitializeServers(ServerProviderCollection providers,MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -268,66 +280,49 @@ namespace RRQMSocket.RPC.JsonRpc
         }
 
         /// <summary>
-        /// 构建请求内容
+        /// 在初次接收时
         /// </summary>
-        /// <param name="byteBlock">数据</param>
-        /// <param name="methodInstance">调用服务实例</param>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        protected virtual void BuildRequestContext(ByteBlock byteBlock, out MethodInstance methodInstance, out RpcRequestContext context)
+        /// <param name="socketClient"></param>
+        /// <param name="creatOption"></param>
+        private void OnCreatSocketCliect(SimpleSocketClient socketClient, CreateOption creatOption)
         {
-            context = (RpcRequestContext)this.JsonConverter.Deserialize(Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length), typeof(RpcRequestContext));
-
-            if (this.actionMap.TryGet(context.method, out methodInstance))
+            if (creatOption.NewCreate)
             {
-                if (context.@params != null)
-                {
-                    if (context.@params.Length != methodInstance.ParameterTypes.Length)
-                    {
-                        throw new RRQMRPCException("调用参数计数不匹配");
-                    }
-                    for (int i = 0; i < context.@params.Length; i++)
-                    {
-                        string s = context.@params[i].ToString();
+                socketClient.DataHandlingAdapter = new TerminatorDataHandlingAdapter(this.BufferLength, "\r\n");
+            }
+        }
+        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
+        {
+            MethodInvoker methodInvoker = new MethodInvoker();
+            methodInvoker.Caller = socketClient;
+            MethodInstance methodInstance = null;
+            RpcRequestContext context = null;
+            try
+            {
+                this.BuildRequestContext(byteBlock, out methodInstance, out context);
 
-                        Type type = methodInstance.ParameterTypes[i];
-                        if (type.IsPrimitive || type == typeof(string))
-                        {
-                            context.@params[i] = s.ParseToType(type);
-                        }
-                        else
-                        {
-                            context.@params[i] = this.JsonConverter.Deserialize(s, type);
-                        }
-                    }
+                if (methodInstance == null)
+                {
+                    methodInvoker.Status = InvokeStatus.UnFound;
+                }
+                else if (methodInstance.IsEnable)
+                {
+                    methodInvoker.Parameters = context.@params;
+                }
+                else
+                {
+                    methodInvoker.Status = InvokeStatus.UnEnable;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                methodInstance = null;
+                methodInvoker.Status = InvokeStatus.Exception;
+                methodInvoker.StatusMessage = ex.Message;
             }
-        }
 
-        /// <summary>
-        /// 构建响应数据
-        /// </summary>
-        /// <param name="responseByteBlock"></param>
-        /// <param name="responseContext"></param>
-        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, RpcResponseContext responseContext)
-        {
-            if (string.IsNullOrEmpty(responseContext.id))
-            {
-                return;
-            }
-            this.JsonConverter.Serialize(responseByteBlock, responseContext);
-        }
+            methodInvoker.Flag = context;
 
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            this.tcpService.Dispose();
+            this.ExecuteMethod(methodInvoker, methodInstance);
         }
     }
 }

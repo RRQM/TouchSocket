@@ -29,15 +29,15 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         internal SerializeConverter serializeConverter;
 
-        private WaitData<RpcContext> invokeWaitData;
+        private WaitData<RPCContext> invokeWaitData;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public RPCSocketClient()
         {
-            this.invokeWaitData = new WaitData<RpcContext>();
-            this.invokeWaitData.WaitResult = new RpcContext();
+            this.invokeWaitData = new WaitData<RPCContext>();
+            this.invokeWaitData.WaitResult = new RPCContext();
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 {
                     invokeWaitData.Wait(invokeOption.WaitTime * 1000);
 
-                    RpcContext context = invokeWaitData.WaitResult;
+                    RPCContext context = invokeWaitData.WaitResult;
                     invokeWaitData.Dispose();
                     if (context.Status == 0)
                     {
@@ -167,7 +167,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 {
                     invokeWaitData.Wait(invokeOption.WaitTime * 1000);
 
-                    RpcContext context = invokeWaitData.WaitResult;
+                    RPCContext context = invokeWaitData.WaitResult;
                     invokeWaitData.Dispose();
                     if (context.Status == 0)
                     {
@@ -190,6 +190,70 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="invokeOption"></param>
+        /// <returns></returns>
+        public byte[] CallBack(RPCContext context, InvokeOption invokeOption = null)
+        {
+            lock (locker)
+            {
+                invokeWaitData.WaitResult=context;
+
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                if (invokeOption == null)
+                {
+                    invokeOption = InvokeOption.NoFeedback;
+                }
+                try
+                {
+                    invokeWaitData.WaitResult.Serialize(byteBlock);
+
+                    agreementHelper.SocketSend(112, byteBlock);
+                }
+                catch (Exception e)
+                {
+                    throw new RRQMException(e.Message);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+                if (invokeOption.Feedback)
+                {
+                    invokeWaitData.Wait(invokeOption.WaitTime * 1000);
+
+                    RPCContext resultContext = invokeWaitData.WaitResult;
+                    invokeWaitData.Dispose();
+                    if (resultContext.Status == 0)
+                    {
+                        throw new RRQMTimeoutException("等待结果超时");
+                    }
+                    else if (resultContext.Status == 2)
+                    {
+                        throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCCallBackMethod");
+                    }
+                    else if (resultContext.Status == 3)
+                    {
+                        throw new RRQMRPCException("客户端未开启反向RPC");
+                    }
+                    else if (resultContext.Status == 4)
+                    {
+                        throw new RRQMRPCException($"调用异常，信息：{context.Message}");
+                    }
+
+                    return resultContext.ReturnParameterBytes;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+
+        /// <summary>
         /// 向RPC发送数据
         /// </summary>
         /// <param name="buffer"></param>
@@ -207,7 +271,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="r"></param>
         internal void Agreement_112(byte[] buffer, int r)
         {
-            RpcContext rpcContext = RpcContext.Deserialize(buffer, 4);
+            RPCContext rpcContext = RPCContext.Deserialize(buffer, 4);
 
             this.invokeWaitData.Set(rpcContext);
         }

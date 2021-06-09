@@ -130,7 +130,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     bool isReturn;
                     bool isOut = false;
                     bool isRef = false;
-                    string methodName = method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey;
+                    string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
                     if (method.ReturnType.Name == "Void")
                     {
@@ -223,30 +223,54 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                     codeString.AppendLine("};");
 
-                    codeString.Append($"Type[] types = new Type[]");
-                    codeString.Append("{");
-                    foreach (ParameterInfo parameter in parameters)
+                    if (isOut||isRef)
                     {
-                        codeString.Append($"typeof({this.GetName(parameter.ParameterType)})");
-                        if (parameter != parameters[parameters.Length - 1])
+                        codeString.Append($"Type[] types = new Type[]");
+                        codeString.Append("{");
+                        foreach (ParameterInfo parameter in parameters)
                         {
-                            codeString.Append(",");
+                            codeString.Append($"typeof({this.GetName(parameter.ParameterType)})");
+                            if (parameter != parameters[parameters.Length - 1])
+                            {
+                                codeString.Append(",");
+                            }
                         }
+                        codeString.AppendLine("};");
                     }
-                    codeString.AppendLine("};");
+                   
 
                     if (isReturn)
                     {
-                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetName(method.ReturnType)));
-                        codeString.Append("(");
-                        codeString.Append(string.Format("\"{0}\"", methodName));
-                        codeString.AppendLine(",invokeOption,ref parameters,types);");
+                        if (isOut || isRef)
+                        {
+                            codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetName(method.ReturnType)));
+                            codeString.Append("(");
+                            codeString.Append(string.Format("\"{0}\"", methodName));
+                            codeString.AppendLine(",invokeOption,ref parameters,types);");
+                        }
+                        else
+                        {
+                            codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetName(method.ReturnType)));
+                            codeString.Append("(");
+                            codeString.Append(string.Format("\"{0}\"", methodName));
+                            codeString.AppendLine(",invokeOption, parameters);");
+                        }
                     }
                     else
                     {
-                        codeString.Append("Client.Invoke(");
-                        codeString.Append(string.Format("\"{0}\"", methodName));
-                        codeString.AppendLine(",invokeOption,ref parameters,types);");
+                        if (isOut || isRef)
+                        {
+                            codeString.Append("Client.Invoke(");
+                            codeString.Append(string.Format("\"{0}\"", methodName));
+                            codeString.AppendLine(",invokeOption,ref parameters,types);");
+                        }
+                        else
+                        {
+                            codeString.Append("Client.Invoke(");
+                            codeString.Append(string.Format("\"{0}\"", methodName));
+                            codeString.AppendLine(",invokeOption, parameters);");
+                        }
+                       
                     }
                     if (isOut || isRef)
                     {
@@ -374,7 +398,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 {
                     bool isOut = false;
                     bool isRef = false;
-                    string methodName = method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey;
+                    string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
                     if (method.ReturnType.Name == "Void")
                     {

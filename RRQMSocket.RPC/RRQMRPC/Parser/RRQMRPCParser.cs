@@ -73,7 +73,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="context"></param>
         /// <param name="caller"></param>
-        protected virtual void ExecuteContext(RpcContext context, object caller)
+        protected virtual void ExecuteContext(RPCContext context, object caller)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = caller;
@@ -143,8 +143,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 初始化服务
         /// </summary>
+        /// <param name="providers"></param>
         /// <param name="methodInstances"></param>
-        protected sealed override void InitializeServers(MethodInstance[] methodInstances)
+        protected sealed override void InitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
         {
             this.methodStore = new MethodStore();
             string nameSpace = string.IsNullOrEmpty(this.NameSpace) ? "RRQMRPC" : $"RRQMRPC.{this.NameSpace}";
@@ -155,9 +156,9 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             foreach (MethodInstance methodInstance in methodInstances)
             {
-                foreach (RPCMethodAttribute att in methodInstance.RPCAttributes)
+                foreach (RPCAttribute att in methodInstance.RPCAttributes)
                 {
-                    if (att is RRQMRPCMethodAttribute attribute)
+                    if (att is RRQMRPCAttribute attribute)
                     {
                         if (methodInstance.ReturnType != null)
                         {
@@ -179,15 +180,15 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             foreach (MethodInstance methodInstance in methodInstances)
             {
-                foreach (RPCMethodAttribute att in methodInstance.RPCAttributes)
+                foreach (RPCAttribute att in methodInstance.RPCAttributes)
                 {
-                    if (att is RRQMRPCMethodAttribute attribute)
+                    if (att is RRQMRPCAttribute attribute)
                     {
                         MethodItem methodItem = new MethodItem();
                         methodItem.IsOutOrRef = methodInstance.IsByRef;
                         methodItem.MethodToken = methodInstance.MethodToken;
 
-                        methodItem.Method = string.IsNullOrEmpty(attribute.MethodKey) ? methodInstance.Method.Name : attribute.MethodKey;
+                        methodItem.Method = string.IsNullOrEmpty(attribute.MemberKey) ? methodInstance.Method.Name : attribute.MemberKey;
                         try
                         {
                             methodStore.AddMethodItem(methodItem);
@@ -211,7 +212,20 @@ namespace RRQMSocket.RPC.RRQMRPC
             CodeMap.Namespace = nameSpace;
             CodeMap.PropertyCode = propertyCode;
             List<CellCode> codes = new List<CellCode>();
-            //codes.Add(CodeMap.GetAssemblyInfo(nameSpace, setting.Version));
+
+            //foreach (var provider in providers)
+            //{
+            //    EventInfo[] eventInfos = provider.GetType().GetEvents();
+            //    foreach (var eventInfo in eventInfos)
+            //    {
+            //        RRQMRPCAttribute attribute = eventInfo.GetCustomAttribute<RRQMRPCAttribute>();
+            //        if (attribute!=null)
+            //        {
+            //            var handler = Delegate.CreateDelegate(eventInfo.EventHandlerType, this, method);
+            //            eventInfo.AddEventHandler(ctrl, handler);
+            //        }
+            //    }
+            //}
 
             foreach (string className in classAndMethods.Keys)
             {

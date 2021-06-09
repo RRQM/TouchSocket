@@ -32,7 +32,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// RPC属性集合
         /// </summary>
-        public RPCMethodAttribute[] RPCAttributes { get; internal set; }
+        public RPCAttribute[] RPCAttributes { get; internal set; }
 
         /// <summary>
         /// 方法唯一令箭

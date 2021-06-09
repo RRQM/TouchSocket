@@ -28,6 +28,10 @@ namespace RRQMSocket.RPC.XmlRpc
     /// </summary>
     public sealed class XmlRpcParser : RPCParser
     {
+        private ActionMap actionMap;
+
+        private SimpleTcpService tcpService;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -40,42 +44,19 @@ namespace RRQMSocket.RPC.XmlRpc
         }
 
         /// <summary>
-        /// 在初次接收时
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="creatOption"></param>
-        private void OnCreatSocketCliect(SimpleSocketClient socketClient, CreateOption creatOption)
-        {
-            if (creatOption.NewCreate)
-            {
-                socketClient.DataHandlingAdapter = new HttpDataHandlingAdapter(this.BufferLength);
-            }
-        }
-
-        private SimpleTcpService tcpService;
-
-        /// <summary>
         /// 服务键映射图
         /// </summary>
         public ActionMap ActionMap { get { return this.actionMap; } }
-
-        private ActionMap actionMap;
-
-        /// <summary>
-        /// 获取当前服务通信器
-        /// </summary>
-        public SimpleTcpService Service { get { return this.tcpService; } }
-
-        ///// <summary>
-        ///// 获取绑定状态
-        ///// </summary>
-        //public bool IsBind => this.tcpService.IsBind;
 
         /// <summary>
         /// 获取或设置缓存大小
         /// </summary>
         public int BufferLength { get { return this.tcpService.BufferLength; } set { this.tcpService.BufferLength = value; } }
 
+        ///// <summary>
+        ///// 获取绑定状态
+        ///// </summary>
+        //public bool IsBind => this.tcpService.IsBind;
         /// <summary>
         /// 获取内存池实例
         /// </summary>
@@ -85,6 +66,11 @@ namespace RRQMSocket.RPC.XmlRpc
         /// 获取或设置日志记录器
         /// </summary>
         public ILog Logger { get { return this.tcpService.Logger; } set { this.tcpService.Logger = value; } }
+
+        /// <summary>
+        /// 获取当前服务通信器
+        /// </summary>
+        public SimpleTcpService Service { get { return this.tcpService; } }
 
         /// <summary>
         /// 绑定服务
@@ -126,112 +112,12 @@ namespace RRQMSocket.RPC.XmlRpc
             // this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
-        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public override void Dispose()
         {
-            HttpRequest httpRequest = (HttpRequest)obj;
-            MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Caller = socketClient;
-            methodInvoker.Flag = httpRequest;
-
-            XmlDocument xml = new XmlDocument();
-            xml.LoadXml(httpRequest.BodyString);
-            XmlNode methodName = xml.SelectSingleNode("methodCall/methodName");
-            string actionKey = methodName.InnerText;
-
-            if (this.actionMap.TryGet(actionKey, out MethodInstance methodInstance))
-            {
-                if (methodInstance.IsEnable)
-                {
-                    try
-                    {
-                        List<object> ps = new List<object>();
-                        XmlNode paramsNode = xml.SelectSingleNode("methodCall/params");
-                        int index = 0;
-                        foreach (XmlNode paramNode in paramsNode.ChildNodes)
-                        {
-                            XmlNode valueNode = paramNode.FirstChild.FirstChild;
-                            ps.Add(this.GetValue(valueNode, methodInstance.ParameterTypes[index]));
-                            index++;
-                        }
-
-                        methodInvoker.Parameters = ps.ToArray();
-                    }
-                    catch (Exception ex)
-                    {
-                        methodInvoker.Status = InvokeStatus.Exception;
-                        methodInvoker.StatusMessage = ex.Message;
-                        this.Logger.Debug(LogType.Error, this, ex.Message, ex);
-                    }
-                }
-                else
-                {
-                    methodInvoker.Status = InvokeStatus.UnEnable;
-                }
-            }
-            else
-            {
-                methodInvoker.Status = InvokeStatus.UnFound;
-            }
-
-            this.ExecuteMethod(methodInvoker, methodInstance);
-        }
-
-        private object GetValue(XmlNode valueNode, Type type)
-        {
-            switch (valueNode.Name)
-            {
-                case "boolean":
-                    {
-                        return bool.Parse(valueNode.InnerText);
-                    }
-                case "i4":
-                case "int":
-                    {
-                        return int.Parse(valueNode.InnerText);
-                    }
-                case "double":
-                    {
-                        return double.Parse(valueNode.InnerText);
-                    }
-                case "dateTime.iso8601":
-                    {
-                        return DateTime.Parse(valueNode.InnerText);
-                    }
-                case "base64":
-                    {
-                        return valueNode.InnerText;
-                    }
-                case "struct":
-                    {
-                        object instance = Activator.CreateInstance(type);
-                        foreach (XmlNode memberNode in valueNode.ChildNodes)
-                        {
-                            string name = memberNode.SelectSingleNode("name").InnerText;
-                            PropertyInfo property = type.GetProperty(name);
-                            property.SetValue(instance, this.GetValue(memberNode.SelectSingleNode("value").FirstChild, property.PropertyType));
-                        }
-                        return instance;
-                    }
-                case "arrays":
-                case "array":
-                    {
-                        XmlNode dataNode = valueNode.SelectSingleNode("data");
-                        Array array = Array.CreateInstance(type.GetElementType(), dataNode.ChildNodes.Count);
-
-                        int index = 0;
-                        foreach (XmlNode arrayValueNode in dataNode.ChildNodes)
-                        {
-                            array.SetValue(this.GetValue(arrayValueNode.FirstChild, type.GetElementType()), index);
-                            index++;
-                        }
-                        return array;
-                    }
-                default:
-                case "string":
-                    {
-                        return valueNode.InnerText;
-                    }
-            }
+            this.tcpService.Dispose();
         }
 
         /// <summary>
@@ -287,6 +173,31 @@ namespace RRQMSocket.RPC.XmlRpc
             if (!httpRequest.KeepAlive)
             {
                 socketClient.Shutdown(SocketShutdown.Both);
+            }
+        }
+
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        /// <param name="providers"></param>
+        /// <param name="methodInstances"></param>
+        protected override void InitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                foreach (var att in methodInstance.RPCAttributes)
+                {
+                    if (att is XmlRpcAttribute attribute)
+                    {
+                        if (methodInstance.IsByRef)
+                        {
+                            throw new RRQMRPCException("XmlRpc服务中不允许有out及ref关键字");
+                        }
+                        string actionKey = string.IsNullOrEmpty(attribute.ActionKey) ? $"{methodInstance.Provider.GetType().Name}.{methodInstance.Method.Name}" : attribute.ActionKey;
+
+                        this.actionMap.Add(actionKey, methodInstance);
+                    }
+                }
             }
         }
 
@@ -372,36 +283,124 @@ namespace RRQMSocket.RPC.XmlRpc
             }
         }
 
-        /// <summary>
-        /// 初始化
-        /// </summary>
-        /// <param name="methodInstances"></param>
-        protected override void InitializeServers(MethodInstance[] methodInstances)
+        private object GetValue(XmlNode valueNode, Type type)
         {
-            foreach (var methodInstance in methodInstances)
+            switch (valueNode.Name)
             {
-                foreach (var att in methodInstance.RPCAttributes)
-                {
-                    if (att is XmlRpcAttribute attribute)
+                case "boolean":
                     {
-                        if (methodInstance.IsByRef)
-                        {
-                            throw new RRQMRPCException("XmlRpc服务中不允许有out及ref关键字");
-                        }
-                        string actionKey = string.IsNullOrEmpty(attribute.ActionKey) ? $"{methodInstance.Provider.GetType().Name}.{methodInstance.Method.Name}" : attribute.ActionKey;
-
-                        this.actionMap.Add(actionKey, methodInstance);
+                        return bool.Parse(valueNode.InnerText);
                     }
-                }
+                case "i4":
+                case "int":
+                    {
+                        return int.Parse(valueNode.InnerText);
+                    }
+                case "double":
+                    {
+                        return double.Parse(valueNode.InnerText);
+                    }
+                case "dateTime.iso8601":
+                    {
+                        return DateTime.Parse(valueNode.InnerText);
+                    }
+                case "base64":
+                    {
+                        return valueNode.InnerText;
+                    }
+                case "struct":
+                    {
+                        object instance = Activator.CreateInstance(type);
+                        foreach (XmlNode memberNode in valueNode.ChildNodes)
+                        {
+                            string name = memberNode.SelectSingleNode("name").InnerText;
+                            PropertyInfo property = type.GetProperty(name);
+                            property.SetValue(instance, this.GetValue(memberNode.SelectSingleNode("value").FirstChild, property.PropertyType));
+                        }
+                        return instance;
+                    }
+                case "arrays":
+                case "array":
+                    {
+                        XmlNode dataNode = valueNode.SelectSingleNode("data");
+                        Array array = Array.CreateInstance(type.GetElementType(), dataNode.ChildNodes.Count);
+
+                        int index = 0;
+                        foreach (XmlNode arrayValueNode in dataNode.ChildNodes)
+                        {
+                            array.SetValue(this.GetValue(arrayValueNode.FirstChild, type.GetElementType()), index);
+                            index++;
+                        }
+                        return array;
+                    }
+                default:
+                case "string":
+                    {
+                        return valueNode.InnerText;
+                    }
             }
         }
 
         /// <summary>
-        /// 释放资源
+        /// 在初次接收时
         /// </summary>
-        public override void Dispose()
+        /// <param name="socketClient"></param>
+        /// <param name="creatOption"></param>
+        private void OnCreatSocketCliect(SimpleSocketClient socketClient, CreateOption creatOption)
         {
-            this.tcpService.Dispose();
+            if (creatOption.NewCreate)
+            {
+                socketClient.DataHandlingAdapter = new HttpDataHandlingAdapter(this.BufferLength);
+            }
+        }
+        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
+        {
+            HttpRequest httpRequest = (HttpRequest)obj;
+            MethodInvoker methodInvoker = new MethodInvoker();
+            methodInvoker.Caller = socketClient;
+            methodInvoker.Flag = httpRequest;
+
+            XmlDocument xml = new XmlDocument();
+            xml.LoadXml(httpRequest.BodyString);
+            XmlNode methodName = xml.SelectSingleNode("methodCall/methodName");
+            string actionKey = methodName.InnerText;
+
+            if (this.actionMap.TryGet(actionKey, out MethodInstance methodInstance))
+            {
+                if (methodInstance.IsEnable)
+                {
+                    try
+                    {
+                        List<object> ps = new List<object>();
+                        XmlNode paramsNode = xml.SelectSingleNode("methodCall/params");
+                        int index = 0;
+                        foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                        {
+                            XmlNode valueNode = paramNode.FirstChild.FirstChild;
+                            ps.Add(this.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                            index++;
+                        }
+
+                        methodInvoker.Parameters = ps.ToArray();
+                    }
+                    catch (Exception ex)
+                    {
+                        methodInvoker.Status = InvokeStatus.Exception;
+                        methodInvoker.StatusMessage = ex.Message;
+                        this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                    }
+                }
+                else
+                {
+                    methodInvoker.Status = InvokeStatus.UnEnable;
+                }
+            }
+            else
+            {
+                methodInvoker.Status = InvokeStatus.UnFound;
+            }
+
+            this.ExecuteMethod(methodInvoker, methodInstance);
         }
     }
 }

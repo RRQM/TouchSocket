@@ -26,6 +26,10 @@ namespace RRQMSocket.RPC.WebApi
     /// </summary>
     public sealed class WebApiParser : RPCParser
     {
+        private RouteMap routeMap;
+
+        private SimpleTcpService tcpService;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -39,30 +43,9 @@ namespace RRQMSocket.RPC.WebApi
         }
 
         /// <summary>
-        /// 在初次接收时
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="creatOption"></param>
-        private void OnCreatSocketCliect(SimpleSocketClient socketClient, CreateOption creatOption)
-        {
-            if (creatOption.NewCreate)
-            {
-                socketClient.DataHandlingAdapter = new Http.HttpDataHandlingAdapter(this.BufferLength);
-            }
-        }
-
-        private RouteMap routeMap;
-        private SimpleTcpService tcpService;
-
-        /// <summary>
         /// 数据转化器
         /// </summary>
         public ApiDataConverter ApiDataConverter { get; set; }
-
-        /// <summary>
-        /// 获取当前服务通信器
-        /// </summary>
-        public SimpleTcpService Service { get { return this.tcpService; } }
 
         /// <summary>
         /// 获取或设置缓存大小
@@ -83,6 +66,11 @@ namespace RRQMSocket.RPC.WebApi
         /// 获取路由映射图
         /// </summary>
         public RouteMap RouteMap { get { return this.routeMap; } }
+
+        /// <summary>
+        /// 获取当前服务通信器
+        /// </summary>
+        public SimpleTcpService Service { get { return this.tcpService; } }
 
         /// <summary>
         /// 绑定服务
@@ -124,6 +112,112 @@ namespace RRQMSocket.RPC.WebApi
             //this.tcpService.Bind(addressFamily, endPoint, threadCount);
         }
 
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public override void Dispose()
+        {
+            this.tcpService.Dispose();
+        }
+
+        /// <summary>
+        /// 结束调用
+        /// </summary>
+        /// <param name="methodInvoker"></param>
+        /// <param name="methodInstance"></param>
+        protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        {
+            HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
+            SimpleSocketClient socketClient = (SimpleSocketClient)methodInvoker.Caller;
+
+            HttpResponse httpResponse = this.ApiDataConverter.OnResult(methodInvoker, methodInstance);
+
+            httpResponse.ProtocolVersion = httpRequest.ProtocolVersion;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+
+            try
+            {
+                httpResponse.Build(byteBlock);
+                socketClient.Send(byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+
+            if (!httpRequest.KeepAlive)
+            {
+                socketClient.Shutdown(SocketShutdown.Both);
+            }
+        }
+
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        /// <param name="providers"></param>
+        /// <param name="methodInstances"></param>
+        protected override void InitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                if ((typeof(ControllerBase).IsAssignableFrom(methodInstance.Provider.GetType())))
+                {
+                    string controllerName;
+                    RouteAttribute classAtt = methodInstance.Provider.GetType().GetCustomAttribute<RouteAttribute>(false);
+                    if (classAtt == null || string.IsNullOrEmpty(classAtt.Template))
+                    {
+                        controllerName = methodInstance.Provider.GetType().Name;
+                    }
+                    else
+                    {
+                        controllerName = classAtt.Template.Replace("[controller]", methodInstance.Provider.GetType().Name);
+                    }
+
+                    foreach (var att in methodInstance.RPCAttributes)
+                    {
+                        if (att is RouteAttribute attribute)
+                        {
+                            if (methodInstance.IsByRef)
+                            {
+                                throw new RRQMRPCException("WebApi服务中不允许有out及ref关键字");
+                            }
+                            string actionUrl;
+
+                            if (controllerName.Contains("[action]"))
+                            {
+                                actionUrl = controllerName.Replace("[action]", methodInstance.Method.Name);
+                            }
+                            else
+                            {
+                                if (string.IsNullOrEmpty(attribute.Template))
+                                {
+                                    actionUrl = $"{controllerName}/{methodInstance.Method.Name}";
+                                }
+                                else
+                                {
+                                    actionUrl = $"{controllerName}/{attribute.Template.Replace("[action]", methodInstance.Method.Name)}";
+                                }
+                            }
+
+                            this.routeMap.Add(actionUrl, methodInstance);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 在初次接收时
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="creatOption"></param>
+        private void OnCreatSocketCliect(SimpleSocketClient socketClient, CreateOption creatOption)
+        {
+            if (creatOption.NewCreate)
+            {
+                socketClient.DataHandlingAdapter = new Http.HttpDataHandlingAdapter(this.BufferLength);
+            }
+        }
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             HttpRequest httpRequest = (HttpRequest)obj;
@@ -183,99 +277,6 @@ namespace RRQMSocket.RPC.WebApi
             }
 
             this.ExecuteMethod(methodInvoker, methodInstance);
-        }
-
-        /// <summary>
-        /// 结束调用
-        /// </summary>
-        /// <param name="methodInvoker"></param>
-        /// <param name="methodInstance"></param>
-        protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
-        {
-            HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
-            SimpleSocketClient socketClient = (SimpleSocketClient)methodInvoker.Caller;
-
-            HttpResponse httpResponse = this.ApiDataConverter.OnResult(methodInvoker, methodInstance);
-
-            httpResponse.ProtocolVersion = httpRequest.ProtocolVersion;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-
-            try
-            {
-                httpResponse.Build(byteBlock);
-                socketClient.Send(byteBlock);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-
-            if (!httpRequest.KeepAlive)
-            {
-                socketClient.Shutdown(SocketShutdown.Both);
-            }
-        }
-
-        /// <summary>
-        /// 初始化
-        /// </summary>
-        /// <param name="methodInstances"></param>
-        protected override void InitializeServers(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if ((typeof(ControllerBase).IsAssignableFrom(methodInstance.Provider.GetType())))
-                {
-                    string controllerName;
-                    RouteAttribute classAtt = methodInstance.Provider.GetType().GetCustomAttribute<RouteAttribute>(false);
-                    if (classAtt == null || string.IsNullOrEmpty(classAtt.Template))
-                    {
-                        controllerName = methodInstance.Provider.GetType().Name;
-                    }
-                    else
-                    {
-                        controllerName = classAtt.Template.Replace("[controller]", methodInstance.Provider.GetType().Name);
-                    }
-
-                    foreach (var att in methodInstance.RPCAttributes)
-                    {
-                        if (att is RouteAttribute attribute)
-                        {
-                            if (methodInstance.IsByRef)
-                            {
-                                throw new RRQMRPCException("WebApi服务中不允许有out及ref关键字");
-                            }
-                            string actionUrl;
-
-                            if (controllerName.Contains("[action]"))
-                            {
-                                actionUrl = controllerName.Replace("[action]", methodInstance.Method.Name);
-                            }
-                            else
-                            {
-                                if (string.IsNullOrEmpty(attribute.Template))
-                                {
-                                    actionUrl = $"{controllerName}/{methodInstance.Method.Name}";
-                                }
-                                else
-                                {
-                                    actionUrl = $"{controllerName}/{attribute.Template.Replace("[action]", methodInstance.Method.Name)}";
-                                }
-                            }
-
-                            this.routeMap.Add(actionUrl, methodInstance);
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            this.tcpService.Dispose();
         }
     }
 }

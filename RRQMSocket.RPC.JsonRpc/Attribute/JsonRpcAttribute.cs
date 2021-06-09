@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.JsonRpc
     /// 适用于XmlRpc的标记
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class JsonRpcAttribute : RPCMethodAttribute
+    public sealed class JsonRpcAttribute : RPCAttribute
     {
         /// <summary>
         /// 构造函数

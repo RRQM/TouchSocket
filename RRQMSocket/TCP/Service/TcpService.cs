@@ -385,6 +385,7 @@ namespace RRQMSocket
                 throw new RRQMException("配置文件为空");
             }
             this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty);
+            this.socketClientPool.Capacity= this.maxCount;
             this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
             this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
             this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);

@@ -30,9 +30,9 @@ namespace RRQMSocket.RPC
 
         internal Action<RPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod;
 
-        internal void RRQMInitializeServers(MethodInstance[] methodInstances)
+        internal void RRQMInitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
         {
-            InitializeServers(methodInstances);
+            InitializeServers(providers,methodInstances);
         }
 
         internal void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
@@ -48,8 +48,9 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 初始化服务
         /// </summary>
+        /// <param name="providers"></param>
         /// <param name="methodInstances"></param>
-        protected abstract void InitializeServers(MethodInstance[] methodInstances);
+        protected abstract void InitializeServers(ServerProviderCollection providers,MethodInstance[] methodInstances);
 
         /// <summary>
         /// 在函数调用完成后调用

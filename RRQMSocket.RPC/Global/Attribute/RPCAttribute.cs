@@ -11,32 +11,12 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace RRQMSocket.RPC.RRQMRPC
+namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC方法标记属性类
+    /// RPC方法属性基类
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class RRQMRPCMethodAttribute : RPCMethodAttribute
+    public abstract class RPCAttribute : Attribute
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public RRQMRPCMethodAttribute()
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodKey">指定函数键</param>
-        public RRQMRPCMethodAttribute(string methodKey)
-        {
-        }
-
-        /// <summary>
-        /// 注册键
-        /// </summary>
-        public string MethodKey { get; private set; }
     }
 }

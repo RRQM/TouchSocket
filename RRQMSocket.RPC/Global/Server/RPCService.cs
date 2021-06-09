@@ -109,7 +109,7 @@ namespace RRQMSocket.RPC
                     {
                         throw new RRQMRPCException("RPC方法中不支持泛型参数");
                     }
-                    IEnumerable<RPCMethodAttribute> attributes = method.GetCustomAttributes<RPCMethodAttribute>(true);
+                    IEnumerable<RPCAttribute> attributes = method.GetCustomAttributes<RPCAttribute>(true);
                     if (attributes.Count() > 0)
                     {
                         MethodInstance methodInstance = new MethodInstance();
@@ -185,7 +185,7 @@ namespace RRQMSocket.RPC
 
             foreach (var parser in this.RPCParsers)
             {
-                parser.RRQMInitializeServers(this.MethodInstances);
+                parser.RRQMInitializeServers(this.ServerProviders,this.MethodInstances);
             }
         }
 

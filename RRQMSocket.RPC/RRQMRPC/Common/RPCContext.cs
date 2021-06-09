@@ -20,9 +20,10 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC传输类
     /// </summary>
-    public class RpcContext : WaitResult
+    public class RPCContext : WaitResult
     {
         internal int MethodToken;
+        internal string ID;
         internal byte Feedback;
         internal byte[] ReturnParameterBytes;
         internal List<byte[]> ParametersBytes;
@@ -33,6 +34,16 @@ namespace RRQMSocket.RPC.RRQMRPC
             byteBlock.Write(this.Status);
             byteBlock.Write(this.Feedback);
             byteBlock.Write(BitConverter.GetBytes(this.MethodToken));
+            if (!string.IsNullOrEmpty(ID))
+            {
+                byte[] idBytes = Encoding.UTF8.GetBytes(this.ID);
+                byteBlock.Write((byte)idBytes.Length);
+                byteBlock.Write(idBytes);
+            }
+            else
+            {
+                byteBlock.Write(0);
+            }
             if (this.Message != null)
             {
                 byte[] mesBytes = Encoding.UTF8.GetBytes(this.Message);
@@ -76,9 +87,9 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        internal static RpcContext Deserialize(byte[] buffer, int offset)
+        internal static RPCContext Deserialize(byte[] buffer, int offset)
         {
-            RpcContext context = new RpcContext();
+            RPCContext context = new RPCContext();
             context.Sign = BitConverter.ToInt32(buffer, offset);
             offset += 4;
             context.Status = buffer[offset];
@@ -87,6 +98,10 @@ namespace RRQMSocket.RPC.RRQMRPC
             offset += 1;
             context.MethodToken = BitConverter.ToInt32(buffer, offset);
             offset += 4;
+            int lenID = buffer[offset];
+            offset += 1;
+            context.ID = Encoding.UTF8.GetString(buffer, offset, lenID);
+            offset += lenID;
             int lenMes = buffer[offset];
             offset += 1;
             context.Message = Encoding.UTF8.GetString(buffer, offset, lenMes);

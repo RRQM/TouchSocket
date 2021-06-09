@@ -301,7 +301,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodInstance"></param>
         protected override void EndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            RpcContext context = (RpcContext)methodInvoker.Flag;
+            RPCContext context = (RPCContext)methodInvoker.Flag;
             if (context.Feedback == 0)
             {
                 return;
@@ -414,7 +414,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RpcContext content = RpcContext.Deserialize(buffer, 4);
+                            RPCContext content = RPCContext.Deserialize(buffer, 4);
                             this.ExecuteContext(content, socketClient);
                         }
                         catch (Exception e)
@@ -434,6 +434,22 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
                         }
+                        break;
+                    }
+                case 103:/*ID调用客户端*/
+                    {
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                RPCContext content = RPCContext.Deserialize(buffer, 4);
+                                this.IDInvoken(socketClient, content);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Debug(LogType.Error, this, $"错误代码: 103, 错误详情:{e.Message}");
+                            }
+                        });
                         break;
                     }
                 case 112:/*回调函数调用*/
@@ -469,6 +485,40 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                     }
             }
+        }
+
+
+        private void IDInvoken(RPCSocketClient socketClient, RPCContext context)
+        {
+            if (this.TryGetSocketClient(context.ID, out RPCSocketClient targetsocketClient))
+            {
+                try
+                {
+                    context.ReturnParameterBytes = targetsocketClient.CallBack(context, InvokeOption.CanFeedback);
+                    context.Status = 1;
+                }
+                catch (Exception ex)
+                {
+                    context.Status = 3;
+                    context.Message = ex.Message;
+                }
+
+            }
+            else
+            {
+                context.Status = 2;
+            }
+            ByteBlock byteBlock = socketClient.BytePool.GetByteBlock(this.BufferLength);
+            try
+            {
+                context.Serialize(byteBlock);
+                socketClient.agreementHelper.SocketSend(103, byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+
         }
 
         private void Service_ClientConnected(object sender, MesEventArgs e)
