@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,7 +21,7 @@ namespace RRQMSocket
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketCliectCollection<T>:IDisposable where T : SocketClient
+    public class SocketCliectCollection<T> : IDisposable where T : ISocketClient
     {
         /// <summary>
         /// 获取或设置分配ID的格式
@@ -87,8 +86,6 @@ namespace RRQMSocket
             return false;
         }
 
-       
-
         /// <summary>
         /// 获取SocketClient
         /// </summary>
@@ -111,13 +108,12 @@ namespace RRQMSocket
         {
             foreach (var item in this.tokenDic.Keys)
             {
-                if (this.tokenDic.TryGetValue(item,out T value))
+                if (this.tokenDic.TryGetValue(item, out T value))
                 {
                     value.Dispose();
                 }
             }
             this.tokenDic.Clear();
         }
-
     }
 }

@@ -24,7 +24,6 @@ namespace RRQMSocket.FileTransfer
     {
         #region Methods
 
-
         internal static void SaveProgressBlockCollection(RRQMStream stream, ProgressBlockCollection blocks)
         {
             if (stream.RRQMFileStream != null && stream.RRQMFileStream.CanWrite)

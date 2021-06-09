@@ -10,11 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -70,6 +67,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 序列化转换器
         /// </summary>
         public SerializeConverter SerializeConverter { get; protected set; }
+
         /// <summary>
         /// 执行内容
         /// </summary>
@@ -189,7 +187,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         methodItem.IsOutOrRef = methodInstance.IsByRef;
                         methodItem.MethodToken = methodInstance.MethodToken;
 
-                        methodItem.Method =string.IsNullOrEmpty(attribute.MethodKey)? methodInstance.Method.Name : attribute.MethodKey;
+                        methodItem.Method = string.IsNullOrEmpty(attribute.MethodKey) ? methodInstance.Method.Name : attribute.MethodKey;
                         try
                         {
                             methodStore.AddMethodItem(methodItem);

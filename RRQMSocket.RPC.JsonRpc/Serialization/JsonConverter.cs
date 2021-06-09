@@ -25,7 +25,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="stream"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        public abstract void Serialize(Stream stream,object parameter);
+        public abstract void Serialize(Stream stream, object parameter);
 
         /// <summary>
         /// 反序列化

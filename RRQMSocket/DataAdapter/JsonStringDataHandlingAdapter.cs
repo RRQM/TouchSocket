@@ -10,12 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -25,6 +21,7 @@ namespace RRQMSocket
     public class JsonStringDataHandlingAdapter : DataHandlingAdapter
     {
         private ByteBlock Temp;
+
         /// <summary>
         /// 预解析
         /// </summary>
@@ -34,7 +31,6 @@ namespace RRQMSocket
             byte[] buffer = byteBlock.Buffer;
             int length = (int)byteBlock.Length;
 
-          
             //Console.WriteLine("----------------接收的新数据-------------------");
             if (Temp != null)
             {
@@ -47,7 +43,7 @@ namespace RRQMSocket
             if (msg.Contains("}{"))
             {
                 //Console.WriteLine("----------------发生粘包-------------------");
-                string[] mes = Regex.Split(msg,"}{");
+                string[] mes = Regex.Split(msg, "}{");
                 for (int i = 0; i < mes.Length; i++)
                 {
                     string str = mes[i];
@@ -82,7 +78,6 @@ namespace RRQMSocket
                             //Console.WriteLine("----------------数据不完整-------------------");
                             break;
                         }
-
                     }
                     else
                     {
@@ -131,6 +126,7 @@ namespace RRQMSocket
             }
             return count;
         }
+
         private void PreviewHandle(string msg)
         {
             GoReceived(null, msg);

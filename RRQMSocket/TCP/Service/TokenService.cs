@@ -10,13 +10,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -26,6 +24,7 @@ namespace RRQMSocket
     public abstract class TokenService<TClient> : TcpService<TClient> where TClient : SocketClient, new()
     {
         private string verifyToken;
+
         /// <summary>
         /// 连接令箭
         /// </summary>
@@ -35,6 +34,7 @@ namespace RRQMSocket
         }
 
         private int verifyTimeout;
+
         /// <summary>
         /// 验证超时时间,默认为3秒
         /// </summary>
@@ -53,6 +53,7 @@ namespace RRQMSocket
             this.verifyTimeout = (int)serverConfig.GetValue(TokenServerConfig.VerifyTimeoutProperty);
             this.verifyToken = (string)serverConfig.GetValue(TokenServerConfig.VerifyTokenProperty);
         }
+
         internal override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -93,7 +94,6 @@ namespace RRQMSocket
                                 client.ReadIpPort();
                                 client.BufferLength = this.BufferLength;
 
-                               
                                 lock (locker)
                                 {
                                     CreateOption creatOption = new CreateOption();

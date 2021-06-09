@@ -9,22 +9,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
-using System;
-using System.Net;
-using System.Net.Sockets;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// TCP客户端终端接口
     /// </summary>
-    public interface IUserTcpClient:ITcpClient, IUserClient
+    public interface IUserTcpClient : ITcpClient, IUserClient
     {
         /// <summary>
         /// 仅发送，即不会开启接收线程。
         /// </summary>
-        bool OnlySend { get;}
+        bool OnlySend { get; }
 
         /// <summary>
         /// 客户端配置

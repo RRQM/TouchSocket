@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
@@ -21,7 +20,6 @@ namespace RRQMSocket
     /// </summary>
     public abstract class BaseSocket : ISocket, IDisposable
     {
-       
         /// <summary>
         /// 心跳检测包
         /// </summary>

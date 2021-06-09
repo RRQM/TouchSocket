@@ -12,7 +12,6 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -24,7 +23,6 @@ namespace RRQMSocket
     /// </summary>
     public abstract class TokenClient : TcpClient
     {
-
         private string verifyToken = "rrqm";
 
         /// <summary>
@@ -36,6 +34,7 @@ namespace RRQMSocket
         }
 
         private string id;
+
         /// <summary>
         /// 获取服务器分配的ID
         /// </summary>
@@ -45,6 +44,7 @@ namespace RRQMSocket
         }
 
         private int verifyTimeout;
+
         /// <summary>
         /// 验证超时时间,默认为3秒；
         /// </summary>

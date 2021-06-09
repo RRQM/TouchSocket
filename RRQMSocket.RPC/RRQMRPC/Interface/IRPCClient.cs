@@ -22,9 +22,9 @@ namespace RRQMSocket.RPC.RRQMRPC
     public interface IRPCClient : IDisposable
     {
         /// <summary>
-        /// 收到ByteBlock时触发
+        /// 收到数据
         /// </summary>
-        event RRQMByteBlockEventHandler ReceivedByteBlock;
+        event RRQMBytesEventHandler Received;
 
         /// <summary>
         /// 获取ID
@@ -44,8 +44,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 序列化生成器
         /// </summary>
-        SerializeConverter SerializeConverter { get;}
-
+        SerializeConverter SerializeConverter { get; }
 
         /// <summary>
         /// 获取远程服务器RPC服务文件

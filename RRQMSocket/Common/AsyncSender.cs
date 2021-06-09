@@ -1,25 +1,34 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+using RRQMCore.Log;
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using RRQMCore.ByteManager;
-using RRQMCore.Log;
 
 namespace RRQMSocket
 {
     internal class AsyncSender : IDisposable
     {
-        internal AsyncSender()
+        internal AsyncSender(Socket socket, EndPoint endPoint, ILog logger)
         {
-            asyncBytes = new ConcurrentQueue<AsyncByte>();
-            waitHandle = new AutoResetEvent(false);
             sendEventArgs = new SocketAsyncEventArgs();
             sendEventArgs.Completed += this.SendEventArgs_Completed;
+            this.socket = socket;
+            this.sendEventArgs.RemoteEndPoint = endPoint;
+            this.logger = logger;
+            asyncBytes = new ConcurrentQueue<AsyncByte>();
+            waitHandle = new AutoResetEvent(false);
             this.sendThread = new Thread(this.BeginSend);
             this.sendThread.IsBackground = true;
             this.sendThread.Name = "AsyncSendThread";
@@ -49,6 +58,7 @@ namespace RRQMSocket
                 }
             }
         }
+
         /// <summary>
         /// 发送完成时处理函数
         /// </summary>
@@ -64,7 +74,6 @@ namespace RRQMSocket
             }
             catch
             {
-
             }
             finally
             {
@@ -94,7 +103,6 @@ namespace RRQMSocket
                         {
                             this.waitHandle.WaitOne();
                         }
-
                     }
                     else
                     {
@@ -106,15 +114,16 @@ namespace RRQMSocket
                 {
                     this.logger.Debug(LogType.Error, this, "异步发送错误。", ex);
                 }
-
             }
         }
 
-        byte[] buffer = new byte[1024 * 1024];
+        private byte[] buffer = new byte[1024 * 1024];
+
         internal void SetBufferLength(int len)
         {
             this.buffer = new byte[len];
         }
+
         private bool tryGet(out AsyncByte asyncByteDe)
         {
             int len = 0;
@@ -171,13 +180,6 @@ namespace RRQMSocket
             {
                 this.waitHandle.Set();
             }
-        }
-
-        public void Load(Socket socket, EndPoint endPoint, ILog logger)
-        {
-            this.socket = socket;
-            this.sendEventArgs.RemoteEndPoint = endPoint;
-            this.logger = logger;
         }
 
         public void Dispose()

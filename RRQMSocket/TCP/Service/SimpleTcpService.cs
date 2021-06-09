@@ -23,7 +23,7 @@ namespace RRQMSocket
         /// 处理数据
         /// </summary>
         public event Action<SimpleSocketClient, ByteBlock, object> Received;
-       
+
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
         /// 用户可以在该方法中再进行自定义设置，
@@ -40,9 +40,9 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
-        protected  override void OnCreateSocketCliect(SimpleSocketClient tcpSocketClient, CreateOption creatOption)
+        protected override void OnCreateSocketCliect(SimpleSocketClient tcpSocketClient, CreateOption creatOption)
         {
-            this.CreateSocketCliect?.Invoke(tcpSocketClient,creatOption);
+            this.CreateSocketCliect?.Invoke(tcpSocketClient, creatOption);
             if (creatOption.NewCreate)
             {
                 tcpSocketClient.OnReceived = this.OnReceive;

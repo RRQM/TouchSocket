@@ -1,14 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+//------------------------------------------------------------------------------
+//  此代码版权归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -44,9 +53,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 收到ByteBlock时触发
+        /// 收到字节
         /// </summary>
-        public event RRQMByteBlockEventHandler ReceivedByteBlock;
+        public event RRQMBytesEventHandler Received;
 
         /// <summary>
         /// 获取反向RPC映射图
@@ -60,6 +69,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 序列化生成器
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
+
         /// <summary>
         /// 获取反向RPC服务实例
         /// </summary>
@@ -67,6 +77,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             get { return serverProviders; }
         }
+
         /// <summary>
         /// 连接
         /// </summary>
@@ -227,7 +238,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 waitData.Dispose();
                 return default;
             }
-
         }
 
         /// <summary>
@@ -368,7 +378,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 开启反向RPC服务
         /// </summary>
-        public void StartCallBackServer()
+        public void OpenCallBackServer()
         {
             if (this.ServerProviders.Count == 0)
             {
@@ -457,6 +467,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             this.ServerProviders.Add(serverProvider);
         }
+
         /// <summary>
         /// 发送
         /// </summary>
@@ -539,25 +550,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 111:/*收到服务器数据*/
-                    {
-                        ByteBlock block = this.BytePool.GetByteBlock(r - 4);
-                        try
-                        {
-                            block.Write(byteBlock.Buffer, 4, r - 4);
-                            ReceivedByteBlock?.Invoke(this, block);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 111, 错误详情:{e.Message}");
-                        }
-                        finally
-                        {
-                            block.Dispose();
-                        }
-                        break;
-                    }
-                case 112:/*反向函数调用返回*/
+                case 112:/*反向函数调用*/
                     {
                         Task.Run(() =>
                         {
@@ -576,6 +569,25 @@ namespace RRQMSocket.RPC.RRQMRPC
                             finally
                             {
                                 block.Dispose();
+                            }
+                        });
+
+                        break;
+                    }
+                case 120:/*接收数据*/
+                    {
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                byte[] data = new byte[r-4];
+                                byteBlock.Position = 4;
+                                byteBlock.Read(data);
+                                this.Received?.Invoke(this,new BytesEventArgs(data));
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Debug(LogType.Error, this, $"错误代码: 120, 错误详情:{e.Message}");
                             }
                         });
 
@@ -606,12 +618,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                         object[] ps = new object[rpcContext.ParametersBytes.Count];
                         for (int i = 0; i < rpcContext.ParametersBytes.Count; i++)
                         {
-                            ps[i] =this.SerializeConverter.DeserializeParameter(rpcContext.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                            ps[i] = this.SerializeConverter.DeserializeParameter(rpcContext.ParametersBytes[i], methodInstance.ParameterTypes[i]);
                         }
                         object result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
                         if (result != null)
                         {
-                            rpcContext.ReturnParameterBytes =this.SerializeConverter.SerializeParameter(result);
+                            rpcContext.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(result);
                         }
                         rpcContext.Status = 1;
                     }
@@ -636,4 +648,3 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
     }
 }
-

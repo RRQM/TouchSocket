@@ -16,7 +16,7 @@ namespace RRQMSocket
     /// <summary>
     /// 字节事件
     /// </summary>
-    public class BytesEventArgs:RRQMEventArgs
+    public class BytesEventArgs : RRQMEventArgs
     {
         /// <summary>
         /// 构造函数
@@ -26,9 +26,10 @@ namespace RRQMSocket
         {
             this.ReceivedDataBytes = data;
         }
+
         /// <summary>
         /// 字节数组
         /// </summary>
-        public byte[] ReceivedDataBytes { get;private set; }
+        public byte[] ReceivedDataBytes { get; private set; }
     }
 }

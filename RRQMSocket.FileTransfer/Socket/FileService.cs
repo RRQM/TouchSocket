@@ -10,9 +10,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using System.Reflection;
 using RRQMCore.ByteManager;
 using RRQMCore.Serialization;
+using System.Reflection;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -58,8 +58,8 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-
         private bool breakpointResume;
+
         /// <summary>
         /// 是否支持断点续传
         /// </summary>
@@ -69,6 +69,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         private long maxDownloadSpeed;
+
         /// <summary>
         /// 最大下载速度
         /// </summary>
@@ -79,6 +80,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         private long maxUploadSpeed;
+
         /// <summary>
         /// 最大上传速度
         /// </summary>
@@ -87,6 +89,7 @@ namespace RRQMSocket.FileTransfer
             get { return maxUploadSpeed; }
             set { maxUploadSpeed = value; }
         }
+
         #endregion 属性
 
         #region 字段
@@ -94,6 +97,7 @@ namespace RRQMSocket.FileTransfer
         private long downloadSpeed;
         private long uploadSpeed;
         private OperationMap operationMap;
+
         #endregion 字段
 
         #region 事件
@@ -117,6 +121,7 @@ namespace RRQMSocket.FileTransfer
         /// 收到字节
         /// </summary>
         public event RRQMBytesEventHandler Received;
+
         #endregion 事件
 
         /// <summary>
@@ -194,7 +199,7 @@ namespace RRQMSocket.FileTransfer
             this.Received?.Invoke(sender, e);
         }
 
-        private void OnCallOperation(FileSocketClient sender, ByteBlock  byteBlock,ByteBlock returnBlock)
+        private void OnCallOperation(FileSocketClient sender, ByteBlock byteBlock, ByteBlock returnBlock)
         {
             OperationContext context = OperationContext.Deserialize(byteBlock.Buffer, 4);
             if (this.operationMap.TryGet(context.OperationName, out OperationEntity entity))
@@ -219,7 +224,6 @@ namespace RRQMSocket.FileTransfer
                     context.Status = 2;
                     context.Message = ex.Message;
                 }
-                
             }
             else
             {

@@ -12,20 +12,18 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using System;
-using System.Net;
-using System.Net.Sockets;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 服务器接口
     /// </summary>
-    public interface IService:IDisposable
+    public interface IService : IDisposable
     {
         /// <summary>
         /// 获取默认内存池实例
         /// </summary>
-        BytePool BytePool { get;}
+        BytePool BytePool { get; }
 
         /// <summary>
         /// 服务器状态
@@ -64,6 +62,5 @@ namespace RRQMSocket
         /// </summary>
         /// <exception cref="RRQMException"></exception>
         void Stop();
-
     }
 }

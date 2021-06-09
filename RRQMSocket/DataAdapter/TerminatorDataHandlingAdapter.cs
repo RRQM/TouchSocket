@@ -210,7 +210,6 @@ namespace RRQMSocket
             {
                 byteBlock.Dispose();
             }
-
         }
     }
 }

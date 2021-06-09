@@ -10,10 +10,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
-using System;
-using System.Net;
-using System.Net.Sockets;
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
@@ -26,6 +25,11 @@ namespace RRQMSocket
         /// 获取最大可连接数
         /// </summary>
         int MaxCount { get; }
+
+        /// <summary>
+        /// 获取当前连接的所有客户端
+        /// </summary>
+        SocketCliectCollection<TClient> SocketClients { get; }
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
@@ -56,5 +60,75 @@ namespace RRQMSocket
         /// <param name="socketClient">TClient</param>
         /// <returns></returns>
         bool TryGetSocketClient(string id, out TClient socketClient);
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void Send(string id, byte[] buffer);
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void Send(string id, byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void Send(string id, ByteBlock byteBlock);
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void SendAsync(string id, byte[] buffer);
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void SendAsync(string id, byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        void SendAsync(string id, ByteBlock byteBlock);
     }
 }

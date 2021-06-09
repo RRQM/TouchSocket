@@ -44,7 +44,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="iPAddress"></param>
         /// <param name="port"></param>
-        public IPHost(IPAddress iPAddress,int port) : this($"{iPAddress}:{port}")
+        public IPHost(IPAddress iPAddress, int port) : this($"{iPAddress}:{port}")
         {
         }
 
@@ -55,6 +55,7 @@ namespace RRQMSocket
         public IPHost(int port) : this($"0.0.0.0:{port}")
         {
         }
+
         /// <summary>
         /// IP
         /// </summary>

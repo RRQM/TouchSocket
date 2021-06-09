@@ -64,8 +64,6 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public SimpleTcpService Service { get { return this.tcpService; } }
 
-        
-
         /// <summary>
         /// 获取或设置缓存大小
         /// </summary>
@@ -171,7 +169,7 @@ namespace RRQMSocket.RPC.WebApi
                     {
                         methodInvoker.Status = InvokeStatus.Exception;
                         methodInvoker.StatusMessage = ex.Message;
-                        this.Logger.Debug(LogType.Error,this, ex.Message, ex);
+                        this.Logger.Debug(LogType.Error, this, ex.Message, ex);
                     }
                 }
                 else

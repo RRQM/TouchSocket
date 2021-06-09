@@ -15,36 +15,23 @@ using RRQMCore.Log;
 using RRQMCore.Pool;
 using System;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 服务器辅助类
     /// </summary>
-
     public abstract class SocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
     {
         internal bool breakOut;
-        internal BufferQueueGroup queueGroup;
         internal long lastTick;
-
-        /// <summary>
-        /// 包含此辅助类的主服务器类
-        /// </summary>
-        public IService Service { get; internal set; }
-
-        /// <summary>
-        /// 用于索引的ID
-        /// </summary>
-        public string ID { get; internal set; }
-
-        /// <summary>
-        /// 判断该实例是否还在线
-        /// </summary>
-        public bool Online { get { return !this.breakOut; } }
-
+        internal BufferQueueGroup queueGroup;
         private DataHandlingAdapter dataHandlingAdapter;
+
+        /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public BytePool BytePool { get { return this.queueGroup == null ? null : this.queueGroup.bytePool; } }
 
         /// <summary>
         /// 数据处理适配器
@@ -66,26 +53,74 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 是否为新建对象
-        /// </summary>
-        public bool NewCreate { get; set; }
-
-        /// <summary>
         /// 标记
         /// </summary>
         public object Flag { get; set; }
 
         /// <summary>
-        /// 获取内存池实例
+        /// 用于索引的ID
         /// </summary>
-        public BytePool BytePool { get { return this.queueGroup == null ? null : this.queueGroup.bytePool; } }
+        public string ID { get; internal set; }
 
         /// <summary>
-        /// 处理已接收到的数据
+        /// 是否为新建对象
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+        public bool NewCreate { get; set; }
+
+        /// <summary>
+        /// 判断该实例是否还在线
+        /// </summary>
+        public bool Online { get { return !this.breakOut; } }
+
+        /// <summary>
+        /// 包含此辅助类的主服务器类
+        /// </summary>
+        public IService Service { get; internal set; }
+        /// <summary>
+        /// 初次创建对象，效应相当于构造函数，父类方法可覆盖
+        /// </summary>
+        public virtual void Create()
+        {
+            if (this.dataHandlingAdapter == null)
+            {
+                this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+            }
+        }
+
+        /// <summary>
+        /// 在断开连接时销毁对象，父类方法不可覆盖
+        /// </summary>
+        public virtual void Destroy()
+        {
+            this.MainSocket = null;
+        }
+
+        /// <summary>
+        /// 完全释放资源
+        /// </summary>
+        public override void Dispose()
+        {
+            this.breakOut = true;
+            base.Dispose();
+        }
+
+        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
+        }
+
+        /// <summary>
+        /// 重新获取,父类方法不可覆盖
+        /// </summary>
+        public virtual void Recreate()
+        {
+            this.breakOut = false;
+            this.disposable = false;
+        }
 
         /// <summary>
         /// 发送字节流
@@ -163,44 +198,16 @@ namespace RRQMSocket
             this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
-        private void Sent(byte[] buffer, int offset, int length, bool isAsync)
+        /// <summary>
+        /// 禁用发送或接收
+        /// </summary>
+        /// <param name="how"></param>
+        public void Shutdown(SocketShutdown how)
         {
-            if (!this.Online)
+            this.breakOut = true;
+            if (this.MainSocket != null)
             {
-                throw new RRQMNotConnectedException("该实例已断开");
-            }
-            try
-            {
-                if (isAsync)
-                {
-                    SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
-                    sendEventArgs.Completed += EventArgs_Completed;
-                    sendEventArgs.SetBuffer(buffer, offset, length);
-                    sendEventArgs.RemoteEndPoint = this.MainSocket.RemoteEndPoint;
-                    if (!this.MainSocket.SendAsync(sendEventArgs))
-                    {
-                        // 同步发送时处理发送完成事件
-                        this.ProcessSend(sendEventArgs);
-                    }
-                }
-                else
-                {
-                    int r = 0;
-                    while (length > 0)
-                    {
-                        r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
-                        if (r == 0 && length > 0)
-                        {
-                            throw new RRQMException("发送数据不完全");
-                        }
-                        offset += r;
-                        length -= r;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                throw new RRQMException(e.Message);
+                MainSocket.Shutdown(how);
             }
         }
 
@@ -228,7 +235,29 @@ namespace RRQMSocket
             }
         }
 
+        /// <summary>
+        /// 测试是否在线
+        /// </summary>
+        internal void GetTimeout(int time, long nowTick)
+        {
+            if (nowTick - this.lastTick / 10000000 > time)
+            {
+                this.breakOut = true;
+            }
+        }
 
+        /// <summary>
+        /// 处理已接收到的数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+        /// <summary>
+        /// 等待接收
+        /// </summary>
+        protected virtual void WaitReceive()
+        {
+        }
 
         private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
@@ -314,80 +343,44 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 测试是否在线
-        /// </summary>
-        internal void GetTimeout(int time, long nowTick)
+        private void Sent(byte[] buffer, int offset, int length, bool isAsync)
         {
-            if (nowTick - this.lastTick / 10000000 > time)
+            if (!this.Online)
             {
-                this.breakOut = true;
+                throw new RRQMNotConnectedException("该实例已断开");
             }
-        }
-
-        /// <summary>
-        /// 等待接收
-        /// </summary>
-        protected virtual void WaitReceive()
-        {
-        }
-
-        /// <summary>
-        /// 重新获取,父类方法不可覆盖
-        /// </summary>
-        public virtual void Recreate()
-        {
-            this.breakOut = false;
-            this.disposable = false;
-        }
-
-        /// <summary>
-        /// 在断开连接时销毁对象，父类方法不可覆盖
-        /// </summary>
-        public virtual void Destroy()
-        {
-            this.MainSocket = null;
-        }
-
-        /// <summary>
-        /// 初次创建对象，效应相当于构造函数，父类方法可覆盖
-        /// </summary>
-        public virtual void Create()
-        {
-            if (this.dataHandlingAdapter == null)
+            try
             {
-                this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+                if (isAsync)
+                {
+                    SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
+                    sendEventArgs.Completed += EventArgs_Completed;
+                    sendEventArgs.SetBuffer(buffer, offset, length);
+                    sendEventArgs.RemoteEndPoint = this.MainSocket.RemoteEndPoint;
+                    if (!this.MainSocket.SendAsync(sendEventArgs))
+                    {
+                        // 同步发送时处理发送完成事件
+                        this.ProcessSend(sendEventArgs);
+                    }
+                }
+                else
+                {
+                    int r = 0;
+                    while (length > 0)
+                    {
+                        r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                        if (r == 0 && length > 0)
+                        {
+                            throw new RRQMException("发送数据不完全");
+                        }
+                        offset += r;
+                        length -= r;
+                    }
+                }
             }
-        }
-
-        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
-        {
-            if (this.dataHandlingAdapter == null)
+            catch (Exception e)
             {
-                throw new RRQMException("数据处理适配器为空");
-            }
-            this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
-        }
-
-        /// <summary>
-        /// 完全释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            this.breakOut = true;
-            base.Dispose();
-        }
-
-        /// <summary>
-        /// 禁用发送或接收
-        /// </summary>
-        /// <param name="how"></param>
-        public void Shutdown(SocketShutdown how)
-        {
-            this.breakOut = true;
-            if (this.MainSocket != null)
-            {
-                MainSocket.Shutdown(how);
+                throw new RRQMException(e.Message);
             }
         }
     }

@@ -15,8 +15,6 @@ using RRQMCore.Log;
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -96,17 +94,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         public TcpRPCService Service => this.service;
 
         /// <summary>
+        /// 连接的所以客户端
+        /// </summary>
+        public SocketCliectCollection<RPCSocketClient> SocketClients => this.service.SocketClients;
+
+        /// <summary>
         /// 回调RPC
         /// </summary>
         /// <typeparam name="T">返回值</typeparam>
-        /// <param name="iDToken">ID</param>
+        /// <param name="id">ID</param>
         /// <param name="methodToken">函数唯一标识</param>
         /// <param name="invokeOption">调用设置</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public T CallBack<T>(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        public T CallBack<T>(string id, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
-            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
+            if (this.Service.SocketClients.TryGetSocketClient(id, out RPCSocketClient socketClient))
             {
                 return socketClient.CallBack<T>(methodToken, invokeOption, parameters);
             }
@@ -119,13 +122,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 回调RPC
         /// </summary>
-        /// <param name="iDToken">ID</param>
+        /// <param name="id">ID</param>
         /// <param name="methodToken">函数唯一标识</param>
         /// <param name="invokeOption">调用设置</param>
         /// <param name="parameters">参数</param>
-        public void CallBack(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        public void CallBack(string id, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
-            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
+            if (this.Service.SocketClients.TryGetSocketClient(id, out RPCSocketClient socketClient))
             {
                 socketClient.CallBack(methodToken, invokeOption, parameters);
             }
@@ -143,6 +146,93 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.service.Dispose();
         }
 
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id, byte[] buffer)
+        {
+            this.Send(id, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id, byte[] buffer, int offset, int length)
+        {
+            this.SocketClients[id].Send(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id, ByteBlock byteBlock)
+        {
+            this.Send(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(string id, byte[] buffer)
+        {
+            this.SendAsync(id, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(string id, byte[] buffer, int offset, int length)
+        {
+            this.SocketClients[id].SendAsync(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(string id, ByteBlock byteBlock)
+        {
+            this.SendAsync(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
+        }
         /// <summary>
         /// 设置
         /// </summary>

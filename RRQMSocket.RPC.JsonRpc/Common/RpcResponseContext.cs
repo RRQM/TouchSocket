@@ -15,6 +15,7 @@ using System.Runtime.Serialization;
 namespace RRQMSocket.RPC.JsonRpc
 {
 #pragma warning disable CS1591
+
     /// <summary>
     /// JsonRpc响应器
     /// </summary>

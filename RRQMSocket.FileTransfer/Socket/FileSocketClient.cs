@@ -18,7 +18,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -119,9 +118,11 @@ namespace RRQMSocket.FileTransfer
         /// 获取当前传输状态
         /// </summary>
         public TransferStatus TransferStatus { get; private set; }
+
         #endregion 属性
 
         #region 字段
+
         internal RRQMAgreementHelper AgreementHelper;
         internal bool breakpointResume;
         private bool bufferLengthChanged;
@@ -134,6 +135,7 @@ namespace RRQMSocket.FileTransfer
         private long tempLength;
         private long timeTick;
         private RRQMStream uploadFileStream;
+
         #endregion 字段
 
         #region 事件
@@ -162,6 +164,7 @@ namespace RRQMSocket.FileTransfer
         /// 收到字节数组并返回
         /// </summary>
         internal RRQMReturnBytesEventHandler ReceivedBytesThenReturn;
+
         #endregion 事件
 
         /// <summary>
@@ -510,6 +513,7 @@ namespace RRQMSocket.FileTransfer
                 this.BufferLength = 1024 * 1024 * 10;
             }
         }
+
         #region 协议函数
 
         private void DownloadBlockData(ByteBlock byteBlock, byte[] buffer)
@@ -641,7 +645,7 @@ namespace RRQMSocket.FileTransfer
             if (!args.IsPermitOperation)
             {
                 waitResult.Status = 2;
-                waitResult.Message =string.IsNullOrEmpty(args.Message)? "服务器拒绝上传":args.Message;
+                waitResult.Message = string.IsNullOrEmpty(args.Message) ? "服务器拒绝上传" : args.Message;
             }
             else if (FileControler.FileIsOpen(requestBlocks.FileInfo.FilePath))
             {
@@ -683,7 +687,7 @@ namespace RRQMSocket.FileTransfer
                 try
                 {
                     ProgressBlockCollection blocks = requestBlocks.ToPBCollection();
-                    uploadFileStream = RRQMStream.GetRQMStream(ref blocks, restart,this.breakpointResume);
+                    uploadFileStream = RRQMStream.GetRQMStream(ref blocks, restart, this.breakpointResume);
                     blocks.FileInfo.FilePath = requestBlocks.FileInfo.FilePath;
                     this.fileBlocks = blocks;
                     waitResult.Status = 1;
@@ -700,6 +704,7 @@ namespace RRQMSocket.FileTransfer
 
             byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult, true));
         }
+
         private void StopUpload(ByteBlock byteBlock)
         {
             FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.fileBlocks);
@@ -773,6 +778,7 @@ namespace RRQMSocket.FileTransfer
 
             byteBlock.Write(1);
         }
+
         #endregion 协议函数
     }
 }

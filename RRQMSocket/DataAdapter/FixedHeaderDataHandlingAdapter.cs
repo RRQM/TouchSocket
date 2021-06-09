@@ -200,7 +200,7 @@ namespace RRQMSocket
                     this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Length, isAsync);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }

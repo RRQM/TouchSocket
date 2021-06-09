@@ -34,11 +34,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
         }
 
-        
         /// <summary>
         /// 注册键
         /// </summary>
         public string MethodKey { get; private set; }
-
     }
 }

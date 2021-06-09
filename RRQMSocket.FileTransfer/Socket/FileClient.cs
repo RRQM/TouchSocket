@@ -17,7 +17,6 @@ using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -174,6 +173,7 @@ namespace RRQMSocket.FileTransfer
         /// 获取当前传输状态
         /// </summary>
         public TransferStatus TransferStatus { get; private set; }
+
         private void FileTransferCollection_OnCollectionChanged(object sender, MesEventArgs e)
         {
             this.FileTransferCollectionChanged?.Invoke(this, e);
@@ -314,7 +314,6 @@ namespace RRQMSocket.FileTransfer
             {
                 byteBlock.Dispose();
             }
-
         }
 
         /// <summary>
@@ -951,6 +950,7 @@ namespace RRQMSocket.FileTransfer
             this.BufferLength = transferSetting.bufferLength;
             byteBlock.SetHolding(false);
         }
+
         /// <summary>
         /// 上传文件
         /// </summary>
@@ -1025,6 +1025,7 @@ namespace RRQMSocket.FileTransfer
                 }
             }
         }
+
         private void UploadFileBlock()
         {
             this.stop = false;
@@ -1166,6 +1167,7 @@ namespace RRQMSocket.FileTransfer
                 UploadFileFinished_s();
             });
         }
+
         private void UploadFileFinished_s()
         {
             int reTryCount = 0;

@@ -65,6 +65,7 @@ namespace RRQMSocket.RPC
             parser.RRQMExecuteMethod = PreviewExecuteMethod;
             parser.RRQMSetMethodMap(this.MethodMap);
         }
+
         /// <summary>
         /// 释放资源
         /// </summary>
@@ -78,65 +79,9 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
-        /// 注册所有服务
-        /// </summary>
-        /// <returns></returns>
-        public int RegistAllServer()
-        {
-            Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
-               .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
-
-            foreach (Type type in types)
-            {
-                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
-                RegistServer(serverProvider);
-            }
-            return types.Length;
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="serverProvider"></param>
-        public void RegistServer(ServerProvider serverProvider)
-        {
-            serverProvider.RPCService = this;
-            this.ServerProviders.Add(serverProvider);
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns>返回T实例</returns>
-        public ServerProvider RegistServer<T>() where T : ServerProvider
-        {
-            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(typeof(T));
-            this.RegistServer(serverProvider);
-            return serverProvider;
-        }
-
-        /// <summary>
-        /// 设置服务方法可用性
-        /// </summary>
-        /// <param name="methodToken">方法名</param>
-        /// <param name="enable">可用性</param>
-        /// <exception cref="RRQMRPCException"></exception>
-        public void SetMethodEnable(int methodToken, bool enable)
-        {
-            if (this.MethodMap.TryGet(methodToken, out MethodInstance methodInstance))
-            {
-                methodInstance.IsEnable = enable;
-            }
-            else
-            {
-                throw new RRQMRPCException("未找到该方法");
-            }
-        }
-        /// <summary>
         /// 开启RPC服务
         /// </summary>
-        public void StartServer()
+        public void OpenServer()
         {
             if (this.ServerProviders.Count == 0)
             {
@@ -241,6 +186,63 @@ namespace RRQMSocket.RPC
             foreach (var parser in this.RPCParsers)
             {
                 parser.RRQMInitializeServers(this.MethodInstances);
+            }
+        }
+
+        /// <summary>
+        /// 注册所有服务
+        /// </summary>
+        /// <returns></returns>
+        public int RegistAllServer()
+        {
+            Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
+               .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
+
+            foreach (Type type in types)
+            {
+                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
+                RegistServer(serverProvider);
+            }
+            return types.Length;
+        }
+
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <param name="serverProvider"></param>
+        public void RegistServer(ServerProvider serverProvider)
+        {
+            serverProvider.RPCService = this;
+            this.ServerProviders.Add(serverProvider);
+        }
+
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>返回T实例</returns>
+        public ServerProvider RegistServer<T>() where T : ServerProvider
+        {
+            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(typeof(T));
+            this.RegistServer(serverProvider);
+            return serverProvider;
+        }
+
+        /// <summary>
+        /// 设置服务方法可用性
+        /// </summary>
+        /// <param name="methodToken">方法名</param>
+        /// <param name="enable">可用性</param>
+        /// <exception cref="RRQMRPCException"></exception>
+        public void SetMethodEnable(int methodToken, bool enable)
+        {
+            if (this.MethodMap.TryGet(methodToken, out MethodInstance methodInstance))
+            {
+                methodInstance.IsEnable = enable;
+            }
+            else
+            {
+                throw new RRQMRPCException("未找到该方法");
             }
         }
 

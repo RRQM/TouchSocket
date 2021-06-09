@@ -54,7 +54,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             codeString.AppendLine("using System.Threading.Tasks;");
             codeString.AppendLine(string.Format("namespace {0}", Namespace));
             codeString.AppendLine("{");
-            this.GetInterface("I"+this.ClassName);
+            this.GetInterface("I" + this.ClassName);
             this.GetClass(this.ClassName);
             codeString.AppendLine("}");//空间结束
 
@@ -68,6 +68,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             AppendInterfaceMethods();
             codeString.AppendLine("}");//类结束
         }
+
         private void GetClass(string className)
         {
             codeString.AppendLine(string.Format("public class {0} :I{0}", className));//类开始
@@ -437,8 +438,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         codeString.Append(",");
                     }
                     codeString.AppendLine("InvokeOption invokeOption = null);");
-
-                    
 
                     if (!isOut && !isRef)//没有out或者ref
                     {

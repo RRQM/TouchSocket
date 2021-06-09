@@ -47,8 +47,6 @@ namespace RRQMSocket
         ///// </summary>
         //protected static event Action OnInterval;
 
-
-
         /// <summary>
         /// 内存池
         /// </summary>

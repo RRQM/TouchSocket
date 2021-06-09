@@ -15,7 +15,6 @@ using RRQMCore.Log;
 using RRQMCore.Pool;
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,7 +36,22 @@ namespace RRQMSocket
         }
 
         #region 属性
+
         private int clearInterval;
+
+        private int maxCount;
+
+        private ServerConfig serverConfig;
+
+        private ServerState serverState;
+
+        private SocketCliectCollection<TClient> socketClients;
+
+        /// <summary>
+        /// 获取默认内存池
+        /// </summary>
+        public BytePool BytePool { get { return BytePool.Default; } }
+
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
@@ -45,8 +59,6 @@ namespace RRQMSocket
         {
             get { return clearInterval; }
         }
-
-        private int maxCount;
         /// <summary>
         /// 最大可连接数
         /// </summary>
@@ -54,17 +66,11 @@ namespace RRQMSocket
         {
             get { return maxCount; }
         }
-
-        private SocketCliectCollection<TClient> socketClients;
         /// <summary>
-        /// 获取当前连接的所有客户端
+        /// 获取服务器配置
         /// </summary>
-        public SocketCliectCollection<TClient> SocketClients
-        {
-            get { return socketClients; }
-        }
+        public ServerConfig ServerConfig { get { return serverConfig; } }
 
-        private ServerState serverState;
         /// <summary>
         /// 服务器状态
         /// </summary>
@@ -74,24 +80,22 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 获取默认内存池
+        /// 获取当前连接的所有客户端
         /// </summary>
-        public BytePool BytePool { get { return BytePool.Default; } }
-
-        private ServerConfig serverConfig;
-        /// <summary>
-        /// 获取服务器配置
-        /// </summary>
-        public ServerConfig ServerConfig { get { return serverConfig; } }
-        #endregion
+        public SocketCliectCollection<TClient> SocketClients
+        {
+            get { return socketClients; }
+        }
+        #endregion 属性
 
         #region 变量
+
         internal ObjectPool<TClient> socketClientPool;
-        private BufferQueueGroup[] bufferQueueGroups;
-        private Thread threadClearClient;
-        private Thread threadAccept;
         private int backlog;
-        #endregion
+        private BufferQueueGroup[] bufferQueueGroups;
+        private Thread threadAccept;
+        private Thread threadClearClient;
+        #endregion 变量
 
         #region 事件
 
@@ -118,95 +122,65 @@ namespace RRQMSocket
         #endregion 事件
 
         /// <summary>
-        /// 启动服务
+        /// 关闭服务器并释放服务器资源
         /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+            this.SocketClients.Dispose();
+            if (bufferQueueGroups != null)
+            {
+                foreach (var item in bufferQueueGroups)
+                {
+                    item.Dispose();
+                }
+            }
+
+            this.serverState = ServerState.Disposed;
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        public virtual void Start()
+        public virtual void Send(string id, byte[] buffer)
         {
-            IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
-            if (iPHost == null)
-            {
-                throw new RRQMException("IPHost为空，无法绑定");
-            }
-            switch (this.serverState)
-            {
-                case ServerState.None:
-                    {
-                        this.BeginListen(iPHost);
-                        this.BeginClearAndHandle();
-                        break;
-                    }
-                case ServerState.Running:
-                    {
-                        return;
-                    }
-                case ServerState.Stopped:
-                    {
-                        this.BeginListen(iPHost);
-                        break;
-                    }
-                case ServerState.Disposed:
-                    {
-                        throw new RRQMException("无法重新利用已释放对象");
-                    }
-            }
-            
-            this.IP = iPHost.IP;
-            this.Port = iPHost.Port;
-            this.serverState = ServerState.Running;
-        }
-
-
-        /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="serverConfig"></param>
-        protected virtual void LoadConfig(ServerConfig serverConfig)
-        {
-            if (serverConfig == null)
-            {
-                throw new RRQMException("配置文件为空");
-            }
-            this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty);
-            this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
-            this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
-            this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
-            this.BufferLength = (int)serverConfig.GetValue(ServerConfig.BufferLengthProperty);
-            this.socketClients.IDFormat = (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
-        }
-
-
-        /// <summary>
-        /// 配置服务器
-        /// </summary>
-        /// <param name="serverConfig"></param>
-        public virtual void Setup(ServerConfig serverConfig)
-        {
-            this.serverConfig = serverConfig;
-            this.LoadConfig(this.serverConfig);
+            this.Send(id, buffer, 0, buffer.Length);
         }
 
         /// <summary>
-        /// 配置服务器
+        /// 发送字节流
         /// </summary>
-        /// <param name="port"></param>
-        public virtual void Setup(int port)
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id, byte[] buffer, int offset, int length)
         {
-            TcpServerConfig serverConfig = new TcpServerConfig();
-            serverConfig.BindIPHost = new IPHost(port);
-            this.Setup(serverConfig);
+            this.SocketClients[id].Send(buffer, offset, length);
         }
 
         /// <summary>
-        /// 在Socket初始化对象后，Bind之前调用。
-        /// 可用于设置Socket参数。
-        /// 父类方法可覆盖。
+        /// 发送流中的有效数据
         /// </summary>
-        /// <param name="socket"></param>
-        protected virtual void PreviewBind(Socket socket)
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void Send(string id, ByteBlock byteBlock)
         {
+            this.Send(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
         /// <summary>
@@ -254,47 +228,24 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 发送字节流
+        /// 配置服务器
         /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public  virtual void Send(string id, byte[] buffer)
+        /// <param name="serverConfig"></param>
+        public virtual void Setup(ServerConfig serverConfig)
         {
-            this.Send(id, buffer, 0, buffer.Length);
+            this.serverConfig = serverConfig;
+            this.LoadConfig(this.serverConfig);
         }
 
         /// <summary>
-        /// 发送字节流
+        /// 配置服务器
         /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id, byte[] buffer, int offset, int length)
+        /// <param name="port"></param>
+        public virtual void Setup(int port)
         {
-            this.SocketClients[id].Send(buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id, ByteBlock byteBlock)
-        {
-            this.Send(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
+            TcpServerConfig serverConfig = new TcpServerConfig();
+            serverConfig.BindIPHost = new IPHost(port);
+            this.Setup(serverConfig);
         }
 
         /// <summary>
@@ -308,6 +259,61 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 启动服务
+        /// </summary>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public virtual void Start()
+        {
+            IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
+            if (iPHost == null)
+            {
+                throw new RRQMException("IPHost为空，无法绑定");
+            }
+            switch (this.serverState)
+            {
+                case ServerState.None:
+                    {
+                        this.BeginListen(iPHost);
+                        this.BeginClearAndHandle();
+                        break;
+                    }
+                case ServerState.Running:
+                    {
+                        return;
+                    }
+                case ServerState.Stopped:
+                    {
+                        this.BeginListen(iPHost);
+                        break;
+                    }
+                case ServerState.Disposed:
+                    {
+                        throw new RRQMException("无法重新利用已释放对象");
+                    }
+            }
+
+            this.IP = iPHost.IP;
+            this.Port = iPHost.Port;
+            this.serverState = ServerState.Running;
+        }
+
+        /// <summary>
+        /// 停止服务器，可重新启动
+        /// </summary>
+        public virtual void Stop()
+        {
+            if (MainSocket != null)
+            {
+                MainSocket.Dispose();
+            }
+            this.SocketClients.Dispose();
+
+            this.serverState = ServerState.Stopped;
+        }
+
+        /// <summary>
         /// 尝试获取TClient
         /// </summary>
         /// <param name="id">ID</param>
@@ -318,26 +324,133 @@ namespace RRQMSocket
             return this.socketClients.TryGetSocketClient(id, out socketClient);
         }
 
-        private void StartAccept()
+        internal virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
-            while (true)
+            try
             {
-                if (this.disposable|| this.serverState == ServerState.Stopped)
+                if (this.SocketClients.Count > this.maxCount)
                 {
-                    break;
+                    this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
+                    socket.Close();
+                    socket.Dispose();
+                    return;
                 }
-                try
+
+                TClient client = this.socketClientPool.GetObject();
+                if (client.NewCreate)
                 {
-                    Socket socket = this.MainSocket.Accept();
-                    Task.Run(() =>
+                    client.queueGroup = queueGroup;
+                    client.Service = this;
+                    client.Logger = this.Logger;
+                }
+
+                client.MainSocket = socket;
+                client.ReadIpPort();
+                client.BufferLength = this.BufferLength;
+
+                lock (locker)
+                {
+                    CreateOption creatOption = new CreateOption();
+                    creatOption.NewCreate = client.NewCreate;
+                    if (client.NewCreate)
                     {
-                        PreviewCreateSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
-                    });
+                        creatOption.ID = this.SocketClients.GetDefaultID();
+                    }
+                    else
+                    {
+                        creatOption.ID = client.ID;
+                    }
+                    this.OnCreateSocketCliect(client, creatOption);
+                    client.ID = creatOption.ID;
+
+                    this.SocketClients.Add(client);
                 }
-                catch
-                {
-                }
+                client.BeginReceive();
+                ClientConnectedMethod(client, null);
             }
+            catch (Exception ex)
+            {
+                Logger.Debug(LogType.Error, this, $"在接收客户端时发生错误，信息：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        protected virtual void LoadConfig(ServerConfig serverConfig)
+        {
+            if (serverConfig == null)
+            {
+                throw new RRQMException("配置文件为空");
+            }
+            this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty);
+            this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
+            this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
+            this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
+            this.BufferLength = (int)serverConfig.GetValue(ServerConfig.BufferLengthProperty);
+            this.socketClients.IDFormat = (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
+        }
+        /// <summary>
+        /// 成功连接后创建（或从对象池中获得）辅助类,
+        /// 用户可以在该方法中再进行自定义设置，
+        /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
+        /// 例如事件等，请先判断CreatOption.NewCreate值再做处理。
+        /// </summary>
+        /// <param name="tcpSocketClient"></param>
+        /// <param name="createOption"></param>
+        protected abstract void OnCreateSocketCliect(TClient tcpSocketClient, CreateOption createOption);
+
+        /// <summary>
+        /// 在Socket初始化对象后，Bind之前调用。
+        /// 可用于设置Socket参数。
+        /// 父类方法可覆盖。
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void PreviewBind(Socket socket)
+        {
+        }
+        private void BeginClearAndHandle()
+        {
+            threadClearClient = new Thread(ClearClient);
+            threadClearClient.IsBackground = true;
+            threadClearClient.Name = "CheckAlive";
+            threadClearClient.Start();
+
+            bufferQueueGroups = new BufferQueueGroup[this.serverConfig.ThreadCount];
+            for (int i = 0; i < this.serverConfig.ThreadCount; i++)
+            {
+                BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
+                bufferQueueGroup.bytePool = new BytePool(this.serverConfig.BytePoolMaxSize, this.serverConfig.BytePoolMaxBlockSize);
+                bufferQueueGroups[i] = bufferQueueGroup;
+                bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
+                bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
+                bufferQueueGroup.bufferAndClient = new BufferQueue();
+                bufferQueueGroup.Thread.IsBackground = true;
+                bufferQueueGroup.Thread.Name = i + "-Num Handler";
+                bufferQueueGroup.Thread.Start(bufferQueueGroup);
+            }
+        }
+
+        private void BeginListen(IPHost iPHost)
+        {
+            try
+            {
+                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                PreviewBind(socket);
+                socket.Bind(iPHost.EndPoint);
+                this.MainSocket = socket;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            MainSocket.Listen(backlog);
+            threadAccept = new Thread(StartAccept);
+            threadAccept.IsBackground = true;
+            threadAccept.Name = "AcceptClient";
+            threadAccept.Start();
         }
 
         private void ClearClient()
@@ -357,11 +470,11 @@ namespace RRQMSocket
                     {
                         if (this.SocketClients.TryGetSocketClient(token, out TClient client))
                         {
-                            if (this.clearInterval>0)
+                            if (this.clearInterval > 0)
                             {
                                 client.GetTimeout(this.clearInterval, tick);
                             }
-                            
+
                             if (client.breakOut)
                             {
                                 try
@@ -416,139 +529,26 @@ namespace RRQMSocket
             }
         }
 
-        private void BeginListen(IPHost iPHost)
+        private void StartAccept()
         {
-            try
+            while (true)
             {
-                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                PreviewBind(socket);
-                socket.Bind(iPHost.EndPoint);
-                this.MainSocket = socket;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-
-            MainSocket.Listen(backlog);
-            threadAccept = new Thread(StartAccept);
-            threadAccept.IsBackground = true;
-            threadAccept.Name = "AcceptClient";
-            threadAccept.Start();
-        }
-
-        private void BeginClearAndHandle()
-        {
-            threadClearClient = new Thread(ClearClient);
-            threadClearClient.IsBackground = true;
-            threadClearClient.Name = "CheckAlive";
-            threadClearClient.Start();
-
-            bufferQueueGroups = new BufferQueueGroup[this.serverConfig.ThreadCount];
-            for (int i = 0; i < this.serverConfig.ThreadCount; i++)
-            {
-                BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
-                bufferQueueGroup.bytePool = new BytePool(this.serverConfig.BytePoolMaxSize, this.serverConfig.BytePoolMaxBlockSize);
-                bufferQueueGroups[i] = bufferQueueGroup;
-                bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                bufferQueueGroup.bufferAndClient = new BufferQueue();
-                bufferQueueGroup.Thread.IsBackground = true;
-                bufferQueueGroup.Thread.Name = i + "-Num Handler";
-                bufferQueueGroup.Thread.Start(bufferQueueGroup);
-            }
-        }
-
-        /// <summary>
-        /// 成功连接后创建（或从对象池中获得）辅助类,
-        /// 用户可以在该方法中再进行自定义设置，
-        /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
-        /// 例如事件等，请先判断CreatOption.NewCreate值再做处理。
-        /// </summary>
-        /// <param name="tcpSocketClient"></param>
-        /// <param name="createOption"></param>
-        protected abstract void OnCreateSocketCliect(TClient tcpSocketClient, CreateOption createOption);
-
-        internal virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
-        {
-            try
-            {
-                if (this.SocketClients.Count > this.maxCount)
+                if (this.disposable || this.serverState == ServerState.Stopped)
                 {
-                    this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
-                    socket.Close();
-                    socket.Dispose();
-                    return;
+                    break;
                 }
-
-                TClient client = this.socketClientPool.GetObject();
-                if (client.NewCreate)
+                try
                 {
-                    client.queueGroup = queueGroup;
-                    client.Service = this;
-                    client.Logger = this.Logger;
-                }
-
-                client.MainSocket = socket;
-                client.ReadIpPort();
-                client.BufferLength = this.BufferLength;
-
-                lock (locker)
-                {
-                    CreateOption creatOption = new CreateOption();
-                    creatOption.NewCreate = client.NewCreate;
-                    if (client.NewCreate)
+                    Socket socket = this.MainSocket.Accept();
+                    Task.Run(() =>
                     {
-                        creatOption.ID = this.SocketClients.GetDefaultID();
-                    }
-                    else
-                    {
-                        creatOption.ID = client.ID;
-                    }
-                    this.OnCreateSocketCliect(client, creatOption);
-                    client.ID = creatOption.ID;
-
-                    this.SocketClients.Add(client);
+                        PreviewCreateSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                    });
                 }
-                client.BeginReceive();
-                ClientConnectedMethod(client, null);
-            }
-            catch (Exception ex)
-            {
-                Logger.Debug(LogType.Error, this, $"在接收客户端时发生错误，信息：{ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 停止服务器，可重新启动
-        /// </summary>
-        public virtual void Stop()
-        {
-            if (MainSocket != null)
-            {
-                MainSocket.Dispose();
-            }
-            this.SocketClients.Dispose();
-
-            this.serverState = ServerState.Stopped;
-        }
-
-        /// <summary>
-        /// 关闭服务器并释放服务器资源
-        /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-            this.SocketClients.Dispose();
-            if (bufferQueueGroups!=null)
-            {
-                foreach (var item in bufferQueueGroups)
+                catch
                 {
-                    item.Dispose();
                 }
             }
-            
-            this.serverState = ServerState.Disposed;
         }
     }
 }

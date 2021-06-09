@@ -9,13 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Serialization;
 using System;
 using System.IO;
-using RRQMCore.Serialization;
 
 namespace RRQMSocket.FileTransfer
 {
-    internal class RRQMStream:IDisposable
+    internal class RRQMStream : IDisposable
     {
         internal static RRQMStream GetRQMStream(ref ProgressBlockCollection blocks, bool restart, bool breakpoint)
         {
@@ -49,7 +49,7 @@ namespace RRQMSocket.FileTransfer
             {
                 byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
                 stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Create, FileAccess.ReadWrite);
-                stream.rrqmFileStream.Write(dataBuffer,0,dataBuffer.Length);
+                stream.rrqmFileStream.Write(dataBuffer, 0, dataBuffer.Length);
                 stream.rrqmFileStream.Flush();
             }
 
@@ -57,7 +57,6 @@ namespace RRQMSocket.FileTransfer
             return stream;
         }
 
-       
         internal FileInfo fileInfo;
 
         private FileStream rrqmFileStream;
@@ -76,7 +75,7 @@ namespace RRQMSocket.FileTransfer
 
         public void Dispose()
         {
-            if (this.rrqmFileStream!=null)
+            if (this.rrqmFileStream != null)
             {
                 this.rrqmFileStream.Dispose();
                 this.rrqmFileStream = null;
@@ -87,6 +86,5 @@ namespace RRQMSocket.FileTransfer
                 this.tempFileStream = null;
             }
         }
-
     }
 }

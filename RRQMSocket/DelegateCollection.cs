@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMSocket;
-using System.Net;
 
 /// <summary>
 /// 显示信息

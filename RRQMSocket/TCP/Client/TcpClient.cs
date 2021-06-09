@@ -13,7 +13,6 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,64 +25,25 @@ namespace RRQMSocket
     public abstract class TcpClient : BaseSocket, IUserTcpClient, IClient, IHandleBuffer
     {
         /// <summary>
-        /// 判断是否已连接
-        /// </summary>
-        public bool Online { get { return this.online; } }
-        private bool online;
-
-        private DataHandlingAdapter dataHandlingAdapter;
-
-        /// <summary>
-        /// 数据处理适配器
-        /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter
-        {
-            get { return dataHandlingAdapter; }
-            set { this.SetDataHandlingAdapter(value); }
-        }
-
-        private BytePool bytePool;
-        /// <summary>
-        /// 获取内存池实例
-        /// </summary>
-        public BytePool BytePool
-        {
-            get { return bytePool; }
-        }
-
-        private bool onlySend;
-        /// <summary>
-        /// 仅发送，即不会开启接收线程。
-        /// </summary>
-        public bool OnlySend
-        {
-            get { return onlySend; }
-        }
-        /// <summary>
         /// 客户端配置
         /// </summary>
         protected TcpClientConfig clientConfig;
-        /// <summary>
-        /// 客户端配置
-        /// </summary>
-        public TcpClientConfig ClientConfig
-        {
-            get { return clientConfig; }
-        }
 
+        private AsyncSender asyncSender;
 
-        private bool separateThreadSend;
-        /// <summary>
-        /// 在异步发送时，使用独立线程发送
-        /// </summary>
-        public bool SeparateThreadSend
-        {
-            get { return separateThreadSend; }
-        }
+        private BytePool bytePool;
+
+        private DataHandlingAdapter dataHandlingAdapter;
+
+        private bool online;
+
+        private bool onlySend;
 
         private BufferQueueGroup queueGroup;
+
         private SocketAsyncEventArgs receiveEventArgs;
-        private AsyncSender asyncSender;
+
+        private bool separateThreadSend;
 
         /// <summary>
         /// 成功连接到服务器
@@ -96,41 +56,49 @@ namespace RRQMSocket
         public event RRQMMessageEventHandler DisconnectedService;
 
         /// <summary>
-        /// 配置服务器
+        /// 获取内存池实例
         /// </summary>
-        /// <param name="clientConfig"></param>
-        /// <exception cref="RRQMException"></exception>
-        public void Setup(TcpClientConfig clientConfig)
+        public BytePool BytePool
         {
-            this.clientConfig = clientConfig;
-            this.LoadConfig(this.clientConfig);
+            get { return bytePool; }
         }
 
         /// <summary>
-        /// 加载配置
+        /// 客户端配置
         /// </summary>
-        /// <param name="clientConfig"></param>
-        protected virtual void LoadConfig(TcpClientConfig clientConfig)
+        public TcpClientConfig ClientConfig
         {
-            if (clientConfig == null)
-            {
-                throw new RRQMException("配置文件为空");
-            }
-            if (clientConfig.BytePool != null)
-            {
-                clientConfig.BytePool.MaxSize = clientConfig.BytePoolMaxSize;
-                clientConfig.BytePool.MaxBlockSize = clientConfig.BytePoolMaxBlockSize;
-                this.bytePool = clientConfig.BytePool;
-            }
-            else
-            {
-                throw new ArgumentNullException("内存池不能为空");
-            }
-            this.Logger = (ILog)clientConfig.GetValue(RRQMConfig.LoggerProperty);
-            this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
-            this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
-            this.onlySend = clientConfig.OnlySend;
-            this.separateThreadSend = clientConfig.SeparateThreadSend;
+            get { return clientConfig; }
+        }
+
+        /// <summary>
+        /// 数据处理适配器
+        /// </summary>
+        public DataHandlingAdapter DataHandlingAdapter
+        {
+            get { return dataHandlingAdapter; }
+            set { this.SetDataHandlingAdapter(value); }
+        }
+
+        /// <summary>
+        /// 判断是否已连接
+        /// </summary>
+        public bool Online { get { return this.online; } }
+
+        /// <summary>
+        /// 仅发送，即不会开启接收线程。
+        /// </summary>
+        public bool OnlySend
+        {
+            get { return onlySend; }
+        }
+
+        /// <summary>
+        /// 在异步发送时，使用独立线程发送
+        /// </summary>
+        public bool SeparateThreadSend
+        {
+            get { return separateThreadSend; }
         }
 
         /// <summary>
@@ -192,208 +160,55 @@ namespace RRQMSocket
                         callback.Invoke(result);
                     }
                 }
-
             });
         }
 
         /// <summary>
-        /// 在Socket初始化对象后，Connect之前调用。
-        /// 可用于设置Socket参数。
-        /// 父类方法可覆盖。
+        /// 断开连接
         /// </summary>
-        /// <param name="socket"></param>
-        protected virtual void PreviewConnect(Socket socket)
+        public virtual void Disconnect()
         {
+            if (MainSocket != null)
+            {
+                MainSocket.Dispose();
+            }
+            if (this.queueGroup != null)
+            {
+                this.queueGroup.Dispose();
+            }
+            if (this.asyncSender != null)
+            {
+                this.asyncSender.Dispose();
+                this.asyncSender = null;
+            }
+            this.OnDisconnectedService(new MesEventArgs("Disconnect"));
         }
 
-        private void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        /// <summary>
+        /// 断开链接并释放资源
+        /// </summary>
+        public override void Dispose()
         {
-            if (adapter == null)
+            base.Dispose();
+            if (this.queueGroup != null)
+            {
+                this.queueGroup.Dispose();
+            }
+            if (this.asyncSender != null)
+            {
+                this.asyncSender.Dispose();
+                this.asyncSender = null;
+            }
+        }
+
+        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        {
+            if (this.dataHandlingAdapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
             }
-            adapter.BytePool = this.bytePool;
-            adapter.Logger = this.Logger;
-            adapter.ReceivedCallBack = this.HandleReceivedData;
-            adapter.SendCallBack = this.Sent;
-            this.dataHandlingAdapter = adapter;
+            this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
-
-        internal void Start()
-        {
-            this.ReadIpPort();
-            this.OnConnectedService(new MesEventArgs());
-            if (!this.onlySend)
-            {
-                queueGroup = new BufferQueueGroup();
-                queueGroup.Thread = new Thread(HandleBuffer);//处理用户的消息
-                queueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                queueGroup.bufferAndClient = new BufferQueue();
-                queueGroup.Thread.IsBackground = true;
-                queueGroup.Thread.Name = "客户端处理线程";
-                queueGroup.Thread.Start();
-
-                this.receiveEventArgs = new SocketAsyncEventArgs();
-                this.receiveEventArgs.Completed += EventArgs_Completed;
-                BeginReceive();
-            }
-            if (this.separateThreadSend)
-            {
-                if (this.asyncSender != null)
-                {
-                    this.asyncSender.Dispose();
-                }
-                this.asyncSender = new AsyncSender();
-                this.asyncSender.Load(this.MainSocket, this.MainSocket.RemoteEndPoint, this.Logger);
-                this.asyncSender.SetBufferLength((int)this.clientConfig.GetValue(TcpClientConfig.SeparateThreadSendBufferLengthProperty));
-            }
-        }
-
-        /// <summary>
-        /// 启动消息接收
-        /// </summary>
-        private void BeginReceive()
-        {
-            try
-            {
-                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
-                this.receiveEventArgs.UserToken = byteBlock;
-                this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                if (!this.MainSocket.ReceiveAsync(this.receiveEventArgs))
-                {
-                    ProcessReceived(this.receiveEventArgs);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.OnDisconnectedService(new MesEventArgs(ex.Message));
-            }
-        }
-
-        private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            try
-            {
-                if (e.LastOperation == SocketAsyncOperation.Receive)
-                {
-                    ProcessReceived(e);
-                }
-                else if (e.LastOperation == SocketAsyncOperation.Send)
-                {
-                    ProcessSend(e);
-                }
-                else
-                {
-                    this.OnDisconnectedService(new MesEventArgs("BreakOut"));
-                }
-            }
-            catch (Exception ex)
-            {
-                this.OnDisconnectedService(new MesEventArgs(ex.Message));
-            }
-        }
-
-        private void ProcessReceived(SocketAsyncEventArgs e)
-        {
-            if (!this.disposable)
-            {
-                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
-                {
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-
-                    if (byteBlock.Using)
-                    {
-                        byteBlock.Position = e.BytesTransferred;
-                        byteBlock.SetLength(e.BytesTransferred);
-                    }
-                    else
-                    {
-                        byte[] buffer = new byte[e.BytesTransferred];
-                        Array.Copy(byteBlock.Buffer, buffer, buffer.Length);
-                        while (!byteBlock.Using)
-                        {
-                            byteBlock.Dispose();
-                            byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
-                        }
-                        byteBlock.Write(buffer);
-                    }
-
-                    ClientBuffer clientBuffer = new ClientBuffer();
-                    clientBuffer.client = this;
-                    clientBuffer.byteBlock = byteBlock;
-                    queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                    queueGroup.waitHandleBuffer.Set();
-
-                    ByteBlock newByteBlock = this.bytePool.GetByteBlock(this.BufferLength);
-                    e.UserToken = newByteBlock;
-                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-
-                    if (!this.MainSocket.ReceiveAsync(e))
-                    {
-                        ProcessReceived(e);
-                    }
-                }
-                else
-                {
-                    this.OnDisconnectedService(new MesEventArgs("BreakOut"));
-                }
-            }
-        }
-
-        /// <summary>
-        /// 发送完成时处理函数
-        /// </summary>
-        /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
-        private void ProcessSend(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                e.Dispose();
-            }
-            else
-            {
-                this.Logger.Debug(LogType.Error, this, "异步发送错误。");
-            }
-        }
-
-        private void HandleBuffer()
-        {
-            while (true)
-            {
-                if (disposable || !this.online)
-                {
-                    break;
-                }
-                ClientBuffer clientBuffer;
-                if (queueGroup.bufferAndClient.TryDequeue(out clientBuffer))
-                {
-                    try
-                    {
-                        clientBuffer.client.HandleBuffer(clientBuffer);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Debug(LogType.Error, this, $"在处理数据时发生错误，信息：{e.Message}");
-                    }
-                    finally
-                    {
-                        clientBuffer.byteBlock.Dispose();
-                    }
-                }
-                else
-                {
-                    queueGroup.waitHandleBuffer.WaitOne();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 处理已接收到的数据。
-        /// 覆盖父类方法将不触发OnReceived事件。
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
 
         /// <summary>
         /// 发送字节流
@@ -471,6 +286,261 @@ namespace RRQMSocket
             this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
+        /// <summary>
+        /// 配置服务器
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        /// <exception cref="RRQMException"></exception>
+        public void Setup(TcpClientConfig clientConfig)
+        {
+            this.clientConfig = clientConfig;
+            this.LoadConfig(this.clientConfig);
+        }
+
+        /// <summary>
+        /// 禁用发送或接收
+        /// </summary>
+        /// <param name="how"></param>
+        public void Shutdown(SocketShutdown how)
+        {
+            if (this.MainSocket != null)
+            {
+                MainSocket.Shutdown(how);
+            }
+        }
+
+        internal void Start()
+        {
+            this.ReadIpPort();
+            this.OnConnectedService(new MesEventArgs());
+            if (!this.onlySend)
+            {
+                queueGroup = new BufferQueueGroup();
+                queueGroup.Thread = new Thread(HandleBuffer);//处理用户的消息
+                queueGroup.waitHandleBuffer = new AutoResetEvent(false);
+                queueGroup.bufferAndClient = new BufferQueue();
+                queueGroup.Thread.IsBackground = true;
+                queueGroup.Thread.Name = "客户端处理线程";
+                queueGroup.Thread.Start();
+
+                this.receiveEventArgs = new SocketAsyncEventArgs();
+                this.receiveEventArgs.Completed += EventArgs_Completed;
+                BeginReceive();
+            }
+            if (this.separateThreadSend)
+            {
+                if (this.asyncSender != null)
+                {
+                    this.asyncSender.Dispose();
+                }
+                this.asyncSender = new AsyncSender(this.MainSocket, this.MainSocket.RemoteEndPoint, this.Logger);
+                this.asyncSender.SetBufferLength((int)this.clientConfig.GetValue(TcpClientConfig.SeparateThreadSendBufferLengthProperty));
+            }
+        }
+
+        /// <summary>
+        /// 处理已接收到的数据。
+        /// 覆盖父类方法将不触发OnReceived事件。
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        protected virtual void LoadConfig(TcpClientConfig clientConfig)
+        {
+            if (clientConfig == null)
+            {
+                throw new RRQMException("配置文件为空");
+            }
+            if (clientConfig.BytePool != null)
+            {
+                clientConfig.BytePool.MaxSize = clientConfig.BytePoolMaxSize;
+                clientConfig.BytePool.MaxBlockSize = clientConfig.BytePoolMaxBlockSize;
+                this.bytePool = clientConfig.BytePool;
+            }
+            else
+            {
+                throw new ArgumentNullException("内存池不能为空");
+            }
+            this.Logger = (ILog)clientConfig.GetValue(RRQMConfig.LoggerProperty);
+            this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
+            this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
+            this.onlySend = clientConfig.OnlySend;
+            this.separateThreadSend = clientConfig.SeparateThreadSend;
+        }
+
+        /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnConnectedService(MesEventArgs e)
+        {
+            this.online = true;
+            this.ConnectedService?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnectedService(MesEventArgs e)
+        {
+            this.online = false;
+            this.DisconnectedService?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 在Socket初始化对象后，Connect之前调用。
+        /// 可用于设置Socket参数。
+        /// 父类方法可覆盖。
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void PreviewConnect(Socket socket)
+        {
+        }
+
+        /// <summary>
+        /// 启动消息接收
+        /// </summary>
+        private void BeginReceive()
+        {
+            try
+            {
+                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
+                this.receiveEventArgs.UserToken = byteBlock;
+                this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                if (!this.MainSocket.ReceiveAsync(this.receiveEventArgs))
+                {
+                    ProcessReceived(this.receiveEventArgs);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.OnDisconnectedService(new MesEventArgs(ex.Message));
+            }
+        }
+
+        private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            try
+            {
+                if (e.LastOperation == SocketAsyncOperation.Receive)
+                {
+                    ProcessReceived(e);
+                }
+                else if (e.LastOperation == SocketAsyncOperation.Send)
+                {
+                    ProcessSend(e);
+                }
+                else
+                {
+                    this.OnDisconnectedService(new MesEventArgs("BreakOut"));
+                }
+            }
+            catch (Exception ex)
+            {
+                this.OnDisconnectedService(new MesEventArgs(ex.Message));
+            }
+        }
+
+        private void HandleBuffer()
+        {
+            while (true)
+            {
+                if (disposable || !this.online)
+                {
+                    break;
+                }
+                ClientBuffer clientBuffer;
+                if (queueGroup.bufferAndClient.TryDequeue(out clientBuffer))
+                {
+                    try
+                    {
+                        clientBuffer.client.HandleBuffer(clientBuffer);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Debug(LogType.Error, this, $"在处理数据时发生错误，信息：{e.Message}");
+                    }
+                    finally
+                    {
+                        clientBuffer.byteBlock.Dispose();
+                    }
+                }
+                else
+                {
+                    queueGroup.waitHandleBuffer.WaitOne();
+                }
+            }
+        }
+
+        private void ProcessReceived(SocketAsyncEventArgs e)
+        {
+            if (!this.disposable)
+            {
+                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
+                {
+                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
+
+                    if (byteBlock.Using)
+                    {
+                        byteBlock.Position = e.BytesTransferred;
+                        byteBlock.SetLength(e.BytesTransferred);
+                    }
+                    else
+                    {
+                        byte[] buffer = new byte[e.BytesTransferred];
+                        Array.Copy(byteBlock.Buffer, buffer, buffer.Length);
+                        while (!byteBlock.Using)
+                        {
+                            byteBlock.Dispose();
+                            byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
+                        }
+                        byteBlock.Write(buffer);
+                    }
+
+                    ClientBuffer clientBuffer = new ClientBuffer();
+                    clientBuffer.client = this;
+                    clientBuffer.byteBlock = byteBlock;
+                    queueGroup.bufferAndClient.Enqueue(clientBuffer);
+                    queueGroup.waitHandleBuffer.Set();
+
+                    ByteBlock newByteBlock = this.bytePool.GetByteBlock(this.BufferLength);
+                    e.UserToken = newByteBlock;
+                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+
+                    if (!this.MainSocket.ReceiveAsync(e))
+                    {
+                        ProcessReceived(e);
+                    }
+                }
+                else
+                {
+                    this.OnDisconnectedService(new MesEventArgs("BreakOut"));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 发送完成时处理函数
+        /// </summary>
+        /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
+        private void ProcessSend(SocketAsyncEventArgs e)
+        {
+            if (e.SocketError == SocketError.Success)
+            {
+                e.Dispose();
+            }
+            else
+            {
+                this.Logger.Debug(LogType.Error, this, "异步发送错误。");
+            }
+        }
+
         private void Sent(byte[] buffer, int offset, int length, bool isAsync)
         {
             if (!this.Online)
@@ -511,86 +581,19 @@ namespace RRQMSocket
                     length -= r;
                 }
             }
-
         }
 
-        /// <summary>
-        /// 禁用发送或接收
-        /// </summary>
-        /// <param name="how"></param>
-        public void Shutdown(SocketShutdown how)
+        private void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
-            if (this.MainSocket != null)
-            {
-                MainSocket.Shutdown(how);
-            }
-        }
-
-        /// <summary>
-        /// 连接到服务器
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnConnectedService(MesEventArgs e)
-        {
-            this.online = true;
-            this.ConnectedService?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnDisconnectedService(MesEventArgs e)
-        {
-            this.online = false;
-            this.DisconnectedService?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 断开链接并释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-            if (this.queueGroup != null)
-            {
-                this.queueGroup.Dispose();
-            }
-            if (this.asyncSender != null)
-            {
-                this.asyncSender.Dispose();
-                this.asyncSender = null;
-            }
-        }
-
-        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
-        {
-            if (this.dataHandlingAdapter == null)
+            if (adapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
             }
-            this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
-        }
-
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        public virtual void Disconnect()
-        {
-            if (MainSocket != null)
-            {
-                MainSocket.Dispose();
-            }
-            if (this.queueGroup != null)
-            {
-                this.queueGroup.Dispose();
-            }
-            if (this.asyncSender != null)
-            {
-                this.asyncSender.Dispose();
-                this.asyncSender = null;
-            }
-            this.OnDisconnectedService(new MesEventArgs("Disconnect"));
+            adapter.BytePool = this.bytePool;
+            adapter.Logger = this.Logger;
+            adapter.ReceivedCallBack = this.HandleReceivedData;
+            adapter.SendCallBack = this.Sent;
+            this.dataHandlingAdapter = adapter;
         }
     }
 }

@@ -23,6 +23,14 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public sealed class RPCSocketClient : SocketClient
     {
+        internal RRQMAgreementHelper agreementHelper;
+
+        internal Action<RPCSocketClient, ByteBlock> Received;
+
+        internal SerializeConverter serializeConverter;
+
+        private WaitData<RpcContext> invokeWaitData;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -30,33 +38,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             this.invokeWaitData = new WaitData<RpcContext>();
             this.invokeWaitData.WaitResult = new RpcContext();
-        }
-        internal Action<RPCSocketClient,ByteBlock> Received;
-        private WaitData<RpcContext> invokeWaitData;
-        internal RRQMAgreementHelper agreementHelper;
-        internal SerializeConverter serializeConverter;
-
-        /// <summary>
-        /// 回调函数
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="r"></param>
-        internal void Agreement_112(byte[] buffer, int r)
-        {
-            RpcContext rpcContext = RpcContext.Deserialize(buffer, 4);
-
-            this.invokeWaitData.Set(rpcContext);
-        }
-
-        /// <summary>
-        /// 向RPC发送数据
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public override void Send(byte[] buffer, int offset, int length)
-        {
-            agreementHelper.SocketSend(111, buffer, offset, length);
         }
 
         /// <summary>
@@ -127,7 +108,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     try
                     {
-                        return (T)this.serializeConverter.DeserializeParameter(context.ReturnParameterBytes,typeof(T));
+                        return (T)this.serializeConverter.DeserializeParameter(context.ReturnParameterBytes, typeof(T));
                     }
                     catch (Exception e)
                     {
@@ -208,6 +189,28 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
+        /// <summary>
+        /// 向RPC发送数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public override void Send(byte[] buffer, int offset, int length)
+        {
+            agreementHelper.SocketSend(120, buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 回调函数
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="r"></param>
+        internal void Agreement_112(byte[] buffer, int r)
+        {
+            RpcContext rpcContext = RpcContext.Deserialize(buffer, 4);
+
+            this.invokeWaitData.Set(rpcContext);
+        }
         /// <summary>
         /// 处理已接收到的数据
         /// </summary>

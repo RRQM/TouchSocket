@@ -12,7 +12,6 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
-using RRQMCore.Pool;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -26,6 +25,7 @@ namespace RRQMSocket
     public abstract class UdpSession : BaseSocket, IService, IClient, IHandleBuffer
     {
         private EndPoint defaultRemotePoint;
+
         /// <summary>
         /// 默认远程节点
         /// </summary>
@@ -39,8 +39,8 @@ namespace RRQMSocket
         /// </summary>
         public long RecivedCount { get { return this.recivedCount; } }
 
-
         private ServerState serverState;
+
         /// <summary>
         /// 获取服务器状态
         /// </summary>
@@ -49,13 +49,13 @@ namespace RRQMSocket
             get { return serverState; }
         }
 
-
         /// <summary>
         /// 获取默认内存池
         /// </summary>
         public BytePool BytePool { get { return BytePool.Default; } }
 
         private ServerConfig serverConfig;
+
         /// <summary>
         /// 获取配置
         /// </summary>
@@ -166,6 +166,7 @@ namespace RRQMSocket
         }
 
         #region 发送
+
         /// <summary>
         /// 发送
         /// </summary>
@@ -264,7 +265,7 @@ namespace RRQMSocket
             this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
         }
 
-        #endregion
+        #endregion 发送
 
         private void HandleBuffer(ClientBuffer clientBuffer)
         {
@@ -295,6 +296,7 @@ namespace RRQMSocket
             serverConfig.BindIPHost = new IPHost(port);
             this.Setup(serverConfig);
         }
+
         /// <summary>
         /// 加载配置
         /// </summary>
@@ -317,7 +319,7 @@ namespace RRQMSocket
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
-           
+
             bool useBind = (bool)this.serverConfig.GetValue(UdpSessionConfig.UseBindProperty);
             if (useBind)
             {

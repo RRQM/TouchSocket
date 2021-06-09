@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Pool;
 using System;
 using System.Threading;
 
@@ -23,6 +22,7 @@ namespace RRQMSocket
         internal EventWaitHandle waitHandleBuffer;
         internal bool isWait;
         internal BytePool bytePool;
+
         public void Dispose()
         {
             if (bufferAndClient != null)
