@@ -22,7 +22,7 @@ namespace RRQMSocket
         /// <summary>
         /// 当收到数据时
         /// </summary>
-        public event RRQMUDPByteBlockEventHandler Received;
+        public event RRQMByteBlockEventHandler Received;
 
         /// <summary>
         /// 处理数据

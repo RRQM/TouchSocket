@@ -9,12 +9,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Run;
+using RRQMCore.Event;
 
-namespace RRQMSocket.RPC.RRQMRPC
+namespace RRQMSocket
 {
-    internal class WaitBytes : WaitResult
+    /// <summary>
+    /// 字节事件
+    /// </summary>
+    public class BytesEventArgs:RRQMEventArgs
     {
-        internal byte[] Bytes;
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="data"></param>
+        public BytesEventArgs(byte[] data)
+        {
+            this.ReceivedDataBytes = data;
+        }
+        /// <summary>
+        /// 字节数组
+        /// </summary>
+        public byte[] ReceivedDataBytes { get;private set; }
     }
 }

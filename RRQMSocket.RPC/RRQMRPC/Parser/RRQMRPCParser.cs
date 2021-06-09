@@ -27,24 +27,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         private MethodStore methodStore;
 
         /// <summary>
-        /// 序列化转换器
+        /// 收到字节
         /// </summary>
-        public SerializeConverter SerializeConverter { get; protected set; }
+        public abstract event RRQMBytesEventHandler Received;
 
         /// <summary>
-        /// 代理源文件命名空间
+        /// 内存池实例
         /// </summary>
-        public string NameSpace { get; protected set; }
-
-        /// <summary>
-        /// RPC代理版本
-        /// </summary>
-        public Version RPCVersion { get; protected set; }
-
-        /// <summary>
-        /// RPC编译器
-        /// </summary>
-        public IRPCCompiler RPCCompiler { get;protected set; }
+        public abstract BytePool BytePool { get; }
 
         /// <summary>
         /// 获取生成的代理代码
@@ -52,9 +42,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         public CellCode[] Codes { get; private set; }
 
         /// <summary>
-        /// 代理令箭，当客户端获取代理文件时需验证令箭
+        /// 代理源文件命名空间
         /// </summary>
-        public string ProxyToken { get;protected set; }
+        public string NameSpace { get; protected set; }
 
         /// <summary>
         /// 获取代理文件实例
@@ -62,11 +52,96 @@ namespace RRQMSocket.RPC.RRQMRPC
         public RPCProxyInfo ProxyInfo { get; private set; }
 
         /// <summary>
-        /// 内存池实例
+        /// 代理令箭，当客户端获取代理文件时需验证令箭
         /// </summary>
-        public abstract BytePool BytePool { get; }
+        public string ProxyToken { get; protected set; }
 
-      
+        /// <summary>
+        /// RPC编译器
+        /// </summary>
+        public IRPCCompiler RPCCompiler { get; protected set; }
+
+        /// <summary>
+        /// RPC代理版本
+        /// </summary>
+        public Version RPCVersion { get; protected set; }
+
+        /// <summary>
+        /// 序列化转换器
+        /// </summary>
+        public SerializeConverter SerializeConverter { get; protected set; }
+        /// <summary>
+        /// 执行内容
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="caller"></param>
+        protected virtual void ExecuteContext(RpcContext context, object caller)
+        {
+            MethodInvoker methodInvoker = new MethodInvoker();
+            methodInvoker.Caller = caller;
+            methodInvoker.Flag = context;
+            if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
+            {
+                if (methodInstance.IsEnable)
+                {
+                    object[] ps = new object[methodInstance.ParameterTypes.Length];
+                    for (int i = 0; i < context.ParametersBytes.Count; i++)
+                    {
+                        ps[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                    }
+                    methodInvoker.Parameters = ps;
+                }
+                else
+                {
+                    methodInvoker.Status = InvokeStatus.UnEnable;
+                }
+
+                this.ExecuteMethod(methodInvoker, methodInstance);
+            }
+            else
+            {
+                methodInvoker.Status = InvokeStatus.UnFound;
+                this.ExecuteMethod(methodInvoker, null);
+            }
+        }
+
+        /// <summary>
+        /// 获取代理文件
+        /// </summary>
+        /// <param name="proxyToken"></param>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken, RPCParser parser)
+        {
+            RPCProxyInfo proxyInfo = new RPCProxyInfo();
+            if (this.ProxyToken == proxyToken)
+            {
+                proxyInfo.AssemblyData = this.ProxyInfo.AssemblyData;
+                proxyInfo.AssemblyName = this.ProxyInfo.AssemblyName;
+                proxyInfo.Codes = this.ProxyInfo.Codes;
+                proxyInfo.Version = this.ProxyInfo.Version;
+                proxyInfo.Status = 1;
+            }
+            else
+            {
+                proxyInfo.Status = 2;
+                proxyInfo.Message = "令箭不正确";
+            }
+
+            return proxyInfo;
+        }
+
+        /// <summary>
+        /// 获取已注册服务条目
+        /// </summary>
+        /// <param name="parser"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        protected virtual List<MethodItem> GetRegisteredMethodItems(RPCParser parser, string id)
+        {
+            return this.methodStore.GetAllMethodItem();
+        }
+
         /// <summary>
         /// 初始化服务
         /// </summary>
@@ -178,78 +253,5 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             this.Codes = codes.ToArray();
         }
-
-        /// <summary>
-        /// 获取代理文件
-        /// </summary>
-        /// <param name="proxyToken"></param>
-        /// <param name="parser"></param>
-        /// <returns></returns>
-        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken, RPCParser parser)
-        {
-            RPCProxyInfo proxyInfo = new RPCProxyInfo();
-            if (this.ProxyToken == proxyToken)
-            {
-                proxyInfo.AssemblyData = this.ProxyInfo.AssemblyData;
-                proxyInfo.AssemblyName = this.ProxyInfo.AssemblyName;
-                proxyInfo.Codes = this.ProxyInfo.Codes;
-                proxyInfo.Version = this.ProxyInfo.Version;
-                proxyInfo.Status = 1;
-            }
-            else
-            {
-                proxyInfo.Status = 2;
-                proxyInfo.Message = "令箭不正确";
-            }
-
-            return proxyInfo;
-        }
-
-        /// <summary>
-        /// 执行内容
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="caller"></param>
-        protected virtual void ExecuteContext(RpcContext context, object caller)
-        {
-            MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Caller = caller;
-            methodInvoker.Flag = context;
-            if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
-            {
-                if (methodInstance.IsEnable)
-                {
-                    object[] ps = new object[methodInstance.ParameterTypes.Length];
-                    for (int i = 0; i < context.ParametersBytes.Count; i++)
-                    {
-                        ps[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
-                    }
-                    methodInvoker.Parameters = ps;
-                }
-                else
-                {
-                    methodInvoker.Status = InvokeStatus.UnEnable;
-                }
-
-                this.ExecuteMethod(methodInvoker, methodInstance);
-            }
-            else
-            {
-                methodInvoker.Status = InvokeStatus.UnFound;
-                this.ExecuteMethod(methodInvoker, null);
-            }
-        }
-
-        /// <summary>
-        /// 获取已注册服务条目
-        /// </summary>
-        /// <param name="parser"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        protected virtual List<MethodItem> GetRegisteredMethodItems(RPCParser parser,string id)
-        {
-            return this.methodStore.GetAllMethodItem();
-        }
-
     }
 }

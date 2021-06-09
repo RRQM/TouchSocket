@@ -28,8 +28,15 @@ public delegate void RRQMMessageEventHandler(object sender, MesEventArgs e);
 public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
 
 /// <summary>
-/// UDP ByteBlock
+/// 字节数据
 /// </summary>
-/// <param name="remoteEndpoint"></param>
+/// <param name="sender"></param>
 /// <param name="e"></param>
-public delegate void RRQMUDPByteBlockEventHandler(EndPoint remoteEndpoint, ByteBlock e);
+public delegate void RRQMBytesEventHandler(object sender, BytesEventArgs e);
+
+/// <summary>
+/// 字节数据
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+public delegate void RRQMReturnBytesEventHandler(object sender, ReturnBytesEventArgs e);

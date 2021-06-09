@@ -34,6 +34,11 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
+        /// 获取函数实例
+        /// </summary>
+        public MethodInstance[] MethodInstances { get; private set; }
+
+        /// <summary>
         /// 获取函数映射图实例
         /// </summary>
         public MethodMap MethodMap { get; private set; }
@@ -42,6 +47,11 @@ namespace RRQMSocket.RPC
         /// 获取RPC解析器集合
         /// </summary>
         public RPCParserCollection RPCParsers { get; private set; }
+
+        /// <summary>
+        /// 获取服务实例
+        /// </summary>
+        public ServerProviderCollection ServerProviders { get; private set; }
 
         /// <summary>
         /// 添加RPC解析器
@@ -55,16 +65,56 @@ namespace RRQMSocket.RPC
             parser.RRQMExecuteMethod = PreviewExecuteMethod;
             parser.RRQMSetMethodMap(this.MethodMap);
         }
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (var item in this.RPCParsers)
+            {
+                item.Dispose();
+            }
+            this.RPCParsers = null;
+        }
 
         /// <summary>
-        /// 获取函数实例
+        /// 注册所有服务
         /// </summary>
-        public MethodInstance[] MethodInstances { get; private set; }
+        /// <returns></returns>
+        public int RegistAllServer()
+        {
+            Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
+               .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
+
+            foreach (Type type in types)
+            {
+                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
+                RegistServer(serverProvider);
+            }
+            return types.Length;
+        }
 
         /// <summary>
-        /// 获取服务实例
+        /// 注册服务
         /// </summary>
-        public ServerProviderCollection ServerProviders { get; private set; }
+        /// <param name="serverProvider"></param>
+        public void RegistServer(ServerProvider serverProvider)
+        {
+            serverProvider.RPCService = this;
+            this.ServerProviders.Add(serverProvider);
+        }
+
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>返回T实例</returns>
+        public ServerProvider RegistServer<T>() where T : ServerProvider
+        {
+            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(typeof(T));
+            this.RegistServer(serverProvider);
+            return serverProvider;
+        }
 
         /// <summary>
         /// 设置服务方法可用性
@@ -83,50 +133,10 @@ namespace RRQMSocket.RPC
                 throw new RRQMRPCException("未找到该方法");
             }
         }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="serverProvider"></param>
-        public void RegistService(ServerProvider serverProvider)
-        {
-            serverProvider.RPCService = this;
-            this.ServerProviders.Add(serverProvider);
-        }
-
-        /// <summary>
-        /// 注册所有服务
-        /// </summary>
-        /// <returns></returns>
-        public int RegistAllService()
-        {
-            Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
-               .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
-
-            foreach (Type type in types)
-            {
-                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
-                RegistService(serverProvider);
-            }
-            return types.Length;
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns>返回T实例</returns>
-        public ServerProvider RegistService<T>() where T : ServerProvider
-        {
-            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(typeof(T));
-            this.RegistService(serverProvider);
-            return serverProvider;
-        }
-
         /// <summary>
         /// 开启RPC服务
         /// </summary>
-        public void OpenRPCServer()
+        public void StartServer()
         {
             if (this.ServerProviders.Count == 0)
             {
@@ -234,21 +244,6 @@ namespace RRQMSocket.RPC
             }
         }
 
-        private void PreviewExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
-        {
-            if (methodInstance != null && methodInstance.Async)
-            {
-                Task.Run(() =>
-                {
-                    ExecuteMethod(true, parser, methodInvoker, methodInstance);
-                });
-            }
-            else
-            {
-                ExecuteMethod(false, parser, methodInvoker, methodInstance);
-            }
-        }
-
         private void ExecuteMethod(bool isAsync, RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
@@ -298,16 +293,19 @@ namespace RRQMSocket.RPC
             parser.RRQMEndInvokeMethod(methodInvoker, methodInstance);
         }
 
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
+        private void PreviewExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            foreach (var item in this.RPCParsers)
+            if (methodInstance != null && methodInstance.Async)
             {
-                item.Dispose();
+                Task.Run(() =>
+                {
+                    ExecuteMethod(true, parser, methodInvoker, methodInstance);
+                });
             }
-            this.RPCParsers = null;
+            else
+            {
+                ExecuteMethod(false, parser, methodInvoker, methodInstance);
+            }
         }
     }
 }

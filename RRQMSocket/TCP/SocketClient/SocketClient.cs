@@ -25,21 +25,9 @@ namespace RRQMSocket
 
     public abstract class SocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public SocketClient()
-        {
-            this.receiveEventArgs = new SocketAsyncEventArgs();
-            this.receiveEventArgs.Completed += this.EventArgs_Completed;
-        }
-
         internal bool breakOut;
         internal BufferQueueGroup queueGroup;
         internal long lastTick;
-        private bool isBeginReceive;
-        private SocketAsyncEventArgs receiveEventArgs;
-        
 
         /// <summary>
         /// 包含此辅助类的主服务器类
@@ -90,7 +78,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取内存池实例
         /// </summary>
-        public BytePool BytePool { get { return this.queueGroup==null?null: this.queueGroup.bytePool; } }
+        public BytePool BytePool { get { return this.queueGroup == null ? null : this.queueGroup.bytePool; } }
 
         /// <summary>
         /// 处理已接收到的数据
@@ -122,7 +110,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
-            this.dataHandlingAdapter.Send(buffer, offset, length,false);
+            this.dataHandlingAdapter.Send(buffer, offset, length, false);
         }
 
         /// <summary>
@@ -221,26 +209,26 @@ namespace RRQMSocket
         /// </summary>
         internal void BeginReceive()
         {
-            if (!this.isBeginReceive)
+            try
             {
-                try
+                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
+                eventArgs.Completed += this.EventArgs_Completed;
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                eventArgs.UserToken = byteBlock;
+                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                if (!MainSocket.ReceiveAsync(eventArgs))
                 {
-                    this.lastTick = DateTime.Now.Ticks;
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    this.receiveEventArgs.UserToken = byteBlock;
-                    this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    if (!MainSocket.ReceiveAsync(this.receiveEventArgs))
-                    {
-                        ProcessReceived(this.receiveEventArgs);
-                    }
+                    ProcessReceived(eventArgs);
                 }
-                catch
-                {
-                    this.breakOut = true;
-                }
-                this.isBeginReceive = true;
+                this.lastTick = DateTime.Now.Ticks;
+            }
+            catch
+            {
+                this.breakOut = true;
             }
         }
+
+
 
         private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
@@ -275,6 +263,7 @@ namespace RRQMSocket
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.Position = e.BytesTransferred;
                     byteBlock.SetLength(e.BytesTransferred);
+
                     ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
                     clientBuffer.byteBlock = byteBlock;
@@ -328,9 +317,9 @@ namespace RRQMSocket
         /// <summary>
         /// 测试是否在线
         /// </summary>
-        internal void GetTimeout(int time,long nowTick)
+        internal void GetTimeout(int time, long nowTick)
         {
-            if (nowTick-this.lastTick/ 10000000 > time)
+            if (nowTick - this.lastTick / 10000000 > time)
             {
                 this.breakOut = true;
             }
@@ -350,7 +339,6 @@ namespace RRQMSocket
         {
             this.breakOut = false;
             this.disposable = false;
-            this.isBeginReceive = false;
         }
 
         /// <summary>

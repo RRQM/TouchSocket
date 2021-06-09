@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -26,6 +27,8 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class TcpRPCParser : RRQMRPCParser, ITcpService<RPCSocketClient>
     {
+        private TcpRPCService service;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -37,58 +40,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.service.ClientDisconnected += this.Service_ClientDisconnected;
         }
 
-        private void Service_ClientDisconnected(object sender, MesEventArgs e)
-        {
-            this.ClientDisconnected?.Invoke(sender, e);
-        }
-
-        private void Service_ClientConnected(object sender, MesEventArgs e)
-        {
-            this.ClientConnected?.Invoke(service, e);
-        }
-
-        /// <summary>
-        /// 获取或设置日志记录器
-        /// </summary>
-        public ILog Logger { get { return this.service.Logger; } set { this.service.Logger = value; } }
-
-        /// <summary>
-        /// 获取通信实例
-        /// </summary>
-        public TcpRPCService Service => this.service;
-
-        /// <summary>
-        /// 获取内存池实例
-        /// </summary>
-        public override sealed BytePool BytePool { get { return this.service.BytePool; } }
-
-        /// <summary>
-        /// 获取或设置缓存大小
-        /// </summary>
-        public int BufferLength { get { return this.service.BufferLength; } set { this.service.BufferLength = value; } }
-
-        /// <summary>
-        /// 服务状态
-        /// </summary>
-        public ServerState ServerState => this.service.ServerState;
-
-        /// <summary>
-        /// 服务配置
-        /// </summary>
-        public ServerConfig ServerConfig => this.service.ServerConfig;
-
-        /// <summary>
-        /// 最大连接数
-        /// </summary>
-        public int MaxCount => this.service.MaxCount;
-
-        /// <summary>
-        /// 清理间隔
-        /// </summary>
-        public int ClearInterval => this.service.ClearInterval;
-
-        private TcpRPCService service;
-
         /// <summary>
         /// 连接
         /// </summary>
@@ -99,83 +50,158 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public event RRQMMessageEventHandler ClientDisconnected;
 
-        private void OnReceived(RPCSocketClient socketClient, ByteBlock byteBlock)
+        /// <summary>
+        /// 收到字节
+        /// </summary>
+        public override event RRQMBytesEventHandler Received;
+
+        /// <summary>
+        /// 获取或设置缓存大小
+        /// </summary>
+        public int BufferLength { get { return this.service.BufferLength; } set { this.service.BufferLength = value; } }
+
+        /// <summary>
+        /// 获取内存池实例
+        /// </summary>
+        public override sealed BytePool BytePool { get { return this.service.BytePool; } }
+
+        /// <summary>
+        /// 清理间隔
+        /// </summary>
+        public int ClearInterval => this.service.ClearInterval;
+
+        /// <summary>
+        /// 获取或设置日志记录器
+        /// </summary>
+        public ILog Logger { get { return this.service.Logger; } set { this.service.Logger = value; } }
+
+        /// <summary>
+        /// 最大连接数
+        /// </summary>
+        public int MaxCount => this.service.MaxCount;
+
+        /// <summary>
+        /// 服务配置
+        /// </summary>
+        public ServerConfig ServerConfig => this.service.ServerConfig;
+
+        /// <summary>
+        /// 服务状态
+        /// </summary>
+        public ServerState ServerState => this.service.ServerState;
+
+        /// <summary>
+        /// 获取通信实例
+        /// </summary>
+        public TcpRPCService Service => this.service;
+
+        /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <typeparam name="T">返回值</typeparam>
+        /// <param name="iDToken">ID</param>
+        /// <param name="methodToken">函数唯一标识</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public T CallBack<T>(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
-            byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Position;
-            int agreement = BitConverter.ToInt32(buffer, 0);
-
-            switch (agreement)
+            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
             {
-                case 100:/*100，请求RPC文件*/
-                    {
-                        try
-                        {
-                            string proxyToken = null;
-                            if (r - 4 > 0)
-                            {
-                                proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
-                            }
-                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo(proxyToken, this), true));
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 100, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-
-                case 101:/*函数调用*/
-                    {
-                        try
-                        {
-                            RpcContext content = RpcContext.Deserialize(buffer, 4);
-                            this.ExecuteContext(content, socketClient);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                case 102:/*获取注册服务*/
-                    {
-                        try
-                        {
-                            byte[] data = SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this, socketClient.ID), true);
-                            socketClient.agreementHelper.SocketSend(102, data);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
-                //case 110:/*数据返回*/
-                //    {
-                //        try
-                //        {
-                //            socketClient.Agreement_110(buffer, r);
-                //        }
-                //        catch (Exception e)
-                //        {
-                //            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
-                //        }
-                //        break;
-                //    }
-                case 112:/*回调函数调用*/
-                    {
-                        try
-                        {
-                            socketClient.Agreement_112(buffer, r);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 112, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
+                return socketClient.CallBack<T>(methodToken, invokeOption, parameters);
             }
+            else
+            {
+                throw new RRQMRPCException("未找到该客户端");
+            }
+        }
+
+        /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <param name="iDToken">ID</param>
+        /// <param name="methodToken">函数唯一标识</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        public void CallBack(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
+            {
+                socketClient.CallBack(methodToken, invokeOption, parameters);
+            }
+            else
+            {
+                throw new RRQMRPCException("未找到该客户端");
+            }
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public override void Dispose()
+        {
+            this.service.Dispose();
+        }
+
+        /// <summary>
+        /// 设置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        public void Setup(ServerConfig serverConfig)
+        {
+            this.service.Setup(serverConfig);
+            this.SerializeConverter = (SerializeConverter)serverConfig.GetValue(RRQMRPCParserConfig.SerializeConverterProperty);
+            this.NameSpace = (string)serverConfig.GetValue(RRQMRPCParserConfig.NameSpaceProperty);
+            this.RPCVersion = (Version)serverConfig.GetValue(RRQMRPCParserConfig.RPCVersionProperty);
+            this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(RRQMRPCParserConfig.RPCCompilerProperty);
+            this.ProxyToken = (string)serverConfig.GetValue(RRQMRPCParserConfig.ProxyTokenProperty);
+        }
+
+        /// <summary>
+        /// 设置
+        /// </summary>
+        /// <param name="port"></param>
+        public void Setup(int port)
+        {
+            this.service.Setup(port);
+        }
+
+        /// <summary>
+        /// 判断Client是否在线
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool SocketClientExist(string id)
+        {
+            return this.service.SocketClientExist(id);
+        }
+
+        /// <summary>
+        /// 启动
+        /// </summary>
+        public void Start()
+        {
+            this.service.serializeConverter = this.SerializeConverter;
+            this.service.Start();
+        }
+
+        /// <summary>
+        /// 停止
+        /// </summary>
+        public void Stop()
+        {
+            this.service.Stop();
+        }
+
+        /// <summary>
+        /// 尝试获取Tclient
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="socketClient"></param>
+        /// <returns></returns>
+        public bool TryGetSocketClient(string id, out RPCSocketClient socketClient)
+        {
+            return this.service.TryGetSocketClient(id, out socketClient);
         }
 
         /// <summary>
@@ -268,113 +294,101 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        /// <summary>
-        /// 回调RPC
-        /// </summary>
-        /// <typeparam name="T">返回值</typeparam>
-        /// <param name="iDToken">ID</param>
-        /// <param name="methodToken">函数唯一标识</param>
-        /// <param name="invokeOption">调用设置</param>
-        /// <param name="parameters">参数</param>
-        /// <returns></returns>
-        public T CallBack<T>(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        private void OnReceived(RPCSocketClient socketClient, ByteBlock byteBlock)
         {
-            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
+            byte[] buffer = byteBlock.Buffer;
+            int r = (int)byteBlock.Position;
+            int agreement = BitConverter.ToInt32(buffer, 0);
+
+            switch (agreement)
             {
-                return socketClient.CallBack<T>(methodToken, invokeOption, parameters);
+                case 100:/*100，请求RPC文件*/
+                    {
+                        try
+                        {
+                            string proxyToken = null;
+                            if (r - 4 > 0)
+                            {
+                                proxyToken = Encoding.UTF8.GetString(buffer, 4, r - 4);
+                            }
+                            socketClient.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(this.GetProxyInfo(proxyToken, this), true));
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 100, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+
+                case 101:/*函数调用*/
+                    {
+                        try
+                        {
+                            RpcContext content = RpcContext.Deserialize(buffer, 4);
+                            this.ExecuteContext(content, socketClient);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 102:/*获取注册服务*/
+                    {
+                        try
+                        {
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(this, socketClient.ID), true);
+                            socketClient.agreementHelper.SocketSend(102, data);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 112:/*回调函数调用*/
+                    {
+                        try
+                        {
+                            socketClient.Agreement_112(buffer, r);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 112, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 120:/*接收普通数据*/
+                    {
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                byte[] data = new byte[r - 4];
+                                byteBlock.Position = 4;
+                                byteBlock.Read(data);
+
+                                this.Received?.Invoke(socketClient, new BytesEventArgs(data));
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Debug(LogType.Error, this, $"错误代码: 120, 错误详情:{e.Message}");
+                            }
+                        });
+
+                        break;
+                    }
             }
-            else
-            {
-                throw new RRQMRPCException("未找到该客户端");
-            }
         }
 
-        /// <summary>
-        /// 回调RPC
-        /// </summary>
-        /// <param name="iDToken">ID</param>
-        /// <param name="methodToken">函数唯一标识</param>
-        /// <param name="invokeOption">调用设置</param>
-        /// <param name="parameters">参数</param>
-        public void CallBack(string iDToken, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        private void Service_ClientConnected(object sender, MesEventArgs e)
         {
-            if (this.Service.SocketClients.TryGetSocketClient(iDToken, out RPCSocketClient socketClient))
-            {
-                socketClient.CallBack(methodToken, invokeOption, parameters);
-            }
-            else
-            {
-                throw new RRQMRPCException("未找到该客户端");
-            }
+            this.ClientConnected?.Invoke(service, e);
         }
 
-        /// <summary>
-        /// 设置
-        /// </summary>
-        /// <param name="serverConfig"></param>
-        public void Setup(ServerConfig serverConfig)
+        private void Service_ClientDisconnected(object sender, MesEventArgs e)
         {
-            this.service.Setup(serverConfig);
-            this.SerializeConverter = (SerializeConverter)serverConfig.GetValue(RRQMRPCParserConfig.SerializeConverterProperty);
-            this.NameSpace = (string)serverConfig.GetValue(RRQMRPCParserConfig.NameSpaceProperty);
-            this.RPCVersion = (Version)serverConfig.GetValue(RRQMRPCParserConfig.RPCVersionProperty);
-            this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(RRQMRPCParserConfig.RPCCompilerProperty);
-            this.ProxyToken = (string)serverConfig.GetValue(RRQMRPCParserConfig.ProxyTokenProperty);
-        }
-
-        /// <summary>
-        /// 设置
-        /// </summary>
-        /// <param name="port"></param>
-        public void Setup(int port)
-        {
-            this.service.Setup(port);
-        }
-
-        /// <summary>
-        /// 启动
-        /// </summary>
-        public void Start()
-        {
-            this.service.serializeConverter = this.SerializeConverter;
-            this.service.Start();
-        }
-
-        /// <summary>
-        /// 停止
-        /// </summary>
-        public void Stop()
-        {
-            this.service.Stop();
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            this.service.Dispose();
-        }
-
-        /// <summary>
-        /// 判断Client是否在线
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public bool SocketClientExist(string id)
-        {
-            return this.service.SocketClientExist(id);
-        }
-
-        /// <summary>
-        /// 尝试获取Tclient
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="socketClient"></param>
-        /// <returns></returns>
-        public bool TryGetSocketClient(string id, out RPCSocketClient socketClient)
-        {
-            return this.service.TryGetSocketClient(id, out socketClient);
+            this.ClientDisconnected?.Invoke(sender, e);
         }
     }
 }

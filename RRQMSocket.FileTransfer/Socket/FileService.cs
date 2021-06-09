@@ -99,11 +99,6 @@ namespace RRQMSocket.FileTransfer
         #region 事件
 
         /// <summary>
-        /// 当接收到系统信息的时候
-        /// </summary>
-        public event RRQMMessageEventHandler ReceiveSystemMes;
-
-        /// <summary>
         /// 传输文件之前
         /// </summary>
         public event RRQMFileOperationEventHandler BeforeFileTransfer;
@@ -121,7 +116,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 收到字节
         /// </summary>
-        public event RRQMBytesEventHandler ReceivedBytes;
+        public event RRQMBytesEventHandler Received;
         #endregion 事件
 
         /// <summary>
@@ -172,9 +167,8 @@ namespace RRQMSocket.FileTransfer
                 tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 tcpSocketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
                 tcpSocketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
-                tcpSocketClient.ReceiveSystemMes = this.OnReceiveSystemMes;
                 tcpSocketClient.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
-                tcpSocketClient.ReceivedBytes = this.OnReceivedBytes;
+                tcpSocketClient.Received = this.OnReceivedBytes;
                 tcpSocketClient.CallOperation = this.OnCallOperation;
             }
             tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient);
@@ -190,11 +184,6 @@ namespace RRQMSocket.FileTransfer
             this.FinishedFileTransfer?.Invoke(sender, e);
         }
 
-        private void OnReceiveSystemMes(object sender, MesEventArgs e)
-        {
-            this.ReceiveSystemMes?.Invoke(sender, e);
-        }
-
         private void OnReceivedBytesThenReturn(object sender, ReturnBytesEventArgs e)
         {
             this.ReceivedBytesThenReturn?.Invoke(sender, e);
@@ -202,7 +191,7 @@ namespace RRQMSocket.FileTransfer
 
         private void OnReceivedBytes(object sender, BytesEventArgs e)
         {
-            this.ReceivedBytes?.Invoke(sender, e);
+            this.Received?.Invoke(sender, e);
         }
 
         private void OnCallOperation(FileSocketClient sender, ByteBlock  byteBlock,ByteBlock returnBlock)

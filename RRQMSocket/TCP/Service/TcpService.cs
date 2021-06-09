@@ -357,7 +357,11 @@ namespace RRQMSocket
                     {
                         if (this.SocketClients.TryGetSocketClient(token, out TClient client))
                         {
-                            client.GetTimeout(this.clearInterval, tick);
+                            if (this.clearInterval>0)
+                            {
+                                client.GetTimeout(this.clearInterval, tick);
+                            }
+                            
                             if (client.breakOut)
                             {
                                 try
