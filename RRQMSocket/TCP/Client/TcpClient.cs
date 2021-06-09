@@ -229,7 +229,6 @@ namespace RRQMSocket
                 queueGroup.Thread = new Thread(HandleBuffer);//处理用户的消息
                 queueGroup.waitHandleBuffer = new AutoResetEvent(false);
                 queueGroup.bufferAndClient = new BufferQueue();
-                queueGroup.clientBufferPool = new RRQMCore.Pool.ObjectPool<ClientBuffer>();
                 queueGroup.Thread.IsBackground = true;
                 queueGroup.Thread.Name = "客户端处理线程";
                 queueGroup.Thread.Start();
@@ -319,7 +318,7 @@ namespace RRQMSocket
                         byteBlock.Write(buffer);
                     }
 
-                    ClientBuffer clientBuffer = this.queueGroup.clientBufferPool.GetObject();
+                    ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
@@ -378,7 +377,7 @@ namespace RRQMSocket
                     }
                     finally
                     {
-                        this.queueGroup.clientBufferPool.DestroyObject(clientBuffer);
+                        clientBuffer.byteBlock.Dispose();
                     }
                 }
                 else

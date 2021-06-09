@@ -101,7 +101,7 @@ namespace RRQMSocket
                     byteBlock.SetLength(e.BytesTransferred);
 
                     BufferQueueGroup queueGroup = this.bufferQueueGroups[++this.recivedCount % this.bufferQueueGroups.Length];
-                    ClientBuffer clientBuffer = queueGroup.clientBufferPool.GetObject();
+                    ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.endPoint = e.RemoteEndPoint;
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
@@ -155,7 +155,7 @@ namespace RRQMSocket
                     }
                     finally
                     {
-                        queueGroup.clientBufferPool.DestroyObject(clientBuffer);
+                        clientBuffer.byteBlock.Dispose();
                     }
                 }
                 else
@@ -354,7 +354,6 @@ namespace RRQMSocket
                         BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                         bufferQueueGroups[i] = bufferQueueGroup;
                         bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                        bufferQueueGroup.clientBufferPool = new ObjectPool<ClientBuffer>(10000);//处理用户的消息
                         bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
                         bufferQueueGroup.bufferAndClient = new BufferQueue();
                         bufferQueueGroup.Thread.IsBackground = true;

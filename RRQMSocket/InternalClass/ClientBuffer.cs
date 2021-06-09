@@ -15,28 +15,10 @@ using System.Net;
 
 namespace RRQMSocket
 {
-    internal class ClientBuffer : IPoolObject
+    internal struct ClientBuffer
     {
         internal IHandleBuffer client;
         internal ByteBlock byteBlock;
         internal EndPoint endPoint;
-
-        public bool NewCreate { get; set; }
-
-        public void Create()
-        {
-        }
-
-        public void Destroy()
-        {
-            this.client = null;
-            this.byteBlock.Dispose();
-            this.byteBlock = null;
-            this.endPoint = null;
-        }
-
-        public void Recreate()
-        {
-        }
     }
 }

@@ -19,18 +19,12 @@ namespace RRQMSocket
     internal class BufferQueueGroup : IDisposable
     {
         internal Thread Thread;
-        internal ObjectPool<ClientBuffer> clientBufferPool;
         internal BufferQueue bufferAndClient;
         internal EventWaitHandle waitHandleBuffer;
         internal bool isWait;
         internal BytePool bytePool;
         public void Dispose()
         {
-            if (clientBufferPool != null)
-            {
-                clientBufferPool.Clear();
-            }
-
             if (bufferAndClient != null)
             {
                 while (bufferAndClient.TryDequeue(out _))

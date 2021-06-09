@@ -275,7 +275,7 @@ namespace RRQMSocket
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.Position = e.BytesTransferred;
                     byteBlock.SetLength(e.BytesTransferred);
-                    ClientBuffer clientBuffer = this.queueGroup.clientBufferPool.GetObject();
+                    ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);

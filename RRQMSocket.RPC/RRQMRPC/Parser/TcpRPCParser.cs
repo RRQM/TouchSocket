@@ -151,18 +151,18 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 110:/*数据返回*/
-                    {
-                        try
-                        {
-                            socketClient.Agreement_110(buffer, r);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
-                        }
-                        break;
-                    }
+                //case 110:/*数据返回*/
+                //    {
+                //        try
+                //        {
+                //            socketClient.Agreement_110(buffer, r);
+                //        }
+                //        catch (Exception e)
+                //        {
+                //            Logger.Debug(LogType.Error, this, $"错误代码: 110, 错误详情:{e.Message}");
+                //        }
+                //        break;
+                //    }
                 case 112:/*回调函数调用*/
                     {
                         try
