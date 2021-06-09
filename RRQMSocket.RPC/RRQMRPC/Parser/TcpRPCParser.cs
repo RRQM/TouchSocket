@@ -125,7 +125,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                     }
 
-                case 101:/*函数式调用*/
+                case 101:/*函数调用*/
                     {
                         try
                         {
@@ -138,7 +138,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 102:/*连接初始化*/
+                case 102:/*获取注册服务*/
                     {
                         try
                         {
@@ -163,7 +163,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 112:/*函数式调用返回*/
+                case 112:/*回调函数调用*/
                     {
                         try
                         {
@@ -336,6 +336,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public void Start()
         {
+            this.service.serializeConverter = this.SerializeConverter;
             this.service.Start();
         }
 

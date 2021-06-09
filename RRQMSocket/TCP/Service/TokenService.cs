@@ -57,7 +57,7 @@ namespace RRQMSocket
         {
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             int waitCount = 0;
-            while (waitCount < this.VerifyTimeout * 1000 / 100)
+            while (waitCount < this.VerifyTimeout * 1000 / 10)
             {
                 if (socket.Available > 0)
                 {
@@ -76,7 +76,6 @@ namespace RRQMSocket
                                 byteBlock.Write(3);
                                 this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
                                 socket.Send(byteBlock.Buffer, 0, 1, SocketFlags.None);
-                                socket.Shutdown(SocketShutdown.Both);
                                 socket.Dispose();
                                 return;
                             }
@@ -130,7 +129,6 @@ namespace RRQMSocket
                                 byteBlock.Write(Encoding.UTF8.GetBytes(verifyOption.ErrorMessage));
                             }
                             socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
-                            socket.Shutdown(SocketShutdown.Both);
                             socket.Dispose();
                         }
                     }
@@ -144,10 +142,9 @@ namespace RRQMSocket
                     }
                 }
                 waitCount++;
-                Thread.Sleep(100);
+                Thread.Sleep(10);
             }
 
-            socket.Shutdown(SocketShutdown.Both);
             socket.Dispose();
         }
 

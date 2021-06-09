@@ -13,7 +13,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     public class TcpRPCService : TokenService<RPCSocketClient>
     {
         internal Action<RPCSocketClient, ByteBlock> Received;
-
+        internal SerializeConverter serializeConverter;
         /// <summary>
         /// 
         /// </summary>
@@ -26,6 +26,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 tcpSocketClient.Logger = this.Logger;
                 tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 tcpSocketClient.Received = this.Received;
+                tcpSocketClient.serializeConverter = this.serializeConverter;
             }
             tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }

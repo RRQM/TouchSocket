@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using RRQMCore.ByteManager;
@@ -21,6 +22,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public TcpRPCClient()
         {
+            this.serverProviders = new ServerProviderCollection();
             this.methodStore = new MethodStore();
             this.singleWaitData = new WaitData<WaitResult>();
             this.singleWaitData.WaitResult = new WaitResult();
@@ -37,6 +39,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public SerializeConverter SerializeConverter { get; set; }
 
+        private ServerProviderCollection serverProviders;
+        /// <summary>
+        /// 获取反向RPC服务实例
+        /// </summary>
+        public ServerProviderCollection ServerProviders
+        {
+            get { return serverProviders; }
+        }
+
+
         private MethodMap methodMap;
         /// <summary>
         /// 获取反向RPC映射图
@@ -51,6 +63,100 @@ namespace RRQMSocket.RPC.RRQMRPC
         private MethodStore methodStore;
         private RPCProxyInfo proxyFile;
         private RRQMAgreementHelper agreementHelper;
+
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <param name="serverProvider"></param>
+        public void RegistService(ServerProvider serverProvider)
+        {
+            this.ServerProviders.Add(serverProvider);
+        }
+
+        /// <summary>
+        /// 开启反向RPC服务
+        /// </summary>
+        public void OpenCallBackRPCServer()
+        {
+            if (this.ServerProviders.Count == 0)
+            {
+                throw new RRQMRPCException("已注册服务数量为0");
+            }
+
+            this.methodMap = new MethodMap();
+
+            foreach (ServerProvider instance in this.ServerProviders)
+            {
+                MethodInfo[] methodInfos = instance.GetType().GetMethods();
+                foreach (MethodInfo method in methodInfos)
+                {
+                    if (method.IsGenericMethod)
+                    {
+                        throw new RRQMRPCException("RPC方法中不支持泛型参数");
+                    }
+                    RRQMRPCCallBackMethodAttribute attribute = method.GetCustomAttribute<RRQMRPCCallBackMethodAttribute>();
+
+                    if (attribute != null)
+                    {
+                        MethodInstance methodInstance = new MethodInstance();
+                        methodInstance.MethodToken = attribute.MethodToken;
+                        methodInstance.Provider = instance;
+                        methodInstance.Method = method;
+                        methodInstance.RPCAttributes = new RPCMethodAttribute[] { attribute };
+                        methodInstance.IsEnable = true;
+                        methodInstance.Parameters = method.GetParameters();
+                        List<string> names = new List<string>();
+                        foreach (var parameterInfo in methodInstance.Parameters)
+                        {
+                            names.Add(parameterInfo.Name);
+                        }
+                        methodInstance.ParameterNames = names.ToArray();
+                        if (typeof(Task).IsAssignableFrom(method.ReturnType))
+                        {
+                            methodInstance.Async = true;
+                        }
+
+                        ParameterInfo[] parameters = method.GetParameters();
+                        List<Type> types = new List<Type>();
+                        foreach (var parameter in parameters)
+                        {
+                            if (parameter.ParameterType.IsByRef)
+                            {
+                                throw new RRQMRPCException("反向RPC方法不支持out或ref");
+                            }
+                            types.Add(parameter.ParameterType);
+                        }
+                        methodInstance.ParameterTypes = types.ToArray();
+
+                        if (method.ReturnType == typeof(void))
+                        {
+                            methodInstance.ReturnType = null;
+                        }
+                        else
+                        {
+                            if (methodInstance.Async)
+                            {
+                                methodInstance.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                            }
+                            else
+                            {
+                                methodInstance.ReturnType = method.ReturnType;
+                            }
+                        }
+
+                        try
+                        {
+                            this.MethodMap.Add(methodInstance);
+                        }
+                        catch
+                        {
+                            throw new RRQMRPCKeyException("MethodToken必须唯一");
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// 获取远程服务器RPC服务文件
         /// </summary>
@@ -323,12 +429,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                         object[] ps = new object[rpcContext.ParametersBytes.Count];
                         for (int i = 0; i < rpcContext.ParametersBytes.Count; i++)
                         {
-                            ps[i] = SerializeConvert.RRQMBinaryDeserialize(rpcContext.ParametersBytes[i], 0, methodInstance.ParameterTypes[i]);
+                            ps[i] =this.SerializeConverter.DeserializeParameter(rpcContext.ParametersBytes[i], methodInstance.ParameterTypes[i]);
                         }
                         object result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
                         if (result != null)
                         {
-                            rpcContext.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(result, true);
+                            rpcContext.ReturnParameterBytes =this.SerializeConverter.SerializeParameter(result);
                         }
                         rpcContext.Status = 1;
                     }

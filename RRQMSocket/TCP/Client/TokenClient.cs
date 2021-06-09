@@ -94,7 +94,7 @@ namespace RRQMSocket
             }
 
             int waitCount = 0;
-            while (waitCount < VerifyTimeout * 1000 / 100)
+            while (waitCount < VerifyTimeout * 1000 / 10)
             {
                 if (this.MainSocket.Available > 0)
                 {
@@ -128,7 +128,7 @@ namespace RRQMSocket
                     }
                 }
                 waitCount++;
-                Thread.Sleep(100);
+                Thread.Sleep(10);
             }
 
             throw new RRQMTimeoutException("验证Token超时");

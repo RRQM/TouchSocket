@@ -54,8 +54,23 @@ namespace RRQMSocket.RPC.RRQMRPC
             codeString.AppendLine("using System.Threading.Tasks;");
             codeString.AppendLine(string.Format("namespace {0}", Namespace));
             codeString.AppendLine("{");
-            string className = this.ClassName;
-            codeString.AppendLine(string.Format("public class {0}", className));//类开始
+            this.GetInterface("I"+this.ClassName);
+            this.GetClass(this.ClassName);
+            codeString.AppendLine("}");//空间结束
+
+            return codeString.ToString();
+        }
+
+        private void GetInterface(string interfaceName)
+        {
+            codeString.AppendLine(string.Format("public interface {0}", interfaceName));//类开始
+            codeString.AppendLine("{");
+            AppendInterfaceMethods();
+            codeString.AppendLine("}");//类结束
+        }
+        private void GetClass(string className)
+        {
+            codeString.AppendLine(string.Format("public class {0} :I{0}", className));//类开始
             codeString.AppendLine("{");
             codeString.AppendLine($"public {className}(IRPCClient client)");
             codeString.AppendLine("{");
@@ -64,10 +79,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             AppendAttributes();
             AppendMethods();
             codeString.AppendLine("}");//类结束
-
-            codeString.AppendLine("}");//空间结束
-
-            return codeString.ToString();
         }
 
         private void AppendAssemblyInfo(string assemblyName, Version version)
@@ -349,6 +360,134 @@ namespace RRQMSocket.RPC.RRQMRPC
                         codeString.Append("invokeOption);");
                         codeString.AppendLine("});");
                         codeString.AppendLine("}");
+                    }
+                }
+            }
+        }
+
+        private void AppendInterfaceMethods()
+        {
+            if (Methods != null)
+            {
+                foreach (MethodInfo method in Methods)
+                {
+                    bool isOut = false;
+                    bool isRef = false;
+                    string methodName = method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCMethodAttribute>().MethodKey;
+
+                    if (method.ReturnType.Name == "Void")
+                    {
+                        codeString.Append(string.Format("  void {0} ", methodName));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format(" {0} {1} ", this.GetName(method.ReturnType), methodName));
+                    }
+                    codeString.Append("(");//方法参数
+
+                    ParameterInfo[] parameters = method.GetParameters();
+
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        if (i > 0)
+                        {
+                            codeString.Append(",");
+                        }
+                        if (parameters[i].ParameterType.Name.Contains("&"))
+                        {
+                            if (parameters[i].IsOut)
+                            {
+                                isOut = true;
+                                codeString.Append(string.Format("out {0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
+                            }
+                            else
+                            {
+                                isRef = true;
+                                codeString.Append(string.Format("ref {0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
+                            }
+                        }
+                        else
+                        {
+                            codeString.Append(string.Format("{0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
+                        }
+
+                        if (parameters[i].HasDefaultValue)
+                        {
+                            object defaultValue = parameters[i].DefaultValue;
+                            if (defaultValue == null)
+                            {
+                                codeString.Append(string.Format("=null"));
+                            }
+                            else if (defaultValue.ToString() == string.Empty)
+                            {
+                                codeString.Append(string.Format("=\"\""));
+                            }
+                            else if (defaultValue.GetType() == typeof(string))
+                            {
+                                codeString.Append(string.Format("=\"{0}\"", defaultValue));
+                            }
+                            else if (typeof(ValueType).IsAssignableFrom(defaultValue.GetType()))
+                            {
+                                codeString.Append(string.Format("={0}", defaultValue));
+                            }
+                        }
+                    }
+                    if (parameters.Length > 0)
+                    {
+                        codeString.Append(",");
+                    }
+                    codeString.AppendLine("InvokeOption invokeOption = null);");
+
+                    
+
+                    if (!isOut && !isRef)//没有out或者ref
+                    {
+                        if (method.ReturnType.Name == "Void")
+                        {
+                            codeString.Append(string.Format("void {0} ", methodName + "Async"));
+                        }
+                        else
+                        {
+                            codeString.Append(string.Format("Task<{0}> {1} ", this.GetName(method.ReturnType), methodName + "Async"));
+                        }
+
+                        codeString.Append("(");//方法参数
+
+                        for (int i = 0; i < parameters.Length; i++)
+                        {
+                            if (i > 0)
+                            {
+                                codeString.Append(",");
+                            }
+
+                            codeString.Append(string.Format("{0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
+                            if (parameters[i].DefaultValue != System.DBNull.Value)
+                            {
+                                object defaultValue = parameters[i].DefaultValue;
+                                if (defaultValue == null)
+                                {
+                                    codeString.Append(string.Format("=null"));
+                                }
+                                else if (defaultValue.ToString() == string.Empty)
+                                {
+                                    codeString.Append(string.Format("=\"\""));
+                                }
+                                else if (defaultValue.GetType() == typeof(string))
+                                {
+                                    codeString.Append(string.Format("=\"{0}\"", defaultValue));
+                                }
+                                else if (typeof(ValueType).IsAssignableFrom(defaultValue.GetType()))
+                                {
+                                    codeString.Append(string.Format("={0}", defaultValue));
+                                }
+                            }
+                        }
+
+                        if (parameters.Length > 0)
+                        {
+                            codeString.Append(",");
+                        }
+                        codeString.AppendLine("InvokeOption invokeOption = null);");
                     }
                 }
             }

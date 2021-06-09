@@ -28,28 +28,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public RPCSocketClient()
         {
-            this.waitHandles = new RRQMWaitHandle<WaitBytes>();
             this.invokeWaitData = new WaitData<RpcContext>();
             this.invokeWaitData.WaitResult = new RpcContext();
         }
         internal Action<RPCSocketClient,ByteBlock> Received;
-        private RRQMWaitHandle<WaitBytes> waitHandles;
         private WaitData<RpcContext> invokeWaitData;
         internal RRQMAgreementHelper agreementHelper;
+        internal SerializeConverter serializeConverter;
 
         /// <summary>
-        /// 等待字节返回
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="r"></param>
-        internal void Agreement_110(byte[] buffer, int r)
-        {
-            WaitBytes waitBytes = SerializeConvert.RRQMBinaryDeserialize<WaitBytes>(buffer, 4);
-            this.waitHandles.SetRun(waitBytes.Sign, waitBytes);
-        }
-
-        /// <summary>
-        /// 等待字节返回
+        /// 回调函数
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="r"></param>
@@ -58,44 +46,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext rpcContext = RpcContext.Deserialize(buffer, 4);
 
             this.invokeWaitData.Set(rpcContext);
-        }
-
-        /// <summary>
-        /// 发送字节并返回
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="waitTime"></param>
-        /// <returns></returns>
-        public byte[] SendBytesWaitReturn(byte[] data, int waitTime = 3)
-        {
-            WaitData<WaitBytes> waitData = this.waitHandles.GetWaitData();
-            waitData.WaitResult.Bytes = data;
-            try
-            {
-                byte[] buffer = SerializeConvert.RRQMBinarySerialize(waitData.WaitResult, true);
-                agreementHelper.SocketSend(110, buffer);
-            }
-            catch (Exception e)
-            {
-                throw new RRQMRPCException(e.Message);
-            }
-
-            waitData.Wait(waitTime * 1000);
-
-            waitData.Wait(waitTime * 1000);
-            WaitBytes waitBytes = waitData.WaitResult;
-            waitData.Dispose();
-
-            if (waitBytes.Status == 0)
-            {
-                throw new RRQMTimeoutException("等待结果超时");
-            }
-            else if (waitBytes.Status == 2)
-            {
-                throw new RRQMRPCException(waitBytes.Message);
-            }
-
-            return waitBytes.Bytes;
         }
 
         /// <summary>
@@ -177,7 +127,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     try
                     {
-                        return SerializeConvert.RRQMBinaryDeserialize<T>(context.ReturnParameterBytes, 0);
+                        return (T)this.serializeConverter.DeserializeParameter(context.ReturnParameterBytes,typeof(T));
                     }
                     catch (Exception e)
                     {
