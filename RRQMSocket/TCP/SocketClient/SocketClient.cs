@@ -57,10 +57,14 @@ namespace RRQMSocket
         /// </summary>
         public object Flag { get; set; }
 
+        internal string id;
         /// <summary>
         /// 用于索引的ID
         /// </summary>
-        public string ID { get; internal set; }
+        public string ID
+        {
+            get { return id; }
+        }
 
         /// <summary>
         /// 是否为新建对象
@@ -75,7 +79,8 @@ namespace RRQMSocket
         /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
-        public IService Service { get; internal set; }
+        public _ITcpService Service { get; internal set; }
+
         /// <summary>
         /// 初次创建对象，效应相当于构造函数，父类方法可覆盖
         /// </summary>
@@ -112,6 +117,7 @@ namespace RRQMSocket
             }
             this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
+
 
         /// <summary>
         /// 重新获取,父类方法不可覆盖

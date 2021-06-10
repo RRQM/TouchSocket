@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
@@ -107,9 +108,12 @@ namespace RRQMSocket
                                         creatOption.ID = client.ID;
                                     }
                                     this.OnCreateSocketCliect(client, creatOption);
-                                    client.ID = creatOption.ID;
+                                    client.id = creatOption.ID;
 
-                                    this.SocketClients.Add(client);
+                                    if (this.SocketClients.TryAdd(client))
+                                    {
+                                        throw new RRQMException("ID重复");
+                                    }
                                 }
 
                                 client.BeginReceive();

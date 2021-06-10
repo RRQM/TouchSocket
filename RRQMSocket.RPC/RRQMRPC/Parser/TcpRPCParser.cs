@@ -25,6 +25,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class TcpRPCParser : RRQMRPCParser, ITcpService<RPCSocketClient>
     {
+        private EventBus eventBus;
         private TcpRPCService service;
 
         /// <summary>
@@ -36,6 +37,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.service.Received += this.OnReceived;
             this.service.ClientConnected += this.Service_ClientConnected;
             this.service.ClientDisconnected += this.Service_ClientDisconnected;
+            this.eventBus = new EventBus();
         }
 
         /// <summary>
@@ -69,6 +71,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         public int ClearInterval => this.service.ClearInterval;
 
         /// <summary>
+        /// 事务总线
+        /// </summary>
+        public EventBus EventBus
+        {
+            get { return eventBus; }
+        }
+
+        /// <summary>
         /// 获取或设置日志记录器
         /// </summary>
         public ILog Logger { get { return this.service.Logger; } set { this.service.Logger = value; } }
@@ -77,6 +87,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 最大连接数
         /// </summary>
         public int MaxCount => this.service.MaxCount;
+
+        /// <summary>
+        /// 服务器名称
+        /// </summary>
+        public string Name => this.service.Name;
 
         /// <summary>
         /// 服务配置
@@ -92,12 +107,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 获取通信实例
         /// </summary>
         public TcpRPCService Service => this.service;
-
         /// <summary>
         /// 连接的所以客户端
         /// </summary>
         public SocketCliectCollection<RPCSocketClient> SocketClients => this.service.SocketClients;
-
         /// <summary>
         /// 回调RPC
         /// </summary>
@@ -144,6 +157,32 @@ namespace RRQMSocket.RPC.RRQMRPC
         public override void Dispose()
         {
             this.service.Dispose();
+        }
+
+        /// <summary>
+        /// 发布事件
+        /// </summary>
+        /// <param name="eventName">事件名称</param>
+        /// <param name="parameterTypes">事件参数类型</param>
+        public void PublishEvent(string eventName,string[] parameterTypes)
+        {
+            EventUnit eventUnit = new EventUnit();
+            eventUnit.ParameterTypes = parameterTypes;
+            eventUnit.Publisher = this.Name;
+            this.eventBus.AddEvent(eventUnit);
+        }
+
+        /// <summary>
+        /// 触发事件
+        /// </summary>
+        /// <param name="eventName"></param>
+        public void RaiseEvent(string eventName)
+        {
+            if (!this.eventBus.TryGetEventUnit(eventName, out EventUnit eventUnit))
+            {
+                throw new RRQMRPCException("没有该事件的注册信息");
+            }
+            
         }
 
         /// <summary>
@@ -282,7 +321,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             this.service.Stop();
         }
-
         /// <summary>
         /// 尝试获取Tclient
         /// </summary>
@@ -384,6 +422,39 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
+        private void IDInvoken(RPCSocketClient socketClient, RPCContext context)
+        {
+            if (this.TryGetSocketClient(context.ID, out RPCSocketClient targetsocketClient))
+            {
+                try
+                {
+                    context.ReturnParameterBytes = targetsocketClient.CallBack(context, context.Feedback == 1 ? InvokeOption.CanFeedback : InvokeOption.NoFeedback);
+                    context.Status = 1;
+                }
+                catch (Exception ex)
+                {
+                    context.Status = 3;
+                    context.Message = ex.Message;
+                }
+
+            }
+            else
+            {
+                context.Status = 2;
+            }
+            ByteBlock byteBlock = socketClient.BytePool.GetByteBlock(this.BufferLength);
+            try
+            {
+                context.Serialize(byteBlock);
+                socketClient.agreementHelper.SocketSend(103, byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+
+        }
+
         private void OnReceived(RPCSocketClient socketClient, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
@@ -456,7 +527,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            socketClient.Agreement_112(buffer);
+                            RPCContext content = RPCContext.Deserialize(buffer, 4);
+                            socketClient.waitHandle.SetRun(content);
                         }
                         catch (Exception e)
                         {
@@ -486,44 +558,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
             }
         }
-
-
-        private void IDInvoken(RPCSocketClient socketClient, RPCContext context)
-        {
-            if (this.TryGetSocketClient(context.ID, out RPCSocketClient targetsocketClient))
-            {
-                try
-                {
-                    context.ReturnParameterBytes = targetsocketClient.CallBack(context,context.Feedback==1? InvokeOption.CanFeedback:InvokeOption.NoFeedback);
-                    context.Status = 1;
-                }
-                catch (Exception ex)
-                {
-                    context.Status = 3;
-                    context.Message = ex.Message;
-                }
-
-            }
-            else
-            {
-                context.Status = 2;
-            }
-            ByteBlock byteBlock = socketClient.BytePool.GetByteBlock(this.BufferLength);
-            try
-            {
-                context.Serialize(byteBlock);
-                socketClient.agreementHelper.SocketSend(103, byteBlock);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-
-        }
-
+        
         private void Service_ClientConnected(object sender, MesEventArgs e)
         {
-            this.ClientConnected?.Invoke(service, e);
+            this.ClientConnected?.Invoke(sender, e);
         }
 
         private void Service_ClientDisconnected(object sender, MesEventArgs e)

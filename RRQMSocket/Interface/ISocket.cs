@@ -9,12 +9,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+using System.Net.Sockets;
+using RRQMCore.Log;
+
 namespace RRQMSocket
 {
     /// <summary>
     /// Socket基接口
     /// </summary>
-    public interface ISocket
+    public interface ISocket:IDisposable
     {
         /// <summary>
         /// IP
@@ -27,8 +31,18 @@ namespace RRQMSocket
         int Port { get; }
 
         /// <summary>
-        /// 获取连接的唯一标识
+        /// 主通信器
         /// </summary>
-        string Name { get; }
+        Socket MainSocket { get; }
+
+        /// <summary>
+        /// 数据交互缓存池限制，Min:1k Byte，Max:10Mb Byte
+        /// </summary>
+        int BufferLength { get; set; }
+
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        ILog Logger { get; set; }
     }
 }

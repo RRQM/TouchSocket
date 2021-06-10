@@ -19,7 +19,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP系列服务器接口
     /// </summary>
-    public interface ITcpService<TClient> : IService where TClient : ISocketClient, new()
+    public interface ITcpService<TClient> : IService where TClient : ISocketClient
     {
         /// <summary>
         /// 获取最大可连接数

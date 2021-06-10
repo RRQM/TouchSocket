@@ -29,7 +29,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         internal SerializeConverter serializeConverter;
 
-        private RRQMWaitHandle<RPCContext> waitHandle;
+        internal RRQMWaitHandle<RPCContext> waitHandle;
 
         /// <summary>
         /// 构造函数
@@ -270,23 +270,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 回调函数
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="r"></param>
-        internal void Agreement_112(byte[] buffer)
-        {
-            RPCContext rpcContext = RPCContext.Deserialize(buffer, 4);
-            this.waitHandle.SetRun(rpcContext);
-        }
-        /// <summary>
         /// 处理已接收到的数据
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            Received?.Invoke(this, byteBlock);
+            Received.Invoke(this, byteBlock);
         }
     }
 }

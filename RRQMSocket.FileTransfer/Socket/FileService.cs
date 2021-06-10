@@ -13,6 +13,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Serialization;
 using System.Reflection;
+using System.Text;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -32,6 +33,20 @@ namespace RRQMSocket.FileTransfer
 
         #region 属性
 
+        private bool breakpointResume;
+
+        private long maxDownloadSpeed;
+
+        private long maxUploadSpeed;
+
+        /// <summary>
+        /// 是否支持断点续传
+        /// </summary>
+        public bool BreakpointResume
+        {
+            get { return breakpointResume; }
+        }
+
         /// <summary>
         /// 获取下载速度
         /// </summary>
@@ -46,6 +61,24 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
+        /// 最大下载速度
+        /// </summary>
+        public long MaxDownloadSpeed
+        {
+            get { return maxDownloadSpeed; }
+            set { maxUploadSpeed = value; }
+        }
+
+        /// <summary>
+        /// 最大上传速度
+        /// </summary>
+        public long MaxUploadSpeed
+        {
+            get { return maxUploadSpeed; }
+            set { maxUploadSpeed = value; }
+        }
+
+        /// <summary>
         /// 获取上传速度
         /// </summary>
         public long UploadSpeed
@@ -57,47 +90,13 @@ namespace RRQMSocket.FileTransfer
                 return this.uploadSpeed;
             }
         }
-
-        private bool breakpointResume;
-
-        /// <summary>
-        /// 是否支持断点续传
-        /// </summary>
-        public bool BreakpointResume
-        {
-            get { return breakpointResume; }
-        }
-
-        private long maxDownloadSpeed;
-
-        /// <summary>
-        /// 最大下载速度
-        /// </summary>
-        public long MaxDownloadSpeed
-        {
-            get { return maxDownloadSpeed; }
-            set { maxUploadSpeed = value; }
-        }
-
-        private long maxUploadSpeed;
-
-        /// <summary>
-        /// 最大上传速度
-        /// </summary>
-        public long MaxUploadSpeed
-        {
-            get { return maxUploadSpeed; }
-            set { maxUploadSpeed = value; }
-        }
-
         #endregion 属性
 
         #region 字段
 
         private long downloadSpeed;
-        private long uploadSpeed;
         private OperationMap operationMap;
-
+        private long uploadSpeed;
         #endregion 字段
 
         #region 事件
@@ -113,16 +112,28 @@ namespace RRQMSocket.FileTransfer
         public event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
 
         /// <summary>
-        /// 收到字节数组并返回
-        /// </summary>
-        public event RRQMReturnBytesEventHandler ReceivedBytesThenReturn;
-
-        /// <summary>
         /// 收到字节
         /// </summary>
         public event RRQMBytesEventHandler Received;
 
+        /// <summary>
+        /// 收到字节数组并返回
+        /// </summary>
+        public event RRQMReturnBytesEventHandler ReceivedBytesThenReturn;
         #endregion 事件
+
+        ///// <summary>
+        ///// 重新设置ID
+        ///// </summary>
+        ///// <param name="oldID"></param>
+        ///// <param name="newID"></param>
+        ///// <returns></returns>
+        //public override void ResetID(string oldID, string newID)
+        //{
+        //    FileSocketClient client=base.ResetID(oldID, newID);
+        //    client.agreementHelper.SocketSend(1127,Encoding.UTF8.GetBytes(newID));
+        //    return client;
+        //}
 
         /// <summary>
         /// 注册操作
@@ -176,27 +187,12 @@ namespace RRQMSocket.FileTransfer
                 tcpSocketClient.Received = this.OnReceivedBytes;
                 tcpSocketClient.CallOperation = this.OnCallOperation;
             }
-            tcpSocketClient.AgreementHelper = new RRQMAgreementHelper(tcpSocketClient);
+            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
 
         private void OnBeforeFileTransfer(object sender, FileOperationEventArgs e)
         {
             this.BeforeFileTransfer?.Invoke(sender, e);
-        }
-
-        private void OnFinishedFileTransfer(object sender, TransferFileMessageArgs e)
-        {
-            this.FinishedFileTransfer?.Invoke(sender, e);
-        }
-
-        private void OnReceivedBytesThenReturn(object sender, ReturnBytesEventArgs e)
-        {
-            this.ReceivedBytesThenReturn?.Invoke(sender, e);
-        }
-
-        private void OnReceivedBytes(object sender, BytesEventArgs e)
-        {
-            this.Received?.Invoke(sender, e);
         }
 
         private void OnCallOperation(FileSocketClient sender, ByteBlock byteBlock, ByteBlock returnBlock)
@@ -233,6 +229,21 @@ namespace RRQMSocket.FileTransfer
                 context.Message = "无此操作";
             }
             context.Serialize(returnBlock);
+        }
+
+        private void OnFinishedFileTransfer(object sender, TransferFileMessageArgs e)
+        {
+            this.FinishedFileTransfer?.Invoke(sender, e);
+        }
+
+        private void OnReceivedBytes(object sender, BytesEventArgs e)
+        {
+            this.Received?.Invoke(sender, e);
+        }
+
+        private void OnReceivedBytesThenReturn(object sender, ReturnBytesEventArgs e)
+        {
+            this.ReceivedBytesThenReturn?.Invoke(sender, e);
         }
     }
 }

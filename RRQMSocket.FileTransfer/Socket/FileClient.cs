@@ -17,6 +17,7 @@ using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -510,6 +511,11 @@ namespace RRQMSocket.FileTransfer
                                 Logger.Debug(LogType.Error, this, ex.Message, ex);
                             }
                         });
+                        break;
+                    }
+                case 1127:
+                    {
+                        //base.ResetID(Encoding.UTF8.GetString());
                         break;
                     }
                 default:

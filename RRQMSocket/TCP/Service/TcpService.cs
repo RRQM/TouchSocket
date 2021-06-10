@@ -24,7 +24,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public abstract class TcpService<TClient> : BaseSocket, ITcpService<TClient> where TClient : SocketClient, new()
+    public abstract class TcpService<TClient> : BaseSocket, ITcpService<TClient>, _ITcpService where TClient : SocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -86,6 +86,17 @@ namespace RRQMSocket
         {
             get { return socketClients; }
         }
+
+      
+        private string name;
+        /// <summary>
+        /// 服务器名称
+        /// </summary>
+        public string Name
+        {
+            get { return name; }
+        }
+
         #endregion 属性
 
         #region 变量
@@ -137,6 +148,32 @@ namespace RRQMSocket
             }
 
             this.serverState = ServerState.Disposed;
+        }
+
+        /// <summary>
+        /// 重新设置ID
+        /// </summary>
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
+        /// <returns></returns>
+        public virtual void ResetID(string oldID,string newID)
+        {
+            if (!this.socketClients.TryGetSocketClient(oldID,out TClient client))
+            {
+                throw new RRQMException("oldID不存在");
+            }
+            if (this.socketClients.TryRemove(oldID))
+            {
+                client.id = newID;
+                if (!this.socketClients.TryAdd(client))
+                {
+                    throw new RRQMException("ID重复");
+                }
+            }
+            else
+            {
+                throw new RRQMException("oldID不存在");
+            }
         }
 
         /// <summary>
@@ -361,9 +398,12 @@ namespace RRQMSocket
                         creatOption.ID = client.ID;
                     }
                     this.OnCreateSocketCliect(client, creatOption);
-                    client.ID = creatOption.ID;
+                    client.id = creatOption.ID;
 
-                    this.SocketClients.Add(client);
+                    if (this.socketClients.TryAdd(client))
+                    {
+                        throw new RRQMException("ID重复");
+                    }
                 }
                 client.BeginReceive();
                 ClientConnectedMethod(client, null);
@@ -391,6 +431,7 @@ namespace RRQMSocket
             this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
             this.BufferLength = (int)serverConfig.GetValue(ServerConfig.BufferLengthProperty);
             this.socketClients.IDFormat = (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
+            this.name = serverConfig.Name;
         }
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
@@ -481,9 +522,11 @@ namespace RRQMSocket
                                 try
                                 {
                                     client.Dispose();
-                                    this.SocketClients.Remove(token);
-                                    this.socketClientPool.DestroyObject(client);
-                                    ClientDisconnectedMethod(client, new MesEventArgs("breakOut"));
+                                    if (this.SocketClients.TryRemove(token))
+                                    {
+                                        this.socketClientPool.DestroyObject(client);
+                                        ClientDisconnectedMethod(client, new MesEventArgs("breakOut"));
+                                    }
                                 }
                                 catch (Exception ex)
                                 {

@@ -64,6 +64,16 @@ namespace RRQMSocket
             get { return serverConfig; }
         }
 
+        private string name;
+        /// <summary>
+        /// 服务器名称
+        /// </summary>
+        public string Name
+        {
+            get { return name; }
+        }
+
+
         private BufferQueueGroup[] bufferQueueGroups;
         private SocketAsyncEventArgs recviveEventArg;
         private long recivedCount;
@@ -308,6 +318,7 @@ namespace RRQMSocket
                 throw new RRQMException("配置文件为空");
             }
             this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpSessionConfig.DefaultRemotePointProperty);
+            this.name = serverConfig.Name;
         }
 
         /// <summary>

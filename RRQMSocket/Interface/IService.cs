@@ -36,6 +36,11 @@ namespace RRQMSocket
         ServerConfig ServerConfig { get; }
 
         /// <summary>
+        /// 名称
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="serverConfig">配置</param>

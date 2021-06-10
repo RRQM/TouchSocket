@@ -21,11 +21,6 @@ namespace RRQMSocket
     public abstract class BaseSocket : ISocket, IDisposable
     {
         /// <summary>
-        /// 心跳检测包
-        /// </summary>
-        protected static readonly byte[] heartPackage = new byte[0];
-
-        /// <summary>
         /// 锁
         /// </summary>
         protected object locker = new object();
@@ -48,11 +43,6 @@ namespace RRQMSocket
                 mainSocket = value;
             }
         }
-
-        /// <summary>
-        /// 远程连接地址名
-        /// </summary>
-        public string Name { get; protected set; }
 
         /// <summary>
         /// IPv4地址
@@ -92,34 +82,34 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 读取Name、IP、Port
+        /// 读取IP、Port
         /// </summary>
         public void ReadIpPort()
         {
             if (mainSocket == null)
             {
-                this.Name = null;
                 this.IP = null;
                 this.Port = -1;
                 return;
             }
 
+            string ipport;
             if (mainSocket.Connected && mainSocket.RemoteEndPoint != null)
             {
-                this.Name = mainSocket.RemoteEndPoint.ToString();
+                ipport = mainSocket.RemoteEndPoint.ToString();
             }
             else if (mainSocket.IsBound && mainSocket.LocalEndPoint != null)
             {
-                this.Name = mainSocket.LocalEndPoint.ToString();
+                ipport = mainSocket.LocalEndPoint.ToString();
             }
             else
             {
                 return;
             }
 
-            int r = this.Name.LastIndexOf(":");
-            this.IP = this.Name.Substring(0, r);
-            this.Port = Convert.ToInt32(this.Name.Substring(r + 1, this.Name.Length - (r + 1)));
+            int r = ipport.LastIndexOf(":");
+            this.IP = ipport.Substring(0, r);
+            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
         }
 
         /// <summary>

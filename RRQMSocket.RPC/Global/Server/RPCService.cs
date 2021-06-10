@@ -190,6 +190,17 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
+        /// 获取解析器
+        /// </summary>
+        /// <param name="parserKey"></param>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        public bool TryGetRPCParser(string parserKey,out RPCParser parser)
+        {
+           return this.RPCParsers.TryGetRPCParser(parserKey,out parser );
+        }
+
+        /// <summary>
         /// 注册所有服务
         /// </summary>
         /// <returns></returns>

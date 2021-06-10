@@ -29,6 +29,6 @@ namespace RRQMSocket
         /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
-        IService Service { get; }
+        _ITcpService Service { get; }
     }
 }

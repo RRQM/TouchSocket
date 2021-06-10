@@ -37,13 +37,9 @@ namespace RRQMSocket
 
         private ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
 
-        internal void Add(T socketClient)
+        internal bool TryAdd(T socketClient)
         {
-            if (this.tokenDic.TryAdd(socketClient.ID, socketClient))
-            {
-                return;
-            }
-            throw new RRQMException("ID重复添加");
+            return this.tokenDic.TryAdd(socketClient.ID, socketClient);
         }
 
         internal string GetDefaultID()
@@ -56,9 +52,9 @@ namespace RRQMSocket
             return this.tokenDic.Keys;
         }
 
-        internal void Remove(string token)
+        internal bool TryRemove(string id)
         {
-            this.tokenDic.TryRemove(token, out _);
+           return this.tokenDic.TryRemove(id, out _);
         }
 
         /// <summary>

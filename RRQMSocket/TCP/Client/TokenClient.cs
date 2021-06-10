@@ -54,6 +54,15 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 重新设置ID
+        /// </summary>
+        /// <param name="id"></param>
+        public virtual void ResetID(string id)
+        {
+            this.id = id;
+        }
+
+        /// <summary>
         /// 连接到服务器
         /// </summary>
         /// <exception cref="RRQMException"></exception>
@@ -131,6 +140,7 @@ namespace RRQMSocket
                 Thread.Sleep(10);
             }
 
+            this.MainSocket.Dispose();
             throw new RRQMTimeoutException("验证Token超时");
         }
 

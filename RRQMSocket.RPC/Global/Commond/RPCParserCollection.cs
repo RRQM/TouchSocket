@@ -35,20 +35,17 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public RPCParser this[string key] { get { return this.GetRPCParser(key); } }
+        public RPCParser this[string key] { get { return this.parsers[key]; } }
 
         /// <summary>
         /// 获取IRPCParser
         /// </summary>
         /// <param name="key"></param>
+        /// <param name="parser"></param>
         /// <returns></returns>
-        public RPCParser GetRPCParser(string key)
+        public bool TryGetRPCParser(string key,out RPCParser parser)
         {
-            if (this.parsers.ContainsKey(key))
-            {
-                return this.parsers[key];
-            }
-            return null;
+            return this.parsers.TryGetValue(key, out parser);
         }
 
         internal void Add(string key, RPCParser parser)

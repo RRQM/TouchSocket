@@ -123,7 +123,7 @@ namespace RRQMSocket.FileTransfer
 
         #region 字段
 
-        internal RRQMAgreementHelper AgreementHelper;
+        internal RRQMAgreementHelper agreementHelper;
         internal bool breakpointResume;
         private bool bufferLengthChanged;
         private long dataTransferLength;
@@ -200,7 +200,7 @@ namespace RRQMSocket.FileTransfer
         /// <exception cref="RRQMException"></exception>
         public sealed override void Send(byte[] buffer, int offset, int length)
         {
-            this.AgreementHelper.SocketSend(1030, buffer, offset, length);
+            this.agreementHelper.SocketSend(1030, buffer, offset, length);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="length"></param>
         public sealed override void SendAsync(byte[] buffer, int offset, int length)
         {
-            this.AgreementHelper.SocketSend(1030, buffer, offset, length);
+            this.agreementHelper.SocketSend(1030, buffer, offset, length);
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace RRQMSocket.FileTransfer
         protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Position;
+            int r = (int)byteBlock.Length;
             int agreement = BitConverter.ToInt32(buffer, 0);
             int returnAgreement;
             ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -416,7 +416,7 @@ namespace RRQMSocket.FileTransfer
 
             try
             {
-                this.AgreementHelper.SocketSend(returnAgreement, returnByteBlock);
+                this.agreementHelper.SocketSend(returnAgreement, returnByteBlock);
             }
             catch (Exception ex)
             {

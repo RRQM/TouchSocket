@@ -47,5 +47,23 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty BindIPHostProperty =
             DependencyProperty.Register("BindIPHost", typeof(IPHost), typeof(ServerConfig), null);
+
+
+        /// <summary>
+        /// 名称
+        /// </summary>
+        public string Name
+        {
+            get { return (string)GetValue(NameProperty); }
+            set { SetValue(NameProperty, value); }
+        }
+
+        /// <summary>
+        /// 名称
+        /// </summary>
+        public static readonly DependencyProperty NameProperty =
+            DependencyProperty.Register("Name", typeof(string), typeof(ServerConfig), "RRQMServer");
+
+
     }
 }
