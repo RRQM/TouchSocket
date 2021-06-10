@@ -118,6 +118,22 @@ namespace RRQMSocket
             this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
         }
 
+        /// <summary>
+        /// 重新设置ID
+        /// </summary>
+        /// <param name="id"></param>
+        protected virtual void ResetID(string id)
+        {
+            this.Service.ResetID(this.id,id);
+        }
+
+        /// <summary>
+        /// 在接收之前
+        /// </summary>
+        protected virtual void OnBeforeReceive()
+        { 
+        
+        }
 
         /// <summary>
         /// 重新获取,父类方法不可覆盖
@@ -224,6 +240,7 @@ namespace RRQMSocket
         {
             try
             {
+                this.OnBeforeReceive();
                 SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
                 eventArgs.Completed += this.EventArgs_Completed;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);

@@ -110,7 +110,7 @@ namespace RRQMSocket
                                     this.OnCreateSocketCliect(client, creatOption);
                                     client.id = creatOption.ID;
 
-                                    if (this.SocketClients.TryAdd(client))
+                                    if (!this.SocketClients.TryAdd(client))
                                     {
                                         throw new RRQMException("ID重复");
                                     }

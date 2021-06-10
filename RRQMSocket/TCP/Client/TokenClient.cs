@@ -54,7 +54,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 重新设置ID
+        /// 重新设置ID,但是不会同步到服务器
         /// </summary>
         /// <param name="id"></param>
         public virtual void ResetID(string id)

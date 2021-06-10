@@ -59,6 +59,7 @@ namespace RRQMSocket
         {
             get { return clearInterval; }
         }
+
         /// <summary>
         /// 最大可连接数
         /// </summary>
@@ -66,6 +67,7 @@ namespace RRQMSocket
         {
             get { return maxCount; }
         }
+
         /// <summary>
         /// 获取服务器配置
         /// </summary>
@@ -87,7 +89,6 @@ namespace RRQMSocket
             get { return socketClients; }
         }
 
-      
         private string name;
         /// <summary>
         /// 服务器名称
@@ -400,7 +401,7 @@ namespace RRQMSocket
                     this.OnCreateSocketCliect(client, creatOption);
                     client.id = creatOption.ID;
 
-                    if (this.socketClients.TryAdd(client))
+                    if (!this.socketClients.TryAdd(client))
                     {
                         throw new RRQMException("ID重复");
                     }

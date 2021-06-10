@@ -223,8 +223,8 @@ namespace RRQMSocket.FileTransfer
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Length;
-            int agreement = BitConverter.ToInt32(buffer, 0);
-            int returnAgreement;
+            short agreement = BitConverter.ToInt16(buffer, 0);
+            short returnAgreement;
             ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             switch (agreement)
             {

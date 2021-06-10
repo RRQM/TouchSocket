@@ -834,7 +834,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private ByteBlock SendWait(int agreement, int waitTime, ByteBlock byteBlock = null)
+        private ByteBlock SendWait(short agreement, int waitTime, ByteBlock byteBlock = null)
         {
             //1001:请求下载
             //1002:请求下载分包

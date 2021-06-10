@@ -17,6 +17,7 @@ using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -111,7 +112,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMTimeoutException"></exception>
         public RPCProxyInfo GetProxyInfo()
         {
-            agreementHelper.SocketSend(100, (string)this.ClientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty));
+            byte[] data = Encoding.UTF8.GetBytes((string)this.ClientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty));
+            agreementHelper.SocketSend(100, data);
             this.singleWaitData.Wait(1000 * 10);
 
             if (this.proxyFile == null)
