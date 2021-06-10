@@ -456,7 +456,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            socketClient.Agreement_112(buffer, r);
+                            socketClient.Agreement_112(buffer);
                         }
                         catch (Exception e)
                         {
@@ -494,7 +494,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 try
                 {
-                    context.ReturnParameterBytes = targetsocketClient.CallBack(context, InvokeOption.CanFeedback);
+                    context.ReturnParameterBytes = targetsocketClient.CallBack(context,context.Feedback==1? InvokeOption.CanFeedback:InvokeOption.NoFeedback);
                     context.Status = 1;
                 }
                 catch (Exception ex)

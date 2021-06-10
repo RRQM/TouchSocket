@@ -20,11 +20,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         static InvokeOption()
         {
             _tcpInvoke = new InvokeOption();
-            _tcpInvoke.WaitTime = 3;
+            _tcpInvoke.WaitTime = 10;
             _tcpInvoke.Feedback = true;
 
             _udpInvoke = new InvokeOption();
-            _udpInvoke.WaitTime = 3;
+            _udpInvoke.WaitTime = 10;
             _udpInvoke.Feedback = false;
         }
 
@@ -32,7 +32,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         /// <summary>
         /// 默认设置。
-        /// WaitTime=3，Feedback=True。
+        /// WaitTime=10，Feedback=True。
         /// </summary>
         public static InvokeOption CanFeedback { get { return _tcpInvoke; } }
 
@@ -40,7 +40,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         /// <summary>
         /// 默认设置。
-        /// WaitTime=3，Feedback=False。
+        /// WaitTime=10，Feedback=False。
         /// </summary>
         public static InvokeOption NoFeedback { get { return _udpInvoke; } }
 
