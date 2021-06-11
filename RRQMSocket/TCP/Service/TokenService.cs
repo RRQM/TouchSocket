@@ -53,6 +53,10 @@ namespace RRQMSocket
             base.LoadConfig(serverConfig);
             this.verifyTimeout = (int)serverConfig.GetValue(TokenServerConfig.VerifyTimeoutProperty);
             this.verifyToken = (string)serverConfig.GetValue(TokenServerConfig.VerifyTokenProperty);
+            if (string.IsNullOrEmpty(this.verifyToken))
+            {
+                this.verifyToken = "rrqm";
+            }
         }
 
         internal override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)

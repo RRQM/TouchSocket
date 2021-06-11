@@ -153,6 +153,10 @@ namespace RRQMSocket
             base.LoadConfig(clientConfig);
             this.verifyToken = (string)clientConfig.GetValue(TokenClientConfig.VerifyTokenProperty);
             this.verifyTimeout = (int)clientConfig.GetValue(TokenClientConfig.VerifyTimeoutProperty);
+            if (string.IsNullOrEmpty(this.verifyToken))
+            {
+                this.verifyToken = "rrqm";
+            }
         }
     }
 }

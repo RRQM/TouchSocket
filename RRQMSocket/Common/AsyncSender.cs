@@ -160,7 +160,15 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    break;
+                    if (len > 0)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        asyncByteDe = default;
+                        return false;
+                    }
                 }
             }
             asyncByteDe = new AsyncByte();

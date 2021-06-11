@@ -26,10 +26,6 @@ namespace RRQMSocket
             get { return (string)GetValue(VerifyTokenProperty); }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                {
-                    value = "rrqm";
-                }
                 SetValue(VerifyTokenProperty, value);
             }
         }
@@ -48,10 +44,6 @@ namespace RRQMSocket
             get { return (int)GetValue(VerifyTimeoutProperty); }
             set
             {
-                if (value < 1)
-                {
-                    value = 1;
-                }
                 SetValue(VerifyTimeoutProperty, value);
             }
         }

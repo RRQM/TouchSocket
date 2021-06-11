@@ -232,7 +232,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 4);
+                            UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 2);
                             RequestDownload(returnByteBlock, fileInfo);
                         }
                         catch (Exception ex)
@@ -287,8 +287,8 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            bool restart = BitConverter.ToBoolean(byteBlock.Buffer, 4);
-                            PBCollectionTemp blocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(byteBlock.Buffer, 5);
+                            bool restart = BitConverter.ToBoolean(byteBlock.Buffer, 2);
+                            PBCollectionTemp blocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(byteBlock.Buffer, 3);
                             RequestUpload(returnByteBlock, blocks, restart);
                         }
                         catch (Exception ex)
@@ -341,7 +341,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            ReceivedBytesAndReturn(returnByteBlock, byteBlock, r - 4);
+                            ReceivedBytesAndReturn(returnByteBlock, byteBlock, r - 2);
                         }
                         catch (Exception ex)
                         {
@@ -381,8 +381,8 @@ namespace RRQMSocket.FileTransfer
                         {
                             try
                             {
-                                byte[] data = new byte[byteBlock.Length - 4];
-                                byteBlock.Position = 4;
+                                byte[] data = new byte[byteBlock.Length - 2];
+                                byteBlock.Position = 2;
                                 byteBlock.Read(data);
                                 this.Received.Invoke(this, new BytesEventArgs(data));
                             }
