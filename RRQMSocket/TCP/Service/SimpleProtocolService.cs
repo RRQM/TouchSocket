@@ -15,7 +15,7 @@ namespace RRQMSocket
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event Action<SimpleProtocolSocketClient, short, ByteBlock> Received;
+        public event Action<SimpleProtocolSocketClient, short?, ByteBlock> Received;
 
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
@@ -38,7 +38,7 @@ namespace RRQMSocket
                 tcpSocketClient.OnReceived = this.OnReceive;
             }
         }
-        private void OnReceive(SimpleProtocolSocketClient socketClient, short agreement, ByteBlock byteBlock)
+        private void OnReceive(SimpleProtocolSocketClient socketClient, short? agreement, ByteBlock byteBlock)
         {
             this.Received?.Invoke(socketClient, agreement, byteBlock);
         }

@@ -15,7 +15,7 @@ namespace RRQMSocket
         /// <summary>
         /// 收到消息
         /// </summary>
-        internal Action<SimpleProtocolSocketClient,short, ByteBlock> OnReceived;
+        internal Action<SimpleProtocolSocketClient,short?, ByteBlock> OnReceived;
 
         /// <summary>
         /// 处理协议数据
@@ -25,6 +25,15 @@ namespace RRQMSocket
         protected override void HandleProtocolData(short agreement, ByteBlock byteBlock)
         {
             this.OnReceived.Invoke(this,agreement,byteBlock);
+        }
+
+        /// <summary>
+        /// 处理正常数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        protected override void HandleNormalData(ByteBlock byteBlock)
+        {
+            this.OnReceived?.Invoke(this,null, byteBlock);
         }
     }
 }

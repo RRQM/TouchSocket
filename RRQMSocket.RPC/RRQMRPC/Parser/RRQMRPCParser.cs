@@ -19,7 +19,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQM内置解析器
     /// </summary>
-    public abstract class RRQMRPCParser : RPCParser
+    public abstract class RRQMRPCParser 
     {
         private MethodStore methodStore;
 
@@ -109,7 +109,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="proxyToken"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken, RPCParser parser)
+        protected virtual RPCProxyInfo GetProxyInfo(string proxyToken, IRPCParser parser)
         {
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
             if (this.ProxyToken == proxyToken)
@@ -135,7 +135,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="parser"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        protected virtual List<MethodItem> GetRegisteredMethodItems(RPCParser parser, string id)
+        protected virtual List<MethodItem> GetRegisteredMethodItems(IRPCParser parser, string id)
         {
             return this.methodStore.GetAllMethodItem();
         }
@@ -245,7 +245,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             propertyCellCode.Code = propertyCode.GetPropertyCode();
             codes.Add(propertyCellCode);
             string assemblyInfo = CodeMap.GetAssemblyInfo(nameSpace, this.RPCVersion);
-            this.RPCVersion = CodeMap.Version;
+         
 
             RPCProxyInfo proxyInfo = new RPCProxyInfo();
             proxyInfo.AssemblyName = assemblyName;

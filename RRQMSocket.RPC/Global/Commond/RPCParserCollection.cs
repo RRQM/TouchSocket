@@ -21,9 +21,9 @@ namespace RRQMSocket.RPC
     /// RPCParser集合
     /// </summary>
     [DebuggerDisplay("Count")]
-    public class RPCParserCollection : IEnumerable<RPCParser>
+    public class RPCParserCollection : IEnumerable<IRPCParser>
     {
-        private Dictionary<string, RPCParser> parsers = new Dictionary<string, RPCParser>();
+        private Dictionary<string, IRPCParser> parsers = new Dictionary<string, IRPCParser>();
 
         /// <summary>
         /// 数量
@@ -35,7 +35,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public RPCParser this[string key] { get { return this.parsers[key]; } }
+        public IRPCParser this[string key] { get { return this.parsers[key]; } }
 
         /// <summary>
         /// 获取IRPCParser
@@ -43,12 +43,12 @@ namespace RRQMSocket.RPC
         /// <param name="key"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public bool TryGetRPCParser(string key,out RPCParser parser)
+        public bool TryGetRPCParser(string key,out IRPCParser parser)
         {
             return this.parsers.TryGetValue(key, out parser);
         }
 
-        internal void Add(string key, RPCParser parser)
+        internal void Add(string key, IRPCParser parser)
         {
             if (this.parsers.Values.Contains(parser))
             {
@@ -67,7 +67,7 @@ namespace RRQMSocket.RPC
         /// 返回枚举对象
         /// </summary>
         /// <returns></returns>
-        IEnumerator<RPCParser> IEnumerable<RPCParser>.GetEnumerator()
+        IEnumerator<IRPCParser> IEnumerable<IRPCParser>.GetEnumerator()
         {
             return this.parsers.Values.GetEnumerator();
         }

@@ -15,7 +15,16 @@ namespace RRQMSocket
         /// <summary>
         /// 接收到数据
         /// </summary>
-        public event Action<short, ByteBlock> Received;
+        public event Action<short?, ByteBlock> Received;
+
+        /// <summary>
+        /// 处理正常数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        protected override void HandleNormalData(ByteBlock byteBlock)
+        {
+            this.Received?.Invoke(null, byteBlock);
+        }
 
         /// <summary>
         /// 处理协议数据

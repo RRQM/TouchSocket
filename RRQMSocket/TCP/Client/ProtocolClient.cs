@@ -156,6 +156,24 @@ namespace RRQMSocket
                         }
                         break;
                     }
+                case -1:
+                    {
+                        ByteBlock newByteBlock = this.BytePool.GetByteBlock(byteBlock.Length - 2);
+                        try
+                        {
+                            newByteBlock.Write(byteBlock.Buffer, 2, (int)byteBlock.Length - 2);
+                            this.HandleNormalData(newByteBlock);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "处理无协议数据异常", ex);
+                        }
+                        finally
+                        {
+                            newByteBlock.Dispose();
+                        }
+                        break;
+                    }
                 default:
                     {
                         HandleProtocolData(agreement,byteBlock);
@@ -174,6 +192,12 @@ namespace RRQMSocket
         /// <param name="agreement"></param>
         /// <param name="byteBlock"></param>
         protected abstract void HandleProtocolData(short agreement,ByteBlock byteBlock);
+
+        /// <summary>
+        /// 处理无协议数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        protected abstract void HandleNormalData(ByteBlock byteBlock);
 
         /// <summary>
         /// 释放资源

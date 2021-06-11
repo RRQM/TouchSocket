@@ -58,12 +58,12 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="key"></param>
         /// <param name="parser"></param>
-        public void AddRPCParser(string key, RPCParser parser)
+        public void AddRPCParser(string key, IRPCParser parser)
         {
             this.RPCParsers.Add(key, parser);
-            parser.RPCService = this;
-            parser.RRQMExecuteMethod = PreviewExecuteMethod;
-            parser.RRQMSetMethodMap(this.MethodMap);
+            parser.SetRPCService(this);
+            parser.SetExecuteMethod(PreviewExecuteMethod);
+            parser.SetMethodMap(this.MethodMap);
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace RRQMSocket.RPC
         /// <param name="parserKey"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public bool TryGetRPCParser(string parserKey,out RPCParser parser)
+        public bool TryGetRPCParser(string parserKey,out IRPCParser parser)
         {
            return this.RPCParsers.TryGetRPCParser(parserKey,out parser );
         }
@@ -257,7 +257,7 @@ namespace RRQMSocket.RPC
             }
         }
 
-        private void ExecuteMethod(bool isAsync, RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        private void ExecuteMethod(bool isAsync, IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
             {
@@ -306,7 +306,7 @@ namespace RRQMSocket.RPC
             parser.RRQMEndInvokeMethod(methodInvoker, methodInstance);
         }
 
-        private void PreviewExecuteMethod(RPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        private void PreviewExecuteMethod(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             if (methodInstance != null && methodInstance.Async)
             {
