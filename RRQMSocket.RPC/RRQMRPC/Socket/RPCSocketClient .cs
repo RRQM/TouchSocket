@@ -11,21 +11,24 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
     /// RPC服务器辅助类
     /// </summary>
-    public sealed class RPCSocketClient : SocketClient
+    public class RPCSocketClient : ProtocolSocketClient
     {
         internal RRQMAgreementHelper agreementHelper;
 
-        internal Action<RPCSocketClient, ByteBlock> Received;
+        internal Action<RPCSocketClient, short, ByteBlock> ReceivedProcotol;
 
         internal SerializeConverter serializeConverter;
 
@@ -51,7 +54,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             RPCContext context = new RPCContext();
             WaitData<RPCContext> waitData = this.waitHandle.GetWaitData(context);
-            
+
             context.MethodToken = methodToken;
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -132,7 +135,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             RPCContext context = new RPCContext();
             WaitData<RPCContext> waitData = this.waitHandle.GetWaitData(context);
-           
+
             context.MethodToken = methodToken;
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -212,7 +215,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 {
                     context.Feedback = 1;
                 }
-                
+
                 context.ParametersBytes = invokeContext.ParametersBytes;
                 context.Serialize(byteBlock);
 
@@ -249,7 +252,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     throw new RRQMRPCException($"调用异常，信息：{context.Message}");
                 }
 
-                    return resultContext.ReturnParameterBytes;
+                return resultContext.ReturnParameterBytes;
             }
             else
             {
@@ -257,26 +260,108 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-
-        /// <summary>
-        /// 向RPC发送数据
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public override void Send(byte[] buffer, int offset, int length)
+        protected override void HandleNormalData(ByteBlock byteBlock)
         {
-            agreementHelper.SocketSend(120, buffer, offset, length);
+            throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// 处理已接收到的数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected sealed override void HandleProtocolData(short agreement, ByteBlock byteBlock)
         {
-            Received.Invoke(this, byteBlock);
+            byte[] buffer = byteBlock.Buffer;
+            int r = (int)byteBlock.Position;
+            switch (agreement)
+            {
+                case 100:/*100，请求RPC文件*/
+                    {
+                        try
+                        {
+                            string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
+                            this.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetProxyInfo(proxyToken, this), true));
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 100, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+
+                case 101:/*函数调用*/
+                    {
+                        try
+                        {
+                            RPCContext content = RPCContext.Deserialize(buffer, 2);
+                            ((IRRQMRPCParser)this.Service).ExecuteContext(content, this);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 102:/*获取注册服务*/
+                    {
+                        try
+                        {
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(this), true);
+                            this.Send(102);
+                            socketClient.agreementHelper.SocketSend(102, data);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 103:/*ID调用客户端*/
+                    {
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                RPCContext content = RPCContext.Deserialize(buffer, 4);
+                                this.IDInvoken(socketClient, content);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Debug(LogType.Error, this, $"错误代码: 103, 错误详情:{e.Message}");
+                            }
+                        });
+                        break;
+                    }
+                case 112:/*回调函数调用*/
+                    {
+                        try
+                        {
+                            RPCContext content = RPCContext.Deserialize(buffer, 4);
+                            socketClient.waitHandle.SetRun(content);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Debug(LogType.Error, this, $"错误代码: 112, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
+                case 120:/*接收普通数据*/
+                    {
+                        Task.Run(() =>
+                        {
+                            try
+                            {
+                                byte[] data = new byte[r - 4];
+                                byteBlock.Position = 4;
+                                byteBlock.Read(data);
+
+                                this.Received?.Invoke(socketClient, new BytesEventArgs(data));
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Debug(LogType.Error, this, $"错误代码: 120, 错误详情:{e.Message}");
+                            }
+                        });
+
+                        break;
+                    }
+            }
         }
     }
 }

@@ -14,8 +14,8 @@ namespace RRQMSocket
     /// </summary>
     public abstract class ProtocolSocketClient : SocketClient
     {
-        internal RRQMAgreementHelper agreementHelper;
-
+        private RRQMAgreementHelper agreementHelper;
+        private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
         /// <summary>
         /// 接收之前
         /// </summary>
@@ -25,6 +25,8 @@ namespace RRQMSocket
             this.agreementHelper = new RRQMAgreementHelper(this);
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
+
+        protected virtual void 
 
         /// <summary>
         /// 发送字节流

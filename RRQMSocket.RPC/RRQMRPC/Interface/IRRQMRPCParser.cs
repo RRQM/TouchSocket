@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -61,5 +62,27 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 序列化转换器
         /// </summary>
         SerializeConverter SerializeConverter { get; }
+
+        /// <summary>
+        /// 获取代理文件
+        /// </summary>
+        /// <param name="proxyToken">代理令箭</param>
+        /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RPCSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
+        /// <returns></returns>
+        RPCProxyInfo GetProxyInfo(string proxyToken, object caller);
+
+        /// <summary>
+        /// 执行函数
+        /// </summary>
+        /// <param name="context">函数内容</param>
+        /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RPCSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
+        void ExecuteContext(RPCContext context, object caller);
+
+        /// <summary>
+        /// 获取注册函数
+        /// </summary>
+        /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RPCSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
+        /// <returns></returns>
+        List<MethodItem> GetRegisteredMethodItems(object caller);
     }
 }

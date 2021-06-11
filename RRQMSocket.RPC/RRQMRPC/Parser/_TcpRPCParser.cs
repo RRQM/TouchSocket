@@ -12,7 +12,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// TcpRPCParser泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public abstract class _TcpRPCParser<TClient> : ProtocolService<TClient>, IRPCParser, IRRQMRPCParser where TClient : ProtocolSocketClient, new()
+    public class _TcpRPCParser<TClient> : ProtocolService<TClient>, IRPCParser, IRRQMRPCParser where TClient : ProtocolSocketClient, new()
     {
 #pragma warning disable 
         public MethodMap MethodMap { get; private set; }
@@ -154,7 +154,67 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.RPCService = service;
         }
 
+        protected override void OnCreateSocketCliect(TClient tcpSocketClient, CreateOption createOption)
+        {
 
+        }
+
+        public virtual RPCProxyInfo GetProxyInfo(string proxyToken, object caller)
+        {
+            RPCProxyInfo proxyInfo = new RPCProxyInfo();
+            if (this.ProxyToken == proxyToken)
+            {
+                proxyInfo.AssemblyData = this.ProxyInfo.AssemblyData;
+                proxyInfo.AssemblyName = this.ProxyInfo.AssemblyName;
+                proxyInfo.Codes = this.ProxyInfo.Codes;
+                proxyInfo.Version = this.ProxyInfo.Version;
+                proxyInfo.Status = 1;
+            }
+            else
+            {
+                proxyInfo.Status = 2;
+                proxyInfo.Message = "令箭不正确";
+            }
+
+            return proxyInfo;
+        }
+
+        public virtual void ExecuteContext(RPCContext context, object caller)
+        {
+            MethodInvoker methodInvoker = new MethodInvoker();
+            methodInvoker.Caller = caller;
+            methodInvoker.Flag = context;
+            if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
+            {
+                if (methodInstance.IsEnable)
+                {
+                    object[] ps = new object[methodInstance.ParameterTypes.Length];
+                    for (int i = 0; i < context.ParametersBytes.Count; i++)
+                    {
+                        ps[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                    }
+                    methodInvoker.Parameters = ps;
+                }
+                else
+                {
+                    methodInvoker.Status = InvokeStatus.UnEnable;
+                }
+
+                this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
+            }
+            else
+            {
+                methodInvoker.Status = InvokeStatus.UnFound;
+                this.RRQMExecuteMethod.Invoke(this, methodInvoker, null);
+            }
+        }
+
+        
+        public virtual List<MethodItem> GetRegisteredMethodItems(object caller)
+        {
+            return this.methodStore.GetAllMethodItem();
+        }
 #pragma warning restore
+
     }
 }
