@@ -440,9 +440,9 @@ namespace RRQMSocket
         /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
         /// 例如事件等，请先判断CreatOption.NewCreate值再做处理。
         /// </summary>
-        /// <param name="tcpSocketClient"></param>
+        /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected abstract void OnCreateSocketCliect(TClient tcpSocketClient, CreateOption createOption);
+        protected abstract void OnCreateSocketCliect(TClient socketClient, CreateOption createOption);
 
         /// <summary>
         /// 在Socket初始化对象后，Bind之前调用。

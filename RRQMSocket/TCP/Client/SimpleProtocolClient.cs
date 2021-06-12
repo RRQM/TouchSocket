@@ -18,20 +18,11 @@ namespace RRQMSocket
         public event Action<short?, ByteBlock> Received;
 
         /// <summary>
-        /// 处理正常数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected override void HandleNormalData(ByteBlock byteBlock)
-        {
-            this.Received?.Invoke(null, byteBlock);
-        }
-
-        /// <summary>
         /// 处理协议数据
         /// </summary>
         /// <param name="agreement"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleProtocolData(short agreement, ByteBlock byteBlock)
+        protected sealed override void HandleProtocolData(short? agreement, ByteBlock byteBlock)
         {
             this.Received?.Invoke(agreement, byteBlock);
         }

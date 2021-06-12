@@ -14,11 +14,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     public interface IRRQMRPCParser
     {
         /// <summary>
-        /// 收到字节
-        /// </summary>
-        event RRQMBytesEventHandler Received;
-
-        /// <summary>
         /// 内存池实例
         /// </summary>
         BytePool BytePool { get; }

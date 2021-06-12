@@ -14,7 +14,10 @@ namespace RRQMSocket
     /// </summary>
     public abstract class ProtocolSocketClient : SocketClient
     {
-        private RRQMAgreementHelper agreementHelper;
+        /// <summary>
+        /// 辅助发送器
+        /// </summary>
+        protected internal RRQMAgreementHelper agreementHelper;
         private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
         /// <summary>
         /// 接收之前
@@ -25,8 +28,15 @@ namespace RRQMSocket
             this.agreementHelper = new RRQMAgreementHelper(this);
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
-
-        protected virtual void 
+        /// <summary>
+        /// 添加已被使用的协议
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="describe"></param>
+        protected static void AddUsedProtocol(short agreement, string describe)
+        {
+            usedProtocol.Add(agreement, describe);
+        }
 
         /// <summary>
         /// 发送字节流
@@ -61,6 +71,30 @@ namespace RRQMSocket
         /// <param name="offset"></param>
         /// <param name="length"></param>
         public void Send(short agreement, byte[] buffer, int offset, int length)
+        {
+            if (!usedProtocol.ContainsKey(agreement))
+            {
+                this.InternalSend(agreement, buffer, offset, length);
+            }
+            else
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (var item in usedProtocol.Keys)
+                {
+                    stringBuilder.AppendLine($"协议{item}已被使用，描述为：{usedProtocol[item]}");
+                }
+                throw new RRQMException(stringBuilder.ToString());
+            }
+        }
+
+        /// <summary>
+        /// 内部发送，不会进行协议检测
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        protected void InternalSend(short agreement, byte[] buffer, int offset, int length)
         {
             if (agreement > 0)
             {
@@ -107,7 +141,7 @@ namespace RRQMSocket
         /// <param name="id"></param>
         protected override void ResetID(string id)
         {
-            this.Service.ResetID(this.id,id);
+            this.Service.ResetID(this.id, id);
         }
 
         /// <summary>
@@ -137,19 +171,16 @@ namespace RRQMSocket
                     }
                 case -1:
                     {
-                        ByteBlock newByteBlock = this.BytePool.GetByteBlock(byteBlock.Length - 2);
                         try
                         {
-                            newByteBlock.Write(byteBlock.Buffer, 2, (int)byteBlock.Length - 2);
-                            this.HandleNormalData(newByteBlock);
+                            byte[] data = new byte[(int)byteBlock.Length - 2];
+                            byteBlock.Position = 2;
+                            byteBlock.Read(data);
+                            HandleProtocolData(null, byteBlock);
                         }
                         catch (Exception ex)
                         {
                             this.Logger.Debug(LogType.Error, this, "处理无协议数据异常", ex);
-                        }
-                        finally
-                        {
-                            newByteBlock.Dispose();
                         }
                         break;
                     }
@@ -170,12 +201,6 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="agreement"></param>
         /// <param name="byteBlock"></param>
-        protected abstract void HandleProtocolData(short agreement, ByteBlock byteBlock);
-
-        /// <summary>
-        /// 处理无协议数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected abstract void HandleNormalData(ByteBlock byteBlock);
+        protected abstract void HandleProtocolData(short? agreement, ByteBlock byteBlock);
     }
 }

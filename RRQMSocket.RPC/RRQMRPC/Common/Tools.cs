@@ -108,7 +108,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             proxyInfo = new RPCProxyInfo();
             proxyInfo.AssemblyName = assemblyName;
-            proxyInfo.Version = version.ToString();
+            proxyInfo.Version =version==null?"1.0.0.0": version.ToString();
             if (compiler != null)
             {
                 List<string> codesString = new List<string>();

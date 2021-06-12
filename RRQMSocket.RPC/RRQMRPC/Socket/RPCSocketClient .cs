@@ -26,9 +26,18 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class RPCSocketClient : ProtocolSocketClient
     {
-        internal RRQMAgreementHelper agreementHelper;
+        static RPCSocketClient()
+        {
+            AddUsedProtocol(100,"请求RPC代理文件");
+            AddUsedProtocol(101,"RPC调用");
+            AddUsedProtocol(102, "获取注册服务");
+            AddUsedProtocol(103, "ID调用客户端");
+            AddUsedProtocol(104, "RPC回调");
+        }
 
-        internal Action<RPCSocketClient, short, ByteBlock> ReceivedProcotol;
+        internal Func<RPCSocketClient, RPCContext, RPCContext> IDAction;
+
+        internal  Action<RPCSocketClient, short?, ByteBlock> Received;
 
         internal SerializeConverter serializeConverter;
 
@@ -76,7 +85,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
 
-                agreementHelper.SocketSend(112, byteBlock);
+                this.InternalSend(104, byteBlock.Buffer,0,(int)byteBlock.Length);
             }
             catch (Exception e)
             {
@@ -157,7 +166,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
 
-                agreementHelper.SocketSend(112, byteBlock);
+                this.InternalSend(104, byteBlock.Buffer,0,(int)byteBlock.Length);
             }
             catch (Exception e)
             {
@@ -219,7 +228,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 context.ParametersBytes = invokeContext.ParametersBytes;
                 context.Serialize(byteBlock);
 
-                agreementHelper.SocketSend(112, byteBlock);
+                this.InternalSend(104, byteBlock.Buffer,0,(int)byteBlock.Length);
             }
             catch (Exception e)
             {
@@ -260,12 +269,25 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        protected override void HandleNormalData(ByteBlock byteBlock)
+        /// <summary>
+        /// 内部发送器
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        internal new void InternalSend(short agreement, byte[] buffer, int offset, int length)
         {
-            throw new NotImplementedException();
+            base.InternalSend(agreement, buffer, offset, length);
         }
 
-        protected sealed override void HandleProtocolData(short agreement, ByteBlock byteBlock)
+
+        /// <summary>
+        /// 处理协议数据
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="byteBlock"></param>
+        protected sealed override void HandleProtocolData(short? agreement, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
@@ -276,7 +298,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
-                            this.agreementHelper.SocketSend(100, SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetProxyInfo(proxyToken, this), true));
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetProxyInfo(proxyToken, this), true);
+                            this.InternalSend(100, data,0,data.Length);
                         }
                         catch (Exception e)
                         {
@@ -284,7 +307,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-
                 case 101:/*函数调用*/
                     {
                         try
@@ -303,8 +325,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(this), true);
-                            this.Send(102);
-                            socketClient.agreementHelper.SocketSend(102, data);
+                            this.InternalSend(102,data,0,data.Length);
                         }
                         catch (Exception e)
                         {
@@ -318,8 +339,20 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             try
                             {
-                                RPCContext content = RPCContext.Deserialize(buffer, 4);
-                                this.IDInvoken(socketClient, content);
+                                RPCContext content = RPCContext.Deserialize(buffer, 2);
+                                content= this.IDAction(this, content);
+
+                                ByteBlock retuenByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                                try
+                                {
+                                    content.Serialize(retuenByteBlock);
+                                    this.InternalSend(103, retuenByteBlock.Buffer,0, (int)retuenByteBlock.Length);
+                                }
+                                finally
+                                {
+                                    byteBlock.Dispose();
+                                }
+
                             }
                             catch (Exception e)
                             {
@@ -328,12 +361,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                         });
                         break;
                     }
-                case 112:/*回调函数调用*/
+                case 104:/*回调函数调用*/
                     {
                         try
                         {
-                            RPCContext content = RPCContext.Deserialize(buffer, 4);
-                            socketClient.waitHandle.SetRun(content);
+                            RPCContext content = RPCContext.Deserialize(buffer, 2);
+                            this.waitHandle.SetRun(content);
                         }
                         catch (Exception e)
                         {
@@ -341,27 +374,20 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 120:/*接收普通数据*/
-                    {
-                        Task.Run(() =>
-                        {
-                            try
-                            {
-                                byte[] data = new byte[r - 4];
-                                byteBlock.Position = 4;
-                                byteBlock.Read(data);
-
-                                this.Received?.Invoke(socketClient, new BytesEventArgs(data));
-                            }
-                            catch (Exception e)
-                            {
-                                Logger.Debug(LogType.Error, this, $"错误代码: 120, 错误详情:{e.Message}");
-                            }
-                        });
-
-                        break;
-                    }
+                default:
+                    RPCHandleDefaultData(agreement,byteBlock);
+                    break;
             }
+        }
+
+        /// <summary>
+        /// RPC处理其余协议
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="byteBlock"></param>
+        protected virtual void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        {
+            Received?.Invoke(this,agreement,byteBlock);
         }
     }
 }

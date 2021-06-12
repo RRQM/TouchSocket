@@ -24,6 +24,17 @@ namespace RRQMSocket
         }
         private EventWaitHandle waitHandle;
         private RRQMAgreementHelper agreementHelper;
+        private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
+
+        /// <summary>
+        /// 添加已被使用的协议
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="describe"></param>
+        protected static void AddUsedProtocol(short agreement, string describe)
+        {
+            usedProtocol.Add(agreement, describe);
+        }
 
         /// <summary>
         /// 连接到服务器时
@@ -51,7 +62,7 @@ namespace RRQMSocket
         /// <param name="id"></param>
         public override void ResetID(string id)
         {
-            this.agreementHelper.SocketSend(0,Encoding.UTF8.GetBytes(id));
+            this.agreementHelper.SocketSend(0, Encoding.UTF8.GetBytes(id));
             if (this.waitHandle.WaitOne(5000))
             {
                 return;
@@ -93,6 +104,30 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Send(short agreement, byte[] buffer, int offset, int length)
         {
+            if (!usedProtocol.ContainsKey(agreement))
+            {
+                this.InternalSend(agreement, buffer, offset, length);
+            }
+            else
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (var item in usedProtocol.Keys)
+                {
+                    stringBuilder.AppendLine($"协议{item}已被使用，描述为：{usedProtocol[item]}");
+                }
+                throw new RRQMException(stringBuilder.ToString());
+            }
+        }
+
+        /// <summary>
+        /// 内部发送，不会进行协议检测
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        protected void InternalSend(short agreement, byte[] buffer, int offset, int length)
+        {
             if (agreement > 0)
             {
                 this.agreementHelper.SocketSend(agreement, buffer, offset, length);
@@ -129,7 +164,7 @@ namespace RRQMSocket
         /// <param name="agreement"></param>
         public void Send(short agreement)
         {
-            this.Send(agreement,new byte[0],0,0);
+            this.Send(agreement, new byte[0], 0, 0);
         }
 
         /// <summary>
@@ -158,28 +193,29 @@ namespace RRQMSocket
                     }
                 case -1:
                     {
-                        ByteBlock newByteBlock = this.BytePool.GetByteBlock(byteBlock.Length - 2);
                         try
                         {
-                            newByteBlock.Write(byteBlock.Buffer, 2, (int)byteBlock.Length - 2);
-                            this.HandleNormalData(newByteBlock);
+                            HandleProtocolData(null, byteBlock);
                         }
                         catch (Exception ex)
                         {
                             this.Logger.Debug(LogType.Error, this, "处理无协议数据异常", ex);
                         }
-                        finally
-                        {
-                            newByteBlock.Dispose();
-                        }
                         break;
                     }
                 default:
                     {
-                        HandleProtocolData(agreement,byteBlock);
-                             break;
+                        try
+                        {
+                            HandleProtocolData(agreement, byteBlock);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "处理协议数据异常", ex);
+                        }
+                        break;
                     }
-                   
+
             }
         }
 
@@ -191,13 +227,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="agreement"></param>
         /// <param name="byteBlock"></param>
-        protected abstract void HandleProtocolData(short agreement,ByteBlock byteBlock);
-
-        /// <summary>
-        /// 处理无协议数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected abstract void HandleNormalData(ByteBlock byteBlock);
+        protected abstract void HandleProtocolData(short? agreement, ByteBlock byteBlock);
 
         /// <summary>
         /// 释放资源

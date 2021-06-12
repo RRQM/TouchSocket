@@ -12,9 +12,23 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// TcpRPCParser泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public class _TcpRPCParser<TClient> : ProtocolService<TClient>, IRPCParser, IRRQMRPCParser where TClient : ProtocolSocketClient, new()
+    public class TcpParser<TClient> : ProtocolService<TClient>, IRPCParser, IRRQMRPCParser where TClient : RPCSocketClient, new()
     {
-#pragma warning disable 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public TcpParser()
+        {
+            this.eventBus = new EventBus();
+        }
+
+#pragma warning disable
+
+        /// <summary>
+        /// 事务总线
+        /// </summary>
+        public EventBus EventBus { get => this.eventBus; }
+
         public MethodMap MethodMap { get; private set; }
 
         public RPCService RPCService { get; private set; }
@@ -38,15 +52,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         private MethodStore methodStore;
         private RPCProxyInfo proxyInfo;
         private CellCode[] codes;
+        private EventBus eventBus;
 
-        public MethodStore MethodStore
-        {
-            get { return methodStore; }
-            set { methodStore = value; }
-        }
-
-
-        public event RRQMBytesEventHandler Received;
+        public MethodStore MethodStore { get => methodStore; }
 
         public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
@@ -121,7 +129,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
 
                 context.Serialize(byteBlock);
-                ((RPCSocketClient)methodInvoker.Caller).agreementHelper.SocketSend(101, byteBlock);
+                ((RPCSocketClient)methodInvoker.Caller).InternalSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
             }
             catch (Exception ex)
             {
@@ -154,9 +162,19 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.RPCService = service;
         }
 
-        protected override void OnCreateSocketCliect(TClient tcpSocketClient, CreateOption createOption)
+        protected override void OnCreateSocketCliect(TClient socketClient, CreateOption createOption)
         {
+            if (createOption.NewCreate)
+            {
+                socketClient.IDAction = this.IDInvoke;
+                socketClient.Received = this.OnReceived;
+                socketClient.serializeConverter = this.SerializeConverter;
+            }
+        }
 
+        private void OnReceived(RPCSocketClient client, short? agreement, ByteBlock byteBlock)
+        {
+            this.Received?.Invoke(client, agreement, byteBlock);
         }
 
         public virtual RPCProxyInfo GetProxyInfo(string proxyToken, object caller)
@@ -209,12 +227,111 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        
+        protected override void LoadConfig(ServerConfig serverConfig)
+        {
+            base.LoadConfig(serverConfig);
+            this.SerializeConverter =(SerializeConverter) serverConfig.GetValue(TcpRPCClientConfig.SerializeConverterProperty);
+        }
+
         public virtual List<MethodItem> GetRegisteredMethodItems(object caller)
         {
             return this.methodStore.GetAllMethodItem();
         }
-#pragma warning restore
 
+        private RPCContext IDInvoke(RPCSocketClient socketClient, RPCContext context)
+        {
+            if (this.TryGetSocketClient(context.ID, out TClient targetsocketClient))
+            {
+                try
+                {
+                    context.ReturnParameterBytes = targetsocketClient.CallBack(context, context.Feedback == 1 ? InvokeOption.CanFeedback : InvokeOption.NoFeedback);
+                    context.Status = 1;
+                }
+                catch (Exception ex)
+                {
+                    context.Status = 3;
+                    context.Message = ex.Message;
+                }
+
+            }
+            else
+            {
+                context.Status = 2;
+            }
+
+            return context;
+        }
+#pragma warning disable
+
+        /// <summary>
+        /// 收到协议数据
+        /// </summary>
+        public event Action<RPCSocketClient, short?, ByteBlock> Received;
+
+        /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <typeparam name="T">返回值</typeparam>
+        /// <param name="id">ID</param>
+        /// <param name="methodToken">函数唯一标识</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        /// <returns></returns>
+        public T CallBack<T>(string id, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            if (this.SocketClients.TryGetSocketClient(id, out TClient socketClient))
+            {
+                return socketClient.CallBack<T>(methodToken, invokeOption, parameters);
+            }
+            else
+            {
+                throw new RRQMRPCException("未找到该客户端");
+            }
+        }
+
+        /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <param name="id">ID</param>
+        /// <param name="methodToken">函数唯一标识</param>
+        /// <param name="invokeOption">调用设置</param>
+        /// <param name="parameters">参数</param>
+        public void CallBack(string id, int methodToken, InvokeOption invokeOption = null, params object[] parameters)
+        {
+            if (this.SocketClients.TryGetSocketClient(id, out TClient socketClient))
+            {
+                socketClient.CallBack(methodToken, invokeOption, parameters);
+            }
+            else
+            {
+                throw new RRQMRPCException("未找到该客户端");
+            }
+        }
+
+        /// <summary>
+        /// 发布事件
+        /// </summary>
+        /// <param name="eventName">事件名称</param>
+        /// <param name="parameterTypes">事件参数类型</param>
+        public void PublishEvent(string eventName, string[] parameterTypes)
+        {
+            EventUnit eventUnit = new EventUnit();
+            eventUnit.ParameterTypes = parameterTypes;
+            eventUnit.Publisher = this.Name;
+            this.eventBus.AddEvent(eventUnit);
+        }
+
+        /// <summary>
+        /// 触发事件
+        /// </summary>
+        /// <param name="eventName"></param>
+        public void RaiseEvent(string eventName)
+        {
+            if (!this.eventBus.TryGetEventUnit(eventName, out EventUnit eventUnit))
+            {
+                throw new RRQMRPCException("没有该事件的注册信息");
+            }
+
+        }
     }
 }

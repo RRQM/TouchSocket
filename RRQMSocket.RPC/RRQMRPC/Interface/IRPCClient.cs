@@ -21,10 +21,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public interface IRPCClient : IDisposable
     {
-        /// <summary>
-        /// 收到数据
-        /// </summary>
-        event RRQMBytesEventHandler Received;
 
         /// <summary>
         /// 获取ID
