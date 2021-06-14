@@ -27,7 +27,7 @@ namespace RRQMSocket
             base.ResetID(oldID, newID);
             if (this.TryGetSocketClient(newID, out TClient client))
             {
-                client.agreementHelper.SocketSend(0, Encoding.UTF8.GetBytes(newID));
+                client.procotolHelper.SocketSend(0, Encoding.UTF8.GetBytes(newID));
             }
             else
             {

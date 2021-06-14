@@ -20,10 +20,6 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public class UrlFileInfo : FileInfo
     {
-        private UrlFileInfo()
-        {
-        }
-
         /// <summary>
         /// 生成下载请求必要信息
         /// </summary>

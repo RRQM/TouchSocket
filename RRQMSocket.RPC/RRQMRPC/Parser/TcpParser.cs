@@ -20,6 +20,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public TcpParser()
         {
             this.eventBus = new EventBus();
+            this.methodStore = new MethodStore();
         }
 
 #pragma warning disable
@@ -172,9 +173,9 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        private void OnReceived(RPCSocketClient client, short? agreement, ByteBlock byteBlock)
+        private void OnReceived(object sender, short? procotol, ByteBlock byteBlock)
         {
-            this.Received?.Invoke(client, agreement, byteBlock);
+            this.Received?.Invoke(sender, procotol, byteBlock);
         }
 
         public virtual RPCProxyInfo GetProxyInfo(string proxyToken, object caller)
@@ -268,7 +269,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 收到协议数据
         /// </summary>
-        public event Action<RPCSocketClient, short?, ByteBlock> Received;
+        public event RRQMReceivedProcotolEventHandler Received;
 
         /// <summary>
         /// 回调RPC

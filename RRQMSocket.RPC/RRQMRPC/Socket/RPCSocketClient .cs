@@ -37,7 +37,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         internal Func<RPCSocketClient, RPCContext, RPCContext> IDAction;
 
-        internal  Action<RPCSocketClient, short?, ByteBlock> Received;
+        internal RRQMReceivedProcotolEventHandler Received;
 
         internal SerializeConverter serializeConverter;
 
@@ -272,25 +272,25 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 内部发送器
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        internal new void InternalSend(short agreement, byte[] buffer, int offset, int length)
+        internal new void InternalSend(short procotol, byte[] buffer, int offset, int length)
         {
-            base.InternalSend(agreement, buffer, offset, length);
+            base.InternalSend(procotol, buffer, offset, length);
         }
 
         /// <summary>
         /// 处理协议数据
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleProtocolData(short? agreement, ByteBlock byteBlock)
+        protected sealed override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
-            switch (agreement)
+            switch (procotol)
             {
                 case 100:/*100，请求RPC文件*/
                     {
@@ -374,7 +374,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                     }
                 default:
-                    RPCHandleDefaultData(agreement,byteBlock);
+                    RPCHandleDefaultData(procotol,byteBlock);
                     break;
             }
         }
@@ -382,21 +382,21 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// RPC处理其余协议
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        protected virtual void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            this.OnHandleDefaultData(agreement,byteBlock);
+            this.OnHandleDefaultData(procotol,byteBlock);
         }
 
         /// <summary>
         /// 处理其余协议的事件触发
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected void OnHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        protected void OnHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            Received?.Invoke(this, agreement, byteBlock);
+            Received?.Invoke(this, procotol, byteBlock);
         }
     }
 }

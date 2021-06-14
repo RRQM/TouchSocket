@@ -19,13 +19,13 @@ namespace RRQMSocket
     /// <summary>
     /// RRQM协议助手
     /// </summary>
-    public class RRQMAgreementHelper
+    public class ProcotolHelper
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="client"></param>
-        public RRQMAgreementHelper(IClient client)
+        public ProcotolHelper(IClient client)
         {
             this.mainSocket = client.MainSocket;
             this.bytePool = client.BytePool;
@@ -39,94 +39,55 @@ namespace RRQMSocket
         /// <summary>
         /// 发送简单协议
         /// </summary>
-        /// <param name="agreement"></param>
-        public void SocketSend(short agreement)
+        /// <param name="procotol"></param>
+        public void SocketSend(short procotol)
         {
-            this.SocketSend(agreement, new byte[0], 0, 0);
+            this.SocketSend(procotol, new byte[0], 0, 0);
         }
 
         /// <summary>
         /// 发送字节
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="dataBuffer"></param>
-        public void SocketSend(short agreement, byte[] dataBuffer)
+        public void SocketSend(short procotol, byte[] dataBuffer)
         {
-            this.SocketSend(agreement, dataBuffer, 0, dataBuffer.Length);
+            this.SocketSend(procotol, dataBuffer, 0, dataBuffer.Length);
         }
 
         /// <summary>
         /// 发送协议流
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="dataByteBlock"></param>
-        public void SocketSend(short agreement, ByteBlock dataByteBlock)
+        public void SocketSend(short procotol, ByteBlock dataByteBlock)
         {
-            this.SocketSend(agreement, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
+            this.SocketSend(procotol, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
         }
-
-        ///// <summary>
-        ///// 发送字节
-        ///// </summary>
-        ///// <param name="agreement"></param>
-        ///// <param name="status"></param>
-        ///// <param name="dataBuffer"></param>
-        //public void SocketSend(short agreement, byte status, byte[] dataBuffer)
-        //{
-        //    ByteBlock byteBlock = this.bytePool.GetByteBlock(dataBuffer.Length + 1);
-
-        //    byteBlock.Write(status);
-        //    byteBlock.Write(dataBuffer);
-        //    try
-        //    {
-        //        this.SocketSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Length);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw ex;
-        //    }
-        //    finally
-        //    {
-        //        byteBlock.Dispose();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 发送流
-        ///// </summary>
-        ///// <param name="dataByteBlock"></param>
-        //public void SocketSend(ByteBlock dataByteBlock)
-        //{
-        //    int dataLen = (int)dataByteBlock.Position + 4;
-        //    ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
-        //    byte[] lenBytes = BitConverter.GetBytes(dataLen);
-
-        //    byteBlock.Write(lenBytes);
-
-        //    byteBlock.Write(dataByteBlock.Buffer, 0, (int)dataByteBlock.Position);
-        //    try
-        //    {
-        //        this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
-        //    }
-        //    finally
-        //    {
-        //        byteBlock.Dispose();
-        //    }
-        //}
 
         /// <summary>
         /// 发送字节
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="dataBuffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void SocketSend(short agreement, byte[] dataBuffer, int offset, int length)
+        /// <param name="reserved"></param>
+        public void SocketSend(short procotol, byte[] dataBuffer, int offset, int length, bool reserved)
         {
             int dataLen = length - offset + 6;
+            if (reserved)
+            {
+                byte[] lenBytes1 = BitConverter.GetBytes(dataLen);
+                byte[] agreementBytes1 = BitConverter.GetBytes(procotol);
+                Array.Copy(lenBytes1, 0, dataBuffer, offset, 4);
+                Array.Copy(agreementBytes1, 0, dataBuffer, 4 + offset, 2);
+                this.mainSocket.Send(dataBuffer, 0, length, SocketFlags.None);
+                return;
+            }
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
-            byte[] agreementBytes = BitConverter.GetBytes(agreement);
+            byte[] agreementBytes = BitConverter.GetBytes(procotol);
 
             byteBlock.Write(lenBytes);
             byteBlock.Write(agreementBytes);

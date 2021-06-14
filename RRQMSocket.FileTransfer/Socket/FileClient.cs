@@ -366,7 +366,6 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-
         /// <summary>
         /// 终止所有传输
         /// </summary>
@@ -407,11 +406,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 密封方法
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        protected sealed override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            switch (agreement)
+            switch (procotol)
             {
                 case 111:
                     {
@@ -735,7 +734,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private ByteBlock SendWait(short agreement, int waitTime, ByteBlock byteBlock = null)
+        private ByteBlock SendWait(short procotol, int waitTime, ByteBlock byteBlock = null)
         {
             lock (locker)
             {
@@ -744,11 +743,11 @@ namespace RRQMSocket.FileTransfer
                 {
                     if (byteBlock == null)
                     {
-                        this.InternalSend(agreement, new byte[0], 0, 0);
+                        this.InternalSend(procotol, new byte[0], 0, 0);
                     }
                     else
                     {
-                        this.InternalSend(agreement, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                        this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length);
                     }
                 }
                 catch

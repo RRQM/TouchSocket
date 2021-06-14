@@ -38,9 +38,9 @@
 //        {
 //            byte[] buffer = byteBlock.Buffer;
 //            int r = (int)byteBlock.Position;
-//            int agreement = BitConverter.ToInt32(buffer, 0);
+//            int procotol = BitConverter.ToInt32(buffer, 0);
 
-//            switch (agreement)
+//            switch (procotol)
 //            {
 //                case 100:/*100，请求RPC文件*/
 //                    {
@@ -129,12 +129,12 @@
 //            return;
 //        }
 
-//        private void UDPSend(int agreement, EndPoint endPoint, byte[] buffer, int offset, int length)
+//        private void UDPSend(int procotol, EndPoint endPoint, byte[] buffer, int offset, int length)
 //        {
 //            ByteBlock byteBlock = this.BytePool.GetByteBlock(length + 4);
 //            try
 //            {
-//                byteBlock.Write(BitConverter.GetBytes(agreement));
+//                byteBlock.Write(BitConverter.GetBytes(procotol));
 //                byteBlock.Write(buffer, offset, length);
 //                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, endPoint);
 //            }
@@ -144,9 +144,9 @@
 //            }
 //        }
 
-//        private void UDPSend(int agreement, EndPoint endPoint, byte[] buffer)
+//        private void UDPSend(int procotol, EndPoint endPoint, byte[] buffer)
 //        {
-//            this.UDPSend(agreement, endPoint, buffer, 0, buffer.Length);
+//            this.UDPSend(procotol, endPoint, buffer, 0, buffer.Length);
 //        }
 
 //        /// <summary>

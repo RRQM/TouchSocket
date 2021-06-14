@@ -158,19 +158,9 @@ namespace RRQMSocket.FileTransfer
         internal RRQMFileOperationEventHandler BeforeFileTransfer;
 
         /// <summary>
-        /// 调用操作
-        /// </summary>
-        internal Action<FileSocketClient, ByteBlock, ByteBlock> CallOperation;
-
-        /// <summary>
         /// 当文件传输完成时
         /// </summary>
         internal RRQMTransferFileMessageEventHandler FinishedFileTransfer;
-
-        /// <summary>
-        /// 收到字节
-        /// </summary>
-        internal RRQMBytesEventHandler Received;
 
         /// <summary>
         /// 收到字节数组并返回
@@ -204,18 +194,17 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 封装协议
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        protected sealed override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Length;
-            short returnAgreement;
-            ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-            switch (agreement)
+           
+            switch (procotol)
             {
                 case 110:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             if (this.TransferStatus == TransferStatus.Download)
@@ -231,137 +220,168 @@ namespace RRQMSocket.FileTransfer
                             transferSetting.bufferLength = this.BufferLength;
                             transferSetting.Serialize(returnByteBlock);
                             this.bufferLengthChanged = false;
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
                 case 112:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 2);
                             RequestDownload(returnByteBlock, fileInfo);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
                 case 113:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             DownloadBlockData(returnByteBlock, buffer);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
-                case 114://停止下载
+                case 114:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             this.fileBlocks = null;
                             this.TransferStatus = TransferStatus.None;
                             returnByteBlock.Write(1);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
                 case 115:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             DownloadFinished(returnByteBlock);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
                 case 116:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             bool restart = BitConverter.ToBoolean(byteBlock.Buffer, 2);
                             PBCollectionTemp blocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(byteBlock.Buffer, 3);
                             RequestUpload(returnByteBlock, blocks, restart);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
                 case 117:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             UploadBlockData(returnByteBlock, byteBlock);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
                 case 118:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             StopUpload(returnByteBlock);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
                 case 119:
                     {
+                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             UploadFinished(returnByteBlock);
+                            this.InternalSend(111, returnByteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 111;
+                        finally
+                        {
+                            returnByteBlock.Dispose();
+                        }
                         break;
                     }
 
-            }
-
-            try
-            {
-                this.agreementHelper.SocketSend(returnAgreement, returnByteBlock);
-            }
-            catch (Exception ex)
-            {
-                Logger.Debug(LogType.Error, this, ex.Message, ex);
-            }
-            finally
-            {
-                returnByteBlock.Dispose();
             }
         }
 

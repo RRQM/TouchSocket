@@ -172,8 +172,8 @@
 //        {
 //            byte[] buffer = byteBlock.Buffer;
 //            int r = (int)byteBlock.Position;
-//            int agreement = BitConverter.ToInt32(buffer, 0);
-//            switch (agreement)
+//            int procotol = BitConverter.ToInt32(buffer, 0);
+//            switch (procotol)
 //            {
 //                case 100:/* 100表示获取RPC引用文件上传状态返回*/
 //                    {
@@ -243,12 +243,12 @@
 //            }
 //        }
 
-//        private void UDPSend(int agreement, byte[] buffer, int offset, int length)
+//        private void UDPSend(int procotol, byte[] buffer, int offset, int length)
 //        {
 //            ByteBlock byteBlock = this.BytePool.GetByteBlock(length + 4);
 //            try
 //            {
-//                byteBlock.Write(BitConverter.GetBytes(agreement));
+//                byteBlock.Write(BitConverter.GetBytes(procotol));
 //                byteBlock.Write(buffer, offset, length);
 //                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, remoteService);
 //            }
@@ -262,12 +262,12 @@
 //            }
 //        }
 
-//        private void UDPSend(int agreement, ByteBlock block)
+//        private void UDPSend(int procotol, ByteBlock block)
 //        {
 //            ByteBlock byteBlock = this.BytePool.GetByteBlock(block.Length + 4);
 //            try
 //            {
-//                byteBlock.Write(BitConverter.GetBytes(agreement));
+//                byteBlock.Write(BitConverter.GetBytes(procotol));
 //                byteBlock.Write(block.Buffer, 0, (int)block.Length);
 //                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, remoteService);
 //            }
@@ -281,12 +281,12 @@
 //            }
 //        }
 
-//        private void UDPSend(int agreement)
+//        private void UDPSend(int procotol)
 //        {
 //            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
 //            try
 //            {
-//                byteBlock.Write(BitConverter.GetBytes(agreement));
+//                byteBlock.Write(BitConverter.GetBytes(procotol));
 //                this.udpSession.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, remoteService);
 //            }
 //            catch (Exception ex)

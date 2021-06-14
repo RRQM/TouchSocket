@@ -38,9 +38,9 @@ namespace RRQMSocket
                 tcpSocketClient.OnReceived = this.OnReceive;
             }
         }
-        private void OnReceive(SimpleProtocolSocketClient socketClient, short? agreement, ByteBlock byteBlock)
+        private void OnReceive(SimpleProtocolSocketClient socketClient, short? procotol, ByteBlock byteBlock)
         {
-            this.Received?.Invoke(socketClient, agreement, byteBlock);
+            this.Received?.Invoke(socketClient, procotol, byteBlock);
         }
     }
 }

@@ -110,7 +110,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public RPCProxyInfo GetProxyInfo()
         {
             string proxyToken = (string)this.ClientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty);
-            byte[] data =Encoding.UTF8.GetBytes(string.IsNullOrEmpty(proxyToken)?string.Empty:proxyToken) ;
+            byte[] data = Encoding.UTF8.GetBytes(string.IsNullOrEmpty(proxyToken) ? string.Empty : proxyToken);
             this.InternalSend(100, data, 0, data.Length);
             this.singleWaitData.Wait(1000 * 10);
 
@@ -753,13 +753,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 协议数据
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleProtocolData(short? agreement, ByteBlock byteBlock)
+        protected sealed override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Length;
-            switch (agreement)
+            switch (procotol)
             {
                 case 100:/* 100表示获取RPC引用文件上传状态返回*/
                     {
@@ -795,11 +795,13 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             List<MethodItem> methodItems = SerializeConvert.RRQMBinaryDeserialize<List<MethodItem>>(buffer, 2);
                             this.methodStore = new MethodStore();
-                            foreach (var item in methodItems)
+                            if (methodItems != null)
                             {
-                                this.methodStore.AddMethodItem(item);
+                                foreach (var item in methodItems)
+                                {
+                                    this.methodStore.AddMethodItem(item);
+                                }
                             }
-
                             this.singleWaitData.Set();
                         }
                         catch (Exception e)
@@ -845,6 +847,12 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                         break;
                     }
+                default:
+                    {
+                        RPCHandleDefaultData(procotol,byteBlock);
+                        break;
+                    }
+
             }
         }
 
@@ -862,21 +870,21 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// RPC处理其余协议
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        protected virtual void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            OnHandleDefaultData(agreement,byteBlock);
+            OnHandleDefaultData(procotol, byteBlock);
         }
 
         /// <summary>
         /// 处理其余协议的事件触发
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected void OnHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        protected void OnHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            Received?.Invoke(agreement, byteBlock);
+            Received?.Invoke(procotol, byteBlock);
         }
 
         private RPCContext OnExecuteCallBack(RPCContext rpcContext)

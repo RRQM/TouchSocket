@@ -23,17 +23,17 @@ namespace RRQMSocket
             waitHandle = new AutoResetEvent(false);
         }
         private EventWaitHandle waitHandle;
-        private RRQMAgreementHelper agreementHelper;
+        private ProcotolHelper agreementHelper;
         private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
 
         /// <summary>
         /// 添加已被使用的协议
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="describe"></param>
-        protected static void AddUsedProtocol(short agreement, string describe)
+        protected static void AddUsedProtocol(short procotol, string describe)
         {
-            usedProtocol.Add(agreement, describe);
+            usedProtocol.Add(procotol, describe);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace RRQMSocket
         protected override void OnConnectedService(MesEventArgs e)
         {
             base.OnConnectedService(e);
-            this.agreementHelper = new RRQMAgreementHelper(this);
+            this.agreementHelper = new ProcotolHelper(this);
         }
 
         /// <summary>
@@ -98,15 +98,15 @@ namespace RRQMSocket
         /// <summary>
         /// 发送字节
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void Send(short agreement, byte[] buffer, int offset, int length)
+        public void Send(short procotol, byte[] buffer, int offset, int length)
         {
-            if (!usedProtocol.ContainsKey(agreement))
+            if (!usedProtocol.ContainsKey(procotol))
             {
-                this.InternalSend(agreement, buffer, offset, length);
+                this.InternalSend(procotol, buffer, offset, length);
             }
             else
             {
@@ -122,15 +122,15 @@ namespace RRQMSocket
         /// <summary>
         /// 内部发送，不会进行协议检测
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected void InternalSend(short agreement, byte[] buffer, int offset, int length)
+        protected void InternalSend(short procotol, byte[] buffer, int offset, int length)
         {
-            if (agreement > 0)
+            if (procotol > 0)
             {
-                this.agreementHelper.SocketSend(agreement, buffer, offset, length);
+                this.agreementHelper.SocketSend(procotol, buffer, offset, length);
             }
             else
             {
@@ -141,30 +141,30 @@ namespace RRQMSocket
         /// <summary>
         /// 发送字节
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="dataBuffer"></param>
-        public void SocketSend(short agreement, byte[] dataBuffer)
+        public void SocketSend(short procotol, byte[] dataBuffer)
         {
-            this.Send(agreement, dataBuffer, 0, dataBuffer.Length);
+            this.Send(procotol, dataBuffer, 0, dataBuffer.Length);
         }
 
         /// <summary>
         /// 发送协议流
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="dataByteBlock"></param>
-        public void Send(short agreement, ByteBlock dataByteBlock)
+        public void Send(short procotol, ByteBlock dataByteBlock)
         {
-            this.Send(agreement, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
+            this.Send(procotol, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
         }
 
         /// <summary>
         /// 发送协议状态
         /// </summary>
-        /// <param name="agreement"></param>
-        public void Send(short agreement)
+        /// <param name="procotol"></param>
+        public void Send(short procotol)
         {
-            this.Send(agreement, new byte[0], 0, 0);
+            this.Send(procotol, new byte[0], 0, 0);
         }
 
         /// <summary>
@@ -174,8 +174,8 @@ namespace RRQMSocket
         /// <param name="obj"></param>
         protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            short agreement = BitConverter.ToInt16(byteBlock.Buffer, 0);
-            switch (agreement)
+            short procotol = BitConverter.ToInt16(byteBlock.Buffer, 0);
+            switch (procotol)
             {
                 case 0:
                     {
@@ -207,7 +207,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            HandleProtocolData(agreement, byteBlock);
+                            HandleProtocolData(procotol, byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -225,9 +225,9 @@ namespace RRQMSocket
         /// 所以真实数据起点为2，
         /// 长度为Length-2。
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected abstract void HandleProtocolData(short? agreement, ByteBlock byteBlock);
+        protected abstract void HandleProtocolData(short? procotol, ByteBlock byteBlock);
 
         /// <summary>
         /// 释放资源

@@ -20,11 +20,11 @@ namespace RRQMSocket
         /// <summary>
         /// 处理协议数据
         /// </summary>
-        /// <param name="agreement"></param>
+        /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleProtocolData(short? agreement, ByteBlock byteBlock)
+        protected sealed override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
         {
-            this.Received?.Invoke(agreement, byteBlock);
+            this.Received?.Invoke(procotol, byteBlock);
         }
     }
 }
