@@ -281,7 +281,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             base.InternalSend(agreement, buffer, offset, length);
         }
 
-
         /// <summary>
         /// 处理协议数据
         /// </summary>
@@ -387,7 +386,17 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="byteBlock"></param>
         protected virtual void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
         {
-            Received?.Invoke(this,agreement,byteBlock);
+            this.OnHandleDefaultData(agreement,byteBlock);
+        }
+
+        /// <summary>
+        /// 处理其余协议的事件触发
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="byteBlock"></param>
+        protected void OnHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        {
+            Received?.Invoke(this, agreement, byteBlock);
         }
     }
 }

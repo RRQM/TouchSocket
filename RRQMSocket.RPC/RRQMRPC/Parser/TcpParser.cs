@@ -230,7 +230,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected override void LoadConfig(ServerConfig serverConfig)
         {
             base.LoadConfig(serverConfig);
-            this.SerializeConverter =(SerializeConverter) serverConfig.GetValue(TcpRPCClientConfig.SerializeConverterProperty);
+            this.SerializeConverter =(SerializeConverter) serverConfig.GetValue(TcpRPCParserConfig.SerializeConverterProperty);
+            this.ProxyToken =(string) serverConfig.GetValue(TcpRPCParserConfig.ProxyTokenProperty);
+            this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(TcpRPCParserConfig.RPCCompilerProperty);
         }
 
         public virtual List<MethodItem> GetRegisteredMethodItems(object caller)

@@ -255,6 +255,29 @@ namespace RRQMSocket
         /// IOCP发送
         /// </summary>
         /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="remoteEP"></param>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public virtual void SendAsync(byte[] buffer, int offset, int length, EndPoint remoteEP)
+        {
+            SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
+            sendEventArgs.Completed += this.IO_Completed;
+            sendEventArgs.SetBuffer(buffer, offset, length);
+            sendEventArgs.RemoteEndPoint = remoteEP;
+
+            if (!this.MainSocket.SendToAsync(sendEventArgs))
+            {
+                this.ProcessSend(sendEventArgs);
+            }
+        }
+
+        /// <summary>
+        /// IOCP发送
+        /// </summary>
+        /// <param name="buffer"></param>
         /// <exception cref="RRQMNotConnectedException"></exception>
         /// <exception cref="RRQMOverlengthException"></exception>
         /// <exception cref="RRQMException"></exception>

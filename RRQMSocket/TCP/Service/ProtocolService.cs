@@ -12,6 +12,7 @@ namespace RRQMSocket
     /// </summary>
     public abstract class ProtocolService<TClient> : TokenService<TClient>where TClient:ProtocolSocketClient,new()
     {
+        private bool canResetID;
         /// <summary>
         /// 重置ID
         /// </summary>
@@ -19,6 +20,10 @@ namespace RRQMSocket
         /// <param name="newID"></param>
         public override void ResetID(string oldID, string newID)
         {
+            if (!canResetID)
+            {
+                throw new RRQMException("服务器不允许修改ID");
+            }
             base.ResetID(oldID, newID);
             if (this.TryGetSocketClient(newID, out TClient client))
             {
@@ -28,6 +33,16 @@ namespace RRQMSocket
             {
                 throw new RRQMException("新ID不可用，请清理客户端重新修改ID");
             }
+        }
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        protected override void LoadConfig(ServerConfig serverConfig)
+        {
+            base.LoadConfig(serverConfig);
+            this.canResetID = (bool)serverConfig.GetValue(ProtocolServerConfig.CanResetIDProperty);
         }
     }
 }

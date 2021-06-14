@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQMRPC解析器配置
     /// </summary>
-    public class RRQMRPCParserConfig : ServerConfig
+    public class TcpRPCParserConfig : TokenServerConfig
     {
         /// <summary>
         /// 序列化转换器
@@ -32,7 +32,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 序列化转换器
         /// </summary>
         public static readonly DependencyProperty SerializeConverterProperty =
-            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(RRQMRPCParserConfig), new BinarySerializeConverter());
+            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(TcpRPCParserConfig), new BinarySerializeConverter());
 
         /// <summary>
         /// 代理源文件命名空间
@@ -47,7 +47,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 代理源文件命名空间
         /// </summary>
         public static readonly DependencyProperty NameSpaceProperty =
-            DependencyProperty.Register("NameSpace", typeof(string), typeof(RRQMRPCParserConfig), null);
+            DependencyProperty.Register("NameSpace", typeof(string), typeof(TcpRPCParserConfig), null);
 
         /// <summary>
         /// RPC代理版本
@@ -62,7 +62,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// RPC代理版本
         /// </summary>
         public static readonly DependencyProperty RPCVersionProperty =
-            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(RRQMRPCParserConfig), null);
+            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(TcpRPCParserConfig), null);
 
         /// <summary>
         /// RPC编译器
@@ -77,7 +77,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// RPC编译器
         /// </summary>
         public static readonly DependencyProperty RPCCompilerProperty =
-            DependencyProperty.Register("RPCCompiler", typeof(IRPCCompiler), typeof(RRQMRPCParserConfig), null);
+            DependencyProperty.Register("RPCCompiler", typeof(IRPCCompiler), typeof(TcpRPCParserConfig), null);
 
         /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭
@@ -92,6 +92,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 代理令箭，当客户端获取代理文件时需验证令箭
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
-            DependencyProperty.Register("ProxyToken", typeof(string), typeof(RRQMRPCParserConfig), null);
+            DependencyProperty.Register("ProxyToken", typeof(string), typeof(TcpRPCParserConfig), null);
     }
 }

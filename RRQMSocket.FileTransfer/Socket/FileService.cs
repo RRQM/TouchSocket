@@ -12,6 +12,7 @@
 
 using RRQMCore.ByteManager;
 using RRQMCore.Serialization;
+using RRQMSocket.RPC.RRQMRPC;
 using System.Reflection;
 using System.Text;
 
@@ -20,7 +21,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public class FileService : TokenService<FileSocketClient>, IFileService
+    public class FileService : TcpParser<FileSocketClient>, IFileService
     {
         /// <summary>
         /// 构造函数
@@ -28,7 +29,6 @@ namespace RRQMSocket.FileTransfer
         public FileService()
         {
             this.BufferLength = 1024 * 64;
-            this.operationMap = new OperationMap();
         }
 
         #region 属性
@@ -95,7 +95,6 @@ namespace RRQMSocket.FileTransfer
         #region 字段
 
         private long downloadSpeed;
-        private OperationMap operationMap;
         private long uploadSpeed;
         #endregion 字段
 
@@ -112,49 +111,10 @@ namespace RRQMSocket.FileTransfer
         public event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
 
         /// <summary>
-        /// 收到字节
-        /// </summary>
-        public event RRQMBytesEventHandler Received;
-
-        /// <summary>
         /// 收到字节数组并返回
         /// </summary>
         public event RRQMReturnBytesEventHandler ReceivedBytesThenReturn;
         #endregion 事件
-
-        ///// <summary>
-        ///// 重新设置ID
-        ///// </summary>
-        ///// <param name="oldID"></param>
-        ///// <param name="newID"></param>
-        ///// <returns></returns>
-        //public override void ResetID(string oldID, string newID)
-        //{
-        //    FileSocketClient client=base.ResetID(oldID, newID);
-        //    client.agreementHelper.SocketSend(1127,Encoding.UTF8.GetBytes(newID));
-        //    return client;
-        //}
-
-        /// <summary>
-        /// 注册操作
-        /// </summary>
-        /// <param name="operation"></param>
-        public void RegisterOperation(IOperation operation)
-        {
-            MethodInfo[] methods = operation.GetType().GetMethods();
-            foreach (var mathod in methods)
-            {
-                OperationAttribute attribute = mathod.GetCustomAttribute<OperationAttribute>();
-                if (attribute != null)
-                {
-                    string key = string.IsNullOrEmpty(attribute.OperationName) ? mathod.Name : attribute.OperationName;
-                    OperationEntity entity = new OperationEntity();
-                    entity.instance = operation;
-                    entity.methodInfo = mathod;
-                    operationMap.Add(key, entity);
-                }
-            }
-        }
 
         /// <summary>
         /// 载入配置
@@ -171,23 +131,22 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 创建完成FileSocketClient
         /// </summary>
-        /// <param name="tcpSocketClient"></param>
+        /// <param name="socketClient"></param>
         /// <param name="creatOption"></param>
-        protected sealed override void OnCreateSocketCliect(FileSocketClient tcpSocketClient, CreateOption creatOption)
+        protected sealed override void OnCreateSocketCliect(FileSocketClient socketClient, CreateOption creatOption)
         {
-            tcpSocketClient.breakpointResume = this.BreakpointResume;
-            tcpSocketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
-            tcpSocketClient.MaxUploadSpeed = this.MaxUploadSpeed;
+            base.OnCreateSocketCliect(socketClient, creatOption);
+
+            socketClient.breakpointResume = this.BreakpointResume;
+            socketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
+            socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
             if (creatOption.NewCreate)
             {
-                tcpSocketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-                tcpSocketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
-                tcpSocketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
-                tcpSocketClient.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
-                tcpSocketClient.Received = this.OnReceivedBytes;
-                tcpSocketClient.CallOperation = this.OnCallOperation;
+                socketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+                socketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
+                socketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
+                socketClient.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
             }
-            tcpSocketClient.agreementHelper = new RRQMAgreementHelper(tcpSocketClient);
         }
 
         private void OnBeforeFileTransfer(object sender, FileOperationEventArgs e)
@@ -195,50 +154,9 @@ namespace RRQMSocket.FileTransfer
             this.BeforeFileTransfer?.Invoke(sender, e);
         }
 
-        private void OnCallOperation(FileSocketClient sender, ByteBlock byteBlock, ByteBlock returnBlock)
-        {
-            OperationContext context = OperationContext.Deserialize(byteBlock.Buffer, 4);
-            if (this.operationMap.TryGet(context.OperationName, out OperationEntity entity))
-            {
-                try
-                {
-                    ParameterInfo[] parameters = entity.methodInfo.GetParameters();
-                    object[] ps = new object[parameters.Length];
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        ps[i] = SerializeConvert.RRQMBinaryDeserialize(context.ParametersBytes[i], 0, parameters[i].ParameterType);
-                    }
-
-                    object returnObj = entity.methodInfo.Invoke(entity.instance, ps);
-                    context.ReturnParameterBytes = SerializeConvert.RRQMBinarySerialize(returnObj, true);
-                    context.Status = 1;
-                }
-                catch (System.Exception ex)
-                {
-                    context.ParametersBytes = null;
-                    context.ReturnParameterBytes = null;
-                    context.Status = 2;
-                    context.Message = ex.Message;
-                }
-            }
-            else
-            {
-                context.ParametersBytes = null;
-                context.ReturnParameterBytes = null;
-                context.Status = 2;
-                context.Message = "无此操作";
-            }
-            context.Serialize(returnBlock);
-        }
-
         private void OnFinishedFileTransfer(object sender, TransferFileMessageArgs e)
         {
             this.FinishedFileTransfer?.Invoke(sender, e);
-        }
-
-        private void OnReceivedBytes(object sender, BytesEventArgs e)
-        {
-            this.Received?.Invoke(sender, e);
         }
 
         private void OnReceivedBytesThenReturn(object sender, ReturnBytesEventArgs e)

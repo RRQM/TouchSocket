@@ -109,7 +109,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMTimeoutException"></exception>
         public RPCProxyInfo GetProxyInfo()
         {
-            byte[] data = Encoding.UTF8.GetBytes((string)this.ClientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty));
+            string proxyToken = (string)this.ClientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty);
+            byte[] data =Encoding.UTF8.GetBytes(string.IsNullOrEmpty(proxyToken)?string.Empty:proxyToken) ;
             this.InternalSend(100, data, 0, data.Length);
             this.singleWaitData.Wait(1000 * 10);
 
@@ -864,6 +865,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="agreement"></param>
         /// <param name="byteBlock"></param>
         protected virtual void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
+        {
+            OnHandleDefaultData(agreement,byteBlock);
+        }
+
+        /// <summary>
+        /// 处理其余协议的事件触发
+        /// </summary>
+        /// <param name="agreement"></param>
+        /// <param name="byteBlock"></param>
+        protected void OnHandleDefaultData(short? agreement, ByteBlock byteBlock)
         {
             Received?.Invoke(agreement, byteBlock);
         }

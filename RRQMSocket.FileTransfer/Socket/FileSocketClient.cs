@@ -14,6 +14,7 @@ using RRQMCore.Exceptions;
 using RRQMCore.IO;
 using RRQMCore.Log;
 using RRQMCore.Serialization;
+using RRQMSocket.RPC.RRQMRPC;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -26,8 +27,22 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 已接收的客户端
     /// </summary>
-    public sealed class FileSocketClient : SocketClient, IFileService, IFileClient
+    public class FileSocketClient : RPCSocketClient, IFileService, IFileClient
     {
+        static FileSocketClient()
+        {
+            AddUsedProtocol(110, "同步设置");
+            AddUsedProtocol(111, "通用信道返回");
+            AddUsedProtocol(112, "请求下载");
+            AddUsedProtocol(113, "下载文件分块");
+            AddUsedProtocol(114, "退出下载通道");
+            AddUsedProtocol(115, "确认下载完成");
+            AddUsedProtocol(116, "请求上传");
+            AddUsedProtocol(117, "上传分块");
+            AddUsedProtocol(118, "停止上传");
+            AddUsedProtocol(119, "确认上传完成");
+        }
+
         #region 属性
 
         private long maxDownloadSpeed = 1024 * 1024;
@@ -122,8 +137,6 @@ namespace RRQMSocket.FileTransfer
         #endregion 属性
 
         #region 字段
-
-        internal RRQMAgreementHelper agreementHelper;
         internal bool breakpointResume;
         private bool bufferLengthChanged;
         private long dataTransferLength;
@@ -135,7 +148,6 @@ namespace RRQMSocket.FileTransfer
         private long tempLength;
         private long timeTick;
         private RRQMStream uploadFileStream;
-
         #endregion 字段
 
         #region 事件
@@ -190,167 +202,19 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 发送字节流
+        /// 封装协议
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public sealed override void Send(byte[] buffer, int offset, int length)
-        {
-            this.agreementHelper.SocketSend(1030, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public sealed override void SendAsync(byte[] buffer, int offset, int length)
-        {
-            this.agreementHelper.SocketSend(1030, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 处理已接收到的数据
-        /// </summary>
+        /// <param name="agreement"></param>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected sealed override void RPCHandleDefaultData(short? agreement, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Length;
-            short agreement = BitConverter.ToInt16(buffer, 0);
             short returnAgreement;
             ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             switch (agreement)
             {
-                case 1001:
-                    {
-                        try
-                        {
-                            UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 2);
-                            RequestDownload(returnByteBlock, fileInfo);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1002:
-                    {
-                        try
-                        {
-                            DownloadBlockData(returnByteBlock, buffer);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1003://停止下载
-                    {
-                        try
-                        {
-                            this.fileBlocks = null;
-                            this.TransferStatus = TransferStatus.None;
-                            returnByteBlock.Write(1);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1004:
-                    {
-                        try
-                        {
-                            DownloadFinished(returnByteBlock);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1010:
-                    {
-                        try
-                        {
-                            bool restart = BitConverter.ToBoolean(byteBlock.Buffer, 2);
-                            PBCollectionTemp blocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(byteBlock.Buffer, 3);
-                            RequestUpload(returnByteBlock, blocks, restart);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1011:
-                    {
-                        try
-                        {
-                            UploadBlockData(returnByteBlock, byteBlock);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1012:
-                    {
-                        try
-                        {
-                            UploadFinished(returnByteBlock);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1013:
-                    {
-                        try
-                        {
-                            StopUpload(returnByteBlock);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1014:
-                    {
-                        try
-                        {
-                            ReceivedBytesAndReturn(returnByteBlock, byteBlock, r - 2);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        returnAgreement = 999;
-                        break;
-                    }
-                case 1020:
+                case 110:
                     {
                         try
                         {
@@ -372,46 +236,119 @@ namespace RRQMSocket.FileTransfer
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 999;
+                        returnAgreement = 111;
                         break;
                     }
-                case 1030:
-                    {
-                        Task.Run(() =>
-                        {
-                            try
-                            {
-                                byte[] data = new byte[byteBlock.Length - 2];
-                                byteBlock.Position = 2;
-                                byteBlock.Read(data);
-                                this.Received.Invoke(this, new BytesEventArgs(data));
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Debug(LogType.Error, this, ex.Message, ex);
-                            }
-                        });
-
-                        return;
-                    }
-                case 1040:
+                case 112:
                     {
                         try
                         {
-                            this.CallOperation.Invoke(this, byteBlock, returnByteBlock);
+                            UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 2);
+                            RequestDownload(returnByteBlock, fileInfo);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        returnAgreement = 999;
+                        returnAgreement = 111;
                         break;
                     }
-                default:
+                case 113:
                     {
-                        returnAgreement = 0;
+                        try
+                        {
+                            DownloadBlockData(returnByteBlock, buffer);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 111;
                         break;
                     }
+                case 114://停止下载
+                    {
+                        try
+                        {
+                            this.fileBlocks = null;
+                            this.TransferStatus = TransferStatus.None;
+                            returnByteBlock.Write(1);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 111;
+                        break;
+                    }
+                case 115:
+                    {
+                        try
+                        {
+                            DownloadFinished(returnByteBlock);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 111;
+                        break;
+                    }
+                case 116:
+                    {
+                        try
+                        {
+                            bool restart = BitConverter.ToBoolean(byteBlock.Buffer, 2);
+                            PBCollectionTemp blocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(byteBlock.Buffer, 3);
+                            RequestUpload(returnByteBlock, blocks, restart);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 111;
+                        break;
+                    }
+                case 117:
+                    {
+                        try
+                        {
+                            UploadBlockData(returnByteBlock, byteBlock);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 111;
+                        break;
+                    }
+                case 118:
+                    {
+                        try
+                        {
+                            StopUpload(returnByteBlock);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 111;
+                        break;
+                    }
+                case 119:
+                    {
+                        try
+                        {
+                            UploadFinished(returnByteBlock);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        returnAgreement = 111;
+                        break;
+                    }
+
             }
 
             try

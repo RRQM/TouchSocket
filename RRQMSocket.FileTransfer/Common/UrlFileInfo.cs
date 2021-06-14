@@ -20,21 +20,8 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public class UrlFileInfo : FileInfo
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public UrlFileInfo()
+        private UrlFileInfo()
         {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="path"></param>
-        public UrlFileInfo(string path)
-        {
-            this.FilePath = path;
-            this.FileName = Path.GetFileName(path);
         }
 
         /// <summary>
@@ -57,10 +44,10 @@ namespace RRQMSocket.FileTransfer
         /// 生成上传请求必要信息
         /// </summary>
         /// <param name="path"></param>
+        /// <param name="fileClient"></param>
         /// <param name="restart"></param>
-        /// <param name="breakpointResume"></param>
         /// <returns></returns>
-        public static UrlFileInfo CreatUpload(string path, bool restart = false, bool breakpointResume = false)
+        public static UrlFileInfo CreatUpload(string path,FileClient fileClient, bool restart = false)
         {
             UrlFileInfo fileInfo = new UrlFileInfo();
             fileInfo.TransferType = TransferType.Upload;
@@ -68,7 +55,7 @@ namespace RRQMSocket.FileTransfer
             {
                 fileInfo.Restart = restart;
                 fileInfo.FilePath = path;
-                if (breakpointResume)
+                if (fileClient.BreakpointResume)
                 {
                     fileInfo.FileHash = FileControler.GetStreamHash(stream);
                 }
