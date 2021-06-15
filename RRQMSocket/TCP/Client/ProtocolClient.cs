@@ -126,16 +126,28 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected void InternalSend(short procotol, byte[] buffer, int offset, int length)
+        /// <param name="reserved"></param>
+        protected void InternalSend(short procotol, byte[] buffer, int offset, int length, bool reserved = false)
         {
             if (procotol > 0)
             {
-                this.agreementHelper.SocketSend(procotol, buffer, offset, length);
+                this.agreementHelper.SocketSend(procotol, buffer, offset, length,reserved);
             }
             else
             {
                 throw new RRQMException("小等于0的协议为系统使用协议");
             }
+        }
+
+        /// <summary>
+        /// 内部发送，不会进行协议检测
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="byteBlock"></param>
+        /// <param name="reserved"></param>
+        protected void InternalSend(short procotol, ByteBlock byteBlock, bool reserved = false)
+        {
+            this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length, reserved);
         }
 
         /// <summary>

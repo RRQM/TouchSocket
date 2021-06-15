@@ -94,11 +94,12 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected void InternalSend(short procotol, byte[] buffer, int offset, int length)
+        /// <param name="reserved"></param>
+        protected void InternalSend(short procotol, byte[] buffer, int offset, int length, bool reserved = false)
         {
             if (procotol > 0)
             {
-                this.procotolHelper.SocketSend(procotol, buffer, offset, length);
+                this.procotolHelper.SocketSend(procotol, buffer, offset, length,reserved);
             }
             else
             {
@@ -111,9 +112,10 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected void InternalSend(short procotol, ByteBlock byteBlock)
+        /// <param name="reserved"></param>
+        protected void InternalSend(short procotol, ByteBlock byteBlock, bool reserved = false)
         {
-            this.InternalSend(procotol,byteBlock.Buffer,0,(int)byteBlock.Length);
+            this.InternalSend(procotol,byteBlock.Buffer,0,(int)byteBlock.Length,reserved);
         }
 
         /// <summary>

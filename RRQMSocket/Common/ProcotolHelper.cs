@@ -73,7 +73,7 @@ namespace RRQMSocket
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <param name="reserved"></param>
-        public void SocketSend(short procotol, byte[] dataBuffer, int offset, int length, bool reserved)
+        public void SocketSend(short procotol, byte[] dataBuffer, int offset, int length, bool reserved=false)
         {
             int dataLen = length - offset + 6;
             if (reserved)
@@ -98,6 +98,10 @@ namespace RRQMSocket
             try
             {
                 this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Position, SocketFlags.None);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
             }
             finally
             {

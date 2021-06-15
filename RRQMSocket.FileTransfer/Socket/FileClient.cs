@@ -734,7 +734,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private ByteBlock SendWait(short procotol, int waitTime, ByteBlock byteBlock = null)
+        private ByteBlock SendWait(short procotol, int waitTime, ByteBlock byteBlock = null, bool reserved = false)
         {
             lock (locker)
             {
@@ -747,7 +747,7 @@ namespace RRQMSocket.FileTransfer
                     }
                     else
                     {
-                        this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                        this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length, reserved);
                     }
                 }
                 catch
