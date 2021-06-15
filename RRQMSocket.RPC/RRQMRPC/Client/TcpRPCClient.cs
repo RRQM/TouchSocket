@@ -53,7 +53,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 收到协议数据
         /// </summary>
-        public event Action<short?, ByteBlock> Received;
+        public event RRQMReceivedProcotolEventHandler Received;
 
         /// <summary>
         /// 获取反向RPC映射图
@@ -823,7 +823,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 112:/*反向函数调用*/
+                case 104:/*反向函数调用*/
                     {
                         Task.Run(() =>
                         {
@@ -884,7 +884,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="byteBlock"></param>
         protected void OnHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            Received?.Invoke(procotol, byteBlock);
+            Received?.Invoke(this,procotol, byteBlock);
         }
 
         private RPCContext OnExecuteCallBack(RPCContext rpcContext)

@@ -110,10 +110,6 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
 
-        /// <summary>
-        /// 收到字节数组并返回
-        /// </summary>
-        public event RRQMReturnBytesEventHandler ReceivedBytesThenReturn;
         #endregion 事件
 
         /// <summary>
@@ -145,7 +141,6 @@ namespace RRQMSocket.FileTransfer
                 socketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 socketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
                 socketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
-                socketClient.ReceivedBytesThenReturn = this.OnReceivedBytesThenReturn;
             }
         }
 
@@ -157,11 +152,6 @@ namespace RRQMSocket.FileTransfer
         private void OnFinishedFileTransfer(object sender, TransferFileMessageArgs e)
         {
             this.FinishedFileTransfer?.Invoke(sender, e);
-        }
-
-        private void OnReceivedBytesThenReturn(object sender, ReturnBytesEventArgs e)
-        {
-            this.ReceivedBytesThenReturn?.Invoke(sender, e);
         }
     }
 }

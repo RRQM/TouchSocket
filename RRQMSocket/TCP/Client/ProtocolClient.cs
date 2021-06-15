@@ -120,6 +120,30 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 发送字节
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void SendAsync(short procotol, byte[] buffer, int offset, int length)
+        {
+            if (!usedProtocol.ContainsKey(procotol))
+            {
+                this.InternalSend(procotol, buffer, offset, length);
+            }
+            else
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (var item in usedProtocol.Keys)
+                {
+                    stringBuilder.AppendLine($"协议{item}已被使用，描述为：{usedProtocol[item]}");
+                }
+                throw new RRQMException(stringBuilder.ToString());
+            }
+        }
+
+        /// <summary>
         /// 内部发送，不会进行协议检测
         /// </summary>
         /// <param name="procotol"></param>

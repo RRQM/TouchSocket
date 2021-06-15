@@ -276,7 +276,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        internal new void InternalSend(short procotol, byte[] buffer, int offset, int length)
+        internal void InternalSend(short procotol, byte[] buffer, int offset, int length)
         {
             base.InternalSend(procotol, buffer, offset, length);
         }
@@ -369,7 +369,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 112, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: 104, 错误详情:{e.Message}");
                         }
                         break;
                     }

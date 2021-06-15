@@ -422,8 +422,21 @@ namespace RRQMSocket.FileTransfer
                         break;
                     }
                 default:
-                    break;
+                    {
+                        FileClientHandleDefaultData(procotol, byteBlock);
+                        break;
+                    }
+                    
             }
+        }
+        /// <summary>
+        /// 文件客户端处理其他协议
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="byteBlock"></param>
+        protected virtual void FileClientHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        {
+            this.OnHandleDefaultData(procotol, byteBlock);
         }
 
         /// <summary>
@@ -507,7 +520,7 @@ namespace RRQMSocket.FileTransfer
                 returnByteBlock.SetHolding(false);
                 if (waitResult.Status == 2)
                 {
-                    throw new RRQMTransferErrorException("服务器拒绝下载");
+                    throw new RRQMTransferErrorException(waitResult.Message);
                 }
 
                 StartDownloadFile(waitResult.PBCollectionTemp.ToPBCollection(), fileInfo.Restart);
@@ -544,7 +557,7 @@ namespace RRQMSocket.FileTransfer
                         ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         byteBlock.Write(BitConverter.GetBytes(this.position));
 
-                        long requestLength = surplusLength > (this.BufferLength - 3) ? (this.BufferLength - 3) : surplusLength;
+                        long requestLength = surplusLength > (this.BufferLength - 7) ? (this.BufferLength - 7) : surplusLength;
                         byteBlock.Write(BitConverter.GetBytes(requestLength));
 
                         try
@@ -947,9 +960,10 @@ namespace RRQMSocket.FileTransfer
                             waitHandle.WaitOne();
                         }
                         byte[] positionBytes = BitConverter.GetBytes(this.position);
-                        long submitLength = surplusLength > (this.BufferLength - 23) ? (this.BufferLength - 23) : surplusLength;
+                        long submitLength = surplusLength > (this.BufferLength - 27) ? (this.BufferLength - 27) : surplusLength;
                         byte[] submitLengthBytes = BitConverter.GetBytes(submitLength);
                         ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                        byteBlock.Position = 6;
                         if (this.position + submitLength == fileBlock.StreamPosition + fileBlock.UnitLength)
                         {
                             byteBlock.Write(1);
@@ -968,19 +982,19 @@ namespace RRQMSocket.FileTransfer
                             {
                                 return;
                             }
-                            if (FileBaseTool.ReadFileBytes(this.fileBlocks.FileInfo.FilePath, this.position, byteBlock, 21, (int)submitLength))
+                            if (FileBaseTool.ReadFileBytes(this.fileBlocks.FileInfo.FilePath, this.position, byteBlock, 27, (int)submitLength))
                             {
-                                ByteBlock returnByteBlock = this.SendWait(117, this.timeout, byteBlock);
-                                if (returnByteBlock != null && returnByteBlock.Buffer.Length > 4)
+                                ByteBlock returnByteBlock = this.SendWait(117, this.timeout, byteBlock, true);
+                                if (returnByteBlock != null && returnByteBlock.Length == 3)
                                 {
-                                    if (returnByteBlock.Buffer[4] == 1)
+                                    if (returnByteBlock.Buffer[2] == 1)
                                     {
                                         reTryCount = 0;
                                         this.tempLength += submitLength;
                                         this.position += submitLength;
                                         surplusLength -= submitLength;
                                     }
-                                    else if (returnByteBlock.Buffer[4] == 2)
+                                    else if (returnByteBlock.Buffer[2] == 2)
                                     {
                                         reTryCount++;
                                         Logger.Debug(LogType.Message, this, $"上传文件错误，正在尝试第{reTryCount}次重试");
@@ -994,7 +1008,7 @@ namespace RRQMSocket.FileTransfer
                                             this.BeginTransfer();
                                         }
                                     }
-                                    else if (returnByteBlock.Buffer[4] == 3)
+                                    else if (returnByteBlock.Buffer[2] == 3)
                                     {
                                         reTryCount = 0;
                                         this.tempLength += submitLength;
@@ -1074,7 +1088,7 @@ namespace RRQMSocket.FileTransfer
                 ByteBlock byteBlock = this.SendWait(119, this.timeout);
                 if (byteBlock != null)
                 {
-                    if (byteBlock.Length == 5 && byteBlock.Buffer[4] == 1)
+                    if (byteBlock.Length == 3 && byteBlock.Buffer[2] == 1)
                     {
                         FilePathEventArgs args = new FilePathEventArgs();
                         args.FileInfo = fileBlocks.FileInfo;

@@ -161,12 +161,6 @@ namespace RRQMSocket.FileTransfer
         /// 当文件传输完成时
         /// </summary>
         internal RRQMTransferFileMessageEventHandler FinishedFileTransfer;
-
-        /// <summary>
-        /// 收到字节数组并返回
-        /// </summary>
-        internal RRQMReturnBytesEventHandler ReceivedBytesThenReturn;
-
         #endregion 事件
 
         /// <summary>
@@ -257,7 +251,7 @@ namespace RRQMSocket.FileTransfer
                         try
                         {
                             DownloadBlockData(returnByteBlock, buffer);
-                            this.InternalSend(111, returnByteBlock);
+                            this.InternalSend(111, returnByteBlock.Buffer,0,(int)returnByteBlock.Length,true);
                         }
                         catch (Exception ex)
                         {
@@ -381,8 +375,23 @@ namespace RRQMSocket.FileTransfer
                         }
                         break;
                     }
+                default:
+                    {
+                        this.FileSocketClientHandleDefaultData(procotol,byteBlock);
+                        break;
+                    }
 
             }
+        }
+
+        /// <summary>
+        /// 文件辅助类处理其他协议
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="byteBlock"></param>
+        protected virtual void FileSocketClientHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        {
+            this.OnHandleDefaultData(procotol,byteBlock);
         }
 
         /// <summary>
@@ -477,14 +486,14 @@ namespace RRQMSocket.FileTransfer
         {
             if (this.TransferStatus != TransferStatus.Download)
             {
-                byteBlock.Write(0);
+                byteBlock.Buffer[6] = 0;
                 return;
             }
             try
             {
-                long position = BitConverter.ToInt64(buffer, 4);
-                long requestLength = BitConverter.ToInt64(buffer, 12);
-                if (FileBaseTool.ReadFileBytes(fileBlocks.FileInfo.FilePath, position, byteBlock, 1, (int)requestLength))
+                long position = BitConverter.ToInt64(buffer, 2);
+                long requestLength = BitConverter.ToInt64(buffer, 10);
+                if (FileBaseTool.ReadFileBytes(fileBlocks.FileInfo.FilePath, position, byteBlock, 7, (int)requestLength))
                 {
                     Speed.downloadSpeed += requestLength;
                     this.position = position + requestLength;
@@ -492,20 +501,21 @@ namespace RRQMSocket.FileTransfer
                     this.dataTransferLength += requestLength;
                     if (this.bufferLengthChanged)
                     {
-                        byteBlock.Buffer[0] = 3;
+                        byteBlock.Buffer[6] = 3;
                     }
                     else
                     {
-                        byteBlock.Buffer[0] = 1;
+                        byteBlock.Buffer[6] = 1;
                     }
                 }
                 else
                 {
-                    byteBlock.Buffer[0] = 2;
+                    byteBlock.Buffer[6] = 2;
                 }
             }
             catch
             {
+                byteBlock.Buffer[6] = 2;
             }
         }
 
@@ -520,20 +530,6 @@ namespace RRQMSocket.FileTransfer
             args.TargetPath = args.FileInfo.FilePath;
             this.FinishedFileTransfer?.Invoke(this, args);
             this.fileBlocks = null;
-        }
-
-        private void ReceivedBytesAndReturn(ByteBlock byteBlock, ByteBlock receivedByteBlock, int length)
-        {
-            byte[] data = new byte[length];
-            receivedByteBlock.Position = 4;
-            receivedByteBlock.Read(data, 0, data.Length);
-            ReturnBytesEventArgs args = new ReturnBytesEventArgs(data);
-            ReceivedBytesThenReturn?.Invoke(this, args);
-            byteBlock.Write(1);
-            if (args.ReturnDataBytes != null)
-            {
-                byteBlock.Write(args.ReturnDataBytes);
-            }
         }
 
         private void RequestDownload(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
@@ -677,13 +673,13 @@ namespace RRQMSocket.FileTransfer
                 byteBlock.Write(4);
                 return;
             }
-            byte status = receivedbyteBlock.Buffer[4];
-            int index = BitConverter.ToInt32(receivedbyteBlock.Buffer, 5);
-            long position = BitConverter.ToInt64(receivedbyteBlock.Buffer, 9);
-            long submitLength = BitConverter.ToInt64(receivedbyteBlock.Buffer, 17);
+            byte status = receivedbyteBlock.Buffer[2];
+            int index = BitConverter.ToInt32(receivedbyteBlock.Buffer, 3);
+            long position = BitConverter.ToInt64(receivedbyteBlock.Buffer, 7);
+            long submitLength = BitConverter.ToInt64(receivedbyteBlock.Buffer, 15);
 
             string mes;
-            if (FileBaseTool.WriteFile(this.uploadFileStream, out mes, position, receivedbyteBlock.Buffer, 25, (int)submitLength))
+            if (FileBaseTool.WriteFile(this.uploadFileStream, out mes, position, receivedbyteBlock.Buffer, 23, (int)submitLength))
             {
                 this.position = position + submitLength;
                 this.tempLength += submitLength;
