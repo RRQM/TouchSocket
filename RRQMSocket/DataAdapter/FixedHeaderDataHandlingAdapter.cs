@@ -21,15 +21,26 @@ namespace RRQMSocket
     /// </summary>
     public class FixedHeaderDataHandlingAdapter : DataHandlingAdapter
     {
+        private int maxSizeHeader = 1024 * 1024 * 10;
         /// <summary>
-        /// 获取或设置包头的最大值（默认为20Mb）
+        /// 获取或设置包头的最大值（默认为10Mb）
         /// </summary>
-        public int MaxSizeHeader { get; set; } = 1024 * 1024 * 20;
+        public int MaxSizeHeader
+        {
+            get { return maxSizeHeader; }
+            set { maxSizeHeader = value; }
+        }
 
+        private int minSizeHeader = 0;
         /// <summary>
         /// 获取或设置包头的最小值（默认为0）
         /// </summary>
-        public int MinSizeHeader { get; set; }
+        public int MinSizeHeader
+        {
+            get { return minSizeHeader; }
+            set { minSizeHeader = value; }
+        }
+
 
         /// <summary>
         /// 临时包
@@ -53,7 +64,7 @@ namespace RRQMSocket
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Position;
+            int r = (int)byteBlock.Length;
             if (agreementTempBytes != null)
             {
                 SeamPackage(buffer, r);
@@ -125,30 +136,30 @@ namespace RRQMSocket
                     Logger.Debug(LogType.Error, this, "接收数据长度错误，已放弃接收");
                     return;
                 }
-                else if (length - 4 < this.MinSizeHeader)
+                else if (length < this.minSizeHeader)
                 {
                     Logger.Debug(LogType.Error, this, "接收数据长度小于设定值，已放弃接收");
                     return;
                 }
-                else if (length - 4 > this.MaxSizeHeader)
+                else if (length > this.maxSizeHeader)
                 {
                     Logger.Debug(LogType.Error, this, "接收数据长度大于设定值，已放弃接收");
                     return;
                 }
-                if (r - index >= length)
+                if (r - index-4 >= length)
                 {
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(length - 4);
-                    byteBlock.Write(dataBuffer, index + 4, length - 4);
+                    ByteBlock byteBlock = this.BytePool.GetByteBlock(length);
+                    byteBlock.Write(dataBuffer, index + 4, length);
                     PreviewHandle(byteBlock);
                     surPlusLength = 0;
                 }
                 else//半包
                 {
-                    this.tempByteBlock = this.BytePool.GetByteBlock(length - 4);
-                    surPlusLength = length - (r - index);
-                    this.tempByteBlock.Write(dataBuffer, index + 4, r - (index + 4));
+                    this.tempByteBlock = this.BytePool.GetByteBlock(length);
+                    surPlusLength = length - (r - index - 4);
+                    this.tempByteBlock.Write(dataBuffer, index + 4, r - -index - 4);
                 }
-                index += length;
+                index += (length + 4);
             }
         }
 
@@ -182,8 +193,8 @@ namespace RRQMSocket
             {
                 throw new RRQMException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            int dataLen = length - offset + 4;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
+            int dataLen = length - offset;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen + 4);
 
             try
             {

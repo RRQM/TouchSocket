@@ -75,18 +75,19 @@ namespace RRQMSocket
         /// <param name="reserved"></param>
         public void SocketSend(short procotol, byte[] dataBuffer, int offset, int length, bool reserved=false)
         {
-           
+            int dataLen;
             if (reserved)
             {
-                byte[] lenBytes1 = BitConverter.GetBytes(length);
+                dataLen = length - 4;
+                byte[] lenBytes1 = BitConverter.GetBytes(dataLen);
                 byte[] agreementBytes1 = BitConverter.GetBytes(procotol);
                 Array.Copy(lenBytes1, 0, dataBuffer, offset, 4);
                 Array.Copy(agreementBytes1, 0, dataBuffer, 4 + offset, 2);
                 this.mainSocket.Send(dataBuffer, 0, length, SocketFlags.None);
                 return;
             }
-            int dataLen = length - offset + 6;
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen);
+            dataLen= length - offset + 2;
+            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen+4);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
             byte[] agreementBytes = BitConverter.GetBytes(procotol);
 
