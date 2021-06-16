@@ -205,19 +205,28 @@ namespace RRQMSocket.RPC.RRQMRPC
             methodInvoker.Flag = context;
             if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
             {
-                if (methodInstance.IsEnable)
+                try
                 {
-                    object[] ps = new object[methodInstance.ParameterTypes.Length];
-                    for (int i = 0; i < context.ParametersBytes.Count; i++)
+                    if (methodInstance.IsEnable)
                     {
-                        ps[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                        object[] ps = new object[methodInstance.ParameterTypes.Length];
+                        for (int i = 0; i < methodInstance.ParameterTypes.Length; i++)
+                        {
+                            ps[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                        }
+                        methodInvoker.Parameters = ps;
                     }
-                    methodInvoker.Parameters = ps;
+                    else
+                    {
+                        methodInvoker.Status = InvokeStatus.UnEnable;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    methodInvoker.Status = InvokeStatus.UnEnable;
+                    methodInvoker.Status = InvokeStatus.Exception;
+                    methodInvoker.StatusMessage = ex.Message;
                 }
+
 
                 this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
             }
@@ -231,8 +240,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected override void LoadConfig(ServerConfig serverConfig)
         {
             base.LoadConfig(serverConfig);
-            this.SerializeConverter =(SerializeConverter) serverConfig.GetValue(TcpRPCParserConfig.SerializeConverterProperty);
-            this.ProxyToken =(string) serverConfig.GetValue(TcpRPCParserConfig.ProxyTokenProperty);
+            this.SerializeConverter = (SerializeConverter)serverConfig.GetValue(TcpRPCParserConfig.SerializeConverterProperty);
+            this.ProxyToken = (string)serverConfig.GetValue(TcpRPCParserConfig.ProxyTokenProperty);
             this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(TcpRPCParserConfig.RPCCompilerProperty);
         }
 
