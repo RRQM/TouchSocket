@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 using RRQMCore.IO;
 using RRQMCore.Log;
 using RRQMCore.Serialization;
@@ -20,7 +19,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -193,7 +191,7 @@ namespace RRQMSocket.FileTransfer
         protected sealed override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-           
+
             switch (procotol)
             {
                 case 110:
@@ -251,7 +249,7 @@ namespace RRQMSocket.FileTransfer
                         try
                         {
                             DownloadBlockData(returnByteBlock, buffer);
-                            this.InternalSend(111, returnByteBlock.Buffer,0,(int)returnByteBlock.Length,true);
+                            this.InternalSend(111, returnByteBlock.Buffer, 0, (int)returnByteBlock.Length, true);
                         }
                         catch (Exception ex)
                         {
@@ -377,7 +375,7 @@ namespace RRQMSocket.FileTransfer
                     }
                 default:
                     {
-                        this.FileSocketClientHandleDefaultData(procotol,byteBlock);
+                        this.FileSocketClientHandleDefaultData(procotol, byteBlock);
                         break;
                     }
 
@@ -391,7 +389,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="byteBlock"></param>
         protected virtual void FileSocketClientHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            this.OnHandleDefaultData(procotol,byteBlock);
+            this.OnHandleDefaultData(procotol, byteBlock);
         }
 
         /// <summary>
@@ -454,29 +452,17 @@ namespace RRQMSocket.FileTransfer
 
         private void MaxSpeedChanged(long speed)
         {
-            if (speed < 1024 * 1024)
+            if (speed < 1024 * 1024 * 50)
             {
-                this.BufferLength = 1024 * 10;
-            }
-            else if (speed < 1024 * 1024 * 10)
-            {
-                this.BufferLength = 1024 * 64;
-            }
-            else if (speed < 1024 * 1024 * 50)
-            {
-                this.BufferLength = 1024 * 512;
+                this.SetBufferLength(1024 * 10);
             }
             else if (speed < 1024 * 1024 * 100)
             {
-                this.BufferLength = 1024 * 1024;
-            }
-            else if (speed < 1024 * 1024 * 200)
-            {
-                this.BufferLength = 1024 * 1024 * 5;
+                this.SetBufferLength(1024 * 64);
             }
             else
             {
-                this.BufferLength = 1024 * 1024 * 10;
+                this.SetBufferLength(1024 * 512);
             }
         }
 

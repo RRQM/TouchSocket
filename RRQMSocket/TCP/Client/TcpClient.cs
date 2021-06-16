@@ -203,6 +203,7 @@ namespace RRQMSocket
 
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
         {
+            clientBuffer.byteBlock.SetLength(clientBuffer.length);
             if (this.dataHandlingAdapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
@@ -367,7 +368,7 @@ namespace RRQMSocket
                 throw new ArgumentNullException("内存池不能为空");
             }
             this.Logger = (ILog)clientConfig.GetValue(RRQMConfig.LoggerProperty);
-            this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
+            this.SetBufferLength((int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty));
             this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
             this.onlySend = clientConfig.OnlySend;
             this.separateThreadSend = clientConfig.SeparateThreadSend;
@@ -484,28 +485,10 @@ namespace RRQMSocket
             {
                 if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-
-                    if (byteBlock.Using)
-                    {
-                        byteBlock.Position = e.BytesTransferred;
-                        byteBlock.SetLength(e.BytesTransferred);
-                    }
-                    else
-                    {
-                        byte[] buffer = new byte[e.BytesTransferred];
-                        Array.Copy(byteBlock.Buffer, buffer, buffer.Length);
-                        while (!byteBlock.Using)
-                        {
-                            byteBlock.Dispose();
-                            byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
-                        }
-                        byteBlock.Write(buffer);
-                    }
-
                     ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
-                    clientBuffer.byteBlock = byteBlock;
+                    clientBuffer.length = e.BytesTransferred;
+                    clientBuffer.byteBlock = (ByteBlock)e.UserToken; ;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
                     queueGroup.waitHandleBuffer.Set();
 

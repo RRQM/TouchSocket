@@ -448,7 +448,6 @@ namespace RRQMSocket.FileTransfer
         {
             clientConfig.OnlySend = false;
             base.LoadConfig(clientConfig);
-            this.BufferLength = 1024 * 64;
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
             this.receiveDirectory = (string)clientConfig.GetValue(FileClientConfig.ReceiveDirectoryProperty);
         }
@@ -862,7 +861,7 @@ namespace RRQMSocket.FileTransfer
             }
             TransferSetting transferSetting = TransferSetting.Deserialize(byteBlock.Buffer, 2);
             this.breakpointResume = transferSetting.breakpointResume;
-            this.BufferLength = transferSetting.bufferLength;
+            this.SetBufferLength(transferSetting.bufferLength);
             byteBlock.SetHolding(false);
         }
 

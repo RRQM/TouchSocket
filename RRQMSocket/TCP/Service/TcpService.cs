@@ -384,7 +384,7 @@ namespace RRQMSocket
 
                 client.MainSocket = socket;
                 client.ReadIpPort();
-                client.BufferLength = this.BufferLength;
+                client.SetBufferLength(this.BufferLength);
 
                 lock (locker)
                 {
@@ -430,7 +430,7 @@ namespace RRQMSocket
             this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
             this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
             this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
-            this.BufferLength = (int)serverConfig.GetValue(ServerConfig.BufferLengthProperty);
+            this.SetBufferLength((int)serverConfig.GetValue(ServerConfig.BufferLengthProperty));
             this.socketClients.IDFormat = (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
             this.name = serverConfig.Name;
         }

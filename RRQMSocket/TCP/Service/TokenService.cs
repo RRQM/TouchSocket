@@ -97,7 +97,7 @@ namespace RRQMSocket
                                 }
                                 client.MainSocket = socket;
                                 client.ReadIpPort();
-                                client.BufferLength = this.BufferLength;
+                                client.SetBufferLength(this.BufferLength);
 
                                 lock (locker)
                                 {

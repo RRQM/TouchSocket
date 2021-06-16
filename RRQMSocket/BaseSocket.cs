@@ -54,19 +54,27 @@ namespace RRQMSocket
         /// </summary>
         public int Port { get; protected set; }
 
-        private int bufferLength = 1024;
+        /// <summary>
+        /// 数据交互缓存池限制
+        /// </summary>
+        protected int bufferLength = 1024;
 
         /// <summary>
-        /// 数据交互缓存池限制，Min:1k Byte，Max:10Mb Byte
+        /// 数据交互缓存池限制
         /// </summary>
         public int BufferLength
         {
             get { return bufferLength; }
-            set
-            {
-                bufferLength = value < 1024 ? 1024 : (value > 1024 * 1024 * 10 ? 1024 * 1024 * 10 : value);
-                this.OnBufferLengthChanged();
-            }
+        }
+
+        /// <summary>
+        /// 数据交互缓存池限制，Min:1k Byte，Max:1Mb Byte
+        /// </summary>
+        /// <param name="bufferLength"></param>
+        public virtual void SetBufferLength(int bufferLength)
+        {
+            this.bufferLength = bufferLength < 1024 ? 1024 : (bufferLength > 1024 * 1024 ? 1024 * 1024 : bufferLength);
+            this.OnBufferLengthChanged();
         }
 
         /// <summary>

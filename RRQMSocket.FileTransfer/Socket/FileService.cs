@@ -23,14 +23,6 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public class FileService : TcpParser<FileSocketClient>, IFileService
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public FileService()
-        {
-            this.BufferLength = 1024 * 64;
-        }
-
         #region 属性
 
         private bool breakpointResume;

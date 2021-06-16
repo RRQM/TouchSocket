@@ -27,6 +27,14 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class TcpRPCClient : ProtocolClient, IRPCClient
     {
+        static TcpRPCClient()
+        {
+            AddUsedProtocol(100, "请求RPC代理文件");
+            AddUsedProtocol(101, "RPC调用");
+            AddUsedProtocol(102, "获取注册服务");
+            AddUsedProtocol(103, "ID调用客户端");
+            AddUsedProtocol(104, "RPC回调");
+        }
         private MethodMap methodMap;
 
         private MethodStore methodStore;

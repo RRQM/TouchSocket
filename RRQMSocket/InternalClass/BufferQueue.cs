@@ -13,10 +13,6 @@ using System.Collections.Concurrent;
 
 namespace RRQMSocket
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
     /// buffer队列
     /// </summary>
@@ -27,13 +23,10 @@ namespace RRQMSocket
             queue = new ConcurrentQueue<ClientBuffer>();
         }
 
-        internal long processingTimes;
-
         private ConcurrentQueue<ClientBuffer> queue;
 
         internal void Enqueue(ClientBuffer item)
         {
-            this.processingTimes++;
             this.queue.Enqueue(item);
         }
 

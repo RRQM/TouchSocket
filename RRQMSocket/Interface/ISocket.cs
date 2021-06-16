@@ -36,9 +36,9 @@ namespace RRQMSocket
         Socket MainSocket { get; }
 
         /// <summary>
-        /// 数据交互缓存池限制，Min:1k Byte，Max:10Mb Byte
+        /// 数据交互缓存池限制
         /// </summary>
-        int BufferLength { get; set; }
+        int BufferLength { get; }
 
         /// <summary>
         /// 日志记录器

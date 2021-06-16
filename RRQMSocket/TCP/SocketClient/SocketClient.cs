@@ -111,6 +111,7 @@ namespace RRQMSocket
 
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
         {
+            clientBuffer.byteBlock.SetLength(clientBuffer.length);
             if (this.dataHandlingAdapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
@@ -312,13 +313,11 @@ namespace RRQMSocket
                 if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
                     this.lastTick = DateTime.Now.Ticks;
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.Position = e.BytesTransferred;
-                    byteBlock.SetLength(e.BytesTransferred);
 
                     ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
-                    clientBuffer.byteBlock = byteBlock;
+                    clientBuffer.length=e.BytesTransferred;
+                    clientBuffer.byteBlock = (ByteBlock)e.UserToken;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
 
                     if (queueGroup.isWait)
