@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQMRPC解析器配置
     /// </summary>
-    public class TcpRPCParserConfig : TokenServerConfig
+    public class TcpRPCParserConfig : ProtocolServerConfig
     {
         /// <summary>
         /// 序列化转换器

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMSocket;
+using System.Net;
 
 /// <summary>
 /// 显示信息
@@ -25,6 +26,13 @@ public delegate void RRQMMessageEventHandler(object sender, MesEventArgs e);
 /// <param name="sender"></param>
 /// <param name="e"></param>
 public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
+
+/// <summary>
+/// UDP接收
+/// </summary>
+/// <param name="endpoint"></param>
+/// <param name="e"></param>
+public delegate void RRQMUDPByteBlockEventHandler(EndPoint endpoint, ByteBlock e);
 
 /// <summary>
 /// 字节数据

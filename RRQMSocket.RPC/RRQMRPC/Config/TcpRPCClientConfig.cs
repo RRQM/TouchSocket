@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TcpRPCClient配置
     /// </summary>
-    public class TcpRPCClientConfig : TokenClientConfig
+    public class TcpRPCClientConfig : ProtocolClientConfig
     {
         /// <summary>
         /// 代理文件令箭

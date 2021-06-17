@@ -131,7 +131,6 @@ namespace RRQMSocket
                 if (this.recviveEventArg.SocketError == SocketError.Success)
                 {
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.Position = e.BytesTransferred;
                     byteBlock.SetLength(e.BytesTransferred);
 
                     BufferQueueGroup queueGroup = this.bufferQueueGroups[++this.recivedCount % this.bufferQueueGroups.Length];
@@ -139,7 +138,10 @@ namespace RRQMSocket
                     clientBuffer.endPoint = e.RemoteEndPoint;
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                    queueGroup.waitHandleBuffer.Set();
+                    if (queueGroup.isWait)
+                    {
+                        queueGroup.waitHandleBuffer.Set();
+                    }
                     ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
@@ -194,7 +196,9 @@ namespace RRQMSocket
                 }
                 else
                 {
+                    queueGroup.isWait = true;
                     queueGroup.waitHandleBuffer.WaitOne();
+                    queueGroup.isWait = false;
                 }
             }
         }
@@ -325,7 +329,7 @@ namespace RRQMSocket
         #endregion 发送
 
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
-        { 
+        {
             HandleReceivedData(clientBuffer.endPoint, clientBuffer.byteBlock);
         }
 
@@ -346,7 +350,7 @@ namespace RRQMSocket
         public void Setup(int port)
         {
             UdpSessionConfig serverConfig = new UdpSessionConfig();
-            serverConfig.ListenIPHosts =new IPHost[] { new IPHost(port)} ;
+            serverConfig.ListenIPHosts = new IPHost[] { new IPHost(port) };
             this.Setup(serverConfig);
         }
 
@@ -377,48 +381,67 @@ namespace RRQMSocket
             bool useBind = (bool)this.serverConfig.GetValue(UdpSessionConfig.UseBindProperty);
             if (useBind)
             {
-                IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.ListenIPHostsProperty);
-                if (iPHost == null)
+                IPHost[] iPHosts = (IPHost[])this.serverConfig.GetValue(ServerConfig.ListenIPHostsProperty);
+
+                if (iPHosts == null || iPHosts.Length != 1)
                 {
-                    throw new RRQMException("IPHost为空，无法绑定");
+                    throw new RRQMException("ListenIPHosts为空或不明确，无法绑定");
                 }
-                if (this.serverState == ServerState.None || this.serverState == ServerState.Stopped)
+
+                switch (this.serverState)
                 {
-                    try
-                    {
-                        Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                        PreviewBind(socket);
-                        socket.Bind(iPHost.EndPoint);
-                        this.MainSocket = socket;
-
-                        this.recviveEventArg = new SocketAsyncEventArgs();
-                        this.recviveEventArg.Completed += this.IO_Completed;
-                        ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                        this.recviveEventArg.UserToken = byteBlock;
-                        this.recviveEventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                        this.recviveEventArg.RemoteEndPoint = iPHost.EndPoint;
-                        this.MainSocket.ReceiveFromAsync(this.recviveEventArg);
-                    }
-                    catch (Exception e)
-                    {
-                        throw new RRQMException(e.Message);
-                    }
-
-                    bufferQueueGroups = new BufferQueueGroup[serverConfig.ThreadCount];
-                    for (int i = 0; i < serverConfig.ThreadCount; i++)
-                    {
-                        BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
-                        bufferQueueGroups[i] = bufferQueueGroup;
-                        bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                        bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                        bufferQueueGroup.bufferAndClient = new BufferQueue();
-                        bufferQueueGroup.Thread.IsBackground = true;
-                        bufferQueueGroup.Thread.Name = i + "-Num Handler";
-                        bufferQueueGroup.Thread.Start(bufferQueueGroup);
-                    }
+                    case ServerState.None:
+                        {
+                            this.BeginReceive(iPHosts[0]);
+                            BeginThread();
+                            break;
+                        }
+                    case ServerState.Running:
+                        break;
+                    case ServerState.Stopped:
+                        {
+                            this.BeginReceive(iPHosts[0]);
+                            break;
+                        }
+                    case ServerState.Disposed:
+                        {
+                            throw new RRQMException("无法再次利用已释放对象");
+                        }
                 }
             }
             this.serverState = ServerState.Running;
+        }
+
+        private void BeginThread()
+        {
+            bufferQueueGroups = new BufferQueueGroup[serverConfig.ThreadCount];
+            for (int i = 0; i < serverConfig.ThreadCount; i++)
+            {
+                BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
+                bufferQueueGroups[i] = bufferQueueGroup;
+                bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
+                bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
+                bufferQueueGroup.bufferAndClient = new BufferQueue();
+                bufferQueueGroup.Thread.IsBackground = true;
+                bufferQueueGroup.Thread.Name = i + "-Num Handler";
+                bufferQueueGroup.Thread.Start(bufferQueueGroup);
+            }
+        }
+
+        private void BeginReceive(IPHost iPHost)
+        {
+            Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            PreviewBind(socket);
+            socket.Bind(iPHost.EndPoint);
+            this.MainSocket = socket;
+
+            this.recviveEventArg = new SocketAsyncEventArgs();
+            this.recviveEventArg.Completed += this.IO_Completed;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            this.recviveEventArg.UserToken = byteBlock;
+            this.recviveEventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+            this.recviveEventArg.RemoteEndPoint = iPHost.EndPoint;
+            this.MainSocket.ReceiveFromAsync(this.recviveEventArg);
         }
 
         /// <summary>
@@ -426,12 +449,11 @@ namespace RRQMSocket
         /// </summary>
         public void Stop()
         {
-            base.Dispose();
-
-            foreach (var item in bufferQueueGroups)
+            if (this.mainSocket!=null)
             {
-                item.Dispose();
+                this.mainSocket.Dispose();
             }
+            
             this.serverState = ServerState.Stopped;
         }
 
@@ -440,7 +462,13 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
+            base.Dispose();
             this.Stop();
+            foreach (var item in bufferQueueGroups)
+            {
+                item.Dispose();
+            }
+            bufferQueueGroups = null;
             this.serverState = ServerState.Disposed;
         }
     }

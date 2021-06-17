@@ -16,11 +16,10 @@ using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
-    /*
-    若汝棋茗
-    */
-
-    internal static class FileBaseTool
+   /// <summary>
+   /// 文件工具类
+   /// </summary>
+    public static class FileBaseTool
     {
         #region Methods
 
@@ -74,24 +73,42 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+        private static int blockCount =100;
+        /// <summary>
+        /// 分块数量
+        /// </summary>
+        public static int BlockCount
+        {
+            get { return blockCount; }
+            set 
+            {
+                if (value<10)
+                {
+                    value = 10;
+                }
+                blockCount= value; 
+            }
+        }
+
+
         internal static ProgressBlockCollection GetProgressBlockCollection(FileInfo fileInfo, bool breakpointResume)
         {
             ProgressBlockCollection blocks = new ProgressBlockCollection();
             blocks.FileInfo = new FileInfo();
             blocks.FileInfo.Copy(fileInfo);
             long position = 0;
-            if (breakpointResume && fileInfo.FileLength >= 100)
+            if (breakpointResume && fileInfo.FileLength >= blockCount)
             {
-                long blockLength = (long)(fileInfo.FileLength / 100.0);
+                long blockLength = (long)(fileInfo.FileLength / (blockCount*1.0));
 
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < blockCount; i++)
                 {
                     FileProgressBlock block = new FileProgressBlock();
                     block.Index = i;
                     block.FileHash = fileInfo.FileHash;
                     block.Finished = false;
                     block.StreamPosition = position;
-                    block.UnitLength = i != 99 ? blockLength : fileInfo.FileLength - i * blockLength;
+                    block.UnitLength = i != (blockCount-1) ? blockLength : fileInfo.FileLength - i * blockLength;
                     blocks.Add(block);
                     position += blockLength;
                 }

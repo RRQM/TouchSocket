@@ -17,12 +17,12 @@ namespace RRQMSocket
     /// <summary>
     /// 若汝棋茗内置UDP会话
     /// </summary>
-    public sealed class SimpleUdpSession : UdpSession
+    public  class SimpleUdpSession : UdpSession
     {
         /// <summary>
         /// 当收到数据时
         /// </summary>
-        public event RRQMByteBlockEventHandler Received;
+        public event RRQMUDPByteBlockEventHandler Received;
 
         /// <summary>
         /// 处理数据
