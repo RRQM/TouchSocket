@@ -14,7 +14,10 @@ using System.Net;
 
 namespace RRQMSocket
 {
-    internal struct ClientBuffer
+    /// <summary>
+    /// 处理
+    /// </summary>
+    public struct ClientBuffer
     {
         internal IHandleBuffer client;
         internal ByteBlock byteBlock;

@@ -28,6 +28,30 @@ namespace RRQMSocket
         internal BufferQueueGroup queueGroup;
         private DataHandlingAdapter dataHandlingAdapter;
 
+        private Socket mainSocket;
+
+        /// <summary>
+        /// 主通信器
+        /// </summary>
+        public Socket MainSocket
+        {
+            get { return mainSocket; }
+            internal set
+            {
+                mainSocket = value;
+            }
+        }
+
+        /// <summary>
+        /// IPv4地址
+        /// </summary>
+        public string IP { get; protected set; }
+
+        /// <summary>
+        /// 端口号
+        /// </summary>
+        public int Port { get; protected set; }
+
         /// <summary>
         /// 获取内存池实例
         /// </summary>
@@ -93,6 +117,37 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 读取IP、Port
+        /// </summary>
+        public void ReadIpPort()
+        {
+            if (MainSocket == null)
+            {
+                this.IP = null;
+                this.Port = -1;
+                return;
+            }
+
+            string ipport;
+            if (MainSocket.Connected && MainSocket.RemoteEndPoint != null)
+            {
+                ipport = MainSocket.RemoteEndPoint.ToString();
+            }
+            else if (MainSocket.IsBound && MainSocket.LocalEndPoint != null)
+            {
+                ipport = MainSocket.LocalEndPoint.ToString();
+            }
+            else
+            {
+                return;
+            }
+
+            int r = ipport.LastIndexOf(":");
+            this.IP = ipport.Substring(0, r);
+            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
+        }
+
+        /// <summary>
         /// 在断开连接时销毁对象，父类方法不可覆盖
         /// </summary>
         public virtual void Destroy()
@@ -105,11 +160,19 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
-            this.breakOut = true;
             base.Dispose();
+            if (this.mainSocket!=null)
+            {
+                this.mainSocket.Dispose();
+            }
+            this.breakOut = true;
         }
 
-        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        /// <param name="clientBuffer"></param>
+        public void HandleBuffer(ClientBuffer clientBuffer)
         {
             if (this.dataHandlingAdapter == null)
             {
@@ -233,7 +296,7 @@ namespace RRQMSocket
             }
         }
 
-       
+
 
         /// <summary>
         /// 测试是否在线
@@ -307,7 +370,7 @@ namespace RRQMSocket
             }
         }
 
-        byte[] buffer = new byte[1024*10];
+
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
             if (!this.disposable)

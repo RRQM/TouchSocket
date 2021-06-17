@@ -80,5 +80,8 @@ Demo：https://gitee.com/RRQM_OS/RRQMSocket.Demo</Description>
 	    <HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Helper\" />
+	</ItemGroup>
 
 </Project>

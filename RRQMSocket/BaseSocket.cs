@@ -30,30 +30,6 @@ namespace RRQMSocket
         /// </summary>
         protected bool disposable = false;
 
-        private Socket mainSocket;
-
-        /// <summary>
-        /// 主通信器
-        /// </summary>
-        public Socket MainSocket
-        {
-            get { return mainSocket; }
-            internal set
-            {
-                mainSocket = value;
-            }
-        }
-
-        /// <summary>
-        /// IPv4地址
-        /// </summary>
-        public string IP { get; protected set; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        public int Port { get; protected set; }
-
         /// <summary>
         /// 数据交互缓存池限制
         /// </summary>
@@ -89,36 +65,7 @@ namespace RRQMSocket
         {
         }
 
-        /// <summary>
-        /// 读取IP、Port
-        /// </summary>
-        public void ReadIpPort()
-        {
-            if (mainSocket == null)
-            {
-                this.IP = null;
-                this.Port = -1;
-                return;
-            }
-
-            string ipport;
-            if (mainSocket.Connected && mainSocket.RemoteEndPoint != null)
-            {
-                ipport = mainSocket.RemoteEndPoint.ToString();
-            }
-            else if (mainSocket.IsBound && mainSocket.LocalEndPoint != null)
-            {
-                ipport = mainSocket.LocalEndPoint.ToString();
-            }
-            else
-            {
-                return;
-            }
-
-            int r = ipport.LastIndexOf(":");
-            this.IP = ipport.Substring(0, r);
-            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
-        }
+       
 
         /// <summary>
         /// 释放资源
@@ -126,10 +73,6 @@ namespace RRQMSocket
         public virtual void Dispose()
         {
             this.disposable = true;
-            if (mainSocket != null)
-            {
-                mainSocket.Dispose();
-            }
         }
     }
 }

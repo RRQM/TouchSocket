@@ -34,6 +34,30 @@ namespace RRQMSocket
             get { return defaultRemotePoint; }
         }
 
+        private Socket mainSocket;
+
+        /// <summary>
+        /// 主通信器
+        /// </summary>
+        public Socket MainSocket
+        {
+            get { return mainSocket; }
+            internal set
+            {
+                mainSocket = value;
+            }
+        }
+
+        /// <summary>
+        /// IPv4地址
+        /// </summary>
+        public string IP { get; protected set; }
+
+        /// <summary>
+        /// 端口号
+        /// </summary>
+        public int Port { get; protected set; }
+
         /// <summary>
         /// 已接收数据次数
         /// </summary>
@@ -157,7 +181,7 @@ namespace RRQMSocket
                 {
                     try
                     {
-                        HandleBuffer(clientBuffer);
+                        ((IHandleBuffer)this).HandleBuffer(clientBuffer);
                     }
                     catch (Exception e)
                     {
@@ -300,13 +324,9 @@ namespace RRQMSocket
 
         #endregion 发送
 
-        private void HandleBuffer(ClientBuffer clientBuffer)
-        {
-            HandleReceivedData(clientBuffer.endPoint, clientBuffer.byteBlock);
-        }
-
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
-        {
+        { 
+            HandleReceivedData(clientBuffer.endPoint, clientBuffer.byteBlock);
         }
 
         /// <summary>
@@ -326,7 +346,7 @@ namespace RRQMSocket
         public void Setup(int port)
         {
             UdpSessionConfig serverConfig = new UdpSessionConfig();
-            serverConfig.BindIPHost = new IPHost(port);
+            serverConfig.ListenIPHosts =new IPHost[] { new IPHost(port)} ;
             this.Setup(serverConfig);
         }
 
@@ -357,7 +377,7 @@ namespace RRQMSocket
             bool useBind = (bool)this.serverConfig.GetValue(UdpSessionConfig.UseBindProperty);
             if (useBind)
             {
-                IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
+                IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.ListenIPHostsProperty);
                 if (iPHost == null)
                 {
                     throw new RRQMException("IPHost为空，无法绑定");

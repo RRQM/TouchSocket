@@ -15,7 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 处理数据
     /// </summary>
-    internal interface IHandleBuffer
+    public interface IHandleBuffer
     {
         /// <summary>
         ///  处理数据

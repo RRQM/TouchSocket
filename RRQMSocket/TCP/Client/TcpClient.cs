@@ -45,6 +45,20 @@ namespace RRQMSocket
 
         private bool separateThreadSend;
 
+        private Socket mainSocket;
+
+        /// <summary>
+        /// 主通信器
+        /// </summary>
+        public Socket MainSocket
+        {
+            get { return mainSocket; }
+            internal set
+            {
+                mainSocket = value;
+            }
+        }
+
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
@@ -54,6 +68,16 @@ namespace RRQMSocket
         /// 断开连接
         /// </summary>
         public event RRQMMessageEventHandler DisconnectedService;
+
+        /// <summary>
+        /// IPv4地址
+        /// </summary>
+        public string IP { get; protected set; }
+
+        /// <summary>
+        /// 端口号
+        /// </summary>
+        public int Port { get; protected set; }
 
         /// <summary>
         /// 获取内存池实例
@@ -190,6 +214,10 @@ namespace RRQMSocket
         public override void Dispose()
         {
             base.Dispose();
+            if (this.mainSocket != null)
+            {
+                this.mainSocket.Dispose();
+            }
             if (this.queueGroup != null)
             {
                 this.queueGroup.Dispose();
@@ -336,6 +364,37 @@ namespace RRQMSocket
                 this.asyncSender = new AsyncSender(this.MainSocket, this.MainSocket.RemoteEndPoint, this.Logger);
                 this.asyncSender.SetBufferLength((int)this.clientConfig.GetValue(TcpClientConfig.SeparateThreadSendBufferLengthProperty));
             }
+        }
+
+        /// <summary>
+        /// 读取IP、Port
+        /// </summary>
+        public void ReadIpPort()
+        {
+            if (MainSocket == null)
+            {
+                this.IP = null;
+                this.Port = -1;
+                return;
+            }
+
+            string ipport;
+            if (MainSocket.Connected && MainSocket.RemoteEndPoint != null)
+            {
+                ipport = MainSocket.RemoteEndPoint.ToString();
+            }
+            else if (MainSocket.IsBound && MainSocket.LocalEndPoint != null)
+            {
+                ipport = MainSocket.LocalEndPoint.ToString();
+            }
+            else
+            {
+                return;
+            }
+
+            int r = ipport.LastIndexOf(":");
+            this.IP = ipport.Substring(0, r);
+            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
         }
 
         /// <summary>

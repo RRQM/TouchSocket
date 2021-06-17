@@ -34,19 +34,19 @@ namespace RRQMSocket
             DependencyProperty.Register("ThreadCount", typeof(int), typeof(ServerConfig), 10);
 
         /// <summary>
-        /// IP和端口号
+        /// 监听IP和端口号组
         /// </summary>
-        public IPHost BindIPHost
+        public IPHost[] ListenIPHosts
         {
-            get { return (IPHost)GetValue(BindIPHostProperty); }
-            set { SetValue(BindIPHostProperty, value); }
+            get { return (IPHost[])GetValue(ListenIPHostsProperty); }
+            set { SetValue(ListenIPHostsProperty, value); }
         }
 
         /// <summary>
         /// IP和端口号依赖属性
         /// </summary>
-        public static readonly DependencyProperty BindIPHostProperty =
-            DependencyProperty.Register("BindIPHost", typeof(IPHost), typeof(ServerConfig), null);
+        public static readonly DependencyProperty ListenIPHostsProperty =
+            DependencyProperty.Register("ListenIPHosts", typeof(IPHost[]), typeof(ServerConfig), null);
 
 
         /// <summary>

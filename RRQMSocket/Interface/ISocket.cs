@@ -21,21 +21,6 @@ namespace RRQMSocket
     public interface ISocket:IDisposable
     {
         /// <summary>
-        /// IP
-        /// </summary>
-        string IP { get; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        int Port { get; }
-
-        /// <summary>
-        /// 主通信器
-        /// </summary>
-        Socket MainSocket { get; }
-
-        /// <summary>
         /// 数据交互缓存池限制
         /// </summary>
         int BufferLength { get; }

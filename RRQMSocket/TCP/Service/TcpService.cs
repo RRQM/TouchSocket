@@ -39,8 +39,11 @@ namespace RRQMSocket
 
         private int clearInterval;
 
+        private IPHost[] listenIPHosts;
+        private Socket[] listenSockets;
         private int maxCount;
 
+        private string name;
         private ServerConfig serverConfig;
 
         private ServerState serverState;
@@ -61,11 +64,35 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 获取监听的地址组
+        /// </summary>
+        public IPHost[] ListenIPHosts
+        {
+            get { return listenIPHosts; }
+        }
+
+        /// <summary>
+        /// 获取正在监听的socket组
+        /// </summary>
+        public Socket[] ListenSockets
+        {
+            get { return listenSockets; }
+        }
+
+        /// <summary>
         /// 最大可连接数
         /// </summary>
         public int MaxCount
         {
             get { return maxCount; }
+        }
+
+        /// <summary>
+        /// 服务器名称
+        /// </summary>
+        public string Name
+        {
+            get { return name; }
         }
 
         /// <summary>
@@ -88,16 +115,6 @@ namespace RRQMSocket
         {
             get { return socketClients; }
         }
-
-        private string name;
-        /// <summary>
-        /// 服务器名称
-        /// </summary>
-        public string Name
-        {
-            get { return name; }
-        }
-
         #endregion 属性
 
         #region 变量
@@ -105,7 +122,6 @@ namespace RRQMSocket
         internal ObjectPool<TClient> socketClientPool;
         private int backlog;
         private BufferQueueGroup[] bufferQueueGroups;
-        private Thread threadAccept;
         private Thread threadClearClient;
         #endregion 变量
 
@@ -139,6 +155,13 @@ namespace RRQMSocket
         public override void Dispose()
         {
             base.Dispose();
+            if (this.listenSockets!=null)
+            {
+                foreach (var item in this.listenSockets)
+                {
+                    item.Dispose();
+                }
+            }
             this.SocketClients.Dispose();
             if (bufferQueueGroups != null)
             {
@@ -282,7 +305,7 @@ namespace RRQMSocket
         public virtual void Setup(int port)
         {
             TcpServerConfig serverConfig = new TcpServerConfig();
-            serverConfig.BindIPHost = new IPHost(port);
+            serverConfig.ListenIPHosts = new IPHost[] { new IPHost(port) };
             this.Setup(serverConfig);
         }
 
@@ -304,16 +327,16 @@ namespace RRQMSocket
         /// <exception cref="Exception"></exception>
         public virtual void Start()
         {
-            IPHost iPHost = (IPHost)this.serverConfig.GetValue(ServerConfig.BindIPHostProperty);
-            if (iPHost == null)
+            IPHost[] iPHosts = (IPHost[])this.serverConfig.GetValue(ServerConfig.ListenIPHostsProperty);
+            if (iPHosts == null)
             {
-                throw new RRQMException("IPHost为空，无法绑定");
+                throw new RRQMException("IPHosts为空，无法绑定");
             }
             switch (this.serverState)
             {
                 case ServerState.None:
                     {
-                        this.BeginListen(iPHost);
+                        this.BeginListen(iPHosts);
                         this.BeginClearAndHandle();
                         break;
                     }
@@ -323,7 +346,7 @@ namespace RRQMSocket
                     }
                 case ServerState.Stopped:
                     {
-                        this.BeginListen(iPHost);
+                        this.BeginListen(iPHosts);
                         break;
                     }
                 case ServerState.Disposed:
@@ -332,8 +355,7 @@ namespace RRQMSocket
                     }
             }
 
-            this.IP = iPHost.IP;
-            this.Port = iPHost.Port;
+            this.listenIPHosts = iPHosts;
             this.serverState = ServerState.Running;
         }
 
@@ -342,9 +364,12 @@ namespace RRQMSocket
         /// </summary>
         public virtual void Stop()
         {
-            if (MainSocket != null)
+            if (listenSockets != null)
             {
-                MainSocket.Dispose();
+                foreach (var item in listenSockets)
+                {
+                    item.Dispose();
+                }
             }
             this.SocketClients.Dispose();
 
@@ -453,11 +478,20 @@ namespace RRQMSocket
         protected virtual void PreviewBind(Socket socket)
         {
         }
+
+        private void Args_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            if (e.LastOperation == SocketAsyncOperation.Accept)
+            {
+                ProcessAccept(e);
+            }
+        }
+
         private void BeginClearAndHandle()
         {
             threadClearClient = new Thread(ClearClient);
             threadClearClient.IsBackground = true;
-            threadClearClient.Name = "CheckAlive";
+            threadClearClient.Name = "ClearClient";
             threadClearClient.Start();
 
             bufferQueueGroups = new BufferQueueGroup[this.serverConfig.ThreadCount];
@@ -475,27 +509,38 @@ namespace RRQMSocket
             }
         }
 
-        private void BeginListen(IPHost iPHost)
+        private void BeginListen(IPHost[] iPHosts)
         {
             try
             {
-                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                PreviewBind(socket);
-                socket.Bind(iPHost.EndPoint);
-                this.MainSocket = socket;
+                this.listenSockets = new Socket[iPHosts.Length];
+                int i = 0;
+                foreach (var  iPHost in iPHosts)
+                {
+                    Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    this.listenSockets[i++] = socket;
+                    PreviewBind(socket);
+                    socket.Bind(iPHost.EndPoint);
+                    socket.Listen(this.backlog);
+                }
             }
             catch (Exception ex)
             {
                 throw ex;
             }
 
-            MainSocket.Listen(backlog);
-            threadAccept = new Thread(StartAccept);
-            threadAccept.IsBackground = true;
-            threadAccept.Name = "AcceptClient";
-            threadAccept.Start();
+            foreach (var socket in this.listenSockets)
+            {
+                SocketAsyncEventArgs e = new SocketAsyncEventArgs();
+                e.UserToken = socket;
+                e.Completed += this.Args_Completed;
+                if (!socket.AcceptAsync(e))
+                {
+                    ProcessAccept(e);
+                }
+            }
         }
-
+        
         private void ClearClient()
         {
             while (true)
@@ -574,26 +619,32 @@ namespace RRQMSocket
             }
         }
 
-        private void StartAccept()
+        private void ProcessAccept(SocketAsyncEventArgs e)
         {
-            while (true)
+            if (!this.disposable)
             {
-                if (this.disposable || this.serverState == ServerState.Stopped)
+                if (e.SocketError == SocketError.Success && e.AcceptSocket!=null)
                 {
-                    break;
-                }
-                try
-                {
-                    Socket socket = this.MainSocket.Accept();
-                    Task.Run(() =>
+                    try
                     {
-                        PreviewCreateSocketCliect(socket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
-                    });
+                        Socket newSocket = e.AcceptSocket;
+                        Task.Run(() =>
+                        {
+                            PreviewCreateSocketCliect(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
+                    }
                 }
-                catch
+                e.AcceptSocket = null;
+                if (!((Socket)e.UserToken).AcceptAsync(e))
                 {
+                    ProcessAccept(e);
                 }
             }
         }
+
     }
 }
