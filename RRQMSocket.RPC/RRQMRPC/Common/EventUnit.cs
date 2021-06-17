@@ -26,9 +26,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         public string Publisher { get; internal set; }
 
         /// <summary>
-        /// 参数类型名称
+        /// 委托类型名称
         /// </summary>
-        public string[] ParameterTypes { get; internal set; }
+        public string ParameterTypes { get; internal set; }
 
         /// <summary>
         /// 订阅者

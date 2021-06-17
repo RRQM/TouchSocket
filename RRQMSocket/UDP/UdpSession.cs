@@ -128,7 +128,7 @@ namespace RRQMSocket
         {
             if (!this.disposable)
             {
-                if (this.recviveEventArg.SocketError == SocketError.Success)
+                if (e.SocketError == SocketError.Success)
                 {
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.SetLength(e.BytesTransferred);
@@ -142,10 +142,10 @@ namespace RRQMSocket
                     {
                         queueGroup.waitHandleBuffer.Set();
                     }
-                    ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                    ByteBlock newByteBlock = queueGroup.bytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-                    if (!this.MainSocket.ReceiveFromAsync(this.recviveEventArg))
+                    if (!this.mainSocket.ReceiveFromAsync(this.recviveEventArg))
                     {
                         ProcessReceive(e);
                     }
@@ -214,7 +214,7 @@ namespace RRQMSocket
         /// <param name="remoteEP"></param>
         public void SendTo(byte[] buffer, int offset, int length, EndPoint remoteEP)
         {
-            this.MainSocket.SendTo(buffer, offset, length, SocketFlags.None, remoteEP);
+            this.mainSocket.SendTo(buffer, offset, length, SocketFlags.None, remoteEP);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace RRQMSocket
             sendEventArgs.SetBuffer(buffer, offset, length);
             sendEventArgs.RemoteEndPoint = this.defaultRemotePoint;
 
-            if (!this.MainSocket.SendToAsync(sendEventArgs))
+            if (!this.mainSocket.SendToAsync(sendEventArgs))
             {
                 this.ProcessSend(sendEventArgs);
             }
@@ -296,7 +296,7 @@ namespace RRQMSocket
             sendEventArgs.SetBuffer(buffer, offset, length);
             sendEventArgs.RemoteEndPoint = remoteEP;
 
-            if (!this.MainSocket.SendToAsync(sendEventArgs))
+            if (!this.mainSocket.SendToAsync(sendEventArgs))
             {
                 this.ProcessSend(sendEventArgs);
             }
@@ -379,6 +379,8 @@ namespace RRQMSocket
             }
 
             bool useBind = (bool)this.serverConfig.GetValue(UdpSessionConfig.UseBindProperty);
+           
+
             if (useBind)
             {
                 IPHost[] iPHosts = (IPHost[])this.serverConfig.GetValue(ServerConfig.ListenIPHostsProperty);
@@ -387,7 +389,6 @@ namespace RRQMSocket
                 {
                     throw new RRQMException("ListenIPHosts为空或不明确，无法绑定");
                 }
-
                 switch (this.serverState)
                 {
                     case ServerState.None:
@@ -409,6 +410,10 @@ namespace RRQMSocket
                         }
                 }
             }
+            else
+            {
+                this.mainSocket = new Socket(SocketType.Dgram, ProtocolType.Udp);
+            }
             this.serverState = ServerState.Running;
         }
 
@@ -419,6 +424,7 @@ namespace RRQMSocket
             {
                 BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                 bufferQueueGroups[i] = bufferQueueGroup;
+                bufferQueueGroup.bytePool = new BytePool(this.serverConfig.BytePoolMaxSize, this.serverConfig.BytePoolMaxBlockSize);
                 bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
                 bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
                 bufferQueueGroup.bufferAndClient = new BufferQueue();
@@ -464,11 +470,14 @@ namespace RRQMSocket
         {
             base.Dispose();
             this.Stop();
-            foreach (var item in bufferQueueGroups)
+            if (this.bufferQueueGroups!=null)
             {
-                item.Dispose();
+                foreach (var item in bufferQueueGroups)
+                {
+                    item.Dispose();
+                }
+                bufferQueueGroups = null;
             }
-            bufferQueueGroups = null;
             this.serverState = ServerState.Disposed;
         }
     }

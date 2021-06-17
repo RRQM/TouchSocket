@@ -192,6 +192,7 @@ namespace RRQMSocket
         /// </summary>
         public virtual void Disconnect()
         {
+            this.online = false;
             if (MainSocket != null)
             {
                 MainSocket.Dispose();
@@ -205,7 +206,6 @@ namespace RRQMSocket
                 this.asyncSender.Dispose();
                 this.asyncSender = null;
             }
-            this.OnDisconnectedService(new MesEventArgs("Disconnect"));
         }
 
         /// <summary>
@@ -213,6 +213,7 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
+            this.online = false;
             base.Dispose();
             if (this.mainSocket != null)
             {

@@ -325,10 +325,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="eventName">事件名称</param>
         /// <param name="parameterTypes">事件参数类型</param>
-        public void PublishEvent(string eventName, string[] parameterTypes)
+        public void PublishEvent<T>(string eventName)
         {
             EventUnit eventUnit = new EventUnit();
-            eventUnit.ParameterTypes = parameterTypes;
+            eventUnit.ParameterTypes = typeof(T).Name;
             eventUnit.Publisher = this.Name;
             this.eventBus.AddEvent(eventUnit);
         }
