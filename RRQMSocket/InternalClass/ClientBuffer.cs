@@ -18,7 +18,6 @@ namespace RRQMSocket
     {
         internal IHandleBuffer client;
         internal ByteBlock byteBlock;
-        internal int length;
         internal EndPoint endPoint;
     }
 }

@@ -111,7 +111,6 @@ namespace RRQMSocket
 
         void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
         {
-            clientBuffer.byteBlock.SetLength(clientBuffer.length);
             if (this.dataHandlingAdapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
@@ -125,15 +124,15 @@ namespace RRQMSocket
         /// <param name="id"></param>
         protected virtual void ResetID(string id)
         {
-            this.Service.ResetID(this.id,id);
+            this.Service.ResetID(this.id, id);
         }
 
         /// <summary>
         /// 在接收之前
         /// </summary>
         protected virtual void OnBeforeReceive()
-        { 
-        
+        {
+
         }
 
         /// <summary>
@@ -234,30 +233,7 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 启动消息接收
-        /// </summary>
-        internal void BeginReceive()
-        {
-            try
-            {
-                this.OnBeforeReceive();
-                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
-                eventArgs.Completed += this.EventArgs_Completed;
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                eventArgs.UserToken = byteBlock;
-                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                if (!MainSocket.ReceiveAsync(eventArgs))
-                {
-                    ProcessReceived(eventArgs);
-                }
-                this.lastTick = DateTime.Now.Ticks;
-            }
-            catch
-            {
-                this.breakOut = true;
-            }
-        }
+       
 
         /// <summary>
         /// 测试是否在线
@@ -306,6 +282,32 @@ namespace RRQMSocket
             }
         }
 
+        /// <summary>
+        /// 启动消息接收
+        /// </summary>
+        internal void BeginReceive()
+        {
+            try
+            {
+                this.OnBeforeReceive();
+                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
+                eventArgs.Completed += this.EventArgs_Completed;
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                eventArgs.UserToken = byteBlock;
+                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                if (!MainSocket.ReceiveAsync(eventArgs))
+                {
+                    ProcessReceived(eventArgs);
+                }
+                this.lastTick = DateTime.Now.Ticks;
+            }
+            catch
+            {
+                this.breakOut = true;
+            }
+        }
+
+        byte[] buffer = new byte[1024*10];
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
             if (!this.disposable)
@@ -316,8 +318,8 @@ namespace RRQMSocket
 
                     ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
-                    clientBuffer.length=e.BytesTransferred;
                     clientBuffer.byteBlock = (ByteBlock)e.UserToken;
+                    clientBuffer.byteBlock.SetLength(e.BytesTransferred);
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
 
                     if (queueGroup.isWait)
