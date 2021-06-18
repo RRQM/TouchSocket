@@ -60,6 +60,11 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// IP及端口
+        /// </summary>
+        public string Name => $"{this.IP}:{this.Port}";
+
+        /// <summary>
         /// 成功连接到服务器
         /// </summary>
         public event RRQMMessageEventHandler ConnectedService;

@@ -38,7 +38,7 @@ namespace RRQMSocket
         /// <summary>
         /// 名称
         /// </summary>
-        string Name { get; }
+        string ServerName { get; }
 
         /// <summary>
         /// 配置服务器

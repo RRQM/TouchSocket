@@ -31,7 +31,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 连接令箭,当为null或空时，重置为默认值“rrqm”
+        /// 连接令箭,当为null或空时，重置为默认值“rrqm”, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty VerifyTokenProperty =
             DependencyProperty.Register("VerifyToken", typeof(string), typeof(TokenServerConfig), "rrqm");
@@ -49,7 +49,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 验证超时时间,默认为3秒；
+        /// 验证超时时间,默认为3秒, 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty VerifyTimeoutProperty =
             DependencyProperty.Register("VerifyTimeout", typeof(int), typeof(TokenServerConfig), 3);

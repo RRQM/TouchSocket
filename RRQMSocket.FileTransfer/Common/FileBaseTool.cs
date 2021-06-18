@@ -16,9 +16,9 @@ using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
-   /// <summary>
-   /// 文件工具类
-   /// </summary>
+    /// <summary>
+    /// 文件工具类
+    /// </summary>
     public static class FileBaseTool
     {
         #region Methods
@@ -73,42 +73,41 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private static int blockCount =100;
+        private static int blockCount = 100;
+
         /// <summary>
         /// 分块数量
         /// </summary>
         public static int BlockCount
         {
             get { return blockCount; }
-            set 
+            set
             {
-                if (value<10)
+                if (value < 10)
                 {
                     value = 10;
                 }
-                blockCount= value; 
+                blockCount = value;
             }
         }
 
-
-        internal static ProgressBlockCollection GetProgressBlockCollection(FileInfo fileInfo, bool breakpointResume)
+        internal static ProgressBlockCollection GetProgressBlockCollection(UrlFileInfo urlFileInfo, bool breakpointResume)
         {
             ProgressBlockCollection blocks = new ProgressBlockCollection();
-            blocks.FileInfo = new FileInfo();
-            blocks.FileInfo.Copy(fileInfo);
+            blocks.UrlFileInfo = urlFileInfo;
             long position = 0;
-            if (breakpointResume && fileInfo.FileLength >= blockCount)
+            if (breakpointResume && urlFileInfo.FileLength >= blockCount)
             {
-                long blockLength = (long)(fileInfo.FileLength / (blockCount*1.0));
+                long blockLength = (long)(urlFileInfo.FileLength / (blockCount * 1.0));
 
                 for (int i = 0; i < blockCount; i++)
                 {
                     FileProgressBlock block = new FileProgressBlock();
                     block.Index = i;
-                    block.FileHash = fileInfo.FileHash;
+                    block.FileHash = urlFileInfo.FileHash;
                     block.Finished = false;
                     block.StreamPosition = position;
-                    block.UnitLength = i != (blockCount-1) ? blockLength : fileInfo.FileLength - i * blockLength;
+                    block.UnitLength = i != (blockCount - 1) ? blockLength : urlFileInfo.FileLength - i * blockLength;
                     blocks.Add(block);
                     position += blockLength;
                 }
@@ -117,10 +116,10 @@ namespace RRQMSocket.FileTransfer
             {
                 FileProgressBlock block = new FileProgressBlock();
                 block.Index = 0;
-                block.FileHash = fileInfo.FileHash;
+                block.FileHash = urlFileInfo.FileHash;
                 block.Finished = false;
                 block.StreamPosition = position;
-                block.UnitLength = fileInfo.FileLength;
+                block.UnitLength = urlFileInfo.FileLength;
                 blocks.Add(block);
             }
             return blocks;

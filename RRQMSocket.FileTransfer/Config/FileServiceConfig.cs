@@ -28,7 +28,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 是否支持断点续传
+        /// 是否支持断点续传, 所需类型<see cref="bool"/>
         /// </summary>
         public static readonly DependencyProperty BreakpointResumeProperty =
             DependencyProperty.Register("BreakpointResume", typeof(bool), typeof(FileServiceConfig), false);
@@ -43,7 +43,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 最大下载速度
+        /// 最大下载速度, 所需类型<see cref="long"/>
         /// </summary>
         public static readonly DependencyProperty MaxDownloadSpeedProperty =
             DependencyProperty.Register("MaxDownloadSpeed", typeof(long), typeof(FileServiceConfig), 1024 * 1024L);
@@ -58,7 +58,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 最大上传速度
+        /// 最大上传速度, 所需类型<see cref="long"/>
         /// </summary>
         public static readonly DependencyProperty MaxUploadSpeedProperty =
             DependencyProperty.Register("MaxUploadSpeed", typeof(long), typeof(FileServiceConfig), 1024 * 1024L);

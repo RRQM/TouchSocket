@@ -106,6 +106,11 @@ namespace RRQMSocket
         public _ITcpService Service { get; internal set; }
 
         /// <summary>
+        /// IP及端口
+        /// </summary>
+        public string Name => $"{this.IP}:{this.Port}";
+
+        /// <summary>
         /// 初次创建对象，效应相当于构造函数，父类方法可覆盖
         /// </summary>
         public virtual void Create()

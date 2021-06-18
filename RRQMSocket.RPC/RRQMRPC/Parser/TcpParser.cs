@@ -329,7 +329,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             EventUnit eventUnit = new EventUnit();
             eventUnit.ParameterTypes = typeof(T).Name;
-            eventUnit.Publisher = this.Name;
+            eventUnit.Publisher = this.ServerName;
             this.eventBus.AddEvent(eventUnit);
         }
 

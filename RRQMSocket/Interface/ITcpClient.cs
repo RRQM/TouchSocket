@@ -24,6 +24,11 @@ namespace RRQMSocket
         bool Online { get; }
 
         /// <summary>
+        /// IP及端口号
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
         /// 数据处理适配器
         /// </summary>
         DataHandlingAdapter DataHandlingAdapter { get; set; }

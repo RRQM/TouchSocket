@@ -28,7 +28,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 挂起连接队列的最大长度
+        /// 挂起连接队列的最大长度，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty BacklogProperty =
             DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServerConfig), 100);
@@ -43,7 +43,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 最大可连接数，默认为10000
+        /// 最大可连接数，默认为10000，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty MaxCountProperty =
             DependencyProperty.Register("MaxCount", typeof(int), typeof(TcpServerConfig), 10000);
@@ -62,7 +62,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取或设置分配ID的格式，
         /// 格式必须符合字符串格式，至少包含一个补位，
-        /// 默认为“{0}-TCP”
+        /// 默认为“{0}-TCP”,所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty IDFormatProperty =
             DependencyProperty.Register("IDFormat", typeof(string), typeof(TcpServerConfig), "{0}-TCP");
@@ -78,6 +78,7 @@ namespace RRQMSocket
 
         /// <summary>
         /// 获取或设置清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
+        /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ClearIntervalProperty =
             DependencyProperty.Register("ClearInterval", typeof(int), typeof(TcpServerConfig), 60);

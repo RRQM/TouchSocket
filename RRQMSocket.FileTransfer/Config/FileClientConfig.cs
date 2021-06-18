@@ -35,7 +35,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 默认接收文件的存放目录
+        /// 默认接收文件的存放目录, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ReceiveDirectoryProperty =
             DependencyProperty.Register("ReceiveDirectory", typeof(string), typeof(FileClientConfig), string.Empty);
@@ -54,7 +54,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 单次请求超时时间 min=5,max=60 单位：秒
+        /// 单次请求超时时间 min=5,max=60 单位：秒, 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty TimeoutProperty =
             DependencyProperty.Register("Timeout", typeof(int), typeof(FileClientConfig), 5);

@@ -23,7 +23,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 是否能重新设置ID
+        /// 是否能重新设置ID，所需类型<see cref="bool"/>
         /// </summary>
         public static readonly DependencyProperty CanResetIDProperty =
             DependencyProperty.Register("CanResetID", typeof(bool), typeof(ProtocolServerConfig), true);

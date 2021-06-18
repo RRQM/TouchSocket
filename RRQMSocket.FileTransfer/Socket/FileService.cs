@@ -10,11 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using RRQMCore.ByteManager;
-using RRQMCore.Serialization;
 using RRQMSocket.RPC.RRQMRPC;
-using System.Reflection;
-using System.Text;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -82,12 +78,14 @@ namespace RRQMSocket.FileTransfer
                 return this.uploadSpeed;
             }
         }
+
         #endregion 属性
 
         #region 字段
 
         private long downloadSpeed;
         private long uploadSpeed;
+
         #endregion 字段
 
         #region 事件

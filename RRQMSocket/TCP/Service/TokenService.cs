@@ -138,6 +138,7 @@ namespace RRQMSocket
                             }
                             socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
                             socket.Dispose();
+                            return;
                         }
                     }
                     catch (Exception ex)

@@ -28,7 +28,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 多线程数量依赖属性
+        /// 多线程数量依赖属性，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ThreadCountProperty =
             DependencyProperty.Register("ThreadCount", typeof(int), typeof(ServerConfig), 10);
@@ -43,7 +43,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// IP和端口号依赖属性
+        /// IP和端口号依赖属性，所需类型<see cref="IPHost"/>数组
         /// </summary>
         public static readonly DependencyProperty ListenIPHostsProperty =
             DependencyProperty.Register("ListenIPHosts", typeof(IPHost[]), typeof(ServerConfig), null);
@@ -52,17 +52,17 @@ namespace RRQMSocket
         /// <summary>
         /// 名称
         /// </summary>
-        public string Name
+        public string ServerName
         {
-            get { return (string)GetValue(NameProperty); }
-            set { SetValue(NameProperty, value); }
+            get { return (string)GetValue(ServerNameProperty); }
+            set { SetValue(ServerNameProperty, value); }
         }
 
         /// <summary>
-        /// 名称
+        /// 名称，所需类型<see cref="string"/>
         /// </summary>
-        public static readonly DependencyProperty NameProperty =
-            DependencyProperty.Register("Name", typeof(string), typeof(ServerConfig), "RRQMServer");
+        public static readonly DependencyProperty ServerNameProperty =
+            DependencyProperty.Register("ServerName", typeof(string), typeof(ServerConfig), "RRQMServer");
 
 
     }

@@ -90,7 +90,7 @@ namespace RRQMSocket
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public string Name
+        public string ServerName
         {
             get { return name; }
         }
@@ -457,7 +457,7 @@ namespace RRQMSocket
             this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
             this.SetBufferLength((int)serverConfig.GetValue(ServerConfig.BufferLengthProperty));
             this.socketClients.IDFormat = (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
-            this.name = serverConfig.Name;
+            this.name = serverConfig.ServerName;
         }
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,

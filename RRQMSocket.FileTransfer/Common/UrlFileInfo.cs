@@ -40,10 +40,10 @@ namespace RRQMSocket.FileTransfer
         /// 生成上传请求必要信息
         /// </summary>
         /// <param name="path"></param>
-        /// <param name="fileClient"></param>
+        /// <param name="breakpointResume"></param>
         /// <param name="restart"></param>
         /// <returns></returns>
-        public static UrlFileInfo CreatUpload(string path,FileClient fileClient, bool restart = false)
+        public static UrlFileInfo CreatUpload(string path, bool breakpointResume, bool restart = false)
         {
             UrlFileInfo fileInfo = new UrlFileInfo();
             fileInfo.TransferType = TransferType.Upload;
@@ -51,7 +51,7 @@ namespace RRQMSocket.FileTransfer
             {
                 fileInfo.Restart = restart;
                 fileInfo.FilePath = path;
-                if (fileClient.BreakpointResume)
+                if (breakpointResume)
                 {
                     fileInfo.FileHash = FileControler.GetStreamHash(stream);
                 }
@@ -76,6 +76,25 @@ namespace RRQMSocket.FileTransfer
         /// 请求传输类型
         /// </summary>
         public TransferType TransferType { get; set; }
+
+       
+        private string saveFolder=string.Empty;
+        /// <summary>
+        /// 存放目录
+        /// </summary>
+        public string SaveFolder
+        {
+            get { return saveFolder; }
+            set 
+            {
+                if (value==null)
+                {
+                    value = string.Empty;
+                }
+                saveFolder = value; 
+            }
+        }
+
 
         /// <summary>
         /// 比较

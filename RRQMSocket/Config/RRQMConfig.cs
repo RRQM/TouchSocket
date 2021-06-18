@@ -29,7 +29,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 日志记录器依赖属性
+        /// 日志记录器依赖属性，所需类型<see cref="ILog"/>
         /// </summary>
         public static readonly DependencyProperty LoggerProperty =
             DependencyProperty.Register("Logger", typeof(ILog), typeof(RRQMConfig), new Log());
@@ -44,7 +44,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 内存池最大尺寸依赖属性
+        /// 内存池最大尺寸依赖属性，所需类型<see cref="long"/>
         /// </summary>
         public static readonly DependencyProperty BytePoolMaxSizeProperty =
             DependencyProperty.Register("BytePoolMaxSize", typeof(long), typeof(RRQMConfig), 1024 * 1024 * 512L);
@@ -59,7 +59,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 内存池块最大尺寸
+        /// 内存池块最大尺寸，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty BytePoolMaxBlockSizeProperty =
             DependencyProperty.Register("BytePoolMaxBlockSize", typeof(int), typeof(RRQMConfig), 1024 * 1024 * 20);
@@ -74,7 +74,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 缓存池容量
+        /// 缓存池容量，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty BufferLengthProperty =
             DependencyProperty.Register("BufferLength", typeof(int), typeof(RRQMConfig), 1024);

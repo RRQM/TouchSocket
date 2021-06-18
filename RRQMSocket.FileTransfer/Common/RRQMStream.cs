@@ -20,14 +20,14 @@ namespace RRQMSocket.FileTransfer
         internal static RRQMStream GetRQMStream(ref ProgressBlockCollection blocks, bool restart, bool breakpoint)
         {
             RRQMStream stream = new RRQMStream();
-            stream.fileInfo = blocks.FileInfo;
-            string rrqmPath = blocks.FileInfo.FilePath + ".rrqm";
-            string tempPath = blocks.FileInfo.FilePath + ".temp";
+            stream.fileInfo = blocks.UrlFileInfo;
+            string rrqmPath = blocks.UrlFileInfo.FilePath + ".rrqm";
+            string tempPath = blocks.UrlFileInfo.FilePath + ".temp";
 
             if (File.Exists(rrqmPath) && File.Exists(tempPath) && !restart && breakpoint)
             {
                 PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(File.ReadAllBytes(rrqmPath));
-                if (readBlocks.FileInfo.FileHash != null && blocks.FileInfo.FileHash != null && readBlocks.FileInfo.FileHash == blocks.FileInfo.FileHash)
+                if (readBlocks.UrlFileInfo.FileHash != null && blocks.UrlFileInfo.FileHash != null && readBlocks.UrlFileInfo.FileHash == blocks.UrlFileInfo.FileHash)
                 {
                     stream.tempFileStream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite);
                     stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Open, FileAccess.ReadWrite);

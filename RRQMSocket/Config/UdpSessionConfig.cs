@@ -29,7 +29,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 默认远程节点
+        /// 默认远程节点, 所需类型<see cref="EndPoint"/>
         /// </summary>
         public static readonly DependencyProperty DefaultRemotePointProperty =
             DependencyProperty.Register("DefaultRemotePoint", typeof(EndPoint), typeof(UdpSessionConfig), null);
@@ -44,7 +44,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 使用绑定
+        /// 使用绑定, 所需类型<see cref="bool"/>
         /// </summary>
         public static readonly DependencyProperty UseBindProperty =
             DependencyProperty.Register("UseBind", typeof(bool), typeof(UdpSessionConfig), false);

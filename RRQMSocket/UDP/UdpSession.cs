@@ -92,7 +92,7 @@ namespace RRQMSocket
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public string Name
+        public string ServerName
         {
             get { return name; }
         }
@@ -365,7 +365,7 @@ namespace RRQMSocket
                 throw new RRQMException("配置文件为空");
             }
             this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpSessionConfig.DefaultRemotePointProperty);
-            this.name = serverConfig.Name;
+            this.name = serverConfig.ServerName;
         }
 
         /// <summary>
