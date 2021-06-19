@@ -665,9 +665,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
+        /// <summary>
+        /// 订阅事件
+        /// </summary>
+        /// <param name="eventName"></param>
         public void Subscribe(string eventName)
-        { 
-        
+        {
+
         }
 
         /// <summary>
@@ -862,7 +866,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 default:
                     {
-                        RPCHandleDefaultData(procotol,byteBlock);
+                        RPCHandleDefaultData(procotol, byteBlock);
                         break;
                     }
 
@@ -897,7 +901,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="byteBlock"></param>
         protected void OnHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            Received?.Invoke(this,procotol, byteBlock);
+            Received?.Invoke(this, procotol, byteBlock);
         }
 
         private RPCContext OnExecuteCallBack(RPCContext rpcContext)
