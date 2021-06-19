@@ -223,6 +223,8 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+
+
         /// <summary>
         /// 取消指定传输任务
         /// </summary>
@@ -522,7 +524,7 @@ namespace RRQMSocket.FileTransfer
                                 {
                                     this.OutDownload(true);
                                     TransferFileMessageArgs args = new TransferFileMessageArgs();
-                                    args.FileInfo = this.fileBlocks.UrlFileInfo;
+                                    args.FileInfo = this.TransferFileInfo;
                                     args.TransferType = TransferType.Download;
                                     args.Message = "请求下载文件错误";
                                     this.TransferFileError?.Invoke(this, args);

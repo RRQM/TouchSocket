@@ -149,8 +149,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             lock (this)
             {
-                this.singleWaitData.WaitResult = null;
-                RpcContext context = new RpcContext();
+                RPCContext context = new RPCContext();
                 MethodItem methodItem = this.methodStore.GetMethodItem(method);
                 context.MethodToken = methodItem.MethodToken;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);

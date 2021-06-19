@@ -48,7 +48,6 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileInfo"></param>
         public void Copy(FileInfo fileInfo)
         {
-            this.Flag = fileInfo.Flag;
             this.FileHash = fileInfo.FileHash;
             this.FileLength = fileInfo.FileLength;
             this.FileName = fileInfo.FileName;
