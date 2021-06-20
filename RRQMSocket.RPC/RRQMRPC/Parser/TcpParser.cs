@@ -144,8 +144,8 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public void RRQMInitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
         {
-            Tools.GetRPCMethod(providers, methodInstances, this.NameSpace, this.RPCService.GetType().Assembly, out this.methodStore,
-                this.RPCVersion, this.RPCCompiler, out this.proxyInfo, out this.codes);
+            Tools.GetRPCMethod(providers, methodInstances, this.NameSpace, providers.SingleAssembly, out this.methodStore,
+           this.RPCVersion, this.RPCCompiler, out this.proxyInfo, out this.codes);
         }
 
         public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
@@ -243,6 +243,8 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.SerializeConverter = (SerializeConverter)serverConfig.GetValue(TcpRPCParserConfig.SerializeConverterProperty);
             this.ProxyToken = (string)serverConfig.GetValue(TcpRPCParserConfig.ProxyTokenProperty);
             this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(TcpRPCParserConfig.RPCCompilerProperty);
+            this.NameSpace = (string)serverConfig.GetValue(TcpRPCParserConfig.NameSpaceProperty);
+            this.RPCVersion = (Version)serverConfig.GetValue(TcpRPCParserConfig.RPCVersionProperty);
         }
 
         public virtual List<MethodItem> GetRegisteredMethodItems(object caller)
