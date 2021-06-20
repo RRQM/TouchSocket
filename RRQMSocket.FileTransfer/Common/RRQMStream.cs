@@ -11,18 +11,28 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
     internal class RRQMStream : IDisposable
     {
-        internal static RRQMStream GetRQMStream(ref ProgressBlockCollection blocks, bool restart, bool breakpoint)
+        internal static ConcurrentDictionary<string, RRQMStream> pathAndStream = new ConcurrentDictionary<string, RRQMStream>();
+
+        internal static RRQMStream GetRRQMStream(ref ProgressBlockCollection blocks, bool restart, bool breakpoint)
         {
-            RRQMStream stream = new RRQMStream();
-            stream.fileInfo = blocks.UrlFileInfo;
             string rrqmPath = blocks.UrlFileInfo.FilePath + ".rrqm";
             string tempPath = blocks.UrlFileInfo.FilePath + ".temp";
+
+            if (pathAndStream.TryRemove(blocks.UrlFileInfo.FilePath, out RRQMStream rrqmStream))
+            {
+                rrqmStream.Dispose();
+            }
+            RRQMStream stream = new RRQMStream();
+            pathAndStream.TryAdd(blocks.UrlFileInfo.FilePath, stream);
+            stream.fileInfo = blocks.UrlFileInfo;
+
 
             if (File.Exists(rrqmPath) && File.Exists(tempPath) && !restart && breakpoint)
             {
@@ -31,7 +41,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     stream.tempFileStream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite);
                     stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Open, FileAccess.ReadWrite);
-                    blocks = readBlocks.ToPBCollection();
+                    stream.blocks = blocks = readBlocks.ToPBCollection();
 
                     return stream;
                 }
@@ -57,6 +67,27 @@ namespace RRQMSocket.FileTransfer
             return stream;
         }
 
+        internal static void FileFinished(RRQMStream stream)
+        {
+            stream.Dispose();
+            string path = stream.fileInfo.FilePath;
+            if (File.Exists(path + ".rrqm"))
+            {
+                File.Delete(path + ".rrqm");
+            }
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+            if (File.Exists(path + ".temp"))
+            {
+                File.Move(path + ".temp", path);
+            }
+           
+        }
+
+        ProgressBlockCollection blocks;
+
         internal FileInfo fileInfo;
 
         private FileStream rrqmFileStream;
@@ -75,6 +106,9 @@ namespace RRQMSocket.FileTransfer
 
         public void Dispose()
         {
+            string path = this.fileInfo.FilePath;
+            pathAndStream.TryRemove(path, out _);
+            this.blocks = null;
             if (this.rrqmFileStream != null)
             {
                 this.rrqmFileStream.Dispose();

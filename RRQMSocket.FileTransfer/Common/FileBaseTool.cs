@@ -12,6 +12,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 namespace RRQMSocket.FileTransfer
@@ -56,22 +57,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        internal static void FileFinished(RRQMStream stream)
-        {
-            stream.Dispose();
-            if (File.Exists(stream.fileInfo.FilePath + ".rrqm"))
-            {
-                File.Delete(stream.fileInfo.FilePath + ".rrqm");
-            }
-            if (File.Exists(stream.fileInfo.FilePath))
-            {
-                File.Delete(stream.fileInfo.FilePath);
-            }
-            if (File.Exists(stream.fileInfo.FilePath + ".temp"))
-            {
-                File.Move(stream.fileInfo.FilePath + ".temp", stream.fileInfo.FilePath);
-            }
-        }
+       
 
         private static int blockCount = 100;
 
@@ -147,5 +133,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         #endregion Methods
+
+      
     }
 }

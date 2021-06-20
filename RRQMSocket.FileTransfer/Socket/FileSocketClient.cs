@@ -170,10 +170,6 @@ namespace RRQMSocket.FileTransfer
         public override void Dispose()
         {
             base.Dispose();
-            if (uploadFileStream != null)
-            {
-                uploadFileStream.Dispose();
-            }
         }
 
         /// <summary>
@@ -628,7 +624,7 @@ namespace RRQMSocket.FileTransfer
                 try
                 {
                     ProgressBlockCollection blocks = requestBlocks.ToPBCollection();
-                    uploadFileStream = RRQMStream.GetRQMStream(ref blocks, restart, this.breakpointResume);
+                    uploadFileStream = RRQMStream.GetRRQMStream(ref blocks, restart, this.breakpointResume);
                     blocks.UrlFileInfo.FilePath = requestBlocks.UrlFileInfo.FilePath;
                     this.fileBlocks = blocks;
                     waitResult.Status = 1;
@@ -702,7 +698,7 @@ namespace RRQMSocket.FileTransfer
             TransferFileHashDictionary.AddFile(this.TransferFileInfo);
             if (this.uploadFileStream != null)
             {
-                FileBaseTool.FileFinished(this.uploadFileStream);
+                RRQMStream.FileFinished(this.uploadFileStream);
                 this.uploadFileStream = null;
             }
             if (this.fileBlocks != null)
