@@ -69,7 +69,9 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="RRQMSocket" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
   </ItemGroup>
 	<ItemGroup>
 		<Reference Include="RRQMCore">

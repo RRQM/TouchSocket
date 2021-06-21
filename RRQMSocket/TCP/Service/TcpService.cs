@@ -354,7 +354,7 @@ namespace RRQMSocket
                         throw new RRQMException("无法重新利用已释放对象");
                     }
             }
-
+            this.Logger.Debug(LogType.Warning,this,Properties.Resources.附加协议);
             this.listenIPHosts = iPHosts;
             this.serverState = ServerState.Running;
         }
