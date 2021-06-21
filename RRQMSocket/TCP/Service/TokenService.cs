@@ -99,25 +99,17 @@ namespace RRQMSocket
                                 client.ReadIpPort();
                                 client.SetBufferLength(this.BufferLength);
 
-                                lock (locker)
-                                {
-                                    CreateOption creatOption = new CreateOption();
-                                    creatOption.NewCreate = client.NewCreate;
-                                    if (client.NewCreate)
-                                    {
-                                        creatOption.ID = this.SocketClients.GetDefaultID();
-                                    }
-                                    else
-                                    {
-                                        creatOption.ID = client.ID;
-                                    }
-                                    this.OnCreateSocketCliect(client, creatOption);
-                                    client.id = creatOption.ID;
+                                CreateOption creatOption = new CreateOption();
+                                creatOption.NewCreate = client.NewCreate;
 
-                                    if (!this.SocketClients.TryAdd(client))
-                                    {
-                                        throw new RRQMException("ID重复");
-                                    }
+                                creatOption.ID = this.SocketClients.GetDefaultID();
+
+                                this.OnCreateSocketCliect(client, creatOption);
+                                client.id = creatOption.ID;
+
+                                if (!this.SocketClients.TryAdd(client))
+                                {
+                                    throw new RRQMException("ID重复");
                                 }
 
                                 client.BeginReceive();

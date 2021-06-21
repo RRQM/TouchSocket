@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Exceptions;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -25,17 +26,24 @@ namespace RRQMSocket
         /// </summary>
         public IPHost(string ipHost)
         {
-            int r = ipHost.LastIndexOf(":");
-            this.IP = ipHost.Substring(0, r);
-            this.Port = Convert.ToInt32(ipHost.Substring(r + 1, ipHost.Length - (r + 1)));
-            this.EndPoint = new IPEndPoint(IPAddress.Parse(this.IP), this.Port);
-            if (this.IP.Contains(":"))
+            try
             {
-                this.AddressFamily = AddressFamily.InterNetworkV6;
+                int r = ipHost.LastIndexOf(":");
+                this.IP = ipHost.Substring(0, r);
+                this.Port = Convert.ToInt32(ipHost.Substring(r + 1, ipHost.Length - (r + 1)));
+                this.EndPoint = new IPEndPoint(IPAddress.Parse(this.IP), this.Port);
+                if (this.IP.Contains(":"))
+                {
+                    this.AddressFamily = AddressFamily.InterNetworkV6;
+                }
+                else
+                {
+                    this.AddressFamily = AddressFamily.InterNetwork;
+                }
             }
-            else
+            catch
             {
-                this.AddressFamily = AddressFamily.InterNetwork;
+                throw new RRQMException("IPHost不合法");
             }
         }
 

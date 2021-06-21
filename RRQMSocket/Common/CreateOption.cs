@@ -15,7 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 创建设置
     /// </summary>
-    public class CreateOption
+    public struct CreateOption
     {
         /// <summary>
         /// 判断该T是否为新建对象，

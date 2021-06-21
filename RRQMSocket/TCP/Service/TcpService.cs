@@ -155,7 +155,7 @@ namespace RRQMSocket
         public override void Dispose()
         {
             base.Dispose();
-            if (this.listenSockets!=null)
+            if (this.listenSockets != null)
             {
                 foreach (var item in this.listenSockets)
                 {
@@ -180,9 +180,9 @@ namespace RRQMSocket
         /// <param name="oldID"></param>
         /// <param name="newID"></param>
         /// <returns></returns>
-        public virtual void ResetID(string oldID,string newID)
+        public virtual void ResetID(string oldID, string newID)
         {
-            if (!this.socketClients.TryGetSocketClient(oldID,out TClient client))
+            if (!this.socketClients.TryGetSocketClient(oldID, out TClient client))
             {
                 throw new RRQMException("oldID不存在");
             }
@@ -354,7 +354,7 @@ namespace RRQMSocket
                         throw new RRQMException("无法重新利用已释放对象");
                     }
             }
-            this.Logger.Debug(LogType.Warning,this,Properties.Resources.附加协议);
+            this.Logger.Debug(LogType.Warning, this, Properties.Resources.附加协议);
             this.listenIPHosts = iPHosts;
             this.serverState = ServerState.Running;
         }
@@ -411,26 +411,19 @@ namespace RRQMSocket
                 client.ReadIpPort();
                 client.SetBufferLength(this.BufferLength);
 
-                lock (locker)
-                {
-                    CreateOption creatOption = new CreateOption();
-                    creatOption.NewCreate = client.NewCreate;
-                    if (client.NewCreate)
-                    {
-                        creatOption.ID = this.SocketClients.GetDefaultID();
-                    }
-                    else
-                    {
-                        creatOption.ID = client.ID;
-                    }
-                    this.OnCreateSocketCliect(client, creatOption);
-                    client.id = creatOption.ID;
+                CreateOption creatOption = new CreateOption();
+                creatOption.NewCreate = client.NewCreate;
 
-                    if (!this.socketClients.TryAdd(client))
-                    {
-                        throw new RRQMException("ID重复");
-                    }
+                creatOption.ID = this.SocketClients.GetDefaultID();
+
+                this.OnCreateSocketCliect(client, creatOption);
+                client.id = creatOption.ID;
+
+                if (!this.socketClients.TryAdd(client))
+                {
+                    throw new RRQMException("ID重复");
                 }
+
                 client.BeginReceive();
                 ClientConnectedMethod(client, null);
             }
@@ -451,12 +444,11 @@ namespace RRQMSocket
                 throw new RRQMException("配置文件为空");
             }
             this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty);
-            this.socketClientPool.Capacity= this.maxCount;
+            this.socketClientPool.Capacity = this.maxCount;
             this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
             this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
             this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
             this.SetBufferLength((int)serverConfig.GetValue(ServerConfig.BufferLengthProperty));
-            this.socketClients.IDFormat = (string)serverConfig.GetValue(TcpServerConfig.IDFormatProperty);
             this.name = serverConfig.ServerName;
         }
         /// <summary>
@@ -515,7 +507,7 @@ namespace RRQMSocket
             {
                 this.listenSockets = new Socket[iPHosts.Length];
                 int i = 0;
-                foreach (var  iPHost in iPHosts)
+                foreach (var iPHost in iPHosts)
                 {
                     Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                     this.listenSockets[i++] = socket;
@@ -540,7 +532,7 @@ namespace RRQMSocket
                 }
             }
         }
-        
+
         private void ClearClient()
         {
             while (true)
@@ -553,7 +545,7 @@ namespace RRQMSocket
                 else
                 {
                     long tick = DateTime.Now.Ticks / 10000000;
-                    ICollection<string> collection = this.SocketClients.GetTokens();
+                    IEnumerable<string> collection = this.SocketClients.GetIDs();
                     foreach (var token in collection)
                     {
                         if (this.SocketClients.TryGetSocketClient(token, out TClient client))
@@ -623,7 +615,7 @@ namespace RRQMSocket
         {
             if (!this.disposable)
             {
-                if (e.SocketError == SocketError.Success && e.AcceptSocket!=null)
+                if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
                 {
                     try
                     {

@@ -48,25 +48,7 @@ namespace RRQMSocket
         public static readonly DependencyProperty MaxCountProperty =
             DependencyProperty.Register("MaxCount", typeof(int), typeof(TcpServerConfig), 10000);
 
-        /// <summary>
-        /// 获取或设置分配ID的格式，
-        /// 格式必须符合字符串格式，至少包含一个补位，
-        /// 默认为“{0}-TCP”
-        /// </summary>
-        public string IDFormat
-        {
-            get { return (string)GetValue(IDFormatProperty); }
-            set { SetValue(IDFormatProperty, value); }
-        }
-
-        /// <summary>
-        /// 获取或设置分配ID的格式，
-        /// 格式必须符合字符串格式，至少包含一个补位，
-        /// 默认为“{0}-TCP”,所需类型<see cref="string"/>
-        /// </summary>
-        public static readonly DependencyProperty IDFormatProperty =
-            DependencyProperty.Register("IDFormat", typeof(string), typeof(TcpServerConfig), "{0}-TCP");
-
+       
         /// <summary>
         /// 获取或设置清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>

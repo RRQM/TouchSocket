@@ -23,13 +23,8 @@ namespace RRQMSocket
     [DebuggerDisplay("Count={Count}")]
     public class SocketCliectCollection<T> : IDisposable where T : ISocketClient
     {
-        /// <summary>
-        /// 获取或设置分配ID的格式
-        /// </summary>
-        public string IDFormat { get; set; }
 
-        private int number;
-
+        private RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
         /// <summary>
         /// 数量
         /// </summary>
@@ -44,10 +39,14 @@ namespace RRQMSocket
 
         internal string GetDefaultID()
         {
-            return string.Format(IDFormat, number++);
+            return iDGenerator.NextID().ToString();
         }
 
-        internal ICollection<string> GetTokens()
+        /// <summary>
+        /// 获取ID集合
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetIDs()
         {
             return this.tokenDic.Keys;
         }
