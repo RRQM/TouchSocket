@@ -146,7 +146,9 @@ namespace RRQMSocket
                     Logger.Debug(LogType.Error, this, "接收数据长度大于设定值，已放弃接收");
                     return;
                 }
-                if (r - index-4 >= length)
+
+                int recedSurPlusLength = r - index - 4;
+                if (recedSurPlusLength >= length)
                 {
                     ByteBlock byteBlock = this.BytePool.GetByteBlock(length);
                     byteBlock.Write(dataBuffer, index + 4, length);
@@ -156,8 +158,8 @@ namespace RRQMSocket
                 else//半包
                 {
                     this.tempByteBlock = this.BytePool.GetByteBlock(length);
-                    surPlusLength = length - (r - index - 4);
-                    this.tempByteBlock.Write(dataBuffer, index + 4, r - -index - 4);
+                    surPlusLength = length - recedSurPlusLength;
+                    this.tempByteBlock.Write(dataBuffer, index + 4, recedSurPlusLength);
                 }
                 index += (length + 4);
             }

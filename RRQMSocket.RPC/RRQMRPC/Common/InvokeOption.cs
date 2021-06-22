@@ -19,30 +19,42 @@ namespace RRQMSocket.RPC.RRQMRPC
     {
         static InvokeOption()
         {
-            _tcpInvoke = new InvokeOption();
-            _tcpInvoke.WaitTime = 10;
-            _tcpInvoke.Feedback = true;
+            onlySend = new InvokeOption();
+            onlySend.WaitTime = 5;
+            onlySend.FeedbackType = FeedbackType.OnlySend ;
 
-            _udpInvoke = new InvokeOption();
-            _udpInvoke.WaitTime = 10;
-            _udpInvoke.Feedback = false;
+            waitSend = new InvokeOption();
+            waitSend.WaitTime = 5;
+            waitSend.FeedbackType =  FeedbackType.WaitSend;
+
+            waitInvoke = new InvokeOption();
+            waitInvoke.WaitTime = 5;
+            waitInvoke.FeedbackType = FeedbackType.WaitInvoke;
         }
 
-        private static InvokeOption _tcpInvoke;
+        private static InvokeOption onlySend;
 
         /// <summary>
         /// 默认设置。
-        /// WaitTime=10，Feedback=True。
+        /// WaitTime=5
         /// </summary>
-        public static InvokeOption CanFeedback { get { return _tcpInvoke; } }
+        public static InvokeOption OnlySend { get { return onlySend; } }
 
-        private static InvokeOption _udpInvoke;
+        private static InvokeOption waitSend;
 
         /// <summary>
         /// 默认设置。
-        /// WaitTime=10，Feedback=False。
+        /// WaitTime=5
         /// </summary>
-        public static InvokeOption NoFeedback { get { return _udpInvoke; } }
+        public static InvokeOption WaitSend { get { return waitSend; } }
+
+        private static InvokeOption waitInvoke;
+
+        /// <summary>
+        /// 默认设置。
+        /// WaitTime=5
+        /// </summary>
+        public static InvokeOption WaitInvoke { get { return waitInvoke; } }
 
         /// <summary>
         /// 调用等待时长
@@ -52,6 +64,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 调用反馈
         /// </summary>
-        public bool Feedback { get; set; }
+        public FeedbackType FeedbackType { get; set; }
     }
 }

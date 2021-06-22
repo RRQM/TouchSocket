@@ -71,7 +71,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             RPCContext context = (RPCContext)methodInvoker.Flag;
-            if (context.Feedback == 0)
+            if (context.Feedback != 2)
             {
                 return;
             }
@@ -269,7 +269,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 try
                 {
-                    context.ReturnParameterBytes = targetsocketClient.CallBack(context, context.Feedback == 1 ? InvokeOption.CanFeedback : InvokeOption.NoFeedback);
+                    context.ReturnParameterBytes = targetsocketClient.CallBack(context, 5);
                     context.Status = 1;
                 }
                 catch (Exception ex)

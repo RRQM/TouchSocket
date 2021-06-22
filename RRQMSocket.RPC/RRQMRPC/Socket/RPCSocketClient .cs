@@ -28,8 +28,8 @@ namespace RRQMSocket.RPC.RRQMRPC
     {
         static RPCSocketClient()
         {
-            AddUsedProtocol(100,"请求RPC代理文件");
-            AddUsedProtocol(101,"RPC调用");
+            AddUsedProtocol(100, "请求RPC代理文件");
+            AddUsedProtocol(101, "RPC调用");
             AddUsedProtocol(102, "获取注册服务");
             AddUsedProtocol(103, "ID调用客户端");
             AddUsedProtocol(104, "RPC回调");
@@ -69,14 +69,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
-                invokeOption = InvokeOption.NoFeedback;
+                invokeOption = InvokeOption.WaitInvoke;
             }
             try
             {
-                if (invokeOption.Feedback)
-                {
-                    context.Feedback = 1;
-                }
+                context.Feedback = (byte)invokeOption.FeedbackType;
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
@@ -85,7 +82,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
 
-                this.InternalSend(104, byteBlock.Buffer,0,(int)byteBlock.Length);
+                this.InternalSend(104, byteBlock.Buffer, 0, (int)byteBlock.Length);
             }
             catch (Exception e)
             {
@@ -95,41 +92,60 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 byteBlock.Dispose();
             }
-            if (invokeOption.Feedback)
-            {
-                waitData.Wait(invokeOption.WaitTime * 1000);
 
-                RPCContext resultContext = waitData.WaitResult;
-                waitData.Dispose();
-                if (resultContext.Status == 0)
-                {
-                    throw new RRQMTimeoutException("等待结果超时");
-                }
-                else if (resultContext.Status == 2)
-                {
-                    throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCCallBackMethod");
-                }
-                else if (resultContext.Status == 3)
-                {
-                    throw new RRQMRPCException("客户端未开启反向RPC");
-                }
-                else if (resultContext.Status == 4)
-                {
-                    throw new RRQMRPCException($"调用异常，信息：{resultContext.Message}");
-                }
-
-                try
-                {
-                    return (T)this.serializeConverter.DeserializeParameter(resultContext.ReturnParameterBytes, typeof(T));
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMException(e.Message);
-                }
-            }
-            else
+            switch (invokeOption.FeedbackType)
             {
-                return default(T);
+                case FeedbackType.OnlySend:
+                    {
+                        waitData.Dispose();
+                        return default(T);
+                    }
+                case FeedbackType.WaitSend:
+                    {
+                        waitData.Wait(invokeOption.WaitTime * 1000);
+
+                        RPCContext resultContext = waitData.WaitResult;
+                        waitData.Dispose();
+                        if (resultContext.Status == 0)
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                        return default(T);
+                    }
+                case FeedbackType.WaitInvoke:
+                    {
+                        waitData.Wait(invokeOption.WaitTime * 1000);
+
+                        RPCContext resultContext = waitData.WaitResult;
+                        waitData.Dispose();
+                        if (resultContext.Status == 0)
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                        else if (resultContext.Status == 2)
+                        {
+                            throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCCallBackMethod");
+                        }
+                        else if (resultContext.Status == 3)
+                        {
+                            throw new RRQMRPCException("客户端未开启反向RPC");
+                        }
+                        else if (resultContext.Status == 4)
+                        {
+                            throw new RRQMRPCException($"调用异常，信息：{resultContext.Message}");
+                        }
+
+                        try
+                        {
+                            return (T)this.serializeConverter.DeserializeParameter(resultContext.ReturnParameterBytes, typeof(T));
+                        }
+                        catch (Exception e)
+                        {
+                            throw new RRQMException(e.Message);
+                        }
+                    }
+                default:
+                    return default(T);
             }
 
         }
@@ -150,14 +166,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
-                invokeOption = InvokeOption.NoFeedback;
+                invokeOption = InvokeOption.WaitInvoke;
             }
             try
             {
-                if (invokeOption.Feedback)
-                {
-                    context.Feedback = 1;
-                }
+                context.Feedback = (byte)invokeOption.FeedbackType;
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
@@ -166,7 +179,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
 
-                this.InternalSend(104, byteBlock.Buffer,0,(int)byteBlock.Length);
+                this.InternalSend(104, byteBlock.Buffer, 0, (int)byteBlock.Length);
             }
             catch (Exception e)
             {
@@ -176,28 +189,51 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 byteBlock.Dispose();
             }
-            if (invokeOption.Feedback)
+            switch (invokeOption.FeedbackType)
             {
-                waitData.Wait(invokeOption.WaitTime * 1000);
+                case FeedbackType.OnlySend:
+                    {
+                        waitData.Dispose();
+                        return;
+                    }
+                case FeedbackType.WaitSend:
+                    {
+                        waitData.Wait(invokeOption.WaitTime * 1000);
 
-                RPCContext resultContext = waitData.WaitResult;
-                waitData.Dispose();
-                if (resultContext.Status == 0)
-                {
-                    throw new RRQMTimeoutException("等待结果超时");
-                }
-                else if (resultContext.Status == 2)
-                {
-                    throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCCallBackMethod");
-                }
-                else if (resultContext.Status == 3)
-                {
-                    throw new RRQMRPCException("客户端未开启反向RPC");
-                }
-                else if (resultContext.Status == 4)
-                {
-                    throw new RRQMRPCException($"调用异常，信息：{resultContext.Message}");
-                }
+                        RPCContext resultContext = waitData.WaitResult;
+                        waitData.Dispose();
+                        if (resultContext.Status == 0)
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                        return;
+                    }
+                case FeedbackType.WaitInvoke:
+                    {
+                        waitData.Wait(invokeOption.WaitTime * 1000);
+
+                        RPCContext resultContext = waitData.WaitResult;
+                        waitData.Dispose();
+                        if (resultContext.Status == 0)
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                        else if (resultContext.Status == 2)
+                        {
+                            throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCCallBackMethod");
+                        }
+                        else if (resultContext.Status == 3)
+                        {
+                            throw new RRQMRPCException("客户端未开启反向RPC");
+                        }
+                        else if (resultContext.Status == 4)
+                        {
+                            throw new RRQMRPCException($"调用异常，信息：{resultContext.Message}");
+                        }
+                        return;
+                    }
+                default:
+                    return;
             }
         }
 
@@ -205,30 +241,24 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 回调RPC
         /// </summary>
         /// <param name="invokeContext"></param>
-        /// <param name="invokeOption"></param>
+        /// <param name="timeout"></param>
         /// <returns></returns>
-        public byte[] CallBack(RPCContext invokeContext, InvokeOption invokeOption = null)
+        public byte[] CallBack(RPCContext invokeContext,int timeout)
         {
             RPCContext context = new RPCContext();
             WaitData<RPCContext> waitData = this.waitHandle.GetWaitData(context);
             context.MethodToken = invokeContext.MethodToken;
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
-            {
-                invokeOption = InvokeOption.NoFeedback;
-            }
+           
             try
             {
-                if (invokeOption.Feedback)
-                {
-                    context.Feedback = 1;
-                }
+                context.Feedback = invokeContext.Feedback;
 
                 context.ParametersBytes = invokeContext.ParametersBytes;
                 context.Serialize(byteBlock);
 
-                this.InternalSend(104, byteBlock.Buffer,0,(int)byteBlock.Length);
+                this.InternalSend(104, byteBlock.Buffer, 0, (int)byteBlock.Length);
             }
             catch (Exception e)
             {
@@ -238,34 +268,53 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 byteBlock.Dispose();
             }
-            if (invokeOption.Feedback)
+            switch (invokeContext.Feedback)
             {
-                waitData.Wait(invokeOption.WaitTime * 1000);
+                case 0:
+                    {
+                        waitData.Dispose();
+                        return null;
+                    }
+                case 1:
+                    {
+                        waitData.Wait(timeout * 1000);
 
-                RPCContext resultContext = waitData.WaitResult;
-                waitData.Dispose();
-                if (resultContext.Status == 0)
-                {
-                    throw new RRQMTimeoutException("等待结果超时");
-                }
-                else if (resultContext.Status == 2)
-                {
-                    throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCCallBackMethod");
-                }
-                else if (resultContext.Status == 3)
-                {
-                    throw new RRQMRPCException("客户端未开启反向RPC");
-                }
-                else if (resultContext.Status == 4)
-                {
-                    throw new RRQMRPCException($"调用异常，信息：{context.Message}");
-                }
+                        RPCContext resultContext = waitData.WaitResult;
+                        waitData.Dispose();
+                        if (resultContext.Status == 0)
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                        return null;
+                    }
+                case 2:
+                    {
+                        waitData.Wait(timeout * 1000);
 
-                return resultContext.ReturnParameterBytes;
-            }
-            else
-            {
-                return null;
+                        RPCContext resultContext = waitData.WaitResult;
+                        waitData.Dispose();
+                        if (resultContext.Status == 0)
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                        else if (resultContext.Status == 2)
+                        {
+                            throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCCallBackMethod");
+                        }
+                        else if (resultContext.Status == 3)
+                        {
+                            throw new RRQMRPCException("客户端未开启反向RPC");
+                        }
+                        else if (resultContext.Status == 4)
+                        {
+                            throw new RRQMRPCException($"调用异常，信息：{resultContext.Message}");
+                        }
+
+                        return resultContext.ReturnParameterBytes;
+
+                    }
+                default:
+                    return null;
             }
         }
 
@@ -298,7 +347,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
                             byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetProxyInfo(proxyToken, this), true);
-                            this.InternalSend(100, data,0,data.Length);
+                            this.InternalSend(100, data, 0, data.Length);
                         }
                         catch (Exception e)
                         {
@@ -311,6 +360,24 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             RPCContext content = RPCContext.Deserialize(buffer, 2);
+                            if (content.Feedback == 1)
+                            {
+                                List<byte[]> ps = content.ParametersBytes;
+
+                                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                                try
+                                {
+                                    content.ParametersBytes = null;
+                                    content.Status = 1;
+                                    content.Serialize(returnByteBlock);
+                                    this.InternalSend(101, returnByteBlock.Buffer, 0, (int)returnByteBlock.Length);
+                                }
+                                finally
+                                {
+                                    content.ParametersBytes = ps;
+                                    returnByteBlock.Dispose();
+                                }
+                            }
                             ((IRRQMRPCParser)this.Service).ExecuteContext(content, this);
                         }
                         catch (Exception e)
@@ -324,7 +391,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(this), true);
-                            this.InternalSend(102,data,0,data.Length);
+                            this.InternalSend(102, data, 0, data.Length);
                         }
                         catch (Exception e)
                         {
@@ -339,13 +406,13 @@ namespace RRQMSocket.RPC.RRQMRPC
                             try
                             {
                                 RPCContext content = RPCContext.Deserialize(buffer, 2);
-                                content= this.IDAction(this, content);
+                                content = this.IDAction(this, content);
 
                                 ByteBlock retuenByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                                 try
                                 {
                                     content.Serialize(retuenByteBlock);
-                                    this.InternalSend(103, retuenByteBlock.Buffer,0, (int)retuenByteBlock.Length);
+                                    this.InternalSend(103, retuenByteBlock.Buffer, 0, (int)retuenByteBlock.Length);
                                 }
                                 finally
                                 {
@@ -374,7 +441,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                     }
                 default:
-                    RPCHandleDefaultData(procotol,byteBlock);
+                    RPCHandleDefaultData(procotol, byteBlock);
                     break;
             }
         }
@@ -386,7 +453,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="byteBlock"></param>
         protected virtual void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            this.OnHandleDefaultData(procotol,byteBlock);
+            this.OnHandleDefaultData(procotol, byteBlock);
         }
 
         /// <summary>
