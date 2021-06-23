@@ -64,6 +64,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         public event RRQMReceivedProcotolEventHandler Received;
 
         /// <summary>
+        /// RPC初始化后
+        /// </summary>
+        public event RRQMMessageEventHandler RPCInitialized;
+
+        /// <summary>
         /// 获取反向RPC映射图
         /// </summary>
         public MethodMap MethodMap
@@ -106,7 +111,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 {
                     throw new RRQMRPCException("初始化超时");
                 }
-
+                this.OnRPCInitialized(new MesEventArgs("success"));
             }
         }
 
@@ -136,12 +141,21 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        public void InitializedRPC()
+        public void InitializeRPC()
         {
             if (!this.Online)
             {
                 this.Connect();
             }
+        }
+
+        /// <summary>
+        /// RPC完成初始化后
+        /// </summary>
+        /// <param name="args"></param>
+        protected virtual void OnRPCInitialized(MesEventArgs args)
+        {
+            this.RPCInitialized?.Invoke(this,args);
         }
 
         /// <summary>

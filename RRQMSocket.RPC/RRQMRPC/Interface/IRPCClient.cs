@@ -53,7 +53,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 初始化RPC
         /// </summary>
-        void InitializedRPC();
+        void InitializeRPC();
 
         /// <summary>
         /// 函数式调用
