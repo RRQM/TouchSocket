@@ -258,29 +258,7 @@ namespace RRQMSocket.FileTransfer
             base.Connect();
             SynchronizeTransferSetting();
         }
-        private void ReConnect()
-        {
-
-            this.Disconnect();
-            this.Logger.Debug(LogType.Warning, this, $"客户端已断连，正在尝试恢复连接！！！");
-            for (int i = 0; i < 10; i++)
-            {
-                try
-                {
-                    this.Connect();
-                    Thread.Sleep(1000);
-                    this.RequestTransfer(this.transferUrlFileInfo);
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.Debug(LogType.Error, this, $"尝试恢复连接时发生错误：{ex.Message}");
-                }
-            }
-            
-
-        }
-
+       
 
         /// <summary>
         /// 释放资源
@@ -527,11 +505,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            Task.Run(async () =>
-                            {
-                                await Task.Delay(3000);
-                                ReConnect();
-                            });
+                            Logger.Debug(LogType.Error, this, $"已断开连接，使用专业版可进行断网续传");
                             OutDownload(false);
                             return;
                         }
@@ -920,11 +894,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            Task.Run(async () =>
-                            {
-                                await Task.Delay(3000);
-                                ReConnect();
-                            });
+                            Logger.Debug(LogType.Error, this, $"已断开连接，使用专业版可进行断网续传");
                             OutUpload();
                             return;
                         }
