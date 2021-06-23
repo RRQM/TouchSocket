@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -23,7 +18,6 @@ namespace RRQMSocket
     /// </summary>
     public class ProtocolServerConfig : TokenServerConfig
     {
-
         /// <summary>
         /// 是否能重新设置ID
         /// </summary>
@@ -38,7 +32,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty CanResetIDProperty =
             DependencyProperty.Register("CanResetID", typeof(bool), typeof(ProtocolServerConfig), true);
-
-
     }
 }

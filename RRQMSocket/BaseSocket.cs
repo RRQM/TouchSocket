@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Log;
 using System;
-using System.Net.Sockets;
 
 namespace RRQMSocket
 {
@@ -64,8 +63,6 @@ namespace RRQMSocket
         protected virtual void OnBufferLengthChanged()
         {
         }
-
-       
 
         /// <summary>
         /// 释放资源

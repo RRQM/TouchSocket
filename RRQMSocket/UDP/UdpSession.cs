@@ -89,6 +89,7 @@ namespace RRQMSocket
         }
 
         private string name;
+
         /// <summary>
         /// 服务器名称
         /// </summary>
@@ -96,7 +97,6 @@ namespace RRQMSocket
         {
             get { return name; }
         }
-
 
         private BufferQueueGroup[] bufferQueueGroups;
         private SocketAsyncEventArgs recviveEventArg;
@@ -365,6 +365,7 @@ namespace RRQMSocket
                 throw new RRQMException("配置文件为空");
             }
             this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpSessionConfig.DefaultRemotePointProperty);
+            this.SetBufferLength(serverConfig.BufferLength);
             this.name = serverConfig.ServerName;
         }
 
@@ -379,7 +380,6 @@ namespace RRQMSocket
             }
 
             bool useBind = (bool)this.serverConfig.GetValue(UdpSessionConfig.UseBindProperty);
-           
 
             if (useBind)
             {
@@ -399,6 +399,7 @@ namespace RRQMSocket
                         }
                     case ServerState.Running:
                         break;
+
                     case ServerState.Stopped:
                         {
                             this.BeginReceive(iPHosts[0]);
@@ -447,7 +448,10 @@ namespace RRQMSocket
             this.recviveEventArg.UserToken = byteBlock;
             this.recviveEventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
             this.recviveEventArg.RemoteEndPoint = iPHost.EndPoint;
-            this.MainSocket.ReceiveFromAsync(this.recviveEventArg);
+            if (!this.MainSocket.ReceiveFromAsync(this.recviveEventArg))
+            {
+                ProcessReceive(this.recviveEventArg);
+            }
         }
 
         /// <summary>
@@ -455,11 +459,11 @@ namespace RRQMSocket
         /// </summary>
         public void Stop()
         {
-            if (this.mainSocket!=null)
+            if (this.mainSocket != null)
             {
                 this.mainSocket.Dispose();
             }
-            
+
             this.serverState = ServerState.Stopped;
         }
 
@@ -470,7 +474,7 @@ namespace RRQMSocket
         {
             base.Dispose();
             this.Stop();
-            if (this.bufferQueueGroups!=null)
+            if (this.bufferQueueGroups != null)
             {
                 foreach (var item in bufferQueueGroups)
                 {

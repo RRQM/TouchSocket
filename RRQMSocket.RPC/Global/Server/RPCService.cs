@@ -185,7 +185,7 @@ namespace RRQMSocket.RPC
 
             foreach (var parser in this.RPCParsers)
             {
-                parser.RRQMInitializeServers(this.ServerProviders,this.MethodInstances);
+                parser.RRQMInitializeServers(this.ServerProviders, this.MethodInstances);
             }
         }
 
@@ -195,9 +195,9 @@ namespace RRQMSocket.RPC
         /// <param name="parserKey"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public bool TryGetRPCParser(string parserKey,out IRPCParser parser)
+        public bool TryGetRPCParser(string parserKey, out IRPCParser parser)
         {
-           return this.RPCParsers.TryGetRPCParser(parserKey,out parser );
+            return this.RPCParsers.TryGetRPCParser(parserKey, out parser);
         }
 
         /// <summary>

@@ -115,6 +115,7 @@ namespace RRQMSocket
         {
             get { return socketClients; }
         }
+
         #endregion 属性
 
         #region 变量
@@ -123,6 +124,7 @@ namespace RRQMSocket
         private int backlog;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadClearClient;
+
         #endregion 变量
 
         #region 事件
@@ -354,7 +356,6 @@ namespace RRQMSocket
                         throw new RRQMException("无法重新利用已释放对象");
                     }
             }
-            this.Logger.Debug(LogType.Warning, this, Properties.Resources.附加协议);
             this.listenIPHosts = iPHosts;
             this.serverState = ServerState.Running;
         }
@@ -451,6 +452,7 @@ namespace RRQMSocket
             this.SetBufferLength((int)serverConfig.GetValue(ServerConfig.BufferLengthProperty));
             this.name = serverConfig.ServerName;
         }
+
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
         /// 用户可以在该方法中再进行自定义设置，
@@ -637,6 +639,5 @@ namespace RRQMSocket
                 }
             }
         }
-
     }
 }

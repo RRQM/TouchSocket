@@ -223,7 +223,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                     codeString.AppendLine("};");
 
-                    if (isOut||isRef)
+                    if (isOut || isRef)
                     {
                         codeString.Append($"Type[] types = new Type[]");
                         codeString.Append("{");
@@ -237,7 +237,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         codeString.AppendLine("};");
                     }
-                   
 
                     if (isReturn)
                     {
@@ -270,7 +269,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                             codeString.Append(string.Format("\"{0}\"", methodName));
                             codeString.AppendLine(",invokeOption, parameters);");
                         }
-                       
                     }
                     if (isOut || isRef)
                     {

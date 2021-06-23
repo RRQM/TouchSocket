@@ -17,7 +17,7 @@ namespace RRQMSocket
     /// <summary>
     /// 若汝棋茗内置UDP会话
     /// </summary>
-    public  class SimpleUdpSession : UdpSession
+    public class SimpleUdpSession : UdpSession
     {
         /// <summary>
         /// 当收到数据时

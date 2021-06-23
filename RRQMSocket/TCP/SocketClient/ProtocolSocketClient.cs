@@ -9,14 +9,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace RRQMSocket
 {
@@ -29,7 +27,9 @@ namespace RRQMSocket
         /// 辅助发送器
         /// </summary>
         internal ProcotolHelper procotolHelper;
+
         private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
+
         /// <summary>
         /// 接收之前
         /// </summary>
@@ -39,6 +39,7 @@ namespace RRQMSocket
             this.procotolHelper = new ProcotolHelper(this);
             this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
         }
+
         /// <summary>
         /// 添加已被使用的协议
         /// </summary>
@@ -134,7 +135,7 @@ namespace RRQMSocket
         {
             if (procotol > 0)
             {
-                this.procotolHelper.SocketSend(procotol, buffer, offset, length,reserved);
+                this.procotolHelper.SocketSend(procotol, buffer, offset, length, reserved);
             }
             else
             {
@@ -150,7 +151,7 @@ namespace RRQMSocket
         /// <param name="reserved"></param>
         protected void InternalSend(short procotol, ByteBlock byteBlock, bool reserved = false)
         {
-            this.InternalSend(procotol,byteBlock.Buffer,0,(int)byteBlock.Length,reserved);
+            this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length, reserved);
         }
 
         /// <summary>
@@ -236,7 +237,6 @@ namespace RRQMSocket
                         HandleProtocolData(procotol, byteBlock);
                         break;
                     }
-
             }
         }
 

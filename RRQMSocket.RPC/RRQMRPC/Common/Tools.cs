@@ -11,24 +11,21 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
     internal static class Tools
     {
         internal static void GetRPCMethod(
-            ServerProviderCollection providers, 
+            ServerProviderCollection providers,
             MethodInstance[] methodInstances,
-            string nameSpaceOld,Assembly assembly,
+            string nameSpaceOld, Assembly assembly,
             out MethodStore methodStore,
              Version version,
              IRPCCompiler compiler,
              out RPCProxyInfo proxyInfo,
-             out CellCode[]  cellCodes)
+             out CellCode[] cellCodes)
         {
             methodStore = new MethodStore();
             string nameSpace = string.IsNullOrEmpty(nameSpaceOld) ? "RRQMRPC" : $"RRQMRPC.{nameSpaceOld}";
@@ -96,7 +93,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             CodeMap.PropertyCode = propertyCode;
             List<CellCode> codes = new List<CellCode>();
 
-         
             foreach (string className in classAndMethods.Keys)
             {
                 CodeMap codeMap = new CodeMap();
@@ -115,11 +111,10 @@ namespace RRQMSocket.RPC.RRQMRPC
             propertyCellCode.Code = propertyCode.GetPropertyCode();
             codes.Add(propertyCellCode);
             string assemblyInfo = CodeMap.GetAssemblyInfo(nameSpace, version);
-           
 
             proxyInfo = new RPCProxyInfo();
             proxyInfo.AssemblyName = assemblyName;
-            proxyInfo.Version =version==null?"1.0.0.0": version.ToString();
+            proxyInfo.Version = version == null ? "1.0.0.0" : version.ToString();
             if (compiler != null)
             {
                 List<string> codesString = new List<string>();
@@ -131,7 +126,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codesString.ToArray(), refs);
             }
             proxyInfo.Codes = codes;
-           
+
             cellCodes = codes.ToArray();
         }
     }

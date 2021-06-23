@@ -26,12 +26,12 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 包含此解析器的服务器实例
         /// </summary>
-        RPCService RPCService { get;}
+        RPCService RPCService { get; }
 
         /// <summary>
         /// 执行函数
         /// </summary>
-        Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get;}
+        Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; }
 
         /// <summary>
         /// 初始化服务
@@ -46,7 +46,7 @@ namespace RRQMSocket.RPC
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
         void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance);
-        
+
         /// <summary>
         /// 设置函数映射
         /// </summary>

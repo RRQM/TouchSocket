@@ -24,12 +24,12 @@ namespace RRQMSocket
         /// <summary>
         /// IP地址
         /// </summary>
-        string IP { get;}
+        string IP { get; }
 
         /// <summary>
         /// 端口号
         /// </summary>
-        int Port { get;}
+        int Port { get; }
 
         /// <summary>
         /// 主通信器

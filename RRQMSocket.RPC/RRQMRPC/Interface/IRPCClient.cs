@@ -21,7 +21,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public interface IRPCClient : IDisposable
     {
-
         /// <summary>
         /// 获取ID
         /// </summary>

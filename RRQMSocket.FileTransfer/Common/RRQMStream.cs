@@ -33,7 +33,6 @@ namespace RRQMSocket.FileTransfer
             pathAndStream.TryAdd(blocks.UrlFileInfo.FilePath, stream);
             stream.fileInfo = blocks.UrlFileInfo;
 
-
             if (File.Exists(rrqmPath) && File.Exists(tempPath) && !restart && breakpoint)
             {
                 PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(File.ReadAllBytes(rrqmPath));
@@ -83,10 +82,9 @@ namespace RRQMSocket.FileTransfer
             {
                 File.Move(path + ".temp", path);
             }
-           
         }
 
-        ProgressBlockCollection blocks;
+        private ProgressBlockCollection blocks;
 
         internal FileInfo fileInfo;
 

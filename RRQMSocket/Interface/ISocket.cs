@@ -9,16 +9,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Net.Sockets;
 using RRQMCore.Log;
+using System;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// Socket基接口
     /// </summary>
-    public interface ISocket:IDisposable
+    public interface ISocket : IDisposable
     {
         /// <summary>
         /// 数据交互缓存池限制

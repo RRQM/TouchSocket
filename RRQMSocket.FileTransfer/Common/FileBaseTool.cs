@@ -12,7 +12,6 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Serialization;
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 
 namespace RRQMSocket.FileTransfer
@@ -56,8 +55,6 @@ namespace RRQMSocket.FileTransfer
                 return false;
             }
         }
-
-       
 
         private static int blockCount = 100;
 
@@ -133,7 +130,5 @@ namespace RRQMSocket.FileTransfer
         }
 
         #endregion Methods
-
-      
     }
 }

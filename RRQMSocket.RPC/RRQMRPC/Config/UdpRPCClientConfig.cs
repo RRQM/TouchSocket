@@ -10,18 +10,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
     /// UdpRpc
     /// </summary>
-   public class UdpRPCClientConfig:UdpSessionConfig
+    public class UdpRPCClientConfig : UdpSessionConfig
     {
         /// <summary>
         /// 代理文件令箭

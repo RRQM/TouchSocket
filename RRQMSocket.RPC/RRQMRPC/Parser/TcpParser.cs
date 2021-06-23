@@ -13,12 +13,9 @@ using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
-{ 
+{
     /// <summary>
     /// TcpRPCParser泛型类型
     /// </summary>
@@ -30,16 +27,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public TcpParser()
         {
-            this.eventBus = new EventBus();
             this.methodStore = new MethodStore();
         }
 
 #pragma warning disable
-
-        /// <summary>
-        /// 事务总线
-        /// </summary>
-        public EventBus EventBus { get => this.eventBus; }
 
         public MethodMap MethodMap { get; private set; }
 
@@ -64,7 +55,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         private MethodStore methodStore;
         private RPCProxyInfo proxyInfo;
         private CellCode[] codes;
-        private EventBus eventBus;
 
         public MethodStore MethodStore { get => methodStore; }
 
@@ -238,7 +228,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                     methodInvoker.StatusMessage = ex.Message;
                 }
 
-
                 this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
             }
             else
@@ -277,7 +266,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                     context.Status = 3;
                     context.Message = ex.Message;
                 }
-
             }
             else
             {
@@ -286,6 +274,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             return context;
         }
+
 #pragma warning disable
 
         /// <summary>
@@ -331,32 +320,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 throw new RRQMRPCException("未找到该客户端");
             }
-        }
-
-        /// <summary>
-        /// 发布事件
-        /// </summary>
-        /// <param name="eventName">事件名称</param>
-        /// <param name="parameterTypes">事件参数类型</param>
-        public void PublishEvent<T>(string eventName)
-        {
-            EventUnit eventUnit = new EventUnit();
-            eventUnit.ParameterTypes = typeof(T).Name;
-            eventUnit.Publisher = this.ServerName;
-            this.eventBus.AddEvent(eventUnit);
-        }
-
-        /// <summary>
-        /// 触发事件
-        /// </summary>
-        /// <param name="eventName"></param>
-        public void RaiseEvent(string eventName)
-        {
-            if (!this.eventBus.TryGetEventUnit(eventName, out EventUnit eventUnit))
-            {
-                throw new RRQMRPCException("没有该事件的注册信息");
-            }
-
         }
     }
 }

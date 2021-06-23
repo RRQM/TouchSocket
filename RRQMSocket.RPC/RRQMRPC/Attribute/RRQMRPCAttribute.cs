@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC方法标记属性类
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method|AttributeTargets.Event|AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public sealed class RRQMRPCAttribute : RPCAttribute
     {
         /// <summary>

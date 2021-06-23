@@ -43,7 +43,7 @@ namespace RRQMSocket.RPC
         /// <param name="key"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public bool TryGetRPCParser(string key,out IRPCParser parser)
+        public bool TryGetRPCParser(string key, out IRPCParser parser)
         {
             return this.parsers.TryGetValue(key, out parser);
         }

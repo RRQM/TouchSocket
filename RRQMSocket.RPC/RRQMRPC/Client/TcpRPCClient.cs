@@ -35,12 +35,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             AddUsedProtocol(103, "ID调用客户端");
             AddUsedProtocol(104, "RPC回调");
         }
+
         private MethodMap methodMap;
 
         private MethodStore methodStore;
 
         private RPCProxyInfo proxyFile;
-         
+
         private ServerProviderCollection serverProviders;
 
         private WaitData<WaitResult> singleWaitData;
@@ -155,7 +156,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="args"></param>
         protected virtual void OnRPCInitialized(MesEventArgs args)
         {
-            this.RPCInitialized?.Invoke(this,args);
+            this.RPCInitialized?.Invoke(this, args);
         }
 
         /// <summary>
@@ -572,7 +573,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                         }
-                       
+
                         try
                         {
                             return (T)this.SerializeConverter.DeserializeParameter(resultContext.ReturnParameterBytes, typeof(T));
@@ -641,6 +642,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         waitData.Dispose();
                     }
                     break;
+
                 case FeedbackType.WaitSend:
                 case FeedbackType.WaitInvoke:
                     {
@@ -662,6 +664,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     }
                     break;
+
                 default:
                     break;
             }
@@ -762,7 +765,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="eventName"></param>
         public void Subscribe(string eventName)
         {
-
         }
 
         /// <summary>
@@ -960,7 +962,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         RPCHandleDefaultData(procotol, byteBlock);
                         break;
                     }
-
             }
         }
 

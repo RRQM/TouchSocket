@@ -147,7 +147,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 default:
                     return default(T);
             }
-
         }
 
         /// <summary>
@@ -243,14 +242,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="invokeContext"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public byte[] CallBack(RPCContext invokeContext,int timeout)
+        public byte[] CallBack(RPCContext invokeContext, int timeout)
         {
             RPCContext context = new RPCContext();
             WaitData<RPCContext> waitData = this.waitHandle.GetWaitData(context);
             context.MethodToken = invokeContext.MethodToken;
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-           
+
             try
             {
                 context.Feedback = invokeContext.Feedback;
@@ -311,7 +310,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
 
                         return resultContext.ReturnParameterBytes;
-
                     }
                 default:
                     return null;
@@ -418,7 +416,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                                 {
                                     byteBlock.Dispose();
                                 }
-
                             }
                             catch (Exception e)
                             {

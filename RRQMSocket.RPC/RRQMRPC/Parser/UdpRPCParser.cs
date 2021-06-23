@@ -10,13 +10,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -31,8 +29,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public UdpRPCParser()
         {
-
         }
+
 #pragma warning disable
         public MethodMap MethodMap { get; private set; }
 
@@ -59,7 +57,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         private CellCode[] codes;
         public MethodStore MethodStore => this.methodStore;
 
-
         public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
         {
             this.RRQMExecuteMethod = executeMethod;
@@ -74,7 +71,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             this.RPCService = service;
         }
-
 
         public virtual RPCProxyInfo GetProxyInfo(string proxyToken, object caller)
         {
@@ -125,7 +121,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                     methodInvoker.StatusMessage = ex.Message;
                 }
 
-
                 this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
             }
             else
@@ -149,8 +144,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             return this.methodStore.GetAllMethodItem();
         }
-#pragma warning restore
 
+#pragma warning restore
 
         private void UDPSend(short procotol, EndPoint endPoint, byte[] buffer, int offset, int length)
         {
@@ -204,15 +199,29 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             RPCContext content = RPCContext.Deserialize(buffer, 2);
-                            this.ExecuteContext(content, remoteEndPoint);
-                            if (content.Feedback != 0)
+                            if (content.Feedback == 1)
                             {
-                                this.UDPSend(101, remoteEndPoint, new byte[0]);
+                                List<byte[]> ps = content.ParametersBytes;
+
+                                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                                try
+                                {
+                                    content.ParametersBytes = null;
+                                    content.Status = 1;
+                                    content.Serialize(returnByteBlock);
+                                    this.UDPSend(101, remoteEndPoint, returnByteBlock.Buffer, 0, (int)returnByteBlock.Length);
+                                }
+                                finally
+                                {
+                                    content.ParametersBytes = ps;
+                                    returnByteBlock.Dispose();
+                                }
                             }
+                            this.ExecuteContext(content, remoteEndPoint);
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"UDP错误代码: 101, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -249,9 +258,87 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodInstance"></param>
         public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            return;
+            RPCContext context = (RPCContext)methodInvoker.Flag;
+            if (context.Feedback != 2)
+            {
+                return;
+            }
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            try
+            {
+                switch (methodInvoker.Status)
+                {
+                    case InvokeStatus.Ready:
+                        {
+                            break;
+                        }
+
+                    case InvokeStatus.UnFound:
+                        {
+                            context.Status = 2;
+                            break;
+                        }
+                    case InvokeStatus.Success:
+                        {
+                            if (methodInstance.MethodToken > 50000000)
+                            {
+                                context.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(methodInvoker.ReturnParameter);
+                            }
+                            else
+                            {
+                                context.ReturnParameterBytes = null;
+                            }
+
+                            if (methodInstance.IsByRef)
+                            {
+                                context.ParametersBytes = new List<byte[]>();
+                                foreach (var item in methodInvoker.Parameters)
+                                {
+                                    context.ParametersBytes.Add(this.SerializeConverter.SerializeParameter(item));
+                                }
+                            }
+                            else
+                            {
+                                context.ParametersBytes = null;
+                            }
+
+                            context.Status = 1;
+                            break;
+                        }
+                    case InvokeStatus.Abort:
+                        {
+                            context.Status = 4;
+                            context.Message = methodInvoker.StatusMessage;
+                            break;
+                        }
+                    case InvokeStatus.UnEnable:
+                        {
+                            context.Status = 3;
+                            break;
+                        }
+                    case InvokeStatus.InvocationException:
+                        {
+                            break;
+                        }
+                    case InvokeStatus.Exception:
+                        {
+                            break;
+                        }
+                    default:
+                        break;
+                }
+
+                context.Serialize(byteBlock);
+                this.UDPSend(101, (EndPoint)methodInvoker.Caller, byteBlock.Buffer, 0, (int)byteBlock.Length);
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(LogType.Error, this, ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
         }
-
-
     }
 }

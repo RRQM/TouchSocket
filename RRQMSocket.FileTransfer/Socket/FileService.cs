@@ -119,7 +119,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="creatOption"></param>
-        protected  override void OnCreateSocketCliect(FileSocketClient socketClient, CreateOption creatOption)
+        protected override void OnCreateSocketCliect(FileSocketClient socketClient, CreateOption creatOption)
         {
             base.OnCreateSocketCliect(socketClient, creatOption);
 

@@ -82,6 +82,7 @@ namespace RRQMSocket
         public object Flag { get; set; }
 
         internal string id;
+
         /// <summary>
         /// 用于索引的ID
         /// </summary>
@@ -166,7 +167,7 @@ namespace RRQMSocket
         public override void Dispose()
         {
             base.Dispose();
-            if (this.mainSocket!=null)
+            if (this.mainSocket != null)
             {
                 this.mainSocket.Dispose();
             }
@@ -200,7 +201,6 @@ namespace RRQMSocket
         /// </summary>
         protected virtual void OnBeforeReceive()
         {
-
         }
 
         /// <summary>
@@ -301,8 +301,6 @@ namespace RRQMSocket
             }
         }
 
-
-
         /// <summary>
         /// 测试是否在线
         /// </summary>
@@ -320,6 +318,7 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
         protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+
         /// <summary>
         /// 等待接收
         /// </summary>
@@ -374,7 +373,6 @@ namespace RRQMSocket
                 this.breakOut = true;
             }
         }
-
 
         private void ProcessReceived(SocketAsyncEventArgs e)
         {

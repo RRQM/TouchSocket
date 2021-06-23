@@ -12,7 +12,6 @@
 using RRQMCore.ByteManager;
 using System;
 using System.Net.Sockets;
-using System.Text;
 
 namespace RRQMSocket
 {
@@ -73,7 +72,7 @@ namespace RRQMSocket
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <param name="reserved"></param>
-        public void SocketSend(short procotol, byte[] dataBuffer, int offset, int length, bool reserved=false)
+        public void SocketSend(short procotol, byte[] dataBuffer, int offset, int length, bool reserved = false)
         {
             int dataLen;
             if (reserved)
@@ -86,8 +85,8 @@ namespace RRQMSocket
                 this.mainSocket.Send(dataBuffer, 0, length, SocketFlags.None);
                 return;
             }
-            dataLen= length - offset + 2;
-            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen+4);
+            dataLen = length - offset + 2;
+            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen + 4);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
             byte[] agreementBytes = BitConverter.GetBytes(procotol);
 

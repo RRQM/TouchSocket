@@ -11,10 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -49,6 +45,7 @@ namespace RRQMSocket
                 tcpSocketClient.OnReceived = this.OnReceive;
             }
         }
+
         private void OnReceive(SimpleProtocolSocketClient socketClient, short? procotol, ByteBlock byteBlock)
         {
             this.Received?.Invoke(socketClient, procotol, byteBlock);

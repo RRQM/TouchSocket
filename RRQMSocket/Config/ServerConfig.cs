@@ -48,7 +48,6 @@ namespace RRQMSocket
         public static readonly DependencyProperty ListenIPHostsProperty =
             DependencyProperty.Register("ListenIPHosts", typeof(IPHost[]), typeof(ServerConfig), null);
 
-
         /// <summary>
         /// 名称
         /// </summary>
@@ -63,7 +62,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ServerNameProperty =
             DependencyProperty.Register("ServerName", typeof(string), typeof(ServerConfig), "RRQMServer");
-
-
     }
 }

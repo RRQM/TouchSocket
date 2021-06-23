@@ -22,6 +22,7 @@ namespace RRQMSocket
     public class FixedHeaderDataHandlingAdapter : DataHandlingAdapter
     {
         private int maxSizeHeader = 1024 * 1024 * 10;
+
         /// <summary>
         /// 获取或设置包头的最大值（默认为10Mb）
         /// </summary>
@@ -32,6 +33,7 @@ namespace RRQMSocket
         }
 
         private int minSizeHeader = 0;
+
         /// <summary>
         /// 获取或设置包头的最小值（默认为0）
         /// </summary>
@@ -40,7 +42,6 @@ namespace RRQMSocket
             get { return minSizeHeader; }
             set { minSizeHeader = value; }
         }
-
 
         /// <summary>
         /// 临时包

@@ -574,7 +574,7 @@ namespace RRQMSocket.FileTransfer
             FileWaitResult waitResult = new FileWaitResult();
             FileOperationEventArgs args = new FileOperationEventArgs();
             args.FileInfo = requestBlocks.UrlFileInfo;
-            args.TargetPath =Path.Combine(requestBlocks.UrlFileInfo.SaveFolder,requestBlocks.UrlFileInfo.FileName) ;
+            args.TargetPath = Path.Combine(requestBlocks.UrlFileInfo.SaveFolder, requestBlocks.UrlFileInfo.FileName);
             args.IsPermitOperation = true;
             this.BeforeFileTransfer?.Invoke(this, args);//触发 接收文件事件
             requestBlocks.UrlFileInfo.FilePath = args.TargetPath;

@@ -21,11 +21,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             onlySend = new InvokeOption();
             onlySend.WaitTime = 5;
-            onlySend.FeedbackType = FeedbackType.OnlySend ;
+            onlySend.FeedbackType = FeedbackType.OnlySend;
 
             waitSend = new InvokeOption();
             waitSend.WaitTime = 5;
-            waitSend.FeedbackType =  FeedbackType.WaitSend;
+            waitSend.FeedbackType = FeedbackType.WaitSend;
 
             waitInvoke = new InvokeOption();
             waitInvoke.WaitTime = 5;

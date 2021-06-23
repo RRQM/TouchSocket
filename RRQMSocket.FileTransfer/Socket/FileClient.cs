@@ -258,7 +258,6 @@ namespace RRQMSocket.FileTransfer
             base.Connect();
             SynchronizeTransferSetting();
         }
-       
 
         /// <summary>
         /// 释放资源

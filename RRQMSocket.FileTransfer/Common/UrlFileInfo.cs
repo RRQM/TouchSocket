@@ -77,24 +77,23 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public TransferType TransferType { get; set; }
 
-       
-        private string saveFolder=string.Empty;
+        private string saveFolder = string.Empty;
+
         /// <summary>
         /// 存放目录
         /// </summary>
         public string SaveFolder
         {
             get { return saveFolder; }
-            set 
+            set
             {
-                if (value==null)
+                if (value == null)
                 {
                     value = string.Empty;
                 }
-                saveFolder = value; 
+                saveFolder = value;
             }
         }
-
 
         /// <summary>
         /// 比较

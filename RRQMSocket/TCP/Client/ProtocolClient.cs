@@ -9,15 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 
 namespace RRQMSocket
 {
@@ -33,6 +31,7 @@ namespace RRQMSocket
         {
             waitHandle = new AutoResetEvent(false);
         }
+
         private EventWaitHandle waitHandle;
         private ProcotolHelper agreementHelper;
         private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
@@ -166,7 +165,7 @@ namespace RRQMSocket
         {
             if (procotol > 0)
             {
-                this.agreementHelper.SocketSend(procotol, buffer, offset, length,reserved);
+                this.agreementHelper.SocketSend(procotol, buffer, offset, length, reserved);
             }
             else
             {
@@ -262,7 +261,6 @@ namespace RRQMSocket
                         }
                         break;
                     }
-
             }
         }
 

@@ -48,7 +48,6 @@ namespace RRQMSocket
         public static readonly DependencyProperty MaxCountProperty =
             DependencyProperty.Register("MaxCount", typeof(int), typeof(TcpServerConfig), 10000);
 
-       
         /// <summary>
         /// 获取或设置清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>

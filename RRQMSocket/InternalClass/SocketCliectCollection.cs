@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,8 +22,8 @@ namespace RRQMSocket
     [DebuggerDisplay("Count={Count}")]
     public class SocketCliectCollection<T> : IDisposable where T : ISocketClient
     {
-
         private RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
+
         /// <summary>
         /// 数量
         /// </summary>
@@ -53,7 +52,7 @@ namespace RRQMSocket
 
         internal bool TryRemove(string id)
         {
-           return this.tokenDic.TryRemove(id, out _);
+            return this.tokenDic.TryRemove(id, out _);
         }
 
         /// <summary>
