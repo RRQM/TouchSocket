@@ -40,7 +40,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         private MethodStore methodStore;
 
         private RPCProxyInfo proxyFile;
-
+         
         private ServerProviderCollection serverProviders;
 
         private WaitData<WaitResult> singleWaitData;
