@@ -172,6 +172,11 @@ namespace RRQMSocket
             {
                 this.mainSocket.Dispose();
             }
+            if (this.eventArgs != null)
+            {
+                this.eventArgs.Dispose();
+                this.eventArgs = null;
+            }
             this.breakOut = true;
         }
 
@@ -349,16 +354,18 @@ namespace RRQMSocket
                 this.breakOut = true;
             }
         }
+        SocketAsyncEventArgs eventArgs;
 
         /// <summary>
         /// 启动消息接收
         /// </summary>
         internal void BeginReceive()
         {
+
             try
             {
                 this.OnBeforeReceive();
-                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
+                eventArgs = new SocketAsyncEventArgs();
                 eventArgs.Completed += this.EventArgs_Completed;
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 eventArgs.UserToken = byteBlock;
@@ -385,7 +392,7 @@ namespace RRQMSocket
                     {
                         this.lastTick = DateTime.Now.Ticks;
                     }
-                   
+
 
                     ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
@@ -417,6 +424,7 @@ namespace RRQMSocket
                 }
                 else
                 {
+                    e.Dispose();
                     this.breakOut = true;
                 }
             }

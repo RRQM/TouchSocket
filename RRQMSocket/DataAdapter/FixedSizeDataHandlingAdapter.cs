@@ -50,7 +50,7 @@ namespace RRQMSocket
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Position;
+            int r = (int)byteBlock.Length;
             if (this.tempByteBlock == null)
             {
                 SplitPackage(buffer, 0, r);
