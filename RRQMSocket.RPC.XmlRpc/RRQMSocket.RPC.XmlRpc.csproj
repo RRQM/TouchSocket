@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>1.0.3</Version>
+		<Version>5.0.0</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<Description>介绍：这是一个扩展于RRQMSocket.RPC的XmlRpc组件，可以通过该组件直接创建XmlRpc服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持XmlRpc全功能。
@@ -12,7 +12,7 @@
 Introduction：This is an XMLRPC component that extends RRQMSocket.rpc. You can create an XMLRPC service parser directly from this component, allowing both Web and mobile users to call RPC functions across languages.  Features support the full functionality of XMLRPC.  
 
 更新说明：
-优化：依赖项。
+发布5.0
 			
 Demo：https://gitee.com/RRQM_OS/RRQMBox
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
@@ -66,8 +66,8 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\RRQMSocket.Http\RRQMSocket.Http.csproj" />
-	  <ProjectReference Include="..\RRQMSocket.RPC\RRQMSocket.RPC.csproj" />
+	  <PackageReference Include="RRQMSocket.Http" Version="5.0.0" />
+	  <PackageReference Include="RRQMSocket.RPC" Version="5.0.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>
