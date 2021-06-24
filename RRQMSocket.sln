@@ -11,12 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.Http", "RRQMSock
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC", "RRQMSocket.RPC\RRQMSocket.RPC.csproj", "{E88189B5-188B-4798-B5A5-FB8AF9C2A3E3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.WebApi", "RRQMSocket.RPC.WebApi\RRQMSocket.RPC.WebApi.csproj", "{1B2A025A-4D72-4C33-89E3-7DDC5A503A52}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.XmlRpc", "RRQMSocket.RPC.XmlRpc\RRQMSocket.RPC.XmlRpc.csproj", "{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RRQMSocket.RPC.JsonRpc", "RRQMSocket.RPC.JsonRpc\RRQMSocket.RPC.JsonRpc.csproj", "{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,18 +33,6 @@ Global
 		{E88189B5-188B-4798-B5A5-FB8AF9C2A3E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E88189B5-188B-4798-B5A5-FB8AF9C2A3E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E88189B5-188B-4798-B5A5-FB8AF9C2A3E3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1B2A025A-4D72-4C33-89E3-7DDC5A503A52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1B2A025A-4D72-4C33-89E3-7DDC5A503A52}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1B2A025A-4D72-4C33-89E3-7DDC5A503A52}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1B2A025A-4D72-4C33-89E3-7DDC5A503A52}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7A7EFF80-EBDD-4205-901F-B8F4C22307DF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0E36E1FE-49AB-4F69-86AB-710E2AD880D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
