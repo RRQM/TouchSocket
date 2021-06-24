@@ -128,7 +128,6 @@ namespace RRQMSocket.FileTransfer
             socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
             if (creatOption.NewCreate)
             {
-                socketClient.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
                 socketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
                 socketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
             }
