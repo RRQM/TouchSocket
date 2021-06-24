@@ -26,7 +26,8 @@
 ## 💿描述
 | 名称 |描述|
 |---|---|
-|[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?label=RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)| **RRQMSocket**是一个整合性的、超轻量级的网络通信服务框架。<br>它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、<br> **多线程处理** 、 **内存池** 、 **对象池** 等特点，<br>让使用者能够更加简单的、快速的搭建网络框架。|
+|[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?label=RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)| **RRQMSocket**是一个整合性的、超轻量级的、可以免费商用使用的网络通信服务框架。<br>它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、<br> **多线程处理** 、 **内存池** 、 **对象池** 等特点，<br>让使用者能够更加简单的、快速的搭建网络框架。|
+|[![NuGet version](https://img.shields.io/nuget/v/RRQMSocketFramework.svg?label=RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)| **RRQMSocketFramework**是RRQMSocket系列的企业版，<br>两者在功能上几乎没有区别，但是RRQMSocketFramework无任何依赖，<br>且可以提供专属的定制功能。后续也会加入企业已定制的优秀功能，希望大家多多支持。|
 | [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?label=RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) |  RRQMSocket.FileTransfer是一个高性能的文件传输框架，<br>您可以用它传输**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、<br>**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。<br>在实时测试中，它的传输速率可达500Mb/s。 |
 |[![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?label=RRQMSocket.RPC)](https://www.nuget.org/packages/RRQMSocket.RPC/)                            |RPC是一个超轻量、高性能、可扩展的微服务管理平台框架，<br>目前已完成开发**RRQMRPC**、**XmlRpc**、**JsonRpc**、**WebApi**部分。<br> **RRQMRPC**部分使用RRQM专属协议，支持客户端**异步调用**，<br>服务端**异步触发**、以及**out**和**ref**关键字，**函数回调**等。<br>在调用效率上也是非常强悍，在调用空载函数，且返回状态时，<br>**10w**次调用仅用时**3.8**秒，不返回状态用时**0.9**秒。<br>其他协议调用性能详看性能评测。|
 |[![NuGet version (RRQMSocket.RPC.WebApi)](https://img.shields.io/nuget/v/RRQMSocket.RPC.WebApi.svg?label=RRQMSocket.RPC.WebApi)](https://www.nuget.org/packages/RRQMSocket.RPC.WebApi/)| WebApi是一个扩展于RRQMSocket.RPC的WebApi组件，<br>可以通过该组件创建WebApi服务解析器，让桌面端、Web端、移动端可以跨语言调用RPC函数。<br>功能支持路由、Get传参、Post传参等。|
@@ -100,7 +101,22 @@ RRQMSocket的IOCP和传统也不一样的，以微软官方为例，使用Memory
 ## 💐快速入门
 
 ## 一、TCP框架
-### 1.1 创建服务器
+
+#### 1.1 特点
+
+- 简单易用。
+- 多线程。
+- 适配器预处理，一键式解决分包、粘包、对象解析等。
+- 超简单的同步发送、异步发送、接收等操作。
+- 基于事件驱动，让每一步操作尽在掌握。
+- 高性能（服务器每秒可接收200w条信息）
+
+#### 1.2 应用场景
+
+- C/S服务器开发。
+- 制造业自动化控制服务器。
+- 物联网数据采集服务器。
+- 游戏服务器开发。
 
 
 #### 1.4 Demo
@@ -109,7 +125,7 @@ RRQMSocket的IOCP和传统也不一样的，以微软官方为例，使用Memory
 
 ## 二、文件传输框架
 
-### 2.1 特点
+#### 2.1 特点
 
 - 简单易用。
 - 多线程处理。
@@ -118,11 +134,12 @@ RRQMSocket的IOCP和传统也不一样的，以微软官方为例，使用Memory
 - 超简单的传输速度、传输进度获取。
 - 随心所欲的暂停、继续、停止传输。
 - 系统化的权限管理，让敏感文件只允许私有化下载。
-- 随时发送消息，让客户端和服务器交流不延迟。
+- RPC交互，让客户端和服务器交流不延迟。
 - 基于事件驱动，让每一步操作尽在掌握。
 - 可视化的文件块流，可以实现像迅雷一样的填充式进度条。
 - 超简单的断点续传设置，为大文件传输保驾护航。
 - 无状态上传断点续传设置，让同一个文件，在不同客户端之间接力上传。
+- 断网续传（企业版支持）
 - 已经上传的文件，再次上传时，可实现快速上传。
 - 极少的GC释放。
 
