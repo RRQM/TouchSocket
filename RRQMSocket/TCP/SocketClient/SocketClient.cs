@@ -23,6 +23,7 @@ namespace RRQMSocket
     /// </summary>
     public abstract class SocketClient : BaseSocket, ISocketClient, IHandleBuffer, IPoolObject
     {
+        internal ClearType clearType;
         internal bool breakOut;
         internal long lastTick;
         internal BufferQueueGroup queueGroup;
@@ -380,7 +381,11 @@ namespace RRQMSocket
             {
                 if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
-                    this.lastTick = DateTime.Now.Ticks;
+                    if (this.clearType.HasFlag(ClearType.Receive))
+                    {
+                        this.lastTick = DateTime.Now.Ticks;
+                    }
+                   
 
                     ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
@@ -466,6 +471,11 @@ namespace RRQMSocket
                         offset += r;
                         length -= r;
                     }
+                }
+
+                if (this.clearType.HasFlag(ClearType.Send))
+                {
+                    this.lastTick = DateTime.Now.Ticks;
                 }
             }
             catch (Exception e)

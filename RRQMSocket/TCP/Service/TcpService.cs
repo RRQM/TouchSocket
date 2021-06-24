@@ -124,7 +124,7 @@ namespace RRQMSocket
         private int backlog;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadClearClient;
-
+        private ClearType clearType;
         #endregion 变量
 
         #region 事件
@@ -406,6 +406,7 @@ namespace RRQMSocket
                     client.queueGroup = queueGroup;
                     client.Service = this;
                     client.Logger = this.Logger;
+                    client.clearType = this.clearType;
                 }
 
                 client.MainSocket = socket;
@@ -451,6 +452,7 @@ namespace RRQMSocket
             this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
             this.SetBufferLength((int)serverConfig.GetValue(ServerConfig.BufferLengthProperty));
             this.name = serverConfig.ServerName;
+            this.clearType = (ClearType)serverConfig.GetValue(TcpServerConfig.ClearTypeProperty);
         }
 
         /// <summary>
