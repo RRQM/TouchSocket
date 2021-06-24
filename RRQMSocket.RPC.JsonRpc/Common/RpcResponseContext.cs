@@ -9,29 +9,39 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using System;
 
-namespace RRQMSocket
+using System.Runtime.Serialization;
+
+namespace RRQMSocket.RPC.JsonRpc
 {
-    /// <summary>
-    /// 服务器辅助类
-    /// </summary>
-    public sealed class SimpleSocketClient : SocketClient
-    {
-        /// <summary>
-        /// 收到消息
-        /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
+#pragma warning disable CS1591
 
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
-        {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
-        }
+    /// <summary>
+    /// JsonRpc响应器
+    /// </summary>
+    [DataContract]
+    public class RpcResponseContext
+    {
+        [DataMember]
+        public object result;
+
+        [DataMember]
+        public error error;
+
+        [DataMember]
+        public string id;
+    }
+
+    /// <summary>
+    /// 错误
+    /// </summary>
+    [DataContract]
+    public class error
+    {
+        [DataMember]
+        public int code;
+
+        [DataMember]
+        public string message;
     }
 }

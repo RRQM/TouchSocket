@@ -9,29 +9,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using System;
 
-namespace RRQMSocket
+namespace RRQMSocket.RPC.WebApi
 {
     /// <summary>
-    /// 服务器辅助类
+    /// 适用于WebApi的路由标记
     /// </summary>
-    public sealed class SimpleSocketClient : SocketClient
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class RouteAttribute : RPCAttribute
     {
         /// <summary>
-        /// 收到消息
+        /// 构造函数
         /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
+        public RouteAttribute()
+        {
+        }
 
         /// <summary>
-        /// 处理数据
+        /// 构造函数
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="template"></param>
+        public RouteAttribute(string template)
         {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
+            this.Template = template;
         }
+
+        /// <summary>
+        /// 路由模板
+        /// </summary>
+        public string Template { get; private set; }
     }
 }

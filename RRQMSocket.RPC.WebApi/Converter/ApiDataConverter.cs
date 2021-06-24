@@ -9,29 +9,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using System;
+using RRQMSocket.Http;
 
-namespace RRQMSocket
+namespace RRQMSocket.RPC.WebApi
 {
     /// <summary>
-    /// 服务器辅助类
+    /// Api结果转化器
     /// </summary>
-    public sealed class SimpleSocketClient : SocketClient
+    public abstract class ApiDataConverter
     {
         /// <summary>
-        /// 收到消息
+        /// 在调用完成时转换结果
         /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
+        /// <param name="methodInvoker"></param>
+        /// <param name="methodInstance"></param>
+        /// <returns></returns>
+        public abstract HttpResponse OnResult(MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
-        /// 处理数据
+        /// 在调用时
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
-        {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
-        }
+        /// <param name="httpRequest"></param>
+        /// <param name="methodInvoker"></param>
+        /// <param name="methodInstance"></param>
+        public abstract void OnPost(HttpRequest httpRequest, ref MethodInvoker methodInvoker, MethodInstance methodInstance);
     }
 }

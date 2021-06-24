@@ -9,29 +9,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using System;
 
-namespace RRQMSocket
+namespace RRQMSocket.RPC.XmlRpc
 {
     /// <summary>
-    /// 服务器辅助类
+    /// 适用于XmlRpc的标记
     /// </summary>
-    public sealed class SimpleSocketClient : SocketClient
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class XmlRpcAttribute : RPCAttribute
     {
         /// <summary>
-        /// 收到消息
+        /// 构造函数
         /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
+        public XmlRpcAttribute()
+        {
+        }
 
         /// <summary>
-        /// 处理数据
+        /// 构造函数
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="actionKey"></param>
+        public XmlRpcAttribute(string actionKey)
         {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
+            this.ActionKey = actionKey;
         }
+
+        /// <summary>
+        /// 服务唯一标识
+        /// </summary>
+        public string ActionKey { get; private set; }
     }
 }

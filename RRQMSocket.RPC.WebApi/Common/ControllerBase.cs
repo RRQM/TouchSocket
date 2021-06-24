@@ -9,29 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using System;
 
-namespace RRQMSocket
+namespace RRQMSocket.RPC.WebApi
 {
     /// <summary>
-    /// 服务器辅助类
+    /// ControllerBase
     /// </summary>
-    public sealed class SimpleSocketClient : SocketClient
+    public abstract class ControllerBase : ServerProvider
     {
-        /// <summary>
-        /// 收到消息
-        /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
-
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
-        {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
-        }
     }
 }

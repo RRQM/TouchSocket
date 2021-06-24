@@ -9,29 +9,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using System;
+using System.IO;
+using System.Runtime.Serialization.Json;
+using System.Text;
 
-namespace RRQMSocket
+namespace RRQMSocket.RPC.JsonRpc
 {
     /// <summary>
-    /// 服务器辅助类
+    /// 使用DataContractJson转化器
     /// </summary>
-    public sealed class SimpleSocketClient : SocketClient
+    public class DataContractJsonConverter : JsonFormatConverter
     {
-        /// <summary>
-        /// 收到消息
-        /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
+#pragma warning disable CS1591
 
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        public override object Deserialize(string jsonString, Type parameterType)
         {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
+            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(parameterType);
+            return deseralizer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(jsonString)));
+        }
+
+        public override void Serialize(Stream stream, object parameter)
+        {
+            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(parameter.GetType());
+            deseralizer.WriteObject(stream, parameter);
         }
     }
 }
