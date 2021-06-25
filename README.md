@@ -81,15 +81,6 @@ RRQMSocket的IOCP和传统也不一样的，以微软官方为例，使用Memory
  - [源代码仓库主页](https://gitee.com/RRQM_Home) 
  - 交流QQ群：234762506
 
-## ✨API文档
-
-[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages)
-
- 
-## 📦 安装
-
-- [Nuget RRQMSocket](https://www.nuget.org/packages/RRQMSocket/)
-- [微软Nuget安装教程](https://docs.microsoft.com/zh-cn/nuget/quickstart/install-and-use-a-package-in-visual-studio)
 
 ## 🍻RRQM系产品
 | 名称| 版本（Nuget Version）|下载（Nuget Download）| 描述 |
@@ -102,26 +93,126 @@ RRQMSocket的IOCP和传统也不一样的，以微软官方为例，使用Memory
 
 ## 一、TCP框架
 
-#### 1.1 特点
+#### 1.1 说明
+
+TCP框架是RRQMSocket最基础的框架，它定制了后继成员的创建、管理，维护、使用等一系列的规则，让使用者无需关心连接、掉线、失活检测、多线程安全等问题，能够专注于数据处理。
+
+#### 1.2 安装
+
+工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+
+```CSharp
+Install-Package RRQMSocket
+```
+
+#### 1.3 特点
 
 - 简单易用。
 - 多线程。
-- 适配器预处理，一键式解决分包、粘包、对象解析等。
+- **多地址监听**（可以一次性监听多个IP及端口）
+- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
 - 超简单的同步发送、异步发送、接收等操作。
 - 基于事件驱动，让每一步操作尽在掌握。
 - 高性能（服务器每秒可接收200w条信息）
+- **独立线程内存池**（每个线程拥有自己的内存池）
 
-#### 1.2 应用场景
+#### 1.4 应用场景
 
 - C/S服务器开发。
 - 制造业自动化控制服务器。
 - 物联网数据采集服务器。
 - 游戏服务器开发。
 
+#### 1.5 API文档
 
-#### 1.4 Demo
+[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984527&doc_id=1402901)
+
+#### 1.6 Demo
+
 [RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
 
+## 二、Token框架
+
+#### 2.1 说明
+
+TokenService框架是RRQMSocket提供的派生自TcpService的基础框架，它在TCP基础之上，通过验证Token的方式，可以规范、筛选连接者。这样可以很大程度的**保护服务器**不疲于非法连接者的攻击。
+
+#### 2.2 安装
+
+工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+
+```CSharp
+Install-Package RRQMSocket
+```
+
+#### 2.3 特点
+
+- 简单易用。
+- 多线程。
+- **多地址监听**（可以一次性监听多个IP及端口）。
+- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
+- 超简单的同步发送、异步发送、接收等操作。
+- 基于事件驱动，让每一步操作尽在掌握。
+- 高性能（服务器每秒可接收200w条信息）。
+- **独立线程内存池**（每个线程拥有自己的内存池）。
+- **规范**、**筛选**连接者，保护服务器。
+- 客户端与服务器必须**配套**使用。
+
+#### 2.4 应用场景
+
+- C/S服务器开发。
+- 制造业自动化控制服务器。
+- 游戏服务器开发。
+
+#### 2.5 API文档
+
+[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984517&doc_id=1402901)
+
+#### 2.6 Demo
+
+[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
+
+## 三、Protocol框架
+
+#### 3.1 说明
+
+ProtocolService框架是RRQMSocket提供的派生自TokenService的基础框架，它在Token基础之上，提供**协议+数据**的形式发送，其中还包括**协议冲突检测**、**协议数据占位**等。
+
+#### 3.2 安装
+
+工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+
+```CSharp
+Install-Package RRQMSocket
+```
+
+#### 3.3 特点
+
+- 简单易用。
+- 多线程。
+- **多地址监听**（可以一次性监听多个IP及端口）。
+- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
+- 超简单的同步发送、异步发送、接收等操作。
+- 基于事件驱动，让每一步操作尽在掌握。
+- 高性能（服务器每秒可接收200w条信息）。
+- **独立线程内存池**（每个线程拥有自己的内存池）。
+- **规范**、**筛选**连接者，保护服务器。
+- 客户端与服务器必须**配套**使用。
+- 快捷**协议发送**。
+
+#### 3.4 应用场景
+
+- C/S服务器开发。
+- 制造业自动化控制服务器。
+- 游戏服务器开发。
+
+#### 3.5 API文档
+
+[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984517&doc_id=1402901)
+
+#### 3.6 Demo
+
+[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
 
 ## 二、文件传输框架
 
