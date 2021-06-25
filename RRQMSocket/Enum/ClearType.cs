@@ -15,11 +15,11 @@ namespace RRQMSocket
         /// <summary>
         /// 从发送统计
         /// </summary>
-        Send,
+        Send=1,
 
         /// <summary>
         /// 从接收统计
         /// </summary>
-        Receive
+        Receive=2
     }
 }
