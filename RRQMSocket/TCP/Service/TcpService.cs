@@ -624,10 +624,7 @@ namespace RRQMSocket
                     try
                     {
                         Socket newSocket = e.AcceptSocket;
-                        Task.Run(() =>
-                        {
-                            PreviewCreateSocketCliect(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
-                        });
+                        PreviewCreateSocketCliect(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
                     }
                     catch (Exception ex)
                     {
