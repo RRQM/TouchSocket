@@ -74,22 +74,26 @@ RRQMSocket的IOCP和传统也不一样的，以微软官方为例，使用Memory
 
 在RRQMSocket中处理TCP粘包、分包问题是非常简单的。只需要更改不同的**数据处理适配器**即可。例如：使用**固定包头**，只需要给TcpSocketClient和TcpClient赋值**FixedHeaderDataHandlingAdapter**的实例即可。同样对应的处理器也有**固定长度** 、 **终止字符分割** 等。
 
+#### 兼容性与适配
+
+RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的所有协议。例如：TcpService与TcpClient，其基础功能和Socket一模一样，只是增强了框架的**坚固性**和**并发性**，将**连接**和**接收数据**通过事件的形式抛出，让使用者能够更加友好的使用。
+
+其次，RRQMSocket也提供了一些特定的服务器和客户端，如TokenService和TokenClient，这两个就必须配套使用，不然在验证Token时会被主动断开。
+
 ## 🔗联系作者
 
- - [CSDN博客主页](https://blog.csdn.net/qq_40374647)
- - [哔哩哔哩视频](https://space.bilibili.com/94253567)
- - [源代码仓库主页](https://gitee.com/RRQM_Home) 
- - 交流QQ群：234762506
-
+- [CSDN博客主页](https://blog.csdn.net/qq_40374647)
+- [哔哩哔哩视频](https://space.bilibili.com/94253567)
+- [源代码仓库主页](https://gitee.com/RRQM_Home) 
+- 交流QQ群：234762506
 
 ## 🍻RRQM系产品
+
 | 名称| 版本（Nuget Version）|下载（Nuget Download）| 描述 |
 |------|----------|-------------|-------|
 | [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、**高性能序列化器**、**规范日志接口**等。 |
 | [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。|
 | [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含： **无边框窗体** 、 **圆角窗体** 、 **水波纹按钮** 、 **输入提示筛选框** 、 **控件拖动效果** 、**圆角图片框**、 **弧形文字** 、 **扇形元素** 、 **指针元素** 、 **饼图** 、 **时钟** 、 **速度表盘** 等。|  
-
-## 💐快速入门
 
 ## 一、TCP框架
 
