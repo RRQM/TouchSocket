@@ -14,7 +14,7 @@ Introduction: RRQMSocket is an integrated, ultra-lightweight network communicati
 
 更新说明：
 5.0正式版本。
-修复：修复ClearType位域
+增加：DataAdapterTester
 
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
