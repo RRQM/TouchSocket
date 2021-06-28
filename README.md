@@ -103,7 +103,7 @@ TCP框架是RRQMSocket最基础的框架，它定制了后继成员的创建、�
 
 #### 1.2 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket
@@ -143,7 +143,7 @@ TokenService框架是RRQMSocket提供的派生自TcpService的基础框架，它
 
 #### 2.2 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具➨Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket
@@ -176,7 +176,7 @@ ProtocolService框架是RRQMSocket提供的派生自TokenService的基础框架�
 
 #### 3.2 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket
@@ -236,7 +236,7 @@ RRQMRPC是基于Protocol框架、固定包头解析的远程调用框架，也�
 
 ##### 4.3.3 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket.RPC
@@ -270,7 +270,7 @@ Install-Package RRQMSocket.RPC
 
 ##### 4.4.3 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket.RPC.WebApi
@@ -292,7 +292,7 @@ Install-Package RRQMSocket.RPC.WebApi
 
 ##### 4.5.3 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket.RPC.XmlRpc
@@ -313,7 +313,7 @@ Install-Package RRQMSocket.RPC.XmlRpc
 
 ##### 4.6.3 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket.RPC.JsonRpc
@@ -353,7 +353,7 @@ RRQMSocket.FileTransfer是一个高性能的文件传输框架，由于它派生
 
 #### 5.3 安装
 
-工具 $\Rightarrow$ Nuegt包管理器 $\Rightarrow$ 程序包管理器控制台
+工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
 
 ```CSharp
 Install-Package RRQMSocket.FileTransfer
