@@ -9,12 +9,8 @@
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>介绍：这是一个高性能的RPC微服务框架，支持异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
 
-Description: This is a high-performance RPC microservice framework that supports asynchronous invocation, permission management, error status return, service callbacks, and more.When the no-load function is executed, it takes only 3.8 seconds for 100,000 calls, and 0.9 seconds for no return state.
-
 更新说明：
-5.0发布
-增加：RPCInitialized事件。
-修复：UDPRPC。
+增加：RPCCompiler编译器。
 
 Demo：https://gitee.com/RRQM_OS/RRQMBox
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
