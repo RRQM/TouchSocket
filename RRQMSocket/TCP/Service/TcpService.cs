@@ -617,25 +617,32 @@ namespace RRQMSocket
 
         private void ProcessAccept(SocketAsyncEventArgs e)
         {
-            if (!this.disposable)
+            try
             {
-                if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
+                if (!this.disposable)
                 {
-                    try
+                    if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
                     {
-                        Socket newSocket = e.AcceptSocket;
-                        PreviewCreateSocketCliect(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                        try
+                        {
+                            Socket newSocket = e.AcceptSocket;
+                            PreviewCreateSocketCliect(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
+                        }
                     }
-                    catch (Exception ex)
+                    e.AcceptSocket = null;
+                    if (!((Socket)e.UserToken).AcceptAsync(e))
                     {
-                        Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
+                        ProcessAccept(e);
                     }
                 }
-                e.AcceptSocket = null;
-                if (!((Socket)e.UserToken).AcceptAsync(e))
-                {
-                    ProcessAccept(e);
-                }
+            }
+            catch 
+            {
+
             }
         }
     }
