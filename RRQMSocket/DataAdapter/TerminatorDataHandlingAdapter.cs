@@ -27,12 +27,8 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="maxSize"></param>
         /// <param name="terminator"></param>
-        public TerminatorDataHandlingAdapter(int maxSize, string terminator)
+        public TerminatorDataHandlingAdapter(int maxSize, string terminator) : this(maxSize, 0, Encoding.UTF8.GetBytes(terminator))
         {
-            this.MaxSize = maxSize;
-            this.Terminator = terminator;
-            this.Encoding = Encoding.UTF8;
-            this.terminatorCode = this.Encoding.GetBytes(terminator);
         }
 
         /// <summary>
@@ -42,29 +38,44 @@ namespace RRQMSocket
         /// <param name="terminator"></param>
         /// <param name="encoding"></param>
         public TerminatorDataHandlingAdapter(int maxSize, string terminator, Encoding encoding)
+            : this(maxSize, 0, encoding.GetBytes(terminator))
         {
-            this.MaxSize = maxSize;
-            this.Terminator = terminator;
-            this.Encoding = encoding;
-            this.terminatorCode = this.Encoding.GetBytes(terminator);
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="maxSize"></param>
+        /// <param name="minSize"></param>
+        /// <param name="terminatorCode"></param>
+        public TerminatorDataHandlingAdapter(int maxSize, int minSize, byte[] terminatorCode)
+        {
+            this.maxSize = maxSize;
+            this.minSize = minSize;
+            this.terminatorCode = terminatorCode;
         }
 
         private byte[] terminatorCode;
 
+        private int maxSize = 1024;
         /// <summary>
-        /// 在未找到终止因子时，允许的最大长度
+        /// 在未找到终止因子时，允许的最大长度，默认1024
         /// </summary>
-        public int MaxSize { get; private set; }
+        public int MaxSize
+        {
+            get { return maxSize; }
+            set { maxSize = value; }
+        }
 
+        private int minSize = 0;
         /// <summary>
-        /// 终止因子
+        /// 即使找到了终止因子，也不会结束，默认0
         /// </summary>
-        public string Terminator { get; private set; }
-
-        /// <summary>
-        /// 编码格式
-        /// </summary>
-        public Encoding Encoding { get; private set; }
+        public int MinSize
+        {
+            get { return minSize; }
+            set { minSize = value; }
+        }
 
         private ByteBlock tempByteBlock;
 
@@ -153,12 +164,18 @@ namespace RRQMSocket
                 if (hitLength == subByteArray.Length)
                 {
                     hitLength = 0;
-                    indexes.Add(i);
+                    if (indexes.Count == 0)
+                    {
+                        if (i >= this.minSize)
+                        {
+                            indexes.Add(i);
+                        }
+                    }
+                    else if (i - indexes[indexes.Count - 1] >= this.minSize)
+                    {
+                        indexes.Add(i);
+                    }
                 }
-                //if (length - i < subByteArray.Length)
-                //{
-                //    break;
-                //}
             }
 
             return indexes;
