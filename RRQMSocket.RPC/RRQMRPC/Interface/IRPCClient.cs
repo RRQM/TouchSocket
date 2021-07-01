@@ -50,6 +50,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         RPCProxyInfo GetProxyInfo();
 
         /// <summary>
+        /// RPC初始化后
+        /// </summary>
+        event RRQMMessageEventHandler RPCInitialized;
+
+        /// <summary>
         /// 初始化RPC
         /// </summary>
         void InitializeRPC();

@@ -112,7 +112,15 @@ namespace RRQMSocket.RPC.RRQMRPC
                     try
                     {
                         this.methodStore = null;
-                        this.UDPSend(102);
+
+                        string proxyToken = (string)this.ServerConfig.GetValue(UdpRPCClientConfig.ProxyTokenProperty);
+                        byte[] data = new byte[0];
+                        if (!string.IsNullOrEmpty(proxyToken))
+                        {
+                            data = Encoding.UTF8.GetBytes(proxyToken);
+                        }
+                        
+                        this.UDPSend(102, data,0,data.Length);
                         this.singleWaitData.Wait(1000 * 5);
                         if (this.methodStore != null)
                         {

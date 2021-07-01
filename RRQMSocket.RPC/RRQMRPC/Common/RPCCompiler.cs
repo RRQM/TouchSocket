@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// RPC编译器
+    /// RPC编译
     /// </summary>
     public class RPCCompiler : IRPCCompiler
     {

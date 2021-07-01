@@ -84,8 +84,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 获取注册函数
         /// </summary>
+        /// <param name="proxyToken"></param>
         /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RPCSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
         /// <returns></returns>
-        List<MethodItem> GetRegisteredMethodItems(object caller);
+        List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller);
     }
 }

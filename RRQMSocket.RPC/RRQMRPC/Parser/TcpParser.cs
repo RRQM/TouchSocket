@@ -166,7 +166,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         protected override void OnCreateSocketCliect(TClient socketClient, CreateOption createOption)
         {
-            if (createOption.NewCreate)
+            if (createOption.NewCreate) 
             {
                 socketClient.IDAction = this.IDInvoke;
                 socketClient.Received = this.OnReceived;
@@ -247,9 +247,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.RPCVersion = (Version)serverConfig.GetValue(TcpRPCParserConfig.RPCVersionProperty);
         }
 
-        public virtual List<MethodItem> GetRegisteredMethodItems(object caller)
+        public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller)
         {
-            return this.methodStore.GetAllMethodItem();
+            if (proxyToken==this.ProxyToken)
+            {
+                return this.methodStore.GetAllMethodItem();
+            }
+            return null;
         }
 
         private RPCContext IDInvoke(RPCSocketClient socketClient, RPCContext context)
@@ -321,5 +325,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 throw new RRQMRPCException("未找到该客户端");
             }
         }
+
     }
 }

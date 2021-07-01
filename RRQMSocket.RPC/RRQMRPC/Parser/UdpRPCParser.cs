@@ -140,7 +140,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.RPCVersion = (Version)serverConfig.GetValue(UdpRPCParserConfig.RPCVersionProperty);
         }
 
-        public virtual List<MethodItem> GetRegisteredMethodItems(object caller)
+        public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller)
         {
             return this.methodStore.GetAllMethodItem();
         }
@@ -175,7 +175,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected sealed override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Position;
+            int r = (int)byteBlock.Length;
             short procotol = BitConverter.ToInt16(buffer, 0);
 
             switch (procotol)
@@ -229,7 +229,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            UDPSend(102, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(remoteEndPoint), true));
+                            string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
+                            UDPSend(102, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(proxyToken,remoteEndPoint), true));
                         }
                         catch (Exception e)
                         {

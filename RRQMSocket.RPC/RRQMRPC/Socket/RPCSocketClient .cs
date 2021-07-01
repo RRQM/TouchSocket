@@ -388,7 +388,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(this), true);
+                            string proxyToken = Encoding.UTF8.GetString(buffer,2,r-2);
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(proxyToken,this), true);
                             this.InternalSend(102, data, 0, data.Length);
                         }
                         catch (Exception e)

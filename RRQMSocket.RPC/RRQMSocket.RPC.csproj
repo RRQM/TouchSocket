@@ -10,7 +10,7 @@
     <Description>介绍：这是一个高性能的RPC微服务框架，支持异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
 
 更新说明：
-增加：RPCCompiler编译器。
+修改：RRQMRPC获取注册服务方法。
 
 Demo：https://gitee.com/RRQM_OS/RRQMBox
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
