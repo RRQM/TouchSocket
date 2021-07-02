@@ -25,7 +25,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TcpRPCClient
     /// </summary>
-    public class TcpRPCClient : ProtocolClient, IRPCClient
+    public class TcpRPCClient : ProtocolClient, IRRQMRPCClient
     {
         static TcpRPCClient()
         {
@@ -970,7 +970,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
             base.LoadConfig(clientConfig);
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
             this.SerializeConverter = (SerializeConverter)clientConfig.GetValue(TcpRPCClientConfig.SerializeConverterProperty);
         }
 

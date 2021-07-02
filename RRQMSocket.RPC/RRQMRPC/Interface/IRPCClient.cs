@@ -9,9 +9,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
-using RRQMCore.Log;
+using RRQMSocket.RPC.RRQMRPC;
 using System;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -21,44 +20,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public interface IRPCClient : IDisposable
     {
-        /// <summary>
-        /// 获取ID
-        /// </summary>
-        string ID { get; }
-
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        ILog Logger { get; set; }
-
-        /// <summary>
-        /// 获取内存池实例
-        /// </summary>
-        BytePool BytePool { get; }
-
-        /// <summary>
-        /// 序列化生成器
-        /// </summary>
-        SerializeConverter SerializeConverter { get; }
-
-        /// <summary>
-        /// 获取远程服务器RPC服务文件
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="RRQMRPCException"></exception>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        RPCProxyInfo GetProxyInfo();
-
-        /// <summary>
-        /// RPC初始化后
-        /// </summary>
-        event RRQMMessageEventHandler RPCInitialized;
-
-        /// <summary>
-        /// 初始化RPC
-        /// </summary>
-        void InitializeRPC();
-
+       
         /// <summary>
         /// 函数式调用
         /// </summary>

@@ -9,47 +9,54 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+using System;
 
-namespace RRQMSocket.RPC
+namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// 调用状态
+    /// 客户端RPC接口
     /// </summary>
-    public enum InvokeStatus:byte
+    public interface IRRQMRPCClient : IRPCClient
     {
         /// <summary>
-        /// 就绪
+        /// 获取ID
         /// </summary>
-        Ready,
+        string ID { get; }
 
         /// <summary>
-        /// 未找到服务
+        /// 日志记录器
         /// </summary>
-        UnFound,
+        ILog Logger { get; set; }
 
         /// <summary>
-        /// 不可用
+        /// 获取内存池实例
         /// </summary>
-        UnEnable,
+        BytePool BytePool { get; }
 
         /// <summary>
-        /// 成功调用
+        /// 序列化生成器
         /// </summary>
-        Success,
+        SerializeConverter SerializeConverter { get; }
 
         /// <summary>
-        /// 终止执行
+        /// 获取远程服务器RPC服务文件
         /// </summary>
-        Abort,
+        /// <returns></returns>
+        /// <exception cref="RRQMRPCException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        RPCProxyInfo GetProxyInfo();
 
         /// <summary>
-        /// 调用内部异常
+        /// RPC初始化后
         /// </summary>
-        InvocationException,
+        event RRQMMessageEventHandler RPCInitialized;
 
         /// <summary>
-        /// 其他异常
+        /// 初始化RPC
         /// </summary>
-        Exception
+        void InitializeRPC();
     }
 }
