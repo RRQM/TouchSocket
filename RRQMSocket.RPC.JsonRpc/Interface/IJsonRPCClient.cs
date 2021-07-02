@@ -10,28 +10,21 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Log;
+using RRQMSocket.RPC.RRQMRPC;
 using System;
 
-namespace RRQMSocket
+namespace RRQMSocket.RPC.JsonRpc
 {
     /// <summary>
-    /// 服务器辅助类
+    /// Json客户端RPC接口
     /// </summary>
-    public sealed class SimpleSocketClient : SocketClient
+    public interface IJsonRPCClient : IRPCClient
     {
         /// <summary>
-        /// 收到消息
+        /// 序列化生成器
         /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
-
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
-        {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
-        }
+        JsonFormatConverter JsonFormatConverter { get; }
     }
 }

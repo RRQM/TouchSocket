@@ -66,8 +66,8 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             ISocketClient socketClient = (ISocketClient)methodInvoker.Caller;
 
-            RpcResponseContext context = new RpcResponseContext();
-            context.id = ((RpcRequestContext)methodInvoker.Flag).id;
+            JsonResponseContext context = new JsonResponseContext();
+            context.id = ((JsonRequestContext)methodInvoker.Flag).id;
             context.result = methodInvoker.ReturnParameter;
             error error = new error();
             context.error = error;
@@ -206,9 +206,9 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="methodInstance">调用服务实例</param>
         /// <param name="context"></param>
         /// <returns></returns>
-        protected virtual void BuildRequestContext(ByteBlock byteBlock, out MethodInstance methodInstance, out RpcRequestContext context)
+        protected virtual void BuildRequestContext(ByteBlock byteBlock, out MethodInstance methodInstance, out JsonRequestContext context)
         {
-            context = (RpcRequestContext)this.JsonFormatConverter.Deserialize(Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length), typeof(RpcRequestContext));
+            context = (JsonRequestContext)this.JsonFormatConverter.Deserialize(Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length), typeof(JsonRequestContext));
 
             if (this.actionMap.TryGet(context.method, out methodInstance))
             {
@@ -245,7 +245,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="responseByteBlock"></param>
         /// <param name="responseContext"></param>
-        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, RpcResponseContext responseContext)
+        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, JsonResponseContext responseContext)
         {
             if (string.IsNullOrEmpty(responseContext.id))
             {
@@ -265,7 +265,7 @@ namespace RRQMSocket.RPC.JsonRpc
             {
                 socketClient.OnReceived = this.OnReceived;
             }
-            socketClient.DataHandlingAdapter = new TerminatorDataHandlingAdapter(this.BufferLength, "\r\n");
+            socketClient.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.BufferLength, "\r\n"));
         }
 
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
@@ -273,7 +273,7 @@ namespace RRQMSocket.RPC.JsonRpc
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = socketClient;
             MethodInstance methodInstance = null;
-            RpcRequestContext context = null;
+            JsonRequestContext context = null;
             try
             {
                 this.BuildRequestContext(byteBlock, out methodInstance, out context);

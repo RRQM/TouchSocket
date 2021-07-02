@@ -10,18 +10,38 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System.Runtime.Serialization;
+
 namespace RRQMSocket.RPC.JsonRpc
 {
-    /// <summary>
-    /// JsonRpc调用器
-    /// </summary>
-    public class RpcRequestContext
-    {
 #pragma warning disable CS1591
-        public string jsonrpc;
-        public string method;
-        public object[] @params;
+
+    /// <summary>
+    /// JsonRpc响应器
+    /// </summary>
+    [DataContract]
+    public class JsonResponseContext
+    {
+        [DataMember]
+        public object result;
+
+        [DataMember]
+        public error error;
+
+        [DataMember]
         public string id;
-#pragma warning restore CS1591
+    }
+
+    /// <summary>
+    /// 错误
+    /// </summary>
+    [DataContract]
+    public class error
+    {
+        [DataMember]
+        public int code;
+
+        [DataMember]
+        public string message;
     }
 }
