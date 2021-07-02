@@ -37,7 +37,7 @@ namespace RRQMSocket
         {
             base.OnBeforeReceive();
             this.procotolHelper = new ProcotolHelper(this);
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
         }
 
         /// <summary>

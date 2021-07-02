@@ -52,8 +52,8 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected override void OnConnectedService(MesEventArgs e)
         {
-            base.OnConnectedService(e);
             this.agreementHelper = new ProcotolHelper(this);
+            base.OnConnectedService(e);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace RRQMSocket
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
             base.LoadConfig(clientConfig);
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
         }
 
         /// <summary>

@@ -129,6 +129,7 @@ namespace RRQMSocket
                 throw new RRQMOverlengthException("发送的数据包长度大于FixedSize");
             }
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+
             byteBlock.Write(buffer, offset, length);
             for (int i = (int)byteBlock.Position; i < this.FixedSize; i++)
             {

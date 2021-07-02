@@ -31,7 +31,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        DataHandlingAdapter DataHandlingAdapter { get; set; }
+        DataHandlingAdapter DataHandlingAdapter { get; }
 
         /// <summary>
         /// 禁用发送或接收

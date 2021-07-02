@@ -20,33 +20,6 @@ namespace RRQMSocket
     /// </summary>
     public abstract class DataHandlingAdapter
     {
-        ///// <summary>
-        ///// 构造函数
-        ///// </summary>
-        //static DataHandlingAdapter()
-        //{
-        //    Timer timer = new Timer(500);
-        //    timer.Elapsed += Timer_Elapsed;
-        //    timer.Start();
-        //}
-
-        //private static void Timer_Elapsed(object sender, ElapsedEventArgs e)
-        //{
-        //    try
-        //    {
-        //        OnInterval?.Invoke();
-        //    }
-        //    catch
-        //    {
-        //    }
-
-        //}
-
-        ///// <summary>
-        ///// 每隔500ms调用一次
-        ///// </summary>
-        //protected static event Action OnInterval;
-
         /// <summary>
         /// 内存池
         /// </summary>

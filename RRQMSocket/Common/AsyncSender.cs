@@ -20,6 +20,24 @@ namespace RRQMSocket
 {
     internal class AsyncSender : IDisposable
     {
+        private readonly ConcurrentQueue<AsyncByte> asyncBytes;
+
+        private readonly SocketAsyncEventArgs sendEventArgs;
+
+        private readonly Thread sendThread;
+
+        private readonly EventWaitHandle waitHandle;
+
+        private byte[] buffer = new byte[1024 * 1024];
+
+        private bool dispose;
+
+        private ILog logger;
+
+        private bool sending;
+
+        private Socket socket;
+
         internal AsyncSender(Socket socket, EndPoint endPoint, ILog logger)
         {
             sendEventArgs = new SocketAsyncEventArgs();
@@ -34,54 +52,30 @@ namespace RRQMSocket
             this.sendThread.Name = "AsyncSendThread";
             this.sendThread.Start();
         }
-
-        private readonly SocketAsyncEventArgs sendEventArgs;
-        private readonly Thread sendThread;
-        private readonly EventWaitHandle waitHandle;
-        private readonly ConcurrentQueue<AsyncByte> asyncBytes;
-        private Socket socket;
-        private bool sending;
-        private ILog logger;
-        private bool dispose;
-
-        private void SendEventArgs_Completed(object sender, SocketAsyncEventArgs e)
+        public void AsyncSend(byte[] buffer, int offset, int length)
         {
-            if (e.LastOperation == SocketAsyncOperation.Send)
+            AsyncByte asyncByte = new AsyncByte();
+            asyncByte.buffer = buffer;
+            asyncByte.offset = offset;
+            asyncByte.length = length;
+            this.asyncBytes.Enqueue(asyncByte);
+            if (!this.sending)
             {
-                ProcessSend(e);
-            }
-            else
-            {
-                if (!dispose)
-                {
-                    this.waitHandle.Set();
-                }
+                this.waitHandle.Set();
             }
         }
 
-        /// <summary>
-        /// 发送完成时处理函数
-        /// </summary>
-        /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
-        private void ProcessSend(SocketAsyncEventArgs e)
+        public void Dispose()
         {
-            try
-            {
-                if (e.SocketError != SocketError.Success)
-                {
-                    this.logger.Debug(LogType.Error, this, "异步发送错误。");
-                }
-            }
-            catch
-            {
-            }
-            finally
-            {
-                if (!dispose)
-                {
-                    this.waitHandle.Set();
-                }
-            }
+            this.dispose = true;
+            this.waitHandle.Set();
+            this.waitHandle.Dispose();
+            this.sendEventArgs.Dispose();
+        }
+
+        internal void SetBufferLength(int len)
+        {
+            this.buffer = new byte[len];
         }
 
         private void BeginSend()
@@ -117,13 +111,45 @@ namespace RRQMSocket
             }
         }
 
-        private byte[] buffer = new byte[1024 * 1024];
-
-        internal void SetBufferLength(int len)
+        /// <summary>
+        /// 发送完成时处理函数
+        /// </summary>
+        /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
+        private void ProcessSend(SocketAsyncEventArgs e)
         {
-            this.buffer = new byte[len];
+            try
+            {
+                if (e.SocketError != SocketError.Success)
+                {
+                    this.logger.Debug(LogType.Error, this, "异步发送错误。");
+                }
+            }
+            catch
+            {
+            }
+            finally
+            {
+                if (!dispose)
+                {
+                    this.waitHandle.Set();
+                }
+            }
         }
 
+        private void SendEventArgs_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            if (e.LastOperation == SocketAsyncOperation.Send)
+            {
+                ProcessSend(e);
+            }
+            else
+            {
+                if (!dispose)
+                {
+                    this.waitHandle.Set();
+                }
+            }
+        }
         private bool tryGet(out AsyncByte asyncByteDe)
         {
             int len = 0;
@@ -175,27 +201,6 @@ namespace RRQMSocket
             asyncByteDe.buffer = buffer;
             asyncByteDe.length = len;
             return true;
-        }
-
-        public void AsyncSend(byte[] buffer, int offset, int length)
-        {
-            AsyncByte asyncByte = new AsyncByte();
-            asyncByte.buffer = buffer;
-            asyncByte.offset = offset;
-            asyncByte.length = length;
-            this.asyncBytes.Enqueue(asyncByte);
-            if (!this.sending)
-            {
-                this.waitHandle.Set();
-            }
-        }
-
-        public void Dispose()
-        {
-            this.dispose = true;
-            this.waitHandle.Set();
-            this.waitHandle.Dispose();
-            this.sendEventArgs.Dispose();
         }
     }
 }

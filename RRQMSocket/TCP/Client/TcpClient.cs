@@ -106,7 +106,6 @@ namespace RRQMSocket
         public DataHandlingAdapter DataHandlingAdapter
         {
             get { return dataHandlingAdapter; }
-            set { this.SetDataHandlingAdapter(value); }
         }
 
         /// <summary>
@@ -630,7 +629,11 @@ namespace RRQMSocket
             }
         }
 
-        private void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        /// <summary>
+        /// 设置数据处理适配器
+        /// </summary>
+        /// <param name="adapter"></param>
+        protected void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
             if (adapter == null)
             {

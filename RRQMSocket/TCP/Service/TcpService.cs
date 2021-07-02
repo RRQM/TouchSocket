@@ -642,8 +642,8 @@ namespace RRQMSocket
             }
             catch 
             {
-
             }
+           
         }
     }
 }

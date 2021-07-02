@@ -9,37 +9,32 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Dependency;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RRQMSocket.RPC.WebApi
+namespace RRQMSocket
 {
     /// <summary>
-    /// WebApiParser配置
+    /// 固定包头类型
     /// </summary>
-    public class WebApiParserConfig : TcpServerConfig
+    public enum FixedHeaderType : byte
     {
+        /// <summary>
+        /// 以1Byte标识长度，最长接收255
+        /// </summary>
+        Byte=1,
 
         /// <summary>
-        /// 数据转化器
+        /// 以2Byte标识长度，最长接收65535
         /// </summary>
-        public ApiDataConverter ApiDataConverter
-        {
-            get { return (ApiDataConverter)GetValue(ApiDataConverterProperty); }
-            set { SetValue(ApiDataConverterProperty, value); }
-        }
+        Ushort=2,
 
         /// <summary>
-        /// 数据转化器
-        /// 所需类型<see cref="RRQMSocket.RPC.WebApi.ApiDataConverter"/>
+        /// 以4Byte标识长度，最长接收2147483647
         /// </summary>
-        public static readonly DependencyProperty ApiDataConverterProperty =
-            DependencyProperty.Register("ApiDataConverter", typeof(ApiDataConverter), typeof(WebApiParserConfig), new XmlDataConverter());
-
-
+        Int=4
     }
 }

@@ -64,17 +64,6 @@ namespace RRQMSocket
         public DataHandlingAdapter DataHandlingAdapter
         {
             get { return dataHandlingAdapter; }
-            set
-            {
-                dataHandlingAdapter = value;
-                if (dataHandlingAdapter != null)
-                {
-                    dataHandlingAdapter.BytePool = this.BytePool;
-                    dataHandlingAdapter.Logger = this.Logger;
-                    dataHandlingAdapter.ReceivedCallBack = this.HandleReceivedData;
-                    dataHandlingAdapter.SendCallBack = this.Sent;
-                }
-            }
         }
 
         /// <summary>
@@ -119,7 +108,7 @@ namespace RRQMSocket
         {
             if (this.dataHandlingAdapter == null)
             {
-                this.DataHandlingAdapter = new NormalDataHandlingAdapter();
+                this.SetDataHandlingAdapter( new NormalDataHandlingAdapter());
             }
         }
 
@@ -172,12 +161,29 @@ namespace RRQMSocket
             {
                 this.mainSocket.Dispose();
             }
-            if (this.eventArgs != null)
+            if (this.eventArgs!=null)
             {
                 this.eventArgs.Dispose();
                 this.eventArgs = null;
             }
             this.breakOut = true;
+        }
+
+        /// <summary>
+        /// 设置数据处理适配器
+        /// </summary>
+        /// <param name="adapter"></param>
+        public void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            if (adapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            adapter.BytePool = this.BytePool;
+            adapter.Logger = this.Logger;
+            adapter.ReceivedCallBack = this.HandleReceivedData;
+            adapter.SendCallBack = this.Sent;
+            this.dataHandlingAdapter = adapter;
         }
 
         /// <summary>
@@ -361,7 +367,7 @@ namespace RRQMSocket
         /// </summary>
         internal void BeginReceive()
         {
-
+            
             try
             {
                 this.OnBeforeReceive();
@@ -392,7 +398,7 @@ namespace RRQMSocket
                     {
                         this.lastTick = DateTime.Now.Ticks;
                     }
-
+                   
 
                     ClientBuffer clientBuffer = new ClientBuffer();
                     clientBuffer.client = this;
