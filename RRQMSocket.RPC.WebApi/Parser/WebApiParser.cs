@@ -192,7 +192,7 @@ namespace RRQMSocket.RPC.WebApi
             {
                 socketClient.OnReceived = this.OnReceived;
             }
-            socketClient.DataHandlingAdapter = new Http.HttpDataHandlingAdapter(this.BufferLength);
+            socketClient.SetDataHandlingAdapter(new Http.HttpDataHandlingAdapter(this.BufferLength, HttpType.Server));
         }
 
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)

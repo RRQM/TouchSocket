@@ -56,7 +56,8 @@ namespace RRQMSocket.RPC.WebApi
                             {
                                 if (i == 0)
                                 {
-                                    methodInvoker.Parameters[i] = SerializeConvert.XmlDeserializeFromBytes(httpRequest.Body.ToArray(), methodInstance.ParameterTypes[0]);
+                                    methodInvoker.Parameters[i] = SerializeConvert.XmlDeserializeFromBytes(
+                                        httpRequest.Encoding.GetBytes(httpRequest.BodyString), methodInstance.ParameterTypes[0]);
                                 }
                                 else
                                 {
