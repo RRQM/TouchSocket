@@ -406,7 +406,7 @@ namespace RRQMSocket.FileTransfer
         {
             clientConfig.OnlySend = false;
             base.LoadConfig(clientConfig);
-            this.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
             this.receiveDirectory = (string)clientConfig.GetValue(FileClientConfig.ReceiveDirectoryProperty);
         }
 

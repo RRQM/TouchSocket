@@ -36,13 +36,16 @@ namespace RRQMSocket.FileTransfer
             if (File.Exists(rrqmPath) && File.Exists(tempPath) && !restart && breakpoint)
             {
                 PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(File.ReadAllBytes(rrqmPath));
-                if (readBlocks.UrlFileInfo.FileHash != null && blocks.UrlFileInfo.FileHash != null && readBlocks.UrlFileInfo.FileHash == blocks.UrlFileInfo.FileHash)
+                if (readBlocks.UrlFileInfo != null && blocks.UrlFileInfo != null)
                 {
-                    stream.tempFileStream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite);
-                    stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Open, FileAccess.ReadWrite);
-                    stream.blocks = blocks = readBlocks.ToPBCollection();
+                    if (readBlocks.UrlFileInfo.FileHash != null && blocks.UrlFileInfo.FileHash != null && readBlocks.UrlFileInfo.FileHash == blocks.UrlFileInfo.FileHash)
+                    {
+                        stream.tempFileStream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite);
+                        stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Open, FileAccess.ReadWrite);
+                        stream.blocks = blocks = readBlocks.ToPBCollection();
 
-                    return stream;
+                        return stream;
+                    }
                 }
             }
 
