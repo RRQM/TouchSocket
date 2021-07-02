@@ -11,14 +11,16 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RRQMSocket.Http
 {
     /// <summary>
     /// Http响应
     /// </summary>
-    public class HttpResponse : BaseHeader
+    public class HttpResponse : HttpBase
     {
         /// <summary>
         /// 构造函数
@@ -68,16 +70,6 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 获取头数据
         /// </summary>
-        /// <param name="header"></param>
-        /// <returns></returns>
-        public string GetHeader(ResponseHeader header)
-        {
-            return GetHeaderByKey(header);
-        }
-
-        /// <summary>
-        /// 获取头数据
-        /// </summary>
         /// <param name="fieldName"></param>
         /// <returns></returns>
         public string GetHeader(string fieldName)
@@ -90,7 +82,7 @@ namespace RRQMSocket.Http
         /// </summary>
         /// <param name="header"></param>
         /// <param name="value"></param>
-        public void SetHeader(ResponseHeader header, string value)
+        public void SetHeader(HttpHeaders header, string value)
         {
             SetHeaderByKey(header, value);
         }
@@ -139,10 +131,34 @@ namespace RRQMSocket.Http
         /// 构建响应数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void Build(ByteBlock byteBlock)
+        public override void Build(ByteBlock byteBlock)
         {
             BuildHeader(byteBlock);
             BuildContent(byteBlock);
+        }
+
+        /// <summary>
+        /// 读取数据
+        /// </summary>
+        public override void ReadFromBase()
+        {
+            var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
+            if (first.Length > 0)
+            {
+                string[] ps = first[0].Split('/');
+                if (ps.Length == 2)
+                {
+                    this.Protocols = ps[0];
+                    this.ProtocolVersion = ps[1];
+                }
+            } 
+            if (first.Length > 1)
+            {
+                this.StatusCode = first[1];
+            }
+            string contentLength = this.GetHeader(HttpHeaders.ContentLength);
+            int.TryParse(contentLength, out int content_Length);
+            this.Content_Length = content_Length;
         }
     }
 }

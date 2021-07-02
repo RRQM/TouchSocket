@@ -92,8 +92,8 @@ namespace RRQMSocket.Http
         public static HttpResponse FromSuccess(this HttpResponse response, string statusCode = "200")
         {
             response.StatusCode = statusCode;
-            response.SetHeader(ResponseHeader.Server, $"RRQMSocket.Http {HttpResponse.ServerVersion}");
-            response.SetHeader(ResponseHeader.Date, DateTime.Now.ToGMTString("r"));
+            response.SetHeader(HttpHeaders.Server, $"RRQMSocket.Http {HttpResponse.ServerVersion}");
+            response.SetHeader(HttpHeaders.Date, DateTime.Now.ToGMTString("r"));
             return response;
         }
     }

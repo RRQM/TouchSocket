@@ -12,6 +12,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Helper;
 using RRQMCore.Log;
+using System;
 using System.Text;
 
 namespace RRQMSocket.Http
@@ -25,12 +26,15 @@ namespace RRQMSocket.Http
         /// 构造函数
         /// </summary>
         /// <param name="maxSize"></param>
-        public HttpDataHandlingAdapter(int maxSize)
+        /// <param name="httpType"></param>
+        public HttpDataHandlingAdapter(int maxSize, HttpType httpType)
         {
             this.MaxSize = maxSize;
             this.terminatorCode = Encoding.UTF8.GetBytes("\r\n\r\n");
+            this.httpType = httpType;
         }
 
+        private HttpType httpType;
         private byte[] terminatorCode;
 
         /// <summary>
@@ -39,8 +43,9 @@ namespace RRQMSocket.Http
         public int MaxSize { get; private set; }
 
         private ByteBlock tempByteBlock;
+        private ByteBlock bodyByteBlock;
 
-        private HttpRequest httpRequest;
+        private HttpBase httpBase;
 
         /// <summary>
         /// 预处理
@@ -56,27 +61,35 @@ namespace RRQMSocket.Http
                 buffer = this.tempByteBlock.Buffer;
                 r = (int)this.tempByteBlock.Position;
             }
-
-            if (this.httpRequest == null)
+            if (this.httpBase == null)
             {
                 int index = buffer.IndexOfFirst(0, r, this.terminatorCode);
                 if (index > 0)
                 {
-                    this.httpRequest = new HttpRequest();
-                    this.httpRequest.ReadHeaders(buffer, 0, index);
-
-                    if (this.httpRequest.Content_Length > 0)
+                    switch (this.httpType)
                     {
-                        this.httpRequest.Body = this.BytePool.GetByteBlock(this.httpRequest.Content_Length);
-                        this.httpRequest.Body.Write(buffer, index + 1, r - (index + 1));
-                        if (this.httpRequest.Body.Length == this.httpRequest.Content_Length)
+                        case HttpType.Server:
+                            this.httpBase = new HttpRequest();
+                            break;
+                        case HttpType.Client:
+                            this.httpBase = new HttpResponse();
+                            break;
+                    }
+
+                    this.httpBase.ReadHeaders(buffer, 0, index);
+
+                    if (this.httpBase.Content_Length > 0)
+                    {
+                        this.bodyByteBlock = this.BytePool.GetByteBlock(this.httpBase.Content_Length);
+                        this.bodyByteBlock.Write(buffer, index + 1, r - (index + 1));
+                        if (this.bodyByteBlock.Length == this.httpBase.Content_Length)
                         {
-                            this.PreviewHandle(this.httpRequest);
+                            this.PreviewHandle(this.httpBase);
                         }
                     }
                     else
                     {
-                        this.PreviewHandle(this.httpRequest);
+                        this.PreviewHandle(this.httpBase);
                     }
                 }
                 else if (r > this.MaxSize)
@@ -98,25 +111,31 @@ namespace RRQMSocket.Http
             }
             else
             {
-                if (r >= this.httpRequest.Content_Length - this.httpRequest.Body.Length)
+                if (r >= this.httpBase.Content_Length - this.bodyByteBlock.Length)
                 {
-                    this.httpRequest.Body.Write(buffer, 0, this.httpRequest.Content_Length - (int)this.httpRequest.Body.Length);
-                    this.PreviewHandle(this.httpRequest);
+                    this.bodyByteBlock.Write(buffer, 0, this.httpBase.Content_Length - this.bodyByteBlock.Len);
+                    this.PreviewHandle(this.httpBase);
                 }
             }
         }
 
-        private void PreviewHandle(HttpRequest httpRequest)
+        private void PreviewHandle(HttpBase httpBase)
         {
-            this.httpRequest = null;
+            this.httpBase = null;
             try
             {
-                httpRequest.Build();
-                this.GoReceived(null, httpRequest);
+                if (this.bodyByteBlock != null)
+                {
+                    httpBase.BodyString = httpBase.Encoding.GetString(this.bodyByteBlock.Buffer, 0, this.bodyByteBlock.Len);
+                    this.bodyByteBlock.Dispose();
+                    this.bodyByteBlock = null;
+                }
+                httpBase.ReadFromBase();
+                this.GoReceived(null, httpBase);
             }
-            finally
+            catch (Exception ex)
             {
-                httpRequest.Dispose();
+                this.Logger.Debug( LogType.Error,this,"处理数据错误",ex);
             }
         }
 
