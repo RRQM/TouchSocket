@@ -77,6 +77,17 @@ namespace RRQMSocket
             set { minSize = value; }
         }
 
+        private bool reserveTerminatorCode;
+        /// <summary>
+        /// 保留终止因子
+        /// </summary>
+        public bool ReserveTerminatorCode
+        {
+            get { return reserveTerminatorCode; }
+            set { reserveTerminatorCode = value; }
+        }
+
+
         private ByteBlock tempByteBlock;
 
         /// <summary>
@@ -119,7 +130,16 @@ namespace RRQMSocket
                 int startIndex = 0;
                 foreach (int lastIndex in indexes)
                 {
-                    int length = lastIndex - startIndex - this.terminatorCode.Length + 1;
+                    int length;
+                    if (this.reserveTerminatorCode)
+                    {
+                        length = lastIndex - startIndex + 1;
+                    }
+                    else
+                    {
+                        length = lastIndex - startIndex - this.terminatorCode.Length + 1;
+                    }
+
                     ByteBlock packageByteBlock = this.BytePool.GetByteBlock(length);
                     packageByteBlock.Write(buffer, startIndex, length);
 
