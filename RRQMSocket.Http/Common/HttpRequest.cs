@@ -48,6 +48,7 @@ namespace RRQMSocket.Http
         /// url参数
         /// </summary>
         public Dictionary<string, string> Query { get; set; }
+
         /// <summary>
         /// 相对路径（不含参数）
         /// </summary>
@@ -57,8 +58,6 @@ namespace RRQMSocket.Http
         /// HTTP(S)地址
         /// </summary>
         public string URL { get; set; }
-
-
 
         /// <summary>
         /// 构建响应头部
@@ -82,7 +81,7 @@ namespace RRQMSocket.Http
         {
             if (this.Content_Length > 0)
             {
-                byteBlock.Write(Encoding.GetBytes(this.BodyString) );
+                byteBlock.Write(Encoding.GetBytes(this.BodyString));
             }
         }
 
@@ -95,6 +94,7 @@ namespace RRQMSocket.Http
             BuildHeader(byteBlock);
             BuildContent(byteBlock);
         }
+
         /// <summary>
         /// 获取头值
         /// </summary>
@@ -161,6 +161,7 @@ namespace RRQMSocket.Http
                 }
             }
         }
+
         /// <summary>
         /// 设置头值
         /// </summary>

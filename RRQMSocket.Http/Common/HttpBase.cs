@@ -56,7 +56,8 @@ namespace RRQMSocket.Http
         /// </summary>
         public string ContentLanguage { get; set; }
 
-        private Encoding encoding=Encoding.UTF8;
+        private Encoding encoding = Encoding.UTF8;
+
         /// <summary>
         /// 编码方式
         /// </summary>
@@ -114,6 +115,7 @@ namespace RRQMSocket.Http
         /// 读取信息
         /// </summary>
         public abstract void ReadFromBase();
+
         /// <summary>
         /// 从内存中读取
         /// </summary>

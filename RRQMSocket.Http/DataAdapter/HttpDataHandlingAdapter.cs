@@ -71,6 +71,7 @@ namespace RRQMSocket.Http
                         case HttpType.Server:
                             this.httpBase = new HttpRequest();
                             break;
+
                         case HttpType.Client:
                             this.httpBase = new HttpResponse();
                             break;
@@ -135,7 +136,7 @@ namespace RRQMSocket.Http
             }
             catch (Exception ex)
             {
-                this.Logger.Debug( LogType.Error,this,"处理数据错误",ex);
+                this.Logger.Debug(LogType.Error, this, "处理数据错误", ex);
             }
         }
 

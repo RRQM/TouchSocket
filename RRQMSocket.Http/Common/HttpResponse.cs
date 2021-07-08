@@ -151,7 +151,7 @@ namespace RRQMSocket.Http
                     this.Protocols = ps[0];
                     this.ProtocolVersion = ps[1];
                 }
-            } 
+            }
             if (first.Length > 1)
             {
                 this.StatusCode = first[1];
