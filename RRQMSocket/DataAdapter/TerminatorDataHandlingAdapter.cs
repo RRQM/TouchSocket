@@ -58,6 +58,7 @@ namespace RRQMSocket
         private byte[] terminatorCode;
 
         private int maxSize = 1024;
+
         /// <summary>
         /// 在未找到终止因子时，允许的最大长度，默认1024
         /// </summary>
@@ -68,6 +69,7 @@ namespace RRQMSocket
         }
 
         private int minSize = 0;
+
         /// <summary>
         /// 即使找到了终止因子，也不会结束，默认0
         /// </summary>
@@ -78,6 +80,7 @@ namespace RRQMSocket
         }
 
         private bool reserveTerminatorCode;
+
         /// <summary>
         /// 保留终止因子
         /// </summary>
@@ -86,7 +89,6 @@ namespace RRQMSocket
             get { return reserveTerminatorCode; }
             set { reserveTerminatorCode = value; }
         }
-
 
         private ByteBlock tempByteBlock;
 

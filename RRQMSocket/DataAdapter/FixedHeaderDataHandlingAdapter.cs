@@ -43,7 +43,8 @@ namespace RRQMSocket
             set { minSizeHeader = value; }
         }
 
-        private FixedHeaderType fixedHeaderType= FixedHeaderType.Int;
+        private FixedHeaderType fixedHeaderType = FixedHeaderType.Int;
+
         /// <summary>
         /// 设置包头类型，默认为int
         /// </summary>
@@ -52,7 +53,6 @@ namespace RRQMSocket
             get { return fixedHeaderType; }
             set { fixedHeaderType = value; }
         }
-
 
         /// <summary>
         /// 临时包
@@ -142,16 +142,18 @@ namespace RRQMSocket
                     Array.Copy(dataBuffer, index, agreementTempBytes, 0, agreementTempBytes.Length);
                     return;
                 }
-                int length=0;
+                int length = 0;
 
                 switch (this.fixedHeaderType)
                 {
                     case FixedHeaderType.Byte:
                         length = dataBuffer[index];
                         break;
+
                     case FixedHeaderType.Ushort:
                         length = BitConverter.ToUInt16(dataBuffer, index);
                         break;
+
                     case FixedHeaderType.Int:
                         length = BitConverter.ToInt32(dataBuffer, index);
                         break;
@@ -222,8 +224,8 @@ namespace RRQMSocket
                 throw new RRQMException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            ByteBlock byteBlock=null;
-            byte[] lenBytes=null;
+            ByteBlock byteBlock = null;
+            byte[] lenBytes = null;
 
             switch (this.fixedHeaderType)
             {
@@ -231,7 +233,7 @@ namespace RRQMSocket
                     {
                         byte dataLen = (byte)(length - offset);
                         byteBlock = this.BytePool.GetByteBlock(dataLen + 1);
-                        lenBytes =new byte[] { dataLen };
+                        lenBytes = new byte[] { dataLen };
                         break;
                     }
                 case FixedHeaderType.Ushort:
@@ -249,11 +251,9 @@ namespace RRQMSocket
                         break;
                     }
             }
-            
-            
+
             try
             {
-                
                 byteBlock.Write(lenBytes);
                 byteBlock.Write(buffer, offset, length);
                 if (isAsync)

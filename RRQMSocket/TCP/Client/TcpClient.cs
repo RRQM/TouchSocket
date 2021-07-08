@@ -44,6 +44,7 @@ namespace RRQMSocket
         private SocketAsyncEventArgs receiveEventArgs;
 
         private bool separateThreadSend;
+        private bool separateThreadReceive;
 
         private Socket mainSocket;
 
@@ -134,6 +135,10 @@ namespace RRQMSocket
         /// </summary>
         public virtual void Connect()
         {
+            if (this.disposable)
+            {
+                throw new RRQMException("无法利用已释放对象");
+            }
             if (this.clientConfig == null)
             {
                 throw new ArgumentNullException("配置文件不能为空。");
@@ -145,18 +150,11 @@ namespace RRQMSocket
             }
             if (!this.Online)
             {
-                try
-                {
-                    Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    PreviewConnect(socket);
-                    socket.Connect(iPHost.EndPoint);
-                    this.MainSocket = socket;
-                    Start();
-                }
-                catch (Exception e)
-                {
-                    throw new RRQMException(e.Message);
-                }
+                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                PreviewConnect(socket);
+                socket.Connect(iPHost.EndPoint);
+                this.mainSocket = socket;
+                Start();
             }
         }
 
@@ -197,9 +195,9 @@ namespace RRQMSocket
         public virtual void Disconnect()
         {
             this.online = false;
-            if (MainSocket != null)
+            if (this.mainSocket != null)
             {
-                MainSocket.Dispose();
+                this.mainSocket.Dispose();
             }
             if (this.queueGroup != null)
             {
@@ -218,7 +216,6 @@ namespace RRQMSocket
         public override void Dispose()
         {
             this.online = false;
-            base.Dispose();
             if (this.mainSocket != null)
             {
                 this.mainSocket.Dispose();
@@ -232,15 +229,19 @@ namespace RRQMSocket
                 this.asyncSender.Dispose();
                 this.asyncSender = null;
             }
+            base.Dispose();
         }
 
-        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        public void HandleBuffer(ByteBlock byteBlock)
         {
             if (this.dataHandlingAdapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
             }
-            this.dataHandlingAdapter.Received(clientBuffer.byteBlock);
+            this.dataHandlingAdapter.Received(byteBlock);
         }
 
         /// <summary>
@@ -336,9 +337,9 @@ namespace RRQMSocket
         /// <param name="how"></param>
         public void Shutdown(SocketShutdown how)
         {
-            if (this.MainSocket != null)
+            if (this.mainSocket != null)
             {
-                MainSocket.Shutdown(how);
+                mainSocket.Shutdown(how);
             }
         }
 
@@ -346,16 +347,20 @@ namespace RRQMSocket
         {
             this.ReadIpPort();
             this.OnConnectedService(new MesEventArgs());
+
             if (!this.onlySend)
             {
-                queueGroup = new BufferQueueGroup();
-                queueGroup.Thread = new Thread(HandleBuffer);//处理用户的消息
-                queueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                queueGroup.bufferAndClient = new BufferQueue();
-                queueGroup.Thread.IsBackground = true;
-                queueGroup.Thread.Name = "客户端处理线程";
-                queueGroup.Thread.Start();
-
+                if (this.separateThreadReceive)
+                {
+                    queueGroup = new BufferQueueGroup();
+                    queueGroup.Thread = new Thread(BeginHandleBuffer);//处理用户的消息
+                    queueGroup.waitHandleBuffer = new AutoResetEvent(false);
+                    queueGroup.bufferAndClient = new BufferQueue();
+                    queueGroup.Thread.IsBackground = true;
+                    queueGroup.Thread.Name = "客户端处理线程";
+                    queueGroup.Thread.Start();
+                }
+                
                 this.receiveEventArgs = new SocketAsyncEventArgs();
                 this.receiveEventArgs.Completed += EventArgs_Completed;
                 BeginReceive();
@@ -435,6 +440,7 @@ namespace RRQMSocket
             this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
             this.onlySend = clientConfig.OnlySend;
             this.separateThreadSend = clientConfig.SeparateThreadSend;
+            this.separateThreadReceive = clientConfig.SeparateThreadSend;
         }
 
         /// <summary>
@@ -511,7 +517,7 @@ namespace RRQMSocket
             }
         }
 
-        private void HandleBuffer()
+        private void BeginHandleBuffer()
         {
             while (true)
             {
@@ -524,7 +530,7 @@ namespace RRQMSocket
                 {
                     try
                     {
-                        clientBuffer.client.HandleBuffer(clientBuffer);
+                        clientBuffer.client.HandleBuffer(clientBuffer.byteBlock);
                     }
                     catch (Exception e)
                     {
@@ -548,13 +554,22 @@ namespace RRQMSocket
             {
                 if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
-                    ClientBuffer clientBuffer = new ClientBuffer();
-                    clientBuffer.client = this;
-                    clientBuffer.byteBlock = (ByteBlock)e.UserToken;
-                    clientBuffer.byteBlock.SetLength(e.BytesTransferred);
-                    queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                    queueGroup.waitHandleBuffer.Set();
-
+                    if (this.separateThreadReceive)
+                    {
+                        ClientBuffer clientBuffer = new ClientBuffer();
+                        clientBuffer.client = this;
+                        clientBuffer.byteBlock = (ByteBlock)e.UserToken;
+                        clientBuffer.byteBlock.SetLength(e.BytesTransferred);
+                        queueGroup.bufferAndClient.Enqueue(clientBuffer);
+                        queueGroup.waitHandleBuffer.Set();
+                    }
+                    else
+                    {
+                        ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                        byteBlock.SetLength(e.BytesTransferred);
+                        this.HandleBuffer(byteBlock);
+                    }
+               
                     ByteBlock newByteBlock = this.bytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);

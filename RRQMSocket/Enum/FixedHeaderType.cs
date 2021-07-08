@@ -9,11 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -25,16 +20,16 @@ namespace RRQMSocket
         /// <summary>
         /// 以1Byte标识长度，最长接收255
         /// </summary>
-        Byte=1,
+        Byte = 1,
 
         /// <summary>
         /// 以2Byte标识长度，最长接收65535
         /// </summary>
-        Ushort=2,
+        Ushort = 2,
 
         /// <summary>
         /// 以4Byte标识长度，最长接收2147483647
         /// </summary>
-        Int=4
+        Int = 4
     }
 }

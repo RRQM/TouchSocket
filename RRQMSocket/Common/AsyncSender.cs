@@ -52,6 +52,7 @@ namespace RRQMSocket
             this.sendThread.Name = "AsyncSendThread";
             this.sendThread.Start();
         }
+
         public void AsyncSend(byte[] buffer, int offset, int length)
         {
             AsyncByte asyncByte = new AsyncByte();
@@ -150,6 +151,7 @@ namespace RRQMSocket
                 }
             }
         }
+
         private bool tryGet(out AsyncByte asyncByteDe)
         {
             int len = 0;

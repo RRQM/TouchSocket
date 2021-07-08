@@ -14,10 +14,7 @@ using RRQMCore.Log;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -49,6 +46,7 @@ namespace RRQMSocket
             this.sendThread.Name = "DataAdapterTesterThread";
             this.sendThread.Start();
         }
+
         /// <summary>
         /// 获取测试器
         /// </summary>
@@ -57,7 +55,7 @@ namespace RRQMSocket
         /// <param name="logger"></param>
         /// <param name="bufferLength"></param>
         /// <returns></returns>
-        public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, Action<ByteBlock, object> receivedCallBack,ILog logger, int bufferLength = 1024)
+        public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, Action<ByteBlock, object> receivedCallBack, ILog logger, int bufferLength = 1024)
         {
             DataAdapterTester tester = new DataAdapterTester();
             tester.adapter = adapter;
@@ -65,7 +63,7 @@ namespace RRQMSocket
 
             adapter.Logger = logger;
             adapter.SendCallBack = tester.SendCallback;
-            adapter.BytePool = BytePool.Default;
+            adapter.BytePool = new BytePool();
             adapter.ReceivedCallBack = receivedCallBack;
 
             return tester;
@@ -109,7 +107,6 @@ namespace RRQMSocket
                         {
                             block.Dispose();
                         }
-
                     }
                 }
                 else
@@ -124,18 +121,18 @@ namespace RRQMSocket
         {
             byteBlocks = new List<ByteBlock>();
 
-            ByteBlock block=null;
+            ByteBlock block = null;
 
             while (true)
             {
                 if (this.asyncBytes.TryDequeue(out AsyncByte asyncByte))
                 {
-                    if (block==null)
+                    if (block == null)
                     {
-                        block = BytePool.Default.GetByteBlock(bufferLength);
+                        block = this.adapter.BytePool.GetByteBlock(bufferLength);
                         byteBlocks.Add(block);
                     }
-                   
+
                     int surLen = block.Capacity - (int)block.Position;
                     if (surLen >= asyncByte.length)
                     {
@@ -144,20 +141,20 @@ namespace RRQMSocket
                     else
                     {
                         block.Write(asyncByte.buffer, asyncByte.offset, surLen);
-                        
-                        int surDataLen = asyncByte.length - surLen;
-                        int offset= asyncByte.offset + surLen;
 
-                        while (surDataLen>0)
+                        int surDataLen = asyncByte.length - surLen;
+                        int offset = asyncByte.offset + surLen;
+
+                        while (surDataLen > 0)
                         {
-                            block = BytePool.Default.GetByteBlock(bufferLength);
+                            block = this.adapter.BytePool.GetByteBlock(bufferLength);
                             byteBlocks.Add(block);
-                            int len = Math.Min(surDataLen,bufferLength);
+                            int len = Math.Min(surDataLen, bufferLength);
                             block.Write(asyncByte.buffer, offset, len);
                             surDataLen -= len;
                             offset += len;
                         }
-                        
+
                         break;
                     }
                 }
@@ -181,7 +178,7 @@ namespace RRQMSocket
             AsyncByte asyncByte = new AsyncByte();
             asyncByte.buffer = new byte[length];
 
-            Array.Copy(buffer,offset,asyncByte.buffer,0,length);
+            Array.Copy(buffer, offset, asyncByte.buffer, 0, length);
             asyncByte.offset = 0;
             asyncByte.length = length;
             this.asyncBytes.Enqueue(asyncByte);

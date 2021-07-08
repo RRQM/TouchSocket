@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.ByteManager;
+
 namespace RRQMSocket
 {
     /// <summary>
@@ -20,7 +22,7 @@ namespace RRQMSocket
         /// <summary>
         ///  处理数据
         /// </summary>
-        /// <param name="clientBuffer"></param>
-        void HandleBuffer(ClientBuffer clientBuffer);
+        /// <param name="byteBlock"></param>
+        void HandleBuffer(ByteBlock byteBlock);
     }
 }

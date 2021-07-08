@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -88,18 +87,17 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 获取服务器配置
+        /// </summary>
+        public ServerConfig ServerConfig { get { return serverConfig; } }
+
+        /// <summary>
         /// 服务器名称
         /// </summary>
         public string ServerName
         {
             get { return name; }
         }
-
-        /// <summary>
-        /// 获取服务器配置
-        /// </summary>
-        public ServerConfig ServerConfig { get { return serverConfig; } }
-
         /// <summary>
         /// 服务器状态
         /// </summary>
@@ -120,11 +118,12 @@ namespace RRQMSocket
 
         #region 变量
 
+        internal ClearType clearType;
+        internal bool separateThreadReceive;
         internal ObjectPool<TClient> socketClientPool;
         private int backlog;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadClearClient;
-        private ClearType clearType;
         #endregion 变量
 
         #region 事件
@@ -156,7 +155,6 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
-            base.Dispose();
             if (this.listenSockets != null)
             {
                 foreach (var item in this.listenSockets)
@@ -164,6 +162,9 @@ namespace RRQMSocket
                     item.Dispose();
                 }
             }
+            this.listenSockets = null;
+            this.listenIPHosts = null;
+
             this.SocketClients.Dispose();
             if (bufferQueueGroups != null)
             {
@@ -174,6 +175,7 @@ namespace RRQMSocket
             }
 
             this.serverState = ServerState.Disposed;
+            base.Dispose();
         }
 
         /// <summary>
@@ -372,6 +374,9 @@ namespace RRQMSocket
                     item.Dispose();
                 }
             }
+            this.listenSockets = null;
+            this.listenIPHosts = null;
+
             this.SocketClients.Dispose();
 
             this.serverState = ServerState.Stopped;
@@ -407,8 +412,9 @@ namespace RRQMSocket
                     client.Service = this;
                     client.Logger = this.Logger;
                     client.clearType = this.clearType;
+                    client.separateThreadReceive = this.separateThreadReceive;
                 }
-
+                
                 client.MainSocket = socket;
                 client.ReadIpPort();
                 client.SetBufferLength(this.BufferLength);
@@ -453,6 +459,7 @@ namespace RRQMSocket
             this.SetBufferLength((int)serverConfig.GetValue(ServerConfig.BufferLengthProperty));
             this.name = serverConfig.ServerName;
             this.clearType = (ClearType)serverConfig.GetValue(TcpServerConfig.ClearTypeProperty);
+            this.separateThreadReceive = serverConfig.SeparateThreadReceive;
         }
 
         /// <summary>
@@ -490,18 +497,24 @@ namespace RRQMSocket
             threadClearClient.Name = "ClearClient";
             threadClearClient.Start();
 
-            bufferQueueGroups = new BufferQueueGroup[this.serverConfig.ThreadCount];
+
+
+            this.bufferQueueGroups = new BufferQueueGroup[this.serverConfig.ThreadCount];
             for (int i = 0; i < this.serverConfig.ThreadCount; i++)
             {
                 BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                 bufferQueueGroup.bytePool = new BytePool(this.serverConfig.BytePoolMaxSize, this.serverConfig.BytePoolMaxBlockSize);
                 bufferQueueGroups[i] = bufferQueueGroup;
-                bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                bufferQueueGroup.bufferAndClient = new BufferQueue();
-                bufferQueueGroup.Thread.IsBackground = true;
-                bufferQueueGroup.Thread.Name = i + "-Num Handler";
-                bufferQueueGroup.Thread.Start(bufferQueueGroup);
+
+                if (this.separateThreadReceive)
+                {
+                    bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
+                    bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
+                    bufferQueueGroup.bufferAndClient = new BufferQueue();
+                    bufferQueueGroup.Thread.IsBackground = true;
+                    bufferQueueGroup.Thread.Name = i + "-Num Handler";
+                    bufferQueueGroup.Thread.Start(bufferQueueGroup);
+                }
             }
         }
 
@@ -595,7 +608,7 @@ namespace RRQMSocket
                 {
                     try
                     {
-                        clientBuffer.client.HandleBuffer(clientBuffer);
+                        clientBuffer.client.HandleBuffer(clientBuffer.byteBlock);
                     }
                     catch (Exception ex)
                     {
@@ -640,10 +653,9 @@ namespace RRQMSocket
                     }
                 }
             }
-            catch 
+            catch
             {
             }
-           
         }
     }
 }

@@ -15,7 +15,6 @@ using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace RRQMSocket
@@ -97,10 +96,12 @@ namespace RRQMSocket
                                         client.queueGroup = queueGroup;
                                         client.Service = this;
                                         client.Logger = this.Logger;
+                                        client.clearType = this.clearType;
+                                        client.separateThreadReceive = this.separateThreadReceive;
                                     }
                                     client.MainSocket = socket;
                                     client.ReadIpPort();
-                                    client.SetBufferLength(this.BufferLength);
+                                    client.SetBufferLength(this.bufferLength);
 
                                     CreateOption creatOption = new CreateOption();
                                     creatOption.NewCreate = client.NewCreate;
@@ -151,7 +152,6 @@ namespace RRQMSocket
 
                 socket.Dispose();
             });
-
         }
 
         /// <summary>

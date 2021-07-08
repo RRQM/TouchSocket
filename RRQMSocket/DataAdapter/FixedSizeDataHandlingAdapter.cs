@@ -61,7 +61,6 @@ namespace RRQMSocket
                 {
                     this.tempByteBlock.Write(buffer, 0, surPlusLength);
                     PreviewHandle(this.tempByteBlock);
-                    this.tempByteBlock.Dispose();
                     this.tempByteBlock = null;
                     surPlusLength = 0;
                 }
@@ -69,7 +68,6 @@ namespace RRQMSocket
                 {
                     this.tempByteBlock.Write(buffer, 0, surPlusLength);
                     PreviewHandle(this.tempByteBlock);
-                    this.tempByteBlock.Dispose();
                     this.tempByteBlock = null;
                     SplitPackage(buffer, surPlusLength, r);
                 }
@@ -135,18 +133,17 @@ namespace RRQMSocket
             {
                 byteBlock.Buffer[i] = 0;
             }
-
+            byteBlock.SetLength(this.FixedSize);
             try
             {
-                byteBlock.SetLength(this.FixedSize);
                 if (isAsync)
                 {
                     byte[] data = byteBlock.ToArray();
-                    this.GoSend(data, 0, data.Length, isAsync);//使用ByteBlock时不能异步发送
+                    this.GoSend(data, 0, data.Length, true);//使用ByteBlock时不能异步发送
                 }
                 else
                 {
-                    this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Length, isAsync);
+                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
             }
             catch (Exception ex)

@@ -22,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public abstract class UdpSession : BaseSocket, IService, IClient, IHandleBuffer
+    public abstract class UdpSession : BaseSocket, IService, IClient
     {
         private EndPoint defaultRemotePoint;
 
@@ -138,6 +138,7 @@ namespace RRQMSocket
                     clientBuffer.endPoint = e.RemoteEndPoint;
                     clientBuffer.byteBlock = byteBlock;
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
+
                     if (queueGroup.isWait)
                     {
                         queueGroup.waitHandleBuffer.Set();
@@ -183,7 +184,7 @@ namespace RRQMSocket
                 {
                     try
                     {
-                        ((IHandleBuffer)this).HandleBuffer(clientBuffer);
+                        this.HandleBuffer(clientBuffer.endPoint, clientBuffer.byteBlock);
                     }
                     catch (Exception e)
                     {
@@ -328,9 +329,9 @@ namespace RRQMSocket
 
         #endregion 发送
 
-        void IHandleBuffer.HandleBuffer(ClientBuffer clientBuffer)
+        private void HandleBuffer(EndPoint endPoint, ByteBlock byteBlock)
         {
-            HandleReceivedData(clientBuffer.endPoint, clientBuffer.byteBlock);
+            HandleReceivedData(endPoint, byteBlock);
         }
 
         /// <summary>
