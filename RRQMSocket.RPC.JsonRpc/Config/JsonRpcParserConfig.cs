@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
@@ -38,7 +33,5 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public static readonly DependencyProperty JsonFormatConverterProperty =
             DependencyProperty.Register("JsonFormatConverter", typeof(JsonFormatConverter), typeof(JsonRpcParserConfig), new DataContractJsonConverter());
-
-
     }
 }

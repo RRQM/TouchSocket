@@ -11,14 +11,10 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
-using RRQMCore.Helper;
 using RRQMCore.Run;
 using RRQMSocket.RPC.RRQMRPC;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
@@ -34,8 +30,10 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             waitHandle = new RRQMWaitHandle<WaitResult>();
         }
+
         private JsonFormatConverter jsonFormatConverter;
         private RRQMWaitHandle<WaitResult> waitHandle;
+
         /// <summary>
         /// Json格式化器
         /// </summary>
@@ -48,8 +46,8 @@ namespace RRQMSocket.RPC.JsonRpc
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
             base.LoadConfig(clientConfig);
-            this.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.bufferLength,"\r\n"));
-            this.jsonFormatConverter =(JsonFormatConverter) clientConfig.GetValue(JsonRPCClientConfig.JsonFormatConverterProperty);
+            this.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.bufferLength, "\r\n"));
+            this.jsonFormatConverter = (JsonFormatConverter)clientConfig.GetValue(JsonRPCClientConfig.JsonFormatConverterProperty);
         }
 
         /// <summary>
@@ -65,10 +63,9 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <returns></returns>
         public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-
             JsonRpcWaitContext context = new JsonRpcWaitContext();
             WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
-            
+
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
@@ -80,7 +77,7 @@ namespace RRQMSocket.RPC.JsonRpc
                 requestContext.jsonrpc = "2.0";
                 requestContext.@params = parameters;
                 requestContext.method = method;
-                if (invokeOption.FeedbackType== FeedbackType.WaitInvoke)
+                if (invokeOption.FeedbackType == FeedbackType.WaitInvoke)
                 {
                     requestContext.id = context.Sign.ToString();
                 }
@@ -101,30 +98,30 @@ namespace RRQMSocket.RPC.JsonRpc
                 case FeedbackType.OnlySend:
                 case FeedbackType.WaitSend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitInvoke:
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
                             throw new RRQMTimeoutException("等待结果超时");
                         }
-                        if (resultContext.error!=null)
+                        if (resultContext.error != null)
                         {
                             throw new RRQMRPCException(resultContext.error.message);
                         }
                         try
                         {
-                            if (typeof(T)==typeof(string))
+                            if (typeof(T) == typeof(string))
                             {
                                 return (T)(object)resultContext.ReturnJsonString;
                             }
-                            return (T)this.jsonFormatConverter.Deserialize(resultContext.ReturnJsonString , typeof(T));
+                            return (T)this.jsonFormatConverter.Deserialize(resultContext.ReturnJsonString, typeof(T));
                         }
                         catch (Exception ex)
                         {
@@ -183,14 +180,14 @@ namespace RRQMSocket.RPC.JsonRpc
                 case FeedbackType.OnlySend:
                 case FeedbackType.WaitSend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return;
                     }
                 case FeedbackType.WaitInvoke:
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -218,7 +215,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, InvokeOption invokeOption, params object[] parameters)
         {
-            this.Invoke(method,invokeOption,ref parameters,null);
+            this.Invoke(method, invokeOption, ref parameters, null);
         }
 
         /// <summary>
@@ -233,7 +230,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <returns></returns>
         public T Invoke<T>(string method, InvokeOption invokeOption, params object[] parameters)
         {
-           return this.Invoke<T>(method, invokeOption, ref parameters, null);
+            return this.Invoke<T>(method, invokeOption, ref parameters, null);
         }
 
         /// <summary>
@@ -243,9 +240,9 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="obj"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            string s = Encoding.UTF8.GetString(byteBlock.Buffer,0,(int)byteBlock.Length);
-            JsonResponseContext responseContext=(JsonResponseContext)  this.jsonFormatConverter.Deserialize(s, typeof(JsonResponseContext));
-            if (responseContext!=null)
+            string s = Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length);
+            JsonResponseContext responseContext = (JsonResponseContext)this.jsonFormatConverter.Deserialize(s, typeof(JsonResponseContext));
+            if (responseContext != null)
             {
                 JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
                 waitContext.Status = 1;
@@ -254,7 +251,6 @@ namespace RRQMSocket.RPC.JsonRpc
                 waitContext.ReturnJsonString = responseContext.result == null ? null : responseContext.result.ToString();
                 this.waitHandle.SetRun(waitContext);
             }
-            
         }
     }
 }

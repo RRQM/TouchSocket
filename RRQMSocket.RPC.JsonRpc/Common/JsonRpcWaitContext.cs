@@ -10,15 +10,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Run;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
-    class JsonRpcWaitContext:WaitResult
+    internal class JsonRpcWaitContext : WaitResult
     {
         internal string ReturnJsonString;
 
