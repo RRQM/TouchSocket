@@ -46,7 +46,8 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public FileClient()
         {
-            waitHandle = new AutoResetEvent(false);
+            this.waitDataSend = new WaitData<ByteBlock>();
+            this.transferWaitHandle = new AutoResetEvent(false);
             this.FileTransferCollection = new TransferCollection();
             this.TransferStatus = TransferStatus.None;
             this.FileTransferCollection.OnCollectionChanged += this.FileTransferCollection_OnCollectionChanged;
@@ -76,11 +77,9 @@ namespace RRQMSocket.FileTransfer
 
         private int timeout = 10;
 
-        private WaitData<ByteBlock> waitDataSend;
-
-        private EventWaitHandle waitHandle;
-
         private UrlFileInfo transferUrlFileInfo;
+        private EventWaitHandle transferWaitHandle;
+        private WaitData<ByteBlock> waitDataSend;
 
         /// <summary>
         /// 传输文件之前
@@ -273,6 +272,7 @@ namespace RRQMSocket.FileTransfer
             {
                 this.OutUpload();
             }
+            this.waitDataSend.Dispose();
             this.TransferStatus = TransferStatus.None;
             this.progress = 0;
             this.speed = 0;
@@ -322,7 +322,7 @@ namespace RRQMSocket.FileTransfer
                 return false;
             }
 
-            return this.waitHandle.Set();
+            return this.transferWaitHandle.Set();
         }
 
         /// <summary>
@@ -363,32 +363,6 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 密封方法
-        /// </summary>
-        /// <param name="procotol"></param>
-        /// <param name="byteBlock"></param>
-        protected sealed override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
-        {
-            switch (procotol)
-            {
-                case 111:
-                    {
-                        if (this.waitDataSend != null)
-                        {
-                            byteBlock.SetHolding(true);
-                            this.waitDataSend.Set(byteBlock);
-                        }
-                        break;
-                    }
-                default:
-                    {
-                        FileClientHandleDefaultData(procotol, byteBlock);
-                        break;
-                    }
-            }
-        }
-
-        /// <summary>
         /// 文件客户端处理其他协议
         /// </summary>
         /// <param name="procotol"></param>
@@ -408,6 +382,30 @@ namespace RRQMSocket.FileTransfer
             base.LoadConfig(clientConfig);
             this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
             this.receiveDirectory = (string)clientConfig.GetValue(FileClientConfig.ReceiveDirectoryProperty);
+        }
+
+        /// <summary>
+        /// 密封方法
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="byteBlock"></param>
+        protected sealed override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        {
+            switch (procotol)
+            {
+                case 111:
+                    {
+                        ByteBlock newByteBlock = this.BytePool.GetByteBlock(byteBlock.Len);
+                        newByteBlock.Write(byteBlock.Buffer,0,byteBlock.Len);
+                        this.waitDataSend.Set(newByteBlock);
+                        break;
+                    }
+                default:
+                    {
+                        FileClientHandleDefaultData(procotol, byteBlock);
+                        break;
+                    }
+            }
         }
 
         private void BeginTransfer()
@@ -504,7 +502,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            Logger.Debug(LogType.Error, this, $"已断开连接，使用专业版可进行断网续传");
+                            Logger.Debug(LogType.Error, this, "已断开连接，终止传输");
                             OutDownload(false);
                             return;
                         }
@@ -515,7 +513,7 @@ namespace RRQMSocket.FileTransfer
                         }
                         if (this.TransferStatus == TransferStatus.PauseDownload)
                         {
-                            waitHandle.WaitOne();
+                            transferWaitHandle.WaitOne();
                         }
 
                         ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -688,7 +686,6 @@ namespace RRQMSocket.FileTransfer
         {
             lock (locker)
             {
-                this.waitDataSend = new WaitData<ByteBlock>();
                 try
                 {
                     if (byteBlock == null)
@@ -704,12 +701,12 @@ namespace RRQMSocket.FileTransfer
                 {
                 }
 
-                this.waitDataSend.Wait(waitTime * 1000);
-                ByteBlock resultByteBlock = this.waitDataSend.WaitResult;
-                this.waitDataSend.Dispose();
-                this.waitDataSend = null;
-
-                return resultByteBlock;
+                if (this.waitDataSend.Wait(waitTime * 1000))
+                {
+                    ByteBlock resultByteBlock = this.waitDataSend.WaitResult;
+                    return resultByteBlock;
+                }
+                return null;
             }
         }
 
@@ -893,7 +890,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            Logger.Debug(LogType.Error, this, $"已断开连接，使用专业版可进行断网续传");
+                            Logger.Debug(LogType.Error, this, "已断开连接，终止传输");
                             OutUpload();
                             return;
                         }
@@ -904,7 +901,7 @@ namespace RRQMSocket.FileTransfer
                         }
                         if (this.TransferStatus == TransferStatus.PauseUpload)
                         {
-                            waitHandle.WaitOne();
+                            transferWaitHandle.WaitOne();
                         }
                         byte[] positionBytes = BitConverter.GetBytes(this.position);
                         long submitLength = surplusLength > (this.BufferLength - 27) ? (this.BufferLength - 27) : surplusLength;
