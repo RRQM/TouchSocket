@@ -97,7 +97,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return default(T);
                     }
                 case FeedbackType.WaitSend:
@@ -105,7 +105,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         waitData.Wait(invokeOption.WaitTime * 1000);
 
                         RPCContext resultContext = waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
                             throw new RRQMTimeoutException("等待结果超时");
@@ -117,7 +117,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         waitData.Wait(invokeOption.WaitTime * 1000);
 
                         RPCContext resultContext = waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
                             throw new RRQMTimeoutException("等待结果超时");
@@ -192,7 +192,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return;
                     }
                 case FeedbackType.WaitSend:
@@ -200,7 +200,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         waitData.Wait(invokeOption.WaitTime * 1000);
 
                         RPCContext resultContext = waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
                             throw new RRQMTimeoutException("等待结果超时");
@@ -212,7 +212,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         waitData.Wait(invokeOption.WaitTime * 1000);
 
                         RPCContext resultContext = waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
                             throw new RRQMTimeoutException("等待结果超时");
@@ -271,7 +271,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case 0:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return null;
                     }
                 case 1:
@@ -279,7 +279,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         waitData.Wait(timeout * 1000);
 
                         RPCContext resultContext = waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
                             throw new RRQMTimeoutException("等待结果超时");
@@ -291,7 +291,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         waitData.Wait(timeout * 1000);
 
                         RPCContext resultContext = waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
                             throw new RRQMTimeoutException("等待结果超时");
@@ -388,8 +388,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            string proxyToken = Encoding.UTF8.GetString(buffer,2,r-2);
-                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(proxyToken,this), true);
+                            string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(proxyToken, this), true);
                             this.InternalSend(102, data, 0, data.Length);
                         }
                         catch (Exception e)

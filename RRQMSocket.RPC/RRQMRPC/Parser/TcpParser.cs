@@ -55,7 +55,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         private MethodStore methodStore;
         private RPCProxyInfo proxyInfo;
         private CellCode[] codes;
-
+    
         public MethodStore MethodStore { get => methodStore; }
 
         public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
@@ -166,7 +166,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         protected override void OnCreateSocketCliect(TClient socketClient, CreateOption createOption)
         {
-            if (createOption.NewCreate) 
+            if (createOption.NewCreate)
             {
                 socketClient.IDAction = this.IDInvoke;
                 socketClient.Received = this.OnReceived;
@@ -249,7 +249,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller)
         {
-            if (proxyToken==this.ProxyToken)
+            if (proxyToken == this.ProxyToken)
             {
                 return this.methodStore.GetAllMethodItem();
             }

@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using RRQMSocket.RPC.RRQMRPC;
 using System;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -20,7 +19,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public interface IRPCClient : IDisposable
     {
-       
         /// <summary>
         /// 函数式调用
         /// </summary>

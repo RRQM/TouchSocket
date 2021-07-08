@@ -107,7 +107,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         data = Encoding.UTF8.GetBytes(proxyToken);
                     }
-                    this.InternalSend(102,data , 0, data.Length);
+                    this.InternalSend(102, data, 0, data.Length);
                 }
                 catch (Exception ex)
                 {
@@ -184,7 +184,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 throw new RRQMException($"服务名为{method}的服务未找到注册信息");
             }
             RPCContext context = new RPCContext();
-            WaitData<WaitResult> waitData =  this.waitHandle.GetWaitData(context);
+            WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
             context.MethodToken = methodItem.MethodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
@@ -217,14 +217,14 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitSend:
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -239,7 +239,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -338,14 +338,14 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         break;
                     }
                 case FeedbackType.WaitSend:
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -357,7 +357,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -446,14 +446,14 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         break;
                     }
                 case FeedbackType.WaitSend:
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -465,7 +465,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -539,14 +539,14 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitSend:
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -561,7 +561,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -645,7 +645,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                     }
                     break;
 
@@ -654,7 +654,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -728,7 +728,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitSend:
@@ -736,7 +736,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(invokeOption.WaitTime * 1000);
                         RPCContext resultContext = (RPCContext)waitData.WaitResult;
-                        waitData.Dispose();
+                        this.waitHandle.Destroy(waitData);
 
                         if (resultContext.Status == 0)
                         {
@@ -764,6 +764,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     return default;
             }
         }
+
 
         /// <summary>
         /// 开启反向RPC服务

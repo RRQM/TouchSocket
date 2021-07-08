@@ -230,7 +230,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
-                            UDPSend(102, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(proxyToken,remoteEndPoint), true));
+                            UDPSend(102, remoteEndPoint, SerializeConvert.RRQMBinarySerialize(this.GetRegisteredMethodItems(proxyToken, remoteEndPoint), true));
                         }
                         catch (Exception e)
                         {

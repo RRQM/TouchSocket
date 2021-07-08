@@ -15,7 +15,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 调用状态
     /// </summary>
-    public enum InvokeStatus:byte
+    public enum InvokeStatus : byte
     {
         /// <summary>
         /// 就绪

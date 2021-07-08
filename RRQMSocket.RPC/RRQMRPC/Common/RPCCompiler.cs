@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 #if NET45_OR_GREATER
+
 using Microsoft.CSharp;
 using RRQMCore.Log;
 using System;
@@ -68,7 +69,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             return File.ReadAllBytes(assemblyName);
         }
-
     }
 }
+
 #endif
