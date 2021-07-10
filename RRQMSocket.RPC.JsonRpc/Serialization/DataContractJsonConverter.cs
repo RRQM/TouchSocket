@@ -29,10 +29,15 @@ namespace RRQMSocket.RPC.JsonRpc
             return deseralizer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(jsonString)));
         }
 
-        public override void Serialize(Stream stream, object parameter)
+        public override string Serialize(object parameter)
         {
-            DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(parameter.GetType());
-            deseralizer.WriteObject(stream, parameter);
+            using (MemoryStream stream =new MemoryStream())
+            {
+                DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(parameter.GetType());
+                deseralizer.WriteObject(stream, parameter);
+                return Encoding.UTF8.GetString(stream.ToArray());
+            }
+            
         }
     }
 }

@@ -22,7 +22,7 @@ namespace RRQMSocket
         /// <summary>
         /// 收到消息
         /// </summary>
-        internal Action<SimpleProtocolSocketClient, short?, ByteBlock> OnReceived;
+        public Action<SimpleProtocolSocketClient, short?, ByteBlock> OnReceived;
 
         /// <summary>
         /// 处理协议数据

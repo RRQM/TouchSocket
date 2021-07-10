@@ -10,20 +10,17 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Helper;
 using RRQMSocket.Http;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
-using RRQMCore.Helper;
-using System.Collections;
 
 namespace RRQMSocket.RPC.XmlRpc
 {
-    static class XmlDataTool
+    internal static class XmlDataTool
     {
         public static object GetValue(XmlNode valueNode, Type type)
         {
@@ -261,7 +258,6 @@ namespace RRQMSocket.RPC.XmlRpc
 
             CreateParam(xml, valueElement, value);
 
-
             ByteBlock xmlBlock = BytePool.Default.GetByteBlock(1024 * 4);
             xml.Save(xmlBlock);
 
@@ -270,6 +266,5 @@ namespace RRQMSocket.RPC.XmlRpc
             httpResponse.FromXML(xmlString);
             xmlBlock.Dispose();
         }
-
     }
 }

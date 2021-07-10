@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.WebApi
 {
@@ -23,7 +18,6 @@ namespace RRQMSocket.RPC.WebApi
     /// </summary>
     public class WebApiParserConfig : TcpServerConfig
     {
-
         /// <summary>
         /// 数据转化器
         /// </summary>
@@ -39,7 +33,5 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public static readonly DependencyProperty ApiDataConverterProperty =
             DependencyProperty.Register("ApiDataConverter", typeof(ApiDataConverter), typeof(WebApiParserConfig), new XmlDataConverter());
-
-
     }
 }

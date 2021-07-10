@@ -33,5 +33,22 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public static readonly DependencyProperty JsonFormatConverterProperty =
             DependencyProperty.Register("JsonFormatConverter", typeof(JsonFormatConverter), typeof(JsonRPCClientConfig), new DataContractJsonConverter());
+
+        /// <summary>
+        /// 协议类型
+        /// </summary>
+        public JsonRpcProtocolType ProtocolType
+        {
+            get { return (JsonRpcProtocolType)GetValue(ProtocolTypeProperty); }
+            set { SetValue(ProtocolTypeProperty, value); }
+        }
+
+        /// <summary>
+        /// 协议类型，
+        /// 所需类型<see cref="JsonRpcProtocolType"/>
+        /// </summary>       
+        public static readonly DependencyProperty ProtocolTypeProperty =
+        DependencyProperty.Register("ProtocolType", typeof(JsonRpcProtocolType), typeof(JsonRPCClientConfig), JsonRpcProtocolType.Tcp);
+
     }
 }

@@ -25,6 +25,13 @@ namespace RRQMSocket.Http
     public abstract class HttpBase
     {
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public HttpBase()
+        {
+            this.headers = new Dictionary<string, string>();
+        }
+        /// <summary>
         /// 服务器版本
         /// </summary>
         public static readonly string ServerVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -32,9 +39,20 @@ namespace RRQMSocket.Http
         private string requestLine;
 
         /// <summary>
-        /// 请求体字符数据
+        /// 字符数据
         /// </summary>
-        public string BodyString { get; set; }
+        public string Body { get { return this.content == null ? null : this.encoding.GetString(this.content); } }
+
+        private byte[] content;
+
+        /// <summary>
+        /// 内容器
+        /// </summary>
+        public byte[] Content
+        {
+            get { return content; }
+        }
+
 
         /// <summary>
         /// 内容编码
@@ -75,7 +93,9 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 请求头集合
         /// </summary>
-        public Dictionary<string, string> Headers { get; set; }
+        public Dictionary<string, string> Headers { get { return this.headers; } }
+
+        Dictionary<string, string> headers;
 
         /// <summary>
         /// 协议名称
@@ -85,7 +105,7 @@ namespace RRQMSocket.Http
         /// <summary>
         /// HTTP协议版本
         /// </summary>
-        public string ProtocolVersion { get; set; }
+        public string ProtocolVersion { get; set; } = "1.1";
 
         /// <summary>
         /// 请求行
@@ -131,7 +151,7 @@ namespace RRQMSocket.Http
             this.requestLine = rows[0];
 
             //Request Headers
-            this.Headers = GetRequestHeaders(rows);
+            GetRequestHeaders(rows);
 
             string contentLength = this.GetHeader(HttpHeaders.ContentLength);
             int.TryParse(contentLength, out int content_Length);
@@ -190,23 +210,49 @@ namespace RRQMSocket.Http
             Headers[fieldName] = value;
         }
 
-        private Dictionary<string, string> GetRequestHeaders(IEnumerable<string> rows)
+        private void GetRequestHeaders(IEnumerable<string> rows)
         {
+            this.headers.Clear();
             if (rows == null || rows.Count() <= 0)
             {
-                return null;
+                return;
             }
-            Dictionary<string, string> header = new Dictionary<string, string>();
+
             foreach (var item in rows)
             {
                 string[] kv = item.SplitFirst(':');
                 if (kv.Length == 2)
                 {
-                    header.Add(kv[0], kv[1]);
+                    if (!this.headers.ContainsKey(kv[0]))
+                    {
+                        this.headers.Add(kv[0], kv[1]);
+                    }
                 }
             }
+        }
 
-            return header;
+        /// <summary>
+        /// 设置内容
+        /// </summary>
+        /// <param name="content"></param>
+        /// <returns></returns>
+        public void SetContent(byte[] content)
+        {
+            this.content = content;
+            this.Content_Length = content.Length;
+        }
+
+        /// <summary>
+        /// 设置内容
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public void SetContent(string content, Encoding encoding = null)
+        {
+            //初始化内容
+            encoding = encoding != null ? encoding : Encoding.UTF8;
+            SetContent(encoding.GetBytes(content));
         }
     }
 }

@@ -15,8 +15,6 @@ using RRQMSocket.Http;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Text;
 using System.Xml;
 
 namespace RRQMSocket.RPC.XmlRpc
@@ -151,11 +149,8 @@ namespace RRQMSocket.RPC.XmlRpc
             {
                 socketClient.OnReceived = this.OnReceived;
             }
-            socketClient.SetDataHandlingAdapter( new HttpDataHandlingAdapter(this.BufferLength, HttpType.Server));
+            socketClient.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.BufferLength, HttpType.Server));
         }
-
-       
-      
 
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
@@ -165,7 +160,7 @@ namespace RRQMSocket.RPC.XmlRpc
             methodInvoker.Flag = httpRequest;
 
             XmlDocument xml = new XmlDocument();
-            xml.LoadXml(httpRequest.BodyString);
+            xml.LoadXml(httpRequest.Body);
             XmlNode methodName = xml.SelectSingleNode("methodCall/methodName");
             string actionKey = methodName.InnerText;
 

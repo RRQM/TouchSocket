@@ -32,6 +32,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
 #pragma warning disable
 
+       
         public MethodMap MethodMap { get; private set; }
 
         public RPCService RPCService { get; private set; }
@@ -55,7 +56,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         private MethodStore methodStore;
         private RPCProxyInfo proxyInfo;
         private CellCode[] codes;
-    
+
         public MethodStore MethodStore { get => methodStore; }
 
         public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)

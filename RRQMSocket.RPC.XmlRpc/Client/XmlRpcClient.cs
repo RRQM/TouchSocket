@@ -15,11 +15,6 @@ using RRQMCore.Run;
 using RRQMSocket.Http;
 using RRQMSocket.RPC.RRQMRPC;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace RRQMSocket.RPC.XmlRpc
@@ -36,8 +31,10 @@ namespace RRQMSocket.RPC.XmlRpc
         {
             singleWaitHandle = new WaitData<HttpResponse>();
         }
+
         private WaitData<HttpResponse> singleWaitHandle;
         private int timeout;
+
         /// <summary>
         /// 载入配置
         /// </summary>
@@ -68,12 +65,12 @@ namespace RRQMSocket.RPC.XmlRpc
             {
                 XmlDataTool.CreateRequest(byteBlock, this.Name, method, parameters);
                 response = this.WaitSend(byteBlock);
-                if (response.StatusCode!="200")
+                if (response.StatusCode != "200")
                 {
                     throw new RRQMException("调用错误");
                 }
                 XmlDocument xml = new XmlDocument();
-                xml.LoadXml(response.BodyString);
+                xml.LoadXml(response.Body);
                 XmlNode paramNode = xml.SelectSingleNode("methodResponse/params/param");
                 if (paramNode != null)
                 {

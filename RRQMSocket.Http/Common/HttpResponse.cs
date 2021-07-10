@@ -23,49 +23,9 @@ namespace RRQMSocket.Http
     public class HttpResponse : HttpBase
     {
         /// <summary>
-        /// 构造函数
-        /// </summary>
-        public HttpResponse()
-        {
-            this.Headers = new Dictionary<string, string>();
-        }
-
-        /// <summary>
         /// 状态码
         /// </summary>
         public string StatusCode { get; set; }
-
-        /// <summary>
-        /// 内容
-        /// </summary>
-        public byte[] Content { get; private set; }
-
-        /// <summary>
-        /// 设置内容
-        /// </summary>
-        /// <param name="content"></param>
-        /// <param name="encoding"></param>
-        /// <returns></returns>
-        public HttpResponse SetContent(byte[] content, Encoding encoding = null)
-        {
-            this.Content = content;
-            this.Encoding = encoding != null ? encoding : Encoding.UTF8;
-            this.Content_Length = content.Length;
-            return this;
-        }
-
-        /// <summary>
-        /// 设置内容
-        /// </summary>
-        /// <param name="content"></param>
-        /// <param name="encoding"></param>
-        /// <returns></returns>
-        public HttpResponse SetContent(string content, Encoding encoding = null)
-        {
-            //初始化内容
-            encoding = encoding != null ? encoding : Encoding.UTF8;
-            return SetContent(encoding.GetBytes(content), encoding);
-        }
 
         /// <summary>
         /// 获取头数据

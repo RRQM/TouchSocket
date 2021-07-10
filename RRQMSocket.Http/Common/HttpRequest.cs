@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using RRQMCore.Helper;
 using System;
 using System.Collections.Generic;
@@ -67,6 +68,13 @@ namespace RRQMSocket.Http
         {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.AppendLine($"{this.Method} / HTTP/{this.ProtocolVersion}");
+
+            this.SetHeader(HttpHeaders.UserAgent, "RRQMHTTP");
+
+            if (!string.IsNullOrEmpty(this.Content_Type))
+                stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
+            stringBuilder.AppendLine("Content-Length: " + this.Content_Length);
+
             foreach (var headerkey in this.Headers.Keys)
             {
                 stringBuilder.Append($"{headerkey}: ");
@@ -74,14 +82,18 @@ namespace RRQMSocket.Http
             }
 
             stringBuilder.AppendLine();
-            byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
+            byteBlock.Write(this.Encoding.GetBytes(stringBuilder.ToString()));
         }
 
         private void BuildContent(ByteBlock byteBlock)
         {
             if (this.Content_Length > 0)
             {
-                byteBlock.Write(Encoding.GetBytes(this.BodyString));
+                if (this.Content_Length != this.Content.Length)
+                {
+                    throw new RRQMException("内容实际长度与设置长度不相等");
+                }
+                byteBlock.Write(this.Content);
             }
         }
 
@@ -157,7 +169,7 @@ namespace RRQMSocket.Http
                 this.Content_Type = GetHeader(HttpHeaders.ContentType);
                 if (this.Content_Type == @"application/x-www-form-urlencoded")
                 {
-                    this.Params = GetRequestParameters(this.BodyString);
+                    this.Params = GetRequestParameters(this.Body);
                 }
             }
         }

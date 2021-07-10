@@ -22,10 +22,9 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 序列化
         /// </summary>
-        /// <param name="stream"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        public abstract void Serialize(Stream stream, object parameter);
+        public abstract string Serialize(object parameter);
 
         /// <summary>
         /// 反序列化

@@ -62,6 +62,7 @@ namespace RRQMSocket
             this.asyncBytes.Enqueue(asyncByte);
             if (!this.sending)
             {
+                this.sending = true;
                 this.waitHandle.Set();
             }
         }
@@ -87,8 +88,8 @@ namespace RRQMSocket
                 {
                     if (this.tryGet(out AsyncByte asyncByte))
                     {
-                        this.sending = true;
                         this.sendEventArgs.SetBuffer(asyncByte.buffer, asyncByte.offset, asyncByte.length);
+
                         if (!this.socket.SendAsync(this.sendEventArgs))
                         {
                             // 同步发送时处理发送完成事件
@@ -127,13 +128,7 @@ namespace RRQMSocket
             }
             catch
             {
-            }
-            finally
-            {
-                if (!dispose)
-                {
-                    this.waitHandle.Set();
-                }
+
             }
         }
 
@@ -142,14 +137,12 @@ namespace RRQMSocket
             if (e.LastOperation == SocketAsyncOperation.Send)
             {
                 ProcessSend(e);
-            }
-            else
-            {
                 if (!dispose)
                 {
                     this.waitHandle.Set();
                 }
             }
+
         }
 
         private bool tryGet(out AsyncByte asyncByteDe)

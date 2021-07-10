@@ -502,7 +502,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            Logger.Debug(LogType.Error, this, "已断开连接，终止传输");
+                            this.Logger.Debug(LogType.Error, this, $"客户端已断开连接！！！");
                             OutDownload(false);
                             return;
                         }
@@ -682,6 +682,7 @@ namespace RRQMSocket.FileTransfer
             this.speed = 0;
         }
 
+     
         private ByteBlock SendWait(short procotol, int waitTime, ByteBlock byteBlock = null, bool reserved = false)
         {
             lock (locker)
@@ -890,7 +891,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            Logger.Debug(LogType.Error, this, "已断开连接，终止传输");
+                            this.Logger.Debug(LogType.Error, this, $"客户端已断开连接！！！");
                             OutUpload();
                             return;
                         }

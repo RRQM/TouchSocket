@@ -127,7 +127,7 @@ namespace RRQMSocket.Http
             {
                 if (this.bodyByteBlock != null)
                 {
-                    httpBase.BodyString = httpBase.Encoding.GetString(this.bodyByteBlock.Buffer, 0, this.bodyByteBlock.Len);
+                    httpBase.SetContent(this.bodyByteBlock.ToArray());
                     this.bodyByteBlock.Dispose();
                     this.bodyByteBlock = null;
                 }

@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.XmlRpc
 {
@@ -23,7 +18,6 @@ namespace RRQMSocket.RPC.XmlRpc
     /// </summary>
     public class XmlRPCClientConfig : TcpClientConfig
     {
-
         /// <summary>
         /// 等待超时时间(秒)
         /// </summary>
@@ -39,7 +33,5 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public static readonly DependencyProperty TimeoutProperty =
             DependencyProperty.Register("Timeout", typeof(int), typeof(XmlRPCClientConfig), 5);
-
-
     }
 }

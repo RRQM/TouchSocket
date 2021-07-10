@@ -37,7 +37,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <summary>
         /// 数据转化器
         /// </summary>
-        public ApiDataConverter ApiDataConverter { get;private set; }
+        public ApiDataConverter ApiDataConverter { get; private set; }
 
         /// <summary>
         /// 函数映射
@@ -48,6 +48,7 @@ namespace RRQMSocket.RPC.WebApi
         /// 获取路由映射图
         /// </summary>
         public RouteMap RouteMap { get { return this.routeMap; } }
+
         /// <summary>
         /// 所属服务器
         /// </summary>
