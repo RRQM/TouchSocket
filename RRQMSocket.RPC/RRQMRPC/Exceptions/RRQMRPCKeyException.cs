@@ -13,14 +13,9 @@ using RRQMCore.Exceptions;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
     /// RPC添加方法键异常
     /// </summary>
-
     public class RRQMRPCKeyException : RRQMException
     {
         /// <summary>

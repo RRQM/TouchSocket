@@ -77,12 +77,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
-                    datas.Add(SerializeConvert.RRQMBinarySerialize(parameter, true));
+                    datas.Add(this.serializeConverter.SerializeParameter (parameter));
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
 
-                this.InternalSend(104, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception e)
             {
@@ -173,12 +173,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
-                    datas.Add(SerializeConvert.RRQMBinarySerialize(parameter, true));
+                    datas.Add(this.serializeConverter.SerializeParameter(parameter));
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
 
-                this.InternalSend(104, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception e)
             {
@@ -257,7 +257,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 context.ParametersBytes = invokeContext.ParametersBytes;
                 context.Serialize(byteBlock);
 
-                this.InternalSend(104, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception e)
             {

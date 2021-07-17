@@ -9,6 +9,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Reflection;
+
 namespace RRQMSocket.RPC
 {
     /// <summary>
@@ -16,6 +18,12 @@ namespace RRQMSocket.RPC
     /// </summary>
     public abstract class ServerProvider
     {
+        /// <summary>
+        /// 默认复刻程序集
+        /// </summary>
+        public static Assembly DefaultAssembly { get; set; }
+
+
         /// <summary>
         /// 该服务所属的服务器
         /// </summary>

@@ -52,11 +52,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         string ProxyToken { get; }
 
         /// <summary>
-        /// RPC编译器
-        /// </summary>
-        IRPCCompiler RPCCompiler { get; }
-
-        /// <summary>
         /// RPC代理版本
         /// </summary>
         Version RPCVersion { get; }
@@ -88,5 +83,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RPCSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
         /// <returns></returns>
         List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller);
+
+#if NET45_OR_GREATER
+        /// <summary>
+        /// 编译代理
+        /// </summary>
+        /// <param name="targetDic">存放目标文件夹</param>
+        void CompilerProxy(string targetDic = "");
+#endif
+
     }
 }

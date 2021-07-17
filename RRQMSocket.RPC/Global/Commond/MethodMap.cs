@@ -9,7 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+using RRQMSocket.RPC.RRQMRPC;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace RRQMSocket.RPC
 {
@@ -20,14 +26,14 @@ namespace RRQMSocket.RPC
     {
         internal MethodMap()
         {
-            this.methodMap = new Dictionary<int, MethodInstance>();
+            this.methodMap = new ConcurrentDictionary<int, MethodInstance>();
         }
 
-        private Dictionary<int, MethodInstance> methodMap;
+        private ConcurrentDictionary<int, MethodInstance> methodMap;
 
         internal void Add(MethodInstance methodInstance)
         {
-            this.methodMap.Add(methodInstance.MethodToken, methodInstance);
+            this.methodMap.TryAdd(methodInstance.MethodToken, methodInstance);
         }
 
         /// <summary>
@@ -38,13 +44,39 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         public bool TryGet(int methodToken, out MethodInstance methodInstance)
         {
-            if (this.methodMap.ContainsKey(methodToken))
+            return this.methodMap.TryGetValue(methodToken, out methodInstance);
+        }
+
+        internal bool RemoveServer(Type type,out ServerProvider serverProvider,out MethodInstance[] methodInstances)
+        {
+            serverProvider = null;
+            bool success=false;
+            List<MethodInstance> keys = new List<MethodInstance>();
+            foreach (var methodInstance in this.methodMap.Values)
             {
-                methodInstance = this.methodMap[methodToken];
-                return true;
+                if (methodInstance.Provider.GetType().FullName==type.FullName)
+                {
+                    success = true;
+                    serverProvider = methodInstance.Provider;
+                    keys.Add(methodInstance);
+                }
             }
-            methodInstance = null;
-            return false;
+
+            foreach (var item in keys)
+            {
+                this.methodMap.TryRemove(item.MethodToken, out _);
+            }
+            methodInstances = keys.ToArray();
+            return success;
+        }
+
+        /// <summary>
+        /// 获取所有服务函数实例
+        /// </summary>
+        /// <returns></returns>
+        public MethodInstance[] GetAllMethodInstances()
+        {
+            return this.methodMap.Values.ToArray();
         }
     }
 }

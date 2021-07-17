@@ -26,21 +26,42 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC编译
     /// </summary>
-    public class RPCCompiler : IRPCCompiler
+    public static class RPCCompiler
     {
+        private static List<string> RefStrings = new List<string>();
+
+        /// <summary>
+        /// 添加编译引用
+        /// </summary>
+        /// <param name="refPath"></param>
+        public static void AddRef(string refPath)
+        {
+            if (!RefStrings.Contains(refPath))
+            {
+                RefStrings.Add(refPath);
+            }
+        }
+
+        /// <summary>
+        /// 清除引用
+        /// </summary>
+        public static void ClearRef()
+        {
+            RefStrings.Clear();
+        }
+
         /// <summary>
         /// 编译代码
         /// </summary>
-        /// <param name="assemblyName"></param>
+        /// <param name="fullPath"></param>
         /// <param name="codes"></param>
-        /// <param name="refStrings"></param>
         /// <returns></returns>
-        public byte[] CompileCode(string assemblyName, string[] codes, List<string> refStrings)
+        public static void CompileCode(string fullPath, string[] codes)
         {
             CSharpCodeProvider codeProvider = new CSharpCodeProvider();
             CompilerParameters compilerParameters = new CompilerParameters();
 
-            compilerParameters.OutputAssembly = assemblyName;
+            compilerParameters.OutputAssembly = fullPath;
 
             compilerParameters.GenerateExecutable = false;
             compilerParameters.GenerateInMemory = false;
@@ -49,7 +70,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             compilerParameters.ReferencedAssemblies.Add(typeof(ILog).Assembly.Location);
             compilerParameters.ReferencedAssemblies.Add(typeof(RPCService).Assembly.Location);
 
-            foreach (var item in refStrings)
+            foreach (var item in RefStrings)
             {
                 compilerParameters.ReferencedAssemblies.Add(item);
             }
@@ -66,8 +87,6 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                 throw new RRQMRPCException(stringBuilder.ToString());
             }
-
-            return File.ReadAllBytes(assemblyName);
         }
     }
 }

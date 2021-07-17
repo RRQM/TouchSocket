@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
@@ -27,15 +28,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class TcpRPCClient : ProtocolClient, IRRQMRPCClient
     {
-        static TcpRPCClient()
-        {
-            AddUsedProtocol(100, "请求RPC代理文件");
-            AddUsedProtocol(101, "RPC调用");
-            AddUsedProtocol(102, "获取注册服务");
-            AddUsedProtocol(103, "ID调用客户端");
-            AddUsedProtocol(104, "RPC回调");
-        }
-
         private MethodMap methodMap;
 
         private MethodStore methodStore;
@@ -48,11 +40,21 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private RRQMWaitHandle<WaitResult> waitHandle;
 
+        static TcpRPCClient()
+        {
+            AddUsedProtocol(100, "请求RPC代理文件");
+            AddUsedProtocol(101, "RPC调用");
+            AddUsedProtocol(102, "获取注册服务");
+            AddUsedProtocol(103, "ID调用客户端");
+            AddUsedProtocol(104, "RPC回调");
+        }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         public TcpRPCClient()
         {
+            this.methodMap = new MethodMap();
             this.serverProviders = new ServerProviderCollection();
             this.methodStore = new MethodStore();
             this.singleWaitData = new WaitData<WaitResult>();
@@ -67,7 +69,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// RPC初始化后
         /// </summary>
-        public event RRQMMessageEventHandler RPCInitialized;
+        public event RRQMMessageEventHandler ServiceDiscovered;
 
         /// <summary>
         /// 获取反向RPC映射图
@@ -80,7 +82,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 序列化生成器
         /// </summary>
-        public SerializeConverter SerializeConverter { get; set; }
+        public SerializeConverter SerializeConverter { get; private set; }
 
         /// <summary>
         /// 获取反向RPC服务实例
@@ -88,38 +90,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         public ServerProviderCollection ServerProviders
         {
             get { return serverProviders; }
-        }
-
-        /// <summary>
-        /// 连接
-        /// </summary>
-        public override void Connect()
-        {
-            lock (this)
-            {
-                base.Connect();
-                try
-                {
-                    this.methodStore = null;
-                    string proxyToken = (string)this.clientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty);
-                    byte[] data = new byte[0];
-                    if (!string.IsNullOrEmpty(proxyToken))
-                    {
-                        data = Encoding.UTF8.GetBytes(proxyToken);
-                    }
-                    this.InternalSend(102, data, 0, data.Length);
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-                this.singleWaitData.Wait(1000 * 10);
-                if (this.methodStore == null)
-                {
-                    throw new RRQMRPCException("初始化超时");
-                }
-                this.OnRPCInitialized(new MesEventArgs("success"));
-            }
         }
 
         /// <summary>
@@ -146,23 +116,45 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 初始化RPC
+        /// 发现服务
         /// </summary>
-        public void InitializeRPC()
+        /// <param name="isTrigger">是否触发初始化事件</param>
+        /// <returns>已发现的服务</returns>
+        public MethodItem[] DiscoveryService(bool isTrigger = true)
         {
-            if (!this.Online)
+            lock (locker)
             {
-                this.Connect();
-            }
-        }
+                if (!this.Online)
+                {
+                    base.Connect();
+                }
+                try
+                {
+                    this.methodStore = null;
+                    string proxyToken = (string)this.clientConfig.GetValue(TcpRPCClientConfig.ProxyTokenProperty);
+                    byte[] data = new byte[0];
+                    if (!string.IsNullOrEmpty(proxyToken))
+                    {
+                        data = Encoding.UTF8.GetBytes(proxyToken);
+                    }
+                    this.InternalSend(102, data, 0, data.Length);
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                this.singleWaitData.Wait(1000 * 10);
+                if (this.methodStore == null)
+                {
+                    throw new RRQMRPCException("初始化超时");
+                }
 
-        /// <summary>
-        /// RPC完成初始化后
-        /// </summary>
-        /// <param name="args"></param>
-        protected virtual void OnRPCInitialized(MesEventArgs args)
-        {
-            this.RPCInitialized?.Invoke(this, args);
+                if (isTrigger)
+                {
+                    this.OnServiceDiscovered(new MesEventArgs("success"));
+                }
+                return this.methodStore.GetAllMethodItem().ToArray();
+            }
         }
 
         /// <summary>
@@ -175,13 +167,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
         public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMException($"服务名为{method}的服务未找到注册信息");
+                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RPCContext context = new RPCContext();
             WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
@@ -202,7 +195,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.InternalSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -256,6 +249,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         else if (resultContext.Status == 4)
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                        }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息："+resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
                         }
                         if (methodItem.IsOutOrRef)
                         {
@@ -298,13 +299,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="types"></param>
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMException($"服务名为{method}的服务未找到注册信息");
+                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RPCContext context = new RPCContext();
             WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
@@ -324,7 +326,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.InternalSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -374,6 +376,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         else if (resultContext.Status == 4)
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                        }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
                         }
                         if (methodItem.IsOutOrRef)
                         {
@@ -407,12 +417,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, InvokeOption invokeOption, params object[] parameters)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMException($"服务名为{method}的服务未找到注册信息");
+                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RPCContext context = new RPCContext();
             WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
@@ -432,7 +443,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.InternalSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -483,6 +494,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                         }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
+                        }
                         break;
                     }
                 default:
@@ -498,6 +517,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="parameters">参数</param>
         /// <exception cref="RRQMTimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
@@ -505,7 +525,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMException($"服务名为{method}的服务未找到注册信息");
+                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RPCContext context = new RPCContext();
             WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
@@ -525,7 +545,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.InternalSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -578,6 +598,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         else if (resultContext.Status == 4)
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                        }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
                         }
 
                         try
@@ -630,7 +658,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.InternalSend(103, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -713,7 +741,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.InternalSend(103, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -766,96 +794,147 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 开启反向RPC服务
+        /// 注册服务
         /// </summary>
-        public void OpenCallBackServer()
+        /// <typeparam name="T"></typeparam>
+        /// <returns>返回T实例</returns>
+        public ServerProvider RegisterServer<T>() where T : ServerProvider
         {
-            if (this.ServerProviders.Count == 0)
+            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(typeof(T));
+            this.RegisterServer(serverProvider);
+            return serverProvider;
+        }
+
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <param name="providerType"></param>
+        /// <returns></returns>
+        public ServerProvider RegisterServer(Type providerType)
+        {
+            if (!typeof(ServerProvider).IsAssignableFrom(providerType))
             {
-                throw new RRQMRPCException("已注册服务数量为0");
+                throw new RRQMRPCException("类型不相符");
             }
-
-            this.methodMap = new MethodMap();
-
-            foreach (ServerProvider instance in this.ServerProviders)
-            {
-                MethodInfo[] methodInfos = instance.GetType().GetMethods();
-                foreach (MethodInfo method in methodInfos)
-                {
-                    if (method.IsGenericMethod)
-                    {
-                        throw new RRQMRPCException("RPC方法中不支持泛型参数");
-                    }
-                    RRQMRPCCallBackMethodAttribute attribute = method.GetCustomAttribute<RRQMRPCCallBackMethodAttribute>();
-
-                    if (attribute != null)
-                    {
-                        MethodInstance methodInstance = new MethodInstance();
-                        methodInstance.MethodToken = attribute.MethodToken;
-                        methodInstance.Provider = instance;
-                        methodInstance.Method = method;
-                        methodInstance.RPCAttributes = new RPCAttribute[] { attribute };
-                        methodInstance.IsEnable = true;
-                        methodInstance.Parameters = method.GetParameters();
-                        List<string> names = new List<string>();
-                        foreach (var parameterInfo in methodInstance.Parameters)
-                        {
-                            names.Add(parameterInfo.Name);
-                        }
-                        methodInstance.ParameterNames = names.ToArray();
-                        if (typeof(Task).IsAssignableFrom(method.ReturnType))
-                        {
-                            methodInstance.Async = true;
-                        }
-
-                        ParameterInfo[] parameters = method.GetParameters();
-                        List<Type> types = new List<Type>();
-                        foreach (var parameter in parameters)
-                        {
-                            if (parameter.ParameterType.IsByRef)
-                            {
-                                throw new RRQMRPCException("反向RPC方法不支持out或ref");
-                            }
-                            types.Add(parameter.ParameterType);
-                        }
-                        methodInstance.ParameterTypes = types.ToArray();
-
-                        if (method.ReturnType == typeof(void))
-                        {
-                            methodInstance.ReturnType = null;
-                        }
-                        else
-                        {
-                            if (methodInstance.Async)
-                            {
-                                methodInstance.ReturnType = method.ReturnType.GetGenericArguments()[0];
-                            }
-                            else
-                            {
-                                methodInstance.ReturnType = method.ReturnType;
-                            }
-                        }
-
-                        try
-                        {
-                            this.MethodMap.Add(methodInstance);
-                        }
-                        catch
-                        {
-                            throw new RRQMRPCKeyException("MethodToken必须唯一");
-                        }
-                    }
-                }
-            }
+            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(providerType);
+            this.RegisterServer(serverProvider);
+            return serverProvider;
         }
 
         /// <summary>
         /// 注册服务
         /// </summary>
         /// <param name="serverProvider"></param>
-        public void RegistServer(ServerProvider serverProvider)
+        public void RegisterServer(ServerProvider serverProvider)
         {
             this.ServerProviders.Add(serverProvider);
+            MethodInfo[] methodInfos = serverProvider.GetType().GetMethods();
+            foreach (MethodInfo method in methodInfos)
+            {
+                if (method.IsGenericMethod)
+                {
+                    throw new RRQMRPCException("RPC方法中不支持泛型参数");
+                }
+                RRQMRPCCallBackMethodAttribute attribute = method.GetCustomAttribute<RRQMRPCCallBackMethodAttribute>();
+
+                if (attribute != null)
+                {
+                    MethodInstance methodInstance = new MethodInstance();
+                    methodInstance.MethodToken = attribute.MethodToken;
+                    methodInstance.Provider = serverProvider;
+                    methodInstance.Method = method;
+                    methodInstance.RPCAttributes = new RPCAttribute[] { attribute };
+                    methodInstance.IsEnable = true;
+                    methodInstance.Parameters = method.GetParameters();
+                    List<string> names = new List<string>();
+                    foreach (var parameterInfo in methodInstance.Parameters)
+                    {
+                        names.Add(parameterInfo.Name);
+                    }
+                    methodInstance.ParameterNames = names.ToArray();
+                    if (typeof(Task).IsAssignableFrom(method.ReturnType))
+                    {
+                        methodInstance.Async = true;
+                    }
+
+                    ParameterInfo[] parameters = method.GetParameters();
+                    List<Type> types = new List<Type>();
+                    foreach (var parameter in parameters)
+                    {
+                        if (parameter.ParameterType.IsByRef)
+                        {
+                            throw new RRQMRPCException("反向RPC方法不支持out或ref");
+                        }
+                        types.Add(parameter.ParameterType);
+                    }
+                    methodInstance.ParameterTypes = types.ToArray();
+
+                    if (method.ReturnType == typeof(void))
+                    {
+                        methodInstance.ReturnType = null;
+                    }
+                    else
+                    {
+                        if (methodInstance.Async)
+                        {
+                            methodInstance.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                        }
+                        else
+                        {
+                            methodInstance.ReturnType = method.ReturnType;
+                        }
+                    }
+
+                    try
+                    {
+                        this.MethodMap.Add(methodInstance);
+                    }
+                    catch
+                    {
+                        throw new RRQMRPCKeyException("MethodToken必须唯一");
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 移除注册服务
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public int UnregisterServer(ServerProvider provider)
+        {
+            return this.UnregisterServer(provider.GetType());
+        }
+
+        /// <summary>
+        /// 移除注册服务
+        /// </summary>
+        /// <param name="providerType"></param>
+        /// <returns></returns>
+        public int UnregisterServer(Type providerType)
+        {
+            if (!typeof(ServerProvider).IsAssignableFrom(providerType))
+            {
+                throw new RRQMRPCException("类型不相符");
+            }
+            this.ServerProviders.Remove(providerType);
+            if (this.MethodMap.RemoveServer(providerType, out ServerProvider serverProvider, out MethodInstance[] instances))
+            {
+                return instances.Length;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 移除注册服务
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public int UnregisterServer<T>() where T : ServerProvider
+        {
+            return this.UnregisterServer(typeof(T));
         }
 
         /// <summary>
@@ -866,7 +945,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected sealed override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Length;
+            int r = byteBlock.Len;
             switch (procotol)
             {
                 case 100:/* 100表示获取RPC引用文件上传状态返回*/
@@ -975,16 +1054,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// RPC处理其余协议
-        /// </summary>
-        /// <param name="procotol"></param>
-        /// <param name="byteBlock"></param>
-        protected virtual void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
-        {
-            OnHandleDefaultData(procotol, byteBlock);
-        }
-
-        /// <summary>
         /// 处理其余协议的事件触发
         /// </summary>
         /// <param name="procotol"></param>
@@ -992,6 +1061,25 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected void OnHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
             Received?.Invoke(this, procotol, byteBlock);
+        }
+
+        /// <summary>
+        /// RPC完成初始化后
+        /// </summary>
+        /// <param name="args"></param>
+        protected virtual void OnServiceDiscovered(MesEventArgs args)
+        {
+            this.ServiceDiscovered?.Invoke(this, args);
+        }
+
+        /// <summary>
+        /// RPC处理其余协议
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="byteBlock"></param>
+        protected virtual void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        {
+            OnHandleDefaultData(procotol, byteBlock);
         }
 
         private RPCContext OnExecuteCallBack(RPCContext rpcContext)

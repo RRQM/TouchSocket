@@ -14,6 +14,7 @@ using RRQMCore.Log;
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text;
 
@@ -29,6 +30,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public UdpRPCParser()
         {
+            this.methodStore = new MethodStore();
+            this.proxyInfo = new RPCProxyInfo();
         }
 
 #pragma warning disable
@@ -38,7 +41,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; private set; }
 
-        public CellCode[] Codes { get => codes; }
+        public CellCode[] Codes { get => this.proxyInfo == null ? null : this.proxyInfo.Codes.ToArray(); }
 
         public string NameSpace { get; private set; }
 
@@ -46,15 +49,12 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public string ProxyToken { get; private set; }
 
-        public IRPCCompiler RPCCompiler { get; private set; }
-
         public Version RPCVersion { get; private set; }
 
         public SerializeConverter SerializeConverter { get; private set; }
 
         private MethodStore methodStore;
         private RPCProxyInfo proxyInfo;
-        private CellCode[] codes;
         public MethodStore MethodStore => this.methodStore;
 
         public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
@@ -130,19 +130,135 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        protected override void LoadConfig(ServerConfig serverConfig)
+        protected override void LoadConfig(ServiceConfig ServiceConfig)
         {
-            base.LoadConfig(serverConfig);
-            this.SerializeConverter = (SerializeConverter)serverConfig.GetValue(UdpRPCParserConfig.SerializeConverterProperty);
-            this.ProxyToken = (string)serverConfig.GetValue(UdpRPCParserConfig.ProxyTokenProperty);
-            this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(UdpRPCParserConfig.RPCCompilerProperty);
-            this.NameSpace = (string)serverConfig.GetValue(UdpRPCParserConfig.NameSpaceProperty);
-            this.RPCVersion = (Version)serverConfig.GetValue(UdpRPCParserConfig.RPCVersionProperty);
+            base.LoadConfig(ServiceConfig);
+            this.SerializeConverter = (SerializeConverter)ServiceConfig.GetValue(UdpRPCParserConfig.SerializeConverterProperty);
+            this.ProxyToken = (string)ServiceConfig.GetValue(UdpRPCParserConfig.ProxyTokenProperty);
+            this.NameSpace = (string)ServiceConfig.GetValue(UdpRPCParserConfig.NameSpaceProperty);
+            this.RPCVersion = (Version)ServiceConfig.GetValue(UdpRPCParserConfig.RPCVersionProperty);
         }
 
         public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller)
         {
             return this.methodStore.GetAllMethodItem();
+        }
+
+        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        {
+            Tools.GetRPCMethod(methodInstances, this.NameSpace, ref this.methodStore, this.RPCVersion, ref this.proxyInfo);
+        }
+
+        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        {
+            foreach (var item in methodInstances)
+            {
+                this.methodStore.RemoveMethodItem(item.MethodToken);
+            }
+
+            CellCode cellCode = null;
+            foreach (var item in this.proxyInfo.Codes)
+            {
+                if (item.Name == provider.GetType().Name)
+                {
+                    cellCode = item;
+                    break;
+                }
+            }
+            if (cellCode != null)
+            {
+                this.proxyInfo.Codes.Remove(cellCode);
+            }
+
+        }
+
+        public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        {
+            RPCContext context = (RPCContext)methodInvoker.Flag;
+            if (context.Feedback != 2)
+            {
+                return;
+            }
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            try
+            {
+                switch (methodInvoker.Status)
+                {
+                    case InvokeStatus.Ready:
+                        {
+                            break;
+                        }
+
+                    case InvokeStatus.UnFound:
+                        {
+                            context.Status = 2;
+                            break;
+                        }
+                    case InvokeStatus.Success:
+                        {
+                            if (methodInstance.MethodToken > 50000000)
+                            {
+                                context.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(methodInvoker.ReturnParameter);
+                            }
+                            else
+                            {
+                                context.ReturnParameterBytes = null;
+                            }
+
+                            if (methodInstance.IsByRef)
+                            {
+                                context.ParametersBytes = new List<byte[]>();
+                                foreach (var item in methodInvoker.Parameters)
+                                {
+                                    context.ParametersBytes.Add(this.SerializeConverter.SerializeParameter(item));
+                                }
+                            }
+                            else
+                            {
+                                context.ParametersBytes = null;
+                            }
+
+                            context.Status = 1;
+                            break;
+                        }
+                    case InvokeStatus.Abort:
+                        {
+                            context.Status = 4;
+                            context.Message = methodInvoker.StatusMessage;
+                            break;
+                        }
+                    case InvokeStatus.UnEnable:
+                        {
+                            context.Status = 3;
+                            break;
+                        }
+                    case InvokeStatus.InvocationException:
+                        {
+                            context.Status = 5;
+                            context.Message = methodInvoker.StatusMessage;
+                            break;
+                        }
+                    case InvokeStatus.Exception:
+                        {
+                            context.Status = 6;
+                            context.Message = methodInvoker.StatusMessage;
+                            break;
+                        }
+                    default:
+                        break;
+                }
+
+                context.Serialize(byteBlock);
+                this.UDPSend(101, (EndPoint)methodInvoker.Caller, byteBlock.Buffer, 0, byteBlock.Len);
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(LogType.Error, this, ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
         }
 
 #pragma warning restore
@@ -154,7 +270,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 byteBlock.Write(BitConverter.GetBytes(procotol));
                 byteBlock.Write(buffer, offset, length);
-                this.SendTo(byteBlock.Buffer, 0, (int)byteBlock.Length, endPoint);
+                this.SendTo(byteBlock.Buffer, 0, byteBlock.Len, endPoint);
             }
             finally
             {
@@ -175,7 +291,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected sealed override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Length;
+            int r = byteBlock.Len;
             short procotol = BitConverter.ToInt16(buffer, 0);
 
             switch (procotol)
@@ -241,105 +357,26 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
+#if NET45_OR_GREATER
         /// <summary>
-        /// 初始化
+        /// 编译代理
         /// </summary>
-        /// <param name="providers"></param>
-        /// <param name="methodInstances"></param>
-        public void RRQMInitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
+        /// <param name="targetDic">存放目标文件夹</param>
+        public void CompilerProxy(string targetDic = "")
         {
-            Tools.GetRPCMethod(providers, methodInstances, this.NameSpace, providers.SingleAssembly, out this.methodStore,
-                 this.RPCVersion, this.RPCCompiler, out this.proxyInfo, out this.codes);
+            string assemblyInfo = CodeMap.GetAssemblyInfo(this.proxyInfo.AssemblyName, this.proxyInfo.Version);
+            List<string> codesString = new List<string>();
+            codesString.Add(assemblyInfo);
+            foreach (var item in this.proxyInfo.Codes)
+            {
+                codesString.Add(item.Code);
+            }
+            RPCCompiler.CompileCode(Path.Combine(targetDic, this.proxyInfo.AssemblyName), codesString.ToArray());
+
         }
+#endif
 
-        /// <summary>
-        /// 结束调用
-        /// </summary>
-        /// <param name="methodInvoker"></param>
-        /// <param name="methodInstance"></param>
-        public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
-        {
-            RPCContext context = (RPCContext)methodInvoker.Flag;
-            if (context.Feedback != 2)
-            {
-                return;
-            }
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-            try
-            {
-                switch (methodInvoker.Status)
-                {
-                    case InvokeStatus.Ready:
-                        {
-                            break;
-                        }
-
-                    case InvokeStatus.UnFound:
-                        {
-                            context.Status = 2;
-                            break;
-                        }
-                    case InvokeStatus.Success:
-                        {
-                            if (methodInstance.MethodToken > 50000000)
-                            {
-                                context.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(methodInvoker.ReturnParameter);
-                            }
-                            else
-                            {
-                                context.ReturnParameterBytes = null;
-                            }
-
-                            if (methodInstance.IsByRef)
-                            {
-                                context.ParametersBytes = new List<byte[]>();
-                                foreach (var item in methodInvoker.Parameters)
-                                {
-                                    context.ParametersBytes.Add(this.SerializeConverter.SerializeParameter(item));
-                                }
-                            }
-                            else
-                            {
-                                context.ParametersBytes = null;
-                            }
-
-                            context.Status = 1;
-                            break;
-                        }
-                    case InvokeStatus.Abort:
-                        {
-                            context.Status = 4;
-                            context.Message = methodInvoker.StatusMessage;
-                            break;
-                        }
-                    case InvokeStatus.UnEnable:
-                        {
-                            context.Status = 3;
-                            break;
-                        }
-                    case InvokeStatus.InvocationException:
-                        {
-                            break;
-                        }
-                    case InvokeStatus.Exception:
-                        {
-                            break;
-                        }
-                    default:
-                        break;
-                }
-
-                context.Serialize(byteBlock);
-                this.UDPSend(101, (EndPoint)methodInvoker.Caller, byteBlock.Buffer, 0, (int)byteBlock.Length);
-            }
-            catch (Exception ex)
-            {
-                Logger.Debug(LogType.Error, this, ex.Message);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
+       
+       
     }
 }

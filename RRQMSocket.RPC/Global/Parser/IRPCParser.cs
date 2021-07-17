@@ -34,18 +34,25 @@ namespace RRQMSocket.RPC
         Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; }
 
         /// <summary>
-        /// 初始化服务
+        /// 注册服务
         /// </summary>
-        /// <param name="providers"></param>
+        /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        void RRQMInitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances);
+        void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances);
+
+        /// <summary>
+        /// 取消注册服务
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="methodInstances"></param>
+        void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances);
 
         /// <summary>
         /// 结束调用
         /// </summary>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance);
+        void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
         /// 设置函数映射

@@ -27,7 +27,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             codeString = new StringBuilder();
         }
 
-        internal static string GetAssemblyInfo(string assemblyName, Version version)
+        internal static string GetAssemblyInfo(string assemblyName, string version)
         {
             CodeMap codeMap = new CodeMap();
             codeMap.AppendAssemblyInfo(assemblyName, version);
@@ -40,7 +40,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal string ClassName { get; set; }
         internal static string Namespace { get; set; }
         internal static PropertyCodeMap PropertyCode { get; set; }
-        internal static Version Version { get; set; }
 
         internal string GetCode()
         {
@@ -82,7 +81,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             codeString.AppendLine("}");//类结束
         }
 
-        private void AppendAssemblyInfo(string assemblyName, Version version)
+        private void AppendAssemblyInfo(string assemblyName, string version)
         {
             codeString.AppendLine("using System.Reflection;");
             codeString.AppendLine("using System.Runtime.CompilerServices;");
@@ -92,22 +91,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             codeString.AppendLine("[assembly: AssemblyCopyright(\"Copyright © 2020 若汝棋茗\")]");
             codeString.AppendLine("[assembly: ComVisible(false)]");
 
-            if (version == null)
-            {
-                if (File.Exists($"{assemblyName}.dll"))
-                {
-                    Assembly assembly = Assembly.Load(File.ReadAllBytes($"{assemblyName}.dll"));
-                    Version v = assembly.GetName().Version;
-                    version = new Version(v.Major, v.Minor, v.Build + 1, v.Revision);
-                }
-                else
-                {
-                    version = new Version("1.0.0.0");
-                }
-            }
-
-            Version = version;
-            codeString.AppendLine(string.Format("[assembly: AssemblyVersion(\"{0}\")]", version.ToString()));
+            codeString.AppendLine(string.Format("[assembly: AssemblyVersion(\"{0}\")]", version));
             codeString.AppendLine(string.Format("[assembly: AssemblyFileVersion(\"{0}\")]", version.ToString()));
         }
 
@@ -132,7 +116,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     bool isRef = false;
                     string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
-                    if (method.ReturnType.Name == "Void")
+                    if (method.ReturnType.FullName == "System.Void"|| method.ReturnType.FullName== "System.Threading.Tasks.Task")
                     {
                         isReturn = false;
                         codeString.Append(string.Format("public  void {0} ", methodName));
@@ -303,7 +287,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (!isOut && !isRef)//没有out或者ref
                     {
-                        if (method.ReturnType.Name == "Void")
+                        if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                         {
                             isReturn = false;
                             codeString.Append(string.Format("public  async void {0} ", methodName + "Async"));
@@ -398,7 +382,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     bool isRef = false;
                     string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
-                    if (method.ReturnType.Name == "Void")
+                    if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                     {
                         codeString.Append(string.Format("  void {0} ", methodName));
                     }
@@ -463,7 +447,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (!isOut && !isRef)//没有out或者ref
                     {
-                        if (method.ReturnType.Name == "Void")
+                        if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                         {
                             codeString.Append(string.Format("void {0} ", methodName + "Async"));
                         }

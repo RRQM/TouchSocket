@@ -48,13 +48,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         RPCProxyInfo GetProxyInfo();
 
         /// <summary>
-        /// RPC初始化后
+        /// 服务发现完成后
         /// </summary>
-        event RRQMMessageEventHandler RPCInitialized;
+        event RRQMMessageEventHandler ServiceDiscovered;
 
         /// <summary>
-        /// 初始化RPC
+        /// 发现服务
         /// </summary>
-        void InitializeRPC();
+        /// <param name="isTrigger">是否触发初始化事件</param>
+        /// <returns>已发现的服务</returns>
+        MethodItem[] DiscoveryService(bool isTrigger=true);
     }
 }

@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,26 +28,35 @@ namespace RRQMSocket.RPC
         /// </summary>
         public int Count { get { return this.servers.Count; } }
 
-        /// <summary>
-        /// 唯一程序集
-        /// </summary>
-        public Assembly SingleAssembly { get; private set; }
-
         private List<ServerProvider> servers = new List<ServerProvider>();
 
         internal void Add(ServerProvider serverProvider)
         {
-            if (this.SingleAssembly == null)
+            foreach (var server in this.servers)
             {
-                this.SingleAssembly = serverProvider.GetType().Assembly;
+                if (serverProvider.GetType().FullName==server.GetType().FullName)
+                {
+                    throw new RRQMRPCException("相同类型的服务已添加");
+                }
             }
-            else if (SingleAssembly != serverProvider.GetType().Assembly)
+            if (ServerProvider.DefaultAssembly == null)
             {
-                throw new RRQMRPCException("所有的服务类必须声明在同一程序集内");
+                ServerProvider.DefaultAssembly = serverProvider.GetType().Assembly;
             }
             servers.Add(serverProvider);
         }
 
+        internal void Remove(Type serverType)
+        {
+            foreach (var server in this.servers)
+            {
+                if (serverType.FullName == server.GetType().FullName)
+                {
+                    this.servers.Remove(server);
+                    return;
+                }
+            }
+        }
         /// <summary>
         /// 返回枚举
         /// </summary>

@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQMRPC解析器配置
     /// </summary>
-    public class TcpRPCParserConfig : ProtocolServerConfig
+    public class TcpRPCParserConfig : ProtocolServiceConfig
     {
         /// <summary>
         /// 序列化转换器
@@ -64,20 +64,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         public static readonly DependencyProperty RPCVersionProperty =
             DependencyProperty.Register("RPCVersion", typeof(Version), typeof(TcpRPCParserConfig), null);
 
-        /// <summary>
-        /// RPC编译器
-        /// </summary>
-        public IRPCCompiler RPCCompiler
-        {
-            get { return (IRPCCompiler)GetValue(RPCCompilerProperty); }
-            set { SetValue(RPCCompilerProperty, value); }
-        }
-
-        /// <summary>
-        /// RPC编译器, 所需类型<see cref="IRPCCompiler"/>
-        /// </summary>
-        public static readonly DependencyProperty RPCCompilerProperty =
-            DependencyProperty.Register("RPCCompiler", typeof(IRPCCompiler), typeof(TcpRPCParserConfig), null);
 
         /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭

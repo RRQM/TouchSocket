@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -23,19 +24,44 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             this.tokenToMethodItem = new Dictionary<int, MethodItem>();
             this.methodKeyToMethodItem = new Dictionary<string, MethodItem>();
+            this.propertyDic = new Dictionary<Type, string>();
+            this.genericTypeDic = new Dictionary<Type, string>();
         }
 
         private Dictionary<int, MethodItem> tokenToMethodItem;
         private Dictionary<string, MethodItem> methodKeyToMethodItem;
+        internal Dictionary<Type, string> propertyDic;
+        internal Dictionary<Type, string> genericTypeDic;
+        /// <summary>
+        /// 获取所有的方法
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetMethods()
+        {
+            return methodKeyToMethodItem.Keys.ToArray();
+        }
 
         /// <summary>
         /// 添加
         /// </summary>
         /// <param name="methodItem"></param>
-        public void AddMethodItem(MethodItem methodItem)
+        internal void AddMethodItem(MethodItem methodItem)
         {
             tokenToMethodItem.Add(methodItem.MethodToken, methodItem);
             methodKeyToMethodItem.Add(methodItem.Method, methodItem);
+        }
+
+        /// <summary>
+        /// 添加
+        /// </summary>
+        /// <param name="methodToken"></param>
+        internal void RemoveMethodItem(int methodToken)
+        {
+            if (tokenToMethodItem.TryGetValue(methodToken,out MethodItem methodItem))
+            {
+                tokenToMethodItem.Remove(methodToken);
+                methodKeyToMethodItem.Remove(methodItem.Method);
+            }
         }
 
         /// <summary>

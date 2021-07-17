@@ -9,32 +9,39 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// 方法体
+    /// RPC无注册异常
     /// </summary>
-    public class MethodItem
+    public class RRQMRPCNoRegisterException : RRQMException
     {
         /// <summary>
-        /// 服务名称
+        ///
         /// </summary>
-        public string ServerName { get; internal set; }
+        public RRQMRPCNoRegisterException() : base() { }
 
         /// <summary>
-        /// 方法唯一标识
+        ///
         /// </summary>
-        public int MethodToken { get; internal set; }
+        /// <param name="message"></param>
+        public RRQMRPCNoRegisterException(string message) : base(message) { }
 
         /// <summary>
-        /// 方法名
+        ///
         /// </summary>
-        public string Method { get; internal set; }
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        public RRQMRPCNoRegisterException(string message, System.Exception inner) : base(message, inner) { }
 
         /// <summary>
-        /// 是否含有Out或Ref
+        ///
         /// </summary>
-        public bool IsOutOrRef { get; internal set; }
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected RRQMRPCNoRegisterException(System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

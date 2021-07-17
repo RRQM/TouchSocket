@@ -9,30 +9,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+using RRQMCore.Helper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
     internal static class Tools
     {
         internal static void GetRPCMethod(
-            ServerProviderCollection providers,
             MethodInstance[] methodInstances,
-            string nameSpaceOld, Assembly assembly,
-            out MethodStore methodStore,
+            string nameSpaceOld,
+            ref MethodStore methodStore,
              Version version,
-             IRPCCompiler compiler,
-             out RPCProxyInfo proxyInfo,
-             out CellCode[] cellCodes)
+             ref RPCProxyInfo proxyInfo)
         {
-            methodStore = new MethodStore();
             string nameSpace = string.IsNullOrEmpty(nameSpaceOld) ? "RRQMRPC" : $"RRQMRPC.{nameSpaceOld}";
             List<string> refs = new List<string>();
 
-            PropertyCodeMap propertyCode = new PropertyCodeMap(assembly, nameSpace);
-            string assemblyName = $"{nameSpace}.dll";
+            PropertyCodeMap propertyCode = new PropertyCodeMap(nameSpace, methodStore);
 
             foreach (MethodInstance methodInstance in methodInstances)
             {
@@ -56,7 +55,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
             }
 
-            Dictionary<string, List<MethodInfo>> classAndMethods = new Dictionary<string, List<MethodInfo>>();
+#if NET45_OR_GREATER
+            foreach (var item in refs)
+            {
+                RPCCompiler.AddRef(item);
+            }
+#endif
+            List<MethodInfo> methods = new List<MethodInfo>();
+            string className = null;
 
             foreach (MethodInstance methodInstance in methodInstances)
             {
@@ -67,7 +73,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         MethodItem methodItem = new MethodItem();
                         methodItem.IsOutOrRef = methodInstance.IsByRef;
                         methodItem.MethodToken = methodInstance.MethodToken;
-
+                        methodItem.ServerName = methodInstance.Provider.GetType().Name;
                         methodItem.Method = string.IsNullOrEmpty(attribute.MemberKey) ? methodInstance.Method.Name : attribute.MemberKey;
                         try
                         {
@@ -78,12 +84,15 @@ namespace RRQMSocket.RPC.RRQMRPC
                             throw new RRQMRPCKeyException($"方法键为{methodItem.Method}的服务已注册");
                         }
 
-                        string className = methodInstance.Provider.GetType().Name;
-                        if (!classAndMethods.ContainsKey(className))
+                        if (className == null)
                         {
-                            classAndMethods.Add(className, new List<MethodInfo>());
+                            className = methodInstance.Provider.GetType().Name;
                         }
-                        classAndMethods[className].Add(methodInstance.Method);
+                        else if (className != methodInstance.Provider.GetType().Name)
+                        {
+                            throw new RRQMRPCException("方法来源于不同服务");
+                        }
+                        methods.Add(methodInstance.Method);
                         break;
                     }
                 }
@@ -91,43 +100,144 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             CodeMap.Namespace = nameSpace;
             CodeMap.PropertyCode = propertyCode;
-            List<CellCode> codes = new List<CellCode>();
 
-            foreach (string className in classAndMethods.Keys)
+
+            CodeMap codeMap = new CodeMap();
+            codeMap.ClassName = className;
+            codeMap.Methods = methods.ToArray();
+
+            CellCode cellCode = new CellCode();
+            cellCode.Name = className;
+            cellCode.CodeType = CodeType.Service;
+            cellCode.Code = codeMap.GetCode();
+
+            if (proxyInfo.Codes == null)
             {
-                CodeMap codeMap = new CodeMap();
-                codeMap.ClassName = className;
-                codeMap.Methods = classAndMethods[className].ToArray();
-
-                CellCode cellCode = new CellCode();
-                cellCode.Name = className;
-                cellCode.CodeType = CodeType.Service;
-                cellCode.Code = codeMap.GetCode();
-                codes.Add(cellCode);
+                proxyInfo.Codes = new List<CellCode>();
             }
-            CellCode propertyCellCode = new CellCode();
-            propertyCellCode.Name = "ClassArgs";
-            propertyCellCode.CodeType = CodeType.ClassArgs;
-            propertyCellCode.Code = propertyCode.GetPropertyCode();
-            codes.Add(propertyCellCode);
-            string assemblyInfo = CodeMap.GetAssemblyInfo(nameSpace, version);
+            proxyInfo.Codes.Add(cellCode);
 
-            proxyInfo = new RPCProxyInfo();
-            proxyInfo.AssemblyName = assemblyName;
+            CellCode argesCode = proxyInfo.Codes.FirstOrDefault(a => a.Name == "ClassArgs");
+            if (argesCode == null)
+            {
+                argesCode = new CellCode();
+                argesCode.Name = "ClassArgs";
+                argesCode.CodeType = CodeType.ClassArgs;
+                argesCode.Code = propertyCode.GetPropertyCode();
+                proxyInfo.Codes.Add(argesCode);
+            }
+            else
+            {
+                argesCode.Code = propertyCode.GetPropertyCode();
+            }
+
+            proxyInfo.AssemblyName = $"{nameSpace}.dll";
             proxyInfo.Version = version == null ? "1.0.0.0" : version.ToString();
-            if (compiler != null)
-            {
-                List<string> codesString = new List<string>();
-                foreach (var item in codes)
-                {
-                    codesString.Add(item.Code);
-                }
-                codesString.Add(assemblyInfo);
-                proxyInfo.AssemblyData = compiler.CompileCode(assemblyName, codesString.ToArray(), refs);
-            }
-            proxyInfo.Codes = codes;
+        }
 
-            cellCodes = codes.ToArray();
+        private static int nullReturnNullParameters = 1000000000;
+        private static int nullReturnExistParameters = 300000000;
+        private static int ExistReturnNullParameters = 500000000;
+        private static int ExistReturnExistParameters = 700000000;
+
+        internal static MethodInstance[] GetMethodInstances(ServerProvider serverProvider, bool isSetToken)
+        {
+            List<MethodInstance> instances = new List<MethodInstance>();
+
+            MethodInfo[] methodInfos = serverProvider.GetType().GetMethods();
+
+            foreach (MethodInfo method in methodInfos)
+            {
+                if (method.IsGenericMethod)
+                {
+                    throw new RRQMRPCException("RPC方法中不支持泛型参数");
+                }
+                IEnumerable<RPCAttribute> attributes = method.GetCustomAttributes<RPCAttribute>(true);
+                if (attributes.Count() > 0)
+                {
+                    MethodInstance methodInstance = new MethodInstance();
+                    methodInstance.Provider = serverProvider;
+                    methodInstance.Method = method;
+                    methodInstance.RPCAttributes = attributes.ToArray();
+                    methodInstance.IsEnable = true;
+                    methodInstance.Parameters = method.GetParameters();
+                    List<string> names = new List<string>();
+                    foreach (var parameterInfo in methodInstance.Parameters)
+                    {
+                        names.Add(parameterInfo.Name);
+                    }
+                    methodInstance.ParameterNames = names.ToArray();
+                    if (typeof(Task).IsAssignableFrom(method.ReturnType))
+                    {
+                        methodInstance.Async = true;
+                    }
+
+                    ParameterInfo[] parameters = method.GetParameters();
+                    List<Type> types = new List<Type>();
+                    foreach (var parameter in parameters)
+                    {
+                        types.Add(parameter.ParameterType.GetRefOutType());
+                        if (parameter.ParameterType.IsByRef)
+                        {
+                            methodInstance.IsByRef = true;
+                        }
+                    }
+                    methodInstance.ParameterTypes = types.ToArray();
+
+                    if (method.ReturnType == typeof(void)|| method.ReturnType==typeof(Task))
+                    {
+                        methodInstance.ReturnType = null;
+
+                        if (isSetToken)
+                        {
+                            if (parameters.Length == 0)
+                            {
+                                methodInstance.MethodToken = ++nullReturnNullParameters;
+                            }
+                            else
+                            {
+                                methodInstance.MethodToken = ++nullReturnExistParameters;
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        if (methodInstance.Async)
+                        {
+                            Type[] ts = method.ReturnType.GetGenericArguments();
+                            if (ts.Length == 1)
+                            {
+                                methodInstance.ReturnType = ts[0];
+                            }
+                            else
+                            {
+                                methodInstance.ReturnType = null;
+                            }
+                        }
+                        else
+                        {
+                            methodInstance.ReturnType = method.ReturnType;
+                        }
+
+                        if (isSetToken)
+                        {
+                            if (parameters.Length == 0)
+                            {
+                                methodInstance.MethodToken = ++ExistReturnNullParameters;
+                            }
+                            else
+                            {
+                                methodInstance.MethodToken = ++ExistReturnExistParameters;
+                            }
+                        }
+                    }
+                    instances.Add(methodInstance);
+
+                }
+            }
+
+            return instances.ToArray();
         }
     }
 }

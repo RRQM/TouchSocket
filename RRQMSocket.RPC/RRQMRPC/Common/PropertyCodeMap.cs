@@ -36,17 +36,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        public PropertyCodeMap(Assembly assembly, string nameSpace)
+        public PropertyCodeMap(string nameSpace,MethodStore methodStore)
         {
-            this.Assembly = assembly;
             codeString = new StringBuilder();
             this.nameSpace = nameSpace;
+            this.propertyDic = methodStore.propertyDic;
+            this.genericTypeDic = methodStore.genericTypeDic;
         }
-
-        /// <summary>
-        /// 所属程序集
-        /// </summary>
-        public Assembly Assembly { get; private set; }
 
         /// <summary>
         /// 获取属性代码
@@ -76,8 +72,8 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private StringBuilder codeString;
         private string nameSpace;
-        private Dictionary<Type, string> propertyDic = new Dictionary<Type, string>();
-        private Dictionary<Type, string> genericTypeDic = new Dictionary<Type, string>();
+        private Dictionary<Type, string> propertyDic ;
+        private Dictionary<Type, string> genericTypeDic;
 
         internal void AddTypeString(Type type)
         {
@@ -181,7 +177,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 else if (type.IsClass)
                 {
-                    if (type.Assembly == this.Assembly)
+                    if (type.Assembly == ServerProvider.DefaultAssembly||type.GetCustomAttribute<RRQMRPCMemberAttribute>()!=null)
                     {
                         StringBuilder stringBuilder = new StringBuilder();
 
@@ -281,7 +277,15 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             else if (typeof(Task).IsAssignableFrom(type))
             {
-                type = type.GetGenericArguments()[0];
+                Type[] ts = type.GetGenericArguments();
+                if (ts.Length == 1)
+                {
+                   return ts[0].Name;
+                }
+                else
+                {
+                    return type.Name;
+                }
             }
             else if (type.IsArray)
             {
@@ -293,9 +297,9 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 string typeName = type.FullName.Replace("&", string.Empty);
                 type = Type.GetType(typeName);
-                if (type == null)
+                if (type == null&& ServerProvider.DefaultAssembly!=null)
                 {
-                    type = this.Assembly.GetType(typeName);
+                    type = ServerProvider.DefaultAssembly.GetType(typeName);
                 }
             }
 

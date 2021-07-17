@@ -14,14 +14,9 @@ using System.Collections.Generic;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
     /// RPC代理文件程序
     /// </summary>
-
     public class RPCProxyInfo : WaitResult
     {
         /// <summary>

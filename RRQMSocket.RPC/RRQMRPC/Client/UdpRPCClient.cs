@@ -33,9 +33,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         private WaitResult waitResult;
 
         /// <summary>
-        /// RPC初始化后
+        /// 发现服务后
         /// </summary>
-        public event RRQMMessageEventHandler RPCInitialized;
+        public event RRQMMessageEventHandler ServiceDiscovered;
 
         /// <summary>
         /// 构造函数
@@ -72,7 +72,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 lock (this)
                 {
                     byte[] datas;
-                    string proxyToken = (string)this.ServerConfig.GetValue(UdpRPCClientConfig.ProxyTokenProperty);
+                    string proxyToken = (string)this.ServiceConfig.GetValue(UdpRPCClientConfig.ProxyTokenProperty);
                     if (proxyToken == null)
                     {
                         datas = new byte[0];
@@ -95,9 +95,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 初始化RPC
+        /// 发现服务
         /// </summary>
-        public void InitializeRPC()
+        /// <param name="isTrigger">是否触发初始化事件</param>
+        /// <returns>已发现的服务</returns>
+        public MethodItem[] DiscoveryService(bool isTrigger = true)
         {
             if (this.ServerState != ServerState.Running)
             {
@@ -113,7 +115,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         this.methodStore = null;
 
-                        string proxyToken = (string)this.ServerConfig.GetValue(UdpRPCClientConfig.ProxyTokenProperty);
+                        string proxyToken = (string)this.ServiceConfig.GetValue(UdpRPCClientConfig.ProxyTokenProperty);
                         byte[] data = new byte[0];
                         if (!string.IsNullOrEmpty(proxyToken))
                         {
@@ -124,7 +126,11 @@ namespace RRQMSocket.RPC.RRQMRPC
                         this.singleWaitData.Wait(1000 * 5);
                         if (this.methodStore != null)
                         {
-                            return;
+                            if (isTrigger)
+                            {
+                                this.OnServiceDiscovered(new MesEventArgs("success"));
+                            }
+                            return this.methodStore.GetAllMethodItem().ToArray();
                         }
                     }
                     catch (Exception e)
@@ -174,7 +180,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.UDPSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception e)
             {
@@ -228,6 +234,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         else if (resultContext.Status == 4)
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                        }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
                         }
                         if (methodItem.IsOutOrRef)
                         {
@@ -296,7 +310,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.UDPSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception e)
             {
@@ -346,6 +360,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         else if (resultContext.Status == 4)
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                        }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
                         }
                         if (methodItem.IsOutOrRef)
                         {
@@ -404,7 +426,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.UDPSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception e)
             {
@@ -455,6 +477,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                         }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
+                        }
                         break;
                     }
                 default:
@@ -497,7 +527,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
-                this.UDPSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception e)
             {
@@ -551,6 +581,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                         }
+                        else if (resultContext.Status == 5)
+                        {
+                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                        }
+                        else if (resultContext.Status == 6)
+                        {
+                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
+                        }
 
                         try
                         {
@@ -564,39 +602,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 default:
                     return default;
             }
-        }
-
-        /// <summary>
-        /// RPC调用
-        /// </summary>
-        /// <param name="id">客户端ID</param>
-        /// <param name="methodToken">方法名</param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public void Invoke(string id, int methodToken, InvokeOption invokeOption, params object[] parameters)
-        {
-            throw new RRQMRPCException("UDPRPC不允许操作");
-        }
-
-        /// <summary>
-        /// RPC调用
-        /// </summary>
-        /// <param name="id">客户端ID</param>
-        /// <param name="methodToken">方法名</param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns></returns>
-        public T Invoke<T>(string id, int methodToken, InvokeOption invokeOption, params object[] parameters)
-        {
-            throw new RRQMRPCException("UDPRPC不允许操作");
         }
 
         /// <summary>
@@ -669,7 +674,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 byteBlock.Write(BitConverter.GetBytes(procotol));
                 byteBlock.Write(buffer, offset, length);
-                this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
+                this.Send(byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -690,9 +695,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// RPC完成初始化后
         /// </summary>
         /// <param name="args"></param>
-        protected virtual void OnRPCInitialized(MesEventArgs args)
+        protected virtual void OnServiceDiscovered(MesEventArgs args)
         {
-            this.RPCInitialized?.Invoke(this, args);
+            this.ServiceDiscovered?.Invoke(this, args);
         }
     }
 }

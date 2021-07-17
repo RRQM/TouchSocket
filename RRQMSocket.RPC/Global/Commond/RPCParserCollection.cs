@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace RRQMSocket.RPC
     [DebuggerDisplay("Count")]
     public class RPCParserCollection : IEnumerable<IRPCParser>
     {
-        private Dictionary<string, IRPCParser> parsers = new Dictionary<string, IRPCParser>();
+        private ConcurrentDictionary<string, IRPCParser> parsers = new ConcurrentDictionary<string, IRPCParser>();
 
         /// <summary>
         /// 数量
@@ -55,7 +56,12 @@ namespace RRQMSocket.RPC
                 throw new RRQMRPCException("重复添加解析器");
             }
 
-            this.parsers.Add(key, parser);
+            this.parsers.TryAdd(key, parser);
+        } 
+        
+        internal bool TryRemove(string key,out IRPCParser parser)
+        {
+            return this.parsers.TryRemove(key,out parser);
         }
 
         IEnumerator IEnumerable.GetEnumerator()

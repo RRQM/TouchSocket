@@ -9,10 +9,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -28,18 +30,18 @@ namespace RRQMSocket.RPC.RRQMRPC
         public TcpParser()
         {
             this.methodStore = new MethodStore();
+            this.proxyInfo = new RPCProxyInfo();
         }
 
 #pragma warning disable
 
-       
         public MethodMap MethodMap { get; private set; }
 
         public RPCService RPCService { get; private set; }
 
         public Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; private set; }
 
-        public CellCode[] Codes { get => codes; }
+        public CellCode[] Codes { get => this.proxyInfo==null?null:this.proxyInfo.Codes.ToArray(); }
 
         public string NameSpace { get; private set; }
 
@@ -47,19 +49,16 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public string ProxyToken { get; private set; }
 
-        public IRPCCompiler RPCCompiler { get; private set; }
-
         public Version RPCVersion { get; private set; }
 
         public SerializeConverter SerializeConverter { get; private set; }
 
         private MethodStore methodStore;
         private RPCProxyInfo proxyInfo;
-        private CellCode[] codes;
 
         public MethodStore MethodStore { get => methodStore; }
 
-        public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             RPCContext context = (RPCContext)methodInvoker.Flag;
             if (context.Feedback != 2)
@@ -121,10 +120,14 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case InvokeStatus.InvocationException:
                         {
+                            context.Status = 5;
+                            context.Message = methodInvoker.StatusMessage;
                             break;
                         }
                     case InvokeStatus.Exception:
                         {
+                            context.Status = 6;
+                            context.Message = methodInvoker.StatusMessage;
                             break;
                         }
                     default:
@@ -132,7 +135,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
 
                 context.Serialize(byteBlock);
-                ((RPCSocketClient)methodInvoker.Caller).InternalSend(101, byteBlock.Buffer, 0, (int)byteBlock.Length);
+                ((RPCSocketClient)methodInvoker.Caller).InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
             catch (Exception ex)
             {
@@ -144,10 +147,32 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        public void RRQMInitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
+        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
         {
-            Tools.GetRPCMethod(providers, methodInstances, this.NameSpace, providers.SingleAssembly, out this.methodStore,
-           this.RPCVersion, this.RPCCompiler, out this.proxyInfo, out this.codes);
+            Tools.GetRPCMethod(methodInstances, this.NameSpace, ref this.methodStore, this.RPCVersion, ref this.proxyInfo);
+        }
+
+        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        {
+            foreach (var item in methodInstances)
+            {
+                this.methodStore.RemoveMethodItem(item.MethodToken);
+            }
+
+            CellCode cellCode=null;
+            foreach (var item in this.proxyInfo.Codes)
+            {
+                if (item.Name==provider.GetType().Name)
+                {
+                    cellCode = item;
+                    break;
+                }
+            }
+            if (cellCode!=null)
+            {
+                this.proxyInfo.Codes.Remove(cellCode);
+            }
+            
         }
 
         public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
@@ -164,7 +189,24 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             this.RPCService = service;
         }
+#if NET45_OR_GREATER
+        /// <summary>
+        /// 编译代理
+        /// </summary>
+        /// <param name="targetDic">存放目标文件夹</param>
+        public void CompilerProxy(string targetDic = "")
+        {
+            string assemblyInfo = CodeMap.GetAssemblyInfo(this.proxyInfo.AssemblyName, this.proxyInfo.Version);
+            List<string> codesString = new List<string>();
+            codesString.Add(assemblyInfo);
+            foreach (var item in this.proxyInfo.Codes)
+            {
+                codesString.Add(item.Code);
+            }
+            RPCCompiler.CompileCode(Path.Combine(targetDic, this.proxyInfo.AssemblyName), codesString.ToArray());
 
+        }
+#endif
         protected override void OnCreateSocketCliect(TClient socketClient, CreateOption createOption)
         {
             if (createOption.NewCreate)
@@ -238,14 +280,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        protected override void LoadConfig(ServerConfig serverConfig)
+        protected override void LoadConfig(ServiceConfig ServiceConfig)
         {
-            base.LoadConfig(serverConfig);
-            this.SerializeConverter = (SerializeConverter)serverConfig.GetValue(TcpRPCParserConfig.SerializeConverterProperty);
-            this.ProxyToken = (string)serverConfig.GetValue(TcpRPCParserConfig.ProxyTokenProperty);
-            this.RPCCompiler = (IRPCCompiler)serverConfig.GetValue(TcpRPCParserConfig.RPCCompilerProperty);
-            this.NameSpace = (string)serverConfig.GetValue(TcpRPCParserConfig.NameSpaceProperty);
-            this.RPCVersion = (Version)serverConfig.GetValue(TcpRPCParserConfig.RPCVersionProperty);
+            base.LoadConfig(ServiceConfig);
+            this.SerializeConverter = (SerializeConverter)ServiceConfig.GetValue(TcpRPCParserConfig.SerializeConverterProperty);
+            this.ProxyToken = (string)ServiceConfig.GetValue(TcpRPCParserConfig.ProxyTokenProperty);
+            this.NameSpace = (string)ServiceConfig.GetValue(TcpRPCParserConfig.NameSpaceProperty);
+            this.RPCVersion = (Version)ServiceConfig.GetValue(TcpRPCParserConfig.RPCVersionProperty);
         }
 
         public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller)
