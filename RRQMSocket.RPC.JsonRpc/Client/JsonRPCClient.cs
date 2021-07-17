@@ -24,6 +24,12 @@ namespace RRQMSocket.RPC.JsonRpc
     /// </summary>
     public class JsonRPCClient : TcpClient, IJsonRPCClient
     {
+        private JsonFormatConverter jsonFormatConverter;
+
+        private JsonRpcProtocolType protocolType;
+
+        private RRQMWaitHandle<WaitResult> waitHandle;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -31,44 +37,18 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             waitHandle = new RRQMWaitHandle<WaitResult>();
         }
-
-        private JsonFormatConverter jsonFormatConverter;
-        private RRQMWaitHandle<WaitResult> waitHandle;
-
+       
         /// <summary>
         /// Json格式化器
         /// </summary>
         public JsonFormatConverter JsonFormatConverter => jsonFormatConverter;
-
-        private JsonRpcProtocolType protocolType;
+       
         /// <summary>
         /// 协议类型
         /// </summary>
         public JsonRpcProtocolType ProtocolType
         {
             get { return protocolType; }
-        }
-
-
-        /// <summary>
-        /// 载入配置
-        /// </summary>
-        /// <param name="clientConfig"></param>
-        protected override void LoadConfig(TcpClientConfig clientConfig)
-        {
-            base.LoadConfig(clientConfig);
-            this.protocolType = (JsonRpcProtocolType)clientConfig.GetValue(JsonRPCClientConfig.ProtocolTypeProperty);
-            switch (this.protocolType)
-            {
-                case JsonRpcProtocolType.Tcp:
-                    this.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.bufferLength, "\r\n"));
-                    break;
-                case JsonRpcProtocolType.Http:
-                    this.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.bufferLength, HttpType.Client));
-                    break;
-            }
-            this.jsonFormatConverter = (JsonFormatConverter)clientConfig.GetValue(JsonRPCClientConfig.JsonFormatConverterProperty);
-
         }
 
         /// <summary>
@@ -155,10 +135,6 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         try
                         {
-                            if (typeof(T) == typeof(string))
-                            {
-                                return (T)(object)resultContext.ReturnJsonString;
-                            }
                             return (T)this.jsonFormatConverter.Deserialize(resultContext.ReturnJsonString, typeof(T));
                         }
                         catch (Exception ex)
@@ -297,7 +273,7 @@ namespace RRQMSocket.RPC.JsonRpc
             {
                 case JsonRpcProtocolType.Tcp:
                     {
-                        string jsonString = Encoding.UTF8.GetString(byteBlock.Buffer, 0, (int)byteBlock.Length);
+                        string jsonString = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
                         JsonResponseContext responseContext = (JsonResponseContext)this.jsonFormatConverter.Deserialize(jsonString, typeof(JsonResponseContext));
                         if (responseContext != null)
                         {
@@ -328,6 +304,27 @@ namespace RRQMSocket.RPC.JsonRpc
                     }
 
             }
+
+        }
+
+        /// <summary>
+        /// 载入配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        protected override void LoadConfig(TcpClientConfig clientConfig)
+        {
+            base.LoadConfig(clientConfig);
+            this.protocolType = (JsonRpcProtocolType)clientConfig.GetValue(JsonRPCClientConfig.ProtocolTypeProperty);
+            switch (this.protocolType)
+            {
+                case JsonRpcProtocolType.Tcp:
+                    this.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.bufferLength, "\r\n"));
+                    break;
+                case JsonRpcProtocolType.Http:
+                    this.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.bufferLength, HttpType.Client));
+                    break;
+            }
+            this.jsonFormatConverter = (JsonFormatConverter)clientConfig.GetValue(JsonRPCClientConfig.JsonFormatConverterProperty);
 
         }
     }

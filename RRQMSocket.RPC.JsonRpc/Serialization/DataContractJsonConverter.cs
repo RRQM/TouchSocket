@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Helper;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Json;
@@ -25,6 +26,10 @@ namespace RRQMSocket.RPC.JsonRpc
 
         public override object Deserialize(string jsonString, Type parameterType)
         {
+            if (parameterType.IsPrimitive||parameterType==typeof(string))
+            {
+                return jsonString.ParseToType(parameterType);
+            }
             DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(parameterType);
             return deseralizer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(jsonString)));
         }

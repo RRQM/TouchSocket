@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC.JsonRpc
     /// <summary>
     /// JsonRpcParser配置
     /// </summary>
-    public class JsonRpcParserConfig : TcpServerConfig
+    public class JsonRpcParserConfig : TcpServiceConfig
     {
         /// <summary>
         /// Json格式
