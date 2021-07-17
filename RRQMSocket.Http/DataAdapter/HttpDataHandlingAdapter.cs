@@ -54,7 +54,7 @@ namespace RRQMSocket.Http
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Length;
+            int r = byteBlock.Len;
             if (this.tempByteBlock != null)
             {
                 this.tempByteBlock.Write(buffer, 0, r);
