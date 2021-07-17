@@ -502,7 +502,13 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            this.Logger.Debug(LogType.Error, this, $"客户端已断开连接！！！");
+                            Task.Run(async () =>
+                            {
+                                await Task.Delay(3000);
+                                ReConnect();
+                            });
+
+                            //this.Logger.Debug(LogType.Error, this, $"客户端已断开连接！！！");
                             OutDownload(false);
                             return;
                         }
@@ -682,7 +688,26 @@ namespace RRQMSocket.FileTransfer
             this.speed = 0;
         }
 
-     
+        private void ReConnect()
+        {
+            this.Disconnect();
+            this.Logger.Debug(LogType.Warning, this, $"客户端已断连，正在尝试恢复连接！！！");
+            for (int i = 0; i < 10; i++)
+            {
+                try
+                {
+                    this.Connect();
+                    Thread.Sleep(1000);
+                    this.RequestTransfer(this.transferUrlFileInfo);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.Debug(LogType.Error, this, $"尝试恢复连接时发生错误：{ex.Message}");
+                }
+            }
+        }
+
         private ByteBlock SendWait(short procotol, int waitTime, ByteBlock byteBlock = null, bool reserved = false)
         {
             lock (locker)
@@ -695,7 +720,7 @@ namespace RRQMSocket.FileTransfer
                     }
                     else
                     {
-                        this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length, reserved);
+                        this.InternalSend(procotol, byteBlock.Buffer, 0, byteBlock.Len, reserved);
                     }
                 }
                 catch
@@ -891,7 +916,11 @@ namespace RRQMSocket.FileTransfer
                     {
                         if (!this.Online)
                         {
-                            this.Logger.Debug(LogType.Error, this, $"客户端已断开连接！！！");
+                            Task.Run(async () =>
+                            {
+                                await Task.Delay(3000);
+                                ReConnect();
+                            });
                             OutUpload();
                             return;
                         }

@@ -16,7 +16,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件服务器配置
     /// </summary>
-    public class FileServiceConfig : TokenServerConfig
+    public class FileServiceConfig : TokenServiceConfig
     {
         /// <summary>
         /// 是否支持断点续传
