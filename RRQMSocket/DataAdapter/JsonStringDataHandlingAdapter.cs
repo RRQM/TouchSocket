@@ -29,7 +29,7 @@ namespace RRQMSocket
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int length = (int)byteBlock.Length;
+            int length = byteBlock.Len;
 
             //Console.WriteLine("----------------接收的新数据-------------------");
             if (Temp != null)

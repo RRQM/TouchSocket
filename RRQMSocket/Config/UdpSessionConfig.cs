@@ -17,7 +17,7 @@ namespace RRQMSocket
     /// <summary>
     /// UDP服务器配置
     /// </summary>
-    public class UdpSessionConfig : ServerConfig
+    public class UdpSessionConfig : ServiceConfig
     {
         /// <summary>
         /// 默认远程节点

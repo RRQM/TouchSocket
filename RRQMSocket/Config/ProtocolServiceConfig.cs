@@ -9,33 +9,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using System;
-using System.Threading;
+using RRQMCore.Dependency;
 
 namespace RRQMSocket
 {
-    internal class BufferQueueGroup : IDisposable
+    /// <summary>
+    /// 协议服务配置
+    /// </summary>
+    public class ProtocolServiceConfig : TokenServiceConfig
     {
-        internal Thread Thread;
-        internal BufferQueue bufferAndClient;
-        internal EventWaitHandle waitHandleBuffer;
-        internal bool isWait;
-        internal BytePool bytePool;
-
-        public void Dispose()
+        /// <summary>
+        /// 是否能重新设置ID
+        /// </summary>
+        public bool CanResetID
         {
-            if (bufferAndClient != null)
-            {
-                while (bufferAndClient.TryDequeue(out _))
-                {
-                }
-            }
-
-            if (waitHandleBuffer != null)
-            {
-                waitHandleBuffer.Set();
-            }
+            get { return (bool)GetValue(CanResetIDProperty); }
+            set { SetValue(CanResetIDProperty, value); }
         }
+
+        /// <summary>
+        /// 是否能重新设置ID，所需类型<see cref="bool"/>
+        /// </summary>
+        public static readonly DependencyProperty CanResetIDProperty =
+            DependencyProperty.Register("CanResetID", typeof(bool), typeof(ProtocolServiceConfig), true);
     }
 }

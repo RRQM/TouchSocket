@@ -180,7 +180,7 @@
 //        /// <exception cref="RRQMException"></exception>
 //        public void Send(ByteBlock byteBlock)
 //        {
-//            this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
+//            this.Send(byteBlock.Buffer, 0, byteBlock.Len);
 //        }
 
 //        /// <summary>

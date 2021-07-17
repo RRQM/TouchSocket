@@ -76,7 +76,7 @@ namespace RRQMSocket
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
-            int r = (int)byteBlock.Length;
+            int r = byteBlock.Len;
 
             if (agreementTempBytes != null)
             {
@@ -263,7 +263,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    this.GoSend(byteBlock.Buffer, 0, (int)byteBlock.Length, isAsync);
+                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
                 }
             }
             catch (Exception ex)

@@ -24,16 +24,25 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="client"></param>
-        public ProcotolHelper(IClient client)
+        /// <param name="separateThread"></param>
+        public ProcotolHelper(ITcpClient client, bool separateThread)
         {
             this.mainSocket = client.MainSocket;
             this.bytePool = client.BytePool;
+            this.separateThread = separateThread;
+
+            if (separateThread)
+            {
+                this.asyncSender = new AsyncSender(client.MainSocket, client.MainSocket.RemoteEndPoint, client.Logger);
+            }
         }
 
         private Socket mainSocket;
         private BytePool bytePool;
+        private AsyncSender asyncSender;
+        private bool separateThread;
 
-        #region 方法
+        #region 同步方法
 
         /// <summary>
         /// 发送简单协议
@@ -98,7 +107,7 @@ namespace RRQMSocket
             }
             try
             {
-                this.mainSocket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
+                this.mainSocket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
             }
             catch (Exception ex)
             {
@@ -110,6 +119,81 @@ namespace RRQMSocket
             }
         }
 
+        #endregion 方法
+
+        #region 异步方法
+
+        /// <summary>
+        /// 发送简单协议
+        /// </summary>
+        /// <param name="procotol"></param>
+        public void SocketSendAsync(short procotol)
+        {
+            this.SocketSend(procotol, new byte[0], 0, 0);
+        }
+
+        /// <summary>
+        /// 发送字节
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="dataBuffer"></param>
+        public void SocketSendAsync(short procotol, byte[] dataBuffer)
+        {
+            this.SocketSend(procotol, dataBuffer, 0, dataBuffer.Length);
+        }
+
+        /// <summary>
+        /// 发送协议流
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="dataByteBlock"></param>
+        public void SocketSendAsync(short procotol, ByteBlock dataByteBlock)
+        {
+            this.SocketSend(procotol, dataByteBlock.Buffer, 0, dataByteBlock.Len);
+        }
+
+        /// <summary>
+        /// 发送字节
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="dataBuffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void SocketSendAsync(short procotol, byte[] dataBuffer, int offset, int length)
+        {
+            int dataLen;
+            dataLen = length - offset + 2;
+            ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen + 4);
+            byte[] lenBytes = BitConverter.GetBytes(dataLen);
+            byte[] agreementBytes = BitConverter.GetBytes(procotol);
+
+            byteBlock.Write(lenBytes);
+            byteBlock.Write(agreementBytes);
+            if (length > 0)
+            {
+                byteBlock.Write(dataBuffer, offset, length);
+            }
+            try
+            {
+                byte[] data = byteBlock.ToArray();
+                if (this.separateThread)
+                {
+                    this.asyncSender.AsyncSend(data, 0, data.Length);
+                }
+                else
+                {
+                    this.mainSocket.BeginSend(data, 0, data.Length, SocketFlags.None, null, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
         #endregion 方法
     }
 }

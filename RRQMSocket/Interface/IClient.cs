@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
 
@@ -40,6 +41,11 @@ namespace RRQMSocket
         /// 内存池实例
         /// </summary>
         BytePool BytePool { get; }
+
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        ILog Logger { get; }
 
         /// <summary>
         /// 发送字节流

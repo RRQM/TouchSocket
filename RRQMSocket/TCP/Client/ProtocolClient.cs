@@ -52,7 +52,7 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected override void OnConnectedService(MesEventArgs e)
         {
-            this.agreementHelper = new ProcotolHelper(this);
+            this.agreementHelper = new ProcotolHelper(this,false);
             base.OnConnectedService(e);
         }
 
@@ -181,7 +181,7 @@ namespace RRQMSocket
         /// <param name="reserved"></param>
         protected void InternalSend(short procotol, ByteBlock byteBlock, bool reserved = false)
         {
-            this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length, reserved);
+            this.InternalSend(procotol, byteBlock.Buffer, 0, byteBlock.Len, reserved);
         }
 
         /// <summary>
@@ -227,7 +227,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            string id = Encoding.UTF8.GetString(byteBlock.Buffer, 2, (int)byteBlock.Length - 2);
+                            string id = Encoding.UTF8.GetString(byteBlock.Buffer, 2, byteBlock.Len - 2);
                             base.ResetID(id);
                             this.waitHandle.Set();
                         }

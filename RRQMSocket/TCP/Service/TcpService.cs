@@ -37,16 +37,12 @@ namespace RRQMSocket
         #region 属性
 
         private int clearInterval;
-
         private IPHost[] listenIPHosts;
         private Socket[] listenSockets;
         private int maxCount;
-
         private string name;
-        private ServerConfig serverConfig;
-
         private ServerState serverState;
-
+        private ServiceConfig serviceConfig;
         private SocketCliectCollection<TClient> socketClients;
 
         /// <summary>
@@ -87,17 +83,13 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 获取服务器配置
-        /// </summary>
-        public ServerConfig ServerConfig { get { return serverConfig; } }
-
-        /// <summary>
         /// 服务器名称
         /// </summary>
         public string ServerName
         {
             get { return name; }
         }
+
         /// <summary>
         /// 服务器状态
         /// </summary>
@@ -107,13 +99,17 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 获取服务器配置
+        /// </summary>
+        public ServiceConfig ServiceConfig { get { return serviceConfig; } }
+
+        /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
         public SocketCliectCollection<TClient> SocketClients
         {
             get { return socketClients; }
         }
-
         #endregion 属性
 
         #region 变量
@@ -155,6 +151,7 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
+            base.Dispose();
             if (this.listenSockets != null)
             {
                 foreach (var item in this.listenSockets)
@@ -175,7 +172,7 @@ namespace RRQMSocket
             }
 
             this.serverState = ServerState.Disposed;
-            base.Dispose();
+          
         }
 
         /// <summary>
@@ -245,7 +242,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(string id, ByteBlock byteBlock)
         {
-            this.Send(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
+            this.Send(id, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         /// <summary>
@@ -289,17 +286,17 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(string id, ByteBlock byteBlock)
         {
-            this.SendAsync(id, byteBlock.Buffer, 0, (int)byteBlock.Length);
+            this.SendAsync(id, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         /// <summary>
         /// 配置服务器
         /// </summary>
-        /// <param name="serverConfig"></param>
-        public virtual void Setup(ServerConfig serverConfig)
+        /// <param name="serviceConfig"></param>
+        public virtual void Setup(ServiceConfig serviceConfig)
         {
-            this.serverConfig = serverConfig;
-            this.LoadConfig(this.serverConfig);
+            this.serviceConfig = serviceConfig;
+            this.LoadConfig(serviceConfig);
         }
 
         /// <summary>
@@ -308,9 +305,9 @@ namespace RRQMSocket
         /// <param name="port"></param>
         public virtual void Setup(int port)
         {
-            TcpServerConfig serverConfig = new TcpServerConfig();
-            serverConfig.ListenIPHosts = new IPHost[] { new IPHost(port) };
-            this.Setup(serverConfig);
+            TcpServiceConfig serviceConfig = new TcpServiceConfig();
+            serviceConfig.ListenIPHosts = new IPHost[] { new IPHost(port) };
+            this.Setup(serviceConfig);
         }
 
         /// <summary>
@@ -331,7 +328,7 @@ namespace RRQMSocket
         /// <exception cref="Exception"></exception>
         public virtual void Start()
         {
-            IPHost[] iPHosts = (IPHost[])this.serverConfig.GetValue(ServerConfig.ListenIPHostsProperty);
+            IPHost[] iPHosts = (IPHost[])this.ServiceConfig.GetValue(ServiceConfig.ListenIPHostsProperty);
             if (iPHosts == null)
             {
                 throw new RRQMException("IPHosts为空，无法绑定");
@@ -414,7 +411,7 @@ namespace RRQMSocket
                     client.clearType = this.clearType;
                     client.separateThreadReceive = this.separateThreadReceive;
                 }
-                
+
                 client.MainSocket = socket;
                 client.ReadIpPort();
                 client.SetBufferLength(this.BufferLength);
@@ -444,22 +441,22 @@ namespace RRQMSocket
         /// <summary>
         /// 加载配置
         /// </summary>
-        /// <param name="serverConfig"></param>
-        protected virtual void LoadConfig(ServerConfig serverConfig)
+        /// <param name="serviceConfig"></param>
+        protected virtual void LoadConfig(ServiceConfig serviceConfig)
         {
-            if (serverConfig == null)
+            if (serviceConfig == null)
             {
                 throw new RRQMException("配置文件为空");
             }
-            this.maxCount = (int)serverConfig.GetValue(TcpServerConfig.MaxCountProperty);
+            this.maxCount = (int)serviceConfig.GetValue(TcpServiceConfig.MaxCountProperty);
+            this.clearInterval = (int)serviceConfig.GetValue(TcpServiceConfig.ClearIntervalProperty);
+            this.backlog = (int)serviceConfig.GetValue(TcpServiceConfig.BacklogProperty);
+            this.Logger = (ILog)serviceConfig.GetValue(ServiceConfig.LoggerProperty);
+            this.SetBufferLength((int)serviceConfig.GetValue(ServiceConfig.BufferLengthProperty));
+            this.name = serviceConfig.ServerName;
+            this.clearType = (ClearType)serviceConfig.GetValue(TcpServiceConfig.ClearTypeProperty);
+            this.separateThreadReceive = serviceConfig.SeparateThreadReceive;
             this.socketClientPool.Capacity = this.maxCount;
-            this.clearInterval = (int)serverConfig.GetValue(TcpServerConfig.ClearIntervalProperty);
-            this.backlog = (int)serverConfig.GetValue(TcpServerConfig.BacklogProperty);
-            this.Logger = (ILog)serverConfig.GetValue(ServerConfig.LoggerProperty);
-            this.SetBufferLength((int)serverConfig.GetValue(ServerConfig.BufferLengthProperty));
-            this.name = serverConfig.ServerName;
-            this.clearType = (ClearType)serverConfig.GetValue(TcpServerConfig.ClearTypeProperty);
-            this.separateThreadReceive = serverConfig.SeparateThreadReceive;
         }
 
         /// <summary>
@@ -499,11 +496,11 @@ namespace RRQMSocket
 
 
 
-            this.bufferQueueGroups = new BufferQueueGroup[this.serverConfig.ThreadCount];
-            for (int i = 0; i < this.serverConfig.ThreadCount; i++)
+            this.bufferQueueGroups = new BufferQueueGroup[this.ServiceConfig.ThreadCount];
+            for (int i = 0; i < this.ServiceConfig.ThreadCount; i++)
             {
                 BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
-                bufferQueueGroup.bytePool = new BytePool(this.serverConfig.BytePoolMaxSize, this.serverConfig.BytePoolMaxBlockSize);
+                bufferQueueGroup.bytePool = new BytePool(this.ServiceConfig.BytePoolMaxSize, this.ServiceConfig.BytePoolMaxBlockSize);
                 bufferQueueGroups[i] = bufferQueueGroup;
 
                 if (this.separateThreadReceive)
@@ -606,24 +603,12 @@ namespace RRQMSocket
                 ClientBuffer clientBuffer;
                 if (queueGroup.bufferAndClient.TryDequeue(out clientBuffer))
                 {
-                    try
-                    {
-                        clientBuffer.client.HandleBuffer(clientBuffer.byteBlock);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
-                    }
-                    finally
-                    {
-                        clientBuffer.byteBlock.Dispose();
-                    }
+                    clientBuffer.client.HandleBuffer(clientBuffer.byteBlock);
                 }
                 else
                 {
                     queueGroup.isWait = true;
                     queueGroup.waitHandleBuffer.WaitOne();
-                    queueGroup.isWait = false;
                 }
             }
         }

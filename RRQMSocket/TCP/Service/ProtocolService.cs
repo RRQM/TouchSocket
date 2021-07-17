@@ -47,10 +47,10 @@ namespace RRQMSocket
         /// 加载配置
         /// </summary>
         /// <param name="serverConfig"></param>
-        protected override void LoadConfig(ServerConfig serverConfig)
+        protected override void LoadConfig(ServiceConfig serverConfig)
         {
             base.LoadConfig(serverConfig);
-            this.canResetID = (bool)serverConfig.GetValue(ProtocolServerConfig.CanResetIDProperty);
+            this.canResetID = (bool)serverConfig.GetValue(ProtocolServiceConfig.CanResetIDProperty);
         }
     }
 }

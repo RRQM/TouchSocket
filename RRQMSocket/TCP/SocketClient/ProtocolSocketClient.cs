@@ -36,7 +36,7 @@ namespace RRQMSocket
         protected override void OnBeforeReceive()
         {
             base.OnBeforeReceive();
-            this.procotolHelper = new ProcotolHelper(this);
+            this.procotolHelper = new ProcotolHelper(this,false);
             this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
         }
 
@@ -151,7 +151,7 @@ namespace RRQMSocket
         /// <param name="reserved"></param>
         protected void InternalSend(short procotol, ByteBlock byteBlock, bool reserved = false)
         {
-            this.InternalSend(procotol, byteBlock.Buffer, 0, (int)byteBlock.Length, reserved);
+            this.InternalSend(procotol, byteBlock.Buffer, 0, byteBlock.Len, reserved);
         }
 
         /// <summary>
@@ -206,7 +206,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            string id = Encoding.UTF8.GetString(byteBlock.Buffer, 2, (int)byteBlock.Length - 2);
+                            string id = Encoding.UTF8.GetString(byteBlock.Buffer, 2, byteBlock.Len - 2);
                             base.ResetID(id);
                             this.procotolHelper.SocketSend(0, Encoding.UTF8.GetBytes(this.id));
                         }
@@ -221,7 +221,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            byte[] data = new byte[(int)byteBlock.Length - 2];
+                            byte[] data = new byte[byteBlock.Len - 2];
                             byteBlock.Position = 2;
                             byteBlock.Read(data);
                             HandleProtocolData(null, byteBlock);

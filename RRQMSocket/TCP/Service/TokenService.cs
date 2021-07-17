@@ -47,12 +47,12 @@ namespace RRQMSocket
         /// <summary>
         /// 载入配置
         /// </summary>
-        /// <param name="serverConfig"></param>
-        protected override void LoadConfig(ServerConfig serverConfig)
+        /// <param name="ServiceConfig"></param>
+        protected override void LoadConfig(ServiceConfig ServiceConfig)
         {
-            base.LoadConfig(serverConfig);
-            this.verifyTimeout = (int)serverConfig.GetValue(TokenServerConfig.VerifyTimeoutProperty);
-            this.verifyToken = (string)serverConfig.GetValue(TokenServerConfig.VerifyTokenProperty);
+            base.LoadConfig(ServiceConfig);
+            this.verifyTimeout = (int)ServiceConfig.GetValue(TokenServiceConfig.VerifyTimeoutProperty);
+            this.verifyToken = (string)ServiceConfig.GetValue(TokenServiceConfig.VerifyTokenProperty);
             if (string.IsNullOrEmpty(this.verifyToken))
             {
                 this.verifyToken = "rrqm";
@@ -119,7 +119,7 @@ namespace RRQMSocket
                                     client.BeginReceive();
                                     byteBlock.Write(1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
-                                    socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
+                                    socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
                                     ClientConnectedMethod(client, null);
 
                                     return;
@@ -132,7 +132,7 @@ namespace RRQMSocket
                                 {
                                     byteBlock.Write(Encoding.UTF8.GetBytes(verifyOption.ErrorMessage));
                                 }
-                                socket.Send(byteBlock.Buffer, 0, (int)byteBlock.Length, SocketFlags.None);
+                                socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
                                 socket.Dispose();
                                 return;
                             }

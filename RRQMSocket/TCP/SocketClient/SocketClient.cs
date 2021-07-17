@@ -142,11 +142,22 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         public void HandleBuffer(ByteBlock byteBlock)
         {
-            if (this.dataHandlingAdapter == null)
+            try
             {
-                throw new RRQMException("数据处理适配器为空");
+                if (this.dataHandlingAdapter == null)
+                {
+                    throw new RRQMException("数据处理适配器为空");
+                }
+                this.dataHandlingAdapter.Received(byteBlock);
             }
-            this.dataHandlingAdapter.Received(byteBlock);
+            catch (Exception ex)
+            {
+                Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
         }
 
         /// <summary>
@@ -224,7 +235,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(ByteBlock byteBlock)
         {
-            this.Send(byteBlock.Buffer, 0, (int)byteBlock.Length);
+            this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         /// <summary>
@@ -262,7 +273,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(ByteBlock byteBlock)
         {
-            this.SendAsync(byteBlock.Buffer, 0, (int)byteBlock.Length);
+            this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         /// <summary>
@@ -401,6 +412,7 @@ namespace RRQMSocket
                         queueGroup.bufferAndClient.Enqueue(clientBuffer);
                         if (queueGroup.isWait)
                         {
+                            queueGroup.isWait = false;
                             queueGroup.waitHandleBuffer.Set();
                         }
                     }

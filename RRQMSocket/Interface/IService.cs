@@ -33,7 +33,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        ServerConfig ServerConfig { get; }
+        ServiceConfig ServiceConfig { get; }
 
         /// <summary>
         /// 名称
@@ -45,7 +45,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="serverConfig">配置</param>
         /// <exception cref="RRQMException"></exception>
-        void Setup(ServerConfig serverConfig);
+        void Setup(ServiceConfig serverConfig);
 
         /// <summary>
         /// 配置服务器

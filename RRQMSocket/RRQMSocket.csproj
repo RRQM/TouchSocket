@@ -4,19 +4,19 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>5.2.1</Version>
+		<Version>5.3.0</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
         <PackageTags>IOCP,TCP,UDP,Socket</PackageTags>
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-增加：TerminatorDataHandlingAdapter可以保留分割符。
-增加：IOCP拥塞接收模式，客户端默认拥塞接收，服务器默认多线程接收。
-优化：等待池获取逻辑（特此感谢百转回魂网友）。
-修复：FixedSizeDataHandlingAdapter重复释放Bug。
-修复：TcpClient释放Dispose后不触发断开连接事件。
-修复：TcpClient独立线程异常Bug。
+优化：内存池释放逻辑，传输时更加节约内存消耗。
+优化：UDP服务器处理逻辑。
+修改：ServerConfig改名为ServiceConfig。
+修改：TcpServerConfig改名为TcpServiceConfig。
+修改：Service端独立线程接收默认使用IOCP拥塞。
+修复：多线程释放导致异常bug。
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
 Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
@@ -85,7 +85,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="2.1.0" />
+	  <PackageReference Include="RRQMCore" Version="2.2.0" />
 	</ItemGroup>
 
 </Project>

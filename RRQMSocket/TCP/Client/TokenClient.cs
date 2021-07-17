@@ -66,6 +66,7 @@ namespace RRQMSocket
         /// 连接到服务器
         /// </summary>
         /// <exception cref="RRQMException"></exception>
+        /// <exception cref="RRQMTokenVerifyException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
         public override void Connect()
         {
@@ -122,7 +123,7 @@ namespace RRQMSocket
                             else if (byteBlock.Buffer[0] == 2)
                             {
                                 this.MainSocket.Dispose();
-                                throw new RRQMException(Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1));
+                                throw new RRQMTokenVerifyException(Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1));
                             }
                             else if (byteBlock.Buffer[0] == 3)
                             {
