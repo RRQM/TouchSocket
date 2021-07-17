@@ -64,7 +64,7 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
             SimpleSocketClient socketClient = (SimpleSocketClient)methodInvoker.Caller;
@@ -93,9 +93,9 @@ namespace RRQMSocket.RPC.WebApi
         /// <summary>
         /// 初始化
         /// </summary>
-        /// <param name="providers"></param>
+        /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void RRQMInitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
+        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -146,6 +146,16 @@ namespace RRQMSocket.RPC.WebApi
         }
 
         /// <summary>
+        /// 取消注册服务
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="methodInstances"></param>
+        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        {
+
+        }
+
+        /// <summary>
         /// 设置执行委托
         /// </summary>
         /// <param name="executeMethod"></param>
@@ -176,7 +186,7 @@ namespace RRQMSocket.RPC.WebApi
         /// 载入配置
         /// </summary>
         /// <param name="serverConfig"></param>
-        protected override void LoadConfig(ServerConfig serverConfig)
+        protected override void LoadConfig(ServiceConfig serverConfig)
         {
             base.LoadConfig(serverConfig);
             this.ApiDataConverter = (ApiDataConverter)serverConfig.GetValue(WebApiParserConfig.ApiDataConverterProperty);
