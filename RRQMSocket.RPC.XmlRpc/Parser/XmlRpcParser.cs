@@ -59,7 +59,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public void RRQMEndInvokeMethod(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
             SimpleSocketClient socketClient = (SimpleSocketClient)methodInvoker.Caller;
@@ -89,9 +89,9 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <summary>
         /// 初始化
         /// </summary>
-        /// <param name="providers"></param>
+        /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void RRQMInitializeServers(ServerProviderCollection providers, MethodInstance[] methodInstances)
+        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -109,6 +109,16 @@ namespace RRQMSocket.RPC.XmlRpc
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 取消注册服务
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="methodInstances"></param>
+        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        {
+
         }
 
         /// <summary>

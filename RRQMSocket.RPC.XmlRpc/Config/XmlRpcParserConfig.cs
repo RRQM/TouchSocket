@@ -15,7 +15,7 @@ namespace RRQMSocket.RPC.XmlRpc
     /// <summary>
     /// XmlRpcParser配置
     /// </summary>
-    public class XmlRpcParserConfig : TcpServerConfig
+    public class XmlRpcParserConfig : TcpServiceConfig
     {
     }
 }
