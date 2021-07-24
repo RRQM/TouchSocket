@@ -761,7 +761,7 @@ namespace RRQMSocket.FileTransfer
 
             downloadStream = RRQMStream.GetRRQMStream(ref blocks, urlFileInfo.Restart, this.breakpointResume);
             fileBlocks = blocks;
-
+             
             this.SynchronizeTransferSetting();
             thread_Transfer = new Thread(this.DownloadFileBlock);
             thread_Transfer.IsBackground = true;
