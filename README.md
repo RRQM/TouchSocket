@@ -391,7 +391,7 @@ Install-Package RRQMSocket.FileTransfer
  6. **安（5￥）
 
 #### 商业采购名单（以下排名只按照商业采购时间顺序）
-1.凯斯得科技信息有限公司
+1.凯斯得****有限公司
 
 <img src="https://images.gitee.com/uploads/images/2021/0330/234046_7662fb8c_8553710.png" width = "600" height = "400" alt="图片名称" align=center />
 
