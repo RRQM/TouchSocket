@@ -11,7 +11,9 @@
 [![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)
 [![star](https://gitee.com/dotnetchina/RRQMSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/stargazers) 
 [![fork](https://gitee.com/dotnetchina/RRQMSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/members)
-
+<a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw">
+<img src="https://img.shields.io/badge/QQ群-234762506-red" alt="QQ">
+</a>
 </div>  
 
 <div align="center">
