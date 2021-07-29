@@ -379,23 +379,19 @@ Install-Package RRQMSocket.FileTransfer
 
 
 ## 💕 支持本项目
-您的支持就是我不懈努力的动力。打赏时请一定留下您的称呼。
+您的支持就是我不懈努力的动力。
 
- **赞助总金额:516.6￥** 
+#### 爱心赞助名单（以下排名只按照打赏时间顺序）
 
-**赞助名单：** 
+ 1. Bobo Joker（200￥）
+ 2. UnitySir（66￥）
+ 3. Coffee（100￥）
+ 4. Ninety（50￥）
+ 5. *琼（100￥）
+ 6. **安（5￥）
 
-（以下排名只按照打赏时间顺序）
-
-> 1.Bobo Joker
-
-> 2.UnitySir
-
-> 3.Coffee
-
-> 4.Ninety
-
-> 5.*琼
+#### 商业采购名单（以下排名只按照商业采购时间顺序）
+1.凯斯得科技信息有限公司
 
 <img src="https://images.gitee.com/uploads/images/2021/0330/234046_7662fb8c_8553710.png" width = "600" height = "400" alt="图片名称" align=center />
 
