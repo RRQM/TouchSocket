@@ -23,6 +23,9 @@ namespace RRQMSocket.RPC.JsonRpc
     public class JsonResponseContext
     {
         [DataMember]
+        public string jsonrpc;
+
+        [DataMember]
         public object result;
 
         [DataMember]

@@ -27,6 +27,7 @@ namespace RRQMSocket.RPC.JsonRpc
 
         private JsonFormatConverter jsonFormatConverter;
 
+        private MethodMap methodMap;
         private JsonRpcProtocolType protocolType;
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// 函数键映射图
         /// </summary>
         public ActionMap ActionMap { get { return this.actionMap; } }
-      
+
         /// <summary>
         /// Json转换器
         /// </summary>
@@ -49,11 +50,14 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             get { return jsonFormatConverter; }
         }
-      
+        
         /// <summary>
         /// 函数映射
         /// </summary>
-        public MethodMap MethodMap { get; private set; }
+        public MethodMap MethodMap
+        {
+            get { return methodMap; }
+        }
 
         /// <summary>
         /// 协议类型
@@ -62,7 +66,7 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             get { return protocolType; }
         }
-       
+
         /// <summary>
         /// 所属服务器
         /// </summary>
@@ -185,8 +189,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
         public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
-        { 
-        
+        {
         }
 
         /// <summary>
@@ -204,7 +207,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="methodMap"></param>
         public void SetMethodMap(MethodMap methodMap)
         {
-            this.MethodMap = methodMap;
+            this.methodMap = methodMap;
         }
 
         /// <summary>
@@ -225,7 +228,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <returns></returns>
         protected virtual void BuildRequestContext(string jsonString, out MethodInstance methodInstance, out JsonRequestContext context)
         {
-            context = (JsonRequestContext)this.JsonFormatConverter.Deserialize(jsonString, typeof(JsonRequestContext));
+            context = (JsonRequestContext)this.jsonFormatConverter.Deserialize(jsonString, typeof(JsonRequestContext));
 
             if (this.actionMap.TryGet(context.method, out methodInstance))
             {
@@ -246,7 +249,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         else
                         {
-                            context.@params[i] = this.JsonFormatConverter.Deserialize(s, type);
+                            context.@params[i] = this.jsonFormatConverter.Deserialize(s, type);
                         }
                     }
                 }
@@ -269,23 +272,39 @@ namespace RRQMSocket.RPC.JsonRpc
             {
                 return;
             }
+            StringBuilder stringBuilder = new StringBuilder();
+            if (responseContext.error == null)
+            {
+                //成功
+                stringBuilder.Append("{\"jsonrpc\": \"2.0\", \"result\":");
+                stringBuilder.Append(this.jsonFormatConverter.Serialize(responseContext.result));
+                stringBuilder.Append(", \"id\":");
+                stringBuilder.Append(responseContext.id);
+                stringBuilder.Append("}");
+            }
+            else
+            {
+                stringBuilder.Append("{\"jsonrpc\": \"2.0\", \"error\":");
+                stringBuilder.Append(this.jsonFormatConverter.Serialize(responseContext.error));
+                stringBuilder.Append(", \"id\":");
+                stringBuilder.Append(responseContext.id);
+                stringBuilder.Append("}");
+            }
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
                     {
-                        responseByteBlock.Write(Encoding.UTF8.GetBytes(this.jsonFormatConverter.Serialize(responseContext)));
+                        responseByteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
                         break;
                     }
                 case JsonRpcProtocolType.Http:
                     {
                         HttpResponse httpResponse = new HttpResponse();
-                        httpResponse.FromJson(this.jsonFormatConverter.Serialize(responseContext));
+                        httpResponse.FromJson(stringBuilder.ToString());
                         httpResponse.Build(responseByteBlock);
                         break;
                     }
             }
-
-
         }
 
         /// <summary>
@@ -298,7 +317,7 @@ namespace RRQMSocket.RPC.JsonRpc
             this.jsonFormatConverter = (JsonFormatConverter)ServiceConfig.GetValue(JsonRpcParserConfig.JsonFormatConverterProperty);
             this.protocolType = (JsonRpcProtocolType)ServiceConfig.GetValue(JsonRpcParserConfig.ProtocolTypeProperty);
         }
-       
+
         /// <summary>
         /// 创建SocketCliect
         /// </summary>
@@ -315,11 +334,11 @@ namespace RRQMSocket.RPC.JsonRpc
                 case JsonRpcProtocolType.Tcp:
                     socketClient.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.BufferLength, "\r\n"));
                     break;
+
                 case JsonRpcProtocolType.Http:
                     socketClient.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.BufferLength, HttpType.Server));
                     break;
             }
-            
         }
 
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
@@ -330,7 +349,7 @@ namespace RRQMSocket.RPC.JsonRpc
             JsonRequestContext context = null;
             try
             {
-                string jsonString=null;
+                string jsonString = null;
                 switch (this.protocolType)
                 {
                     case JsonRpcProtocolType.Tcp:

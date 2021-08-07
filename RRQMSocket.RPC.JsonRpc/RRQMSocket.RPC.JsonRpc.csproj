@@ -4,14 +4,13 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>5.3.0</Version>
+		<Version>5.3.1</Version>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<Description>介绍：这是一个扩展于RRQMSocket.RPC的JsonRpc组件，可以通过该组件直接创建JsonRpc服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持JsonRpc全功能。
 
 更新说明：
-修改：服务注册逻辑
-修复：基础类型返回异常bug
+修复：响应数据格式
 
 Demo：https://gitee.com/RRQM_OS/RRQMBox
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages	</Description>
