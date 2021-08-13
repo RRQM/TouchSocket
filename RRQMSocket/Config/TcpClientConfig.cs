@@ -96,7 +96,6 @@ namespace RRQMSocket
         public static readonly DependencyProperty SeparateThreadSendProperty =
             DependencyProperty.Register("SeparateThreadSend", typeof(bool), typeof(TcpClientConfig), false);
 
-
         /// <summary>
         /// 独立线程接收
         /// </summary>

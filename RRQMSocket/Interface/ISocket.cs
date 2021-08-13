@@ -27,6 +27,6 @@ namespace RRQMSocket
         /// <summary>
         /// 日志记录器
         /// </summary>
-        ILog Logger { get; set; }
+        ILog Logger { get; }
     }
 }

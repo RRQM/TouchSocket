@@ -17,7 +17,7 @@ namespace RRQMSocket
     /// <summary>
     /// SimpleProtocolSocketClient
     /// </summary>
-    public sealed class SimpleProtocolSocketClient : ProtocolSocketClient
+    public class SimpleProtocolSocketClient : ProtocolSocketClient
     {
         /// <summary>
         /// 收到消息

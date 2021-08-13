@@ -110,6 +110,7 @@ namespace RRQMSocket
         {
             get { return socketClients; }
         }
+
         #endregion 属性
 
         #region 变量
@@ -120,6 +121,7 @@ namespace RRQMSocket
         private int backlog;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadClearClient;
+
         #endregion 变量
 
         #region 事件
@@ -134,14 +136,24 @@ namespace RRQMSocket
         /// </summary>
         public event RRQMMessageEventHandler ClientDisconnected;
 
-        internal void ClientConnectedMethod(object sender, MesEventArgs e)
+        /// <summary>
+        /// 在客户端连接时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnClientConnected(TClient client, MesEventArgs e)
         {
-            ClientConnected?.Invoke(sender, e);
+            this.ClientConnected?.Invoke(client, e);
         }
 
-        internal void ClientDisconnectedMethod(object sender, MesEventArgs e)
+        /// <summary>
+        /// 客户端断开连接
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnClientDisconnected(TClient client, MesEventArgs e)
         {
-            ClientDisconnected?.Invoke(sender, e);
+            this.ClientDisconnected?.Invoke(client, e);
         }
 
         #endregion 事件
@@ -172,7 +184,6 @@ namespace RRQMSocket
             }
 
             this.serverState = ServerState.Disposed;
-          
         }
 
         /// <summary>
@@ -407,14 +418,14 @@ namespace RRQMSocket
                 {
                     client.queueGroup = queueGroup;
                     client.Service = this;
-                    client.Logger = this.Logger;
+                    client.logger = this.Logger;
                     client.clearType = this.clearType;
                     client.separateThreadReceive = this.separateThreadReceive;
                 }
 
                 client.MainSocket = socket;
                 client.ReadIpPort();
-                client.SetBufferLength(this.BufferLength);
+                client.bufferLength = this.BufferLength;
 
                 CreateOption creatOption = new CreateOption();
                 creatOption.NewCreate = client.NewCreate;
@@ -430,7 +441,7 @@ namespace RRQMSocket
                 }
 
                 client.BeginReceive();
-                ClientConnectedMethod(client, null);
+                OnClientConnected(client, null);
             }
             catch (Exception ex)
             {
@@ -451,8 +462,8 @@ namespace RRQMSocket
             this.maxCount = (int)serviceConfig.GetValue(TcpServiceConfig.MaxCountProperty);
             this.clearInterval = (int)serviceConfig.GetValue(TcpServiceConfig.ClearIntervalProperty);
             this.backlog = (int)serviceConfig.GetValue(TcpServiceConfig.BacklogProperty);
-            this.Logger = (ILog)serviceConfig.GetValue(ServiceConfig.LoggerProperty);
-            this.SetBufferLength((int)serviceConfig.GetValue(ServiceConfig.BufferLengthProperty));
+            this.logger = (ILog)serviceConfig.GetValue(RRQMConfig.LoggerProperty);
+            this.bufferLength = (int)serviceConfig.GetValue(RRQMConfig.BufferLengthProperty);
             this.name = serviceConfig.ServerName;
             this.clearType = (ClearType)serviceConfig.GetValue(TcpServiceConfig.ClearTypeProperty);
             this.separateThreadReceive = serviceConfig.SeparateThreadReceive;
@@ -493,8 +504,6 @@ namespace RRQMSocket
             threadClearClient.IsBackground = true;
             threadClearClient.Name = "ClearClient";
             threadClearClient.Start();
-
-
 
             this.bufferQueueGroups = new BufferQueueGroup[this.ServiceConfig.ThreadCount];
             for (int i = 0; i < this.ServiceConfig.ThreadCount; i++)
@@ -566,7 +575,7 @@ namespace RRQMSocket
                         {
                             if (this.clearInterval > 0)
                             {
-                                client.GetTimeout(this.clearInterval, tick);
+                                client.GetTimeout(this.clearInterval / 1000, tick);
                             }
 
                             if (client.breakOut)
@@ -577,7 +586,7 @@ namespace RRQMSocket
                                     if (this.SocketClients.TryRemove(token))
                                     {
                                         this.socketClientPool.DestroyObject(client);
-                                        ClientDisconnectedMethod(client, new MesEventArgs("breakOut"));
+                                        this.OnClientDisconnected(client, new MesEventArgs("breakOut"));
                                     }
                                 }
                                 catch (Exception ex)

@@ -49,7 +49,7 @@ namespace RRQMSocket
             DependencyProperty.Register("MaxCount", typeof(int), typeof(TcpServiceConfig), 10000);
 
         /// <summary>
-        /// 获取或设置清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
+        /// 获取或设置清理无数据交互的SocketClient，默认60*1000 ms。如果不想清除，可使用-1。
         /// </summary>
         public int ClearInterval
         {
@@ -58,11 +58,11 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 获取或设置清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
+        /// 获取或设置清理无数据交互的SocketClient，默认60*1000 ms。如果不想清除，可使用-1。
         /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ClearIntervalProperty =
-            DependencyProperty.Register("ClearInterval", typeof(int), typeof(TcpServiceConfig), 60);
+            DependencyProperty.Register("ClearInterval", typeof(int), typeof(TcpServiceConfig), 60*1000);
 
         /// <summary>
         /// 统计类型，可叠加位域

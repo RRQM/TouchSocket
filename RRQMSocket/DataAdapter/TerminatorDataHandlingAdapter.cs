@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
+using RRQMCore.Helper;
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
@@ -107,7 +109,7 @@ namespace RRQMSocket
                 r = (int)this.tempByteBlock.Position;
             }
 
-            List<int> indexes = this.IndexOfInclude(buffer, r, this.terminatorCode);
+            List<int> indexes = buffer.IndexOfInclude(0,r, this.terminatorCode);
             if (indexes.Count == 0)
             {
                 if (r > this.MaxSize)
@@ -163,46 +165,6 @@ namespace RRQMSocket
             }
         }
 
-        private List<int> IndexOfInclude(byte[] srcByteArray, int length, byte[] subByteArray)
-        {
-            int subByteArrayLen = subByteArray.Length;
-            List<int> indexes = new List<int>();
-            if (length < subByteArrayLen)
-            {
-                return indexes;
-            }
-            int hitLength = 0;
-            for (int i = 0; i < length; i++)
-            {
-                if (srcByteArray[i] == subByteArray[hitLength])
-                {
-                    hitLength++;
-                }
-                else
-                {
-                    hitLength = 0;
-                }
-
-                if (hitLength == subByteArray.Length)
-                {
-                    hitLength = 0;
-                    if (indexes.Count == 0)
-                    {
-                        if (i >= this.minSize)
-                        {
-                            indexes.Add(i);
-                        }
-                    }
-                    else if (i - indexes[indexes.Count - 1] >= this.minSize)
-                    {
-                        indexes.Add(i);
-                    }
-                }
-            }
-
-            return indexes;
-        }
-
         private void PreviewHandle(ByteBlock byteBlock)
         {
             try
@@ -224,6 +186,10 @@ namespace RRQMSocket
         /// <param name="isAsync"></param>
         protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
+            if (length>this.maxSize)
+            {
+                throw new RRQMException("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
+            }
             int dataLen = length - offset + this.terminatorCode.Length;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);

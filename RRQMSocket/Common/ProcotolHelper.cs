@@ -94,7 +94,7 @@ namespace RRQMSocket
                 this.mainSocket.Send(dataBuffer, 0, length, SocketFlags.None);
                 return;
             }
-            dataLen = length - offset + 2;
+            dataLen = length + 2;
             ByteBlock byteBlock = this.bytePool.GetByteBlock(dataLen + 4);
             byte[] lenBytes = BitConverter.GetBytes(dataLen);
             byte[] agreementBytes = BitConverter.GetBytes(procotol);
@@ -119,7 +119,7 @@ namespace RRQMSocket
             }
         }
 
-        #endregion 方法
+        #endregion 同步方法
 
         #region 异步方法
 
@@ -129,7 +129,7 @@ namespace RRQMSocket
         /// <param name="procotol"></param>
         public void SocketSendAsync(short procotol)
         {
-            this.SocketSend(procotol, new byte[0], 0, 0);
+            this.SocketSendAsync(procotol, new byte[0], 0, 0);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace RRQMSocket
         /// <param name="dataBuffer"></param>
         public void SocketSendAsync(short procotol, byte[] dataBuffer)
         {
-            this.SocketSend(procotol, dataBuffer, 0, dataBuffer.Length);
+            this.SocketSendAsync(procotol, dataBuffer, 0, dataBuffer.Length);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace RRQMSocket
         /// <param name="dataByteBlock"></param>
         public void SocketSendAsync(short procotol, ByteBlock dataByteBlock)
         {
-            this.SocketSend(procotol, dataByteBlock.Buffer, 0, dataByteBlock.Len);
+            this.SocketSendAsync(procotol, dataByteBlock.Buffer, 0, dataByteBlock.Len);
         }
 
         /// <summary>
@@ -194,6 +194,7 @@ namespace RRQMSocket
                 byteBlock.Dispose();
             }
         }
-        #endregion 方法
+
+        #endregion 异步方法
     }
 }

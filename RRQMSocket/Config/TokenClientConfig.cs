@@ -44,18 +44,14 @@ namespace RRQMSocket
             get { return (int)GetValue(VerifyTimeoutProperty); }
             set
             {
-                if (value < 1)
-                {
-                    value = 1;
-                }
                 SetValue(VerifyTimeoutProperty, value);
             }
         }
 
         /// <summary>
-        /// 验证超时时间,默认为3秒, 所需类型<see cref="int"/>
+        /// 验证超时时间,默认为3000ms, 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty VerifyTimeoutProperty =
-            DependencyProperty.Register("VerifyTimeout", typeof(int), typeof(TokenClientConfig), 3);
+            DependencyProperty.Register("VerifyTimeout", typeof(int), typeof(TokenClientConfig), 3000);
     }
 }

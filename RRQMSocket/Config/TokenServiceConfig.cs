@@ -37,7 +37,7 @@ namespace RRQMSocket
             DependencyProperty.Register("VerifyToken", typeof(string), typeof(TokenServiceConfig), "rrqm");
 
         /// <summary>
-        /// 验证超时时间,默认为3秒；
+        /// 验证超时时间,默认为3000ms；
         /// </summary>
         public int VerifyTimeout
         {
@@ -49,9 +49,9 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 验证超时时间,默认为3秒, 所需类型<see cref="int"/>
+        /// 验证超时时间,默认为3000ms, 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty VerifyTimeoutProperty =
-            DependencyProperty.Register("VerifyTimeout", typeof(int), typeof(TokenServiceConfig), 3);
+            DependencyProperty.Register("VerifyTimeout", typeof(int), typeof(TokenServiceConfig), 3000);
     }
 }

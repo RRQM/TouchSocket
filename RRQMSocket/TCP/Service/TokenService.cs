@@ -37,7 +37,7 @@ namespace RRQMSocket
         private int verifyTimeout;
 
         /// <summary>
-        /// 验证超时时间,默认为3秒
+        /// 验证超时时间,默认为3000ms
         /// </summary>
         public int VerifyTimeout
         {
@@ -65,7 +65,7 @@ namespace RRQMSocket
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
-                while (waitCount < this.VerifyTimeout * 1000 / 10)
+                while (waitCount < this.verifyTimeout/ 10)
                 {
                     if (socket.Available > 0)
                     {
@@ -81,7 +81,7 @@ namespace RRQMSocket
                             {
                                 if (this.SocketClients.Count > this.MaxCount)
                                 {
-                                    byteBlock.Write(3);
+                                    byteBlock.Write((byte)3);
                                     this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
                                     socket.Send(byteBlock.Buffer, 0, 1, SocketFlags.None);
                                     socket.Dispose();
@@ -95,13 +95,13 @@ namespace RRQMSocket
                                     {
                                         client.queueGroup = queueGroup;
                                         client.Service = this;
-                                        client.Logger = this.Logger;
+                                        client.logger = this.Logger;
                                         client.clearType = this.clearType;
                                         client.separateThreadReceive = this.separateThreadReceive;
                                     }
                                     client.MainSocket = socket;
                                     client.ReadIpPort();
-                                    client.SetBufferLength(this.bufferLength);
+                                    client.bufferLength = this.bufferLength;
 
                                     CreateOption creatOption = new CreateOption();
                                     creatOption.NewCreate = client.NewCreate;
@@ -117,17 +117,17 @@ namespace RRQMSocket
                                     }
 
                                     client.BeginReceive();
-                                    byteBlock.Write(1);
+                                    byteBlock.Write((byte)1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
                                     socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
-                                    ClientConnectedMethod(client, null);
+                                    OnClientConnected(client, null);
 
                                     return;
                                 }
                             }
                             else
                             {
-                                byteBlock.Write(2);
+                                byteBlock.Write((byte)2);
                                 if (verifyOption.ErrorMessage != null)
                                 {
                                     byteBlock.Write(Encoding.UTF8.GetBytes(verifyOption.ErrorMessage));

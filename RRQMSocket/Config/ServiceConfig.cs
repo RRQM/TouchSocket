@@ -78,6 +78,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty SeparateThreadReceiveProperty =
             DependencyProperty.Register("SeparateThreadReceive", typeof(bool), typeof(ServiceConfig), false);
-
     }
 }

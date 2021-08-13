@@ -30,7 +30,6 @@ namespace RRQMSocket
         internal BufferQueueGroup queueGroup;
         internal bool separateThreadReceive;
         private DataHandlingAdapter dataHandlingAdapter;
-
         private SocketAsyncEventArgs eventArgs;
         private Socket mainSocket;
 
@@ -76,6 +75,7 @@ namespace RRQMSocket
                 mainSocket = value;
             }
         }
+
         /// <summary>
         /// IP及端口
         /// </summary>
@@ -95,19 +95,18 @@ namespace RRQMSocket
         /// 端口号
         /// </summary>
         public int Port { get; protected set; }
+
         /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
         public _ITcpService Service { get; internal set; }
+
         /// <summary>
         /// 初次创建对象，效应相当于构造函数，父类方法可覆盖
         /// </summary>
         public virtual void Create()
         {
-            if (this.dataHandlingAdapter == null)
-            {
-                this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
-            }
+           
         }
 
         /// <summary>
@@ -116,6 +115,7 @@ namespace RRQMSocket
         public virtual void Destroy()
         {
             this.MainSocket = null;
+            this.dataHandlingAdapter = null;
         }
 
         /// <summary>
@@ -280,7 +280,7 @@ namespace RRQMSocket
         /// 设置数据处理适配器
         /// </summary>
         /// <param name="adapter"></param>
-        public void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
             if (adapter == null)
             {
@@ -292,6 +292,7 @@ namespace RRQMSocket
             adapter.SendCallBack = this.Sent;
             this.dataHandlingAdapter = adapter;
         }
+
         /// <summary>
         /// 禁用发送或接收
         /// </summary>
@@ -339,6 +340,15 @@ namespace RRQMSocket
             {
                 this.breakOut = true;
             }
+
+            try
+            {
+                this.OnPerSecond();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Debug(LogType.Error, this, $"在{nameof(OnPerSecond)}中发生异常", ex);
+            }
         }
 
         /// <summary>
@@ -353,6 +363,17 @@ namespace RRQMSocket
         /// </summary>
         protected virtual void OnBeforeReceive()
         {
+            if (this.dataHandlingAdapter == null)
+            {
+                this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+            }
+        }
+
+        /// <summary>
+        /// 每一秒执行
+        /// </summary>
+        protected virtual void OnPerSecond()
+        {
         }
 
         /// <summary>
@@ -363,6 +384,7 @@ namespace RRQMSocket
         {
             this.Service.ResetID(this.id, id);
         }
+
         /// <summary>
         /// 等待接收
         /// </summary>
@@ -392,6 +414,7 @@ namespace RRQMSocket
                 this.breakOut = true;
             }
         }
+
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
             if (!this.disposable)
@@ -431,14 +454,19 @@ namespace RRQMSocket
                     {
                         this.Logger.Debug(LogType.Error, this, ex.Message);
                     }
-
-                    ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    e.UserToken = newByteBlock;
-                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-
-                    if (!MainSocket.ReceiveAsync(e))
+                    try
                     {
-                        ProcessReceived(e);
+                        ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                        e.UserToken = newByteBlock;
+                        e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+
+                        if (!MainSocket.ReceiveAsync(e))
+                        {
+                            ProcessReceived(e);
+                        }
+                    }
+                    catch
+                    {
                     }
                 }
                 else

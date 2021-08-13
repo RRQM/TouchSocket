@@ -84,5 +84,10 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="RRQMCore">
+	    <HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 
 </Project>

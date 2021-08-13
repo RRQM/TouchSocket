@@ -128,7 +128,6 @@ namespace RRQMSocket
             }
             catch
             {
-
             }
         }
 
@@ -142,7 +141,6 @@ namespace RRQMSocket
                     this.waitHandle.Set();
                 }
             }
-
         }
 
         private bool tryGet(out AsyncByte asyncByteDe)

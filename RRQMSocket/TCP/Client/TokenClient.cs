@@ -46,7 +46,7 @@ namespace RRQMSocket
         private int verifyTimeout;
 
         /// <summary>
-        /// 验证超时时间,默认为3秒；
+        /// 验证超时时间,默认为3000ms；
         /// </summary>
         public int VerifyTimeout
         {
@@ -96,7 +96,7 @@ namespace RRQMSocket
                 PreviewConnect(socket);
                 socket.Connect(iPHost.EndPoint);
                 this.MainSocket = socket;
-                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.VerifyToken == null ? string.Empty : this.VerifyToken));
+                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.verifyToken == null ? string.Empty : this.verifyToken));
             }
             catch (Exception e)
             {
@@ -104,7 +104,7 @@ namespace RRQMSocket
             }
 
             int waitCount = 0;
-            while (waitCount < VerifyTimeout * 1000 / 10)
+            while (waitCount < this.verifyTimeout / 10)
             {
                 if (this.MainSocket.Available > 0)
                 {
