@@ -66,10 +66,6 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RRQMSocket.RPC" Version="5.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="RRQMCore">
       <HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
     </Reference>

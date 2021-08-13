@@ -84,8 +84,5 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
-	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="2.2.0" />
-	</ItemGroup>
 
 </Project>
