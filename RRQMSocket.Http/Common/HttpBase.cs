@@ -31,6 +31,7 @@ namespace RRQMSocket.Http
         {
             this.headers = new Dictionary<string, string>();
         }
+
         /// <summary>
         /// 服务器版本
         /// </summary>
@@ -52,7 +53,6 @@ namespace RRQMSocket.Http
         {
             get { return content; }
         }
-
 
         /// <summary>
         /// 内容编码
@@ -95,7 +95,7 @@ namespace RRQMSocket.Http
         /// </summary>
         public Dictionary<string, string> Headers { get { return this.headers; } }
 
-        Dictionary<string, string> headers;
+        private Dictionary<string, string> headers;
 
         /// <summary>
         /// 协议名称

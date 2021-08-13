@@ -58,65 +58,95 @@ namespace RRQMSocket.Http
             if (this.tempByteBlock != null)
             {
                 this.tempByteBlock.Write(buffer, 0, r);
-                buffer = this.tempByteBlock.Buffer;
-                r = (int)this.tempByteBlock.Position;
+                buffer = this.tempByteBlock.ToArray();
+                r = this.tempByteBlock.Pos;
+                this.tempByteBlock.Dispose();
+                this.tempByteBlock = null;
             }
             if (this.httpBase == null)
             {
-                int index = buffer.IndexOfFirst(0, r, this.terminatorCode);
-                if (index > 0)
-                {
-                    switch (this.httpType)
-                    {
-                        case HttpType.Server:
-                            this.httpBase = new HttpRequest();
-                            break;
-
-                        case HttpType.Client:
-                            this.httpBase = new HttpResponse();
-                            break;
-                    }
-
-                    this.httpBase.ReadHeaders(buffer, 0, index);
-
-                    if (this.httpBase.Content_Length > 0)
-                    {
-                        this.bodyByteBlock = this.BytePool.GetByteBlock(this.httpBase.Content_Length);
-                        this.bodyByteBlock.Write(buffer, index + 1, r - (index + 1));
-                        if (this.bodyByteBlock.Length == this.httpBase.Content_Length)
-                        {
-                            this.PreviewHandle(this.httpBase);
-                        }
-                    }
-                    else
-                    {
-                        this.PreviewHandle(this.httpBase);
-                    }
-                }
-                else if (r > this.MaxSize)
-                {
-                    if (this.tempByteBlock != null)
-                    {
-                        this.tempByteBlock.Dispose();
-                        this.tempByteBlock = null;
-                    }
-
-                    Logger.Debug(LogType.Error, this, "在已接收数据大于设定值的情况下未找到终止符号，已放弃接收");
-                    return;
-                }
-                else if (this.tempByteBlock == null)
-                {
-                    this.tempByteBlock = this.BytePool.GetByteBlock(r * 2);
-                    this.tempByteBlock.Write(buffer, 0, r);
-                }
+                this.Split(buffer, 0, r);
             }
             else
             {
-                if (r >= this.httpBase.Content_Length - this.bodyByteBlock.Length)
+                int surLen = this.httpBase.Content_Length - this.bodyByteBlock.Len;
+                if (r == surLen)
                 {
-                    this.bodyByteBlock.Write(buffer, 0, this.httpBase.Content_Length - this.bodyByteBlock.Len);
+                    this.bodyByteBlock.Write(buffer, 0, surLen);
                     this.PreviewHandle(this.httpBase);
                 }
+                else if (r > surLen)
+                {
+                    this.bodyByteBlock.Write(buffer, 0, surLen);
+                    this.PreviewHandle(this.httpBase);
+                    Split(buffer, surLen, r - surLen);
+                }
+                else
+                {
+                    this.bodyByteBlock.Write(buffer, 0, r);
+                }
+            }
+        }
+
+        private void Split(byte[] buffer, int offset, int length)
+        {
+            int index = buffer.IndexOfFirst(offset, length, this.terminatorCode);
+            if (index > 0)
+            {
+                switch (this.httpType)
+                {
+                    case HttpType.Server:
+                        this.httpBase = new HttpRequest();
+                        break;
+
+                    case HttpType.Client:
+                        this.httpBase = new HttpResponse();
+                        break;
+                }
+
+                this.httpBase.ReadHeaders(buffer, 0, index);
+
+                if (this.httpBase.Content_Length > 0)
+                {
+                    this.bodyByteBlock = this.BytePool.GetByteBlock(this.httpBase.Content_Length);
+                    int surLength = length - (index + 1 + this.httpBase.Content_Length);
+                    if (surLength == 0)
+                    {
+                        this.bodyByteBlock.Write(buffer, index + 1, this.httpBase.Content_Length);
+                        this.PreviewHandle(this.httpBase);
+                    }
+                    else if (surLength >0)
+                    {
+                        this.bodyByteBlock.Write(buffer, index + 1, this.httpBase.Content_Length);
+                        int indexBuffer = index + 1 + this.httpBase.Content_Length;
+                        this.PreviewHandle(this.httpBase);
+                        this.Split(buffer, indexBuffer, length);
+                    }
+                    else
+                    {
+                        this.bodyByteBlock.Write(buffer, index + 1, length);
+                    }
+                }
+                else
+                {
+                    this.PreviewHandle(this.httpBase);
+                }
+            }
+            else if (length > this.MaxSize)
+            {
+                if (this.tempByteBlock != null)
+                {
+                    this.tempByteBlock.Dispose();
+                    this.tempByteBlock = null;
+                }
+
+                Logger.Debug(LogType.Error, this, "在已接收数据大于设定值的情况下未找到终止符号，已放弃接收");
+                return;
+            }
+            else if (this.tempByteBlock == null)
+            {
+                this.tempByteBlock = this.BytePool.GetByteBlock(length * 2);
+                this.tempByteBlock.Write(buffer,offset, length-offset);
             }
         }
 

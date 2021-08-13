@@ -65,6 +65,9 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
+	  <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
+	</ItemGroup>
+	<ItemGroup>
 		<Reference Include="RRQMCore">
 			<HintPath>..\..\RRQMCore\RRQMCore\bin\Debug\net45\RRQMCore.dll</HintPath>
 		</Reference>

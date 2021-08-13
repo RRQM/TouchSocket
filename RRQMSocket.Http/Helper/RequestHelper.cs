@@ -9,12 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace RRQMSocket.Http
 {
     /// <summary>
@@ -28,7 +22,7 @@ namespace RRQMSocket.Http
         /// <param name="httpRequest"></param>
         /// <param name="xmlText"></param>
         /// <returns></returns>
-        public static HttpRequest FromXML(this HttpRequest  httpRequest, string xmlText)
+        public static HttpRequest FromXML(this HttpRequest httpRequest, string xmlText)
         {
             httpRequest.SetContent(xmlText);
             httpRequest.Content_Type = "text/xml";
