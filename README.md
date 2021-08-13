@@ -30,7 +30,7 @@
 |---|---|
 |[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?label=RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)| **RRQMSocket**是一个整合性的、超轻量级的、可以免费商用使用的网络通信服务框架。<br>它具有 **高并发连接** 、 **高并发处理** 、 **事件订阅** 、 **插件式扩展** 、<br> **多线程处理** 、 **内存池** 、 **对象池** 等特点，<br>让使用者能够更加简单的、快速的搭建网络框架。|
 |[![NuGet version](https://img.shields.io/nuget/v/RRQMSocketFramework.svg?label=RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)| **RRQMSocketFramework**是RRQMSocket系列的企业版，<br>两者在功能上几乎没有区别，但是RRQMSocketFramework无任何依赖，<br>且可以提供专属的定制功能。后续也会加入企业已定制的优秀功能，希望大家多多支持。|
-| [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?label=RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) |  RRQMSocket.FileTransfer是一个高性能的文件传输框架，<br>您可以用它传输**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、<br>**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。<br>在实时测试中，它的传输速率可达500Mb/s。 |
+| [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?label=RRQMSocket.FileTransfer)](https://www.nuget.org/packages/RRQMSocket.FileTransfer/) |  RRQMSocket.FileTransfer是一个高性能的文件传输框架，<br>您可以用它传输**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、<br>**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。<br>在实时测试中，它的传输速率可达1000Mb/s。 |
 |[![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?label=RRQMSocket.RPC)](https://www.nuget.org/packages/RRQMSocket.RPC/)                            |RPC是一个超轻量、高性能、可扩展的微服务管理平台框架，<br>目前已完成开发**RRQMRPC**、**XmlRpc**、**JsonRpc**、**WebApi**部分。<br> **RRQMRPC**部分使用RRQM专属协议，支持客户端**异步调用**，<br>服务端**异步触发**、以及**out**和**ref**关键字，**函数回调**等。<br>在调用效率上也是非常强悍，在调用空载函数，且返回状态时，<br>**10w**次调用仅用时**3.8**秒，不返回状态用时**0.9**秒。<br>其他协议调用性能详看性能评测。|
 |[![NuGet version (RRQMSocket.RPC.WebApi)](https://img.shields.io/nuget/v/RRQMSocket.RPC.WebApi.svg?label=RRQMSocket.RPC.WebApi)](https://www.nuget.org/packages/RRQMSocket.RPC.WebApi/)| WebApi是一个扩展于RRQMSocket.RPC的WebApi组件，<br>可以通过该组件创建WebApi服务解析器，让桌面端、Web端、移动端可以跨语言调用RPC函数。<br>功能支持路由、Get传参、Post传参等。|
 |[![NuGet version (RRQMSocket.RPC.XmlRpc)](https://img.shields.io/nuget/v/RRQMSocket.RPC.XmlRpc.svg?label=RRQMSocket.RPC.XmlRpc)](https://www.nuget.org/packages/RRQMSocket.RPC.XmlRpc/)| XmlRpc是一个扩展于RRQMSocket.RPC的XmlRpc组件，<br>可以通过该组件创建XmlRpc服务解析器，完美支持XmlRpc数据类型，类型嵌套，<br>Array等，也能与CookComputing.XmlRpcV2完美对接。不限Web，Android等平台。|
@@ -94,7 +94,6 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 | 名称| 版本（Nuget Version）|下载（Nuget Download）| 描述 |
 |------|----------|-------------|-------|
 | [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、**高性能序列化器**、**规范日志接口**等。 |
-| [RRQMMVVM](https://gitee.com/RRQM_OS/RRQMMVVM) | [![NuGet version (RRQMMVVM)](https://img.shields.io/nuget/v/RRQMMVVM.svg?style=flat-square)](https://www.nuget.org/packages/RRQMMVVM/) | [![Download](https://img.shields.io/nuget/dt/RRQMMVVM)](https://www.nuget.org/packages/RRQMMVVM/) | RRQMMVVM是超轻简的MVVM框架，但是麻雀虽小，五脏俱全。|
 | [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含： **无边框窗体** 、 **圆角窗体** 、 **水波纹按钮** 、 **输入提示筛选框** 、 **控件拖动效果** 、**圆角图片框**、 **弧形文字** 、 **扇形元素** 、 **指针元素** 、 **饼图** 、 **时钟** 、 **速度表盘** 等。|  
 
 ## 一、TCP框架
@@ -339,7 +338,7 @@ RRQMSocket.FileTransfer是一个高性能的文件传输框架，由于它派生
 
 - 简单易用。
 - 多线程处理。
-- 高性能，传输速度可达**500Mb/s**。
+- 高性能，传输速度可达**1000Mb/s**。
 - 超简单的**传输限速**设置，1k-10Gb 无级调节。
 - 超简单的传输速度、传输进度获取。
 - 随心所欲的暂停、继续、停止传输。
@@ -367,11 +366,8 @@ Install-Package RRQMSocket.FileTransfer
 
 #### 5.5 性能测试
 
- **说明：** 可以看到，图一正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到346Mb/s，这是因为服务器和客户端在同一电脑上，磁盘性能限制导致的。其次，GC基本上没有释放，性能非常强悍，图二是下载文件，性能依旧非常强悍。
-
-![上传文件](https://images.gitee.com/uploads/images/2021/0409/190350_92a2ad36_8553710.png "上传文件")
-![下载文件](https://images.gitee.com/uploads/images/2021/0409/190954_a212982d_8553710.png "下载文件")
-
+ **说明：** 可以看到，下图正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到800Mb/s，性能非常强悍。其次，GC基本上没有释放。
+![](https://s3.bmp.ovh/imgs/2021/08/08f17f67b9e06bc7.gif)
 
 ## 致谢
 
