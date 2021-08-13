@@ -11,37 +11,37 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
 using System;
- 
+
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
     /// UdpRPCParser
     /// </summary>
-    public class UdpRPCParserConfig : UdpSessionConfig
+    public class UdpRpcParserConfig : UdpSessionConfig
     {
         /// <summary>
         /// 代理源文件命名空间, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty NameSpaceProperty =
-            DependencyProperty.Register("NameSpace", typeof(string), typeof(UdpRPCParserConfig), null);
+            DependencyProperty.Register("NameSpace", typeof(string), typeof(UdpRpcParserConfig), null);
 
         /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
-            DependencyProperty.Register("ProxyToken", typeof(string), typeof(UdpRPCParserConfig), null);
+            DependencyProperty.Register("ProxyToken", typeof(string), typeof(UdpRpcParserConfig), null);
 
         /// <summary>
         /// RPC代理版本, 所需类型<see cref="Version"/>
         /// </summary>
         public static readonly DependencyProperty RPCVersionProperty =
-            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(UdpRPCParserConfig), null);
+            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(UdpRpcParserConfig), null);
 
         /// <summary>
         /// 序列化转换器, 所需类型<see cref="RRQMRPC.SerializeConverter"/>
         /// </summary>
         public static readonly DependencyProperty SerializeConverterProperty =
-            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(UdpRPCParserConfig), new BinarySerializeConverter());
+            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(UdpRpcParserConfig), new BinarySerializeConverter());
 
         /// <summary>
         /// 代理源文件命名空间

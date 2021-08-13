@@ -9,24 +9,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Reflection;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC范围类
+    /// RRQM的RPC服务接口
     /// </summary>
-    public abstract class ServerProvider:IServerProvider
+    public interface IServerProvider
     {
-        /// <summary>
-        /// 默认复刻程序集
-        /// </summary>
-        public static Assembly DefaultAssembly { get; set; }
-
         /// <summary>
         /// 该服务所属的服务器
         /// </summary>
-        public RPCService RPCService { get; set; }
+        RPCService RPCService { get; set; }
 
         /// <summary>
         /// RPC即将进入,
@@ -35,9 +34,7 @@ namespace RRQMSocket.RPC
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public virtual void RPCEnter(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
-        {
-        }
+        void RPCEnter(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
         /// 执行RPC发生错误
@@ -45,9 +42,7 @@ namespace RRQMSocket.RPC
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public virtual void RPCError(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
-        {
-        }
+        void RPCError(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
         /// RPC方法执行完成
@@ -55,8 +50,6 @@ namespace RRQMSocket.RPC
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public virtual void RPCLeave(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
-        {
-        }
+        void RPCLeave(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
     }
 }

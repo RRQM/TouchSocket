@@ -17,53 +17,61 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class InvokeOption
     {
-        static InvokeOption()
-        {
-            onlySend = new InvokeOption();
-            onlySend.WaitTime = 5;
-            onlySend.FeedbackType = FeedbackType.OnlySend;
-
-            waitSend = new InvokeOption();
-            waitSend.WaitTime = 5;
-            waitSend.FeedbackType = FeedbackType.WaitSend;
-
-            waitInvoke = new InvokeOption();
-            waitInvoke.WaitTime = 5;
-            waitInvoke.FeedbackType = FeedbackType.WaitInvoke;
-        }
-
         private static InvokeOption onlySend;
-
-        /// <summary>
-        /// 默认设置。
-        /// WaitTime=5
-        /// </summary>
-        public static InvokeOption OnlySend { get { return onlySend; } }
-
-        private static InvokeOption waitSend;
-
-        /// <summary>
-        /// 默认设置。
-        /// WaitTime=5
-        /// </summary>
-        public static InvokeOption WaitSend { get { return waitSend; } }
 
         private static InvokeOption waitInvoke;
 
+        private static InvokeOption waitSend;
+
+        private int timeout = 5000;
+
+        static InvokeOption()
+        {
+            onlySend = new InvokeOption();
+            onlySend.FeedbackType = FeedbackType.OnlySend;
+
+            waitSend = new InvokeOption();
+            waitSend.FeedbackType = FeedbackType.WaitSend;
+
+            waitInvoke = new InvokeOption();
+            waitInvoke.FeedbackType = FeedbackType.WaitInvoke;
+        }
         /// <summary>
         /// 默认设置。
-        /// WaitTime=5
+        /// Timeout=5000 ms
+        /// </summary>
+        public static InvokeOption OnlySend { get { return onlySend; } }
+        /// <summary>
+        /// 默认设置。
+        /// Timeout=5000 ms
         /// </summary>
         public static InvokeOption WaitInvoke { get { return waitInvoke; } }
 
         /// <summary>
-        /// 调用等待时长
+        /// 默认设置。
+        /// Timeout=5000 ms
         /// </summary>
-        public int WaitTime { get; set; }
-
+        public static InvokeOption WaitSend { get { return waitSend; } }
         /// <summary>
         /// 调用反馈
         /// </summary>
         public FeedbackType FeedbackType { get; set; }
+
+        /// <summary>
+        /// 调用超时，
+        /// min=1000，默认5000 ms
+        /// </summary>
+        public int Timeout
+        {
+            get { return timeout; }
+            set
+            {
+                if (value < 1000)
+                {
+                    value = 1000;
+                }
+                timeout = value;
+            }
+        }
     }
 }

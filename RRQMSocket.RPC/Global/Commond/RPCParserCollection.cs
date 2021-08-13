@@ -9,12 +9,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace RRQMSocket.RPC
 {
@@ -57,11 +55,11 @@ namespace RRQMSocket.RPC
             }
 
             this.parsers.TryAdd(key, parser);
-        } 
-        
-        internal bool TryRemove(string key,out IRPCParser parser)
+        }
+
+        internal bool TryRemove(string key, out IRPCParser parser)
         {
-            return this.parsers.TryRemove(key,out parser);
+            return this.parsers.TryRemove(key, out parser);
         }
 
         IEnumerator IEnumerable.GetEnumerator()

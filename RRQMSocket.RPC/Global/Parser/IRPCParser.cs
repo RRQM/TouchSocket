@@ -38,14 +38,14 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances);
+        void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances);
 
         /// <summary>
         /// 取消注册服务
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances);
+        void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances);
 
         /// <summary>
         /// 结束调用

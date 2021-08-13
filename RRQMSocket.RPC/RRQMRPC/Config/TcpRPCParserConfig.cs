@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQMRPC解析器配置
     /// </summary>
-    public class TcpRPCParserConfig : ProtocolServiceConfig
+    public class TcpRpcParserConfig : ProtocolServiceConfig
     {
         /// <summary>
         /// 序列化转换器
@@ -32,7 +32,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 序列化转换器, 所需类型<see cref="RRQMRPC.SerializeConverter"/>
         /// </summary>
         public static readonly DependencyProperty SerializeConverterProperty =
-            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(TcpRPCParserConfig), new BinarySerializeConverter());
+            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(TcpRpcParserConfig), new BinarySerializeConverter());
 
         /// <summary>
         /// 代理源文件命名空间
@@ -47,7 +47,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 代理源文件命名空间, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty NameSpaceProperty =
-            DependencyProperty.Register("NameSpace", typeof(string), typeof(TcpRPCParserConfig), null);
+            DependencyProperty.Register("NameSpace", typeof(string), typeof(TcpRpcParserConfig), null);
 
         /// <summary>
         /// RPC代理版本
@@ -62,8 +62,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// RPC代理版本, 所需类型<see cref="Version"/>
         /// </summary>
         public static readonly DependencyProperty RPCVersionProperty =
-            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(TcpRPCParserConfig), null);
-
+            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(TcpRpcParserConfig), null);
 
         /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭
@@ -78,6 +77,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 代理令箭，当客户端获取代理文件时需验证令箭, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
-            DependencyProperty.Register("ProxyToken", typeof(string), typeof(TcpRPCParserConfig), null);
+            DependencyProperty.Register("ProxyToken", typeof(string), typeof(TcpRpcParserConfig), null);
     }
 }

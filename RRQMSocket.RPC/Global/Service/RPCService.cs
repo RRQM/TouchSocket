@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.Exceptions;
-using RRQMCore.Helper;
 using RRQMSocket.RPC.RRQMRPC;
 using System;
 using System.Collections.Generic;
@@ -79,7 +78,7 @@ namespace RRQMSocket.RPC
 
             if (applyServer)
             {
-                Dictionary<ServerProvider, List<MethodInstance>> pairs = new Dictionary<ServerProvider, List<MethodInstance>>();
+                Dictionary<IServerProvider, List<MethodInstance>> pairs = new Dictionary<IServerProvider, List<MethodInstance>>();
 
                 MethodInstance[] instances = this.MethodMap.GetAllMethodInstances();
 
@@ -133,9 +132,9 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns>返回T实例</returns>
-        public ServerProvider RegisterServer<T>() where T : ServerProvider
+        public IServerProvider RegisterServer<T>() where T : IServerProvider
         {
-            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(typeof(T));
+            IServerProvider serverProvider = (IServerProvider)Activator.CreateInstance(typeof(T));
             this.RegisterServer(serverProvider);
             return serverProvider;
         }
@@ -145,13 +144,13 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="providerType"></param>
         /// <returns></returns>
-        public ServerProvider RegisterServer(Type providerType)
+        public IServerProvider RegisterServer(Type providerType)
         {
-            if (!typeof(ServerProvider).IsAssignableFrom(providerType))
+            if (!typeof(IServerProvider).IsAssignableFrom(providerType))
             {
                 throw new RRQMRPCException("类型不相符");
             }
-            ServerProvider serverProvider = (ServerProvider)Activator.CreateInstance(providerType);
+            IServerProvider serverProvider = (IServerProvider)Activator.CreateInstance(providerType);
             this.RegisterServer(serverProvider);
             return serverProvider;
         }
@@ -160,7 +159,7 @@ namespace RRQMSocket.RPC
         /// 注册服务
         /// </summary>
         /// <param name="serverProvider"></param>
-        public void RegisterServer(ServerProvider serverProvider)
+        public void RegisterServer(IServerProvider serverProvider)
         {
             serverProvider.RPCService = this;
             this.ServerProviders.Add(serverProvider);
@@ -193,7 +192,7 @@ namespace RRQMSocket.RPC
                 throw new RRQMException("没有找到该解析器");
             }
         }
-       
+
         /// <summary>
         /// 设置服务方法可用性
         /// </summary>
@@ -222,13 +221,13 @@ namespace RRQMSocket.RPC
         {
             return this.RPCParsers.TryGetRPCParser(parserKey, out parser);
         }
-       
+
         /// <summary>
         /// 移除注册服务
         /// </summary>
         /// <param name="provider"></param>
         /// <returns></returns>
-        public int UnregisterServer(ServerProvider provider)
+        public int UnregisterServer(IServerProvider provider)
         {
             return this.UnregisterServer(provider.GetType());
         }
@@ -240,12 +239,12 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         public int UnregisterServer(Type providerType)
         {
-            if (!typeof(ServerProvider).IsAssignableFrom(providerType))
+            if (!typeof(IServerProvider).IsAssignableFrom(providerType))
             {
                 throw new RRQMRPCException("类型不相符");
             }
             this.ServerProviders.Remove(providerType);
-            if (this.MethodMap.RemoveServer(providerType, out ServerProvider serverProvider, out MethodInstance[] instances))
+            if (this.MethodMap.RemoveServer(providerType, out IServerProvider serverProvider, out MethodInstance[] instances))
             {
                 foreach (var parser in this.RPCParsers)
                 {
@@ -273,12 +272,12 @@ namespace RRQMSocket.RPC
             {
                 try
                 {
-                    methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPCEnter(parser, methodInvoker, methodInstance);
                     if (isAsync)
                     {
                         dynamic task = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
                         task.Wait();
-                        if (methodInstance.ReturnType!=null)
+                        if (methodInstance.ReturnType != null)
                         {
                             methodInvoker.ReturnParameter = task.Result;
                         }
@@ -287,7 +286,7 @@ namespace RRQMSocket.RPC
                     {
                         methodInvoker.ReturnParameter = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
                     }
-                    methodInstance.Provider.RPC(3, parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPCLeave(parser, methodInvoker, methodInstance);
                     methodInvoker.Status = InvokeStatus.Success;
                 }
                 catch (RRQMAbandonRPCException e)
@@ -306,13 +305,13 @@ namespace RRQMSocket.RPC
                     {
                         methodInvoker.StatusMessage = "函数内部发生异常，信息：未知";
                     }
-                    methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPCError(parser, methodInvoker, methodInstance);
                 }
                 catch (Exception e)
                 {
                     methodInvoker.Status = InvokeStatus.Exception;
                     methodInvoker.StatusMessage = e.Message;
-                    methodInstance.Provider.RPC(1, parser, methodInvoker, methodInstance);
+                    methodInstance.Provider.RPCError(parser, methodInvoker, methodInstance);
                 }
             }
 

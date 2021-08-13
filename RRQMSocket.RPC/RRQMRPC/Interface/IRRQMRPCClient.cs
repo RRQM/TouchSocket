@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// 客户端RPC接口
     /// </summary>
-    public interface IRRQMRPCClient : IRPCClient
+    public interface IRRQMRpcClient : IRpcClient
     {
         /// <summary>
         /// 获取ID
@@ -27,7 +27,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 日志记录器
         /// </summary>
-        ILog Logger { get; set; }
+        ILog Logger { get; }
 
         /// <summary>
         /// 获取内存池实例
@@ -45,7 +45,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         /// <exception cref="RRQMRPCException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        RPCProxyInfo GetProxyInfo();
+        RpcProxyInfo GetProxyInfo();
 
         /// <summary>
         /// 服务发现完成后
@@ -57,6 +57,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="isTrigger">是否触发初始化事件</param>
         /// <returns>已发现的服务</returns>
-        MethodItem[] DiscoveryService(bool isTrigger=true);
+        MethodItem[] DiscoveryService(bool isTrigger = true);
     }
 }

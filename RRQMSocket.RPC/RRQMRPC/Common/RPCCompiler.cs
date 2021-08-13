@@ -26,7 +26,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC编译
     /// </summary>
-    public static class RPCCompiler
+    public static class RpcCompiler
     {
         private static List<string> RefStrings = new List<string>();
 
@@ -40,6 +40,15 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 RefStrings.Add(refPath);
             }
+        }
+
+        /// <summary>
+        ///  添加编译引用
+        /// </summary>
+        /// <param name="type"></param>
+        public static void AddRef(Type type)
+        {
+            AddRef(type.Assembly.FullName);
         }
 
         /// <summary>

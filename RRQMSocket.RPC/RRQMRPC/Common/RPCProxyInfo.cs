@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC代理文件程序
     /// </summary>
-    public class RPCProxyInfo : WaitResult
+    public class RpcProxyInfo : WaitResult
     {
         /// <summary>
         /// 程序名

@@ -15,7 +15,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace RRQMSocket.RPC
 {
@@ -47,14 +46,14 @@ namespace RRQMSocket.RPC
             return this.methodMap.TryGetValue(methodToken, out methodInstance);
         }
 
-        internal bool RemoveServer(Type type,out ServerProvider serverProvider,out MethodInstance[] methodInstances)
+        internal bool RemoveServer(Type type, out IServerProvider serverProvider, out MethodInstance[] methodInstances)
         {
             serverProvider = null;
-            bool success=false;
+            bool success = false;
             List<MethodInstance> keys = new List<MethodInstance>();
             foreach (var methodInstance in this.methodMap.Values)
             {
-                if (methodInstance.Provider.GetType().FullName==type.FullName)
+                if (methodInstance.Provider.GetType().FullName == type.FullName)
                 {
                     success = true;
                     serverProvider = methodInstance.Provider;

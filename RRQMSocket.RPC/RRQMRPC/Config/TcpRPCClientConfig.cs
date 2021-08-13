@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TcpRPCClient配置
     /// </summary>
-    public class TcpRPCClientConfig : ProtocolClientConfig
+    public class TcpRpcClientConfig : ProtocolClientConfig
     {
         /// <summary>
         /// 代理文件令箭
@@ -31,7 +31,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 代理文件令箭, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
-            DependencyProperty.Register("ProxyToken", typeof(string), typeof(TcpRPCClientConfig), null);
+            DependencyProperty.Register("ProxyToken", typeof(string), typeof(TcpRpcClientConfig), null);
 
         /// <summary>
         /// 序列化转换器
@@ -46,6 +46,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 序列化转换器, 所需类型<see cref="RRQMRPC.SerializeConverter"/>
         /// </summary>
         public static readonly DependencyProperty SerializeConverterProperty =
-            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(TcpRPCClientConfig), new BinarySerializeConverter());
+            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(TcpRpcClientConfig), new BinarySerializeConverter());
     }
 }

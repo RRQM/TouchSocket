@@ -19,7 +19,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQMRPC接口
     /// </summary>
-    public interface IRRQMRPCParser
+    public interface IRRQMRpcParser
     {
         /// <summary>
         /// 内存池实例
@@ -39,7 +39,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 获取代理文件实例
         /// </summary>
-        RPCProxyInfo ProxyInfo { get; }
+        RpcProxyInfo ProxyInfo { get; }
 
         /// <summary>
         /// 函数库
@@ -67,14 +67,14 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="proxyToken">代理令箭</param>
         /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RPCSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
         /// <returns></returns>
-        RPCProxyInfo GetProxyInfo(string proxyToken, object caller);
+        RpcProxyInfo GetProxyInfo(string proxyToken, object caller);
 
         /// <summary>
         /// 执行函数
         /// </summary>
         /// <param name="context">函数内容</param>
         /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RPCSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
-        void ExecuteContext(RPCContext context, object caller);
+        void ExecuteContext(RpcContext context, object caller);
 
         /// <summary>
         /// 获取注册函数
@@ -85,12 +85,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller);
 
 #if NET45_OR_GREATER
+
         /// <summary>
         /// 编译代理
         /// </summary>
         /// <param name="targetDic">存放目标文件夹</param>
         void CompilerProxy(string targetDic = "");
-#endif
 
+#endif
     }
 }

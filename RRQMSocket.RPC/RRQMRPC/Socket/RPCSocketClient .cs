@@ -33,22 +33,26 @@ namespace RRQMSocket.RPC.RRQMRPC
             AddUsedProtocol(102, "获取注册服务");
             AddUsedProtocol(103, "ID调用客户端");
             AddUsedProtocol(104, "RPC回调");
+            for (short i = 105; i < 110; i++)
+            {
+                AddUsedProtocol(i, "保留协议");
+            }
         }
 
-        internal Func<RPCSocketClient, RPCContext, RPCContext> IDAction;
+        internal Func<RPCSocketClient, RpcContext, RpcContext> IDAction;
 
         internal RRQMReceivedProcotolEventHandler Received;
 
         internal SerializeConverter serializeConverter;
 
-        internal RRQMWaitHandle<RPCContext> waitHandle;
+        internal RRQMWaitHandle<RpcContext> waitHandle;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public RPCSocketClient()
         {
-            waitHandle = new RRQMWaitHandle<RPCContext>();
+            waitHandle = new RRQMWaitHandle<RpcContext>();
         }
 
         /// <summary>
@@ -61,8 +65,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         public T CallBack<T>(int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
-            RPCContext context = new RPCContext();
-            WaitData<RPCContext> waitData = this.waitHandle.GetWaitData(context);
+            RpcContext context = new RpcContext();
+            WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
 
             context.MethodToken = methodToken;
 
@@ -77,7 +81,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
-                    datas.Add(this.serializeConverter.SerializeParameter (parameter));
+                    datas.Add(this.serializeConverter.SerializeParameter(parameter));
                 }
                 context.ParametersBytes = datas;
                 context.Serialize(byteBlock);
@@ -102,9 +106,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 case FeedbackType.WaitSend:
                     {
-                        waitData.Wait(invokeOption.WaitTime * 1000);
+                        waitData.Wait(invokeOption.Timeout);
 
-                        RPCContext resultContext = waitData.WaitResult;
+                        RpcContext resultContext = waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
@@ -114,9 +118,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        waitData.Wait(invokeOption.WaitTime * 1000);
+                        waitData.Wait(invokeOption.Timeout);
 
-                        RPCContext resultContext = waitData.WaitResult;
+                        RpcContext resultContext = waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
@@ -157,8 +161,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="parameters"></param>
         public void CallBack(int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
-            RPCContext context = new RPCContext();
-            WaitData<RPCContext> waitData = this.waitHandle.GetWaitData(context);
+            RpcContext context = new RpcContext();
+            WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
 
             context.MethodToken = methodToken;
 
@@ -197,9 +201,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 case FeedbackType.WaitSend:
                     {
-                        waitData.Wait(invokeOption.WaitTime * 1000);
+                        waitData.Wait(invokeOption.Timeout);
 
-                        RPCContext resultContext = waitData.WaitResult;
+                        RpcContext resultContext = waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
@@ -209,9 +213,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        waitData.Wait(invokeOption.WaitTime * 1000);
+                        waitData.Wait(invokeOption.Timeout);
 
-                        RPCContext resultContext = waitData.WaitResult;
+                        RpcContext resultContext = waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
@@ -242,10 +246,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="invokeContext"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public byte[] CallBack(RPCContext invokeContext, int timeout)
+        public byte[] CallBack(RpcContext invokeContext, int timeout)
         {
-            RPCContext context = new RPCContext();
-            WaitData<RPCContext> waitData = this.waitHandle.GetWaitData(context);
+            RpcContext context = new RpcContext();
+            WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
             context.MethodToken = invokeContext.MethodToken;
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -278,7 +282,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(timeout * 1000);
 
-                        RPCContext resultContext = waitData.WaitResult;
+                        RpcContext resultContext = waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
@@ -290,7 +294,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         waitData.Wait(timeout * 1000);
 
-                        RPCContext resultContext = waitData.WaitResult;
+                        RpcContext resultContext = waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
                         if (resultContext.Status == 0)
                         {
@@ -344,7 +348,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
-                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetProxyInfo(proxyToken, this), true);
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRpcParser)this.Service).GetProxyInfo(proxyToken, this), true);
                             this.InternalSend(100, data, 0, data.Length);
                         }
                         catch (Exception e)
@@ -357,12 +361,13 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RPCContext content = RPCContext.Deserialize(buffer, 2);
+                            byteBlock.Pos = 2;
+                            RpcContext content = RpcContext.Deserialize(byteBlock);
                             if (content.Feedback == 1)
                             {
                                 List<byte[]> ps = content.ParametersBytes;
 
-                                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                                 try
                                 {
                                     content.ParametersBytes = null;
@@ -376,7 +381,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     returnByteBlock.Dispose();
                                 }
                             }
-                            ((IRRQMRPCParser)this.Service).ExecuteContext(content, this);
+                            ((IRRQMRpcParser)this.Service).ExecuteContext(content, this);
                         }
                         catch (Exception e)
                         {
@@ -389,7 +394,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         try
                         {
                             string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
-                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRPCParser)this.Service).GetRegisteredMethodItems(proxyToken, this), true);
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRpcParser)this.Service).GetRegisteredMethodItems(proxyToken, this), true);
                             this.InternalSend(102, data, 0, data.Length);
                         }
                         catch (Exception e)
@@ -404,7 +409,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             try
                             {
-                                RPCContext content = RPCContext.Deserialize(buffer, 2);
+                                byteBlock.Pos = 2;
+                                RpcContext content = RpcContext.Deserialize(byteBlock);
                                 content = this.IDAction(this, content);
 
                                 ByteBlock retuenByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
@@ -429,7 +435,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RPCContext content = RPCContext.Deserialize(buffer, 2);
+                            byteBlock.Pos = 2;
+                            RpcContext content = RpcContext.Deserialize(byteBlock);
                             this.waitHandle.SetRun(content);
                         }
                         catch (Exception e)

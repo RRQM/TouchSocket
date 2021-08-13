@@ -26,12 +26,12 @@ namespace RRQMSocket.RPC.RRQMRPC
             string nameSpaceOld,
             ref MethodStore methodStore,
              Version version,
-             ref RPCProxyInfo proxyInfo)
+             ref RpcProxyInfo proxyInfo)
         {
             string nameSpace = string.IsNullOrEmpty(nameSpaceOld) ? "RRQMRPC" : $"RRQMRPC.{nameSpaceOld}";
             List<string> refs = new List<string>();
 
-            PropertyCodeMap propertyCode = new PropertyCodeMap(nameSpace, methodStore);
+            PropertyCodeGenerator propertyCode = new PropertyCodeGenerator(nameSpace, methodStore);
 
             foreach (MethodInstance methodInstance in methodInstances)
             {
@@ -58,7 +58,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 #if NET45_OR_GREATER
             foreach (var item in refs)
             {
-                RPCCompiler.AddRef(item);
+                RpcCompiler.AddRef(item);
             }
 #endif
             List<MethodInfo> methods = new List<MethodInfo>();
@@ -98,11 +98,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
             }
 
-            CodeMap.Namespace = nameSpace;
-            CodeMap.PropertyCode = propertyCode;
+            CodeGenerator.Namespace = nameSpace;
+            CodeGenerator.PropertyCode = propertyCode;
 
-
-            CodeMap codeMap = new CodeMap();
+            CodeGenerator codeMap = new CodeGenerator();
             codeMap.ClassName = className;
             codeMap.Methods = methods.ToArray();
 
@@ -140,7 +139,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         private static int ExistReturnNullParameters = 500000000;
         private static int ExistReturnExistParameters = 700000000;
 
-        internal static MethodInstance[] GetMethodInstances(ServerProvider serverProvider, bool isSetToken)
+        internal static MethodInstance[] GetMethodInstances(IServerProvider serverProvider, bool isSetToken)
         {
             List<MethodInstance> instances = new List<MethodInstance>();
 
@@ -150,7 +149,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 if (method.IsGenericMethod)
                 {
-                    throw new RRQMRPCException("RPC方法中不支持泛型参数");
+                   continue;
                 }
                 IEnumerable<RPCAttribute> attributes = method.GetCustomAttributes<RPCAttribute>(true);
                 if (attributes.Count() > 0)
@@ -184,7 +183,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                     methodInstance.ParameterTypes = types.ToArray();
 
-                    if (method.ReturnType == typeof(void)|| method.ReturnType==typeof(Task))
+                    if (method.ReturnType == typeof(void) || method.ReturnType == typeof(Task))
                     {
                         methodInstance.ReturnType = null;
 
@@ -199,7 +198,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                                 methodInstance.MethodToken = ++nullReturnExistParameters;
                             }
                         }
-
                     }
                     else
                     {
@@ -233,7 +231,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     }
                     instances.Add(methodInstance);
-
                 }
             }
 

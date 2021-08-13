@@ -32,6 +32,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         private Dictionary<string, MethodItem> methodKeyToMethodItem;
         internal Dictionary<Type, string> propertyDic;
         internal Dictionary<Type, string> genericTypeDic;
+
         /// <summary>
         /// 获取所有的方法
         /// </summary>
@@ -57,7 +58,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodToken"></param>
         internal void RemoveMethodItem(int methodToken)
         {
-            if (tokenToMethodItem.TryGetValue(methodToken,out MethodItem methodItem))
+            if (tokenToMethodItem.TryGetValue(methodToken, out MethodItem methodItem))
             {
                 tokenToMethodItem.Remove(methodToken);
                 methodKeyToMethodItem.Remove(methodItem.Method);

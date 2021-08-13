@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 执行此RPC的实例
         /// </summary>
-        public ServerProvider Provider { get; internal set; }
+        public IServerProvider Provider { get; internal set; }
 
         /// <summary>
         /// RPC函数

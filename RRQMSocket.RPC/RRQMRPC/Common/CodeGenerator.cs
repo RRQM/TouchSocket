@@ -10,26 +10,25 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
-    /*
-    若汝棋茗
-    */
-
-    internal class CodeMap
+    /// <summary>
+    /// 代码生成器
+    /// </summary>
+    public class CodeGenerator
     {
-        internal CodeMap()
+        internal CodeGenerator()
         {
             codeString = new StringBuilder();
         }
 
         internal static string GetAssemblyInfo(string assemblyName, string version)
         {
-            CodeMap codeMap = new CodeMap();
+            CodeGenerator codeMap = new CodeGenerator();
             codeMap.AppendAssemblyInfo(assemblyName, version);
             return codeMap.codeString.ToString();
         }
@@ -39,7 +38,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal MethodInfo[] Methods { get; set; }
         internal string ClassName { get; set; }
         internal static string Namespace { get; set; }
-        internal static PropertyCodeMap PropertyCode { get; set; }
+        internal static PropertyCodeGenerator PropertyCode { get; set; }
 
         internal string GetCode()
         {
@@ -64,6 +63,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             codeString.AppendLine(string.Format("public interface {0}", interfaceName));//类开始
             codeString.AppendLine("{");
+            codeString.AppendLine("IRpcClient Client{get;}");
             AppendInterfaceMethods();
             codeString.AppendLine("}");//类结束
         }
@@ -72,11 +72,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             codeString.AppendLine(string.Format("public class {0} :I{0}", className));//类开始
             codeString.AppendLine("{");
-            codeString.AppendLine($"public {className}(IRPCClient client)");
+            codeString.AppendLine($"public {className}(IRpcClient client)");
             codeString.AppendLine("{");
             codeString.AppendLine("this.Client=client;");
             codeString.AppendLine("}");
-            AppendAttributes();
+            AppendProperties();
             AppendMethods();
             codeString.AppendLine("}");//类结束
         }
@@ -95,12 +95,12 @@ namespace RRQMSocket.RPC.RRQMRPC
             codeString.AppendLine(string.Format("[assembly: AssemblyFileVersion(\"{0}\")]", version.ToString()));
         }
 
-        private void AppendAttributes()
+        private void AppendProperties()
         {
-            codeString.AppendLine("public IRPCClient Client{get;private set; }");
+            codeString.AppendLine("public IRpcClient Client{get;private set; }");
         }
 
-        public string GetName(Type type)
+        internal string GetName(Type type)
         {
             return PropertyCode.GetTypeFullName(type);
         }
@@ -116,7 +116,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     bool isRef = false;
                     string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
-                    if (method.ReturnType.FullName == "System.Void"|| method.ReturnType.FullName== "System.Threading.Tasks.Task")
+                    if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                     {
                         isReturn = false;
                         codeString.Append(string.Format("public  void {0} ", methodName));
@@ -285,6 +285,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     codeString.AppendLine("}");
 
+                    //以下生成异步
                     if (!isOut && !isRef)//没有out或者ref
                     {
                         if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")

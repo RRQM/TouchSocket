@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// UdpRpc
     /// </summary>
-    public class UdpRPCClientConfig : UdpSessionConfig
+    public class UdpRpcClientConfig : UdpSessionConfig
     {
         /// <summary>
         /// 代理文件令箭
@@ -31,7 +31,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 代理文件令箭, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
-            DependencyProperty.Register("ProxyToken", typeof(string), typeof(UdpRPCClientConfig), null);
+            DependencyProperty.Register("ProxyToken", typeof(string), typeof(UdpRpcClientConfig), null);
 
         /// <summary>
         /// 序列化转换器
@@ -46,6 +46,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 序列化转换器, 所需类型<see cref="RRQMRPC.SerializeConverter"/>
         /// </summary>
         public static readonly DependencyProperty SerializeConverterProperty =
-            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(UdpRPCClientConfig), new BinarySerializeConverter());
+            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(UdpRpcClientConfig), new BinarySerializeConverter());
     }
 }

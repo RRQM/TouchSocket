@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// 客户端RPC接口
     /// </summary>
-    public interface IRPCClient : IDisposable
+    public interface IRpcClient : IDisposable
     {
         /// <summary>
         /// 函数式调用

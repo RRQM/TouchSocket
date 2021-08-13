@@ -11,16 +11,14 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Run;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
     /// RPC传输类
     /// </summary>
-    public class RPCContext : WaitResult
+    public class RpcContext : WaitResult
     {
         internal int MethodToken;
         internal string ID;
@@ -30,108 +28,45 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         internal void Serialize(ByteBlock byteBlock)
         {
-            byteBlock.Write(BitConverter.GetBytes(this.Sign));
+            byteBlock.Write(this.Sign);
             byteBlock.Write(this.Status);
             byteBlock.Write(this.Feedback);
-            byteBlock.Write(BitConverter.GetBytes(this.MethodToken));
-            if (!string.IsNullOrEmpty(ID))
-            {
-                byte[] idBytes = Encoding.UTF8.GetBytes(this.ID);
-                byteBlock.Write((byte)idBytes.Length);
-                byteBlock.Write(idBytes);
-            }
-            else
-            {
-                byteBlock.Write(0);
-            }
-            if (this.Message != null)
-            {
-                byte[] mesBytes = Encoding.UTF8.GetBytes(this.Message);
-                byteBlock.Write((byte)mesBytes.Length);
-                byteBlock.Write(mesBytes);
-            }
-            else
-            {
-                byteBlock.Write(0);
-            }
+            byteBlock.Write(this.MethodToken);
+            byteBlock.Write(this.ID);
+            byteBlock.Write(this.Message);
+            byteBlock.WriteBytesPackage(this.ReturnParameterBytes);
 
-            if (this.ReturnParameterBytes != null)
-            {
-                byteBlock.Write(BitConverter.GetBytes(this.ReturnParameterBytes.Length));
-                byteBlock.Write(this.ReturnParameterBytes);
-            }
-            else
-            {
-                byteBlock.Write(BitConverter.GetBytes(0));
-            }
-
-            if (this.ParametersBytes != null)
+            if (this.ParametersBytes != null && this.ParametersBytes.Count > 0)
             {
                 byteBlock.Write((byte)this.ParametersBytes.Count);
                 foreach (byte[] item in this.ParametersBytes)
                 {
-                    if (item != null)
-                    {
-                        byteBlock.Write(BitConverter.GetBytes(item.Length));
-                        byteBlock.Write(item);
-                    }
-                    else
-                    {
-                        byteBlock.Write(BitConverter.GetBytes(0));
-                    }
+                    byteBlock.WriteBytesPackage(item);
                 }
             }
             else
             {
-                byteBlock.Write(0);
+                byteBlock.Write((byte)0);
             }
         }
 
-        internal static RPCContext Deserialize(byte[] buffer, int offset)
+        internal static RpcContext Deserialize(ByteBlock byteBlock)
         {
-            RPCContext context = new RPCContext();
-            context.Sign = BitConverter.ToInt32(buffer, offset);
-            offset += 4;
-            context.Status = buffer[offset];
-            offset += 1;
-            context.Feedback = buffer[offset];
-            offset += 1;
-            context.MethodToken = BitConverter.ToInt32(buffer, offset);
-            offset += 4;
-            int lenID = buffer[offset];
-            offset += 1;
-            context.ID = Encoding.UTF8.GetString(buffer, offset, lenID);
-            offset += lenID;
-            int lenMes = buffer[offset];
-            offset += 1;
-            context.Message = Encoding.UTF8.GetString(buffer, offset, lenMes);
-            offset += lenMes;
-            int lenRet = BitConverter.ToInt32(buffer, offset);
-            offset += 4;
-            if (lenRet > 0)
-            {
-                context.ReturnParameterBytes = new byte[lenRet];
-                Array.Copy(buffer, offset, context.ReturnParameterBytes, 0, lenRet);
-            }
-            offset += lenRet;
+            RpcContext context = new RpcContext();
+            context.Sign = byteBlock.ReadInt32();
+            context.Status = byteBlock.ReadByte();
+            context.Feedback = byteBlock.ReadByte();
+            context.MethodToken = byteBlock.ReadInt32();
+            context.ID = byteBlock.ReadString();
+            context.Message = byteBlock.ReadString();
+            context.ReturnParameterBytes = byteBlock.ReadBytesPackage();
+
             context.ParametersBytes = new List<byte[]>();
-            int countPar = buffer[offset];
-            offset += 1;
+            byte countPar = byteBlock.ReadByte();
+
             for (int i = 0; i < countPar; i++)
             {
-                int lenPar = BitConverter.ToInt32(buffer, offset);
-                offset += 4;
-                if (lenPar > 0)
-                {
-                    byte[] datas = new byte[lenPar];
-                    Array.Copy(buffer, offset, datas, 0, lenPar);
-                    offset += lenPar;
-                    context.ParametersBytes.Add(datas);
-                }
-                else
-                {
-                    context.ParametersBytes.Add(null);
-                }
+                context.ParametersBytes.Add(byteBlock.ReadBytesPackage());
             }
             return context;
         }

@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// 代码辅助类
     /// </summary>
-    public class PropertyCodeMap
+    public class PropertyCodeGenerator
     {
         private static readonly string[] listType = { "List`1", "HashSet`1", "IList`1", "ISet`1", "ICollection`1", "IEnumerable`1" };
 
@@ -36,7 +36,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        public PropertyCodeMap(string nameSpace,MethodStore methodStore)
+        public PropertyCodeGenerator(string nameSpace, MethodStore methodStore)
         {
             codeString = new StringBuilder();
             this.nameSpace = nameSpace;
@@ -72,7 +72,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private StringBuilder codeString;
         private string nameSpace;
-        private Dictionary<Type, string> propertyDic ;
+        private Dictionary<Type, string> propertyDic;
         private Dictionary<Type, string> genericTypeDic;
 
         internal void AddTypeString(Type type)
@@ -177,7 +177,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 else if (type.IsClass)
                 {
-                    if (type.Assembly == ServerProvider.DefaultAssembly||type.GetCustomAttribute<RRQMRPCMemberAttribute>()!=null)
+                    if (type.Assembly == ServerProvider.DefaultAssembly || type.GetCustomAttribute<RRQMRPCMemberAttribute>() != null)
                     {
                         StringBuilder stringBuilder = new StringBuilder();
 
@@ -280,7 +280,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 Type[] ts = type.GetGenericArguments();
                 if (ts.Length == 1)
                 {
-                   return ts[0].Name;
+                    return ts[0].Name;
                 }
                 else
                 {
@@ -297,7 +297,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 string typeName = type.FullName.Replace("&", string.Empty);
                 type = Type.GetType(typeName);
-                if (type == null&& ServerProvider.DefaultAssembly!=null)
+                if (type == null && ServerProvider.DefaultAssembly != null)
                 {
                     type = ServerProvider.DefaultAssembly.GetType(typeName);
                 }

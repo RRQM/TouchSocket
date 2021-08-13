@@ -13,9 +13,9 @@
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// 回调函数载体
+    /// TCP RPC解释器
     /// </summary>
-    public class RpcCallBackContext
+    public class TcpRpcParser : TcpParser<RPCSocketClient>
     {
     }
 }

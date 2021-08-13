@@ -23,15 +23,15 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// UDP RPC解释器
     /// </summary>
-    public class UdpRPCParser : UdpSession, IRPCParser, IRRQMRPCParser
+    public class UdpRpcParser : UdpSession, IRPCParser, IRRQMRpcParser
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public UdpRPCParser()
+        public UdpRpcParser()
         {
             this.methodStore = new MethodStore();
-            this.proxyInfo = new RPCProxyInfo();
+            this.proxyInfo = new RpcProxyInfo();
         }
 
 #pragma warning disable
@@ -45,7 +45,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public string NameSpace { get; private set; }
 
-        public RPCProxyInfo ProxyInfo { get => proxyInfo; }
+        public RpcProxyInfo ProxyInfo { get => proxyInfo; }
 
         public string ProxyToken { get; private set; }
 
@@ -54,7 +54,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         public SerializeConverter SerializeConverter { get; private set; }
 
         private MethodStore methodStore;
-        private RPCProxyInfo proxyInfo;
+       
+        private RpcProxyInfo proxyInfo;
+       
         public MethodStore MethodStore => this.methodStore;
 
         public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
@@ -72,9 +74,9 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.RPCService = service;
         }
 
-        public virtual RPCProxyInfo GetProxyInfo(string proxyToken, object caller)
+        public virtual RpcProxyInfo GetProxyInfo(string proxyToken, object caller)
         {
-            RPCProxyInfo proxyInfo = new RPCProxyInfo();
+            RpcProxyInfo proxyInfo = new RpcProxyInfo();
             if (this.ProxyToken == proxyToken)
             {
                 proxyInfo.AssemblyData = this.ProxyInfo.AssemblyData;
@@ -92,7 +94,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             return proxyInfo;
         }
 
-        public virtual void ExecuteContext(RPCContext context, object caller)
+        public virtual void ExecuteContext(RpcContext context, object caller)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = caller;
@@ -133,10 +135,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected override void LoadConfig(ServiceConfig ServiceConfig)
         {
             base.LoadConfig(ServiceConfig);
-            this.SerializeConverter = (SerializeConverter)ServiceConfig.GetValue(UdpRPCParserConfig.SerializeConverterProperty);
-            this.ProxyToken = (string)ServiceConfig.GetValue(UdpRPCParserConfig.ProxyTokenProperty);
-            this.NameSpace = (string)ServiceConfig.GetValue(UdpRPCParserConfig.NameSpaceProperty);
-            this.RPCVersion = (Version)ServiceConfig.GetValue(UdpRPCParserConfig.RPCVersionProperty);
+            this.SerializeConverter = (SerializeConverter)ServiceConfig.GetValue(UdpRpcParserConfig.SerializeConverterProperty);
+            this.ProxyToken = (string)ServiceConfig.GetValue(UdpRpcParserConfig.ProxyTokenProperty);
+            this.NameSpace = (string)ServiceConfig.GetValue(UdpRpcParserConfig.NameSpaceProperty);
+            this.RPCVersion = (Version)ServiceConfig.GetValue(UdpRpcParserConfig.RPCVersionProperty);
         }
 
         public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller)
@@ -144,12 +146,12 @@ namespace RRQMSocket.RPC.RRQMRPC
             return this.methodStore.GetAllMethodItem();
         }
 
-        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             Tools.GetRPCMethod(methodInstances, this.NameSpace, ref this.methodStore, this.RPCVersion, ref this.proxyInfo);
         }
 
-        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var item in methodInstances)
             {
@@ -169,12 +171,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 this.proxyInfo.Codes.Remove(cellCode);
             }
-
         }
 
         public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            RPCContext context = (RPCContext)methodInvoker.Flag;
+            RpcContext context = (RpcContext)methodInvoker.Flag;
             if (context.Feedback != 2)
             {
                 return;
@@ -314,12 +315,13 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            RPCContext content = RPCContext.Deserialize(buffer, 2);
+                            byteBlock.Pos = 2;
+                            RpcContext content = RpcContext.Deserialize(byteBlock);
                             if (content.Feedback == 1)
                             {
                                 List<byte[]> ps = content.ParametersBytes;
 
-                                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                                 try
                                 {
                                     content.ParametersBytes = null;
@@ -358,25 +360,23 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
 #if NET45_OR_GREATER
+
         /// <summary>
         /// 编译代理
         /// </summary>
         /// <param name="targetDic">存放目标文件夹</param>
         public void CompilerProxy(string targetDic = "")
         {
-            string assemblyInfo = CodeMap.GetAssemblyInfo(this.proxyInfo.AssemblyName, this.proxyInfo.Version);
+            string assemblyInfo = CodeGenerator.GetAssemblyInfo(this.proxyInfo.AssemblyName, this.proxyInfo.Version);
             List<string> codesString = new List<string>();
             codesString.Add(assemblyInfo);
             foreach (var item in this.proxyInfo.Codes)
             {
                 codesString.Add(item.Code);
             }
-            RPCCompiler.CompileCode(Path.Combine(targetDic, this.proxyInfo.AssemblyName), codesString.ToArray());
-
+            RpcCompiler.CompileCode(Path.Combine(targetDic, this.proxyInfo.AssemblyName), codesString.ToArray());
         }
-#endif
 
-       
-       
+#endif
     }
 }

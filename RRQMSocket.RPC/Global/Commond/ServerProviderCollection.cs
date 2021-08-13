@@ -13,7 +13,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace RRQMSocket.RPC
 {
@@ -21,20 +20,20 @@ namespace RRQMSocket.RPC
     /// 服务集合
     /// </summary>
     [DebuggerDisplay("{Count}")]
-    public class ServerProviderCollection : IEnumerable<ServerProvider>, IEnumerable
+    public class ServerProviderCollection : IEnumerable<IServerProvider>, IEnumerable
     {
         /// <summary>
         /// 服务数量
         /// </summary>
         public int Count { get { return this.servers.Count; } }
 
-        private List<ServerProvider> servers = new List<ServerProvider>();
+        private List<IServerProvider> servers = new List<IServerProvider>();
 
-        internal void Add(ServerProvider serverProvider)
+        internal void Add(IServerProvider serverProvider)
         {
             foreach (var server in this.servers)
             {
-                if (serverProvider.GetType().FullName==server.GetType().FullName)
+                if (serverProvider.GetType().FullName == server.GetType().FullName)
                 {
                     throw new RRQMRPCException("相同类型的服务已添加");
                 }
@@ -57,11 +56,12 @@ namespace RRQMSocket.RPC
                 }
             }
         }
+
         /// <summary>
         /// 返回枚举
         /// </summary>
         /// <returns></returns>
-        IEnumerator<ServerProvider> IEnumerable<ServerProvider>.GetEnumerator()
+        IEnumerator<IServerProvider> IEnumerable<IServerProvider>.GetEnumerator()
         {
             return this.servers.GetEnumerator();
         }
