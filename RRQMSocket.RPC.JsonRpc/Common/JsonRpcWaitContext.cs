@@ -15,7 +15,7 @@ namespace RRQMSocket.RPC.JsonRpc
 {
     internal class JsonRpcWaitContext : WaitResult
     {
-        internal string ReturnJsonString;
+        internal object Return;
 
         internal error error;
     }

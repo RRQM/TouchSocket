@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.XREF.Newtonsoft.Json.Linq;
+
 namespace RRQMSocket.RPC.JsonRpc
 {
     /// <summary>
@@ -20,8 +22,10 @@ namespace RRQMSocket.RPC.JsonRpc
 #pragma warning disable
         public string jsonrpc;
         public string method;
-        public object[] @params;
+        public object[] parameters;
+        public JToken @params;
         public string id;
+        public bool needResponse;
 #pragma warning restore
     }
 }

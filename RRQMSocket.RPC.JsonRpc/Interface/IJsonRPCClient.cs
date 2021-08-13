@@ -16,11 +16,7 @@ namespace RRQMSocket.RPC.JsonRpc
     /// <summary>
     /// Json客户端RPC接口
     /// </summary>
-    public interface IJsonRPCClient : IRPCClient
+    public interface IJsonRpcClient : IRpcClient
     {
-        /// <summary>
-        /// 序列化生成器
-        /// </summary>
-        JsonFormatConverter JsonFormatConverter { get; }
     }
 }

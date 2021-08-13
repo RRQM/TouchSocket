@@ -11,7 +11,10 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Helper;
 using RRQMCore.Run;
+using RRQMCore.XREF.Newtonsoft.Json;
+using RRQMCore.XREF.Newtonsoft.Json.Linq;
 using RRQMSocket.Http;
 using RRQMSocket.RPC.RRQMRPC;
 using System;
@@ -20,11 +23,11 @@ using System.Text;
 namespace RRQMSocket.RPC.JsonRpc
 {
     /// <summary>
-    /// JsonRPC客户端
+    /// JsonRpc客户端
     /// </summary>
-    public class JsonRPCClient : TcpClient, IJsonRPCClient
+    public class JsonRpcClient : TcpClient, IJsonRpcClient
     {
-        private JsonFormatConverter jsonFormatConverter;
+        private int maxPackageSize;
 
         private JsonRpcProtocolType protocolType;
 
@@ -33,16 +36,19 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        public JsonRPCClient()
+        public JsonRpcClient()
         {
             waitHandle = new RRQMWaitHandle<WaitResult>();
         }
-       
+
         /// <summary>
-        /// Json格式化器
+        /// 最大数据包长度
         /// </summary>
-        public JsonFormatConverter JsonFormatConverter => jsonFormatConverter;
-       
+        public int MaxPackageSize
+        {
+            get { return maxPackageSize; }
+        }
+
         /// <summary>
         /// 协议类型
         /// </summary>
@@ -50,7 +56,6 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             get { return protocolType; }
         }
-
         /// <summary>
         /// RPC调用
         /// </summary>
@@ -74,33 +79,53 @@ namespace RRQMSocket.RPC.JsonRpc
             }
             try
             {
-                JsonRequestContext requestContext = new JsonRequestContext();
-                requestContext.jsonrpc = "2.0";
-                requestContext.@params = parameters;
-                requestContext.method = method;
+                JObject jobject = new JObject();
+                jobject.Add("jsonrpc", JToken.FromObject("2.0"));
+                jobject.Add("method", JToken.FromObject(method));
+                jobject.Add("params", JToken.FromObject(parameters));
+
                 if (invokeOption.FeedbackType == FeedbackType.WaitInvoke)
                 {
-                    requestContext.id = context.Sign.ToString();
+                    jobject.Add("id", JToken.FromObject(context.Sign.ToString()));
                 }
-
+                else
+                {
+                    jobject.Add("id", null);
+                }
                 switch (this.protocolType)
                 {
                     case JsonRpcProtocolType.Tcp:
                         {
-                            byteBlock.Write(Encoding.UTF8.GetBytes(jsonFormatConverter.Serialize(requestContext)));
+                            byteBlock.Write(Encoding.UTF8.GetBytes(jobject.ToString(Formatting.None)));
                             break;
                         }
                     case JsonRpcProtocolType.Http:
                         {
                             HttpRequest httpRequest = new HttpRequest();
                             httpRequest.Method = "POST";
-                            httpRequest.FromJson(jsonFormatConverter.Serialize(requestContext));
+                            httpRequest.FromJson(jobject.ToString(Formatting.None));
                             httpRequest.Build(byteBlock);
                         }
                         break;
                 }
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.SendAsync(byteBlock);
+                        }
+                        break;
 
-                this.Send(byteBlock);
+                    case FeedbackType.WaitSend:
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.Send(byteBlock);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
             }
             catch (Exception ex)
             {
@@ -121,7 +146,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        waitData.Wait(invokeOption.WaitTime * 1000);
+                        waitData.Wait(invokeOption.Timeout);
                         JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
 
@@ -135,7 +160,12 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         try
                         {
-                            return (T)this.jsonFormatConverter.Deserialize(resultContext.ReturnJsonString, typeof(T));
+                            if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
+                            {
+                                return (T)resultContext.Return.ToString().ParseToType(typeof(T));
+                            }
+
+                            return JsonConvert.DeserializeObject<T>(resultContext.Return.ToString());
                         }
                         catch (Exception ex)
                         {
@@ -169,31 +199,53 @@ namespace RRQMSocket.RPC.JsonRpc
             }
             try
             {
-                JsonRequestContext requestContext = new JsonRequestContext();
-                requestContext.jsonrpc = "2.0";
-                requestContext.@params = parameters;
-                requestContext.method = method;
+                JObject jobject = new JObject();
+                jobject.Add("jsonrpc", JToken.FromObject("2.0"));
+                jobject.Add("method", JToken.FromObject(method));
+                jobject.Add("params", JToken.FromObject(parameters));
+
                 if (invokeOption.FeedbackType == FeedbackType.WaitInvoke)
                 {
-                    requestContext.id = context.Sign.ToString();
+                    jobject.Add("id", JToken.FromObject(context.Sign.ToString()));
+                }
+                else
+                {
+                    jobject.Add("id", null);
                 }
                 switch (this.protocolType)
                 {
                     case JsonRpcProtocolType.Tcp:
                         {
-                            byteBlock.Write(Encoding.UTF8.GetBytes(jsonFormatConverter.Serialize(requestContext)));
+                            byteBlock.Write(Encoding.UTF8.GetBytes(jobject.ToString(Formatting.None)));
                             break;
                         }
                     case JsonRpcProtocolType.Http:
                         {
                             HttpRequest httpRequest = new HttpRequest();
                             httpRequest.Method = "POST";
-                            httpRequest.FromJson(jsonFormatConverter.Serialize(requestContext));
+                            httpRequest.FromJson(jobject.ToString(Formatting.None));
                             httpRequest.Build(byteBlock);
                         }
                         break;
                 }
-                this.Send(byteBlock);
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.SendAsync(byteBlock);
+                        }
+                        break;
+
+                    case FeedbackType.WaitSend:
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.Send(byteBlock);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
             }
             catch (Exception ex)
             {
@@ -214,7 +266,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        waitData.Wait(invokeOption.WaitTime * 1000);
+                        waitData.Wait(invokeOption.Timeout);
                         JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
                         this.waitHandle.Destroy(waitData);
 
@@ -274,14 +326,14 @@ namespace RRQMSocket.RPC.JsonRpc
                 case JsonRpcProtocolType.Tcp:
                     {
                         string jsonString = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                        JsonResponseContext responseContext = (JsonResponseContext)this.jsonFormatConverter.Deserialize(jsonString, typeof(JsonResponseContext));
+                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(jsonString, typeof(JsonResponseContext));
                         if (responseContext != null)
                         {
                             JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
                             waitContext.Status = 1;
                             waitContext.Sign = int.Parse(responseContext.id);
                             waitContext.error = responseContext.error;
-                            waitContext.ReturnJsonString = responseContext.result == null ? null : responseContext.result.ToString();
+                            waitContext.Return = responseContext.result;
                             this.waitHandle.SetRun(waitContext);
                         }
                         break;
@@ -290,21 +342,19 @@ namespace RRQMSocket.RPC.JsonRpc
                 case JsonRpcProtocolType.Http:
                     {
                         HttpResponse httpResponse = (HttpResponse)obj;
-                        JsonResponseContext responseContext = (JsonResponseContext)this.jsonFormatConverter.Deserialize(httpResponse.Body, typeof(JsonResponseContext));
+                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(httpResponse.Body, typeof(JsonResponseContext));
                         if (responseContext != null)
                         {
                             JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
                             waitContext.Status = 1;
                             waitContext.Sign = int.Parse(responseContext.id);
                             waitContext.error = responseContext.error;
-                            waitContext.ReturnJsonString = responseContext.result == null ? null : responseContext.result.ToString();
+                            waitContext.Return = responseContext.result;
                             this.waitHandle.SetRun(waitContext);
                         }
                         break;
                     }
-
             }
-
         }
 
         /// <summary>
@@ -314,18 +364,19 @@ namespace RRQMSocket.RPC.JsonRpc
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
             base.LoadConfig(clientConfig);
-            this.protocolType = (JsonRpcProtocolType)clientConfig.GetValue(JsonRPCClientConfig.ProtocolTypeProperty);
+            this.maxPackageSize = (int)clientConfig.GetValue(JsonRpcClientConfig.MaxPackageSizeProperty);
+
+            this.protocolType = (JsonRpcProtocolType)clientConfig.GetValue(JsonRpcClientConfig.ProtocolTypeProperty);
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
-                    this.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.bufferLength, "\r\n"));
+                    base.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.maxPackageSize, "\r\n"));
                     break;
+
                 case JsonRpcProtocolType.Http:
-                    this.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.bufferLength, HttpType.Client));
+                    base.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
                     break;
             }
-            this.jsonFormatConverter = (JsonFormatConverter)clientConfig.GetValue(JsonRPCClientConfig.JsonFormatConverterProperty);
-
         }
     }
 }

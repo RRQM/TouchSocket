@@ -14,26 +14,10 @@ using RRQMCore.Dependency;
 namespace RRQMSocket.RPC.JsonRpc
 {
     /// <summary>
-    /// JsonRPCClient配置
+    /// JsonRpcClient配置
     /// </summary>
-    public class JsonRPCClientConfig : TcpClientConfig
+    public class JsonRpcClientConfig : TcpClientConfig
     {
-        /// <summary>
-        /// Json格式化器
-        /// </summary>
-        public JsonFormatConverter JsonFormatConverter
-        {
-            get { return (JsonFormatConverter)GetValue(JsonFormatConverterProperty); }
-            set { SetValue(JsonFormatConverterProperty, value); }
-        }
-
-        /// <summary>
-        /// Json格式化器,
-        /// 所需类型<see cref="RRQMSocket.RPC.JsonRpc.JsonFormatConverter"/>
-        /// </summary>
-        public static readonly DependencyProperty JsonFormatConverterProperty =
-            DependencyProperty.Register("JsonFormatConverter", typeof(JsonFormatConverter), typeof(JsonRPCClientConfig), new DataContractJsonConverter());
-
         /// <summary>
         /// 协议类型
         /// </summary>
@@ -46,9 +30,25 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 协议类型，
         /// 所需类型<see cref="JsonRpcProtocolType"/>
-        /// </summary>       
+        /// </summary>
         public static readonly DependencyProperty ProtocolTypeProperty =
-        DependencyProperty.Register("ProtocolType", typeof(JsonRpcProtocolType), typeof(JsonRPCClientConfig), JsonRpcProtocolType.Tcp);
+        DependencyProperty.Register("ProtocolType", typeof(JsonRpcProtocolType), typeof(JsonRpcClientConfig), JsonRpcProtocolType.Tcp);
+
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return (int)GetValue(MaxPackageSizeProperty); }
+            set { SetValue(MaxPackageSizeProperty, value); }
+        }
+
+        /// <summary>
+        /// 最大数据包长度，所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty MaxPackageSizeProperty =
+            DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(JsonRpcClientConfig), 1024);
+
 
     }
 }

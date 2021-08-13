@@ -19,23 +19,6 @@ namespace RRQMSocket.RPC.JsonRpc
     public class JsonRpcParserConfig : TcpServiceConfig
     {
         /// <summary>
-        /// Json格式
-        /// </summary>
-        public JsonFormatConverter JsonFormatConverter
-        {
-            get { return (JsonFormatConverter)GetValue(JsonFormatConverterProperty); }
-            set { SetValue(JsonFormatConverterProperty, value); }
-        }
-
-        /// <summary>
-        /// Json格式
-        /// 所需类型<see cref="RRQMSocket.RPC.JsonRpc.JsonFormatConverter"/>
-        /// </summary>
-        public static readonly DependencyProperty JsonFormatConverterProperty =
-            DependencyProperty.Register("JsonFormatConverter", typeof(JsonFormatConverter), typeof(JsonRpcParserConfig), new DataContractJsonConverter());
-
-
-        /// <summary>
         /// 协议类型
         /// </summary>
         public JsonRpcProtocolType ProtocolType
@@ -47,9 +30,25 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 协议类型，
         /// 所需类型<see cref="JsonRpcProtocolType"/>
-        /// </summary>       
+        /// </summary>
         public static readonly DependencyProperty ProtocolTypeProperty =
-        DependencyProperty.Register("ProtocolType", typeof(JsonRpcProtocolType), typeof(JsonRpcParserConfig),  JsonRpcProtocolType.Tcp);
+        DependencyProperty.Register("ProtocolType", typeof(JsonRpcProtocolType), typeof(JsonRpcParserConfig), JsonRpcProtocolType.Tcp);
+
+
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return (int)GetValue(MaxPackageSizeProperty); }
+            set { SetValue(MaxPackageSizeProperty, value); }
+        }
+
+        /// <summary>
+        /// 最大数据包长度，所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty MaxPackageSizeProperty =
+            DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(JsonRpcParserConfig), 1024);
 
 
     }

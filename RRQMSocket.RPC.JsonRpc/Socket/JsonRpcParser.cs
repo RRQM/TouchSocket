@@ -10,8 +10,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
 using RRQMCore.Log;
+using RRQMCore.XREF.Newtonsoft.Json;
+using RRQMCore.XREF.Newtonsoft.Json.Linq;
 using RRQMSocket.Http;
 using System;
 using System.Text;
@@ -21,13 +22,12 @@ namespace RRQMSocket.RPC.JsonRpc
     /// <summary>
     /// JsonRpcParser解析器
     /// </summary>
-    public class JsonRpcParser : TcpService<SimpleSocketClient>, IRPCParser
+    public class JsonRpcParser : TcpService<JsonRpcSocketClient>, IRPCParser
     {
         private ActionMap actionMap;
 
-        private JsonFormatConverter jsonFormatConverter;
-
         private MethodMap methodMap;
+
         private JsonRpcProtocolType protocolType;
 
         /// <summary>
@@ -43,14 +43,16 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public ActionMap ActionMap { get { return this.actionMap; } }
 
+        private int maxPackageSize;
+
         /// <summary>
-        /// Json转换器
+        /// 最大数据包长度
         /// </summary>
-        public JsonFormatConverter JsonFormatConverter
+        public int MaxPackageSize
         {
-            get { return jsonFormatConverter; }
+            get { return maxPackageSize; }
         }
-        
+
         /// <summary>
         /// 函数映射
         /// </summary>
@@ -85,18 +87,13 @@ namespace RRQMSocket.RPC.JsonRpc
         public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             ISocketClient socketClient = (ISocketClient)methodInvoker.Caller;
-
-            JsonResponseContext context = new JsonResponseContext();
-            context.id = ((JsonRequestContext)methodInvoker.Flag).id;
-            context.result = methodInvoker.ReturnParameter;
             error error = new error();
-            context.error = error;
 
             switch (methodInvoker.Status)
             {
                 case InvokeStatus.Success:
                     {
-                        context.error = null;
+                        error = null;
                         break;
                     }
                 case InvokeStatus.UnFound:
@@ -130,23 +127,26 @@ namespace RRQMSocket.RPC.JsonRpc
                         break;
                     }
             }
-
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-            this.BuildResponseByteBlock(byteBlock, methodInvoker, context);
-            if (socketClient.Online)
+            JsonRequestContext jsonRequestContext = (JsonRequestContext)methodInvoker.Flag;
+            if (jsonRequestContext.needResponse)
             {
-                try
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                this.BuildResponseByteBlock(byteBlock, methodInvoker, jsonRequestContext.id, methodInvoker.ReturnParameter, error);
+                if (socketClient.Online)
                 {
-                    string s = Encoding.UTF8.GetString(byteBlock.ToArray());
-                    socketClient.Send(byteBlock);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.Debug(LogType.Error, this, ex.Message);
-                }
-                finally
-                {
-                    byteBlock.Dispose();
+                    try
+                    {
+                        string s = Encoding.UTF8.GetString(byteBlock.ToArray());
+                        socketClient.Send(byteBlock);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger.Debug(LogType.Error, this, ex.Message);
+                    }
+                    finally
+                    {
+                        byteBlock.Dispose();
+                    }
                 }
             }
         }
@@ -156,7 +156,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -166,7 +166,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     {
                         if (methodInstance.IsByRef)
                         {
-                            throw new RRQMRPCException("JsonRpc服务中不允许有out及ref关键字");
+                            throw new RRQMRPCException($"JsonRpc服务中不允许有out及ref关键字，服务：{methodInstance.Method.Name}");
                         }
                         string actionKey = string.IsNullOrEmpty(attribute.MethodKey) ? methodInstance.Method.Name : attribute.MethodKey;
 
@@ -188,7 +188,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
         }
 
@@ -228,29 +228,65 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <returns></returns>
         protected virtual void BuildRequestContext(string jsonString, out MethodInstance methodInstance, out JsonRequestContext context)
         {
-            context = (JsonRequestContext)this.jsonFormatConverter.Deserialize(jsonString, typeof(JsonRequestContext));
+            try
+            {
+                context = JsonConvert.DeserializeObject<JsonRequestContext>(jsonString);
+                if (context.id != null)
+                {
+                    context.needResponse = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                context = new JsonRequestContext();
+                context.needResponse = true;
+                throw ex;
+            }
 
             if (this.actionMap.TryGet(context.method, out methodInstance))
             {
-                if (context.@params != null)
+                if (context.@params == null)
                 {
-                    if (context.@params.Length != methodInstance.ParameterTypes.Length)
+                    if (methodInstance.ParameterNames.Length != 0)
                     {
                         throw new RRQMRPCException("调用参数计数不匹配");
                     }
-                    for (int i = 0; i < context.@params.Length; i++)
+                    return;
+                }
+                if (context.@params.GetType() != typeof(JArray))
+                {
+                    JObject obj = (JObject)context.@params;
+                    context.parameters = new object[methodInstance.ParameterNames.Length];
+                    //内联
+                    for (int i = 0; i < methodInstance.ParameterNames.Length; i++)
                     {
-                        string s = context.@params[i].ToString();
-
-                        Type type = methodInstance.ParameterTypes[i];
-                        if (type.IsPrimitive || type == typeof(string))
+                        if (obj.TryGetValue(methodInstance.ParameterNames[i], out JToken jToken))
                         {
-                            context.@params[i] = s.ParseToType(type);
+                            Type type = methodInstance.ParameterTypes[i];
+                            context.parameters[i] = jToken.ToObject(type);
+                        }
+                        else if (methodInstance.Parameters[i].HasDefaultValue)
+                        {
+                            context.parameters[i] = methodInstance.Parameters[i].DefaultValue;
                         }
                         else
                         {
-                            context.@params[i] = this.jsonFormatConverter.Deserialize(s, type);
+                            throw new RRQMRPCException("调用参数计数不匹配");
                         }
+                    }
+                }
+                else
+                {
+                    JArray array = (JArray)context.@params;
+                    if (array.Count != methodInstance.ParameterNames.Length)
+                    {
+                        throw new RRQMRPCException("调用参数计数不匹配");
+                    }
+                    context.parameters = new object[methodInstance.ParameterNames.Length];
+
+                    for (int i = 0; i < array.Count; i++)
+                    {
+                        context.parameters[i] = context.@params[i].ToObject(methodInstance.ParameterTypes[i]);
                     }
                 }
             }
@@ -265,42 +301,36 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="responseByteBlock"></param>
         /// <param name="methodInvoker"></param>
-        /// <param name="responseContext"></param>
-        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, MethodInvoker methodInvoker, JsonResponseContext responseContext)
+        /// <param name="id"></param>
+        /// <param name="result"></param>
+        /// <param name="error"></param>
+        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, MethodInvoker methodInvoker, string id, object result, error error)
         {
-            if (string.IsNullOrEmpty(responseContext.id))
-            {
-                return;
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            if (responseContext.error == null)
+            JObject jobject = new JObject();
+            if (error == null)
             {
                 //成功
-                stringBuilder.Append("{\"jsonrpc\": \"2.0\", \"result\":");
-                stringBuilder.Append(this.jsonFormatConverter.Serialize(responseContext.result));
-                stringBuilder.Append(", \"id\":");
-                stringBuilder.Append(responseContext.id);
-                stringBuilder.Append("}");
+                jobject.Add("jsonrpc", JToken.FromObject("2.0"));
+                jobject.Add("result", result == null ? null : JToken.FromObject(result));
+                jobject.Add("id", id == null ? null : JToken.FromObject(id));
             }
             else
             {
-                stringBuilder.Append("{\"jsonrpc\": \"2.0\", \"error\":");
-                stringBuilder.Append(this.jsonFormatConverter.Serialize(responseContext.error));
-                stringBuilder.Append(", \"id\":");
-                stringBuilder.Append(responseContext.id);
-                stringBuilder.Append("}");
+                jobject.Add("jsonrpc", JToken.FromObject("2.0"));
+                jobject.Add("error", JToken.FromObject(error));
+                jobject.Add("id", id == null ? null : JToken.FromObject(id));
             }
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
                     {
-                        responseByteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
+                        responseByteBlock.Write(Encoding.UTF8.GetBytes(jobject.ToString(Formatting.None)));
                         break;
                     }
                 case JsonRpcProtocolType.Http:
                     {
                         HttpResponse httpResponse = new HttpResponse();
-                        httpResponse.FromJson(stringBuilder.ToString());
+                        httpResponse.FromJson(jobject.ToString(Formatting.None));
                         httpResponse.Build(responseByteBlock);
                         break;
                     }
@@ -310,12 +340,12 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 载入配置
         /// </summary>
-        /// <param name="ServiceConfig"></param>
-        protected override void LoadConfig(ServiceConfig ServiceConfig)
+        /// <param name="serviceConfig"></param>
+        protected override void LoadConfig(ServiceConfig serviceConfig)
         {
-            base.LoadConfig(ServiceConfig);
-            this.jsonFormatConverter = (JsonFormatConverter)ServiceConfig.GetValue(JsonRpcParserConfig.JsonFormatConverterProperty);
-            this.protocolType = (JsonRpcProtocolType)ServiceConfig.GetValue(JsonRpcParserConfig.ProtocolTypeProperty);
+            base.LoadConfig(serviceConfig);
+            this.protocolType = (JsonRpcProtocolType)serviceConfig.GetValue(JsonRpcParserConfig.ProtocolTypeProperty);
+            this.maxPackageSize = (int)serviceConfig.GetValue(JsonRpcParserConfig.MaxPackageSizeProperty);
         }
 
         /// <summary>
@@ -323,7 +353,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected override void OnCreateSocketCliect(SimpleSocketClient socketClient, CreateOption createOption)
+        protected override void OnCreateSocketCliect(JsonRpcSocketClient socketClient, CreateOption createOption)
         {
             if (createOption.NewCreate)
             {
@@ -332,11 +362,11 @@ namespace RRQMSocket.RPC.JsonRpc
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
-                    socketClient.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.BufferLength, "\r\n"));
+                    socketClient.SetAdapter(new TerminatorDataHandlingAdapter(this.maxPackageSize, "\r\n"));
                     break;
 
                 case JsonRpcProtocolType.Http:
-                    socketClient.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.BufferLength, HttpType.Server));
+                    socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
                     break;
             }
         }
@@ -373,7 +403,7 @@ namespace RRQMSocket.RPC.JsonRpc
                 }
                 else if (methodInstance.IsEnable)
                 {
-                    methodInvoker.Parameters = context.@params;
+                    methodInvoker.Parameters = context.parameters;
                 }
                 else
                 {
