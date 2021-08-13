@@ -32,6 +32,22 @@ namespace RRQMSocket.RPC.WebApi
         /// 所需类型<see cref="RRQMSocket.RPC.WebApi.ApiDataConverter"/>
         /// </summary>
         public static readonly DependencyProperty ApiDataConverterProperty =
-            DependencyProperty.Register("ApiDataConverter", typeof(ApiDataConverter), typeof(WebApiParserConfig), new XmlDataConverter());
+            DependencyProperty.Register("ApiDataConverter", typeof(ApiDataConverter), typeof(WebApiParserConfig), new JsonDataConverter());
+
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return (int)GetValue(MaxPackageSizeProperty); }
+            set { SetValue(MaxPackageSizeProperty, value); }
+        }
+
+        /// <summary>
+        /// 最大数据包长度，所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty MaxPackageSizeProperty =
+            DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(WebApiParserConfig), 1024);
+
     }
 }

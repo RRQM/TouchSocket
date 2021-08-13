@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC.WebApi
     /// <summary>
     /// WebApi解析器
     /// </summary>
-    public class WebApiParser : TcpService<SimpleSocketClient>, IRPCParser
+    public class WebApiParser : TcpService<WebApiSocketClient>, IRPCParser
     {
         private RouteMap routeMap;
 
@@ -38,6 +38,16 @@ namespace RRQMSocket.RPC.WebApi
         /// 数据转化器
         /// </summary>
         public ApiDataConverter ApiDataConverter { get; private set; }
+
+        private int maxPackageSize;
+
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return maxPackageSize; }
+        }
 
         /// <summary>
         /// 函数映射
@@ -95,7 +105,7 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -150,9 +160,8 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
-
         }
 
         /// <summary>
@@ -185,11 +194,12 @@ namespace RRQMSocket.RPC.WebApi
         /// <summary>
         /// 载入配置
         /// </summary>
-        /// <param name="serverConfig"></param>
-        protected override void LoadConfig(ServiceConfig serverConfig)
+        /// <param name="serviceConfig"></param>
+        protected override void LoadConfig(ServiceConfig serviceConfig)
         {
-            base.LoadConfig(serverConfig);
-            this.ApiDataConverter = (ApiDataConverter)serverConfig.GetValue(WebApiParserConfig.ApiDataConverterProperty);
+            base.LoadConfig(serviceConfig);
+            this.ApiDataConverter = (ApiDataConverter)serviceConfig.GetValue(WebApiParserConfig.ApiDataConverterProperty);
+            this.maxPackageSize = (int)serviceConfig.GetValue(WebApiParserConfig.MaxPackageSizeProperty);
         }
 
         /// <summary>
@@ -197,13 +207,13 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected override void OnCreateSocketCliect(SimpleSocketClient socketClient, CreateOption createOption)
+        protected override void OnCreateSocketCliect(WebApiSocketClient socketClient, CreateOption createOption)
         {
             if (createOption.NewCreate)
             {
                 socketClient.OnReceived = this.OnReceived;
             }
-            socketClient.SetDataHandlingAdapter(new Http.HttpDataHandlingAdapter(this.BufferLength, HttpType.Server));
+            socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
         }
 
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
