@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net45;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+		<ApplicationIcon>RRQM.ico</ApplicationIcon>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
+		<Version>5.5.0</Version>
+		<Company>若汝棋茗</Company>
+		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
+        <PackageTags>IOCP,TCP,UDP,Socket</PackageTags>
+		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
+
+更新说明：
+优化：架构接口。
+修改：ClearInterval单位由“秒”调整为“毫秒”。
+修改：BufferLength默认值调整为64Kb。
+
+API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
+Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
+		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
+		<PackageIconUrl></PackageIconUrl>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<PackageIcon>RRQM.png</PackageIcon>
+		<Authors>若汝棋茗</Authors>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+		<DocumentationFile>bin\Debug\netstandard2.0\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+		<DocumentationFile>bin\Release\netstandard2.0\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+		<DocumentationFile>bin\Debug\net45\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+		<DocumentationFile>bin\Release\net45\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
+		<DocumentationFile>bin\Debug\net461\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+		<DocumentationFile>bin\Release\net461\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Release\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Helper\**" />
+	  <EmbeddedResource Remove="Helper\**" />
+	  <None Remove="Helper\**" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="LICENSE">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="RRQM.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="RRQMCore" Version="2.3.0" />
+	</ItemGroup>
+
+</Project>
