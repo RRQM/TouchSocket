@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC.XmlRpc
     /// <summary>
     /// XmlRpc解析器
     /// </summary>
-    public class XmlRpcParser : TcpService<SimpleSocketClient>, IRPCParser
+    public class XmlRpcParser : TcpService<XmlRpcSocketClient>, IRPCParser
     {
         private ActionMap actionMap;
 
@@ -38,6 +38,16 @@ namespace RRQMSocket.RPC.XmlRpc
         /// 服务键映射图
         /// </summary>
         public ActionMap ActionMap { get { return this.actionMap; } }
+
+        private int maxPackageSize;
+
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return maxPackageSize; }
+        }
 
         /// <summary>
         /// 函数映射
@@ -91,7 +101,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void OnRegisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -116,9 +126,18 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="methodInstances"></param>
-        public void OnUnregisterServer(ServerProvider provider, MethodInstance[] methodInstances)
+        public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
+        }
 
+        /// <summary>
+        /// 载入配置
+        /// </summary>
+        /// <param name="serviceConfig"></param>
+        protected override void LoadConfig(ServiceConfig serviceConfig)
+        {
+            base.LoadConfig(serviceConfig);
+            this.maxPackageSize = (int)serviceConfig.GetValue(XmlRpcParserConfig.MaxPackageSizeProperty);
         }
 
         /// <summary>
@@ -153,13 +172,13 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected override void OnCreateSocketCliect(SimpleSocketClient socketClient, CreateOption createOption)
+        protected override void OnCreateSocketCliect(XmlRpcSocketClient socketClient, CreateOption createOption)
         {
             if (createOption.NewCreate)
             {
                 socketClient.OnReceived = this.OnReceived;
             }
-            socketClient.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.BufferLength, HttpType.Server));
+            socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
         }
 
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)

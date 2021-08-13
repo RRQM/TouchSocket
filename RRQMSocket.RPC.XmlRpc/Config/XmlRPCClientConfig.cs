@@ -14,10 +14,27 @@ using RRQMCore.Dependency;
 namespace RRQMSocket.RPC.XmlRpc
 {
     /// <summary>
-    /// XmlRPCClient配置
+    /// XmlRpcClient配置
     /// </summary>
-    public class XmlRPCClientConfig : TcpClientConfig
+    public class XmlRpcClientConfig : TcpClientConfig
     {
+
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return (int)GetValue(MaxPackageSizeProperty); }
+            set { SetValue(MaxPackageSizeProperty, value); }
+        }
+
+        /// <summary>
+        /// 最大数据包长度，所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty MaxPackageSizeProperty =
+            DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(XmlRpcClientConfig), 1024);
+
+
         /// <summary>
         /// 等待超时时间(秒)
         /// </summary>
@@ -32,6 +49,6 @@ namespace RRQMSocket.RPC.XmlRpc
         /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty TimeoutProperty =
-            DependencyProperty.Register("Timeout", typeof(int), typeof(XmlRPCClientConfig), 5);
+            DependencyProperty.Register("Timeout", typeof(int), typeof(XmlRpcClientConfig), 5);
     }
 }

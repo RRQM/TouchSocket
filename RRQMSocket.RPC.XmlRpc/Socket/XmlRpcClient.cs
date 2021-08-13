@@ -20,19 +20,30 @@ using System.Xml;
 namespace RRQMSocket.RPC.XmlRpc
 {
     /// <summary>
-    /// XmlRPC客户端
+    /// XmlRpc客户端
     /// </summary>
-    public class XmlRPCClient : TcpClient, IRPCClient
+    public class XmlRpcClient : TcpClient, IRpcClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public XmlRPCClient()
+        public XmlRpcClient()
         {
             singleWaitHandle = new WaitData<HttpResponse>();
         }
 
+        private int maxPackageSize;
+
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return maxPackageSize; }
+        }
+
         private WaitData<HttpResponse> singleWaitHandle;
+
         private int timeout;
 
         /// <summary>
@@ -42,8 +53,9 @@ namespace RRQMSocket.RPC.XmlRpc
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
             base.LoadConfig(clientConfig);
-            this.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.bufferLength, HttpType.Client));
-            this.timeout = (int)clientConfig.GetValue(XmlRPCClientConfig.TimeoutProperty);
+            this.timeout = (int)clientConfig.GetValue(XmlRpcClientConfig.TimeoutProperty);
+            this.maxPackageSize = (int)clientConfig.GetValue(XmlRpcClientConfig.MaxPackageSizeProperty);
+            this.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
         }
 
         /// <summary>

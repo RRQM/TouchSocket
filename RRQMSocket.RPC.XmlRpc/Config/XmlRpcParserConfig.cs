@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.Dependency;
+
 namespace RRQMSocket.RPC.XmlRpc
 {
     /// <summary>
@@ -17,5 +19,20 @@ namespace RRQMSocket.RPC.XmlRpc
     /// </summary>
     public class XmlRpcParserConfig : TcpServiceConfig
     {
+        /// <summary>
+        /// 最大数据包长度
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return (int)GetValue(MaxPackageSizeProperty); }
+            set { SetValue(MaxPackageSizeProperty, value); }
+        }
+
+        /// <summary>
+        /// 最大数据包长度，所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty MaxPackageSizeProperty =
+            DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(XmlRpcParserConfig), 1024);
+
     }
 }
