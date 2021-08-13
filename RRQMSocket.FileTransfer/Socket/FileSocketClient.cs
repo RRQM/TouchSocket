@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.IO;
 using RRQMCore.Log;
 using RRQMCore.Serialization;
 using RRQMSocket.RPC.RRQMRPC;
@@ -18,6 +17,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace RRQMSocket.FileTransfer
@@ -27,6 +27,40 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public class FileSocketClient : RPCSocketClient, IFileService, IFileClient
     {
+        /// <summary>
+        /// 传输文件之前
+        /// </summary>
+        internal RRQMFileOperationEventHandler BeforeFileTransfer;
+
+        /// <summary>
+        /// 当文件传输完成时
+        /// </summary>
+        internal RRQMTransferFileMessageEventHandler FinishedFileTransfer;
+
+        private long dataTransferLength;
+
+        private long maxDownloadSpeed = 1024 * 1024;
+
+        private long maxUploadSpeed = 1024 * 1024;
+
+        private long position;
+
+        private float progress;
+
+        private string rrqmPath;
+
+        private long speed;
+
+        private Stopwatch stopwatch = new Stopwatch();
+
+        private long tempLength;
+
+        private long timeTick;
+
+        private TransferStatus transferStatus;
+
+        private UrlFileInfo transferUrlFileInfo;
+
         static FileSocketClient()
         {
             AddUsedProtocol(110, "同步设置");
@@ -39,18 +73,12 @@ namespace RRQMSocket.FileTransfer
             AddUsedProtocol(117, "上传分块");
             AddUsedProtocol(118, "停止上传");
             AddUsedProtocol(119, "确认上传完成");
+            AddUsedProtocol(120, "智能包调节");
+            for (short i = 121; i < 200; i++)
+            {
+                AddUsedProtocol(i, "保留协议");
+            }
         }
-
-        #region 属性
-
-        private long maxDownloadSpeed = 1024 * 1024;
-
-        private long maxUploadSpeed = 1024 * 1024;
-
-        /// <summary>
-        /// 获取当前传输文件包
-        /// </summary>
-        public ProgressBlockCollection FileBlocks { get { return fileBlocks == null ? null : fileBlocks; } }
 
         /// <summary>
         /// 每秒最大下载速度（Byte）,不可小于1024
@@ -64,8 +92,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     value = 1024;
                 }
-                maxDownloadSpeed = value;
-                MaxSpeedChanged(maxDownloadSpeed);
+                this.maxDownloadSpeed = value;
             }
         }
 
@@ -81,15 +108,14 @@ namespace RRQMSocket.FileTransfer
                 {
                     value = 1024;
                 }
-                maxUploadSpeed = value;
-                MaxSpeedChanged(maxUploadSpeed);
+                this.maxUploadSpeed = value;
             }
         }
 
         /// <summary>
         /// 获取当前传输文件信息
         /// </summary>
-        public FileInfo TransferFileInfo { get { return fileBlocks == null ? null : fileBlocks.UrlFileInfo; } }
+        public UrlFileInfo TransferFileInfo { get => this.transferUrlFileInfo; }
 
         /// <summary>
         /// 获取当前传输进度
@@ -98,18 +124,11 @@ namespace RRQMSocket.FileTransfer
         {
             get
             {
-                if (fileBlocks == null)
+                if (transferUrlFileInfo == null)
                 {
                     return 0;
                 }
-                if (fileBlocks.UrlFileInfo != null)
-                {
-                    this.progress = fileBlocks.UrlFileInfo.FileLength > 0 ? (float)position / fileBlocks.UrlFileInfo.FileLength : 0;//计算下载完成进度
-                }
-                else
-                {
-                    this.progress = 0;
-                }
+                this.progress = transferUrlFileInfo.FileLength > 0 ? (float)position / transferUrlFileInfo.FileLength : 0;//计算下载完成进度
                 return progress <= 1 ? progress : 1;
             }
         }
@@ -130,39 +149,10 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 获取当前传输状态
         /// </summary>
-        public TransferStatus TransferStatus { get; private set; }
-
-        #endregion 属性
-
-        #region 字段
-
-        internal bool breakpointResume;
-        private bool bufferLengthChanged;
-        private long dataTransferLength;
-        private ProgressBlockCollection fileBlocks;
-        private long position;
-        private float progress;
-        private long speed;
-        private Stopwatch stopwatch = new Stopwatch();
-        private long tempLength;
-        private long timeTick;
-        private RRQMStream uploadFileStream;
-
-        #endregion 字段
-
-        #region 事件
-
-        /// <summary>
-        /// 传输文件之前
-        /// </summary>
-        internal RRQMFileOperationEventHandler BeforeFileTransfer;
-
-        /// <summary>
-        /// 当文件传输完成时
-        /// </summary>
-        internal RRQMTransferFileMessageEventHandler FinishedFileTransfer;
-
-        #endregion 事件
+        public TransferStatus TransferStatus
+        {
+            get { return transferStatus; }
+        }
 
         /// <summary>
         /// 释放资源
@@ -170,6 +160,7 @@ namespace RRQMSocket.FileTransfer
         public override void Dispose()
         {
             base.Dispose();
+            this.ResetVariable();
         }
 
         /// <summary>
@@ -178,8 +169,16 @@ namespace RRQMSocket.FileTransfer
         public override void Recreate()
         {
             base.Recreate();
-            this.maxDownloadSpeed = 1024 * 1024;
-            this.maxUploadSpeed = 1024 * 1024;
+        }
+
+        /// <summary>
+        /// 文件辅助类处理其他协议
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="byteBlock"></param>
+        protected virtual void FileSocketClientHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        {
+            this.OnHandleDefaultData(procotol, byteBlock);
         }
 
         /// <summary>
@@ -195,181 +194,113 @@ namespace RRQMSocket.FileTransfer
             {
                 case 110:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            if (this.TransferStatus == TransferStatus.Download)
-                            {
-                                this.MaxSpeedChanged(this.maxDownloadSpeed);
-                            }
-                            else
-                            {
-                                this.MaxSpeedChanged(this.maxUploadSpeed);
-                            }
-                            TransferSetting transferSetting = new TransferSetting();
-                            transferSetting.breakpointResume = this.breakpointResume;
-                            transferSetting.bufferLength = this.BufferLength;
-                            transferSetting.Serialize(returnByteBlock);
-                            this.bufferLengthChanged = false;
-                            this.InternalSend(111, returnByteBlock);
+                            //this.P110_SynchronizeTransferSetting();
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 112:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
                             UrlFileInfo fileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 2);
-                            RequestDownload(returnByteBlock, fileInfo);
-                            this.InternalSend(111, returnByteBlock);
+                            P112_RequestDownload(fileInfo);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 113:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            DownloadBlockData(returnByteBlock, buffer);
-                            this.InternalSend(111, returnByteBlock.Buffer, 0, (int)returnByteBlock.Length, true);
+                            P113_DownloadBlockData(byteBlock);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 114:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            this.fileBlocks = null;
-                            this.TransferStatus = TransferStatus.None;
-                            returnByteBlock.Write(1);
-                            this.InternalSend(111, returnByteBlock);
+                            P114_StopDownload();
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 115:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            DownloadFinished(returnByteBlock);
-                            this.InternalSend(111, returnByteBlock);
+                            P115_DownloadFinished();
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 116:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            bool restart = BitConverter.ToBoolean(byteBlock.Buffer, 2);
-                            PBCollectionTemp blocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(byteBlock.Buffer, 3);
-                            RequestUpload(returnByteBlock, blocks, restart);
-                            this.InternalSend(111, returnByteBlock);
+                            UrlFileInfo urlFileInfo = SerializeConvert.RRQMBinaryDeserialize<UrlFileInfo>(buffer, 2);
+                            P116_RequestUpload(urlFileInfo);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 117:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            UploadBlockData(returnByteBlock, byteBlock);
-                            this.InternalSend(111, returnByteBlock);
+                            P117_UploadBlockData(buffer);
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 118:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            StopUpload(returnByteBlock);
-                            this.InternalSend(111, returnByteBlock);
+                            P118_StopUpload();
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
-                        }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
                         }
                         break;
                     }
                 case 119:
                     {
-                        ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         try
                         {
-                            UploadFinished(returnByteBlock);
-                            this.InternalSend(111, returnByteBlock);
+                            P119_UploadFinished();
                         }
                         catch (Exception ex)
                         {
                             Logger.Debug(LogType.Error, this, ex.Message, ex);
                         }
-                        finally
-                        {
-                            returnByteBlock.Dispose();
-                        }
+
                         break;
                     }
                 default:
@@ -378,24 +309,6 @@ namespace RRQMSocket.FileTransfer
                         break;
                     }
             }
-        }
-
-        /// <summary>
-        /// 文件辅助类处理其他协议
-        /// </summary>
-        /// <param name="procotol"></param>
-        /// <param name="byteBlock"></param>
-        protected virtual void FileSocketClientHandleDefaultData(short? procotol, ByteBlock byteBlock)
-        {
-            this.OnHandleDefaultData(procotol, byteBlock);
-        }
-
-        /// <summary>
-        /// 当BufferLength改变值的时候
-        /// </summary>
-        protected override void OnBufferLengthChanged()
-        {
-            bufferLengthChanged = true;
         }
 
         /// <summary>
@@ -414,7 +327,7 @@ namespace RRQMSocket.FileTransfer
             else
             {
                 //在这一秒中
-                switch (this.TransferStatus)
+                switch (this.transferStatus)
                 {
                     case TransferStatus.Upload:
                         if (this.dataTransferLength > this.maxUploadSpeed)
@@ -448,188 +361,222 @@ namespace RRQMSocket.FileTransfer
             return DateTime.Now.Ticks / 10000000;
         }
 
-        private void MaxSpeedChanged(long speed)
+        private FileOperationEventArgs OnBeforeFileTransfer(UrlFileInfo urlFileInfo)
         {
-            if (speed < 1024 * 1024 * 50)
+            FileOperationEventArgs args = new FileOperationEventArgs();
+            args.UrlFileInfo = urlFileInfo;
+            args.TransferType = urlFileInfo.TransferType;
+            args.IsPermitOperation = true;
+            if (urlFileInfo.TransferType == TransferType.Download)
             {
-                this.SetBufferLength(1024 * 10);
+                //下载
+                urlFileInfo.FilePath = Path.GetFullPath(urlFileInfo.FilePath);
             }
-            else if (speed < 1024 * 1024 * 100)
+
+            try
             {
-                this.SetBufferLength(1024 * 64);
+                this.BeforeFileTransfer?.Invoke(this, args);//触发 接收文件事件
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(BeforeFileTransfer)}中发生异常", ex);
+            }
+
+            if (urlFileInfo.TransferType == TransferType.Upload)
+            {
+                urlFileInfo.SaveFullPath = Path.GetFullPath(string.IsNullOrEmpty(urlFileInfo.SaveFullPath) ? urlFileInfo.FileName : urlFileInfo.SaveFullPath);
+                this.rrqmPath = urlFileInfo.SaveFullPath + ".rrqm";
+            }
+            this.transferUrlFileInfo = urlFileInfo;
+            return args;
+        }
+
+        private void OnFinishedFileTransfer(TransferType transferType)
+        {
+            if (!string.IsNullOrEmpty(this.transferUrlFileInfo.FileHash))
+            {
+                TransferFileHashDictionary.AddFile(this.transferUrlFileInfo);
+            }
+            TransferFileMessageArgs args = new TransferFileMessageArgs();
+            args.UrlFileInfo = this.transferUrlFileInfo;
+            args.TransferType = transferType;
+
+            if (transferType == TransferType.Download)
+            {
+                FileStreamPool.DisposeReadStream(this.transferUrlFileInfo.FilePath);
             }
             else
             {
-                this.SetBufferLength(1024 * 512);
+                FileStreamPool.DisposeWriteStream(this.rrqmPath, true);
+                this.rrqmPath = null;
             }
-        }
-
-        #region 协议函数
-
-        private void DownloadBlockData(ByteBlock byteBlock, byte[] buffer)
-        {
-            if (this.TransferStatus != TransferStatus.Download)
-            {
-                byteBlock.Buffer[6] = 0;
-                return;
-            }
+            this.transferStatus = TransferStatus.None;
+            this.transferUrlFileInfo = null;
             try
             {
-                long position = BitConverter.ToInt64(buffer, 2);
-                long requestLength = BitConverter.ToInt64(buffer, 10);
-                if (FileBaseTool.ReadFileBytes(fileBlocks.UrlFileInfo.FilePath, position, byteBlock, 7, (int)requestLength))
-                {
-                    Speed.downloadSpeed += requestLength;
-                    this.position = position + requestLength;
-                    this.tempLength += requestLength;
-                    this.dataTransferLength += requestLength;
-                    if (this.bufferLengthChanged)
-                    {
-                        byteBlock.Buffer[6] = 3;
-                    }
-                    else
-                    {
-                        byteBlock.Buffer[6] = 1;
-                    }
-                }
-                else
-                {
-                    byteBlock.Buffer[6] = 2;
-                }
+                this.FinishedFileTransfer?.Invoke(this, args);
             }
-            catch
+            catch (Exception ex)
             {
-                byteBlock.Buffer[6] = 2;
+                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FinishedFileTransfer)}中发生异常", ex);
             }
+            this.ResetVariable();
         }
 
-        private void DownloadFinished(ByteBlock byteBlock)
+        private void P112_RequestDownload(UrlFileInfo urlFileInfo)
         {
-            TransferFileStreamDic.DisposeFileStream(this.fileBlocks.UrlFileInfo.FilePath);
-            byteBlock.Write(1);
-            FilePathEventArgs args = new FilePathEventArgs();
-            args.FileInfo = this.fileBlocks.UrlFileInfo;
-            this.TransferStatus = TransferStatus.None;
-            args.TransferType = TransferType.Download;
-            args.TargetPath = args.FileInfo.FilePath;
-            this.FinishedFileTransfer?.Invoke(this, args);
-            this.fileBlocks = null;
-        }
-
-        private void RequestDownload(ByteBlock byteBlock, UrlFileInfo urlFileInfo)
-        {
-            FileOperationEventArgs args = new FileOperationEventArgs();
-            args.FileInfo = urlFileInfo;
-            args.IsPermitOperation = true;
-            args.TargetPath = args.FileInfo.FilePath;
-            args.TransferType = TransferType.Download;
-            this.BeforeFileTransfer?.Invoke(this, args);
-
-            string filePath = args.TargetPath;
+            FileOperationEventArgs args = OnBeforeFileTransfer(urlFileInfo);
             FileWaitResult waitResult = new FileWaitResult();
             if (!args.IsPermitOperation)
             {
                 waitResult.Message = string.IsNullOrEmpty(args.Message) ? "服务器拒绝下载" : args.Message;
                 waitResult.Status = 2;
-                this.TransferStatus = TransferStatus.None;
+                this.transferStatus = TransferStatus.None;
             }
             else if (!File.Exists(urlFileInfo.FilePath))
             {
-                waitResult.Message = string.Format("文件不存在", filePath);
+                waitResult.Message = $"路径{urlFileInfo.FilePath}文件不存在";
                 waitResult.Status = 2;
-                this.TransferStatus = TransferStatus.None;
+                this.transferStatus = TransferStatus.None;
             }
             else
             {
-                this.TransferStatus = TransferStatus.Download;
-                waitResult.Message = null;
-                waitResult.Status = 1;
-                FileInfo fileInfo;
+                UrlFileInfo fileInfo;
 
-                if (!TransferFileHashDictionary.GetFileInfo(filePath, out fileInfo, breakpointResume))
+                if (!TransferFileHashDictionary.GetFileInfo(urlFileInfo.FilePath, out fileInfo, urlFileInfo.Flags.HasFlag(TransferFlags.BreakpointResume)))
                 {
-                    fileInfo = new FileInfo();
-                    using (FileStream stream = File.OpenRead(filePath))
-                    {
-                        fileInfo.FilePath = filePath;
-                        fileInfo.FileLength = stream.Length;
-                        fileInfo.FileName = Path.GetFileName(filePath);
-                        if (this.breakpointResume)
-                        {
-                            fileInfo.FileHash = FileControler.GetStreamHash(stream);
-                        }
-                        TransferFileHashDictionary.AddFile(fileInfo);
-                    }
+                    fileInfo = TransferFileHashDictionary.AddFile(urlFileInfo.FilePath, urlFileInfo.Flags.HasFlag(TransferFlags.BreakpointResume));
                 }
-                urlFileInfo.Copy(fileInfo);
-                fileBlocks = FileBaseTool.GetProgressBlockCollection(urlFileInfo, this.breakpointResume);
-                waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(fileBlocks);
+                urlFileInfo.CopyFrom(fileInfo);
+                if (FileStreamPool.LoadReadStream(ref urlFileInfo, out string mes))
+                {
+                    this.transferStatus = TransferStatus.Download;
+                    waitResult.Message = null;
+                    waitResult.Status = 1;
+                    this.transferUrlFileInfo = urlFileInfo;
+                    waitResult.PBCollectionTemp = new PBCollectionTemp();
+                    waitResult.PBCollectionTemp.UrlFileInfo = urlFileInfo;
+                }
+                else
+                {
+                    waitResult.Message = mes;
+                    waitResult.Status = 2;
+                }
             }
 
-            byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult, true));
+            this.SendDefaultObject(waitResult);
         }
 
-        private void RequestUpload(ByteBlock byteBlock, PBCollectionTemp requestBlocks, bool restart)
+        private void P113_DownloadBlockData(ByteBlock receivedByteBlock)
         {
-            FileWaitResult waitResult = new FileWaitResult();
-            FileOperationEventArgs args = new FileOperationEventArgs();
-            args.FileInfo = requestBlocks.UrlFileInfo;
-            args.TargetPath = Path.Combine(requestBlocks.UrlFileInfo.SaveFolder, requestBlocks.UrlFileInfo.FileName);
-            args.IsPermitOperation = true;
-            this.BeforeFileTransfer?.Invoke(this, args);//触发 接收文件事件
-            requestBlocks.UrlFileInfo.FilePath = args.TargetPath;
+            receivedByteBlock.Pos = 2;
 
+            long position = receivedByteBlock.ReadInt64();
+            int requestLength = receivedByteBlock.ReadInt32();
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(requestLength + 7);
+            if (this.transferStatus != TransferStatus.Download)
+            {
+                byteBlock.Buffer[6] = 0;
+            }
+
+            string mes;
+            if (FileStreamPool.ReadFile(transferUrlFileInfo.FilePath, out mes, position, byteBlock, 7, requestLength))
+            {
+                Speed.downloadSpeed += requestLength;
+                this.position = position + requestLength;
+                this.tempLength += requestLength;
+                this.dataTransferLength += requestLength;
+                byteBlock.Buffer[6] = 1;
+            }
+            else
+            {
+                byteBlock.Position = 6;
+                byteBlock.Write((byte)2);
+                byteBlock.Write(Encoding.UTF8.GetBytes(string.IsNullOrEmpty(mes) ? "未知错误" : mes));
+            }
+
+            try
+            {
+                if (this.Online)
+                {
+                    this.InternalSend(111, byteBlock.Buffer, 0, byteBlock.Len, true);
+                }
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        private void P114_StopDownload()
+        {
+            this.transferUrlFileInfo = null;
+            this.transferStatus = TransferStatus.None;
+            this.InternalSend(111, new byte[] { 1 }, 0, 1);
+        }
+
+        private void P115_DownloadFinished()
+        {
+            if (this.transferStatus == TransferStatus.None)
+            {
+                this.InternalSend(111, new byte[] { 1 }, 0, 1);
+                return;
+            }
+            this.InternalSend(111, new byte[] { 1 }, 0, 1);
+            OnFinishedFileTransfer(TransferType.Download);
+        }
+
+        private void P116_RequestUpload(UrlFileInfo urlFileInfo)
+        {
+            FileOperationEventArgs args = OnBeforeFileTransfer(urlFileInfo);
+
+            FileWaitResult waitResult = new FileWaitResult();
             if (!args.IsPermitOperation)
             {
                 waitResult.Status = 2;
                 waitResult.Message = string.IsNullOrEmpty(args.Message) ? "服务器拒绝上传" : args.Message;
             }
-            else if (FileControler.FileIsOpen(requestBlocks.UrlFileInfo.FilePath))
-            {
-                waitResult.Status = 2;
-                waitResult.Message = "该文件已被打开，或许正在由其他客户端上传";
-            }
             else
             {
-                this.TransferStatus = TransferStatus.Upload;
-
-                restart = this.breakpointResume ? restart : true;
-                if (!restart)
+                this.transferStatus = TransferStatus.Upload;
+                this.transferUrlFileInfo = urlFileInfo;
+                if (urlFileInfo.Flags.HasFlag(TransferFlags.QuickTransfer) && TransferFileHashDictionary.GetFileInfoFromHash(urlFileInfo.FileHash, out UrlFileInfo oldUrlFileInfo))
                 {
-                    FileInfo fileInfo;
-                    if (TransferFileHashDictionary.GetFileInfoFromHash(requestBlocks.UrlFileInfo.FileHash, out fileInfo))
+                    try
                     {
-                        try
+                        if (urlFileInfo.FilePath != oldUrlFileInfo.FilePath)
                         {
-                            if (fileInfo.FilePath != requestBlocks.UrlFileInfo.FilePath)
-                            {
-                                File.Copy(fileInfo.FilePath, requestBlocks.UrlFileInfo.FilePath);
-                            }
-                            this.fileBlocks = FileBaseTool.GetProgressBlockCollection(requestBlocks.UrlFileInfo, this.breakpointResume);
-                            foreach (var item in this.fileBlocks)
-                            {
-                                item.Finished = true;
-                            }
-                            waitResult.Status = 3;
-                            waitResult.Message = null;
+                            File.Copy(oldUrlFileInfo.FilePath, urlFileInfo.FilePath, true);
+                        }
 
-                            byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult, true));
-                            return;
-                        }
-                        catch
-                        {
-                        }
+                        waitResult.Status = 3;
+                        waitResult.Message = null;
+                        this.SendDefaultObject(waitResult);
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        waitResult.Status = 2;
+                        waitResult.Message = ex.Message;
+                        this.Logger.Debug(LogType.Error, this, "在处理快速上传时发生异常。", ex);
                     }
                 }
+
                 try
                 {
-                    ProgressBlockCollection blocks = requestBlocks.ToPBCollection();
-                    uploadFileStream = RRQMStream.GetRRQMStream(ref blocks, restart, this.breakpointResume);
-                    blocks.UrlFileInfo.FilePath = requestBlocks.UrlFileInfo.FilePath;
-                    this.fileBlocks = blocks;
-                    waitResult.Status = 1;
-                    waitResult.Message = null;
-                    waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(blocks);
+                    ProgressBlockCollection blocks = ProgressBlockCollection.CreateProgressBlockCollection(urlFileInfo);
+
+                    if (FileStreamPool.LoadWriteStream(ref blocks, false, out string mes))
+                    {
+                        waitResult.Status = 1;
+                        waitResult.Message = null;
+                        waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(blocks);
+                    }
+                    else
+                    {
+                        waitResult.Status = 2;
+                        waitResult.Message = mes;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -639,83 +586,107 @@ namespace RRQMSocket.FileTransfer
                 }
             }
 
-            byteBlock.Write(SerializeConvert.RRQMBinarySerialize(waitResult, true));
+            this.SendDefaultObject(waitResult);
         }
 
-        private void StopUpload(ByteBlock byteBlock)
+        private void P117_UploadBlockData(byte[] buffer)
         {
-            FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.fileBlocks);
-            this.uploadFileStream.Dispose();
-            this.uploadFileStream = null;
-            byteBlock.Write(1);
-        }
-
-        private void UploadBlockData(ByteBlock byteBlock, ByteBlock receivedbyteBlock)
-        {
-            if (this.TransferStatus != TransferStatus.Upload)
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            try
             {
-                byteBlock.Write(4);
-                return;
-            }
-            byte status = receivedbyteBlock.Buffer[2];
-            int index = BitConverter.ToInt32(receivedbyteBlock.Buffer, 3);
-            long position = BitConverter.ToInt64(receivedbyteBlock.Buffer, 7);
-            long submitLength = BitConverter.ToInt64(receivedbyteBlock.Buffer, 15);
-
-            string mes;
-            if (FileBaseTool.WriteFile(this.uploadFileStream, out mes, position, receivedbyteBlock.Buffer, 23, (int)submitLength))
-            {
-                this.position = position + submitLength;
-                this.tempLength += submitLength;
-                this.dataTransferLength += submitLength;
-                Speed.uploadSpeed += submitLength;
-
-                if (this.bufferLengthChanged)
+                if (this.transferStatus != TransferStatus.Upload)
                 {
-                    byteBlock.Write(3);
+                    byteBlock.Write((byte)4);
+                }
+                byte status = buffer[2];
+                int index = BitConverter.ToInt32(buffer, 3);
+                long position = BitConverter.ToInt64(buffer, 7);
+                int submitLength = BitConverter.ToInt32(buffer, 15);
+
+                string mes;
+                if (FileStreamPool.WriteFile(this.rrqmPath, out mes, out RRQMStream stream, position, buffer, 19, submitLength))
+                {
+                    this.position = position + submitLength;
+                    this.tempLength += submitLength;
+                    this.dataTransferLength += submitLength;
+                    Speed.uploadSpeed += submitLength;
+                    byteBlock.Write((byte)1);
+                    if (status == 1)
+                    {
+                        FileBlock fileProgress = stream.Blocks.FirstOrDefault(a => a.Index == index);
+                        fileProgress.RequestStatus = RequestStatus.Finished;
+                        stream.SaveProgressBlockCollection();
+                    }
                 }
                 else
                 {
-                    byteBlock.Write(1);
+                    byteBlock.Write((byte)2);
+                    byteBlock.Write(Encoding.UTF8.GetBytes(mes));
+                    Logger.Debug(LogType.Error, this, $"上传文件写入错误，信息：{mes}");
                 }
-
-                if (status == 1)
-                {
-                    FileProgressBlock fileProgress = this.fileBlocks.FirstOrDefault(a => a.Index == index);
-                    fileProgress.Finished = true;
-                    FileBaseTool.SaveProgressBlockCollection(this.uploadFileStream, this.fileBlocks);
-                }
+                this.InternalSend(111, byteBlock);
             }
-            else
+            catch (Exception ex)
             {
-                byteBlock.Write(2);
-                Logger.Debug(LogType.Error, this, "上传文件写入错误：" + mes);
+                Logger.Debug(LogType.Error, this, "上传文件错误", ex);
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 
-        private void UploadFinished(ByteBlock byteBlock)
+        private void P118_StopUpload()
         {
-            TransferFileHashDictionary.AddFile(this.TransferFileInfo);
-            if (this.uploadFileStream != null)
+            try
             {
-                RRQMStream.FileFinished(this.uploadFileStream);
-                this.uploadFileStream = null;
+                FileStreamPool.SaveProgressBlockCollection(this.rrqmPath);
+                FileStreamPool.DisposeWriteStream(this.rrqmPath, false);
+                this.ResetVariable();
+                this.InternalSend(111, new byte[] { 1 }, 0, 1);
             }
-            if (this.fileBlocks != null)
+            catch (Exception ex)
             {
-                TransferFileHashDictionary.AddFile(this.fileBlocks.UrlFileInfo);
-                FilePathEventArgs args = new FilePathEventArgs();
-                args.FileInfo = this.fileBlocks.UrlFileInfo;
-                args.TargetPath = args.FileInfo.FilePath;
-                args.TransferType = TransferType.Upload;
-                this.FinishedFileTransfer?.Invoke(this, args);
-
-                this.fileBlocks = null;
+                this.Logger.Debug(LogType.Error, this, "客户端请求停止上传时发生异常", ex);
             }
-
-            byteBlock.Write(1);
         }
 
-        #endregion 协议函数
+        private void P119_UploadFinished()
+        {
+            if (this.transferStatus == TransferStatus.None)
+            {
+                this.InternalSend(111, new byte[] { 1 }, 0, 1);
+                return;
+            }
+            this.InternalSend(111, new byte[] { 1 }, 0, 1);
+            OnFinishedFileTransfer(TransferType.Upload);
+        }
+
+        private void ResetVariable()
+        {
+            this.transferStatus = TransferStatus.None;
+            this.transferUrlFileInfo = null;
+            this.progress = 0;
+            this.speed = 0;
+            if (!string.IsNullOrEmpty(this.rrqmPath))
+            {
+                FileStreamPool.DisposeWriteStream(this.rrqmPath, false);
+                this.rrqmPath = null;
+            }
+        }
+
+        private void SendDefaultObject(object obj)
+        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            byteBlock.Write(SerializeConvert.RRQMBinarySerialize(obj, true));
+            try
+            {
+                this.InternalSend(111, byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
     }
 }

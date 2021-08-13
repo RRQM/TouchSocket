@@ -19,19 +19,12 @@ namespace RRQMSocket.FileTransfer
     public class FileServiceConfig : TokenServiceConfig
     {
         /// <summary>
-        /// 是否支持断点续传
+        /// 构造函数
         /// </summary>
-        public bool BreakpointResume
+        public FileServiceConfig()
         {
-            get { return (bool)GetValue(BreakpointResumeProperty); }
-            set { SetValue(BreakpointResumeProperty, value); }
+            this.BufferLength = 64 * 1024;
         }
-
-        /// <summary>
-        /// 是否支持断点续传, 所需类型<see cref="bool"/>
-        /// </summary>
-        public static readonly DependencyProperty BreakpointResumeProperty =
-            DependencyProperty.Register("BreakpointResume", typeof(bool), typeof(FileServiceConfig), false);
 
         /// <summary>
         /// 最大下载速度

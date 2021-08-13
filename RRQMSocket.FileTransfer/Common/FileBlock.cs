@@ -25,11 +25,16 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件流位置
         /// </summary>
-        public long StreamPosition { get; internal set; }
+        public long Position { get; internal set; }
 
         /// <summary>
-        /// 文件哈希值
+        /// 文件块长度
         /// </summary>
-        public string FileHash { get; internal set; }
+        public long UnitLength { get; internal set; }
+
+        /// <summary>
+        /// 请求状态
+        /// </summary>
+        public RequestStatus RequestStatus { get; internal set; }
     }
 }

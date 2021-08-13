@@ -17,7 +17,7 @@ namespace RRQMSocket.FileTransfer
     public class TransferFileMessageArgs : FileEventArgs
     {
         /// <summary>
-        /// 错误信息
+        /// 信息
         /// </summary>
         public string Message { get; internal set; }
 

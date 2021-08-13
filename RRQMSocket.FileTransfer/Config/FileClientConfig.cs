@@ -19,6 +19,14 @@ namespace RRQMSocket.FileTransfer
     public class FileClientConfig : TokenClientConfig
     {
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public FileClientConfig()
+        {
+            this.BufferLength = 64 * 1024;
+        }
+
+        /// <summary>
         /// 默认接收文件的存放目录
         /// </summary>
         public string ReceiveDirectory
@@ -41,22 +49,37 @@ namespace RRQMSocket.FileTransfer
             DependencyProperty.Register("ReceiveDirectory", typeof(string), typeof(FileClientConfig), string.Empty);
 
         /// <summary>
-        /// 单次请求超时时间 min=5,max=60 单位：秒
+        /// 单次请求超时时间 min=5000,max=60*1000 ms
         /// </summary>
         public int Timeout
         {
             get { return (int)GetValue(TimeoutProperty); }
             set
             {
-                value = value < 5 ? 5 : (value > 60 ? 60 : value);
                 SetValue(TimeoutProperty, value);
             }
         }
 
         /// <summary>
-        /// 单次请求超时时间 min=5,max=60 单位：秒, 所需类型<see cref="int"/>
+        /// 单次请求超时时间 min=5000,max=60*1000 ms, 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty TimeoutProperty =
-            DependencyProperty.Register("Timeout", typeof(int), typeof(FileClientConfig), 5);
+            DependencyProperty.Register("Timeout", typeof(int), typeof(FileClientConfig), 10*1000);
+
+        /// <summary>
+        /// 数据包尺寸
+        /// </summary>
+        public int PacketSize
+        {
+            get { return (int)GetValue(PacketSizeProperty); }
+            set { SetValue(PacketSizeProperty, value); }
+        }
+
+        /// <summary>
+        /// 数据包尺寸, 所需类型<see cref="int"/>
+        /// </summary>
+        [RRQMCore.Range]
+        public static readonly DependencyProperty PacketSizeProperty =
+            DependencyProperty.Register("PacketSize", typeof(int), typeof(FileClientConfig), 1024 * 1024);
     }
 }

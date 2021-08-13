@@ -9,49 +9,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 文件信息基类
+    /// 流操作类型
     /// </summary>
-    public class FileInfo
+    public enum StreamOperationType : byte
     {
         /// <summary>
-        /// 文件名
+        /// 读
         /// </summary>
-        public string FileName { get; set; }
+        Read,
 
         /// <summary>
-        /// 文件大小
+        /// 写
         /// </summary>
-        public long FileLength { get; set; }
-
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string FilePath { get; set; }
-
-        /// <summary>
-        /// 文件哈希值
-        /// </summary>
-        public string FileHash { get; set; }
-
-        /// <summary>
-        /// 文件标志
-        /// </summary>
-        public string Flag { get; set; }
-
-        /// <summary>
-        /// 复制
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        public void Copy(FileInfo fileInfo)
-        {
-            this.FileHash = fileInfo.FileHash;
-            this.FileLength = fileInfo.FileLength;
-            this.FileName = fileInfo.FileName;
-            this.FilePath = fileInfo.FilePath;
-        }
+        Write
     }
 }

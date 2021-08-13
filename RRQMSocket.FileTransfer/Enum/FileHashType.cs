@@ -9,22 +9,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 文件进度块
+    /// 文件Hash检验类型
     /// </summary>
-    public class FileProgressBlock : FileBlock
+    public enum FileHashType : byte
     {
         /// <summary>
-        /// 文件块长度
+        /// MD5
         /// </summary>
-        public long UnitLength { get; internal set; }
+        MD5,
 
         /// <summary>
-        /// 完成
+        /// SHA1
         /// </summary>
-        public bool Finished { get; internal set; }
+        SHA1,
+
+        /// <summary>
+        /// SHA256
+        /// </summary>
+        SHA256,
+
+        /// <summary>
+        /// SHA512
+        /// </summary>
+        SHA512
     }
 }

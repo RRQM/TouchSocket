@@ -14,7 +14,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 操作文件事件类
     /// </summary>
-    public class FileOperationEventArgs : FilePathEventArgs
+    public class FileOperationEventArgs : TransferFileMessageArgs
     {
         /// <summary>
         /// 是否允许操作

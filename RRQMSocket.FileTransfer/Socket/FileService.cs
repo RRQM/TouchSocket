@@ -21,19 +21,9 @@ namespace RRQMSocket.FileTransfer
     {
         #region 属性
 
-        private bool breakpointResume;
-
         private long maxDownloadSpeed;
 
         private long maxUploadSpeed;
-
-        /// <summary>
-        /// 是否支持断点续传
-        /// </summary>
-        public bool BreakpointResume
-        {
-            get { return breakpointResume; }
-        }
 
         /// <summary>
         /// 获取下载速度
@@ -105,13 +95,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 载入配置
         /// </summary>
-        /// <param name="serverConfig"></param>
-        protected override void LoadConfig(ServiceConfig serverConfig)
+        /// <param name="serviceConfig"></param>
+        protected override void LoadConfig(ServiceConfig serviceConfig)
         {
-            base.LoadConfig(serverConfig);
-            this.breakpointResume = (bool)serverConfig.GetValue(FileServiceConfig.BreakpointResumeProperty);
-            this.maxDownloadSpeed = (long)serverConfig.GetValue(FileServiceConfig.MaxDownloadSpeedProperty);
-            this.maxUploadSpeed = (long)serverConfig.GetValue(FileServiceConfig.MaxUploadSpeedProperty);
+            base.LoadConfig(serviceConfig);
+            this.maxDownloadSpeed = (long)serviceConfig.GetValue(FileServiceConfig.MaxDownloadSpeedProperty);
+            this.maxUploadSpeed = (long)serviceConfig.GetValue(FileServiceConfig.MaxUploadSpeedProperty);
         }
 
         /// <summary>
@@ -122,8 +111,6 @@ namespace RRQMSocket.FileTransfer
         protected override void OnCreateSocketCliect(FileSocketClient socketClient, CreateOption creatOption)
         {
             base.OnCreateSocketCliect(socketClient, creatOption);
-
-            socketClient.breakpointResume = this.BreakpointResume;
             socketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
             if (creatOption.NewCreate)

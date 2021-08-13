@@ -20,7 +20,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 获取当前传输文件信息
         /// </summary>
-        FileInfo TransferFileInfo { get; }
+        UrlFileInfo TransferFileInfo { get; }
 
         /// <summary>
         /// 获取当前传输进度
@@ -36,10 +36,5 @@ namespace RRQMSocket.FileTransfer
         /// 获取当前传输状态
         /// </summary>
         TransferStatus TransferStatus { get; }
-
-        /// <summary>
-        /// 获取当前传输文件包
-        /// </summary>
-        ProgressBlockCollection FileBlocks { get; }
     }
 }

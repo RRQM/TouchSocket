@@ -9,30 +9,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Collections.Concurrent;
-using System.IO;
+using RRQMCore.Exceptions;
 
 namespace RRQMSocket.FileTransfer
 {
-    internal static class TransferFileStreamDic
+    /// <summary>
+    /// 文件传输错误码映射
+    /// </summary>
+    public class FileTransferErrorExceptionMapping : ErrorExceptionMapping
     {
-        private static ConcurrentDictionary<string, FileStream> readOrWriteStreamDic = new ConcurrentDictionary<string, FileStream>();
+        private static FileTransferErrorExceptionMapping _instance = new FileTransferErrorExceptionMapping();
 
-        internal static FileStream GetFileStream(string path)
-        {
-            return readOrWriteStreamDic.GetOrAdd(path, (v) =>
-              {
-                  return File.OpenRead(path);
-              });
-        }
-
-        internal static void DisposeFileStream(string path)
-        {
-            FileStream stream;
-            if (readOrWriteStreamDic.TryRemove(path, out stream))
-            {
-                stream.Dispose();
-            }
-        }
+        /// <summary>
+        /// 默认实例
+        /// </summary>
+        public static FileTransferErrorExceptionMapping Default { get => _instance; }
     }
 }

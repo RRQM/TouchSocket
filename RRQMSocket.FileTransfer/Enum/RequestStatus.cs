@@ -9,28 +9,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using System;
-
 namespace RRQMSocket.FileTransfer
 {
-    internal class TransferSetting
+    /// <summary>
+    /// 请求状态
+    /// </summary>
+    public enum RequestStatus : byte
     {
-        internal bool breakpointResume;
-        internal int bufferLength;
+        /// <summary>
+        /// 未开始
+        /// </summary>
+        Hovering,
 
-        internal void Serialize(ByteBlock byteBlock)
-        {
-            byteBlock.Write(Convert.ToByte(breakpointResume));
-            byteBlock.Write(BitConverter.GetBytes(bufferLength));
-        }
+        /// <summary>
+        /// 正在进行
+        /// </summary>
+        InProgress,
 
-        internal static TransferSetting Deserialize(byte[] buffer, int offset)
-        {
-            TransferSetting transferSetting = new TransferSetting();
-            transferSetting.breakpointResume = BitConverter.ToBoolean(buffer, offset);
-            transferSetting.bufferLength = BitConverter.ToInt32(buffer, offset + 1);
-            return transferSetting;
-        }
+        /// <summary>
+        /// 完成
+        /// </summary>
+        Finished
     }
 }

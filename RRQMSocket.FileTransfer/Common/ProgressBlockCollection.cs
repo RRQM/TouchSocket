@@ -18,12 +18,30 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件进度块集合
     /// </summary>
-    public class ProgressBlockCollection : ReadOnlyList<FileProgressBlock>
+    public class ProgressBlockCollection : ReadOnlyList<FileBlock>
     {
         /// <summary>
         /// 文件信息
         /// </summary>
         public UrlFileInfo UrlFileInfo { get; internal set; }
+
+        private static int blockLength = 1024 * 1024 * 10;
+
+        /// <summary>
+        /// 分块长度,min=1024*1024*5
+        /// </summary>
+        public static int BlockLength
+        {
+            get { return blockLength; }
+            set
+            {
+                if (value < 1024 * 1024 * 5)
+                {
+                    value = 1024 * 1024 * 5;
+                }
+                blockLength = value;
+            }
+        }
 
         /// <summary>
         /// 保存
@@ -62,6 +80,27 @@ namespace RRQMSocket.FileTransfer
             {
                 return null;
             }
+        }
+
+        internal static ProgressBlockCollection CreateProgressBlockCollection(UrlFileInfo urlFileInfo)
+        {
+            ProgressBlockCollection blocks = new ProgressBlockCollection();
+            blocks.UrlFileInfo = urlFileInfo;
+            long position = 0;
+            long surLength = urlFileInfo.FileLength;
+            int index = 0;
+            while (surLength > 0)
+            {
+                FileBlock block = new FileBlock();
+                block.Index = index++;
+                block.RequestStatus = RequestStatus.Hovering;
+                block.Position = position;
+                block.UnitLength = surLength > blockLength ? blockLength : surLength;
+                blocks.Add(block);
+                position += block.UnitLength;
+                surLength -= block.UnitLength;
+            }
+            return blocks;
         }
     }
 }

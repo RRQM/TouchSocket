@@ -9,26 +9,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 传输文件
+    /// 传输标识
     /// </summary>
-    public class TransferFileArgs
+    [Flags]
+    public enum TransferFlags
     {
         /// <summary>
-        /// 已接收的流位置
+        /// 无任何标识
         /// </summary>
-        public long StreamPosition { get; set; }
+        None = 0,
 
         /// <summary>
-        /// 接收的文件信息（不要手动更改里面任何内容）
+        /// 断点续传
         /// </summary>
-        public FileInfo FileInfo { get; set; }
+        BreakpointResume = 1,
 
         /// <summary>
-        /// 传输文件进度
+        /// 快速传输
         /// </summary>
-        public float TransferProgressValue { get; set; }
+        QuickTransfer = 2
     }
 }

@@ -11,115 +11,147 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Serialization;
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
-    internal class RRQMStream : IDisposable
+    internal class RRQMStream
     {
-        internal static ConcurrentDictionary<string, RRQMStream> pathAndStream = new ConcurrentDictionary<string, RRQMStream>();
-
-        internal static RRQMStream GetRRQMStream(ref ProgressBlockCollection blocks, bool restart, bool breakpoint)
-        {
-            string rrqmPath = blocks.UrlFileInfo.FilePath + ".rrqm";
-            string tempPath = blocks.UrlFileInfo.FilePath + ".temp";
-
-            if (pathAndStream.TryRemove(blocks.UrlFileInfo.FilePath, out RRQMStream rrqmStream))
-            {
-                rrqmStream.Dispose();
-            }
-            RRQMStream stream = new RRQMStream();
-            pathAndStream.TryAdd(blocks.UrlFileInfo.FilePath, stream);
-            stream.fileInfo = blocks.UrlFileInfo;
-
-            if (File.Exists(rrqmPath) && File.Exists(tempPath) && !restart && breakpoint)
-            {
-                PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(File.ReadAllBytes(rrqmPath));
-                if (readBlocks.UrlFileInfo != null && blocks.UrlFileInfo != null)
-                {
-                    if (readBlocks.UrlFileInfo.FileHash != null && blocks.UrlFileInfo.FileHash != null && readBlocks.UrlFileInfo.FileHash == blocks.UrlFileInfo.FileHash)
-                    {
-                        stream.tempFileStream = new FileStream(tempPath, FileMode.Open, FileAccess.ReadWrite);
-                        stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Open, FileAccess.ReadWrite);
-                        stream.blocks = blocks = readBlocks.ToPBCollection();
-
-                        return stream;
-                    }
-                }
-            }
-
-            if (File.Exists(rrqmPath))
-            {
-                File.Delete(rrqmPath);
-            }
-            if (File.Exists(tempPath))
-            {
-                File.Delete(tempPath);
-            }
-            if (breakpoint)
-            {
-                byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
-                stream.rrqmFileStream = new FileStream(rrqmPath, FileMode.Create, FileAccess.ReadWrite);
-                stream.rrqmFileStream.Write(dataBuffer, 0, dataBuffer.Length);
-                stream.rrqmFileStream.Flush();
-            }
-
-            stream.tempFileStream = new FileStream(tempPath, FileMode.Create, FileAccess.ReadWrite);
-            return stream;
-        }
-
-        internal static void FileFinished(RRQMStream stream)
-        {
-            stream.Dispose();
-            string path = stream.fileInfo.FilePath;
-            if (File.Exists(path + ".rrqm"))
-            {
-                File.Delete(path + ".rrqm");
-            }
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-            if (File.Exists(path + ".temp"))
-            {
-                File.Move(path + ".temp", path);
-            }
-        }
+        internal int reference;
 
         private ProgressBlockCollection blocks;
 
-        internal FileInfo fileInfo;
+        private FileStream fileStream;
+        private string rrqmPath;
+        private StreamOperationType streamType;
 
-        private FileStream rrqmFileStream;
+        private UrlFileInfo urlFileInfo;
 
-        public FileStream RRQMFileStream
+        private RRQMStream()
         {
-            get { return rrqmFileStream; }
         }
 
-        private FileStream tempFileStream;
+        public ProgressBlockCollection Blocks { get { return blocks; } }
 
-        public FileStream TempFileStream
+        public FileStream FileStream
         {
-            get { return tempFileStream; }
+            get { return fileStream; }
         }
 
-        public void Dispose()
+        public StreamOperationType StreamType
         {
-            string path = this.fileInfo.FilePath;
-            pathAndStream.TryRemove(path, out _);
+            get { return streamType; }
+        }
+
+        public UrlFileInfo UrlFileInfo { get => urlFileInfo; }
+
+        internal static bool CreateReadStream(out RRQMStream stream, ref UrlFileInfo urlFileInfo, out string mes)
+        {
+            stream = new RRQMStream();
+            try
+            {
+                stream.streamType = StreamOperationType.Read;
+                stream.fileStream = File.OpenRead(urlFileInfo.FilePath);
+                urlFileInfo.FileLength = stream.fileStream.Length;
+                stream.urlFileInfo = urlFileInfo;
+                mes = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                stream.Dispose();
+                stream = null;
+                mes = ex.Message;
+                return false;
+            }
+        }
+
+        internal static bool CreateWriteStream(out RRQMStream stream, ref ProgressBlockCollection blocks, out string mes)
+        {
+            stream = new RRQMStream();
+            stream.rrqmPath = blocks.UrlFileInfo.SaveFullPath + ".rrqm";
+            stream.urlFileInfo = blocks.UrlFileInfo;
+            stream.streamType = StreamOperationType.Write;
+            try
+            {
+                if (blocks.UrlFileInfo.Flags.HasFlag(TransferFlags.BreakpointResume) && File.Exists(stream.rrqmPath))
+                {
+                    stream.fileStream = new FileStream(stream.rrqmPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                    int blocksLength = (int)(stream.fileStream.Length - blocks.UrlFileInfo.FileLength);
+                    if (blocksLength > 0)
+                    {
+                        stream.fileStream.Position = blocks.UrlFileInfo.FileLength;
+                        byte[] buffer = new byte[blocksLength];
+                        stream.fileStream.Read(buffer, 0, buffer.Length);
+                        try
+                        {
+                            PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(buffer);
+                            if (readBlocks.UrlFileInfo != null && blocks.UrlFileInfo != null && readBlocks.UrlFileInfo.FileHash != null)
+                            {
+                                if (readBlocks.UrlFileInfo.FileHash == blocks.UrlFileInfo.FileHash)
+                                {
+                                    stream.blocks = blocks = readBlocks.ToPBCollection();
+                                    mes = null;
+                                    return true;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+                    stream.fileStream.Dispose();
+                }
+                stream.blocks = blocks;
+                if (File.Exists(stream.rrqmPath))
+                {
+                    File.Delete(stream.rrqmPath);
+                }
+                stream.fileStream = new FileStream(stream.rrqmPath, FileMode.Create, FileAccess.ReadWrite);
+                stream.SaveProgressBlockCollection();
+                mes = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                mes = ex.Message;
+                stream.Dispose();
+                stream = null;
+                return false;
+            }
+        }
+
+        internal bool FinishStream()
+        {
+            this.fileStream.SetLength(this.urlFileInfo.FileLength);
+            this.fileStream.Flush();
+            UrlFileInfo info = this.urlFileInfo;
+            this.Dispose();
+            if (File.Exists(info.SaveFullPath))
+            {
+                File.Delete(info.SaveFullPath);
+            }
+            File.Move(info.SaveFullPath + ".rrqm", info.SaveFullPath);
+            return true;
+        }
+
+        internal void Dispose()
+        {
             this.blocks = null;
-            if (this.rrqmFileStream != null)
+            this.urlFileInfo = null;
+            if (this.fileStream != null)
             {
-                this.rrqmFileStream.Dispose();
-                this.rrqmFileStream = null;
+                this.fileStream.Dispose();
+                this.fileStream = null;
             }
-            if (this.tempFileStream != null)
-            {
-                this.tempFileStream.Dispose();
-                this.tempFileStream = null;
-            }
+        }
+
+        internal void SaveProgressBlockCollection()
+        {
+            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
+            this.fileStream.Position = this.urlFileInfo.FileLength;
+            this.fileStream.WriteAsync(dataBuffer, 0, dataBuffer.Length);
+            this.fileStream.Flush();
         }
     }
 }

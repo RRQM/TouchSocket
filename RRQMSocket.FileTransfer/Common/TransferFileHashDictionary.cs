@@ -9,71 +9,86 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.IO;
 using System.Collections.Concurrent;
 using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
     /// 传输文件Hash暂存字典
     /// </summary>
     public static class TransferFileHashDictionary
     {
-        private static ConcurrentDictionary<string, FileInfo> filePathAndInfo = new ConcurrentDictionary<string, FileInfo>();
+        private static ConcurrentDictionary<string, UrlFileInfo> fileHashAndInfo = new ConcurrentDictionary<string, UrlFileInfo>();
+        private static ConcurrentDictionary<string, UrlFileInfo> filePathAndInfo = new ConcurrentDictionary<string, UrlFileInfo>();
 
         /// <summary>
-        /// 字典存储文件Hash的最大数量，默认为5000
+        /// 字典存储文件Hash的最大数量，默认为10000
         /// </summary>
-        public static int MaxCount { get; set; } = 5000;
+        public static int MaxCount { get; set; } = 10000;
 
         /// <summary>
         /// 添加文件信息
         /// </summary>
         /// <param name="filePath"></param>
-        public static void AddFile(string filePath)
+        /// <param name="breakpointResume"></param>
+        /// <returns></returns>
+        public static UrlFileInfo AddFile(string filePath, bool breakpointResume = true)
         {
-            if (!File.Exists(filePath))
-            {
-                return;
-            }
-
-            FileInfo fileInfo = new FileInfo();
+            UrlFileInfo urlFileInfo = new UrlFileInfo();
             using (FileStream stream = File.OpenRead(filePath))
             {
-                fileInfo.FilePath = filePath;
-                fileInfo.FileLength = stream.Length;
-                fileInfo.FileName = Path.GetFileName(filePath);
-                fileInfo.FileHash = FileControler.GetStreamHash(stream);
+                urlFileInfo.FilePath = filePath;
+                urlFileInfo.FileLength = stream.Length;
+                urlFileInfo.FileName = Path.GetFileName(filePath);
+                if (breakpointResume)
+                {
+                    urlFileInfo.FileHash = FileHashGenerator.GetFileHash(stream);
+                }
             }
-            AddFile(fileInfo);
+            AddFile(urlFileInfo);
+            return urlFileInfo;
         }
 
         /// <summary>
         /// 添加文件信息
         /// </summary>
-        /// <param name="fileInfo"></param>
-        public static void AddFile(FileInfo fileInfo)
+        /// <param name="urlFileInfo"></param>
+        public static void AddFile(UrlFileInfo urlFileInfo)
         {
-            if (fileInfo == null)
+            if (urlFileInfo == null)
             {
                 return;
             }
-            filePathAndInfo.AddOrUpdate(fileInfo.FilePath, fileInfo, (key, oldValue) =>
+            filePathAndInfo.AddOrUpdate(urlFileInfo.FilePath, urlFileInfo, (key, oldValue) =>
               {
-                  return fileInfo;
+                  return urlFileInfo;
               });
+
+            if (!string.IsNullOrEmpty(urlFileInfo.FileHash))
+            {
+                fileHashAndInfo.AddOrUpdate(urlFileInfo.FileHash, urlFileInfo, (key, oldValue) =>
+                {
+                    return urlFileInfo;
+                });
+            }
 
             if (filePathAndInfo.Count > MaxCount)
             {
                 foreach (var item in filePathAndInfo.Keys)
                 {
-                    FileInfo info;
-                    if (filePathAndInfo.TryRemove(item, out info))
+                    if (filePathAndInfo.TryRemove(item, out _))
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (fileHashAndInfo.Count > MaxCount)
+            {
+                foreach (var item in fileHashAndInfo.Keys)
+                {
+                    if (fileHashAndInfo.TryRemove(item, out _))
                     {
                         break;
                     }
@@ -94,6 +109,84 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
+        /// 获取文件信息
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="urlFileInfo"></param>
+        /// <param name="breakpointResume"></param>
+        /// <returns></returns>
+        public static bool GetFileInfo(string filePath, out UrlFileInfo urlFileInfo, bool breakpointResume)
+        {
+            if (filePathAndInfo == null)
+            {
+                urlFileInfo = null;
+                return false;
+            }
+            if (filePathAndInfo.ContainsKey(filePath))
+            {
+                urlFileInfo = filePathAndInfo[filePath];
+                if (File.Exists(filePath))
+                {
+                    using (FileStream stream = File.OpenRead(filePath))
+                    {
+                        if (urlFileInfo.FileLength == stream.Length)
+                        {
+                            if (breakpointResume && urlFileInfo.FileHash == null)
+                            {
+                                urlFileInfo.FileHash = FileHashGenerator.GetFileHash(stream);
+                                AddFile(urlFileInfo);
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            urlFileInfo = null;
+            return false;
+        }
+
+        /// <summary>
+        /// 通过FileHash获取文件信息
+        /// </summary>
+        /// <param name="fileHash"></param>
+        /// <param name="urlFileInfo"></param>
+        /// <returns></returns>
+        public static bool GetFileInfoFromHash(string fileHash, out UrlFileInfo urlFileInfo)
+        {
+            if (fileHashAndInfo == null)
+            {
+                urlFileInfo = null;
+                return false;
+            }
+            if (string.IsNullOrEmpty(fileHash))
+            {
+                urlFileInfo = null;
+                return false;
+            }
+
+            if (fileHashAndInfo.TryGetValue(fileHash, out urlFileInfo))
+            {
+                if (urlFileInfo.FileHash == fileHash)
+                {
+                    if (File.Exists(urlFileInfo.FilePath))
+                    {
+                        using (FileStream stream = File.OpenRead(urlFileInfo.FilePath))
+                        {
+                            if (urlFileInfo.FileLength == stream.Length)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            urlFileInfo = null;
+            return false;
+        }
+
+        /// <summary>
         /// 移除
         /// </summary>
         /// <param name="filePath"></param>
@@ -105,85 +198,6 @@ namespace RRQMSocket.FileTransfer
                 return false;
             }
             return filePathAndInfo.TryRemove(filePath, out _);
-        }
-
-        /// <summary>
-        /// 获取文件信息
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileInfo"></param>
-        /// <param name="breakpointResume"></param>
-        /// <returns></returns>
-        public static bool GetFileInfo(string filePath, out FileInfo fileInfo, bool breakpointResume)
-        {
-            if (filePathAndInfo == null)
-            {
-                fileInfo = null;
-                return false;
-            }
-            if (filePathAndInfo.ContainsKey(filePath))
-            {
-                fileInfo = filePathAndInfo[filePath];
-                if (File.Exists(filePath))
-                {
-                    using (FileStream stream = File.OpenRead(filePath))
-                    {
-                        if (fileInfo.FileLength == stream.Length)
-                        {
-                            if (breakpointResume && fileInfo.FileHash == null)
-                            {
-                                fileInfo.FileHash = FileControler.GetStreamHash(stream);
-                                AddFile(fileInfo);
-                            }
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            fileInfo = null;
-            return false;
-        }
-
-        /// <summary>
-        /// 通过FileHash获取文件信息
-        /// </summary>
-        /// <param name="fileHash"></param>
-        /// <param name="fileInfo"></param>
-        /// <returns></returns>
-        public static bool GetFileInfoFromHash(string fileHash, out FileInfo fileInfo)
-        {
-            if (filePathAndInfo == null)
-            {
-                fileInfo = null;
-                return false;
-            }
-            if (fileHash == null)
-            {
-                fileInfo = null;
-                return false;
-            }
-
-            foreach (var item in filePathAndInfo.Values)
-            {
-                if (item.FileHash == fileHash)
-                {
-                    if (File.Exists(item.FilePath))
-                    {
-                        using (FileStream stream = File.OpenRead(item.FilePath))
-                        {
-                            if (item.FileLength == stream.Length)
-                            {
-                                fileInfo = item;
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            fileInfo = null;
-            return false;
         }
     }
 }

@@ -26,7 +26,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 块集合
         /// </summary>
-        public List<FileProgressBlock> Blocks { get; internal set; }
+        public List<FileBlock> Blocks { get; internal set; }
 
         /// <summary>
         /// 从文件块转换
@@ -41,7 +41,7 @@ namespace RRQMSocket.FileTransfer
             }
             PBCollectionTemp collectionTemp = new PBCollectionTemp();
             collectionTemp.UrlFileInfo = progressBlocks.UrlFileInfo;
-            collectionTemp.Blocks = new List<FileProgressBlock>();
+            collectionTemp.Blocks = new List<FileBlock>();
             collectionTemp.Blocks.AddRange(progressBlocks);
             return collectionTemp;
         }

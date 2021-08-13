@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using RRQMCore.IO;
 using System.IO;
 
 namespace RRQMSocket.FileTransfer
@@ -18,19 +17,83 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件信息类
     /// </summary>
-    public class UrlFileInfo : FileInfo
+    public class UrlFileInfo
     {
+        private string saveFullPath = string.Empty;
+
+        private int timeout = 30 * 1000;
+
+        /// <summary>
+        /// 文件哈希值
+        /// </summary>
+        public string FileHash { get; internal set; }
+
+        /// <summary>
+        /// 文件大小
+        /// </summary>
+        public long FileLength { get; internal set; }
+
+        /// <summary>
+        /// 文件名
+        /// </summary>
+        public string FileName { get; internal set; }
+
+        /// <summary>
+        /// 文件路径
+        /// </summary>
+        public string FilePath { get; internal set; }
+
+        /// <summary>
+        /// 传输标识
+        /// </summary>
+        public TransferFlags Flags { get; set; }
+
+        /// <summary>
+        /// 携带消息
+        /// </summary>
+        public string Message { get; set; }
+
+        /// <summary>
+        /// 存放目录
+        /// </summary>
+        public string SaveFullPath
+        {
+            get { return saveFullPath; }
+            set
+            {
+                if (value == null)
+                {
+                    value = string.Empty;
+                }
+                saveFullPath = value;
+            }
+        }
+
+        /// <summary>
+        /// 超时时间，默认30*1000 ms
+        /// </summary>
+        public int Timeout
+        {
+            get { return timeout; }
+            set { timeout = value; }
+        }
+
+        /// <summary>
+        /// 请求传输类型
+        /// </summary>
+        public TransferType TransferType { get; internal set; }
+
         /// <summary>
         /// 生成下载请求必要信息
         /// </summary>
         /// <param name="path"></param>
-        /// <param name="restart"></param>
+        /// <param name="flags"></param>
         /// <returns></returns>
-        public static UrlFileInfo CreatDownload(string path, bool restart = false)
+        public static UrlFileInfo CreateDownload(string path, TransferFlags flags)
         {
             UrlFileInfo fileInfo = new UrlFileInfo();
             fileInfo.FilePath = path;
-            fileInfo.Restart = restart;
+            fileInfo.Flags = flags;
             fileInfo.FileName = Path.GetFileName(path);
             fileInfo.TransferType = TransferType.Download;
             return fileInfo;
@@ -40,20 +103,19 @@ namespace RRQMSocket.FileTransfer
         /// 生成上传请求必要信息
         /// </summary>
         /// <param name="path"></param>
-        /// <param name="breakpointResume"></param>
-        /// <param name="restart"></param>
+        /// <param name="flags"></param>
         /// <returns></returns>
-        public static UrlFileInfo CreatUpload(string path, bool breakpointResume, bool restart = false)
+        public static UrlFileInfo CreateUpload(string path, TransferFlags flags)
         {
             UrlFileInfo fileInfo = new UrlFileInfo();
             fileInfo.TransferType = TransferType.Upload;
             using (FileStream stream = File.OpenRead(path))
             {
-                fileInfo.Restart = restart;
+                fileInfo.Flags = flags;
                 fileInfo.FilePath = path;
-                if (breakpointResume)
+                if (flags.HasFlag(TransferFlags.BreakpointResume) || flags.HasFlag(TransferFlags.QuickTransfer))
                 {
-                    fileInfo.FileHash = FileControler.GetStreamHash(stream);
+                    fileInfo.FileHash = FileHashGenerator.GetFileHash(stream);
                 }
                 fileInfo.FileLength = stream.Length;
                 fileInfo.FileName = Path.GetFileName(path);
@@ -63,57 +125,42 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 重新开始
+        /// 复制
         /// </summary>
-        public bool Restart { get; set; }
-
-        /// <summary>
-        /// 超时时间，默认30秒
-        /// </summary>
-        public int Timeout { get; set; } = 30;
-
-        /// <summary>
-        /// 请求传输类型
-        /// </summary>
-        public TransferType TransferType { get; set; }
-
-        private string saveFolder = string.Empty;
-
-        /// <summary>
-        /// 存放目录
-        /// </summary>
-        public string SaveFolder
+        /// <param name="urlFileInfo"></param>
+        public void CopyFrom(UrlFileInfo urlFileInfo)
         {
-            get { return saveFolder; }
-            set
-            {
-                if (value == null)
-                {
-                    value = string.Empty;
-                }
-                saveFolder = value;
-            }
+            this.FileHash = urlFileInfo.FileHash;
+            this.FileLength = urlFileInfo.FileLength;
+            this.FileName = urlFileInfo.FileName;
+            this.FilePath = urlFileInfo.FilePath;
         }
 
         /// <summary>
-        /// 比较
+        /// 判断参数是否相同
         /// </summary>
-        /// <param name="fileInfo"></param>
+        /// <param name="urlFileInfo"></param>
         /// <returns></returns>
-        public bool Equals(UrlFileInfo fileInfo)
+        public bool Equals(UrlFileInfo urlFileInfo)
         {
-            if (this.FileHash == fileInfo.FileHash)
-            {
-                return true;
-            }
-            else if (this.FilePath == fileInfo.FilePath)
-            {
-                return true;
-            }
-            else
+            if (urlFileInfo.FileHash != this.FileHash)
             {
                 return false;
             }
+            if (urlFileInfo.FileLength != this.FileLength)
+            {
+                return false;
+            }
+            if (urlFileInfo.FileName != this.FileName)
+            {
+                return false;
+            }
+            if (urlFileInfo.FilePath != this.FilePath)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
