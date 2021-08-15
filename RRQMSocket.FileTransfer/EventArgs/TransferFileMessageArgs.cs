@@ -14,13 +14,13 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件传输消息
     /// </summary>
-    public class TransferFileMessageArgs : FileEventArgs
+    public class TransferFileMessageArgs : MesEventArgs
     {
         /// <summary>
-        /// 信息
+        /// 文件信息
         /// </summary>
-        public string Message { get; internal set; }
-
+        public UrlFileInfo UrlFileInfo { get; internal set; }
+        
         /// <summary>
         /// 传输类型
         /// </summary>
