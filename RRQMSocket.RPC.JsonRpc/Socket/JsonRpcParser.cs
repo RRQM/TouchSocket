@@ -311,7 +311,22 @@ namespace RRQMSocket.RPC.JsonRpc
             {
                 //成功
                 jobject.Add("jsonrpc", JToken.FromObject("2.0"));
-                jobject.Add("result", result == null ? null : JToken.FromObject(result));
+                if (result != null)
+                {
+                    if (result.GetType().FullName == "Newtonsoft.Json.Linq.JObject")
+                    {
+                        jobject.Add("result", JToken.Parse(((dynamic)result).ToString(0)));
+                    }
+                    else
+                    {
+                        jobject.Add("result", JToken.FromObject(result));
+                    }
+                }
+                else
+                {
+                    jobject.Add("result", null);
+                }
+
                 jobject.Add("id", id == null ? null : JToken.FromObject(id));
             }
             else
