@@ -10,13 +10,14 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
+using RRQMSocket.RPC.RRQMRPC;
 
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 文件客户端配置
     /// </summary>
-    public class FileClientConfig : TokenClientConfig
+    public class FileClientConfig : TcpRpcClientConfig
     {
         /// <summary>
         /// 构造函数

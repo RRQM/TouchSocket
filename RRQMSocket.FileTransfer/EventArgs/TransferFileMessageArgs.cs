@@ -20,7 +20,7 @@ namespace RRQMSocket.FileTransfer
         /// 文件信息
         /// </summary>
         public UrlFileInfo UrlFileInfo { get; internal set; }
-        
+
         /// <summary>
         /// 传输类型
         /// </summary>

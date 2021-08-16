@@ -375,7 +375,7 @@ namespace RRQMSocket.FileTransfer
                 case 111:
                     {
                         this.waitDataSend.Set(byteBlock);
-                        this.receiveWaitHandle.WaitOne();
+                        this.receiveWaitHandle.WaitOne(1000*10);
                         break;
                     }
                 default:
@@ -394,7 +394,6 @@ namespace RRQMSocket.FileTransfer
                 {
                     if (this.transferStatus == TransferStatus.None)
                     {
-                        this.receiveWaitHandle.Set();
                         if (this.FileTransferCollection.GetFirst(out UrlFileInfo urlFileInfo))
                         {
                             try
@@ -505,7 +504,7 @@ namespace RRQMSocket.FileTransfer
                         {
                             transferWaitHandle.WaitOne();
                         }
-
+                        
                         ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                         byteBlock.Write(this.position);
                         int requestLength = surplusLength > this.packetSize ? this.packetSize : (int)surplusLength;
@@ -746,6 +745,7 @@ namespace RRQMSocket.FileTransfer
         {
             lock (locker)
             {
+                this.receiveWaitHandle.Reset();
                 if (!this.Online)
                 {
                     throw new RRQMNotConnectedException("客户端未连接");
@@ -760,7 +760,6 @@ namespace RRQMSocket.FileTransfer
                 }
                 if (!this.waitDataSend.Wait(timeout))
                 {
-                    this.receiveWaitHandle.Set();
                     throw new RRQMTimeoutException("请求超时");
                 }
                 return this.waitDataSend.WaitResult;
