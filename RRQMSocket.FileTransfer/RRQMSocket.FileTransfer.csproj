@@ -4,21 +4,13 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>5.5.2</Version>
+    <Version>5.6.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>介绍：RRQMSocket.FileTransfer是一个轻量级文件传输框架，您可以用它传输任意大小的文件，它可以完美支持断点续传、快速上传、传输限速等。在实时测试中，它的传输速率可达1000Mb/s。
 
 更新说明：
-优化：传输逻辑。
-优化：临时文件存储逻辑。
-优化：断点续传逻辑。
-优化：文件验证支持MD5、SHA1、SHA256、SHA512。
-修改：UrlFileInfo属性特性，可以一键式设置文件上传，下载路径。
-修改：扩大客户端权限，传输的封包可以由配置PacketSize设置。
-修改：超时事件单位由“秒”调整为“毫秒”。
-修复：事件类触发参数类。
-修复：配置类继承。
+无特殊优化。
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
 Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
@@ -74,6 +66,6 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RRQMSocket.RPC" Version="5.5.0" />
+    <ProjectReference Include="..\RRQMSocket.RPC\RRQMSocket.RPC.csproj" />
   </ItemGroup>
 </Project>

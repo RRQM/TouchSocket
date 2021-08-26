@@ -67,6 +67,10 @@ namespace RRQMSocket.FileTransfer
 
         internal static void DisposeWriteStream(string path, bool finished)
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
             RRQMStream stream;
             if (pathStream.TryGetValue(path, out stream))
             {

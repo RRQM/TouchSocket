@@ -163,13 +163,6 @@ namespace RRQMSocket.FileTransfer
             this.ResetVariable();
         }
 
-        /// <summary>
-        ///  重置
-        /// </summary>
-        public override void Recreate()
-        {
-            base.Recreate();
-        }
 
         /// <summary>
         /// 文件辅助类处理其他协议

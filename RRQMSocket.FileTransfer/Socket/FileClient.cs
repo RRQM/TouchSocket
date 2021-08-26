@@ -236,6 +236,7 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+
         /// <summary>
         /// 取消指定传输任务
         /// </summary>
@@ -746,6 +747,7 @@ namespace RRQMSocket.FileTransfer
             lock (locker)
             {
                 this.receiveWaitHandle.Reset();
+                this.waitDataSend.Reset();
                 if (!this.Online)
                 {
                     throw new RRQMNotConnectedException("客户端未连接");
