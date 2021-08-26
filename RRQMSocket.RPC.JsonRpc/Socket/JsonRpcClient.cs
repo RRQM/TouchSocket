@@ -160,6 +160,10 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         try
                         {
+                            if (resultContext.Return==null)
+                            {
+                                return default;
+                            }
                             if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
                             {
                                 return (T)resultContext.Return.ToString().ParseToType(typeof(T));

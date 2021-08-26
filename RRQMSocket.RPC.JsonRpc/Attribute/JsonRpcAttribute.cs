@@ -29,15 +29,33 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="methodKey"></param>
-        public JsonRpcAttribute(string methodKey)
+        /// <param name="memberKey">指定键</param>
+        public JsonRpcAttribute(string memberKey) : this(memberKey, MethodFlags.None)
         {
-            this.MethodKey = methodKey;
+
+        }
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodFlags"></param>
+        public JsonRpcAttribute(MethodFlags methodFlags) : this(null, methodFlags)
+        {
+
         }
 
         /// <summary>
-        /// 服务唯一标识
+        /// 构造函数
         /// </summary>
-        public string MethodKey { get; private set; }
+        /// <param name="memberKey"></param>
+        /// <param name="methodFlags"></param>
+        public JsonRpcAttribute(string memberKey, MethodFlags methodFlags) : base(methodFlags)
+        {
+            this.MemberKey = memberKey;
+        }
+
+        /// <summary>
+        /// 注册键
+        /// </summary>
+        public string MemberKey { get; private set; }
     }
 }

@@ -15,6 +15,7 @@ using RRQMCore.XREF.Newtonsoft.Json;
 using RRQMCore.XREF.Newtonsoft.Json.Linq;
 using RRQMSocket.Http;
 using System;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace RRQMSocket.RPC.JsonRpc
@@ -35,6 +36,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcParser()
         {
+            this.idTypeInstance = new ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>>();
             this.actionMap = new ActionMap();
         }
 
@@ -73,6 +75,16 @@ namespace RRQMSocket.RPC.JsonRpc
         /// 所属服务器
         /// </summary>
         public RPCService RPCService { get; private set; }
+
+        private InvokeType invokeType;
+        /// <summary>
+        /// 调用类型
+        /// </summary>
+        public InvokeType InvokeType
+        {
+            get { return invokeType; }
+        }
+
 
         /// <summary>
         /// 执行函数
@@ -127,11 +139,11 @@ namespace RRQMSocket.RPC.JsonRpc
                         break;
                     }
             }
-            JsonRequestContext jsonRequestContext = (JsonRequestContext)methodInvoker.Flag;
-            if (jsonRequestContext.needResponse)
+            JsonRpcContext jsonRpcContext = (JsonRpcContext)methodInvoker.Flag;
+            if (jsonRpcContext.needResponse)
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                this.BuildResponseByteBlock(byteBlock, methodInvoker, jsonRequestContext.id, methodInvoker.ReturnParameter, error);
+                this.BuildResponseByteBlock(byteBlock, methodInvoker, jsonRpcContext.id, methodInvoker.ReturnParameter, error);
                 if (socketClient.Online)
                 {
                     try
@@ -168,7 +180,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         {
                             throw new RRQMRPCException($"JsonRpc服务中不允许有out及ref关键字，服务：{methodInstance.Method.Name}");
                         }
-                        string actionKey = string.IsNullOrEmpty(attribute.MethodKey) ? methodInstance.Method.Name : attribute.MethodKey;
+                        string actionKey = string.IsNullOrEmpty(attribute.MemberKey) ? methodInstance.Method.Name : attribute.MemberKey;
 
                         try
                         {
@@ -222,52 +234,87 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 构建请求内容
         /// </summary>
+        /// <param name="methodInvoker"></param>
         /// <param name="jsonString">数据</param>
         /// <param name="methodInstance">调用服务实例</param>
-        /// <param name="context"></param>
+        /// <param name="jsonRpcContext"></param>
         /// <returns></returns>
-        protected virtual void BuildRequestContext(string jsonString, out MethodInstance methodInstance, out JsonRequestContext context)
+        protected virtual void BuildRequestContext(MethodInvoker  methodInvoker, string jsonString, out MethodInstance methodInstance, out JsonRpcContext jsonRpcContext)
         {
             try
             {
-                context = JsonConvert.DeserializeObject<JsonRequestContext>(jsonString);
-                if (context.id != null)
+                jsonRpcContext = JsonConvert.DeserializeObject<JsonRpcContext>(jsonString);
+                if (jsonRpcContext.id != null)
                 {
-                    context.needResponse = true;
+                    jsonRpcContext.needResponse = true;
                 }
             }
             catch (Exception ex)
             {
-                context = new JsonRequestContext();
-                context.needResponse = true;
+                jsonRpcContext = new JsonRpcContext();
+                jsonRpcContext.needResponse = true;
                 throw ex;
             }
 
-            if (this.actionMap.TryGet(context.method, out methodInstance))
+            if (this.actionMap.TryGet(jsonRpcContext.method, out methodInstance))
             {
-                if (context.@params == null)
+                if (jsonRpcContext.@params == null)
                 {
-                    if (methodInstance.ParameterNames.Length != 0)
+                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
-                        throw new RRQMRPCException("调用参数计数不匹配");
+                        if (methodInstance.ParameterNames.Length > 1)
+                        {
+                            throw new RRQMRPCException("调用参数计数不匹配");
+                        }
+                        else
+                        {
+                            JsonRpcServerCallContext jsonRpcServerCallContext = new JsonRpcServerCallContext();
+                            jsonRpcServerCallContext.caller = methodInvoker.Caller;
+                            jsonRpcServerCallContext.methodInvoker = methodInvoker;
+                            jsonRpcServerCallContext.context = jsonRpcContext;
+                            jsonRpcServerCallContext.jsonString = jsonString;
+                            jsonRpcServerCallContext.methodInstance = methodInstance;
+                            jsonRpcServerCallContext.protocolType = this.protocolType;
+                            jsonRpcContext.parameters = new object[] { jsonRpcServerCallContext };
+                        }
+                    }
+                    else
+                    {
+                        if (methodInstance.ParameterNames.Length != 0)
+                        {
+                            throw new RRQMRPCException("调用参数计数不匹配");
+                        }
                     }
                     return;
                 }
-                if (context.@params.GetType() != typeof(JArray))
+                if (jsonRpcContext.@params.GetType() != typeof(JArray))
                 {
-                    JObject obj = (JObject)context.@params;
-                    context.parameters = new object[methodInstance.ParameterNames.Length];
+                    JObject obj = (JObject)jsonRpcContext.@params;
+                    jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
                     //内联
-                    for (int i = 0; i < methodInstance.ParameterNames.Length; i++)
+                    int i = 0;
+                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                    {
+                        JsonRpcServerCallContext jsonRpcServerCallContext = new JsonRpcServerCallContext();
+                        jsonRpcServerCallContext.caller = methodInvoker.Caller;
+                        jsonRpcServerCallContext.methodInvoker = methodInvoker;
+                        jsonRpcServerCallContext.context = jsonRpcContext;
+                        jsonRpcServerCallContext.jsonString = jsonString;
+                        jsonRpcServerCallContext.methodInstance = methodInstance;
+                        jsonRpcServerCallContext.protocolType = this.protocolType;
+                        jsonRpcContext.parameters[0] = jsonRpcServerCallContext;
+                        i = 1;
+                    }
+                    for (; i < methodInstance.ParameterNames.Length; i++)
                     {
                         if (obj.TryGetValue(methodInstance.ParameterNames[i], out JToken jToken))
                         {
                             Type type = methodInstance.ParameterTypes[i];
-                            context.parameters[i] = jToken.ToObject(type);
+                            jsonRpcContext.parameters[i] = jToken.ToObject(type);
                         }
                         else if (methodInstance.Parameters[i].HasDefaultValue)
                         {
-                            context.parameters[i] = methodInstance.Parameters[i].DefaultValue;
+                            jsonRpcContext.parameters[i] = methodInstance.Parameters[i].DefaultValue;
                         }
                         else
                         {
@@ -277,17 +324,43 @@ namespace RRQMSocket.RPC.JsonRpc
                 }
                 else
                 {
-                    JArray array = (JArray)context.@params;
-                    if (array.Count != methodInstance.ParameterNames.Length)
+                    JArray array = (JArray)jsonRpcContext.@params;
+                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
-                        throw new RRQMRPCException("调用参数计数不匹配");
-                    }
-                    context.parameters = new object[methodInstance.ParameterNames.Length];
+                        if (array.Count != methodInstance.ParameterNames.Length - 1)
+                        {
+                            throw new RRQMRPCException("调用参数计数不匹配");
+                        }
+                        jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
 
-                    for (int i = 0; i < array.Count; i++)
-                    {
-                        context.parameters[i] = context.@params[i].ToObject(methodInstance.ParameterTypes[i]);
+                        JsonRpcServerCallContext jsonRpcServerCallContext = new JsonRpcServerCallContext();
+                        jsonRpcServerCallContext.caller = methodInvoker.Caller;
+                        jsonRpcServerCallContext.methodInvoker = methodInvoker;
+                        jsonRpcServerCallContext.context = jsonRpcContext;
+                        jsonRpcServerCallContext.jsonString = jsonString;
+                        jsonRpcServerCallContext.methodInstance = methodInstance;
+                        jsonRpcServerCallContext.protocolType = this.protocolType;
+
+                        jsonRpcContext.parameters[0] = jsonRpcServerCallContext;
+                        for (int i = 0; i < array.Count; i++)
+                        {
+                            jsonRpcContext.parameters[i + 1] = jsonRpcContext.@params[i].ToObject(methodInstance.ParameterTypes[i + 1]);
+                        }
                     }
+                    else
+                    {
+                        if (array.Count != methodInstance.ParameterNames.Length)
+                        {
+                            throw new RRQMRPCException("调用参数计数不匹配");
+                        }
+                        jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
+
+                        for (int i = 0; i < array.Count; i++)
+                        {
+                            jsonRpcContext.parameters[i] = jsonRpcContext.@params[i].ToObject(methodInstance.ParameterTypes[i]);
+                        }
+                    }
+
                 }
             }
             else
@@ -361,6 +434,7 @@ namespace RRQMSocket.RPC.JsonRpc
             base.LoadConfig(serviceConfig);
             this.protocolType = (JsonRpcProtocolType)serviceConfig.GetValue(JsonRpcParserConfig.ProtocolTypeProperty);
             this.maxPackageSize = (int)serviceConfig.GetValue(JsonRpcParserConfig.MaxPackageSizeProperty);
+            this.invokeType = (InvokeType)serviceConfig.GetValue(JsonRpcParserConfig.InvokeTypeProperty);
         }
 
         /// <summary>
@@ -370,10 +444,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="createOption"></param>
         protected override void OnCreateSocketCliect(JsonRpcSocketClient socketClient, CreateOption createOption)
         {
-            if (createOption.NewCreate)
-            {
-                socketClient.OnReceived = this.OnReceived;
-            }
+            socketClient.OnReceived = this.OnReceived;
+
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
@@ -385,13 +457,15 @@ namespace RRQMSocket.RPC.JsonRpc
                     break;
             }
         }
-
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idTypeInstance;
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Caller = socketClient;
+            methodInvoker.Caller = (JsonRpcSocketClient)socketClient;
+            methodInvoker.InvokeType = this.invokeType;
+
             MethodInstance methodInstance = null;
-            JsonRequestContext context = null;
+            JsonRpcContext context = null;
             try
             {
                 string jsonString = null;
@@ -410,7 +484,7 @@ namespace RRQMSocket.RPC.JsonRpc
                             break;
                         }
                 }
-                this.BuildRequestContext(jsonString, out methodInstance, out context);
+                this.BuildRequestContext(methodInvoker, jsonString, out methodInstance, out context);
 
                 if (methodInstance == null)
                 {
@@ -419,6 +493,24 @@ namespace RRQMSocket.RPC.JsonRpc
                 else if (methodInstance.IsEnable)
                 {
                     methodInvoker.Parameters = context.parameters;
+                    if (this.invokeType == InvokeType.CustomInstance)
+                    {
+                        ConcurrentDictionary<Type, IServerProvider> typeInstance;
+                        if (!this.idTypeInstance.TryGetValue(socketClient.ID, out typeInstance))
+                        {
+                            typeInstance = new ConcurrentDictionary<Type, IServerProvider>();
+                            this.idTypeInstance.TryAdd(socketClient.ID, typeInstance);
+                        }
+
+                        IServerProvider instance;
+                        if (!typeInstance.TryGetValue(methodInstance.ProviderType, out instance))
+                        {
+                            instance = (IServerProvider)Activator.CreateInstance(methodInstance.ProviderType);
+                            typeInstance.TryAdd(methodInstance.ProviderType, instance);
+                        }
+
+                        methodInvoker.CustomServerProvider = instance;
+                    }
                 }
                 else
                 {

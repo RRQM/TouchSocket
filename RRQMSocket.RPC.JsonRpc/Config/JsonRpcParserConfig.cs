@@ -51,5 +51,22 @@ namespace RRQMSocket.RPC.JsonRpc
             DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(JsonRpcParserConfig), 1024);
 
 
+
+        /// <summary>
+        /// 调用类型
+        /// </summary>
+        public InvokeType InvokeType
+        {
+            get { return (InvokeType)GetValue(InvokeTypeProperty); }
+            set { SetValue(InvokeTypeProperty, value); }
+        }
+
+        /// <summary>
+        /// 调用类型，所需类型<see cref="RRQMSocket.RPC.InvokeType"/>
+        /// </summary>
+        public static readonly DependencyProperty InvokeTypeProperty =
+            DependencyProperty.Register("InvokeType", typeof(InvokeType), typeof(JsonRpcParserConfig), InvokeType.GlobalInstance);
+
+
     }
 }
