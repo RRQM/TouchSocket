@@ -110,7 +110,7 @@ namespace RRQMSocket.Http
                 {
                     this.bodyByteBlock = this.BytePool.GetByteBlock(this.httpBase.Content_Length);
                     int surLength = length - (index + 1);
-                    if (surLength - this.httpBase.Content_Length == 0)
+                    if (surLength-this.httpBase.Content_Length == 0)
                     {
                         this.bodyByteBlock.Write(buffer, index + 1, this.httpBase.Content_Length);
                         this.PreviewHandle(this.httpBase);
@@ -146,7 +146,7 @@ namespace RRQMSocket.Http
             else if (this.tempByteBlock == null)
             {
                 this.tempByteBlock = this.BytePool.GetByteBlock(length * 2);
-                this.tempByteBlock.Write(buffer, offset, length - offset);
+                this.tempByteBlock.Write(buffer,offset, length-offset);
             }
         }
 
