@@ -36,16 +36,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 序列化转换器
         /// </summary>
-        public SerializeConverter SerializeConverter
+        public SerializationSelector SerializationSelector
         {
-            get { return (SerializeConverter)GetValue(SerializeConverterProperty); }
-            set { SetValue(SerializeConverterProperty, value); }
+            get { return (SerializationSelector)GetValue(SerializationSelectorProperty); }
+            set { SetValue(SerializationSelectorProperty, value); }
         }
 
         /// <summary>
-        /// 序列化转换器, 所需类型<see cref="RRQMRPC.SerializeConverter"/>
+        /// 序列化转换器, 所需类型<see cref="RRQMRPC.SerializationSelector"/>
         /// </summary>
-        public static readonly DependencyProperty SerializeConverterProperty =
-            DependencyProperty.Register("SerializeConverter", typeof(SerializeConverter), typeof(UdpRpcClientConfig), new BinarySerializeConverter());
+        public static readonly DependencyProperty SerializationSelectorProperty =
+            DependencyProperty.Register("SerializationSelector", typeof(SerializationSelector), typeof(UdpRpcClientConfig), new DefaultSerializationSelector());
     }
 }

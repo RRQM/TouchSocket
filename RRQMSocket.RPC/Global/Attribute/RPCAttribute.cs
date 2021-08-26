@@ -18,5 +18,32 @@ namespace RRQMSocket.RPC
     /// </summary>
     public abstract class RPCAttribute : Attribute
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public RPCAttribute()
+        {
+
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodFlags"></param>
+        public RPCAttribute(MethodFlags methodFlags)
+        {
+            this.methodFlags = methodFlags;
+        }
+
+        private MethodFlags methodFlags = MethodFlags.None;
+
+        /// <summary>
+        /// 函数标识
+        /// </summary>
+        public MethodFlags MethodFlags
+        {
+            get { return methodFlags; }
+        }
+
     }
 }

@@ -20,31 +20,41 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 返回值
         /// </summary>
-        public object ReturnParameter { get; set; }
+        public object ReturnParameter;
 
         /// <summary>
         /// 参数值集合
         /// </summary>
-        public object[] Parameters { get; set; }
+        public object[] Parameters;
 
         /// <summary>
-        /// 获取调用状态
+        /// 调用状态
         /// </summary>
-        public InvokeStatus Status { get; set; }
+        public InvokeStatus Status;
+
+        /// <summary>
+        /// 调用类型
+        /// </summary>
+        public InvokeType InvokeType;
+
+        /// <summary>
+        /// 自定义调用实例
+        /// </summary>
+        public IServerProvider CustomServerProvider;
 
         /// <summary>
         /// 状态消息
         /// </summary>
-        public string StatusMessage { get; set; }
+        public string StatusMessage;
 
         /// <summary>
         /// 可以传递其他类型的数据容器
         /// </summary>
-        public object Flag { get; set; }
+        public object Flag;
 
         /// <summary>
         /// 此函数执行者
         /// </summary>
-        public object Caller { get; set; }
+        public ICaller Caller;
     }
 }

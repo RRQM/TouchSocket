@@ -9,9 +9,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
@@ -28,6 +30,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public TcpParser()
         {
+            this.idTypeInstance = new ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>>();
             this.methodStore = new MethodStore();
             this.proxyInfo = new RpcProxyInfo();
         }
@@ -50,10 +53,15 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public Version RPCVersion { get; private set; }
 
-        public SerializeConverter SerializeConverter { get; private set; }
+        private SerializationSelector serializationSelector;
+
+        public SerializationSelector SerializationSelector
+        {
+            get { return serializationSelector; }
+        }
+
 
         private MethodStore methodStore;
-        
         private RpcProxyInfo proxyInfo;
 
         public MethodStore MethodStore { get => methodStore; }
@@ -84,24 +92,30 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             if (methodInstance.MethodToken > 50000000)
                             {
-                                context.ReturnParameterBytes = this.SerializeConverter.SerializeParameter(methodInvoker.ReturnParameter);
+                                context.returnParameterBytes = this.serializationSelector.SerializeParameter(context.SerializationType, methodInvoker.ReturnParameter);
                             }
                             else
                             {
-                                context.ReturnParameterBytes = null;
+                                context.returnParameterBytes = null;
                             }
 
                             if (methodInstance.IsByRef)
                             {
-                                context.ParametersBytes = new List<byte[]>();
-                                foreach (var item in methodInvoker.Parameters)
+                                context.parametersBytes = new List<byte[]>();
+
+                                int i = 0;
+                                if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                                 {
-                                    context.ParametersBytes.Add(this.SerializeConverter.SerializeParameter(item));
+                                    i = 1;
+                                }
+                                for (; i < methodInvoker.Parameters.Length; i++)
+                                {
+                                    context.parametersBytes.Add(this.serializationSelector.SerializeParameter(context.SerializationType, methodInvoker.Parameters[i]));
                                 }
                             }
                             else
                             {
-                                context.ParametersBytes = null;
+                                context.parametersBytes = null;
                             }
 
                             context.Status = 1;
@@ -149,7 +163,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
-            Tools.GetRPCMethod(methodInstances, this.NameSpace, ref this.methodStore, this.RPCVersion, ref this.proxyInfo);
+            RRQMRPCTools.GetRPCMethod(methodInstances, this.NameSpace, ref this.methodStore, this.RPCVersion, ref this.proxyInfo);
         }
 
         public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
@@ -211,12 +225,9 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         protected override void OnCreateSocketCliect(TClient socketClient, CreateOption createOption)
         {
-            if (createOption.NewCreate)
-            {
-                socketClient.IDAction = this.IDInvoke;
-                socketClient.Received = this.OnReceived;
-                socketClient.serializeConverter = this.SerializeConverter;
-            }
+            socketClient.IDAction = this.IDInvoke;
+            socketClient.Received = this.OnReceived;
+            socketClient.serializationSelector = this.serializationSelector;
         }
 
         private void OnReceived(object sender, short? procotol, ByteBlock byteBlock)
@@ -224,7 +235,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.Received?.Invoke(sender, procotol, byteBlock);
         }
 
-        public virtual RpcProxyInfo GetProxyInfo(string proxyToken, object caller)
+        public virtual RpcProxyInfo GetProxyInfo(string proxyToken, ICaller caller)
         {
             RpcProxyInfo proxyInfo = new RpcProxyInfo();
             if (this.ProxyToken == proxyToken)
@@ -244,23 +255,65 @@ namespace RRQMSocket.RPC.RRQMRPC
             return proxyInfo;
         }
 
-        public virtual void ExecuteContext(RpcContext context, object caller)
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idTypeInstance;
+        
+        public virtual void ExecuteContext(RpcContext context, ICaller caller)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = caller;
             methodInvoker.Flag = context;
+            methodInvoker.InvokeType = context.InvokeType;
             if (this.MethodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
             {
                 try
                 {
                     if (methodInstance.IsEnable)
                     {
-                        object[] ps = new object[methodInstance.ParameterTypes.Length];
-                        for (int i = 0; i < methodInstance.ParameterTypes.Length; i++)
+                        object[] ps;
+                        if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
-                            ps[i] = this.SerializeConverter.DeserializeParameter(context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                            ps = new object[methodInstance.ParameterTypes.Length];
+                            RpcServerCallContext serverCallContext = new RpcServerCallContext();
+                            serverCallContext.caller = caller;
+                            serverCallContext.methodInvoker = methodInvoker;
+                            serverCallContext.methodInstance = methodInstance;
+                            serverCallContext.context = context;
+                            ps[0] = serverCallContext;
+                            for (int i = 0; i < context.parametersBytes.Count; i++)
+                            {
+                                ps[i + 1] = this.serializationSelector.DeserializeParameter(context.SerializationType, context.ParametersBytes[i], methodInstance.ParameterTypes[i + 1]);
+                            }
                         }
+                        else
+                        {
+                            ps = new object[methodInstance.ParameterTypes.Length];
+                            for (int i = 0; i < methodInstance.ParameterTypes.Length; i++)
+                            {
+                                ps[i] = this.serializationSelector.DeserializeParameter(context.SerializationType, context.ParametersBytes[i], methodInstance.ParameterTypes[i]);
+                            }
+                        }
+
                         methodInvoker.Parameters = ps;
+
+                        if (context.InvokeType == InvokeType.CustomInstance)
+                        {
+                            ISocketClient socketClient = ((ISocketClient)caller);
+                            ConcurrentDictionary<Type, IServerProvider> typeInstance;
+                            if (!this.idTypeInstance.TryGetValue(socketClient.ID, out typeInstance))
+                            {
+                                typeInstance = new ConcurrentDictionary<Type, IServerProvider>();
+                                this.idTypeInstance.TryAdd(socketClient.ID, typeInstance);
+                            }
+
+                            IServerProvider instance;
+                            if (!typeInstance.TryGetValue(methodInstance.ProviderType, out instance))
+                            {
+                                instance = (IServerProvider)Activator.CreateInstance(methodInstance.ProviderType);
+                                typeInstance.TryAdd(methodInstance.ProviderType, instance);
+                            }
+
+                            methodInvoker.CustomServerProvider = instance;
+                        }
                     }
                     else
                     {
@@ -285,13 +338,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected override void LoadConfig(ServiceConfig ServiceConfig)
         {
             base.LoadConfig(ServiceConfig);
-            this.SerializeConverter = (SerializeConverter)ServiceConfig.GetValue(TcpRpcParserConfig.SerializeConverterProperty);
+            this.serializationSelector = (SerializationSelector)ServiceConfig.GetValue(TcpRpcParserConfig.SerializationSelectorProperty);
             this.ProxyToken = (string)ServiceConfig.GetValue(TcpRpcParserConfig.ProxyTokenProperty);
             this.NameSpace = (string)ServiceConfig.GetValue(TcpRpcParserConfig.NameSpaceProperty);
             this.RPCVersion = (Version)ServiceConfig.GetValue(TcpRpcParserConfig.RPCVersionProperty);
         }
 
-        public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller)
+        public virtual List<MethodItem> GetRegisteredMethodItems(string proxyToken, ICaller caller)
         {
             if (proxyToken == this.ProxyToken)
             {
@@ -306,7 +359,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 try
                 {
-                    context.ReturnParameterBytes = targetsocketClient.CallBack(context, 5);
+                    context.returnParameterBytes = targetsocketClient.CallBack(context, 5);
                     context.Status = 1;
                 }
                 catch (Exception ex)
@@ -369,6 +422,5 @@ namespace RRQMSocket.RPC.RRQMRPC
                 throw new RRQMRPCException("未找到该客户端");
             }
         }
-
     }
 }

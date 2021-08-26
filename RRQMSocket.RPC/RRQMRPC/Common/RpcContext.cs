@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Run;
+using RRQMCore.Serialization;
 using System.Collections.Generic;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -18,28 +19,110 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC传输类
     /// </summary>
-    public class RpcContext : WaitResult
+    public sealed class RpcContext : WaitResult, IRpcContext
     {
-        internal int MethodToken;
-        internal string ID;
-        internal byte Feedback;
-        internal byte[] ReturnParameterBytes;
-        internal List<byte[]> ParametersBytes;
+        private byte feedback;
+        private byte serializationType;
+        private byte invokeType;
+        internal string id;
+        internal int methodToken;
+        internal List<byte[]> parametersBytes;
+        internal byte[] returnParameterBytes;
+
+        /// <summary>
+        /// 反馈类型
+        /// </summary>
+        public byte Feedback
+        {
+            get { return feedback; }
+        }
+
+        /// <summary>
+        /// 调用类型
+        /// </summary>
+        public InvokeType InvokeType
+        {
+            get { return (InvokeType)this.invokeType; }
+        }
+
+        /// <summary>
+        /// 序列化类型
+        /// </summary>
+        public SerializationType SerializationType
+        {
+            get { return (SerializationType)serializationType; }
+        }
+
+        /// <summary>
+        /// 调用ID
+        /// </summary>
+        public string ID
+        {
+            get { return id; }
+        }
+
+        /// <summary>
+        /// 函数键
+        /// </summary>
+        public int MethodToken
+        {
+            get { return methodToken; }
+        }
+
+        /// <summary>
+        /// 参数数据
+        /// </summary>
+        public byte[][] ParametersBytes
+        {
+            get { return parametersBytes.ToArray(); }
+        }
+
+        /// <summary>
+        /// 反回参数数据
+        /// </summary>
+        public byte[] ReturnParameterBytes
+        {
+            get { return returnParameterBytes; }
+        }
+
+        internal static RpcContext Deserialize(ByteBlock byteBlock)
+        {
+            RpcContext context = new RpcContext();
+            context.sign = byteBlock.ReadInt32();
+            context.status = byteBlock.ReadByte();
+            context.invokeType = byteBlock.ReadByte();
+            context.feedback = byteBlock.ReadByte();
+            context.serializationType = byteBlock.ReadByte();
+            context.methodToken = byteBlock.ReadInt32();
+            context.id = byteBlock.ReadString();
+            context.message = byteBlock.ReadString();
+            context.returnParameterBytes = byteBlock.ReadBytesPackage();
+
+            byte countPar = byteBlock.ReadByte();
+            context.parametersBytes = new List<byte[]>();
+            for (int i = 0; i < countPar; i++)
+            {
+                context.parametersBytes.Add(byteBlock.ReadBytesPackage());
+            }
+            return context;
+        }
 
         internal void Serialize(ByteBlock byteBlock)
         {
-            byteBlock.Write(this.Sign);
-            byteBlock.Write(this.Status);
-            byteBlock.Write(this.Feedback);
-            byteBlock.Write(this.MethodToken);
-            byteBlock.Write(this.ID);
-            byteBlock.Write(this.Message);
-            byteBlock.WriteBytesPackage(this.ReturnParameterBytes);
+            byteBlock.Write(this.sign);
+            byteBlock.Write(this.status);
+            byteBlock.Write(this.invokeType);
+            byteBlock.Write(this.feedback);
+            byteBlock.Write(this.serializationType);
+            byteBlock.Write(this.methodToken);
+            byteBlock.Write(this.id);
+            byteBlock.Write(this.message);
+            byteBlock.WriteBytesPackage(this.returnParameterBytes);
 
-            if (this.ParametersBytes != null && this.ParametersBytes.Count > 0)
+            if (this.parametersBytes != null && this.parametersBytes.Count > 0)
             {
-                byteBlock.Write((byte)this.ParametersBytes.Count);
-                foreach (byte[] item in this.ParametersBytes)
+                byteBlock.Write((byte)this.parametersBytes.Count);
+                foreach (byte[] item in this.parametersBytes)
                 {
                     byteBlock.WriteBytesPackage(item);
                 }
@@ -50,25 +133,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        internal static RpcContext Deserialize(ByteBlock byteBlock)
+        internal void LoadInvokeOption(InvokeOption invokeOption)
         {
-            RpcContext context = new RpcContext();
-            context.Sign = byteBlock.ReadInt32();
-            context.Status = byteBlock.ReadByte();
-            context.Feedback = byteBlock.ReadByte();
-            context.MethodToken = byteBlock.ReadInt32();
-            context.ID = byteBlock.ReadString();
-            context.Message = byteBlock.ReadString();
-            context.ReturnParameterBytes = byteBlock.ReadBytesPackage();
-
-            context.ParametersBytes = new List<byte[]>();
-            byte countPar = byteBlock.ReadByte();
-
-            for (int i = 0; i < countPar; i++)
-            {
-                context.ParametersBytes.Add(byteBlock.ReadBytesPackage());
-            }
-            return context;
+            this.invokeType = (byte)invokeOption.InvokeType;
+            this.feedback = (byte)invokeOption.FeedbackType;
+            this.serializationType = (byte)invokeOption.SerializationType;
         }
     }
 }

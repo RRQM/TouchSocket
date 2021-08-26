@@ -57,32 +57,32 @@ namespace RRQMSocket.RPC.RRQMRPC
         Version RPCVersion { get; }
 
         /// <summary>
-        /// 序列化转换器
+        /// 序列化选择器
         /// </summary>
-        SerializeConverter SerializeConverter { get; }
+        SerializationSelector SerializationSelector { get; }
 
         /// <summary>
         /// 获取代理文件
         /// </summary>
         /// <param name="proxyToken">代理令箭</param>
-        /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RpcSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
+        /// <param name="caller">调用作用者/></param>
         /// <returns></returns>
-        RpcProxyInfo GetProxyInfo(string proxyToken, object caller);
+        RpcProxyInfo GetProxyInfo(string proxyToken, ICaller caller);
 
         /// <summary>
         /// 执行函数
         /// </summary>
         /// <param name="context">函数内容</param>
-        /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RpcSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
-        void ExecuteContext(RpcContext context, object caller);
+        /// <param name="caller">调用作用者/></param>
+        void ExecuteContext(RpcContext context, ICaller caller);
 
         /// <summary>
         /// 获取注册函数
         /// </summary>
         /// <param name="proxyToken"></param>
-        /// <param name="caller">调用作用者，TCP模式下派生自<see cref="RpcSocketClient"/>,UDP模式下是<see cref="EndPoint"/></param>
+        /// <param name="caller">调用作用者/></param>
         /// <returns></returns>
-        List<MethodItem> GetRegisteredMethodItems(string proxyToken, object caller);
+        List<MethodItem> GetRegisteredMethodItems(string proxyToken, ICaller caller);
 
 #if NET45_OR_GREATER
 

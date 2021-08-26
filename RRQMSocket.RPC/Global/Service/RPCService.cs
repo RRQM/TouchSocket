@@ -11,8 +11,8 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.Exceptions;
-using RRQMSocket.RPC.RRQMRPC;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -117,12 +117,11 @@ namespace RRQMSocket.RPC
         public int RegisterAllServer()
         {
             Type[] types = (AppDomain.CurrentDomain.GetAssemblies()
-               .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && p.IsAbstract == false)).ToArray();
+               .SelectMany(s => s.GetTypes()).Where(p => typeof(ServerProvider).IsAssignableFrom(p) && !p.IsAbstract)).ToArray();
 
             foreach (Type type in types)
             {
-                ServerProvider serverProvider = Activator.CreateInstance(type) as ServerProvider;
-                RegisterServer(serverProvider);
+                this.RegisterServer(type);
             }
             return types.Length;
         }
@@ -131,12 +130,10 @@ namespace RRQMSocket.RPC
         /// 注册服务
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <returns>返回T实例</returns>
+        /// <returns></returns>
         public IServerProvider RegisterServer<T>() where T : IServerProvider
         {
-            IServerProvider serverProvider = (IServerProvider)Activator.CreateInstance(typeof(T));
-            this.RegisterServer(serverProvider);
-            return serverProvider;
+            return this.RegisterServer(typeof(T));
         }
 
         /// <summary>
@@ -168,7 +165,7 @@ namespace RRQMSocket.RPC
             {
                 throw new RRQMRPCException("请至少添加一种RPC解析器");
             }
-            MethodInstance[] methodInstances = Tools.GetMethodInstances(serverProvider, true);
+            MethodInstance[] methodInstances = GlobalTools.GetMethodInstances(serverProvider, true);
 
             foreach (var item in methodInstances)
             {
@@ -266,16 +263,41 @@ namespace RRQMSocket.RPC
             return this.UnregisterServer(typeof(T));
         }
 
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idInvokeType = new ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>>();
+
+        private IServerProvider GetServerProvider(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        {
+            switch (methodInvoker.InvokeType)
+            {
+                default:
+                case InvokeType.GlobalInstance:
+                    {
+                        return methodInstance.Provider;
+                    }
+                case InvokeType.CustomInstance:
+                    {
+                        if (methodInvoker.CustomServerProvider == null)
+                        {
+                            throw new RRQMRPCException($"调用类型为{InvokeType.CustomInstance}时，{methodInvoker.CustomServerProvider}不能为空。");
+                        }
+                        return methodInvoker.CustomServerProvider;
+                    }
+                case InvokeType.NewInstance:
+                    return (IServerProvider)Activator.CreateInstance(methodInstance.Provider.GetType());
+            }
+        }
+
         private void ExecuteMethod(bool isAsync, IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
+            IServerProvider serverProvider = this.GetServerProvider(methodInvoker, methodInstance);
             if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
             {
                 try
                 {
-                    methodInstance.Provider.RPCEnter(parser, methodInvoker, methodInstance);
+                    serverProvider.RPCEnter(parser, methodInvoker, methodInstance);
                     if (isAsync)
                     {
-                        dynamic task = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
+                        dynamic task = methodInstance.Method.Invoke(serverProvider, methodInvoker.Parameters);
                         task.Wait();
                         if (methodInstance.ReturnType != null)
                         {
@@ -284,9 +306,9 @@ namespace RRQMSocket.RPC
                     }
                     else
                     {
-                        methodInvoker.ReturnParameter = methodInstance.Method.Invoke(methodInstance.Provider, methodInvoker.Parameters);
+                        methodInvoker.ReturnParameter = methodInstance.Method.Invoke(serverProvider, methodInvoker.Parameters);
                     }
-                    methodInstance.Provider.RPCLeave(parser, methodInvoker, methodInstance);
+                    serverProvider.RPCLeave(parser, methodInvoker, methodInstance);
                     methodInvoker.Status = InvokeStatus.Success;
                 }
                 catch (RRQMAbandonRPCException e)
@@ -305,13 +327,13 @@ namespace RRQMSocket.RPC
                     {
                         methodInvoker.StatusMessage = "函数内部发生异常，信息：未知";
                     }
-                    methodInstance.Provider.RPCError(parser, methodInvoker, methodInstance);
+                    serverProvider.RPCError(parser, methodInvoker, methodInstance);
                 }
                 catch (Exception e)
                 {
                     methodInvoker.Status = InvokeStatus.Exception;
                     methodInvoker.StatusMessage = e.Message;
-                    methodInstance.Provider.RPCError(parser, methodInvoker, methodInstance);
+                    serverProvider.RPCError(parser, methodInvoker, methodInstance);
                 }
             }
 

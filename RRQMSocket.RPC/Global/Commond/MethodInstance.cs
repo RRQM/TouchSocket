@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace RRQMSocket.RPC
@@ -23,6 +24,11 @@ namespace RRQMSocket.RPC
         /// 执行此RPC的实例
         /// </summary>
         public IServerProvider Provider { get; internal set; }
+
+        /// <summary>
+        /// 实例类型
+        /// </summary>
+        public Type ProviderType { get; internal set; }
 
         /// <summary>
         /// RPC函数
@@ -73,5 +79,25 @@ namespace RRQMSocket.RPC
         /// 是否可用
         /// </summary>
         public bool IsEnable { get; internal set; }
+
+        /// <summary>
+        /// 函数标识
+        /// </summary>
+        public MethodFlags MethodFlags { get; internal set; }
+
+        /// <summary>
+        /// 获取指定类型属性标签
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T GetAttribute<T>()
+        {
+            object attribute = this.RPCAttributes.FirstOrDefault((a) => { return a.GetType() == typeof(T); });
+            if (attribute == null)
+            {
+                return default;
+            }
+            return (T)attribute;
+        }
     }
 }

@@ -43,7 +43,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         public UdpRpcClient()
         {
             this.waitHandle = new RRQMWaitHandle<RpcContext>();
-            this.SerializeConverter = new BinarySerializeConverter();
             this.waitResult = new WaitResult();
             this.singleWaitData = new WaitData<WaitResult>();
         }
@@ -53,10 +52,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public string ID => null;
 
+        private SerializationSelector serializationSelector;
         /// <summary>
-        /// 序列化生成器
+        /// 序列化选择器
         /// </summary>
-        public SerializeConverter SerializeConverter { get; set; }
+        public SerializationSelector SerializationSelector
+        {
+            get { return serializationSelector; }
+        }
+
 
         /// <summary>
         /// 获取远程服务器RPC服务文件
@@ -163,7 +167,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
-            context.MethodToken = methodItem.MethodToken;
+            context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
@@ -171,14 +175,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             try
             {
-                context.Feedback = (byte)invokeOption.FeedbackType;
-
+                context.LoadInvokeOption(invokeOption);
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
-                    datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
                 }
-                context.ParametersBytes = datas;
+                context.parametersBytes = datas;
                 context.Serialize(byteBlock);
                 this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
@@ -249,7 +252,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             {
                                 for (int i = 0; i < parameters.Length; i++)
                                 {
-                                    parameters[i] = this.SerializeConverter.DeserializeParameter(resultContext.ParametersBytes[i], types[i]);
+                                    parameters[i] = this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
                                 }
                             }
                             catch (Exception e)
@@ -263,7 +266,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         try
                         {
-                            return (T)this.SerializeConverter.DeserializeParameter(resultContext.ReturnParameterBytes, typeof(T));
+                            return (T)this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
                         }
                         catch (Exception e)
                         {
@@ -294,7 +297,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
-            context.MethodToken = methodItem.MethodToken;
+            context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
@@ -302,13 +305,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             try
             {
-                context.Feedback = (byte)invokeOption.FeedbackType;
+                context.LoadInvokeOption(invokeOption);
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
-                    datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
                 }
-                context.ParametersBytes = datas;
+                context.parametersBytes = datas;
                 context.Serialize(byteBlock);
                 this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
@@ -375,7 +378,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             {
                                 for (int i = 0; i < parameters.Length; i++)
                                 {
-                                    parameters[i] = this.SerializeConverter.DeserializeParameter(resultContext.ParametersBytes[i], types[i]);
+                                    parameters[i] = this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
                                 }
                             }
                             catch (Exception e)
@@ -410,7 +413,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
-            context.MethodToken = methodItem.MethodToken;
+            context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
@@ -418,13 +421,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             try
             {
-                context.Feedback = (byte)invokeOption.FeedbackType;
+                context.LoadInvokeOption(invokeOption);
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
-                    datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
                 }
-                context.ParametersBytes = datas;
+                context.parametersBytes = datas;
                 context.Serialize(byteBlock);
                 this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
@@ -511,7 +514,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
-            context.MethodToken = methodItem.MethodToken;
+            context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
@@ -519,13 +522,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             try
             {
-                context.Feedback = (byte)invokeOption.FeedbackType;
+                context.LoadInvokeOption(invokeOption);
                 List<byte[]> datas = new List<byte[]>();
                 foreach (object parameter in parameters)
                 {
-                    datas.Add(this.SerializeConverter.SerializeParameter(parameter));
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
                 }
-                context.ParametersBytes = datas;
+                context.parametersBytes = datas;
                 context.Serialize(byteBlock);
                 this.UDPSend(101, byteBlock.Buffer, 0, byteBlock.Len);
             }
@@ -592,7 +595,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                         try
                         {
-                            return (T)this.SerializeConverter.DeserializeParameter(resultContext.ReturnParameterBytes, typeof(T));
+                            return (T)this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
                         }
                         catch (Exception e)
                         {
@@ -604,6 +607,15 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <param name="serverConfig"></param>
+        protected override void LoadConfig(ServiceConfig serverConfig)
+        {
+            base.LoadConfig(serverConfig);
+            this.serializationSelector = (SerializationSelector)serverConfig.GetValue(UdpRpcClientConfig.SerializationSelectorProperty);
+        }
 
         /// <summary>
         /// 密封数据

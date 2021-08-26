@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.Serialization;
+
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
@@ -56,6 +58,29 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 调用反馈
         /// </summary>
         public FeedbackType FeedbackType { get; set; }
+
+        private SerializationType serializationType = SerializationType.RRQMBinary;
+
+        /// <summary>
+        /// RRQMRPC序列化类型
+        /// </summary>
+        public SerializationType SerializationType
+        {
+            get { return serializationType; }
+            set { serializationType = value; }
+        }
+
+        private InvokeType invokeType= InvokeType.GlobalInstance;
+        /// <summary>
+        /// 调用类型
+        /// </summary>
+        public InvokeType InvokeType
+        {
+            get { return invokeType; }
+            set { invokeType = value; }
+        }
+
+
 
         /// <summary>
         /// 调用超时，

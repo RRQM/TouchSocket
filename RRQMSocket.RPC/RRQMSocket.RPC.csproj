@@ -4,15 +4,16 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>5.5.0</Version>
+    <Version>5.6.0</Version>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>介绍：这是一个高性能的RPC微服务框架，支持异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
 
 更新说明：
-修改：服务类ServerProvider改为IServerProvider接口。
-修改：RRQMRPC下多数含有“RPC”的类改为“Rpc”驼峰拼写。
-增加：序列化方式中增加JsonSerializeConverter。
+修改：序列化方式由客户端动态指定。
+增加：支持调用上下文。
+增加：支持客户端动态指定调用实例。
+增加：Channel联合使用。
 
 Demo：https://gitee.com/RRQM_OS/RRQMBox
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
@@ -67,6 +68,8 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="RRQMSocket" Version="5.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
   </ItemGroup>
 </Project>

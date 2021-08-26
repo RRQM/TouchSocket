@@ -37,7 +37,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 序列化生成器
         /// </summary>
-        SerializeConverter SerializeConverter { get; }
+        SerializationSelector SerializationSelector { get; }
 
         /// <summary>
         /// 获取远程服务器RPC服务文件
