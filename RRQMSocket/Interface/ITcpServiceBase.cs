@@ -13,13 +13,15 @@
 namespace RRQMSocket
 {
     /// <summary>
-    /// 创建设置
+    /// TCP服务器辅助接口
     /// </summary>
-    public class CreateOption
+    public interface ITcpServiceBase : IService
     {
         /// <summary>
-        /// 获取或设置该T的ID
+        /// 重新设置ID
         /// </summary>
-        public string ID { get; set; }
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
+        void ResetID(string oldID, string newID);
     }
 }

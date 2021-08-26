@@ -70,11 +70,11 @@ namespace RRQMSocket
         /// <exception cref="RRQMTimeoutException"></exception>
         public override void Connect()
         {
-            if (this.clientConfig == null)
+            if (this.ClientConfig == null)
             {
                 throw new ArgumentNullException("配置文件不能为空。");
             }
-            IPHost iPHost = this.clientConfig.RemoteIPHost;
+            IPHost iPHost = this.ClientConfig.RemoteIPHost;
             if (iPHost == null)
             {
                 throw new ArgumentNullException("iPHost不能为空。");
@@ -117,7 +117,7 @@ namespace RRQMSocket
                             if (byteBlock.Buffer[0] == 1)
                             {
                                 this.id = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
-                                Start();
+                                PreviewConnect();
                                 return;
                             }
                             else if (byteBlock.Buffer[0] == 2)

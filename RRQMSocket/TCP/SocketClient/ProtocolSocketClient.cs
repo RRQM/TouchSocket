@@ -13,6 +13,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 
@@ -23,12 +24,9 @@ namespace RRQMSocket
     /// </summary>
     public abstract class ProtocolSocketClient : SocketClient
     {
-        /// <summary>
-        /// 辅助发送器
-        /// </summary>
         internal ProcotolHelper procotolHelper;
-
         private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
+        private readonly ConcurrentDictionary<int, Channel> userChannels = new ConcurrentDictionary<int, Channel>();
 
         /// <summary>
         /// 发送字节
@@ -202,12 +200,117 @@ namespace RRQMSocket
                         }
                         break;
                     }
+                case -2:
+                    {
+                        try
+                        {
+                            int id = BitConverter.ToInt32(byteBlock.Buffer, 2);
+                            this.RequestCreateChannel(id);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "创建通道异常", ex);
+                        }
+
+                        break;
+                    }
+                case -3:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            int id = byteBlock.ReadInt32();
+                            byte[] data = byteBlock.ReadBytesPackage();
+                            this.ReceivedChannelData(id, -3, data);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "通道接收异常", ex);
+                        }
+
+                        break;
+                    }
+                case -4:
+                case -5:
+                case -6:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            int id = byteBlock.ReadInt32();
+                            this.ReceivedChannelData(id, procotol, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "通道接收异常", ex);
+                        }
+
+                        break;
+                    }
                 default:
                     {
                         HandleProtocolData(procotol, byteBlock);
                         break;
                     }
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnDisconnected(MesEventArgs e)
+        {
+            base.OnDisconnected(e);
+            foreach (var item in this.userChannels.Values)
+            {
+                item.Dispose();
+            }
+        }
+
+        private void ReceivedChannelData(int id, short type, byte[] data)
+        {
+            if (this.userChannels.TryGetValue(id, out Channel channel))
+            {
+                ChannelData channelData = new ChannelData();
+                channelData.type = type;
+                channelData.data = data;
+                channel.ReceivedData(channelData);
+            }
+        }
+
+        private void RequestCreateChannel(int id)
+        {
+            if (!this.userChannels.ContainsKey(id))
+            {
+                Channel channel = new Channel(this.procotolHelper);
+                channel.id = id;
+                channel.parent = this.userChannels;
+                this.userChannels.TryAdd(id, channel);
+            }
+        }
+
+        /// <summary>
+        /// 创建通道
+        /// </summary>
+        /// <returns></returns>
+        public Channel CreateChannel()
+        {
+            Channel channel = new Channel(this.procotolHelper);
+            this.userChannels.TryAdd(channel.GetHashCode(), channel);
+            this.procotolHelper.SocketSend(-2, BitConverter.GetBytes(channel.GetHashCode()));
+            return channel;
+        }
+
+        /// <summary>
+        /// 订阅通道
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="channel"></param>
+        /// <returns></returns>
+        public bool TrySubscribeChannel(int id, out Channel channel)
+        {
+            return this.userChannels.TryGetValue(id, out channel);
         }
 
         /// <summary>
@@ -247,7 +350,7 @@ namespace RRQMSocket
         protected override void OnBeforeReceive()
         {
             base.OnBeforeReceive();
-            this.procotolHelper = new ProcotolHelper(this, false);
+            this.procotolHelper = new ProcotolHelper(this);
             if (this.DataHandlingAdapter is FixedHeaderDataHandlingAdapter adapter)
             {
                 adapter.FixedHeaderType = FixedHeaderType.Int;

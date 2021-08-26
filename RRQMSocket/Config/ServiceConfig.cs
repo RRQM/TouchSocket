@@ -31,7 +31,7 @@ namespace RRQMSocket
         /// 多线程数量依赖属性，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ThreadCountProperty =
-            DependencyProperty.Register("ThreadCount", typeof(int), typeof(ServiceConfig), 1);
+            DependencyProperty.Register("ThreadCount", typeof(int), typeof(ServiceConfig), 10);
 
         /// <summary>
         /// 监听IP和端口号组

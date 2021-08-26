@@ -24,23 +24,42 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="separateThread"></param>
-        public ProcotolHelper(ITcpClient client, bool separateThread)
+        public ProcotolHelper(ISocketClient client)
         {
+            this.client = client;
             this.mainSocket = client.MainSocket;
             this.bytePool = client.BytePool;
-            this.separateThread = separateThread;
+            this.separateThread = false;
+        }
 
-            if (separateThread)
-            {
-                this.asyncSender = new AsyncSender(client.MainSocket, client.MainSocket.RemoteEndPoint, client.Logger);
-            }
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="onError"></param>
+        public ProcotolHelper(IUserTcpClient client, Action<Exception> onError)
+        {
+            this.client = client;
+            this.mainSocket = client.MainSocket;
+            this.bytePool = client.BytePool;
+            this.separateThread = client.SeparateThreadSend;
+            this.asyncSender = new AsyncSender(client.MainSocket, client.MainSocket.RemoteEndPoint, onError);
         }
 
         private Socket mainSocket;
         private BytePool bytePool;
         private AsyncSender asyncSender;
         private bool separateThread;
+
+        private ITcpClient client;
+        /// <summary>
+        /// 客户端
+        /// </summary>
+        public ITcpClient Client
+        {
+            get { return client; }
+        }
+
 
         #region 同步方法
 

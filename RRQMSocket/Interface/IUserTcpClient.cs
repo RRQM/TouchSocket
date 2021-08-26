@@ -28,6 +28,11 @@ namespace RRQMSocket
         TcpClientConfig ClientConfig { get; }
 
         /// <summary>
+        /// 独立线程发送
+        /// </summary>
+        bool SeparateThreadSend { get; }
+
+        /// <summary>
         /// 断开连接
         /// </summary>
         void Disconnect();

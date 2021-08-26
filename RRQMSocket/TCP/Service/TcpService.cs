@@ -23,7 +23,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP服务器
     /// </summary>
-    public abstract class TcpService<TClient> : BaseSocket, ITcpService<TClient>, _ITcpService where TClient : SocketClient, new()
+    public abstract class TcpService<TClient> : BaseSocket, ITcpService<TClient>, ITcpServiceBase where TClient : SocketClient, new()
     {
         /// <summary>
         /// 构造函数
@@ -31,7 +31,6 @@ namespace RRQMSocket
         public TcpService()
         {
             this.socketClients = new SocketCliectCollection<TClient>();
-            this.socketClientPool = new ObjectPool<TClient>();
         }
 
         #region 属性
@@ -117,7 +116,6 @@ namespace RRQMSocket
 
         internal ClearType clearType;
         internal bool separateThreadReceive;
-        internal ObjectPool<TClient> socketClientPool;
         private int backlog;
         private BufferQueueGroup[] bufferQueueGroups;
         private Thread threadClearClient;
@@ -144,6 +142,7 @@ namespace RRQMSocket
         protected virtual void OnClientConnected(TClient client, MesEventArgs e)
         {
             this.ClientConnected?.Invoke(client, e);
+            client.OnEvent(1, e);
         }
 
         /// <summary>
@@ -154,6 +153,7 @@ namespace RRQMSocket
         protected virtual void OnClientDisconnected(TClient client, MesEventArgs e)
         {
             this.ClientDisconnected?.Invoke(client, e);
+            client.OnEvent(2,e);
         }
 
         #endregion 事件
@@ -401,54 +401,6 @@ namespace RRQMSocket
             return this.socketClients.TryGetSocketClient(id, out socketClient);
         }
 
-        internal virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
-        {
-            try
-            {
-                if (this.SocketClients.Count > this.maxCount)
-                {
-                    this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
-                    socket.Close();
-                    socket.Dispose();
-                    return;
-                }
-
-                TClient client = this.socketClientPool.GetObject();
-                if (client.NewCreate)
-                {
-                    client.queueGroup = queueGroup;
-                    client.Service = this;
-                    client.logger = this.Logger;
-                    client.clearType = this.clearType;
-                    client.separateThreadReceive = this.separateThreadReceive;
-                }
-
-                client.MainSocket = socket;
-                client.ReadIpPort();
-                client.bufferLength = this.BufferLength;
-
-                CreateOption creatOption = new CreateOption();
-                creatOption.NewCreate = client.NewCreate;
-
-                creatOption.ID = this.SocketClients.GetDefaultID();
-
-                this.OnCreateSocketCliect(client, creatOption);
-                client.id = creatOption.ID;
-
-                if (!this.socketClients.TryAdd(client))
-                {
-                    throw new RRQMException("ID重复");
-                }
-
-                client.BeginReceive();
-                OnClientConnected(client, null);
-            }
-            catch (Exception ex)
-            {
-                Logger.Debug(LogType.Error, this, $"在接收客户端时发生错误，信息：{ex.Message}");
-            }
-        }
-
         /// <summary>
         /// 加载配置
         /// </summary>
@@ -467,7 +419,6 @@ namespace RRQMSocket
             this.name = serviceConfig.ServerName;
             this.clearType = (ClearType)serviceConfig.GetValue(TcpServiceConfig.ClearTypeProperty);
             this.separateThreadReceive = serviceConfig.SeparateThreadReceive;
-            this.socketClientPool.Capacity = this.maxCount;
         }
 
         /// <summary>
@@ -490,6 +441,54 @@ namespace RRQMSocket
         {
         }
 
+        /// <summary>
+        /// 创建客户端之前
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="queueGroup"></param>
+        protected virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
+        {
+            try
+            {
+                if (this.SocketClients.Count > this.maxCount)
+                {
+                    this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
+                    socket.Close();
+                    socket.Dispose();
+                    return;
+                }
+
+                TClient client = (TClient)Activator.CreateInstance(typeof(TClient));
+
+                client.queueGroup = queueGroup;
+                client.service = this;
+                client.logger = this.Logger;
+                client.clearType = this.clearType;
+                client.separateThreadReceive = this.separateThreadReceive;
+
+                client.MainSocket = socket;
+                client.ReadIpPort();
+                client.bufferLength = this.bufferLength;
+
+                CreateOption creatOption = new CreateOption();
+                creatOption.ID = this.SocketClients.GetDefaultID();
+                this.OnCreateSocketCliect(client, creatOption);
+                client.id = creatOption.ID;
+
+                if (!this.socketClients.TryAdd(client))
+                {
+                    throw new RRQMException("ID重复");
+                }
+
+                client.BeginReceive();
+                OnClientConnected(client, new MesEventArgs("新客户端连接"));
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(LogType.Error, this, $"在接收客户端时发生错误，信息：{ex.Message}");
+            }
+        }
+
         private void Args_Completed(object sender, SocketAsyncEventArgs e)
         {
             if (e.LastOperation == SocketAsyncOperation.Accept)
@@ -506,7 +505,7 @@ namespace RRQMSocket
             threadClearClient.Start();
 
             this.bufferQueueGroups = new BufferQueueGroup[this.ServiceConfig.ThreadCount];
-            for (int i = 0; i < this.ServiceConfig.ThreadCount; i++)
+            for (int i = 0; i < this.serviceConfig.ThreadCount; i++)
             {
                 BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
                 bufferQueueGroup.bytePool = new BytePool(this.ServiceConfig.BytePoolMaxSize, this.ServiceConfig.BytePoolMaxBlockSize);
@@ -520,6 +519,10 @@ namespace RRQMSocket
                     bufferQueueGroup.Thread.IsBackground = true;
                     bufferQueueGroup.Thread.Name = i + "-Num Handler";
                     bufferQueueGroup.Thread.Start(bufferQueueGroup);
+                }
+                else
+                {
+                    ThreadPool.SetMinThreads(this.serviceConfig.ThreadCount, this.serviceConfig.ThreadCount);
                 }
             }
         }
@@ -585,7 +588,6 @@ namespace RRQMSocket
                                     client.Dispose();
                                     if (this.SocketClients.TryRemove(token))
                                     {
-                                        this.socketClientPool.DestroyObject(client);
                                         this.OnClientDisconnected(client, new MesEventArgs("breakOut"));
                                     }
                                 }
@@ -616,7 +618,6 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    queueGroup.isWait = true;
                     queueGroup.waitHandleBuffer.WaitOne();
                 }
             }

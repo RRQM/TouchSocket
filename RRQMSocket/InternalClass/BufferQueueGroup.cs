@@ -15,14 +15,19 @@ using System.Threading;
 
 namespace RRQMSocket
 {
-    internal class BufferQueueGroup : IDisposable
+    /// <summary>
+    /// 多线程队列组
+    /// </summary>
+    public class BufferQueueGroup : IDisposable
     {
         internal Thread Thread;
         internal BufferQueue bufferAndClient;
         internal EventWaitHandle waitHandleBuffer;
-        internal bool isWait;
         internal BytePool bytePool;
 
+        /// <summary>
+        /// 释放
+        /// </summary>
         public void Dispose()
         {
             if (bufferAndClient != null)

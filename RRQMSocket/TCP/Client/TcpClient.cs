@@ -24,28 +24,18 @@ namespace RRQMSocket
     /// </summary>
     public abstract class TcpClient : BaseSocket, IUserTcpClient, IClient, IHandleBuffer
     {
-        /// <summary>
-        /// 客户端配置
-        /// </summary>
-        protected TcpClientConfig clientConfig;
-
         private AsyncSender asyncSender;
-
         private BytePool bytePool;
-
+        private TcpClientConfig clientConfig;
         private DataHandlingAdapter dataHandlingAdapter;
-
         private Socket mainSocket;
         private bool online;
-
         private bool onlySend;
-
         private BufferQueueGroup queueGroup;
-
         private SocketAsyncEventArgs receiveEventArgs;
-
         private bool separateThreadReceive;
         private bool separateThreadSend;
+
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
@@ -69,7 +59,7 @@ namespace RRQMSocket
         /// </summary>
         public TcpClientConfig ClientConfig
         {
-            get { return clientConfig; }
+            get { return this.clientConfig; }
         }
 
         /// <summary>
@@ -81,7 +71,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// IPv4地址
+        /// IP地址
         /// </summary>
         public string IP { get; private set; }
 
@@ -101,6 +91,7 @@ namespace RRQMSocket
         /// IP及端口
         /// </summary>
         public string Name => $"{this.IP}:{this.Port}";
+
         /// <summary>
         /// 判断是否已连接
         /// </summary>
@@ -118,6 +109,7 @@ namespace RRQMSocket
         /// 端口号
         /// </summary>
         public int Port { get; private set; }
+
         /// <summary>
         /// 在异步发送时，使用独立线程发送
         /// </summary>
@@ -150,7 +142,7 @@ namespace RRQMSocket
                 PreviewConnect(socket);
                 socket.Connect(iPHost.EndPoint);
                 this.mainSocket = socket;
-                Start();
+                PreviewConnect();
             }
         }
 
@@ -350,7 +342,7 @@ namespace RRQMSocket
             }
         }
 
-        internal void Start()
+        internal void PreviewConnect()
         {
             this.ReadIpPort();
             this.OnConnectedService(new MesEventArgs());
@@ -378,7 +370,7 @@ namespace RRQMSocket
                 {
                     this.asyncSender.Dispose();
                 }
-                this.asyncSender = new AsyncSender(this.MainSocket, this.MainSocket.RemoteEndPoint, this.Logger);
+                this.asyncSender = new AsyncSender(this.MainSocket, this.MainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
                 this.asyncSender.SetBufferLength((int)this.clientConfig.GetValue(TcpClientConfig.SeparateThreadSendBufferLengthProperty));
             }
         }
@@ -440,6 +432,15 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 在独立发送线程中发生错误
+        /// </summary>
+        /// <param name="ex"></param>
+        protected virtual void OnSeparateThreadSendError(Exception ex)
+        {
+            this.logger.Debug(LogType.Error, this, "独立线程发送错误", ex);
+        }
+
+        /// <summary>
         /// 在Socket初始化对象后，Connect之前调用。
         /// 可用于设置Socket参数。
         /// 父类方法可覆盖。
@@ -481,7 +482,6 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    queueGroup.isWait = true;
                     queueGroup.waitHandleBuffer.WaitOne();
                 }
             }
@@ -538,11 +538,7 @@ namespace RRQMSocket
                     clientBuffer.byteBlock = (ByteBlock)e.UserToken;
                     clientBuffer.byteBlock.SetLength(e.BytesTransferred);
                     queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                    if (queueGroup.isWait)
-                    {
-                        queueGroup.isWait = false;
-                        queueGroup.waitHandleBuffer.Set();
-                    }
+                    queueGroup.waitHandleBuffer.Set();
                 }
                 else
                 {
@@ -599,7 +595,7 @@ namespace RRQMSocket
             this.IP = ipport.Substring(0, r);
             this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
         }
-        
+
         private void Sent(byte[] buffer, int offset, int length, bool isAsync)
         {
             if (!this.Online)

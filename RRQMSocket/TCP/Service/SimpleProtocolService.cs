@@ -40,10 +40,7 @@ namespace RRQMSocket
         protected override void OnCreateSocketCliect(SimpleProtocolSocketClient tcpSocketClient, CreateOption createOption)
         {
             this.CreateSocketCliect?.Invoke(tcpSocketClient, createOption);
-            if (createOption.NewCreate)
-            {
-                tcpSocketClient.OnReceived = this.OnReceive;
-            }
+            tcpSocketClient.OnReceived = this.OnReceive;
         }
 
         private void OnReceive(SimpleProtocolSocketClient socketClient, short? procotol, ByteBlock byteBlock)

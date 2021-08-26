@@ -34,6 +34,11 @@ namespace RRQMSocket
         DataHandlingAdapter DataHandlingAdapter { get; }
 
         /// <summary>
+        /// 缓存池大小
+        /// </summary>
+        int BufferLength { get; }
+
+        /// <summary>
         /// 禁用发送或接收
         /// </summary>
         /// <param name="how"></param>

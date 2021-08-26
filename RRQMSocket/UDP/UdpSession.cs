@@ -395,7 +395,6 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    queueGroup.isWait = true;
                     queueGroup.waitHandleBuffer.WaitOne();
                 }
             }
@@ -442,12 +441,7 @@ namespace RRQMSocket
                         clientBuffer.endPoint = e.RemoteEndPoint;
                         clientBuffer.byteBlock = byteBlock;
                         queueGroup.bufferAndClient.Enqueue(clientBuffer);
-
-                        if (queueGroup.isWait)
-                        {
-                            queueGroup.isWait = false;
-                            queueGroup.waitHandleBuffer.Set();
-                        }
+                        queueGroup.waitHandleBuffer.Set();
                     }
                     else
                     {

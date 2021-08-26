@@ -59,13 +59,18 @@ namespace RRQMSocket
             }
         }
 
-        internal override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
+        /// <summary>
+        /// 创建对象
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="queueGroup"></param>
+        protected override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
         {
             Task.Run(async () =>
             {
                 ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 int waitCount = 0;
-                while (waitCount < this.verifyTimeout/ 10)
+                while (waitCount < this.verifyTimeout / 10)
                 {
                     if (socket.Available > 0)
                     {
@@ -89,23 +94,21 @@ namespace RRQMSocket
                                 }
                                 else
                                 {
-                                    TClient client = this.socketClientPool.GetObject();
+                                    TClient client = (TClient)Activator.CreateInstance(typeof(TClient));
                                     client.Flag = verifyOption.Flag;
-                                    if (client.NewCreate)
-                                    {
-                                        client.queueGroup = queueGroup;
-                                        client.Service = this;
-                                        client.logger = this.Logger;
-                                        client.clearType = this.clearType;
-                                        client.separateThreadReceive = this.separateThreadReceive;
-                                    }
+
+                                    client.queueGroup = queueGroup;
+                                    client.service = this;
+                                    client.logger = this.Logger;
+                                    client.clearType = this.clearType;
+                                    client.separateThreadReceive = this.separateThreadReceive;
+
                                     client.MainSocket = socket;
                                     client.ReadIpPort();
                                     client.bufferLength = this.bufferLength;
 
                                     CreateOption creatOption = new CreateOption();
-                                    creatOption.NewCreate = client.NewCreate;
-
+                                   
                                     creatOption.ID = this.SocketClients.GetDefaultID();
 
                                     this.OnCreateSocketCliect(client, creatOption);
@@ -120,8 +123,7 @@ namespace RRQMSocket
                                     byteBlock.Write((byte)1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
                                     socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
-                                    OnClientConnected(client, null);
-
+                                    this.OnClientConnected(client, new MesEventArgs("新客户端连接"));
                                     return;
                                 }
                             }

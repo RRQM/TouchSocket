@@ -32,19 +32,19 @@ namespace RRQMSocket
 
         private bool dispose;
 
-        private ILog logger;
+        private Action<Exception> onError;
 
         private bool sending;
 
         private Socket socket;
 
-        internal AsyncSender(Socket socket, EndPoint endPoint, ILog logger)
+        internal AsyncSender(Socket socket, EndPoint endPoint, Action<Exception> onError)
         {
             sendEventArgs = new SocketAsyncEventArgs();
             sendEventArgs.Completed += this.SendEventArgs_Completed;
             this.socket = socket;
             this.sendEventArgs.RemoteEndPoint = endPoint;
-            this.logger = logger;
+            this.onError = onError;
             asyncBytes = new ConcurrentQueue<AsyncByte>();
             waitHandle = new AutoResetEvent(false);
             this.sendThread = new Thread(this.BeginSend);
@@ -108,7 +108,7 @@ namespace RRQMSocket
                 }
                 catch (Exception ex)
                 {
-                    this.logger.Debug(LogType.Error, this, "异步发送错误。", ex);
+                    this.onError?.Invoke(ex);
                 }
             }
         }
@@ -119,15 +119,9 @@ namespace RRQMSocket
         /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
         private void ProcessSend(SocketAsyncEventArgs e)
         {
-            try
+            if (e.SocketError != SocketError.Success)
             {
-                if (e.SocketError != SocketError.Success)
-                {
-                    this.logger.Debug(LogType.Error, this, "异步发送错误。");
-                }
-            }
-            catch
-            {
+                this.onError?.Invoke(new Exception(e.SocketError.ToString()));
             }
         }
 
