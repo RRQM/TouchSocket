@@ -165,7 +165,7 @@ namespace RRQMSocket.RPC.XmlRpc
             else if (value is bool)
             {
                 XmlElement valueElement = xml.CreateElement("boolean");
-                valueElement.InnerText = ((int)value).ToString();
+                valueElement.InnerText = (value).ToString();
                 xmlNode.AppendChild(valueElement);
             }
             else if (value is double)

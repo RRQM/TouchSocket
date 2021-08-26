@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
 
-namespace RRQMSocket.RPC.XmlRpc 
+namespace RRQMSocket.RPC.XmlRpc
 {
     /// <summary>
     /// XmlRpcClient配置

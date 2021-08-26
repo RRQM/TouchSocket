@@ -109,6 +109,10 @@ namespace RRQMSocket.RPC.XmlRpc
                 {
                     if (att is XmlRpcAttribute attribute)
                     {
+                        if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                        {
+                            throw new RRQMRPCException("XmlRpc不支持上下文调用");
+                        }
                         if (methodInstance.IsByRef)
                         {
                             throw new RRQMRPCException("XmlRpc服务中不允许有out及ref关键字");
@@ -174,10 +178,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <param name="createOption"></param>
         protected override void OnCreateSocketCliect(XmlRpcSocketClient socketClient, CreateOption createOption)
         {
-            if (createOption.NewCreate)
-            {
-                socketClient.OnReceived = this.OnReceived;
-            }
+            socketClient.OnReceived = this.OnReceived;
             socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
         }
 
@@ -185,7 +186,7 @@ namespace RRQMSocket.RPC.XmlRpc
         {
             HttpRequest httpRequest = (HttpRequest)obj;
             MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Caller = socketClient;
+            methodInvoker.Caller = (XmlRpcSocketClient)socketClient;
             methodInvoker.Flag = httpRequest;
 
             XmlDocument xml = new XmlDocument();
