@@ -126,6 +126,11 @@ namespace RRQMSocket.RPC.WebApi
                     {
                         if (att is RouteAttribute attribute)
                         {
+                            if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                            {
+                                throw new RRQMRPCException("WebApi调用不支持上下文调用");
+                            }
+
                             if (methodInstance.IsByRef)
                             {
                                 throw new RRQMRPCException("WebApi服务中不允许有out及ref关键字");
@@ -209,10 +214,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="createOption"></param>
         protected override void OnCreateSocketCliect(WebApiSocketClient socketClient, CreateOption createOption)
         {
-            if (createOption.NewCreate)
-            {
-                socketClient.OnReceived = this.OnReceived;
-            }
+            socketClient.OnReceived = this.OnReceived;
             socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
         }
 
@@ -220,7 +222,7 @@ namespace RRQMSocket.RPC.WebApi
         {
             HttpRequest httpRequest = (HttpRequest)obj;
             MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Caller = socketClient;
+            methodInvoker.Caller = (WebApiSocketClient)socketClient;
             methodInvoker.Flag = httpRequest;
 
             if (this.routeMap.TryGet(httpRequest.RelativeURL, out MethodInstance methodInstance))
