@@ -289,9 +289,9 @@ namespace RRQMSocket.RPC
 
         private void ExecuteMethod(bool isAsync, IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            IServerProvider serverProvider = this.GetServerProvider(methodInvoker, methodInstance);
             if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
             {
+                IServerProvider serverProvider = this.GetServerProvider(methodInvoker, methodInstance);
                 try
                 {
                     serverProvider.RPCEnter(parser, methodInvoker, methodInstance);
