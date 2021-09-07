@@ -61,6 +61,10 @@ namespace RRQMSocket.FileTransfer
 
         private UrlFileInfo transferUrlFileInfo;
 
+        internal string downloadRoot;
+
+        internal string uploadRoot;
+
         static FileSocketClient()
         {
             AddUsedProtocol(110, "同步设置");
@@ -162,7 +166,6 @@ namespace RRQMSocket.FileTransfer
             base.Dispose();
             this.ResetVariable();
         }
-
 
         /// <summary>
         /// 文件辅助类处理其他协议
@@ -363,12 +366,23 @@ namespace RRQMSocket.FileTransfer
             if (urlFileInfo.TransferType == TransferType.Download)
             {
                 //下载
-                urlFileInfo.FilePath = Path.GetFullPath(urlFileInfo.FilePath);
+                if (Path.IsPathRooted(urlFileInfo.FilePath))
+                {
+                    args.IsPathRooted = true;
+                }
+                else if (!string.IsNullOrEmpty(this.downloadRoot))
+                {
+                    urlFileInfo.FilePath = Path.Combine(this.downloadRoot, urlFileInfo.FilePath);
+                }
+                else
+                {
+                    urlFileInfo.FilePath = Path.GetFullPath(urlFileInfo.FilePath);
+                }
             }
 
             try
             {
-                this.BeforeFileTransfer?.Invoke(this, args);//触发 接收文件事件
+                this.BeforeFileTransfer.Invoke(this, args);//触发 接收文件事件
             }
             catch (Exception ex)
             {
@@ -377,7 +391,19 @@ namespace RRQMSocket.FileTransfer
 
             if (urlFileInfo.TransferType == TransferType.Upload)
             {
-                urlFileInfo.SaveFullPath = Path.GetFullPath(string.IsNullOrEmpty(urlFileInfo.SaveFullPath) ? urlFileInfo.FileName : urlFileInfo.SaveFullPath);
+                if (Path.IsPathRooted(urlFileInfo.SaveFullPath))
+                {
+                    args.IsPathRooted = true;
+                }
+                else if (!string.IsNullOrEmpty(this.uploadRoot))
+                {
+                    urlFileInfo.SaveFullPath = Path.Combine(this.uploadRoot, urlFileInfo.SaveFullPath);
+                }
+                else
+                {
+                    urlFileInfo.SaveFullPath = Path.GetFullPath(string.IsNullOrEmpty(urlFileInfo.SaveFullPath) ? urlFileInfo.FileName : urlFileInfo.SaveFullPath);
+                }
+
                 this.rrqmPath = urlFileInfo.SaveFullPath + ".rrqm";
             }
             this.transferUrlFileInfo = urlFileInfo;

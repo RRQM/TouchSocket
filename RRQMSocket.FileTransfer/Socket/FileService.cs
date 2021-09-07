@@ -113,6 +113,8 @@ namespace RRQMSocket.FileTransfer
             base.OnCreateSocketCliect(socketClient, creatOption);
             socketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
+            socketClient.downloadRoot = (string)this.ServiceConfig.GetValue(FileServiceConfig.DownloadRootProperty);
+            socketClient.uploadRoot = (string)this.ServiceConfig.GetValue(FileServiceConfig.UploadRootProperty);
             socketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
             socketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
         }

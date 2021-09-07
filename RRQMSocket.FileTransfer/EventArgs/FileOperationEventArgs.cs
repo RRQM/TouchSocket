@@ -20,5 +20,10 @@ namespace RRQMSocket.FileTransfer
         /// 是否允许操作
         /// </summary>
         public bool IsPermitOperation { get; set; }
+
+        /// <summary>
+        /// 是否包含根目录
+        /// </summary>
+        public bool IsPathRooted { get; internal set; }
     }
 }
