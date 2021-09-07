@@ -713,10 +713,18 @@ namespace RRQMSocket.FileTransfer
         private void OnUploadFileFinished()
         {
             TransferFileMessageArgs args = new TransferFileMessageArgs();
-            args.UrlFileInfo = this.transferUrlFileInfo;
-            args.TransferType = TransferType.Upload;
+            try
+            {
+                FileStreamPool.DisposeReadStream(this.transferUrlFileInfo.FilePath);
+                args.UrlFileInfo = this.transferUrlFileInfo;
+                args.TransferType = TransferType.Upload;
+                ResetVariable();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Debug(LogType.Error, this, "未知异常", ex);
+            }
 
-            ResetVariable();
             try
             {
                 this.FinishedFileTransfer?.Invoke(this, args);
