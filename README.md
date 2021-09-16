@@ -373,6 +373,7 @@ Install-Package RRQMSocket.FileTransfer
 
 谢谢大家对我的支持，如果还有其他问题，请加群QQ：234762506讨论。
 
+[![Giteye chart](https://chart.giteye.net/gitee/dotnetchina/RRQMSocket/RJ9NH249.png)](https://giteye.net/chart/RJ9NH249)
 
 ## 💕 支持本项目
 您的支持就是我不懈努力的动力。
