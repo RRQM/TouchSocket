@@ -80,21 +80,5 @@ namespace RRQMSocket
         public static readonly DependencyProperty BufferLengthProperty =
             DependencyProperty.Register("BufferLength", typeof(int), typeof(RRQMConfig), 1024 * 64);
 
-        /// <summary>
-        /// 许可密钥
-        /// </summary>
-        [EnterpriseEdition]
-        public string LicenceKey
-        {
-            get { return (string)GetValue(LicenceKeyProperty); }
-            set { SetValue(LicenceKeyProperty, value); }
-        }
-
-        /// <summary>
-        /// 许可密钥
-        /// </summary>
-        [EnterpriseEdition]
-        public static readonly DependencyProperty LicenceKeyProperty =
-            DependencyProperty.Register("LicenceKey", typeof(string), typeof(RRQMConfig), null);
     }
 }

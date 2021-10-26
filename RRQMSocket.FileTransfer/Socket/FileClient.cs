@@ -234,88 +234,6 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 请求下载文件
-        /// </summary>
-        /// <param name="urlFileInfo"></param>
-        /// <param name="host">IP及端口</param>
-        /// <param name="errorMes"></param>
-        /// <param name="verifyToken">验证令箭</param>
-        /// <param name="callbackRequest">回调</param>
-        /// <param name="timeout">无响应超时时间</param>
-        /// <returns></returns>
-        [EnterpriseEdition]
-        public static bool RequestFileThenWait(UrlFileInfo urlFileInfo, string host, out string errorMes, string verifyToken = null, Action<FileClient> callbackRequest = null, int timeout = 30 * 1000)
-        {
-            FileClient fileClient = new FileClient();
-            bool success = false;
-
-            var config = new FileClientConfig();
-            config.SetValue(TcpClientConfig.RemoteIPHostProperty, new IPHost(host))
-                .SetValue(TokenClientConfig.VerifyTokenProperty, verifyToken);
-
-            fileClient.Setup(config);
-            fileClient.Connect();
-
-            EventWaitHandle waitHandle = new AutoResetEvent(false);
-            System.Timers.Timer timer = new System.Timers.Timer(1000);
-            float p = 0;
-            int count = 0;
-            timer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
-            {
-                if (p == fileClient.TransferProgress)
-                {
-                    count++;
-                    if (count > timeout / 1000)
-                    {
-                        waitHandle.Set();
-                        timer.Stop();
-                    }
-                }
-                else
-                {
-                    count = 0;
-                }
-                p = fileClient.TransferProgress;
-            };
-            timer.Start();
-            fileClient.FinishedFileTransfer +=
-                (object sender, TransferFileMessageArgs e) =>
-                {
-                    fileClient.Dispose();
-                    success = true;
-                    waitHandle.Set();
-                };
-            string errMes = null;
-            fileClient.TransferFileError +=
-                (object sender, TransferFileMessageArgs e) =>
-                {
-                    errMes = e.Message;
-                    fileClient.Dispose();
-                    waitHandle.Set();
-                };
-            string mes = null;
-            fileClient.BeforeFileTransfer += (object sender, FileOperationEventArgs e) =>
-            {
-                mes = e.Message;
-            };
-
-            try
-            {
-                fileClient.RequestTransfer(urlFileInfo);
-                callbackRequest?.Invoke(fileClient);
-                waitHandle.WaitOne();
-                errorMes = errMes;
-            }
-            catch (Exception ex)
-            {
-                fileClient.Dispose();
-                errorMes = ex.Message;
-            }
-
-            return success;
-        }
-
-        /// <summary>
         /// 取消指定传输任务
         /// </summary>
         /// <param name="fileInfo"></param>
@@ -446,7 +364,6 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        [EnterpriseEdition]
         protected sealed override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
             switch (procotol)
@@ -577,12 +494,8 @@ namespace RRQMSocket.FileTransfer
                         if (!this.Online)
                         {
                             fileBlock.RequestStatus = RequestStatus.Hovering;
-                            ReConnect(this.transferUrlFileInfo);
+                            this.OnTransferError(TransferType.Download, "客户端已断开连接！！！");
                             return;
-
-                            //fileBlock.RequestStatus = RequestStatus.Hovering;
-                            //this.OnTransferError(TransferType.Download, "客户端已断开连接！！！");
-                            //return;
                         }
                         if (disposable || stop)
                         {
@@ -822,43 +735,6 @@ namespace RRQMSocket.FileTransfer
             this.BeginTransfer();
         }
 
-        [EnterpriseEdition]
-        private void ReConnect(UrlFileInfo urlFileInfo)
-        {
-            base.Disconnect();
-
-            this.Logger.Debug(LogType.Warning, this, $"客户端已断连，正在尝试恢复连接！！！");
-            for (int i = 1; i < 11; i++)
-            {
-                try
-                {
-                    if (this.disposable)
-                    {
-                        return;
-                    }
-                    this.Connect();
-                    if (urlFileInfo.TransferType == TransferType.Download)
-                    {
-                        this.transferStatus = TransferStatus.None;
-                        this.DownloadFile(urlFileInfo, false);
-                    }
-                    else
-                    {
-                        this.transferStatus = TransferStatus.None;
-                        this.UploadFile(urlFileInfo, false);
-                    }
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.Debug(LogType.Warning, this, $"尝试恢复连接时发生错误：{ex.Message}，将在{i}秒后重试。");
-                    Thread.Sleep(i * 1000);
-                }
-            }
-
-            OnTransferError(urlFileInfo.TransferType, "多次尝试续传失败，详细信息请看日志输出。", urlFileInfo);
-        }
-
         private void ResetVariable()
         {
             this.fileBlocks = null;
@@ -1040,12 +916,8 @@ namespace RRQMSocket.FileTransfer
                         if (!this.Online)
                         {
                             fileBlock.RequestStatus = RequestStatus.Hovering;
-                            ReConnect(this.transferUrlFileInfo);
+                            this.OnTransferError(TransferType.Download, "客户端已断开连接！！！");
                             return;
-
-                            //fileBlock.RequestStatus = RequestStatus.Hovering;
-                            //this.OnTransferError(TransferType.Download, "客户端已断开连接！！！");
-                            //return;
                         }
                         if (disposable || stop)
                         {

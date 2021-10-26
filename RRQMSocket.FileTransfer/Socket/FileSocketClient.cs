@@ -720,7 +720,6 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        [RRQMCore.EnterpriseEdition]
         private void TransferSpeedChanged()
         {
             long speed;

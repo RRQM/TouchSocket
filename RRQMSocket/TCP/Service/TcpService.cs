@@ -35,10 +35,6 @@ namespace RRQMSocket
         #region 属性
 
         private int clearInterval;
-        [RRQMCore.EnterpriseEdition]
-        private string licenceInfo;
-        [RRQMCore.EnterpriseEdition]
-        private string licenceOwner;
         private IPHost[] listenIPHosts;
         private Socket[] listenSockets;
         private int maxCount;
@@ -58,24 +54,6 @@ namespace RRQMSocket
         public int ClearInterval
         {
             get { return clearInterval; }
-        }
-
-        /// <summary>
-        /// 许可证信息
-        /// </summary>
-        [RRQMCore.EnterpriseEdition]
-        public string LicenceInfo
-        {
-            get { return licenceInfo; }
-        }
-
-        /// <summary>
-        /// 密钥归属
-        /// </summary>
-        [RRQMCore.EnterpriseEdition]
-        public string LicenceOwner
-        {
-            get { return licenceOwner; }
         }
 
         /// <summary>
