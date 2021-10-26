@@ -45,6 +45,16 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 		<DocumentationFile>bin\Release\net45\RRQMSocket.Http.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
+		<DocumentationFile>bin\Debug\net461\RRQMSocket.Http.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+		<DocumentationFile>bin\Release\net461\RRQMSocket.Http.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
 		<DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.Http.xml</DocumentationFile>

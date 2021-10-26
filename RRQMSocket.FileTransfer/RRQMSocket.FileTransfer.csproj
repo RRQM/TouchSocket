@@ -45,6 +45,16 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
     <DocumentationFile>bin\Release\net45\RRQMSocket.FileTransfer.xml</DocumentationFile>
     <OutputPath></OutputPath>
   </PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
+    <DocumentationFile>bin\Debug\net461\RRQMSocket.FileTransfer.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+    <DocumentationFile>bin\Release\net461\RRQMSocket.FileTransfer.xml</DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
     <DocumentationFile>bin\Debug\netcoreapp3.1\RRQMSocket.FileTransfer.xml</DocumentationFile>
