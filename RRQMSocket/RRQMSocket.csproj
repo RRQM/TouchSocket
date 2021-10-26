@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>5.6.0</Version>
+		<Version>5.7.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
@@ -12,8 +12,13 @@
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-修改：取消连接对象复用机制和NewCreate属性。
-增加：Protocol组件增加Channel用法。
+增加：服务器增加Clear方法。
+增加：ITcpClient接口增加Close方法（该方法效果等同与Socket.Close）。
+增加：服务器增加组合发送模式。
+增加：SocketClient增加OnInitComplete方法。
+增加：ProtocolClient增加心跳配置，同时服务器增加收到心跳方法。
+修改：Protocol类及其派生类可以自由指定数据处理适配器。
+修复：服务器Dispose后不触发断开事件。
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
 Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
@@ -82,7 +87,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\RRQMCore\RRQMCore.csproj" />
+	  <PackageReference Include="RRQMCore" Version="5.7.0" />
 	</ItemGroup>
 
 </Project>
