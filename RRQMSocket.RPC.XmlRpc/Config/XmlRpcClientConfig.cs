@@ -18,7 +18,6 @@ namespace RRQMSocket.RPC.XmlRpc
     /// </summary>
     public class XmlRpcClientConfig : TcpClientConfig
     {
-
         /// <summary>
         /// 最大数据包长度
         /// </summary>
@@ -33,7 +32,6 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public static readonly DependencyProperty MaxPackageSizeProperty =
             DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(XmlRpcClientConfig), 1024);
-
 
         /// <summary>
         /// 等待超时时间(秒)

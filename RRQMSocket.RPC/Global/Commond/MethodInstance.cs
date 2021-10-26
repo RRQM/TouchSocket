@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
@@ -39,6 +40,11 @@ namespace RRQMSocket.RPC
         /// RPC属性集合
         /// </summary>
         public RPCAttribute[] RPCAttributes { get; internal set; }
+
+        /// <summary>
+        /// 描述属性集合
+        /// </summary>
+        public DescriptionAttribute[] DescriptionAttributes { get; internal set; }
 
         /// <summary>
         /// 方法唯一令箭

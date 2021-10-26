@@ -113,7 +113,6 @@ namespace RRQMSocket.RPC.RRQMRPC
 
 #endif
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -126,7 +125,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 try
                 {
-                    if (methodInstance.IsEnable) 
+                    if (methodInstance.IsEnable)
                     {
                         object[] ps;
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))

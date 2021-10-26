@@ -30,17 +30,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 构造函数
         /// </summary>
         /// <param name="memberKey">指定键</param>
-        public RRQMRPCAttribute(string memberKey):this(memberKey,MethodFlags.None)
+        public RRQMRPCAttribute(string memberKey) : this(memberKey, MethodFlags.None)
         {
-            
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="methodFlags"></param>
         public RRQMRPCAttribute(MethodFlags methodFlags) : this(null, methodFlags)
         {
-
         }
 
         /// <summary>
@@ -48,7 +47,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="memberKey"></param>
         /// <param name="methodFlags"></param>
-        public RRQMRPCAttribute(string memberKey, MethodFlags methodFlags):base(methodFlags)
+        public RRQMRPCAttribute(string memberKey, MethodFlags methodFlags) : base(methodFlags)
         {
             this.MemberKey = memberKey;
         }

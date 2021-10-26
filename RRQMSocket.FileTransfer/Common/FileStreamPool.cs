@@ -187,11 +187,6 @@ namespace RRQMSocket.FileTransfer
                 {
                     stream.FileStream.Position = beginPosition;
 
-                    if (byteBlock.Buffer.Length < length + offset)
-                    {
-                        byteBlock.SetBuffer(new byte[length + offset]);
-                    }
-
                     int r = stream.FileStream.Read(byteBlock.Buffer, offset, length);
                     if (r == length)
                     {

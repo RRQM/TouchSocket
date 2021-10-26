@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.Dependency;
+
 namespace RRQMSocket
 {
     /// <summary>
@@ -17,5 +19,20 @@ namespace RRQMSocket
     /// </summary>
     public class ProtocolClientConfig : TokenClientConfig
     {
+        /// <summary>
+        /// 心跳频率，默认为-1。（设置为-1时禁止心跳）
+        /// </summary>
+        public int HeartbeatFrequency
+        {
+            get { return (int)GetValue(HeartbeatFrequencyProperty); }
+            set { SetValue(HeartbeatFrequencyProperty, value); }
+        }
+
+        /// <summary>
+        /// 心跳频率，默认为-1。（设置为-1时禁止心跳），
+        ///  所需类型<see cref="string"/>
+        /// </summary>
+        public static readonly DependencyProperty HeartbeatFrequencyProperty =
+            DependencyProperty.Register("HeartbeatFrequency", typeof(int), typeof(ProtocolClientConfig), -1);
     }
 }

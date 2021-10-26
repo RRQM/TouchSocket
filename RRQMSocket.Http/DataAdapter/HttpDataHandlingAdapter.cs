@@ -13,6 +13,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.Helper;
 using RRQMCore.Log;
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace RRQMSocket.Http
@@ -41,6 +42,11 @@ namespace RRQMSocket.Http
         /// 允许的最大长度
         /// </summary>
         public int MaxSize { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => false;
 
         private ByteBlock tempByteBlock;
         private ByteBlock bodyByteBlock;
@@ -110,7 +116,7 @@ namespace RRQMSocket.Http
                 {
                     this.bodyByteBlock = this.BytePool.GetByteBlock(this.httpBase.Content_Length);
                     int surLength = length - (index + 1);
-                    if (surLength-this.httpBase.Content_Length == 0)
+                    if (surLength - this.httpBase.Content_Length == 0)
                     {
                         this.bodyByteBlock.Write(buffer, index + 1, this.httpBase.Content_Length);
                         this.PreviewHandle(this.httpBase);
@@ -146,7 +152,7 @@ namespace RRQMSocket.Http
             else if (this.tempByteBlock == null)
             {
                 this.tempByteBlock = this.BytePool.GetByteBlock(length * 2);
-                this.tempByteBlock.Write(buffer,offset, length-offset);
+                this.tempByteBlock.Write(buffer, offset, length - offset);
             }
         }
 
@@ -180,6 +186,16 @@ namespace RRQMSocket.Http
         protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
             this.GoSend(buffer, offset, length, isAsync);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            throw new NotImplementedException();
         }
     }
 }

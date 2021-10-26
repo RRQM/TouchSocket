@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.JsonRpc
     /// <summary>
     /// JsonRpc调用器
     /// </summary>
-    public class JsonRpcContext:IRpcContext
+    public class JsonRpcContext : IRpcContext
     {
 #pragma warning disable
         public string jsonrpc;

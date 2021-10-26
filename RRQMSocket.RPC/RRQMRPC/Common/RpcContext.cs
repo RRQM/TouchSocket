@@ -21,13 +21,13 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public sealed class RpcContext : WaitResult, IRpcContext
     {
-        private byte feedback;
-        private byte serializationType;
-        private byte invokeType;
         internal string id;
         internal int methodToken;
         internal List<byte[]> parametersBytes;
         internal byte[] returnParameterBytes;
+        private byte feedback;
+        private byte invokeType;
+        private byte serializationType;
 
         /// <summary>
         /// 反馈类型
@@ -38,27 +38,19 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 调用类型
-        /// </summary>
-        public InvokeType InvokeType
-        {
-            get { return (InvokeType)this.invokeType; }
-        }
-
-        /// <summary>
-        /// 序列化类型
-        /// </summary>
-        public SerializationType SerializationType
-        {
-            get { return (SerializationType)serializationType; }
-        }
-
-        /// <summary>
         /// 调用ID
         /// </summary>
         public string ID
         {
             get { return id; }
+        }
+
+        /// <summary>
+        /// 调用类型
+        /// </summary>
+        public InvokeType InvokeType
+        {
+            get { return (InvokeType)this.invokeType; }
         }
 
         /// <summary>
@@ -85,6 +77,14 @@ namespace RRQMSocket.RPC.RRQMRPC
             get { return returnParameterBytes; }
         }
 
+        /// <summary>
+        /// 序列化类型
+        /// </summary>
+        public SerializationType SerializationType
+        {
+            get { return (SerializationType)serializationType; }
+        }
+
         internal static RpcContext Deserialize(ByteBlock byteBlock)
         {
             RpcContext context = new RpcContext();
@@ -105,6 +105,13 @@ namespace RRQMSocket.RPC.RRQMRPC
                 context.parametersBytes.Add(byteBlock.ReadBytesPackage());
             }
             return context;
+        }
+
+        internal void LoadInvokeOption(InvokeOption invokeOption)
+        {
+            this.invokeType = (byte)invokeOption.InvokeType;
+            this.feedback = (byte)invokeOption.FeedbackType;
+            this.serializationType = (byte)invokeOption.SerializationType;
         }
 
         internal void Serialize(ByteBlock byteBlock)
@@ -131,13 +138,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 byteBlock.Write((byte)0);
             }
-        }
-
-        internal void LoadInvokeOption(InvokeOption invokeOption)
-        {
-            this.invokeType = (byte)invokeOption.InvokeType;
-            this.feedback = (byte)invokeOption.FeedbackType;
-            this.serializationType = (byte)invokeOption.SerializationType;
         }
     }
 }

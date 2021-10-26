@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Serialization;
+using System.Threading;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -19,23 +20,39 @@ namespace RRQMSocket.RPC.RRQMRPC
     public class RpcServerCallContext : IServerCallContext
     {
         internal ICaller caller;
+        internal CancellationTokenSource tokenSource;
         internal RpcContext context;
         internal MethodInstance methodInstance;
         internal MethodInvoker methodInvoker;
 
-
-#pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public ICaller Caller => this.caller;
 
+        /// <summary>
+        /// 能取消的调用令箭，在客户端主动取消或网络故障时生效
+        /// </summary>
+        public CancellationTokenSource TokenSource => tokenSource;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public IRpcContext Context => this.context;
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public MethodInstance MethodInstance => this.methodInstance;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public MethodInvoker MethodInvoker => methodInvoker;
 
         /// <summary>
         /// 序列化类型
         /// </summary>
         public SerializationType SerializationType => this.context == null ? (SerializationType)byte.MaxValue : this.context.SerializationType;
-
-        public MethodInvoker MethodInvoker => methodInvoker;
     }
 }

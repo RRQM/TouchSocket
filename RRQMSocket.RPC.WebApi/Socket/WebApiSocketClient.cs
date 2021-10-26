@@ -10,18 +10,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.WebApi
 {
     /// <summary>
     /// WebApiSocket辅助类
     /// </summary>
-    public class WebApiSocketClient : SimpleSocketClient,ICaller
+    public class WebApiSocketClient : SimpleSocketClient, ICaller
     {
         /// <summary>
         /// 禁用适配器赋值

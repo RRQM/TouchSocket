@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;net461;netcoreapp3.1;netstandard2.0</TargetFrameworks>
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
@@ -79,9 +79,6 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
 		</None>
-	</ItemGroup>
-	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="2.4.0" />
 	</ItemGroup>
 
 </Project>

@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
-using System.Text;
 
 namespace RRQMSocket
 {
@@ -24,18 +23,18 @@ namespace RRQMSocket
         /// <summary>
         /// 重置ID
         /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
-        public override void ResetID(string oldID, string newID)
+        /// <param name="waitSetID"></param>
+        public override void ResetID(WaitSetID waitSetID)
         {
             if (!canResetID)
             {
                 throw new RRQMException("服务器不允许修改ID");
             }
-            base.ResetID(oldID, newID);
-            if (this.TryGetSocketClient(newID, out TClient client))
+            base.ResetID(waitSetID);
+            if (this.TryGetSocketClient(waitSetID.NewID, out TClient client))
             {
-                client.procotolHelper.SocketSend(0, Encoding.UTF8.GetBytes(newID));
+                waitSetID.Status = 1;
+                client.ChangeID(waitSetID);
             }
             else
             {

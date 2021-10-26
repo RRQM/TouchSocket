@@ -48,6 +48,5 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public static readonly DependencyProperty MaxPackageSizeProperty =
             DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(WebApiParserConfig), 1024);
-
     }
 }

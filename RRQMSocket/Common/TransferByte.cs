@@ -9,39 +9,58 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
+using RRQMCore.Collections.Concurrent;
 
-namespace RRQMSocket.RPC
+namespace RRQMSocket
 {
     /// <summary>
-    /// RPC方法属性基类
+    /// 传输字节
     /// </summary>
-    public abstract class RPCAttribute : Attribute
+    public struct TransferByte : IQueueData
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RPCAttribute()
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public TransferByte(byte[] buffer, int offset, int length)
         {
+            this.offset = offset;
+            this.length = length;
+            this.buffer = buffer;
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="methodFlags"></param>
-        public RPCAttribute(MethodFlags methodFlags)
+        /// <param name="buffer"></param>
+        public TransferByte(byte[] buffer) : this(buffer, 0, buffer.Length)
         {
-            this.methodFlags = methodFlags;
         }
 
-        private MethodFlags methodFlags = MethodFlags.None;
+        private int offset;
+        private int length;
+        private byte[] buffer;
 
         /// <summary>
-        /// 函数标识
+        /// 数据内存
         /// </summary>
-        public MethodFlags MethodFlags
-        {
-            get { return methodFlags; }
-        }
+        public byte[] Buffer => this.buffer;
+
+        /// <summary>
+        /// 偏移
+        /// </summary>
+        public int Offset => this.offset;
+
+        /// <summary>
+        /// 长度
+        /// </summary>
+        public int Length => this.length;
+
+        /// <summary>
+        /// 尺寸
+        /// </summary>
+        public int Size => length;
     }
 }

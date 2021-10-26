@@ -34,7 +34,6 @@ namespace RRQMSocket.RPC.JsonRpc
         public static readonly DependencyProperty ProtocolTypeProperty =
         DependencyProperty.Register("ProtocolType", typeof(JsonRpcProtocolType), typeof(JsonRpcParserConfig), JsonRpcProtocolType.Tcp);
 
-
         /// <summary>
         /// 最大数据包长度
         /// </summary>
@@ -50,8 +49,6 @@ namespace RRQMSocket.RPC.JsonRpc
         public static readonly DependencyProperty MaxPackageSizeProperty =
             DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(JsonRpcParserConfig), 1024);
 
-
-
         /// <summary>
         /// 调用类型
         /// </summary>
@@ -66,7 +63,5 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public static readonly DependencyProperty InvokeTypeProperty =
             DependencyProperty.Register("InvokeType", typeof(InvokeType), typeof(JsonRpcParserConfig), InvokeType.GlobalInstance);
-
-
     }
 }

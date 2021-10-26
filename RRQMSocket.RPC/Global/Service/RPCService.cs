@@ -263,6 +263,51 @@ namespace RRQMSocket.RPC
             return this.UnregisterServer(typeof(T));
         }
 
+        /// <summary>
+        /// 更新注册服务
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <returns>更新的服务数量</returns>
+        [EnterpriseEdition]
+        public int UpdateRegisteredServer(ServerProvider provider)
+        {
+            int count = this.MethodMap.UpdateServer(provider);
+            if (count > 0)
+            {
+                this.ServerProviders.Remove(provider.GetType());
+                this.ServerProviders.Add(provider);
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// 更新注册服务
+        /// </summary>
+        /// <param name="providerType"></param>
+        /// <returns></returns>
+        [EnterpriseEdition]
+        public ServerProvider UpdateRegisteredServer(Type providerType)
+        {
+            if (!typeof(ServerProvider).IsAssignableFrom(providerType))
+            {
+                throw new RRQMRPCException("类型不相符");
+            }
+            ServerProvider provider = (ServerProvider)Activator.CreateInstance(providerType);
+            this.UpdateRegisteredServer(provider);
+            return provider;
+        }
+
+        /// <summary>
+        /// 更新注册服务
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        [EnterpriseEdition]
+        public ServerProvider UpdateRegisteredServer<T>() where T : ServerProvider
+        {
+            return this.UpdateRegisteredServer(typeof(T));
+        }
+
         private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idInvokeType = new ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>>();
 
         private IServerProvider GetServerProvider(MethodInvoker methodInvoker, MethodInstance methodInstance)
@@ -351,7 +396,17 @@ namespace RRQMSocket.RPC
             }
             else
             {
-                ExecuteMethod(false, parser, methodInvoker, methodInstance);
+                if (methodInvoker.AsyncRun)
+                {
+                    Task.Run(() =>
+                    {
+                        ExecuteMethod(false, parser, methodInvoker, methodInstance);
+                    });
+                }
+                else
+                {
+                    ExecuteMethod(false, parser, methodInvoker, methodInstance);
+                }
             }
         }
     }

@@ -17,12 +17,12 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器辅助类
     /// </summary>
-    public class SimpleSocketClient : SocketClient
+    public class SimpleSocketClient : TokenSocketClient
     {
         /// <summary>
         /// 收到消息
         /// </summary>
-        public  Action<SimpleSocketClient, ByteBlock, object> OnReceived;
+        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
 
         /// <summary>
         /// 处理数据
@@ -33,5 +33,6 @@ namespace RRQMSocket
         {
             this.OnReceived?.Invoke(this, byteBlock, obj);
         }
+
     }
 }

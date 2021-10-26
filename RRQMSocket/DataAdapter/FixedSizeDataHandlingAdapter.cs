@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System;
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
@@ -32,6 +33,11 @@ namespace RRQMSocket
         /// 获取已设置的数据包的长度
         /// </summary>
         public int FixedSize { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => true;
 
         /// <summary>
         /// 临时包
@@ -133,6 +139,54 @@ namespace RRQMSocket
             {
                 byteBlock.Buffer[i] = 0;
             }
+            byteBlock.SetLength(this.FixedSize);
+            try
+            {
+                if (isAsync)
+                {
+                    byte[] data = byteBlock.ToArray();
+                    this.GoSend(data, 0, data.Length, true);//使用ByteBlock时不能异步发送
+                }
+                else
+                {
+                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            int length = 0;
+            foreach (var item in transferBytes)
+            {
+                length += item.Length;
+            }
+
+            if (length > this.FixedSize)
+            {
+                throw new RRQMOverlengthException("发送的数据包长度大于FixedSize");
+            }
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+
+            foreach (var item in transferBytes)
+            {
+                byteBlock.Write(item.Buffer, item.Offset, item.Length);
+            }
+
+            Array.Clear(byteBlock.Buffer, byteBlock.Pos, this.FixedSize);
             byteBlock.SetLength(this.FixedSize);
             try
             {

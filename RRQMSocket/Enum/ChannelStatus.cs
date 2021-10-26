@@ -9,11 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -25,31 +20,31 @@ namespace RRQMSocket
         /// <summary>
         /// 本次操作成功
         /// </summary>
-        Success,
+        Success=1,
 
         /// <summary>
         /// 超时
         /// </summary>
-        Timeout,
-
-        /// <summary>
-        /// 取消
-        /// </summary>
-        Cancel,
-
-        /// <summary>
-        /// 完成
-        /// </summary>
-        Completed,
+        Timeout=2,
 
         /// <summary>
         /// 错误
         /// </summary>
-        Error,
+        Error=3,
+
+        /// <summary>
+        /// 取消
+        /// </summary>
+        Cancel=4,
+
+        /// <summary>
+        /// 完成
+        /// </summary>
+        Completed=5,
 
         /// <summary>
         /// 已释放
         /// </summary>
-        Disposed
+        Disposed=6
     }
 }

@@ -9,15 +9,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-namespace RRQMSocket
+
+using RRQMCore;
+
+namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// 异步字节
+    /// 事件单元
     /// </summary>
-    internal struct AsyncByte
+    [EnterpriseEdition]
+    public class EventUnit
     {
-        internal int offset;
-        internal int length;
-        internal byte[] buffer;
+        internal EventUnit()
+        {
+            this.Subscribers = new ReadOnlyList<string>();
+        }
+
+        /// <summary>
+        /// 事件名称
+        /// </summary>
+        public string EventName { get; internal set; }
+
+        /// <summary>
+        /// 发布者
+        /// </summary>
+        public string Publisher { get; internal set; }
+
+        /// <summary>
+        /// 订阅者
+        /// </summary>
+        public ReadOnlyList<string> Subscribers { get; internal set; }
     }
 }

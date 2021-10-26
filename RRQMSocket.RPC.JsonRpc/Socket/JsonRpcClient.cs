@@ -31,14 +31,14 @@ namespace RRQMSocket.RPC.JsonRpc
 
         private JsonRpcProtocolType protocolType;
 
-        private RRQMWaitHandle<WaitResult> waitHandle;
+        private RRQMWaitHandlePool<IWaitResult> waitHandle;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public JsonRpcClient()
         {
-            waitHandle = new RRQMWaitHandle<WaitResult>();
+            waitHandle = new RRQMWaitHandlePool<IWaitResult>();
         }
 
         /// <summary>
@@ -56,6 +56,7 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             get { return protocolType; }
         }
+
         /// <summary>
         /// RPC调用
         /// </summary>
@@ -70,7 +71,7 @@ namespace RRQMSocket.RPC.JsonRpc
         public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             JsonRpcWaitContext context = new JsonRpcWaitContext();
-            WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
+            WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
@@ -160,7 +161,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         try
                         {
-                            if (resultContext.Return==null)
+                            if (resultContext.Return == null)
                             {
                                 return default;
                             }
@@ -194,7 +195,7 @@ namespace RRQMSocket.RPC.JsonRpc
         public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             JsonRpcWaitContext context = new JsonRpcWaitContext();
-            WaitData<WaitResult> waitData = this.waitHandle.GetWaitData(context);
+            WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)

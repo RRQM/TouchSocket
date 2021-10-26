@@ -10,10 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
@@ -26,7 +22,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 空
         /// </summary>
-        None=0,
+        None = 0,
 
         /// <summary>
         /// 包含调用者

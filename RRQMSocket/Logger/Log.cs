@@ -39,7 +39,7 @@ namespace RRQMSocket
         /// <param name="exception"></param>
         public void Debug(LogType logType, object source, string message, Exception exception)
         {
-            Console.WriteLine($"类型：{logType}，消息：{message}，堆：{exception.StackTrace}");
+            Console.WriteLine($"类型：{logType}，消息：{message}，堆：{(exception != null ? exception.StackTrace : string.Empty)}");
         }
     }
 }

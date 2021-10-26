@@ -175,15 +175,23 @@ namespace RRQMSocket.RPC.RRQMRPC
                         propertyDic.Add(type, stringBuilder.ToString());
                     }
                 }
-                else if (type.IsClass)
+                else
                 {
-                    if (type.Assembly == ServerProvider.DefaultAssembly || type.GetCustomAttribute<RRQMRPCMemberAttribute>() != null)
+                    if (type.Assembly == ServerProvider.DefaultAssembly || type.GetCustomAttribute<RRQMRPCMemberAttribute>() != null || CodeGenerator.proxyType.Contains(type))
                     {
                         StringBuilder stringBuilder = new StringBuilder();
 
                         stringBuilder.AppendLine("");
-                        stringBuilder.AppendLine($"public class {type.Name}");
-                        if (type.BaseType != typeof(object))
+                        if (type.IsStruct())
+                        {
+                            stringBuilder.AppendLine($"public struct {type.Name}");
+                        }
+                        else
+                        {
+                            stringBuilder.AppendLine($"public class {type.Name}");
+                        }
+
+                        if (!type.IsStruct() && type.BaseType != typeof(object))
                         {
                             AddTypeString(type.BaseType);
                             if (type.BaseType.IsGenericType)
@@ -210,6 +218,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                 stringBuilder.AppendLine($": {this.GetTypeFullName(type.BaseType)}");
                             }
                         }
+
                         stringBuilder.AppendLine("{");
                         PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty);
 

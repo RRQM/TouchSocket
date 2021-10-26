@@ -11,8 +11,8 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace RRQMSocket
 {
@@ -20,7 +20,7 @@ namespace RRQMSocket
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketCliectCollection<T> : IDisposable where T : ISocketClient
+    public class SocketCliectCollection<T> where T : ISocketClient
     {
         private RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
 
@@ -45,9 +45,9 @@ namespace RRQMSocket
         /// 获取ID集合
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> GetIDs()
+        public string[] GetIDs()
         {
-            return this.tokenDic.Keys;
+            return this.tokenDic.Keys.ToArray();
         }
 
         internal bool TryRemove(string id)
@@ -95,19 +95,13 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 释放客户端
-        /// </summary>
-        public void Dispose()
+
+        internal void Clear()
         {
-            foreach (var item in this.tokenDic.Keys)
+            foreach (var client in this.tokenDic.Values)
             {
-                if (this.tokenDic.TryGetValue(item, out T value))
-                {
-                    value.Dispose();
-                }
+                client.Dispose();
             }
-            this.tokenDic.Clear();
         }
     }
 }

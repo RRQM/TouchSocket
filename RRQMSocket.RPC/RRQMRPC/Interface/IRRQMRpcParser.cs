@@ -12,7 +12,6 @@
 using RRQMCore.ByteManager;
 using System;
 using System.Collections.Generic;
-using System.Net;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -69,12 +68,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         RpcProxyInfo GetProxyInfo(string proxyToken, ICaller caller);
 
-        /// <summary>
-        /// 执行函数
-        /// </summary>
-        /// <param name="context">函数内容</param>
-        /// <param name="caller">调用作用者/></param>
-        void ExecuteContext(RpcContext context, ICaller caller);
 
         /// <summary>
         /// 获取注册函数

@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
@@ -18,6 +19,11 @@ namespace RRQMSocket
     /// </summary>
     public class NormalDataHandlingAdapter : DataHandlingAdapter
     {
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => false;
+
         /// <summary>
         /// 当接收到数据时处理数据
         /// </summary>
@@ -37,6 +43,16 @@ namespace RRQMSocket
         protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
             this.GoSend(buffer, offset, length, isAsync);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
         }
     }
 }

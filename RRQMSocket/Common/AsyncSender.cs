@@ -9,18 +9,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Log;
+using RRQMCore.Collections.Concurrent;
 using System;
-using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
 namespace RRQMSocket
 {
-    internal class AsyncSender : IDisposable
+    /// <summary>
+    /// 异步独立线程发送器
+    /// </summary>
+    public class AsyncSender
     {
-        private readonly ConcurrentQueue<AsyncByte> asyncBytes;
+        private readonly IntelligentDataQueue<TransferByte> asyncBytes;
 
         private readonly SocketAsyncEventArgs sendEventArgs;
 
@@ -38,6 +40,18 @@ namespace RRQMSocket
 
         private Socket socket;
 
+        private static int cacheLength = 1024 * 1024 * 100;
+
+        /// <summary>
+        /// 缓存发送池尺寸，
+        /// 默认100*1024*1024字节
+        /// </summary>
+        public static int CacheLength
+        {
+            get { return cacheLength; }
+            set { cacheLength = value; }
+        }
+
         internal AsyncSender(Socket socket, EndPoint endPoint, Action<Exception> onError)
         {
             sendEventArgs = new SocketAsyncEventArgs();
@@ -45,7 +59,7 @@ namespace RRQMSocket
             this.socket = socket;
             this.sendEventArgs.RemoteEndPoint = endPoint;
             this.onError = onError;
-            asyncBytes = new ConcurrentQueue<AsyncByte>();
+            asyncBytes = new IntelligentDataQueue<TransferByte>(1024 * 1024 * 100);
             waitHandle = new AutoResetEvent(false);
             this.sendThread = new Thread(this.BeginSend);
             this.sendThread.IsBackground = true;
@@ -53,12 +67,9 @@ namespace RRQMSocket
             this.sendThread.Start();
         }
 
-        public void AsyncSend(byte[] buffer, int offset, int length)
+        internal void AsyncSend(byte[] buffer, int offset, int length)
         {
-            AsyncByte asyncByte = new AsyncByte();
-            asyncByte.buffer = buffer;
-            asyncByte.offset = offset;
-            asyncByte.length = length;
+            TransferByte asyncByte = new TransferByte(buffer, offset, length);
             this.asyncBytes.Enqueue(asyncByte);
             if (!this.sending)
             {
@@ -67,17 +78,12 @@ namespace RRQMSocket
             }
         }
 
-        public void Dispose()
+        internal void Dispose()
         {
             this.dispose = true;
             this.waitHandle.Set();
             this.waitHandle.Dispose();
             this.sendEventArgs.Dispose();
-        }
-
-        internal void SetBufferLength(int len)
-        {
-            this.buffer = new byte[len];
         }
 
         private void BeginSend()
@@ -86,9 +92,9 @@ namespace RRQMSocket
             {
                 try
                 {
-                    if (this.tryGet(out AsyncByte asyncByte))
+                    if (this.tryGet(out TransferByte asyncByte))
                     {
-                        this.sendEventArgs.SetBuffer(asyncByte.buffer, asyncByte.offset, asyncByte.length);
+                        this.sendEventArgs.SetBuffer(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
 
                         if (!this.socket.SendAsync(this.sendEventArgs))
                         {
@@ -137,24 +143,24 @@ namespace RRQMSocket
             }
         }
 
-        private bool tryGet(out AsyncByte asyncByteDe)
+        private bool tryGet(out TransferByte asyncByteDe)
         {
             int len = 0;
             int surLen = buffer.Length;
             while (true)
             {
-                if (this.asyncBytes.TryPeek(out AsyncByte asyncB))
+                if (this.asyncBytes.TryPeek(out TransferByte asyncB))
                 {
-                    if (surLen > asyncB.length)
+                    if (surLen > asyncB.Length)
                     {
-                        if (this.asyncBytes.TryDequeue(out AsyncByte asyncByte))
+                        if (this.asyncBytes.TryDequeue(out TransferByte asyncByte))
                         {
-                            Array.Copy(asyncByte.buffer, asyncByte.offset, buffer, len, asyncByte.length);
-                            len += asyncByte.length;
-                            surLen -= asyncByte.length;
+                            Array.Copy(asyncByte.Buffer, asyncByte.Offset, buffer, len, asyncByte.Length);
+                            len += asyncByte.Length;
+                            surLen -= asyncByte.Length;
                         }
                     }
-                    else if (asyncB.length > buffer.Length)
+                    else if (asyncB.Length > buffer.Length)
                     {
                         if (len > 0)
                         {
@@ -184,9 +190,7 @@ namespace RRQMSocket
                     }
                 }
             }
-            asyncByteDe = new AsyncByte();
-            asyncByteDe.buffer = buffer;
-            asyncByteDe.length = len;
+            asyncByteDe = new TransferByte(buffer, 0, len);
             return true;
         }
     }

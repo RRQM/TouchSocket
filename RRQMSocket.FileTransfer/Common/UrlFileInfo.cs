@@ -26,22 +26,22 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件哈希值
         /// </summary>
-        public string FileHash { get; internal set; }
+        public string FileHash { get;  set; }
 
         /// <summary>
         /// 文件大小
         /// </summary>
-        public long FileLength { get; internal set; }
+        public long FileLength { get;  set; }
 
         /// <summary>
         /// 文件名
         /// </summary>
-        public string FileName { get; internal set; }
+        public string FileName { get;  set; }
 
         /// <summary>
         /// 文件路径
         /// </summary>
-        public string FilePath { get; internal set; }
+        public string FilePath { get; set; }
 
         /// <summary>
         /// 传输标识
@@ -81,7 +81,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 请求传输类型
         /// </summary>
-        public TransferType TransferType { get; internal set; }
+        public TransferType TransferType { get; set; }
 
         /// <summary>
         /// 生成下载请求必要信息

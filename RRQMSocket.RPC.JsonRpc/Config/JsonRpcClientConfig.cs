@@ -48,7 +48,5 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public static readonly DependencyProperty MaxPackageSizeProperty =
             DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(JsonRpcClientConfig), 1024);
-
-
     }
 }

@@ -33,6 +33,5 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public static readonly DependencyProperty MaxPackageSizeProperty =
             DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(XmlRpcParserConfig), 1024);
-
     }
 }

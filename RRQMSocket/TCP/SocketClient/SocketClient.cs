@@ -13,6 +13,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace RRQMSocket
@@ -45,7 +46,10 @@ namespace RRQMSocket
         /// </summary>
         public DataHandlingAdapter DataHandlingAdapter
         {
-            get { return dataHandlingAdapter; }
+            get
+            {
+                return dataHandlingAdapter;
+            }
         }
 
         /// <summary>
@@ -113,6 +117,10 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
+            if (this.disposable)
+            {
+                return;
+            }
             base.Dispose();
             if (this.mainSocket != null)
             {
@@ -124,8 +132,19 @@ namespace RRQMSocket
                 this.eventArgs = null;
             }
             this.MainSocket = null;
-            this.dataHandlingAdapter = null;
             this.breakOut = true;
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Close()
+        {
+            this.breakOut = true;
+            if (this.mainSocket != null)
+            {
+                this.mainSocket.Close();
+            }
         }
 
         /// <summary>
@@ -142,7 +161,7 @@ namespace RRQMSocket
                 }
                 if (this.dataHandlingAdapter == null)
                 {
-                    Logger.Debug(LogType.Error, this, "数据处理适配器为空", null);
+                    logger.Debug(LogType.Error, this, "数据处理适配器为空");
                     return;
                 }
                 this.dataHandlingAdapter.Received(byteBlock);
@@ -188,6 +207,8 @@ namespace RRQMSocket
             this.port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
         }
 
+        #region 同步发送
+
         /// <summary>
         /// 发送字节流
         /// </summary>
@@ -225,6 +246,38 @@ namespace RRQMSocket
         {
             this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        public virtual void Send(IList<TransferByte> transferBytes)
+        {
+            if (this.dataHandlingAdapter.CanSplicingSend)
+            {
+                this.dataHandlingAdapter.Send(transferBytes, false);
+            }
+            else
+            {
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                try
+                {
+                    foreach (var item in transferBytes)
+                    {
+                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                    }
+                    this.dataHandlingAdapter.Send(byteBlock.Buffer, 0, byteBlock.Len, false);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+        }
+
+        #endregion 同步发送
+
+        #region 异步发送
 
         /// <summary>
         /// IOCP发送
@@ -265,21 +318,34 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 设置数据处理适配器
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="adapter"></param>
-        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        /// <param name="transferBytes"></param>
+        public virtual void SendAsync(IList<TransferByte> transferBytes)
         {
-            if (adapter == null)
+            if (this.dataHandlingAdapter.CanSplicingSend)
             {
-                throw new RRQMException("数据处理适配器为空");
+                this.dataHandlingAdapter.Send(transferBytes, true);
             }
-            adapter.BytePool = this.BytePool;
-            adapter.Logger = this.Logger;
-            adapter.ReceivedCallBack = this.HandleReceivedData;
-            adapter.SendCallBack = this.Sent;
-            this.dataHandlingAdapter = adapter;
+            else
+            {
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                try
+                {
+                    foreach (var item in transferBytes)
+                    {
+                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                    }
+                    this.dataHandlingAdapter.Send(byteBlock.Buffer, 0, byteBlock.Len, true);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
         }
+
+        #endregion 异步发送
 
         /// <summary>
         /// 禁用发送或接收
@@ -301,11 +367,11 @@ namespace RRQMSocket
         {
             try
             {
-                this.OnBeforeReceive();
+                this.OnInitCompleted();
             }
             catch (Exception ex)
             {
-                this.logger.Debug(LogType.Error, this, $"在{nameof(OnBeforeReceive)}中发生错误。", ex);
+                this.logger.Debug(LogType.Error, this, $"在{nameof(OnInitCompleted)}中发生错误。", ex);
             }
             try
             {
@@ -326,9 +392,6 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 测试是否在线
-        /// </summary>
         internal void GetTimeout(int time, long nowTick)
         {
             if (nowTick - this.lastTick / 10000000 > time)
@@ -346,23 +409,7 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 处理已接收到的数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
-
-        /// <summary>
-        /// 当连接时
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnConnected(MesEventArgs e)
-        { 
-        
-        }
-
-        internal void OnEvent(int type,MesEventArgs e)
+        internal void OnEvent(int type, MesEventArgs e)
         {
             switch (type)
             {
@@ -382,18 +429,36 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 处理已接收到的数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+
+        /// <summary>
+        /// 初始化完成
+        /// </summary>
+        protected virtual void OnInitCompleted()
+        {
+            if (this.dataHandlingAdapter == null)
+            {
+                this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+            }
+        }
+
+        /// <summary>
+        /// 当连接时
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnConnected(MesEventArgs e)
+        {
+        }
+
+        /// <summary>
         /// 当断开连接时
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnDisconnected(MesEventArgs e)
-        {
-
-        }
-
-        /// <summary>
-        /// 在接收之前
-        /// </summary>
-        protected virtual void OnBeforeReceive()
         {
         }
 
@@ -407,10 +472,31 @@ namespace RRQMSocket
         /// <summary>
         /// 重新设置ID
         /// </summary>
-        /// <param name="id"></param>
-        protected virtual void ResetID(string id)
+        /// <param name="waitSetID"></param>
+        protected virtual void ResetID(WaitSetID waitSetID)
         {
-            this.Service.ResetID(this.id, id);
+            this.Service.ResetID(waitSetID);
+        }
+
+        /// <summary>
+        /// 设置数据处理适配器
+        /// </summary>
+        /// <param name="adapter"></param>
+        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            if (adapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            if (this.BytePool==null)
+            {
+                throw new RRQMException($"数据处理适配器应当在初始化完成后赋值，建议在{nameof(this.OnInitCompleted)}赋值。");
+            }
+            adapter.BytePool = this.BytePool;
+            adapter.Logger = this.Logger;
+            adapter.ReceivedCallBack = this.HandleReceivedData;
+            adapter.SendCallBack = this.Sent;
+            this.dataHandlingAdapter = adapter;
         }
 
         /// <summary>
@@ -427,10 +513,6 @@ namespace RRQMSocket
                 if (e.LastOperation == SocketAsyncOperation.Receive)
                 {
                     ProcessReceived(e);
-                }
-                else if (e.LastOperation == SocketAsyncOperation.Send)
-                {
-                    ProcessSend(e);
                 }
                 else
                 {
@@ -504,22 +586,6 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 发送完成时处理函数
-        /// </summary>
-        /// <param name="e">与发送完成操作相关联的SocketAsyncEventArg对象</param>
-        private void ProcessSend(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                e.Dispose();
-            }
-            else
-            {
-                this.Logger.Debug(LogType.Error, this, "异步发送错误。");
-            }
-        }
-
         private void Sent(byte[] buffer, int offset, int length, bool isAsync)
         {
             if (!this.Online)
@@ -528,22 +594,13 @@ namespace RRQMSocket
             }
             if (isAsync)
             {
-                SocketAsyncEventArgs sendEventArgs = new SocketAsyncEventArgs();
-                sendEventArgs.Completed += EventArgs_Completed;
-                sendEventArgs.SetBuffer(buffer, offset, length);
-                sendEventArgs.RemoteEndPoint = this.MainSocket.RemoteEndPoint;
-                if (!this.MainSocket.SendAsync(sendEventArgs))
-                {
-                    // 同步发送时处理发送完成事件
-                    this.ProcessSend(sendEventArgs);
-                }
+                this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
             }
             else
             {
-                int r = 0;
                 while (length > 0)
                 {
-                    r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                    int r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
                     if (r == 0 && length > 0)
                     {
                         throw new RRQMException("发送数据不完全");
@@ -558,5 +615,6 @@ namespace RRQMSocket
                 this.lastTick = DateTime.Now.Ticks;
             }
         }
+
     }
 }

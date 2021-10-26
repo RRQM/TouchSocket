@@ -23,7 +23,7 @@ namespace RRQMSocket
     /// </summary>
     public class DataAdapterTester : IDisposable
     {
-        private readonly ConcurrentQueue<AsyncByte> asyncBytes;
+        private readonly ConcurrentQueue<TransferByte> asyncBytes;
 
         private readonly Thread sendThread;
 
@@ -39,7 +39,7 @@ namespace RRQMSocket
 
         private DataAdapterTester()
         {
-            asyncBytes = new ConcurrentQueue<AsyncByte>();
+            asyncBytes = new ConcurrentQueue<TransferByte>();
             waitHandle = new AutoResetEvent(false);
             this.sendThread = new Thread(this.BeginSend);
             this.sendThread.IsBackground = true;
@@ -125,7 +125,7 @@ namespace RRQMSocket
 
             while (true)
             {
-                if (this.asyncBytes.TryDequeue(out AsyncByte asyncByte))
+                if (this.asyncBytes.TryDequeue(out TransferByte asyncByte))
                 {
                     if (block == null)
                     {
@@ -134,23 +134,23 @@ namespace RRQMSocket
                     }
 
                     int surLen = block.Capacity - (int)block.Position;
-                    if (surLen >= asyncByte.length)
+                    if (surLen >= asyncByte.Length)
                     {
-                        block.Write(asyncByte.buffer, asyncByte.offset, asyncByte.length);
+                        block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
                     }
                     else
                     {
-                        block.Write(asyncByte.buffer, asyncByte.offset, surLen);
+                        block.Write(asyncByte.Buffer, asyncByte.Offset, surLen);
 
-                        int surDataLen = asyncByte.length - surLen;
-                        int offset = asyncByte.offset + surLen;
+                        int surDataLen = asyncByte.Length - surLen;
+                        int offset = asyncByte.Offset + surLen;
 
                         while (surDataLen > 0)
                         {
                             block = this.adapter.BytePool.GetByteBlock(bufferLength);
                             byteBlocks.Add(block);
                             int len = Math.Min(surDataLen, bufferLength);
-                            block.Write(asyncByte.buffer, offset, len);
+                            block.Write(asyncByte.Buffer, offset, len);
                             surDataLen -= len;
                             offset += len;
                         }
@@ -175,12 +175,8 @@ namespace RRQMSocket
 
         private void SendCallback(byte[] buffer, int offset, int length, bool isAsync)
         {
-            AsyncByte asyncByte = new AsyncByte();
-            asyncByte.buffer = new byte[length];
-
-            Array.Copy(buffer, offset, asyncByte.buffer, 0, length);
-            asyncByte.offset = 0;
-            asyncByte.length = length;
+            TransferByte asyncByte = new TransferByte(new byte[length], 0, length);
+            Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
             this.asyncBytes.Enqueue(asyncByte);
             if (!this.sending)
             {

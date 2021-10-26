@@ -22,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : SocketClient, new()
+    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient, new()
     {
         private string verifyToken;
 
@@ -108,7 +108,7 @@ namespace RRQMSocket
                                     client.bufferLength = this.bufferLength;
 
                                     CreateOption creatOption = new CreateOption();
-                                   
+
                                     creatOption.ID = this.SocketClients.GetDefaultID();
 
                                     this.OnCreateSocketCliect(client, creatOption);

@@ -13,6 +13,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
@@ -53,6 +54,11 @@ namespace RRQMSocket
             get { return fixedHeaderType; }
             set { fixedHeaderType = value; }
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => true;
 
         /// <summary>
         /// 临时包
@@ -256,6 +262,85 @@ namespace RRQMSocket
             {
                 byteBlock.Write(lenBytes);
                 byteBlock.Write(buffer, offset, length);
+                if (isAsync)
+                {
+                    byte[] data = byteBlock.ToArray();
+                    this.GoSend(data, 0, data.Length, isAsync);//使用ByteBlock时不能异步发送
+                }
+                else
+                {
+                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            int length = 0;
+            foreach (var item in transferBytes)
+            {
+                length += item.Length;
+            }
+
+            if (length < this.minSizeHeader)
+            {
+                throw new RRQMException("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
+            }
+
+            if (length > this.maxSizeHeader)
+            {
+                throw new RRQMException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
+            }
+
+            ByteBlock byteBlock = null;
+            byte[] lenBytes = null;
+
+            switch (this.fixedHeaderType)
+            {
+                case FixedHeaderType.Byte:
+                    {
+                        byte dataLen = (byte)length;
+                        byteBlock = this.BytePool.GetByteBlock(dataLen + 1);
+                        lenBytes = new byte[] { dataLen };
+                        break;
+                    }
+                case FixedHeaderType.Ushort:
+                    {
+                        ushort dataLen = (ushort)length;
+                        byteBlock = this.BytePool.GetByteBlock(dataLen + 2);
+                        lenBytes = BitConverter.GetBytes(dataLen);
+                        break;
+                    }
+                case FixedHeaderType.Int:
+                    {
+                        byteBlock = this.BytePool.GetByteBlock(length + 4);
+                        lenBytes = BitConverter.GetBytes(length);
+                        break;
+                    }
+            }
+
+            try
+            {
+                byteBlock.Write(lenBytes);
+
+                foreach (var item in transferBytes)
+                {
+                    byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                }
+
                 if (isAsync)
                 {
                     byte[] data = byteBlock.ToArray();

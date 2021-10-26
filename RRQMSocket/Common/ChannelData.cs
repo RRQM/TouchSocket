@@ -9,20 +9,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RRQMCore.Collections.Concurrent;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 通道数据
     /// </summary>
-    public struct ChannelData
+    public struct ChannelData : IQueueData
     {
         internal byte[] data;
         internal short type;
+
+        /// <summary>
+        /// 通道数据长度
+        /// </summary>
+        public int Size => this.data != null ? this.data.Length : 0;
     }
 }

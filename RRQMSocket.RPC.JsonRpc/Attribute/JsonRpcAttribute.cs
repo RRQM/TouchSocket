@@ -32,15 +32,14 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="memberKey">指定键</param>
         public JsonRpcAttribute(string memberKey) : this(memberKey, MethodFlags.None)
         {
-
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="methodFlags"></param>
         public JsonRpcAttribute(MethodFlags methodFlags) : this(null, methodFlags)
         {
-
         }
 
         /// <summary>

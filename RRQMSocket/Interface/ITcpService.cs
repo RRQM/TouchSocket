@@ -62,6 +62,11 @@ namespace RRQMSocket
         bool TryGetSocketClient(string id, out TClient socketClient);
 
         /// <summary>
+        /// 清理当前已连接的所有客户端
+        /// </summary>
+        void Clear();
+
+        /// <summary>
         /// 发送字节流
         /// </summary>
         /// <param name="id">用于检索TcpSocketClient</param>

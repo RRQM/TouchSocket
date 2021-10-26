@@ -9,11 +9,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using System.Threading;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
@@ -28,6 +25,7 @@ namespace RRQMSocket.RPC.JsonRpc
         internal string jsonString;
         internal JsonRpcProtocolType protocolType;
         internal MethodInvoker methodInvoker;
+        internal CancellationTokenSource tokenSource;
 
         /// <summary>
         /// Json字符串
@@ -36,7 +34,6 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             get { return jsonString; }
         }
-
 
         /// <summary>
         /// 协议类型
@@ -47,9 +44,7 @@ namespace RRQMSocket.RPC.JsonRpc
             set { protocolType = value; }
         }
 
-
-
-#pragma warning disable CS1591 
+#pragma warning disable CS1591
         public ICaller Caller => this.caller;
 
         public IRpcContext Context => this.context;
@@ -57,5 +52,7 @@ namespace RRQMSocket.RPC.JsonRpc
         public MethodInstance MethodInstance => this.methodInstance;
 
         public MethodInvoker MethodInvoker => this.methodInvoker;
+
+        public CancellationTokenSource TokenSource =>this.tokenSource;
     }
 }

@@ -92,6 +92,11 @@ namespace RRQMSocket
             set { reserveTerminatorCode = value; }
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => true;
+
         private ByteBlock tempByteBlock;
 
         /// <summary>
@@ -109,7 +114,7 @@ namespace RRQMSocket
                 r = (int)this.tempByteBlock.Position;
             }
 
-            List<int> indexes = buffer.IndexOfInclude(0,r, this.terminatorCode);
+            List<int> indexes = buffer.IndexOfInclude(0, r, this.terminatorCode);
             if (indexes.Count == 0)
             {
                 if (r > this.MaxSize)
@@ -186,13 +191,60 @@ namespace RRQMSocket
         /// <param name="isAsync"></param>
         protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
-            if (length>this.maxSize)
+            if (length > this.maxSize)
             {
                 throw new RRQMException("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
             int dataLen = length - offset + this.terminatorCode.Length;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);
+            byteBlock.Write(this.terminatorCode);
+
+            try
+            {
+                if (isAsync)
+                {
+                    byte[] data = byteBlock.ToArray();
+                    this.GoSend(data, 0, data.Length, isAsync);//使用ByteBlock时不能异步发送
+                }
+                else
+                {
+                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            int length = 0;
+            foreach (var item in transferBytes)
+            {
+                length += item.Length;
+            }
+            if (length > this.maxSize)
+            {
+                throw new RRQMException("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
+            }
+            int dataLen = length + this.terminatorCode.Length;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
+            foreach (var item in transferBytes)
+            {
+                byteBlock.Write(item.Buffer, item.Offset, item.Length);
+            }
+
             byteBlock.Write(this.terminatorCode);
 
             try

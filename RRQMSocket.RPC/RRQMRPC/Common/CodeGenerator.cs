@@ -21,6 +21,9 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class CodeGenerator
     {
+        [RRQMCore.EnterpriseEdition]
+        internal static List<Type> proxyType = new List<Type>();
+
         private StringBuilder codeString;
 
         internal CodeGenerator()
@@ -34,7 +37,33 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         internal string ClassName { get; set; }
 
-        internal MethodInstance[]  MethodInstances { get; set; }
+        internal MethodInstance[] MethodInstances { get; set; }
+
+        /// <summary>
+        /// 添加代理类型
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="deepSearch"></param>
+        [RRQMCore.EnterpriseEdition]
+        public static void AddProxyType(Type type, bool deepSearch = true)
+        {
+            if (type.IsPrimitive || type == typeof(string))
+            {
+                return;
+            }
+            if (!proxyType.Contains(type))
+            {
+                proxyType.Add(type);
+                if (deepSearch)
+                {
+                    PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.SetProperty);
+                    foreach (var item in properties)
+                    {
+                        AddProxyType(item.PropertyType);
+                    }
+                }
+            }
+        }
 
         internal static string GetAssemblyInfo(string assemblyName, string version)
         {
@@ -42,6 +71,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             codeMap.AppendAssemblyInfo(assemblyName, version);
             return codeMap.codeString.ToString();
         }
+
         internal string GetCode()
         {
             codeString.AppendLine("using System;");
@@ -91,6 +121,13 @@ namespace RRQMSocket.RPC.RRQMRPC
                     MethodInfo method = methodInstance.Method;
                     string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
+                    codeString.AppendLine("///<summary>");
+                    foreach (var item in methodInstance.DescriptionAttributes)
+                    {
+                        codeString.AppendLine($"///{item.Description}");
+                    }
+                    codeString.AppendLine("///</summary>");
+
                     if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                     {
                         codeString.Append(string.Format("  void {0} ", methodName));
@@ -101,7 +138,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                     codeString.Append("(");//方法参数
 
-                    ParameterInfo[] parameters ;
+                    ParameterInfo[] parameters;
                     if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
                         List<ParameterInfo> infos = new List<ParameterInfo>(methodInstance.Parameters);
@@ -166,6 +203,13 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (!isOut && !isRef)//没有out或者ref
                     {
+                        codeString.AppendLine("///<summary>");
+                        foreach (var item in methodInstance.DescriptionAttributes)
+                        {
+                            codeString.AppendLine($"///{item.Description}");
+                        }
+                        codeString.AppendLine("///</summary>");
+
                         if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                         {
                             codeString.Append(string.Format("void {0} ", methodName + "Async"));
@@ -221,14 +265,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             if (MethodInstances != null)
             {
-                foreach (MethodInstance  methodInstance in MethodInstances)
+                foreach (MethodInstance methodInstance in MethodInstances)
                 {
                     bool isReturn;
                     bool isOut = false;
                     bool isRef = false;
                     MethodInfo method = methodInstance.Method;
                     string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
-
+                    codeString.AppendLine("///<summary>");
+                    codeString.AppendLine("///<inheritdoc/>");
+                    codeString.AppendLine("///</summary>");
                     if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                     {
                         isReturn = false;
@@ -411,6 +457,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                     //以下生成异步
                     if (!isOut && !isRef)//没有out或者ref
                     {
+                        codeString.AppendLine("///<summary>");
+                        codeString.AppendLine("///<inheritdoc/>");
+                        codeString.AppendLine("///</summary>");
                         if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                         {
                             isReturn = false;

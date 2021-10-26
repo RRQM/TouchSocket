@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using RRQMCore.Serialization;
+using System.Threading;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -25,6 +26,10 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private static InvokeOption waitSend;
 
+        private InvokeType invokeType = InvokeType.GlobalInstance;
+
+        private SerializationType serializationType = SerializationType.RRQMBinary;
+
         private int timeout = 5000;
 
         static InvokeOption()
@@ -38,14 +43,16 @@ namespace RRQMSocket.RPC.RRQMRPC
             waitInvoke = new InvokeOption();
             waitInvoke.FeedbackType = FeedbackType.WaitInvoke;
         }
+
         /// <summary>
         /// 默认设置。
-        /// Timeout=5000 ms
+        /// Timeout=5000ms
         /// </summary>
         public static InvokeOption OnlySend { get { return onlySend; } }
+
         /// <summary>
         /// 默认设置。
-        /// Timeout=5000 ms
+        /// Timeout=5000ms
         /// </summary>
         public static InvokeOption WaitInvoke { get { return waitInvoke; } }
 
@@ -54,23 +61,12 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// Timeout=5000 ms
         /// </summary>
         public static InvokeOption WaitSend { get { return waitSend; } }
+
         /// <summary>
         /// 调用反馈
         /// </summary>
         public FeedbackType FeedbackType { get; set; }
 
-        private SerializationType serializationType = SerializationType.RRQMBinary;
-
-        /// <summary>
-        /// RRQMRPC序列化类型
-        /// </summary>
-        public SerializationType SerializationType
-        {
-            get { return serializationType; }
-            set { serializationType = value; }
-        }
-
-        private InvokeType invokeType= InvokeType.GlobalInstance;
         /// <summary>
         /// 调用类型
         /// </summary>
@@ -80,7 +76,14 @@ namespace RRQMSocket.RPC.RRQMRPC
             set { invokeType = value; }
         }
 
-
+        /// <summary>
+        /// RRQMRPC序列化类型
+        /// </summary>
+        public SerializationType SerializationType
+        {
+            get { return serializationType; }
+            set { serializationType = value; }
+        }
 
         /// <summary>
         /// 调用超时，
@@ -97,6 +100,17 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 timeout = value;
             }
+        }
+
+        private CancellationToken cancellationToken;
+
+        /// <summary>
+        /// 可以取消的调用令箭
+        /// </summary>
+        public CancellationToken CancellationToken
+        {
+            get { return cancellationToken; }
+            set { cancellationToken = value; }
         }
     }
 }

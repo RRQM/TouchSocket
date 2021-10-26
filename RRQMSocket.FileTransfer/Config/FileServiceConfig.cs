@@ -57,7 +57,6 @@ namespace RRQMSocket.FileTransfer
         public static readonly DependencyProperty MaxUploadSpeedProperty =
             DependencyProperty.Register("MaxUploadSpeed", typeof(long), typeof(FileServiceConfig), 1024 * 1024L);
 
-
         /// <summary>
         /// 下载根目录
         /// </summary>
@@ -73,8 +72,6 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public static readonly DependencyProperty DownloadRootProperty =
             DependencyProperty.Register("DownloadRoot", typeof(string), typeof(FileServiceConfig), string.Empty);
-
-
 
         /// <summary>
         /// 上传根目录

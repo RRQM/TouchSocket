@@ -13,9 +13,9 @@ using RRQMCore;
 using RRQMCore.Helper;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
@@ -25,9 +25,44 @@ namespace RRQMSocket.RPC
     /// </summary>
     internal static class GlobalTools
     {
-        private static int nullReturnNullParameters   = 100000000;
-        private static int nullReturnExistParameters  = 300000000;
-        private static int ExistReturnNullParameters  = 500000000;
+        [EnterpriseEdition]
+        internal static bool MethodEquals(MethodInfo m1, MethodInfo m2)
+        {
+            if (m1.GetCustomAttributes().Count() != m2.GetCustomAttributes().Count())
+            {
+                return false;
+            }
+            if (m1.Name != m2.Name)
+            {
+                return false;
+            }
+            if (m1.ReturnType.FullName != m2.ReturnType.FullName)
+            {
+                return false;
+            }
+
+            ParameterInfo[] ps1 = m1.GetParameters();
+            ParameterInfo[] ps2 = m2.GetParameters();
+            if (ps1.Length != ps2.Length)
+            {
+                return false;
+            }
+            else
+            {
+                for (int i = 0; i < ps1.Length; i++)
+                {
+                    if (ps1[i].ParameterType.FullName != ps2[i].ParameterType.FullName)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private static int nullReturnNullParameters = 100000000;
+        private static int nullReturnExistParameters = 300000000;
+        private static int ExistReturnNullParameters = 500000000;
         private static int ExistReturnExistParameters = 700000000;
 
         internal static MethodInstance[] GetMethodInstances(IServerProvider serverProvider, bool isSetToken)
@@ -50,6 +85,7 @@ namespace RRQMSocket.RPC
                     methodInstance.ProviderType = serverProvider.GetType();
                     methodInstance.Method = method;
                     methodInstance.RPCAttributes = attributes.ToArray();
+                    methodInstance.DescriptionAttributes = method.GetCustomAttributes<DescriptionAttribute>(true).ToArray();
                     methodInstance.IsEnable = true;
                     methodInstance.Parameters = method.GetParameters();
                     foreach (var item in attributes)
@@ -58,7 +94,7 @@ namespace RRQMSocket.RPC
                     }
                     if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
-                        if (methodInstance.Parameters.Length==0||!typeof(IServerCallContext).IsAssignableFrom(methodInstance.Parameters[0].ParameterType) )
+                        if (methodInstance.Parameters.Length == 0 || !typeof(IServerCallContext).IsAssignableFrom(methodInstance.Parameters[0].ParameterType))
                         {
                             throw new RRQMRPCException($"函数：{method}，标识包含{MethodFlags.IncludeCallContext}时，必须包含{nameof(IServerCallContext)}或其派生类参数，且为第一参数。");
                         }
@@ -139,6 +175,5 @@ namespace RRQMSocket.RPC
 
             return instances.ToArray();
         }
-
     }
 }

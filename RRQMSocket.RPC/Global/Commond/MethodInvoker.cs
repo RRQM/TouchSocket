@@ -38,6 +38,11 @@ namespace RRQMSocket.RPC
         public InvokeType InvokeType;
 
         /// <summary>
+        /// 异步执行
+        /// </summary>
+        public bool AsyncRun;
+
+        /// <summary>
         /// 自定义调用实例
         /// </summary>
         public IServerProvider CustomServerProvider;

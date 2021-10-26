@@ -65,22 +65,6 @@ namespace RRQMSocket.FileTransfer
         /// 单次请求超时时间 min=5000,max=60*1000 ms, 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty TimeoutProperty =
-            DependencyProperty.Register("Timeout", typeof(int), typeof(FileClientConfig), 10 * 1000);
-
-        /// <summary>
-        /// 数据包尺寸
-        /// </summary>
-        public int PacketSize
-        {
-            get { return (int)GetValue(PacketSizeProperty); }
-            set { SetValue(PacketSizeProperty, value); }
-        }
-
-        /// <summary>
-        /// 数据包尺寸, 所需类型<see cref="int"/>
-        /// </summary>
-        [RRQMCore.Range]
-        public static readonly DependencyProperty PacketSizeProperty =
-            DependencyProperty.Register("PacketSize", typeof(int), typeof(FileClientConfig), 1024 * 64);
+            DependencyProperty.Register("Timeout", typeof(int), typeof(FileClientConfig), 30 * 1000);
     }
 }

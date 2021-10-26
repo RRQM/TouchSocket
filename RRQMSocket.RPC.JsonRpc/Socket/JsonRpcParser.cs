@@ -77,6 +77,7 @@ namespace RRQMSocket.RPC.JsonRpc
         public RPCService RPCService { get; private set; }
 
         private InvokeType invokeType;
+
         /// <summary>
         /// 调用类型
         /// </summary>
@@ -84,7 +85,6 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             get { return invokeType; }
         }
-
 
         /// <summary>
         /// 执行函数
@@ -239,7 +239,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="methodInstance">调用服务实例</param>
         /// <param name="jsonRpcContext"></param>
         /// <returns></returns>
-        protected virtual void BuildRequestContext(MethodInvoker  methodInvoker, string jsonString, out MethodInstance methodInstance, out JsonRpcContext jsonRpcContext)
+        protected virtual void BuildRequestContext(MethodInvoker methodInvoker, string jsonString, out MethodInstance methodInstance, out JsonRpcContext jsonRpcContext)
         {
             try
             {
@@ -360,7 +360,6 @@ namespace RRQMSocket.RPC.JsonRpc
                             jsonRpcContext.parameters[i] = jsonRpcContext.@params[i].ToObject(methodInstance.ParameterTypes[i]);
                         }
                     }
-
                 }
             }
             else
@@ -457,7 +456,9 @@ namespace RRQMSocket.RPC.JsonRpc
                     break;
             }
         }
+
         private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idTypeInstance;
+
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             MethodInvoker methodInvoker = new MethodInvoker();

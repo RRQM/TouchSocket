@@ -9,6 +9,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+
+using System.Threading;
+
 namespace RRQMSocket.RPC
 {
     /// <summary>
@@ -35,5 +38,10 @@ namespace RRQMSocket.RPC
         /// RPC请求实际
         /// </summary>
         IRpcContext Context { get; }
+
+        /// <summary>
+        /// 可取消的调用令箭
+        /// </summary>
+        CancellationTokenSource TokenSource { get; }
     }
 }

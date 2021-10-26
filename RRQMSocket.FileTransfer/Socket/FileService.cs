@@ -44,7 +44,7 @@ namespace RRQMSocket.FileTransfer
         public long MaxDownloadSpeed
         {
             get { return maxDownloadSpeed; }
-            set { maxUploadSpeed = value; }
+            set { maxDownloadSpeed = value; }
         }
 
         /// <summary>
@@ -113,8 +113,8 @@ namespace RRQMSocket.FileTransfer
             base.OnCreateSocketCliect(socketClient, creatOption);
             socketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
-            socketClient.downloadRoot = (string)this.ServiceConfig.GetValue(FileServiceConfig.DownloadRootProperty);
-            socketClient.uploadRoot = (string)this.ServiceConfig.GetValue(FileServiceConfig.UploadRootProperty);
+            socketClient.downloadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.DownloadRootProperty);
+            socketClient.uploadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.UploadRootProperty);
             socketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
             socketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
         }

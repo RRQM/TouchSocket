@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
-using RRQMSocket.RPC.RRQMRPC;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -67,6 +66,47 @@ namespace RRQMSocket.RPC
             }
             methodInstances = keys.ToArray();
             return success;
+        }
+
+        [EnterpriseEdition]
+        internal int UpdateServer(IServerProvider serverProvider)
+        {
+            MethodInstance[] methodInstances = GlobalTools.GetMethodInstances(serverProvider, false);
+
+            List<MethodInstance> keys = new List<MethodInstance>();
+            foreach (var methodInstance in this.methodMap.Values)
+            {
+                if (methodInstance.Provider.GetType().FullName == serverProvider.GetType().FullName)
+                {
+                    keys.Add(methodInstance);
+                }
+            }
+
+            if (methodInstances.Length != keys.Count)
+            {
+                throw new RRQMRPCException("更新的函数数量不一致");
+            }
+
+            int count = 0;
+            foreach (var instanceOld in keys)
+            {
+                foreach (var instanceNew in methodInstances)
+                {
+                    if (GlobalTools.MethodEquals(instanceOld.Method, instanceNew.Method))
+                    {
+                        count++;
+                        instanceOld.Provider = instanceNew.Provider;
+                        instanceOld.Parameters = instanceNew.Parameters;
+                        instanceOld.ParameterTypes = instanceNew.ParameterTypes;
+                        instanceOld.ReturnType = instanceNew.ReturnType;
+                        instanceOld.RPCAttributes = instanceNew.RPCAttributes;
+                        instanceOld.Method = instanceNew.Method;
+                        instanceOld.ParameterNames = instanceNew.ParameterNames;
+                        break;
+                    }
+                }
+            }
+            return count;
         }
 
         /// <summary>

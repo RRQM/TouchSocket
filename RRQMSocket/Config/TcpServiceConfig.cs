@@ -62,7 +62,7 @@ namespace RRQMSocket
         /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ClearIntervalProperty =
-            DependencyProperty.Register("ClearInterval", typeof(int), typeof(TcpServiceConfig), 60*1000);
+            DependencyProperty.Register("ClearInterval", typeof(int), typeof(TcpServiceConfig), 60 * 1000);
 
         /// <summary>
         /// 统计类型，可叠加位域

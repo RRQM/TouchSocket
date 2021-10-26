@@ -9,13 +9,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Helper;
 using RRQMCore.Serialization;
 using RRQMCore.XREF.Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -35,7 +33,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             if (parameterBytes == null)
             {
-                return null;
+                return parameterType.GetDefault();
             }
             switch (serializationType)
             {

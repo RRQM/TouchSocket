@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace RRQMSocket
@@ -43,5 +44,22 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="how"></param>
         void Shutdown(SocketShutdown how);
+
+        /// <summary>
+        /// 关闭Socket信道，并随后释放资源
+        /// </summary>
+        void Close();
+
+        /// <summary>
+        /// 同步组合发送
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        void Send(IList<TransferByte> transferBytes);
+
+        /// <summary>
+        /// 异步组合发送
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        void SendAsync(IList<TransferByte> transferBytes);
     }
 }

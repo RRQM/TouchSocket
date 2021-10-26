@@ -10,10 +10,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Collections.Concurrent;
 using RRQMCore.Exceptions;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,28 +28,43 @@ namespace RRQMSocket
         internal byte[] current;
         internal int id = 0;
         internal ConcurrentDictionary<int, Channel> parent;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly BytePool bytePool;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ConcurrentQueue<ChannelData> dataQueue;
+        private readonly IntelligentDataQueue<ChannelData> dataQueue;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ProcotolHelper procotolHelper;
+        private readonly ProtocolClient client1;
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly ProtocolSocketClient client2;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly AutoResetEvent waitHandle;
 
         private int bufferLength;
         private ChannelStatus status;
-        internal Channel(ProcotolHelper procotolHelper)
+
+        internal Channel(ProtocolClient client)
         {
             this.status = ChannelStatus.Success;
-            this.procotolHelper = procotolHelper;
-            this.dataQueue = new ConcurrentQueue<ChannelData>();
+            this.client1 = client;
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(1024 * 1024 * 20);
             this.waitHandle = new AutoResetEvent(false);
-            this.bytePool = procotolHelper.Client.BytePool;
-            this.bufferLength = procotolHelper.Client.BufferLength;
+            this.bytePool = client.BytePool;
+            this.bufferLength = client.BufferLength;
+        }
+        
+        internal Channel(ProtocolSocketClient client)
+        {
+            this.status = ChannelStatus.Success;
+            this.client2 = client;
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(1024 * 1024 * 20);
+            this.waitHandle = new AutoResetEvent(false);
+            this.bytePool = client.BytePool;
+            this.bufferLength = client.BufferLength;
         }
 
         /// <summary>
@@ -85,7 +100,14 @@ namespace RRQMSocket
             try
             {
                 byteBlock.Write(this.id);
-                this.procotolHelper.SocketSend(-5, byteBlock.Buffer, 0, byteBlock.Len, false);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSend(-5, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSend(-5, byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
             catch (Exception)
             {
@@ -107,7 +129,14 @@ namespace RRQMSocket
             try
             {
                 byteBlock.Write(this.id);
-                this.procotolHelper.SocketSend(-4, byteBlock.Buffer, 0, byteBlock.Len, false);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSend(-4, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSend(-4, byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
             catch (Exception)
             {
@@ -129,11 +158,17 @@ namespace RRQMSocket
             {
                 this.RequestDispose();
                 byteBlock.Write(this.id);
-                this.procotolHelper.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len, false);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
             catch
             {
-
             }
             finally
             {
@@ -187,7 +222,7 @@ namespace RRQMSocket
                 this.waitHandle.Reset();
                 if (this.waitHandle.WaitOne(timeout))
                 {
-                   return this.MoveNext();
+                    return this.MoveNext(timeout);
                 }
                 else
                 {
@@ -217,7 +252,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Write(byte[] data, int offset, int length)
         {
-            if (this.status != ChannelStatus.Success)
+            if ((byte)this.status>3)
             {
                 throw new RRQMException("通道已不允许使用");
             }
@@ -226,7 +261,14 @@ namespace RRQMSocket
             {
                 byteBlock.Write(this.id);
                 byteBlock.WriteBytesPackage(data, offset, length);
-                this.procotolHelper.SocketSend(-3, byteBlock.Buffer, 0, byteBlock.Len, false);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSend(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSend(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
             catch (Exception)
             {
@@ -255,7 +297,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void WriteAsync(byte[] data, int offset, int length)
         {
-            if (this.status != ChannelStatus.Success)
+            if ((byte)this.status > 3)
             {
                 throw new RRQMException("通道已不允许使用");
             }
@@ -264,7 +306,14 @@ namespace RRQMSocket
             {
                 byteBlock.Write(this.id);
                 byteBlock.WriteBytesPackage(data, offset, length);
-                this.procotolHelper.SocketSendAsync(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSendAsync(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSendAsync(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
             catch (Exception)
             {
@@ -312,6 +361,9 @@ namespace RRQMSocket
             this.status = ChannelStatus.Disposed;
             this.waitHandle.Set();
             this.parent.TryRemove(this.id, out _);
+            while (this.dataQueue.TryDequeue(out _))
+            {
+            }
         }
     }
 }

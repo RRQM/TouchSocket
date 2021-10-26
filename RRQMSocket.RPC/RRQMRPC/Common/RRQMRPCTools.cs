@@ -9,13 +9,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
-using RRQMCore.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -135,6 +131,5 @@ namespace RRQMSocket.RPC.RRQMRPC
             proxyInfo.AssemblyName = $"{nameSpace}.dll";
             proxyInfo.Version = version == null ? "1.0.0.0" : version.ToString();
         }
-
     }
 }

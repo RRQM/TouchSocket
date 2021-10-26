@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// RPC范围类
     /// </summary>
-    public abstract class ServerProvider:IServerProvider
+    public abstract class ServerProvider : IServerProvider
     {
         /// <summary>
         /// 默认复刻程序集

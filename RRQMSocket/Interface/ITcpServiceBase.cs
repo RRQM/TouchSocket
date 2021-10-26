@@ -20,8 +20,7 @@ namespace RRQMSocket
         /// <summary>
         /// 重新设置ID
         /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
-        void ResetID(string oldID, string newID);
+        /// <param name="waitSetID"></param>
+        void ResetID(WaitSetID waitSetID);
     }
 }

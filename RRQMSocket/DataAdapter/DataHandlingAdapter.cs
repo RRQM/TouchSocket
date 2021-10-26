@@ -12,6 +12,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
@@ -20,6 +21,11 @@ namespace RRQMSocket
     /// </summary>
     public abstract class DataHandlingAdapter
     {
+        /// <summary>
+        /// 拼接发送
+        /// </summary>
+        public abstract bool CanSplicingSend { get; }
+
         /// <summary>
         /// 内存池
         /// </summary>
@@ -73,6 +79,14 @@ namespace RRQMSocket
         protected abstract void PreviewSend(byte[] buffer, int offset, int length, bool isAsync);
 
         /// <summary>
+        /// 组合发送预处理数据，
+        /// 当属性SplicingSend实现为True时，系统才会调用该方法。
+        /// </summary>
+        /// <param name="transferBytes">代发送数据组合</param>
+        /// <param name="isAsync">是否使用IOCP发送</param>
+        protected abstract void PreviewSend(IList<TransferByte> transferBytes, bool isAsync);
+
+        /// <summary>
         /// 发送已经经过预先处理后的数据
         /// </summary>
         /// <param name="buffer"></param>
@@ -92,6 +106,11 @@ namespace RRQMSocket
         internal void Send(byte[] buffer, int offset, int length, bool isAsync)
         {
             this.PreviewSend(buffer, offset, length, isAsync);
+        }
+
+        internal void Send(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            this.PreviewSend(transferBytes, isAsync);
         }
     }
 }

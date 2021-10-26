@@ -28,9 +28,9 @@ namespace RRQMSocket.RPC.RRQMRPC
     {
         private MethodStore methodStore;
         private RpcProxyInfo proxyFile;
-        private WaitData<WaitResult> singleWaitData;
-        private RRQMWaitHandle<RpcContext> waitHandle;
-        private WaitResult waitResult;
+        private WaitData<IWaitResult> singleWaitData;
+        private RRQMWaitHandlePool<RpcContext> waitHandle;
+        private IWaitResult waitResult;
 
         /// <summary>
         /// 发现服务后
@@ -42,9 +42,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public UdpRpcClient()
         {
-            this.waitHandle = new RRQMWaitHandle<RpcContext>();
+            this.waitHandle = new RRQMWaitHandlePool<RpcContext>();
             this.waitResult = new WaitResult();
-            this.singleWaitData = new WaitData<WaitResult>();
+            this.singleWaitData = new WaitData<IWaitResult>();
         }
 
         /// <summary>
@@ -53,6 +53,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public string ID => null;
 
         private SerializationSelector serializationSelector;
+
         /// <summary>
         /// 序列化选择器
         /// </summary>
@@ -60,7 +61,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             get { return serializationSelector; }
         }
-
 
         /// <summary>
         /// 获取远程服务器RPC服务文件

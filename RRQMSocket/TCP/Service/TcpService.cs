@@ -12,7 +12,6 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
-using RRQMCore.Pool;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
@@ -36,6 +35,10 @@ namespace RRQMSocket
         #region 属性
 
         private int clearInterval;
+        [RRQMCore.EnterpriseEdition]
+        private string licenceInfo;
+        [RRQMCore.EnterpriseEdition]
+        private string licenceOwner;
         private IPHost[] listenIPHosts;
         private Socket[] listenSockets;
         private int maxCount;
@@ -55,6 +58,24 @@ namespace RRQMSocket
         public int ClearInterval
         {
             get { return clearInterval; }
+        }
+
+        /// <summary>
+        /// 许可证信息
+        /// </summary>
+        [RRQMCore.EnterpriseEdition]
+        public string LicenceInfo
+        {
+            get { return licenceInfo; }
+        }
+
+        /// <summary>
+        /// 密钥归属
+        /// </summary>
+        [RRQMCore.EnterpriseEdition]
+        public string LicenceOwner
+        {
+            get { return licenceOwner; }
         }
 
         /// <summary>
@@ -109,7 +130,6 @@ namespace RRQMSocket
         {
             get { return socketClients; }
         }
-
         #endregion 属性
 
         #region 变量
@@ -153,10 +173,18 @@ namespace RRQMSocket
         protected virtual void OnClientDisconnected(TClient client, MesEventArgs e)
         {
             this.ClientDisconnected?.Invoke(client, e);
-            client.OnEvent(2,e);
+            client.OnEvent(2, e);
         }
 
         #endregion 事件
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Clear()
+        {
+            this.socketClients.Clear();
+        }
 
         /// <summary>
         /// 关闭服务器并释放服务器资源
@@ -174,7 +202,7 @@ namespace RRQMSocket
             this.listenSockets = null;
             this.listenIPHosts = null;
 
-            this.SocketClients.Dispose();
+            this.SocketClients.Clear();
             if (bufferQueueGroups != null)
             {
                 foreach (var item in bufferQueueGroups)
@@ -189,20 +217,21 @@ namespace RRQMSocket
         /// <summary>
         /// 重新设置ID
         /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
+        /// <param name="waitSetID"></param>
         /// <returns></returns>
-        public virtual void ResetID(string oldID, string newID)
+        public virtual void ResetID(WaitSetID waitSetID)
         {
-            if (!this.socketClients.TryGetSocketClient(oldID, out TClient client))
+            if (!this.socketClients.TryGetSocketClient(waitSetID.OldID, out TClient client))
             {
                 throw new RRQMException("oldID不存在");
             }
-            if (this.socketClients.TryRemove(oldID))
+            if (this.socketClients.TryRemove(waitSetID.OldID))
             {
-                client.id = newID;
+                client.id = waitSetID.NewID;
                 if (!this.socketClients.TryAdd(client))
                 {
+                    client.id = waitSetID.OldID;
+                    this.socketClients.TryAdd(client);
                     throw new RRQMException("ID重复");
                 }
             }
@@ -385,7 +414,7 @@ namespace RRQMSocket
             this.listenSockets = null;
             this.listenIPHosts = null;
 
-            this.SocketClients.Dispose();
+            this.SocketClients.Clear();
 
             this.serverState = ServerState.Stopped;
         }
@@ -419,13 +448,15 @@ namespace RRQMSocket
             this.name = serviceConfig.ServerName;
             this.clearType = (ClearType)serviceConfig.GetValue(TcpServiceConfig.ClearTypeProperty);
             this.separateThreadReceive = serviceConfig.SeparateThreadReceive;
+            //if (!Mak.VT(this.serviceConfig.LicenceKey, out this.licenceOwner,out this.licenceInfo))
+            //{
+            //    this.maxCount = 10;
+            //    this.Logger.Debug(LogType.Message, this, "密钥无效，请下载安装RRQMSocket使用，或者继续使用企业试用版，企业试用版最大允许10个连接。");
+            //}
         }
 
         /// <summary>
-        /// 成功连接后创建（或从对象池中获得）辅助类,
-        /// 用户可以在该方法中再进行自定义设置，
-        /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
-        /// 例如事件等，请先判断CreatOption.NewCreate值再做处理。
+        /// 成功连接后。
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
@@ -564,37 +595,34 @@ namespace RRQMSocket
             while (true)
             {
                 Thread.Sleep(1000);
-                if (disposable)
+                long tick = DateTime.Now.Ticks / 10000000;
+                string[] collection = this.SocketClients.GetIDs();
+                if (collection.Length == 0 && disposable)
                 {
-                    break;
+                    return;
                 }
-                else
+                foreach (var token in collection)
                 {
-                    long tick = DateTime.Now.Ticks / 10000000;
-                    IEnumerable<string> collection = this.SocketClients.GetIDs();
-                    foreach (var token in collection)
+                    if (this.SocketClients.TryGetSocketClient(token, out TClient client))
                     {
-                        if (this.SocketClients.TryGetSocketClient(token, out TClient client))
+                        if (this.clearInterval > 0)
                         {
-                            if (this.clearInterval > 0)
-                            {
-                                client.GetTimeout(this.clearInterval / 1000, tick);
-                            }
+                            client.GetTimeout(this.clearInterval / 1000, tick);
+                        }
 
-                            if (client.breakOut)
+                        if (client.breakOut)
+                        {
+                            try
                             {
-                                try
+                                client.Dispose();
+                                if (this.SocketClients.TryRemove(token))
                                 {
-                                    client.Dispose();
-                                    if (this.SocketClients.TryRemove(token))
-                                    {
-                                        this.OnClientDisconnected(client, new MesEventArgs("breakOut"));
-                                    }
+                                    this.OnClientDisconnected(client, new MesEventArgs("breakOut"));
                                 }
-                                catch (Exception ex)
-                                {
-                                    Logger.Debug(LogType.Error, this, $"在检验客户端时发生错误，信息：{ex.Message}");
-                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Debug(LogType.Error, this, $"在检验客户端时发生错误，信息：{ex.Message}");
                             }
                         }
                     }

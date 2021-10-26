@@ -97,6 +97,7 @@ namespace RRQMSocket.FileTransfer
                     value = 1024;
                 }
                 this.maxDownloadSpeed = value;
+                this.TransferSpeedChanged();
             }
         }
 
@@ -113,6 +114,7 @@ namespace RRQMSocket.FileTransfer
                     value = 1024;
                 }
                 this.maxUploadSpeed = value;
+                this.TransferSpeedChanged();
             }
         }
 
@@ -266,7 +268,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         try
                         {
-                            P117_UploadBlockData(buffer);
+                            P117_UploadBlockData(byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -475,6 +477,7 @@ namespace RRQMSocket.FileTransfer
                     this.transferUrlFileInfo = urlFileInfo;
                     waitResult.PBCollectionTemp = new PBCollectionTemp();
                     waitResult.PBCollectionTemp.UrlFileInfo = urlFileInfo;
+                    this.TransferSpeedChanged();
                 }
                 else
                 {
@@ -492,33 +495,35 @@ namespace RRQMSocket.FileTransfer
 
             long position = receivedByteBlock.ReadInt64();
             int requestLength = receivedByteBlock.ReadInt32();
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(requestLength + 7);
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(requestLength + 1);
             if (this.transferStatus != TransferStatus.Download)
             {
-                byteBlock.Buffer[6] = 0;
-            }
-
-            string mes;
-            if (FileStreamPool.ReadFile(transferUrlFileInfo.FilePath, out mes, position, byteBlock, 7, requestLength))
-            {
-                Speed.downloadSpeed += requestLength;
-                this.position = position + requestLength;
-                this.tempLength += requestLength;
-                this.dataTransferLength += requestLength;
-                byteBlock.Buffer[6] = 1;
+                byteBlock.WriteByte(0);
             }
             else
             {
-                byteBlock.Position = 6;
-                byteBlock.Write((byte)2);
-                byteBlock.Write(Encoding.UTF8.GetBytes(string.IsNullOrEmpty(mes) ? "未知错误" : mes));
+                string mes;
+                if (FileStreamPool.ReadFile(transferUrlFileInfo.FilePath, out mes, position, byteBlock, 1, requestLength))
+                {
+                    Speed.downloadSpeed += requestLength;
+                    this.position = position + requestLength;
+                    this.tempLength += requestLength;
+                    this.dataTransferLength += requestLength;
+                    byteBlock.Buffer[0] = 1;
+                }
+                else
+                {
+                    byteBlock.Position = 0;
+                    byteBlock.WriteByte(2);
+                    byteBlock.Write(Encoding.UTF8.GetBytes(string.IsNullOrEmpty(mes) ? "未知错误" : mes));
+                }
             }
 
             try
             {
                 if (this.Online)
                 {
-                    this.InternalSend(111, byteBlock.Buffer, 0, byteBlock.Len, true);
+                    this.InternalSend(111, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
             finally
@@ -590,6 +595,7 @@ namespace RRQMSocket.FileTransfer
                         waitResult.Status = 1;
                         waitResult.Message = null;
                         waitResult.PBCollectionTemp = PBCollectionTemp.GetFromProgressBlockCollection(blocks);
+                        this.TransferSpeedChanged();
                     }
                     else
                     {
@@ -608,42 +614,48 @@ namespace RRQMSocket.FileTransfer
             this.SendDefaultObject(waitResult);
         }
 
-        private void P117_UploadBlockData(byte[] buffer)
+        private void P117_UploadBlockData(ByteBlock byteBlock)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             try
             {
-                if (this.transferStatus != TransferStatus.Upload)
+                if (this.transferStatus == TransferStatus.Upload)
                 {
-                    byteBlock.Write((byte)4);
-                }
-                byte status = buffer[2];
-                int index = BitConverter.ToInt32(buffer, 3);
-                long position = BitConverter.ToInt64(buffer, 7);
-                int submitLength = BitConverter.ToInt32(buffer, 15);
+                    byteBlock.Pos = 2;
 
-                string mes;
-                if (FileStreamPool.WriteFile(this.rrqmPath, out mes, out RRQMStream stream, position, buffer, 19, submitLength))
-                {
-                    this.position = position + submitLength;
-                    this.tempLength += submitLength;
-                    this.dataTransferLength += submitLength;
-                    Speed.uploadSpeed += submitLength;
-                    byteBlock.Write((byte)1);
-                    if (status == 1)
+                    byte status = byteBlock.ReadByte();
+                    int index = byteBlock.ReadInt32();
+                    long position = byteBlock.ReadInt64();
+                    int submitLength = byteBlock.ReadInt32();
+
+                    string mes;
+                    if (FileStreamPool.WriteFile(this.rrqmPath, out mes, out RRQMStream stream, position, byteBlock.Buffer, 19, submitLength))
                     {
-                        FileBlock fileProgress = stream.Blocks.FirstOrDefault(a => a.Index == index);
-                        fileProgress.RequestStatus = RequestStatus.Finished;
-                        stream.SaveProgressBlockCollection();
+                        this.position = position + submitLength;
+                        this.tempLength += submitLength;
+                        this.dataTransferLength += submitLength;
+                        Speed.uploadSpeed += submitLength;
+                        returnByteBlock.Write((byte)1);
+                        if (status == 1)
+                        {
+                            FileBlock fileProgress = stream.Blocks.FirstOrDefault(a => a.Index == index);
+                            fileProgress.RequestStatus = RequestStatus.Finished;
+                            stream.SaveProgressBlockCollection();
+                        }
+                    }
+                    else
+                    {
+                        returnByteBlock.Write((byte)2);
+                        returnByteBlock.Write(Encoding.UTF8.GetBytes(mes));
+                        Logger.Debug(LogType.Error, this, $"上传文件写入错误，信息：{mes}");
                     }
                 }
                 else
                 {
-                    byteBlock.Write((byte)2);
-                    byteBlock.Write(Encoding.UTF8.GetBytes(mes));
-                    Logger.Debug(LogType.Error, this, $"上传文件写入错误，信息：{mes}");
+                    returnByteBlock.Write((byte)4);
                 }
-                this.InternalSend(111, byteBlock);
+
+                this.InternalSend(111, returnByteBlock);
             }
             catch (Exception ex)
             {
@@ -651,7 +663,7 @@ namespace RRQMSocket.FileTransfer
             }
             finally
             {
-                byteBlock.Dispose();
+                returnByteBlock.Dispose();
             }
         }
 
@@ -701,6 +713,36 @@ namespace RRQMSocket.FileTransfer
             try
             {
                 this.InternalSend(111, byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        [RRQMCore.EnterpriseEdition]
+        private void TransferSpeedChanged()
+        {
+            long speed;
+            switch (this.transferStatus)
+            {
+                case TransferStatus.Upload:
+                    speed = this.maxUploadSpeed;
+                    break;
+
+                case TransferStatus.Download:
+                    speed = this.maxDownloadSpeed;
+                    break;
+
+                default:
+                    return;
+            }
+            int packageSize = Math.Min((int)(speed / 20.0), 1024 * 1024 * 5);
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            try
+            {
+                byteBlock.Write(packageSize);
+                this.InternalSend(120, byteBlock);
             }
             finally
             {

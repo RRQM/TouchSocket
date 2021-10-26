@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP客户端
     /// </summary>
-    public abstract class TokenClient : TcpClient
+    public abstract class TokenClient : TcpClient, ITokenClient
     {
         private string verifyToken = "rrqm";
 
@@ -117,7 +117,7 @@ namespace RRQMSocket
                             if (byteBlock.Buffer[0] == 1)
                             {
                                 this.id = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
-                                PreviewConnect();
+                                InitConnect();
                                 return;
                             }
                             else if (byteBlock.Buffer[0] == 2)

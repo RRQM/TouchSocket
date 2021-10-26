@@ -32,7 +32,7 @@ namespace RRQMSocket
         /// 数据处理适配器，所需类型<see cref="RRQMSocket.DataHandlingAdapter"/>
         /// </summary>
         public static readonly DependencyProperty DataHandlingAdapterProperty =
-            DependencyProperty.Register("DataHandlingAdapter", typeof(DataHandlingAdapter), typeof(TcpClientConfig), new NormalDataHandlingAdapter());
+            DependencyProperty.Register("DataHandlingAdapter", typeof(DataHandlingAdapter), typeof(TcpClientConfig), null);
 
         /// <summary>
         /// 远程IPHost
@@ -111,20 +111,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty SeparateThreadReceiveProperty =
             DependencyProperty.Register("SeparateThreadReceive", typeof(bool), typeof(TcpClientConfig), false);
-
-        /// <summary>
-        /// 独立线程发送缓存区
-        /// </summary>
-        public int SeparateThreadSendBufferLength
-        {
-            get { return (int)GetValue(SeparateThreadSendBufferLengthProperty); }
-            set { SetValue(SeparateThreadSendBufferLengthProperty, value); }
-        }
-
-        /// <summary>
-        /// 独立线程发送缓存区，所需类型<see cref="int"/>
-        /// </summary>
-        public static readonly DependencyProperty SeparateThreadSendBufferLengthProperty =
-            DependencyProperty.Register("SeparateThreadSendBufferLength", typeof(int), typeof(TcpClientConfig), 1024);
     }
 }

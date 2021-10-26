@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -21,6 +22,11 @@ namespace RRQMSocket
     public class JsonStringDataHandlingAdapter : DataHandlingAdapter
     {
         private ByteBlock Temp;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => false;
 
         /// <summary>
         /// 预解析
@@ -130,6 +136,16 @@ namespace RRQMSocket
         private void PreviewHandle(string msg)
         {
             GoReceived(null, msg);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
