@@ -9,23 +9,27 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 
-namespace RRQMCore.Pool
+namespace RRQMCore.Run
 {
     /// <summary>
-    /// 对象池接口
+    /// 等待返回类
     /// </summary>
-    public interface IObjectPool : IDisposable
+    public interface IWaitResult
     {
         /// <summary>
-        /// 可使用数量
+        /// 消息
         /// </summary>
-        int FreeSize { get; }
+        string Message { get; set; }
 
         /// <summary>
-        /// 清空池中对象
+        /// 标记
         /// </summary>
-        void Clear();
+        int Sign { get; set; }
+
+        /// <summary>
+        /// 状态
+        /// </summary>
+        byte Status { get; set; }
     }
 }

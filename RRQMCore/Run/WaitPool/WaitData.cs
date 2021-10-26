@@ -20,6 +20,14 @@ namespace RRQMCore.Run
     /// <typeparam name="T"></typeparam>
     public class WaitData<T> : IDisposable
     {
+        internal bool _dispose;
+
+        private WaitDataStatus status;
+
+        private AutoResetEvent waitHandle;
+
+        private T waitResult;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -28,10 +36,21 @@ namespace RRQMCore.Run
             this.waitHandle = new AutoResetEvent(false);
         }
 
-        private EventWaitHandle waitHandle;
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~WaitData()
+        {
+            if (!this._dispose)
+            {
+                this.Dispose();
+            }
+        }
 
-        private T waitResult;
-        private WaitDataStatus status;
+        /// <summary>
+        /// 状态
+        /// </summary>
+        public WaitDataStatus Status { get => status; }
 
         /// <summary>
         /// 等待数据结果
@@ -42,36 +61,24 @@ namespace RRQMCore.Run
         }
 
         /// <summary>
-        /// 状态
+        /// 取消任务
         /// </summary>
-        public WaitDataStatus Status { get => status; }
-
-        /// <summary>
-        /// 载入结果
-        /// </summary>
-        public void LoadResult(T result)
+        public void Cancel()
         {
-            this.waitResult = result;
-        }
-
-        /// <summary>
-        /// 等待指定毫秒
-        /// </summary>
-        /// <param name="millisecond"></param>
-        public bool Wait(int millisecond)
-        {
-            this.status = WaitDataStatus.Waiting;
-            bool signSuccess = this.waitHandle.WaitOne(millisecond);
-            this.status = WaitDataStatus.Running;
-            return signSuccess;
-        }
-
-        /// <summary>
-        /// 使等待的线程继续执行
-        /// </summary>
-        public void Set()
-        {
+            this.status = WaitDataStatus.Canceled;
             this.waitHandle.Set();
+        }
+
+        /// <summary>
+        /// 回收
+        /// </summary>
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            this.status = WaitDataStatus.Disposed;
+            this._dispose = true;
+            this.waitResult = default;
+            this.waitHandle.Dispose();
         }
 
         /// <summary>
@@ -79,7 +86,17 @@ namespace RRQMCore.Run
         /// </summary>
         public bool Reset()
         {
+            this.waitResult = default;
             return this.waitHandle.Reset();
+        }
+
+        /// <summary>
+        /// 使等待的线程继续执行
+        /// </summary>
+        public void Set()
+        {
+            this.status = WaitDataStatus.SetRunning;
+            this.waitHandle.Set();
         }
 
         /// <summary>
@@ -89,20 +106,45 @@ namespace RRQMCore.Run
         public void Set(T waitResult)
         {
             this.waitResult = waitResult;
+            this.status = WaitDataStatus.SetRunning;
             this.waitHandle.Set();
         }
 
-        internal bool _dispose;
+        /// <summary>
+        /// 加载取消令箭
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        public void SetCancellationToken(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(() =>
+                {
+                    this.Cancel();
+                });
+            }
+        }
 
         /// <summary>
-        /// 回收
+        /// 载入结果
         /// </summary>
-        public void Dispose()
+        public void SetResult(T result)
         {
-            this.status = WaitDataStatus.Disposed;
-            this._dispose = true;
-            this.waitResult = default;
-            this.waitHandle.Dispose();
+            this.waitResult = result;
+        }
+
+        /// <summary>
+        /// 等待指定毫秒
+        /// </summary>
+        /// <param name="millisecond"></param>
+        public WaitDataStatus Wait(int millisecond)
+        {
+            this.status = WaitDataStatus.Waiting;
+            if (!this.waitHandle.WaitOne(millisecond))
+            {
+                this.status = WaitDataStatus.Overtime;
+            }
+            return this.status;
         }
     }
 }

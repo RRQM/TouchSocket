@@ -9,24 +9,36 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-namespace RRQMCore
+namespace RRQMCore.Run
 {
     /// <summary>
-    /// 范围控制
+    /// 等待数据状态
     /// </summary>
-    public class RangeAttribute : DependencyDataValidationAttribute
+    public enum WaitDataStatus : byte
     {
         /// <summary>
-        /// 验证
+        /// 等待中
         /// </summary>
-        /// <param name="value"></param>
-        public override void Verify(object value)
-        {
-            double v = (double)value;
-            if (v > 10)
-            {
-                throw new RRQMCore.Exceptions.RRQMException();
-            }
-        }
+        Waiting,
+
+        /// <summary>
+        /// 收到信号运行
+        /// </summary>
+        SetRunning,
+
+        /// <summary>
+        /// 超时
+        /// </summary>
+        Overtime,
+
+        /// <summary>
+        /// 已取消
+        /// </summary>
+        Canceled,
+
+        /// <summary>
+        /// 已释放
+        /// </summary>
+        Disposed
     }
 }

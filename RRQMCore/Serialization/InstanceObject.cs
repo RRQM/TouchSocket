@@ -20,9 +20,9 @@ namespace RRQMCore.Serialization
         internal Type Type;
         internal object Instance;
         internal Type[] ArgTypes;
+        internal Type ArrayType;
         internal Type[] ProTypes;
         internal PropertyInfo[] Properties;
         internal MethodInfo AddMethod;
-        internal MethodInfo ToArrayMethod;
     }
 }

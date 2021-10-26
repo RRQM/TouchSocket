@@ -103,7 +103,8 @@ namespace RRQMCore.IO
             }
         }
 
-#if NET45_OR_GREATER
+# if NET45_OR_GREATER
+
         [DllImport("kernel32.dll")]
         private static extern IntPtr _lopen(string lpPathName, int iReadWrite);
 
@@ -139,6 +140,7 @@ namespace RRQMCore.IO
 
             return false;
         }
+
 #endif
     }
 }

@@ -12,7 +12,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace RRQMCore.Concurrent
+namespace RRQMCore.Collections.Concurrent
 {
     /// <summary>
     /// 线程安全的List

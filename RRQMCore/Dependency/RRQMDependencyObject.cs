@@ -47,6 +47,17 @@ namespace RRQMCore.Dependency
         }
 
         /// <summary>
+        /// 获取值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dependencyProperty"></param>
+        /// <returns></returns>
+        public T GetValue<T>(DependencyProperty dependencyProperty)
+        {
+            return (T)this.GetValue(dependencyProperty);
+        }
+
+        /// <summary>
         /// 设置值
         /// </summary>
         /// <param name="dependencyProperty"></param>

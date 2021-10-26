@@ -5,14 +5,20 @@
 		<Authors>若汝棋茗</Authors>
 		<PackageIcon>RRQM.png</PackageIcon>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Version>5.6.0</Version>
+		<Version>5.7.0</Version>
 		<SignAssembly>true</SignAssembly>
 		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
 
 更新内容：
-增加：ByteBlock独立读写功能。
-增加：ByteBlock创建临时对象。
-修改：只有在net45及其以上版本才可以判断文件是否打开。
+优化：ByteBlock使用体验，例如：实例化、重复释放、扩容设置等。
+优化：RRQMBinaryFormatter可以很好的支持数组。
+增加：LoopAction。
+增加：EasyAction。
+增加：ConcurrentDoublyDictionary。
+增加：IntelligentConcurrentQueue。
+增加：IntelligentDataQueue。
+增加：SerializationHelper。
+修复：RRQMWaitHandlePool。
 
 特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
 特此感谢其作者！！！

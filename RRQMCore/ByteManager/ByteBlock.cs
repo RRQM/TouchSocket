@@ -25,7 +25,11 @@ namespace RRQMCore.ByteManager
     {
         internal bool @using;
 
+        internal BytePool _bytePool;
+
         internal long length;
+
+        private static float ratio = 1.5f;
 
         private byte[] _buffer;
 
@@ -33,8 +37,32 @@ namespace RRQMCore.ByteManager
 
         private long position;
 
-        private static float ratio = 1.5f;
+        /// <summary>
+        ///  构造函数
+        /// </summary>
+        /// <param name="capacity"></param>
+        public ByteBlock(int capacity = 1024 * 10) : this(new byte[capacity])
+        {
 
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="buffer"></param>
+        public ByteBlock(byte[] buffer)
+        {
+            this.@using = true;
+            this._buffer = buffer;
+        }
+
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~ByteBlock()
+        {
+            this.AbsoluteDispose();
+        }
         /// <summary>
         /// 扩容增长比，默认为1.5，
         /// min：1
@@ -52,9 +80,6 @@ namespace RRQMCore.ByteManager
             }
         }
 
-        internal ByteBlock()
-        {
-        }
         /// <summary>
         /// 字节实例
         /// </summary>
@@ -64,29 +89,25 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 创建一次性内存块
+        ///  该字节流块所属内存池，若值为null则意味着该流块未被管理，可能会被GC
         /// </summary>
-        /// <param name="capacity"></param>
-        /// <returns></returns>
-        public static ByteBlock CreateDisposableBlock(int capacity = 1024 * 10)
+        public BytePool BytePool
         {
-            return new ByteBlock()
-            {
-                @using = true,
-                _buffer = new byte[capacity]
-            };
+            get { return _bytePool; }
         }
-
-        /// <summary>
-        /// 该字节流块所属集合，若值为null则意味着该流块未被管理，可能会被GC
-        /// </summary>
-        public BytesCollection BytesCollection { get; internal set; }
 
         /// <summary>
         /// 可读取
         /// </summary>
         public override bool CanRead => this.@using;
 
+        /// <summary>
+        /// 能否回收
+        /// </summary>
+        public bool CanRecycle
+        {
+            get { return this._bytePool == null ? false : true; }
+        }
         /// <summary>
         /// 支持查找
         /// </summary>
@@ -100,7 +121,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 容量
         /// </summary>
-        public int Capacity => this._buffer.Length;
+        public int Capacity => this._buffer == null ? 0 : this._buffer.Length;
 
         /// <summary>
         /// 表示持续性持有，为True时，Dispose将调用无效。
@@ -147,14 +168,43 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 直接完全释放，游离该对象，等待GC
+        /// 直接完全释放，游离该对象，然后GC
         /// </summary>
         public void AbsoluteDispose()
         {
-            this.@using = false;
-            this.Position = 0;
-            this.length = 0;
-            this.BytesCollection = null;
+            this._bytePool = null;
+            this._buffer = null;
+            this.Disposed();
+            GC.Collect();
+        }
+
+        private void Disposed()
+        {
+            if (this.holding)
+            {
+                return;
+            }
+            if (this.@using)
+            {
+                this.@using = false;
+                this.position = 0;
+                this.length = 0;
+
+                GC.SuppressFinalize(this);
+
+                if (this.BytePool != null)
+                {
+                    lock (this)
+                    {
+                        if (this._buffer != null)
+                        {
+                            this.BytePool.Recycle(this._buffer);
+                        }
+                        this._bytePool = null;
+                        this._buffer = null;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -162,24 +212,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public new void Dispose()
         {
-            if (this.Holding)
-            {
-                return;
-            }
-            if (!this.@using)
-            {
-                throw new RRQMException("重复释放");
-            }
-            this.@using = false;
-
-            if (this.BytesCollection != null)
-            {
-                this.BytesCollection.BytePool.OnByteBlockRecycle(this);
-            }
-            else
-            {
-                this._buffer = null;
-            }
+            GC.SuppressFinalize(this);
+            this.Disposed();
         }
 
         /// <summary>
@@ -263,7 +297,8 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 设置持续持有属性，当为False时，会自动调用Dispose。
+        /// 设置持续持有属性，当为True时，调用Dispose会失效，表示该对象将长期持有，直至设置为False。
+        /// 当为False时，会自动调用Dispose。
         /// </summary>
         /// <param name="holding"></param>
         public void SetHolding(bool holding)
@@ -369,33 +404,35 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void WriteBytesPackage(byte[] value, int offset, int length)
+        public ByteBlock WriteBytesPackage(byte[] value, int offset, int length)
         {
             if (value == null)
             {
                 this.Write((byte)0);
-                return;
             }
-            this.Write((byte)1);
-            this.Write(length);
-            this.Write(value, offset, length);
+            else
+            {
+                this.Write((byte)1);
+                this.Write(length);
+                this.Write(value, offset, length);
+            }
+            return this;
         }
 
         /// <summary>
         /// 写入一个独立的<see cref="byte"/>数组包
         /// </summary>
         /// <param name="value"></param>
-        public void WriteBytesPackage(byte[] value)
+        public ByteBlock WriteBytesPackage(byte[] value)
         {
             if (value == null)
             {
-                this.WriteBytesPackage(value, 0, 0);
-                return;
+                return this.WriteBytesPackage(value, 0, 0);
             }
-            this.WriteBytesPackage(value, 0, value.Length);
+            return this.WriteBytesPackage(value, 0, value.Length);
         }
 
-        #endregion Int32
+        #endregion BytesPackage
 
         #region Int32
 
@@ -413,9 +450,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="int"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(int value)
+        public ByteBlock Write(int value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion Int32
@@ -436,9 +474,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="short"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(short value)
+        public ByteBlock Write(short value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion Int16
@@ -459,9 +498,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="long"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(long value)
+        public ByteBlock Write(long value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion Int64
@@ -482,9 +522,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="bool"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(bool value)
+        public ByteBlock Write(bool value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion Boolean
@@ -506,10 +547,12 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public void Write(byte value)
+        public ByteBlock Write(byte value)
         {
             this.Write(new byte[] { value }, 0, 1);
+            return this;
         }
+
         #endregion Byte
 
         #region String
@@ -541,7 +584,7 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="string"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(string value)
+        public ByteBlock Write(string value)
         {
             if (value == null)
             {
@@ -562,6 +605,7 @@ namespace RRQMCore.ByteManager
                 this.Write((ushort)buffer.Length);
                 this.Write(buffer);
             }
+            return this;
         }
 
         #endregion String
@@ -582,9 +626,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="char"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(char value)
+        public ByteBlock Write(char value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion Char
@@ -605,9 +650,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="double"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(double value)
+        public ByteBlock Write(double value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion Double
@@ -628,9 +674,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="float"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(float value)
+        public ByteBlock Write(float value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion Float
@@ -651,9 +698,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="ushort"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(ushort value)
+        public ByteBlock Write(ushort value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion UInt16
@@ -674,9 +722,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="uint"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(uint value)
+        public ByteBlock Write(uint value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion UInt32
@@ -697,9 +746,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="ulong"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(ulong value)
+        public ByteBlock Write(ulong value)
         {
             this.Write(BitConverter.GetBytes(value));
+            return this;
         }
 
         #endregion UInt64
@@ -720,9 +770,10 @@ namespace RRQMCore.ByteManager
         /// 写入<see cref="DateTime"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(DateTime value)
+        public ByteBlock Write(DateTime value)
         {
             this.Write(BitConverter.GetBytes(value.ToBinary()));
+            return this;
         }
 
         #endregion DateTime
@@ -753,17 +804,20 @@ namespace RRQMCore.ByteManager
                         obj = SerializeConvert.RRQMBinaryDeserialize<T>(this._buffer, (int)this.position);
                     }
                     break;
+
                 case SerializationType.SystemBinary:
                     {
                         obj = SerializeConvert.BinaryDeserialize<T>(this._buffer, (int)this.position, length);
                     }
                     break;
+
                 case SerializationType.Json:
                     {
                         string jsonString = Encoding.UTF8.GetString(this._buffer, (int)this.position, length);
                         obj = JsonConvert.DeserializeObject<T>(jsonString);
                     }
                     break;
+
                 default:
                     throw new RRQMException("未定义的序列化类型");
             }
@@ -777,12 +831,12 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="value"></param>
         /// <param name="serializationType"></param>
-        public void WriteObject(object value, SerializationType serializationType = SerializationType.RRQMBinary)
+        public ByteBlock WriteObject(object value, SerializationType serializationType = SerializationType.RRQMBinary)
         {
             if (value == null)
             {
                 this.Write(0);
-                return;
+                return this;
             }
             byte[] data;
             switch (serializationType)
@@ -792,22 +846,26 @@ namespace RRQMCore.ByteManager
                         data = SerializeConvert.RRQMBinarySerialize(value, true);
                     }
                     break;
+
                 case SerializationType.SystemBinary:
                     {
                         data = SerializeConvert.BinarySerialize(value);
                     }
                     break;
+
                 case SerializationType.Json:
                     {
                         data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
                     }
                     break;
+
                 default:
                     throw new RRQMException("未定义的序列化类型");
             }
 
             this.Write(data.Length);
             this.Write(data);
+            return this;
         }
 
         #endregion Object

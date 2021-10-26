@@ -11,17 +11,13 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace RRQMCore
+namespace RRQMCore.Dependency
 {
     /// <summary>
     /// 依赖属性数据验证
     /// </summary>
-    public abstract class DependencyDataValidationAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    public class DataValidationAttribute : Attribute
     {
-        /// <summary>
-        /// 验证
-        /// </summary>
-        /// <param name="value"></param>
-        public abstract void Verify(object value);
     }
 }

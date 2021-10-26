@@ -19,50 +19,45 @@ namespace RRQMCore.ByteManager
     /// <summary>
     /// 字节块集合
     /// </summary>
-    [DebuggerDisplay("Count = {bytes.Count}")]
-    public class BytesCollection
+    [DebuggerDisplay("Count = {bytesQueue.Count}")]
+    public class BytesQueue
     {
         internal long size;
 
-        internal BytesCollection(long size)
+        internal BytesQueue(long size)
         {
             this.size = size;
         }
 
         /// <summary>
-        /// 可用空间
+        /// 占用空间
         /// </summary>
-        public long FreeSize { get { return this.size * this.bytes.Count; } }
+        public long FullSize { get { return this.size * this.bytesQueue.Count; } }
 
-        /// <summary>
-        /// 所属字节池
-        /// </summary>
-        public BytePool BytePool { get; internal set; }
 
-        private ConcurrentQueue<ByteBlock> bytes = new ConcurrentQueue<ByteBlock>();
+        private ConcurrentQueue<byte[]> bytesQueue = new ConcurrentQueue<byte[]>();
 
         /// <summary>
         /// 获取当前实例中的空闲的Block
         /// </summary>
         /// <returns></returns>
-        public bool TryGet(out ByteBlock byteBlock)
+        public bool TryGet(out byte[] bytes)
         {
-            return this.bytes.TryDequeue(out byteBlock);
+            return this.bytesQueue.TryDequeue(out bytes);
         }
 
         /// <summary>
         /// 向当前集合添加Block
         /// </summary>
-        /// <param name="byteBlock"></param>
-        public void Add(ByteBlock byteBlock)
+        /// <param name="bytes"></param>
+        public void Add(byte[] bytes)
         {
-            byteBlock.BytesCollection = this;
-            this.bytes.Enqueue(byteBlock);
+            this.bytesQueue.Enqueue(bytes);
         }
 
-        internal List<ByteBlock> ToList()
+        internal List<byte[]> ToList()
         {
-            return this.bytes.ToList();
+            return this.bytesQueue.ToList();
         }
     }
 }

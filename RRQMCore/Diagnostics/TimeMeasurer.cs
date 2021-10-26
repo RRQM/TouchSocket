@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace RRQMCore.Diagnostics
 {
@@ -31,6 +32,16 @@ namespace RRQMCore.Diagnostics
             action?.Invoke();
             stopwatch.Stop();
             return stopwatch.Elapsed;
+        }
+
+        /// <summary>
+        /// 异步执行
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public static Task<TimeSpan> RunAsync(Action action)
+        {
+            return Task.Run(() => { return Run(action); });
         }
     }
 }

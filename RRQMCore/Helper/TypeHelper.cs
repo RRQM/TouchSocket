@@ -58,5 +58,19 @@ namespace RRQMCore.Helper
         {
             return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
         }
+
+        /// <summary>
+        /// 判断为结构体
+        /// </summary>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        public static bool IsStruct(this Type targetType)
+        {
+            if (!targetType.IsPrimitive && !targetType.IsClass && !targetType.IsEnum && targetType.IsValueType)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
+using RRQMCore.Helper;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -20,84 +21,21 @@ namespace RRQMCore.Run
     /// 等待处理数据
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class RRQMWaitHandle<T> : IDisposable where T : WaitResult
+    public class RRQMWaitHandlePool<T> : IDisposable where T : IWaitResult
     {
+        private int signCount;
+
+        private ConcurrentDictionary<int, WaitData<T>> waitDic;
+
+        private ConcurrentQueue<WaitData<T>> waitQueue;
+
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMWaitHandle()
+        public RRQMWaitHandlePool()
         {
             this.waitDic = new ConcurrentDictionary<int, WaitData<T>>();
             this.waitQueue = new ConcurrentQueue<WaitData<T>>();
-        }
-
-        private ConcurrentDictionary<int, WaitData<T>> waitDic;
-        private ConcurrentQueue<WaitData<T>> waitQueue;
-        private int signCount;
-
-        /// <summary>
-        /// 获取一个可等待对象
-        /// </summary>
-        public WaitData<T> GetWaitData(T result)
-        {
-            if (signCount == int.MaxValue)
-            {
-                signCount = 0;
-            }
-            WaitData<T> waitData;
-            if (this.waitQueue.TryDequeue(out waitData))
-            {
-                result.Sign = Interlocked.Increment(ref signCount);
-                waitData.LoadResult(result);
-                this.waitDic.TryAdd(result.Sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitData<T>();
-            result.Sign = Interlocked.Increment(ref signCount);
-            waitData.LoadResult(result);
-            this.waitDic.TryAdd(result.Sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
-        /// 让等待对象恢复运行
-        /// </summary>
-        /// <param name="sign"></param>
-        public void SetRun(int sign)
-        {
-            WaitData<T> waitData;
-            if (this.waitDic.TryRemove(sign, out waitData))
-            {
-                waitData.Set();
-            }
-        }
-
-        /// <summary>
-        /// 让等待对象恢复运行
-        /// </summary>
-        /// <param name="sign"></param>
-        /// <param name="waitResult"></param>
-        public void SetRun(int sign, T waitResult)
-        {
-            WaitData<T> waitData;
-            if (this.waitDic.TryRemove(sign, out waitData))
-            {
-                waitData.Set(waitResult);
-            }
-        }
-
-        /// <summary>
-        /// 让等待对象恢复运行
-        /// </summary>
-        /// <param name="waitResult"></param>
-        public void SetRun(T waitResult)
-        {
-            WaitData<T> waitData;
-            if (this.waitDic.TryRemove(waitResult.Sign, out waitData))
-            {
-                waitData.Set(waitResult);
-            }
         }
 
         /// <summary>
@@ -131,8 +69,72 @@ namespace RRQMCore.Run
                 item.Dispose();
             }
             this.waitDic.Clear();
-            while (this.waitQueue.TryDequeue(out _))
+
+            this.waitQueue.Clear();
+        }
+
+        /// <summary>
+        /// 获取一个可等待对象
+        /// </summary>
+        public WaitData<T> GetWaitData(T result)
+        {
+            if (signCount == int.MaxValue)
             {
+                signCount = 0;
+            }
+            WaitData<T> waitData;
+            if (this.waitQueue.TryDequeue(out waitData))
+            {
+                result.Sign = Interlocked.Increment(ref signCount);
+                waitData.SetResult(result);
+                this.waitDic.TryAdd(result.Sign, waitData);
+                return waitData;
+            }
+
+            waitData = new WaitData<T>();
+            result.Sign = Interlocked.Increment(ref signCount);
+            waitData.SetResult(result);
+            this.waitDic.TryAdd(result.Sign, waitData);
+            return waitData;
+        }
+
+        /// <summary>
+        /// 让等待对象恢复运行
+        /// </summary>
+        /// <param name="sign"></param>
+        public void SetRun(int sign)
+        {
+            WaitData<T> waitData;
+            if (this.waitDic.TryGetValue(sign, out waitData))
+            {
+                waitData.Set();
+            }
+        }
+
+        /// <summary>
+        /// 让等待对象恢复运行
+        /// </summary>
+        /// <param name="sign"></param>
+        /// <param name="waitResult"></param>
+        public void SetRun(int sign, T waitResult)
+        {
+            WaitData<T> waitData;
+            if (this.waitDic.TryGetValue(sign, out waitData))
+            {
+                waitData.Set(waitResult);
+            }
+        }
+
+        /// <summary>
+        /// 让等待对象恢复运行
+        /// </summary>
+        /// <param name="waitResult"></param>
+        public void SetRun(T waitResult)
+        {
+            WaitData<T> waitData;
+            if (this.waitDic.TryGetValue(waitResult.Sign, out waitData))
+            {
+                waitData.Set(waitResult);
             }
         }
     }

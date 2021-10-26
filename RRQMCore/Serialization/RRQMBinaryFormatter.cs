@@ -10,10 +10,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Helper;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -187,9 +187,9 @@ namespace RRQMCore.Serialization
                     if (reserveAttributeName)
                     {
                         byte[] propertyBytes = Encoding.UTF8.GetBytes(property.Name);
-                        if (propertyBytes.Length > 255)
+                        if (propertyBytes.Length > byte.MaxValue)
                         {
-                            throw new RRQMCore.Exceptions.RRQMException($"属性名：{property.Name}超长");
+                            throw new Exceptions.RRQMException($"属性名：{property.Name}超长");
                         }
                         byte lenBytes = (byte)propertyBytes.Length;
                         stream.Write(lenBytes);
@@ -207,10 +207,20 @@ namespace RRQMCore.Serialization
             int len = 0;
             if (param != null)
             {
+                long oldPosition = stream.Position;
+                stream.Position += 4;
+                len += 4;
+                uint paramLen = 0;
+
                 foreach (object item in param)
                 {
+                    paramLen++;
                     len += SerializeObject(stream, item);
                 }
+                long newPosition = stream.Position;
+                stream.Position = oldPosition;
+                stream.Write(BitConverter.GetBytes(paramLen));
+                stream.Position = newPosition;
             }
             return len;
         }
@@ -238,15 +248,15 @@ namespace RRQMCore.Serialization
             }
             else
             {
-                throw new RRQMCore.Exceptions.RRQMException("数据流解析错误");
+                throw new Exceptions.RRQMException("数据流解析错误");
             }
             offset += 1;
             return Deserialize(type, data, ref offset);
         }
 
-        private object Deserialize(Type type, byte[] datas, ref int offset)
+        private dynamic Deserialize(Type type, byte[] datas, ref int offset)
         {
-            dynamic obj = null;
+            dynamic obj;
             int len = BitConverter.ToInt32(datas, offset);
             offset += 4;
             if (len > 0)
@@ -318,7 +328,7 @@ namespace RRQMCore.Serialization
                     Buffer.BlockCopy(datas, offset, data, 0, len);
                     obj = data;
                 }
-                else if (type.IsClass)
+                else if (type.IsClass || type.IsStruct())
                 {
                     obj = DeserializeClass(type, datas, offset, len);
                 }
@@ -327,11 +337,15 @@ namespace RRQMCore.Serialization
                     throw new Exception("未定义的类型：" + type.ToString());
                 }
             }
+            else
+            {
+                obj = type.GetDefault();
+            }
             offset += len;
             return obj;
         }
 
-        private object DeserializeClass(Type type, byte[] datas, int offset, int length)
+        private dynamic DeserializeClass(Type type, byte[] datas, int offset, int length)
         {
             InstanceObject instanceObject = GetOrAddInstance(type);
             switch (instanceObject.instanceType)
@@ -368,50 +382,75 @@ namespace RRQMCore.Serialization
                     }
                 case InstanceType.List:
                     {
-                        int index = offset;
-                        while (offset - index < length && (length >= 4))
+                        if (length > 0)
                         {
-                            object obj = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
-                            instanceObject.AddMethod.Invoke(instanceObject.Instance, new object[] { obj });
+                            uint paramLen = BitConverter.ToUInt32(datas, offset);
+                            offset += 4;
+                            for (uint i = 0; i < paramLen; i++)
+                            {
+                                object obj = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
+                                instanceObject.AddMethod.Invoke(instanceObject.Instance, new object[] { obj });
+                            }
+                        }
+                        else
+                        {
+                            instanceObject.Instance = null;
                         }
                         break;
                     }
                 case InstanceType.Array:
                     {
-                        int index = offset;
-                        while (offset - index < length && (length >= 4))
+                        if (length > 0)
                         {
-                            object obj = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
-                            instanceObject.AddMethod.Invoke(instanceObject.Instance, new object[] { obj });
+                            uint paramLen = BitConverter.ToUInt32(datas, offset);
+                            Array array = Array.CreateInstance(instanceObject.ArrayType, paramLen);
+
+                            offset += 4;
+                            for (uint i = 0; i < paramLen; i++)
+                            {
+                                object obj = Deserialize(instanceObject.ArrayType, datas, ref offset);
+                                array.SetValue(obj, i);
+                            }
+                            instanceObject.Instance = array;
                         }
-                        instanceObject.ToArrayMethod.Invoke(instanceObject.Instance, null);
+                        else
+                        {
+                            instanceObject.Instance = null;
+                        }
                         break;
                     }
                 case InstanceType.Dictionary:
                     {
-                        int index = offset;
-                        while (offset - index < length && (length >= 4))
+                        if (length > 0)
                         {
+                            uint paramLen = BitConverter.ToUInt32(datas, offset);
                             offset += 4;
-                            if (reserveAttributeName)
+                            for (uint i = 0; i < paramLen; i++)
                             {
-                                offset += datas[offset] + 1;
-                            }
+                                offset += 4;
+                                if (reserveAttributeName)
+                                {
+                                    offset += datas[offset] + 1;
+                                }
 
-                            object key = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
+                                object key = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
 
-                            if (reserveAttributeName)
-                            {
-                                offset += datas[offset] + 1;
-                            }
+                                if (reserveAttributeName)
+                                {
+                                    offset += datas[offset] + 1;
+                                }
 
-                            object value = Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
-                            if (key != null)
-                            {
-                                instanceObject.AddMethod.Invoke(instanceObject.Instance, new object[] { key, value });
+                                object value = Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
+                                if (key != null)
+                                {
+                                    instanceObject.AddMethod.Invoke(instanceObject.Instance, new object[] { key, value });
+                                }
                             }
                         }
-
+                        else
+                        {
+                            instanceObject.Instance = null;
+                        }
                         break;
                     }
                 default:
@@ -432,26 +471,21 @@ namespace RRQMCore.Serialization
 
         private InstanceObject GetOrAddInstance(Type type)
         {
-            if (type.IsArray && !type.IsGenericType)
+            if (type.IsArray && !type.IsGenericType)//数组
             {
-                type = typeof(List<>).MakeGenericType(type.GetElementType());
                 InstanceObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (v) =>
                 {
                     InstanceObject instanceObject = new InstanceObject();
                     instanceObject.Type = type;
-                    instanceObject.ArgTypes = type.GetGenericArguments();
+                    instanceObject.ArrayType = type.GetElementType();
                     instanceObject.instanceType = InstanceType.Array;
                     instanceObject.Properties = this.GetProperties(type);
                     instanceObject.ProTypes = instanceObject.Properties.Select(a => a.PropertyType).ToArray();
-                    instanceObject.AddMethod = type.GetMethod("Add");
-                    instanceObject.ToArrayMethod = type.GetMethod("ToArray");
                     return instanceObject;
                 });
-
-                typeInfo.Instance = Activator.CreateInstance(type);
                 return typeInfo;
             }
-            else if (type.IsClass)
+            else if (type.IsClass || type.IsStruct())
             {
                 InstanceObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (v) =>
                 {
@@ -463,8 +497,6 @@ namespace RRQMCore.Serialization
                     if (type.IsGenericType)
                     {
                         instanceObject.AddMethod = type.GetMethod("Add");
-                        instanceObject.ToArrayMethod = type.GetMethod("ToArray");
-
                         instanceObject.ArgTypes = type.GetGenericArguments();
                         type = type.GetGenericTypeDefinition().MakeGenericType(instanceObject.ArgTypes);
 

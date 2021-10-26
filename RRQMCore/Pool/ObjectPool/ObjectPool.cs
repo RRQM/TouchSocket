@@ -14,7 +14,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace RRQMCore.Pool
+namespace RRQMCore.ByteManager
 {
     /// <summary>
     /// 对象池

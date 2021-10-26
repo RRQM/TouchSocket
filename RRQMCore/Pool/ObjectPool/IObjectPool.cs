@@ -11,53 +11,21 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace RRQMCore.Run
+namespace RRQMCore.ByteManager
 {
     /// <summary>
-    /// 等待返回类
+    /// 对象池接口
     /// </summary>
-    [Serializable]
-    public class WaitResult
+    public interface IObjectPool : IDisposable
     {
         /// <summary>
-        /// 消息
+        /// 可使用数量
         /// </summary>
-        protected string message;
+        int FreeSize { get; }
 
         /// <summary>
-        /// 标记
+        /// 清空池中对象
         /// </summary>
-        protected int sign;
-
-        /// <summary>
-        /// 状态
-        /// </summary>
-        protected byte status;
-
-        /// <summary>
-        /// 消息
-        /// </summary>
-        public string Message
-        {
-            get { return message; }
-            set { message = value; }
-        }
-
-        /// <summary>
-        /// 标记
-        /// </summary>
-        public int Sign
-        {
-            get { return sign; }
-            set { sign = value; }
-        }
-        /// <summary>
-        /// 状态
-        /// </summary>
-        public byte Status
-        {
-            get { return status; }
-            set { status = value; }
-        }
+        void Clear();
     }
 }
