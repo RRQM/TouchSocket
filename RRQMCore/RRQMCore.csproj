@@ -1,0 +1,74 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net45;net461;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+		<Authors>若汝棋茗</Authors>
+		<PackageIcon>RRQM.png</PackageIcon>
+		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
+		<Version>5.7.0</Version>
+		<LangVersion>9.0</LangVersion>
+		<SignAssembly>true</SignAssembly>
+		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
+
+更新内容：
+优化：ByteBlock使用体验，例如：实例化、重复释放、扩容设置等。
+优化：RRQMBinaryFormatter可以很好的支持数组。
+增加：LoopAction。
+增加：EasyAction。
+增加：ConcurrentDoublyDictionary。
+增加：IntelligentConcurrentQueue。
+增加：IntelligentDataQueue。
+增加：SerializationHelper。
+修复：RRQMWaitHandlePool。
+
+特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
+特此感谢其作者！！！
+附带其Github：https://github.com/JamesNK/Newtonsoft.Json</Description>
+		<PackageProjectUrl>https://gitee.com/RRQM_OS/RRQMCore</PackageProjectUrl>
+		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
+		<ApplicationIcon>RRQM.ico</ApplicationIcon>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageTags>MemoryPool,ObjectPool,Serialize,Tool</PackageTags>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+		<DocumentationFile>bin\Debug\netstandard2.0\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+		<DocumentationFile>bin\Release\netstandard2.0\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+		<DocumentationFile>bin\Debug\net45\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+		<DocumentationFile>bin\Release\net45\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
+		<DocumentationFile>bin\Debug\net461\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+		<DocumentationFile>bin\Release\net461\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Debug\netcoreapp3.1\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Release\netcoreapp3.1\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="RRQM.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+</Project>
