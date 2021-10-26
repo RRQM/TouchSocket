@@ -5,6 +5,7 @@
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
 		<Version>5.6.0</Version>
+		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<Description>介绍：这是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过该组件直接创建WebApi服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持路由、Get传参、Post传参等。

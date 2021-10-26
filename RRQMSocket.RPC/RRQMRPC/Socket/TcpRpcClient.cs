@@ -1078,17 +1078,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 订阅事件
-        /// </summary>
-        /// <param name="eventName"></param>
-        [EnterpriseEdition]
-        public void SubscribeEvent(string eventName)
-        {
-            EventContext context = new EventContext();
-            context.EventName = eventName;
-        }
-
-        /// <summary>
         /// 移除注册服务
         /// </summary>
         /// <param name="provider"></param>

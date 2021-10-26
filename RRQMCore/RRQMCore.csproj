@@ -6,6 +6,7 @@
 		<PackageIcon>RRQM.png</PackageIcon>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<Version>5.7.0</Version>
+		<LangVersion>9.0</LangVersion>
 		<SignAssembly>true</SignAssembly>
 		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
 

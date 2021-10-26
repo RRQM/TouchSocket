@@ -21,7 +21,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class CodeGenerator
     {
-        [RRQMCore.EnterpriseEdition]
         internal static List<Type> proxyType = new List<Type>();
 
         private StringBuilder codeString;
@@ -44,7 +43,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="type"></param>
         /// <param name="deepSearch"></param>
-        [RRQMCore.EnterpriseEdition]
         public static void AddProxyType(Type type, bool deepSearch = true)
         {
             if (type.IsPrimitive || type == typeof(string))

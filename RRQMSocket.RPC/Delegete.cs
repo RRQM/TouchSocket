@@ -16,8 +16,8 @@ namespace RRQMSocket.RPC
     /// <summary>
     /// 收到字节数据
     /// </summary>
-    /// <param name="sender"></param>
+    /// <param name="client"></param>
     /// <param name="procotol"></param>
     /// <param name="byteBlock"></param>
-    public delegate void RRQMReceivedProcotolEventHandler(object sender, short? procotol, ByteBlock byteBlock);
+    public delegate void RRQMReceivedProcotolEventHandler(IClient client, short? procotol, ByteBlock byteBlock);
 }

@@ -25,7 +25,6 @@ namespace RRQMSocket.RPC
     /// </summary>
     internal static class GlobalTools
     {
-        [EnterpriseEdition]
         internal static bool MethodEquals(MethodInfo m1, MethodInfo m2)
         {
             if (m1.GetCustomAttributes().Count() != m2.GetCustomAttributes().Count())

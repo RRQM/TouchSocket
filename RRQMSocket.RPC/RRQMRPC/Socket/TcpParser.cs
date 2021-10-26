@@ -23,8 +23,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <typeparam name="TClient"></typeparam>
     public class TcpParser<TClient> : ProtocolService<TClient>, IRPCParser, IRRQMRpcParser where TClient : RpcSocketClient, new()
     {
-        private EventBus eventBus;
-
         private MethodStore methodStore;
 
         private RpcProxyInfo proxyInfo;
@@ -36,7 +34,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public TcpParser()
         {
-            this.eventBus = new EventBus();
             this.methodStore = new MethodStore();
             this.proxyInfo = new RpcProxyInfo();
         }
@@ -50,12 +47,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <inheritdoc/>
         /// </summary>
         public CellCode[] Codes { get => this.proxyInfo == null ? null : this.proxyInfo.Codes.ToArray(); }
-
-        /// <summary>
-        /// 事务总线
-        /// </summary>
-        [EnterpriseEdition]
-        public EventBus EventBus { get => this.eventBus; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -313,31 +304,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (cellCode != null)
             {
                 this.proxyInfo.Codes.Remove(cellCode);
-            }
-        }
-
-        /// <summary>
-        /// 发布事件
-        /// </summary>
-        /// <param name="eventName">事件名称</param>
-        [EnterpriseEdition]
-        public void PublishEvent(string eventName)
-        {
-            EventUnit eventUnit = new EventUnit();
-            eventUnit.Publisher = this.ServerName;
-            this.eventBus.AddEvent(eventUnit);
-        }
-
-        /// <summary>
-        /// 触发事件
-        /// </summary>
-        /// <param name="eventName"></param>
-        [EnterpriseEdition]
-        public void RaiseEvent(string eventName)
-        {
-            if (!this.eventBus.TryGetEventUnit(eventName, out EventUnit eventUnit))
-            {
-                throw new RRQMRPCException("没有该事件的注册信息");
             }
         }
 
