@@ -426,11 +426,6 @@ namespace RRQMSocket
             this.name = serviceConfig.ServerName;
             this.clearType = (ClearType)serviceConfig.GetValue(TcpServiceConfig.ClearTypeProperty);
             this.separateThreadReceive = serviceConfig.SeparateThreadReceive;
-            //if (!Mak.VT(this.serviceConfig.LicenceKey, out this.licenceOwner,out this.licenceInfo))
-            //{
-            //    this.maxCount = 10;
-            //    this.Logger.Debug(LogType.Message, this, "密钥无效，请下载安装RRQMSocket使用，或者继续使用企业试用版，企业试用版最大允许10个连接。");
-            //}
         }
 
         /// <summary>
