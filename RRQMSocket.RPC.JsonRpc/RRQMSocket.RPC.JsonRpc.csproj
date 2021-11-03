@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>5.7.0</Version>
+		<Version>5.7.1</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
@@ -75,7 +75,7 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\RRQMSocket.Http\RRQMSocket.Http.csproj" />
-	  <ProjectReference Include="..\RRQMSocket.RPC\RRQMSocket.RPC.csproj" />
+	  <PackageReference Include="RRQMSocket.Http" Version="5.7.1" />
+	  <PackageReference Include="RRQMSocket.RPC" Version="5.7.1" />
 	</ItemGroup>
 </Project>
