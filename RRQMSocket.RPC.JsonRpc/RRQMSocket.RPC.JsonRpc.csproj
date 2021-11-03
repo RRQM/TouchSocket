@@ -74,8 +74,4 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
-	<ItemGroup>
-	  <PackageReference Include="RRQMSocket.Http" Version="5.7.0" />
-	  <PackageReference Include="RRQMSocket.RPC" Version="5.7.0" />
-	</ItemGroup>
 </Project>
