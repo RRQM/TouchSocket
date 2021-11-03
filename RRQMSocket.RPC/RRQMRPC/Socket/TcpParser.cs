@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using System;
 using System.Collections.Generic;
@@ -40,6 +41,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 收到协议数据
         /// </summary>
         public event RRQMReceivedProcotolEventHandler Received;
+
+        /// <summary>
+        /// 预处理流
+        /// </summary>
+        public event RRQMStreamOperationEventHandler BeforeReceiveStream;
+
+        /// <summary>
+        /// 收到流数据
+        /// </summary>
+        public event RRQMStreamStatusEventHandler ReceivedStream;
 
         /// <summary>
         /// <inheritdoc/>
@@ -379,6 +390,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             socketClient.IDAction = this.IDInvoke;
             socketClient.Received = this.OnReceived;
+            socketClient.OnBeforeReceiveStream = this.OnBeforeReceiveStream;
+            socketClient.OnReceivedStream = this.OnReceivedStream;
             socketClient.methodMap = this.MethodMap;
             socketClient.executeMethod = this.Execute;
             socketClient.serializationSelector = this.serializationSelector;
@@ -410,6 +423,16 @@ namespace RRQMSocket.RPC.RRQMRPC
         private void OnReceived(IClient sender, short? procotol, ByteBlock byteBlock)
         {
             this.Received?.Invoke(sender, procotol, byteBlock);
+        }
+
+        private void OnBeforeReceiveStream(IProtocolClient client, StreamOperationEventArgs e)
+        {
+            this.BeforeReceiveStream?.Invoke(client, e);
+        }
+
+        private void OnReceivedStream(IProtocolClient client, StreamStatusEventArgs e)
+        {
+            this.ReceivedStream?.Invoke(client, e);
         }
     }
 }

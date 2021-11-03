@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
@@ -69,9 +70,19 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// 预处理流
+        /// </summary>
+        public event RRQMStreamOperationEventHandler BeforeReceiveStream;
+
+        /// <summary>
         /// 收到协议数据
         /// </summary>
         public event RRQMReceivedProcotolEventHandler Received;
+
+        /// <summary>
+        /// 收到流数据
+        /// </summary>
+        public event RRQMStreamStatusEventHandler ReceivedStream;
 
         /// <summary>
         /// RPC初始化后
@@ -260,6 +271,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.waitPool.Destroy(waitData);
                                 }
                                 break;
+
                             case WaitDataStatus.Overtime:
                                 {
                                     throw new RRQMTimeoutException("等待结果超时");
@@ -336,11 +348,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 default:
                     return default;
             }
-        }
-
-        private void CanceledInvoke(int sign)
-        {
-            this.InternalSend(105, BitConverter.GetBytes(sign));
         }
 
         /// <summary>
@@ -435,6 +442,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.waitPool.Destroy(waitData);
                                 }
                                 break;
+
                             case WaitDataStatus.Overtime:
                                 {
                                     throw new RRQMTimeoutException("等待结果超时");
@@ -596,6 +604,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.waitPool.Destroy(waitData);
                                 }
                                 break;
+
                             case WaitDataStatus.Overtime:
                                 {
                                     throw new RRQMTimeoutException("等待结果超时");
@@ -741,6 +750,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.waitPool.Destroy(waitData);
                                 }
                                 break;
+
                             case WaitDataStatus.Overtime:
                                 {
                                     throw new RRQMTimeoutException("等待结果超时");
@@ -1224,6 +1234,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        protected override void HandleStream(StreamStatusEventArgs args)
+        {
+            this.ReceivedStream?.Invoke(this, args);
+        }
+
+        /// <summary>
         /// 加载配置
         /// </summary>
         /// <param name="clientConfig"></param>
@@ -1261,6 +1280,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        protected override void PreviewHandleStream(StreamOperationEventArgs args)
+        {
+            this.BeforeReceiveStream?.Invoke(this, args);
+        }
+
+        /// <summary>
         /// RPC处理其余协议
         /// </summary>
         /// <param name="procotol"></param>
@@ -1268,6 +1296,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected virtual void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
             OnHandleDefaultData(procotol, byteBlock);
+        }
+
+        private void CanceledInvoke(int sign)
+        {
+            this.InternalSend(105, BitConverter.GetBytes(sign));
         }
 
         private RpcContext OnExecuteCallBack(RpcContext rpcContext)
@@ -1283,7 +1316,26 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             ps[i] = this.serializationSelector.DeserializeParameter(rpcContext.SerializationType, rpcContext.ParametersBytes[i], methodInstance.ParameterTypes[i]);
                         }
-                        object result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
+
+                        object result;
+                        if (methodInstance.Async)
+                        {
+                            dynamic task = methodInstance.Method.Invoke(methodInstance.Provider, ps);
+                            task.Wait();
+                            if (methodInstance.ReturnType != null)
+                            {
+                                result = task.Result;
+                            }
+                            else
+                            {
+                                result = null;
+                            }
+                        }
+                        else
+                        {
+                            result = methodInstance.Method.Invoke(methodInstance.Provider, ps);
+                        }
+
                         if (result != null)
                         {
                             rpcContext.returnParameterBytes = this.serializationSelector.SerializeParameter(rpcContext.SerializationType, result);

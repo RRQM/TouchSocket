@@ -278,9 +278,9 @@ namespace RRQMSocket
         public Task<bool> MoveNextAsync(int timeout = 60 * 1000)
         {
             return Task.Run(() =>
-            {
-                return this.MoveNext(timeout);
-            });
+             {
+                 return this.MoveNext(timeout);
+             });
         }
 
         /// <summary>

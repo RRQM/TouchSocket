@@ -26,6 +26,16 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class RpcSocketClient : ProtocolSocketClient, ICaller
     {
+        /// <summary>
+        /// 预处理流
+        /// </summary>
+        public RRQMStreamOperationEventHandler OnBeforeReceiveStream;
+
+        /// <summary>
+        /// 收到流数据
+        /// </summary>
+        public RRQMStreamStatusEventHandler OnReceivedStream;
+
         internal Action<MethodInvoker, MethodInstance> executeMethod;
 
         internal Func<RpcSocketClient, RpcContext, RpcContext> IDAction;
@@ -733,6 +743,24 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             this.contextDic.Clear();
             this.serverProviderDic.Clear();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        protected override void HandleStream(StreamStatusEventArgs args)
+        {
+            this.OnReceivedStream.Invoke(this, args);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        protected override void PreviewHandleStream(StreamOperationEventArgs args)
+        {
+            this.OnBeforeReceiveStream.Invoke(this, args);
         }
     }
 }

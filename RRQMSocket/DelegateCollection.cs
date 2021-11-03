@@ -47,3 +47,17 @@ public delegate void RRQMBytesEventHandler(object sender, BytesEventArgs e);
 /// <param name="sender"></param>
 /// <param name="e"></param>
 public delegate void RRQMReturnBytesEventHandler(object sender, ReturnBytesEventArgs e);
+
+/// <summary>
+/// 收到流操作
+/// </summary>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void RRQMStreamOperationEventHandler(IProtocolClient client, StreamOperationEventArgs e);
+
+/// <summary>
+/// 流状态
+/// </summary>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void RRQMStreamStatusEventHandler(IProtocolClient client, StreamStatusEventArgs e);

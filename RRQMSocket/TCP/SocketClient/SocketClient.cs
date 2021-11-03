@@ -35,6 +35,15 @@ namespace RRQMSocket
         private string ip;
         private Socket mainSocket;
         private int port;
+        internal ServiceConfig serviceConfig;
+
+        /// <summary>
+        /// 服务配置
+        /// </summary>
+        public ServiceConfig ServiceConfig
+        {
+            get { return serviceConfig; }
+        }
 
         /// <summary>
         /// 获取内存池实例

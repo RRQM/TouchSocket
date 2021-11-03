@@ -1,4 +1,7 @@
-﻿using RRQMCore.ByteManager;
+﻿using RRQMCore;
+using RRQMCore.ByteManager;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -70,6 +73,24 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="procotol"></param>
         void SendAsync(short procotol);
+
+        /// <summary>
+        /// 发送流数据
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="streamOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        AsyncResult SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = default);
+
+        /// <summary>
+        /// 异步发送流数据
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="streamOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        Task<AsyncResult> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = default);
 
         /// <summary>
         /// 订阅通道

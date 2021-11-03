@@ -9,15 +9,19 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Run;
+using RRQMCore.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -107,8 +111,10 @@ namespace RRQMSocket
                     throw new RRQMException("同步ID超时");
                 case WaitDataStatus.Canceled:
                     break;
+
                 case WaitDataStatus.Disposed:
                     break;
+
                 default:
                     break;
             }
@@ -123,17 +129,6 @@ namespace RRQMSocket
         public bool TrySubscribeChannel(int id, out Channel channel)
         {
             return this.userChannels.TryGetValue(id, out channel);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        protected override void OnInitCompleted()
-        {
-            if (this.DataHandlingAdapter == null)
-            {
-                this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
-            }
         }
 
         /// <summary>
@@ -246,6 +241,34 @@ namespace RRQMSocket
                 case -7://心跳
                     break;
 
+                case -8://StreamStatusToThis
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitStream waitStream = byteBlock.ReadObject<WaitStream>();
+                            this.waitHandlePool.SetRun(waitStream);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.logger.Debug(LogType.Error, this, "在StreamStatusToThis中发生错误。", ex);
+                        }
+                        break;
+                    }
+                case -9://StreamToThis
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            this.P_9_RequestStreamToThis(byteBlock.ReadObject<WaitStream>(SerializationType.Json));
+                        }
+                        catch (Exception ex)
+                        {
+                            this.logger.Debug(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
+                        }
+                    }
+                    break;
+
                 default:
                     {
                         try
@@ -260,6 +283,12 @@ namespace RRQMSocket
                     }
             }
         }
+
+        /// <summary>
+        /// 流数据处理
+        /// </summary>
+        /// <param name="args"></param>
+        protected abstract void HandleStream(StreamStatusEventArgs args);
 
         /// <summary>
         /// <inheritdoc/>
@@ -296,6 +325,104 @@ namespace RRQMSocket
                 thread.IsBackground = true;
                 thread.Start();
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnDisconnectedService(MesEventArgs e)
+        {
+            base.OnDisconnectedService(e);
+            foreach (var item in this.userChannels.Values)
+            {
+                item.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void OnInitCompleted()
+        {
+            if (this.DataHandlingAdapter == null)
+            {
+                this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
+            }
+        }
+        /// <summary>
+        /// 预处理流数据
+        /// </summary>
+        /// <param name="args"></param>
+        protected abstract void PreviewHandleStream(StreamOperationEventArgs args);
+
+        private void P_9_RequestStreamToThis(WaitStream waitStream)
+        {
+            StreamOperationEventArgs args = new StreamOperationEventArgs();
+            args.IsPermitOperation = true;
+            args.Metadata = waitStream.Metadata;
+
+            StreamInfo streamInfo = new StreamInfo();
+            streamInfo.Size = waitStream.Size;
+            args.StreamInfo = streamInfo;
+
+            StreamOperator streamOperator = new StreamOperator();
+            args.StreamOperator = streamOperator;
+
+            try
+            {
+                this.PreviewHandleStream(args);
+
+                if (args.IsPermitOperation)
+                {
+                    if (args.Bucket != null)
+                    {
+                        waitStream.Status = 1;
+                        Channel channel = this.CreateChannel();
+                        waitStream.ChannelID = channel.ID;
+
+                        Task.Run(() =>
+                        {
+                            Stream stream = args.Bucket;
+                            while (channel.MoveNext())
+                            {
+                                if (streamOperator.Token.IsCancellationRequested)
+                                {
+                                    channel.Cancel();
+                                    break;
+                                }
+                                stream.Write(channel.Current, 0, channel.Current.Length);
+                                streamOperator.speedTemp += channel.Current.Length;
+                                streamOperator.completedLength += channel.Current.Length;
+                                streamOperator.progress = (float)((double)streamOperator.completedLength / waitStream.Size);
+                            }
+
+                            HandleStream(new StreamStatusEventArgs() { Metadata = args.Metadata, Status = channel.Status, Bucket = stream, Message = args.Message, StreamInfo = args.StreamInfo });
+                        });
+                    }
+                    else
+                    {
+                        waitStream.Status = 3;
+                        waitStream.Message = "未设置流容器";
+                    }
+                }
+                else
+                {
+                    waitStream.Status = 2;
+                    waitStream.Message = args.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+                waitStream.Status = 3;
+                waitStream.Message = ex.Message;
+
+                this.logger.Debug(LogType.Error, this, $"在{nameof(P_9_RequestStreamToThis)}中发生错误。", ex);
+            }
+
+            waitStream.Metadata = null;
+            ByteBlock byteBlock = new ByteBlock(1024).WriteObject(waitStream);
+            this.SocketSend(-9, byteBlock.Buffer, 0, byteBlock.Pos);
         }
 
         #region 普通同步发送
@@ -646,18 +773,124 @@ namespace RRQMSocket
 
         #endregion Socket异步直发
 
+        #region Stream发送
+
         /// <summary>
-        /// <inheritdoc/>
+        /// 发送流数据
         /// </summary>
-        /// <param name="e"></param>
-        protected override void OnDisconnectedService(MesEventArgs e)
+        /// <param name="stream"></param>
+        /// <param name="streamOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public AsyncResult SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = default)
         {
-            base.OnDisconnectedService(e);
-            foreach (var item in this.userChannels.Values)
+            WaitStream waitStream = new WaitStream();
+            WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitStream);
+            waitStream.Metadata = metadata;
+            long size = stream.Length - stream.Position;
+            waitStream.Size = size;
+            int length = 1024 * 64;
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(length).WriteObject(waitStream, SerializationType.Json);
+
+            try
             {
-                item.Dispose();
+                this.SocketSend(-8, byteBlock.Buffer, 0, byteBlock.Len);
+
+                waitData.SetCancellationToken(streamOperator.Token);
+
+                waitData.Wait(60 * 1000);
+
+                switch (waitData.Status)
+                {
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitStream waitStreamResult = (WaitStream)waitData.WaitResult;
+                            if (waitStreamResult.Status == 1)
+                            {
+                                if (this.TrySubscribeChannel(waitStreamResult.ChannelID, out Channel channel))
+                                {
+                                    while (true)
+                                    {
+                                        if (streamOperator.Token.IsCancellationRequested)
+                                        {
+                                            channel.Cancel();
+                                            return new AsyncResult(false, "任务已取消");
+                                        }
+                                        int r = stream.Read(byteBlock.Buffer, 0, length);
+                                        if (r <= 0)
+                                        {
+                                            channel.Complete();
+                                            return new AsyncResult(true, $"成功发送");
+                                        }
+
+                                        channel.Write(byteBlock.Buffer, 0, r);
+
+                                        streamOperator.speedTemp += r;
+                                        streamOperator.completedLength += r;
+                                        streamOperator.progress = (float)((double)streamOperator.completedLength / size);
+                                    }
+
+                                }
+                                else
+                                {
+                                    return new AsyncResult(false, $"建立通道失败。");
+                                }
+                            }
+                            else if (waitStreamResult.Status == 2)
+                            {
+                                return new AsyncResult(false, $"服务器拒绝接收，反馈信息：{waitStreamResult.Message}");
+                            }
+                            else if (waitStreamResult.Status == 3)
+                            {
+                                return new AsyncResult(false, $"服务器异常，信息：{waitStreamResult.Message}");
+                            }
+                            else
+                            {
+                                return new AsyncResult(false, "未知状态返回");
+                            }
+                        }
+                    case WaitDataStatus.Overtime:
+                        {
+                            throw new RRQMTimeoutException();
+                        }
+                    case WaitDataStatus.Canceled:
+                        {
+                            return new AsyncResult(false, "任务已取消");
+                        }
+                    case WaitDataStatus.Waiting:
+                    case WaitDataStatus.Disposed:
+                    default:
+                        {
+                            return new AsyncResult(false, "未知错误");
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new AsyncResult(false, ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
+
+        /// <summary>
+        /// 发送流数据
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="streamOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public Task<AsyncResult> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = default)
+        {
+            return Task.Run(() =>
+             {
+                 return this.SendStream(stream, streamOperator, metadata);
+             });
+        }
+
+        #endregion Stream发送
 
         private void ReceivedChannelData(int id, short type, byte[] data)
         {

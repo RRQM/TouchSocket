@@ -137,7 +137,7 @@ namespace RRQMSocket
             {
                 throw new ArgumentNullException("iPHost不能为空。");
             }
-            if (!this.Online)
+            if (!this.online)
             {
                 Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 PreviewConnect(socket);
@@ -160,8 +160,7 @@ namespace RRQMSocket
                     this.Connect();
                     if (callback != null)
                     {
-                        AsyncResult result = new AsyncResult();
-                        result.Status = true;
+                        AsyncResult result = new AsyncResult(true);
                         callback.Invoke(result);
                     }
                 }
@@ -169,9 +168,7 @@ namespace RRQMSocket
                 {
                     if (callback != null)
                     {
-                        AsyncResult result = new AsyncResult();
-                        result.Status = false;
-                        result.Message = ex.Message;
+                        AsyncResult result = new AsyncResult(false, ex.Message);
                         callback.Invoke(result);
                     }
                 }
