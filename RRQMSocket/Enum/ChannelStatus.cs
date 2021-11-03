@@ -18,33 +18,33 @@ namespace RRQMSocket
     public enum ChannelStatus : byte
     {
         /// <summary>
-        /// 本次操作成功
+        /// 继续下移
         /// </summary>
-        Success=1,
+        Moving = 1,
 
         /// <summary>
         /// 超时
         /// </summary>
-        Timeout=2,
+        Timeout = 2,
 
         /// <summary>
         /// 错误
         /// </summary>
-        Error=3,
+        Error = 3,
 
         /// <summary>
         /// 取消
         /// </summary>
-        Cancel=4,
+        Cancel = 4,
 
         /// <summary>
         /// 完成
         /// </summary>
-        Completed=5,
+        Completed = 5,
 
         /// <summary>
         /// 已释放
         /// </summary>
-        Disposed=6
+        Disposed = 6
     }
 }

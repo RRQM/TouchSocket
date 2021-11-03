@@ -52,7 +52,7 @@ namespace RRQMSocket
 
         internal Channel(ProtocolClient client)
         {
-            this.status = ChannelStatus.Success;
+            this.status = ChannelStatus.Moving;
             this.client1 = client;
             this.dataQueue = new IntelligentDataQueue<ChannelData>(1024 * 1024 * 20);
             this.waitHandle = new AutoResetEvent(false);
@@ -62,7 +62,7 @@ namespace RRQMSocket
 
         internal Channel(ProtocolSocketClient client)
         {
-            this.status = ChannelStatus.Success;
+            this.status = ChannelStatus.Moving;
             this.client2 = client;
             this.dataQueue = new IntelligentDataQueue<ChannelData>(1024 * 1024 * 20);
             this.waitHandle = new AutoResetEvent(false);
@@ -106,6 +106,11 @@ namespace RRQMSocket
         /// </summary>
         public void Cancel()
         {
+            if ((byte)this.status > 3)
+            {
+                return;
+            }
+
             ByteBlock byteBlock = this.bytePool.GetByteBlock(this.bufferLength);
             try
             {
@@ -135,6 +140,10 @@ namespace RRQMSocket
         /// </summary>
         public void Complete()
         {
+            if ((byte)this.status > 3)
+            {
+                return;
+            }
 
             ByteBlock byteBlock = this.bytePool.GetByteBlock(this.bufferLength);
             try
@@ -165,7 +174,7 @@ namespace RRQMSocket
         /// </summary>
         public void Dispose()
         {
-            if (this.status == ChannelStatus.Disposed)
+            if ((byte)this.status > 3)
             {
                 return;
             }
@@ -200,6 +209,8 @@ namespace RRQMSocket
             }
         }
 
+        private bool moving;
+
         /// <summary>
         /// 转向下个元素
         /// </summary>
@@ -207,10 +218,12 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool MoveNext(int timeout = 60 * 1000)
         {
-            if (this.status != ChannelStatus.Success)
+            moving = true;
+            if (this.status != ChannelStatus.Moving)
             {
                 return false;
             }
+
             if (this.dataQueue.TryDequeue(out ChannelData channelData))
             {
                 switch (channelData.type)
@@ -363,13 +376,20 @@ namespace RRQMSocket
         {
             this.dataQueue.Enqueue(data);
             this.waitHandle.Set();
-            if (data.type == -5)
+            if (!moving)
             {
-                this.RequestCancel();
-            }
-            else if (data.type == -6)
-            {
-                this.RequestDispose();
+                if (data.type == -4)
+                {
+                    this.RequestComplete();
+                }
+                else if (data.type == -5)
+                {
+                    this.RequestCancel();
+                }
+                else if (data.type == -6)
+                {
+                    this.RequestDispose();
+                }
             }
         }
 
@@ -389,16 +409,16 @@ namespace RRQMSocket
 
         private void RequestDispose()
         {
-            if (this.status == ChannelStatus.Disposed)
+            if ((byte)this.status > 3)
             {
                 return;
             }
             this.status = ChannelStatus.Disposed;
 
             this.current = null;
+            this.waitHandle.Set();
             this.waitHandle.Dispose();
             this.status = ChannelStatus.Disposed;
-            this.waitHandle.Set();
             this.parent.TryRemove(this.id, out _);
             while (this.dataQueue.TryDequeue(out _))
             {
