@@ -9,10 +9,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.ByteManager;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -318,7 +316,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private void Execute(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            this.RRQMExecuteMethod.Invoke(this,methodInvoker,methodInstance);
+            this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
         }
 
         /// <summary>

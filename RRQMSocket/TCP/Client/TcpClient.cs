@@ -487,7 +487,7 @@ namespace RRQMSocket
                 throw new ArgumentNullException("内存池不能为空");
             }
 
-            if (clientConfig.DataHandlingAdapter!=null)
+            if (clientConfig.DataHandlingAdapter != null)
             {
                 this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
             }
@@ -513,7 +513,7 @@ namespace RRQMSocket
             {
                 this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.ConnectedService)}中发生错误。", ex);
             }
-            
+
         }
 
         /// <summary>
@@ -736,7 +736,7 @@ namespace RRQMSocket
         /// </summary>
         public void Close()
         {
-            if (this.mainSocket!=null)
+            if (this.mainSocket != null)
             {
                 this.mainSocket.Close();
             }

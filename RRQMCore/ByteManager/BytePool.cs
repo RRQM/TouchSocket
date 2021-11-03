@@ -11,9 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace RRQMCore.ByteManager
 {
@@ -146,13 +144,46 @@ namespace RRQMCore.ByteManager
         }
 
         internal void Recycle(byte[] bytes)
+
+        /* 项目“RRQMCore (netcoreapp3.1)”的未合并的更改
+        在此之前:
+                {
+
+                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
+        在此之后:
+                {
+
+                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
+        */
+
+        /* 项目“RRQMCore (net461)”的未合并的更改
+        在此之前:
+                {
+
+                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
+        在此之后:
+                {
+
+                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
+        */
+
+        /* 项目“RRQMCore (netstandard2.0)”的未合并的更改
+        在此之前:
+                {
+
+                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
+        在此之后:
+                {
+
+                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
+        */
         {
-            
+
             this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-            if (maxSize>fullSize)
+            if (maxSize > fullSize)
             {
                 this.fullSize += bytes.Length;
-                BytesQueue bytesCollection = this.bytesDictionary.GetOrAdd(bytes.Length, (size)=> 
+                BytesQueue bytesCollection = this.bytesDictionary.GetOrAdd(bytes.Length, (size) =>
                 {
                     return new BytesQueue(size);
                 });
@@ -210,7 +241,7 @@ namespace RRQMCore.ByteManager
                                 {
                                     this.fullSize -= byteSize;
                                     return bytes;
-                                } 
+                                }
                             }
                         }
                     }

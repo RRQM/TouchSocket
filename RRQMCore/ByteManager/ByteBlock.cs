@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
 using RRQMCore.Serialization;
-using RRQMCore.XREF.Newtonsoft.Json; 
+using RRQMCore.XREF.Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Text;

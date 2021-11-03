@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
@@ -199,7 +198,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (invokeOption.CancellationToken.CanBeCanceled)
             {
                 waitData.SetCancellationToken(invokeOption.CancellationToken);
-                invokeOption.CancellationToken.Register(()=> 
+                invokeOption.CancellationToken.Register(() =>
                 {
                     this.CanceledInvoke(context.Sign);
                 });
@@ -341,7 +340,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private void CanceledInvoke(int sign)
         {
-            this.InternalSend(105,BitConverter.GetBytes(sign));
+            this.InternalSend(105, BitConverter.GetBytes(sign));
         }
 
         /// <summary>

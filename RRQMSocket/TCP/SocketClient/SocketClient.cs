@@ -488,7 +488,7 @@ namespace RRQMSocket
             {
                 throw new RRQMException("数据处理适配器为空");
             }
-            if (this.BytePool==null)
+            if (this.BytePool == null)
             {
                 throw new RRQMException($"数据处理适配器应当在初始化完成后赋值，建议在{nameof(this.OnInitCompleted)}赋值。");
             }

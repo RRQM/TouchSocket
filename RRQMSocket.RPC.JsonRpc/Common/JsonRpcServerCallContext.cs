@@ -53,6 +53,6 @@ namespace RRQMSocket.RPC.JsonRpc
 
         public MethodInvoker MethodInvoker => this.methodInvoker;
 
-        public CancellationTokenSource TokenSource =>this.tokenSource;
+        public CancellationTokenSource TokenSource => this.tokenSource;
     }
 }

@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
@@ -411,7 +410,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     {
                                         try
                                         {
-                                            return  resultContext.ReturnParameterBytes;
+                                            return resultContext.ReturnParameterBytes;
                                         }
                                         catch (Exception ex)
                                         {

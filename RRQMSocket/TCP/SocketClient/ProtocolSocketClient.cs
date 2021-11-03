@@ -468,7 +468,7 @@ namespace RRQMSocket
                                 waitSetID.Message = ex.Message;
                                 this.ChangeID(waitSetID);
                             }
-                            
+
                         }
                         catch (Exception ex)
                         {

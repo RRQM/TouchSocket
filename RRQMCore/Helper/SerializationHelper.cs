@@ -16,7 +16,7 @@ namespace RRQMCore.Helper
         /// <returns></returns>
         public static byte[] ToBytes(this object obj, SerializationType serializationType = SerializationType.RRQMBinary)
         {
-            ByteBlock byteBlock = new ByteBlock(1024*10);
+            ByteBlock byteBlock = new ByteBlock(1024 * 10);
             byteBlock.WriteObject(obj, serializationType);
             return byteBlock.ToArray();
         }

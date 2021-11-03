@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
@@ -33,7 +32,7 @@ namespace RRQMSocket.FileTransfer
 
         private TransferCollection fileTransferCollection;
 
-        private int packetSize=1024*64;
+        private int packetSize = 1024 * 64;
 
         private long position;
 
