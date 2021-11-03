@@ -75,4 +75,7 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\RRQMSocket\RRQMSocket.csproj" />
+	</ItemGroup>
 </Project>

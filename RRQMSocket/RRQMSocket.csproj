@@ -86,5 +86,8 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\RRQMCore\RRQMCore.csproj" />
+	</ItemGroup>
 
 </Project>
