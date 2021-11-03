@@ -29,7 +29,7 @@ namespace RRQMSocket
         /// </summary>
         public TcpService()
         {
-            this.socketClients = new SocketCliectCollection<TClient>();
+            this.socketClients = new SocketClientCollection<TClient>();
         }
 
         #region 属性
@@ -41,7 +41,7 @@ namespace RRQMSocket
         private string name;
         private ServerState serverState;
         private ServiceConfig serviceConfig;
-        private SocketCliectCollection<TClient> socketClients;
+        private SocketClientCollection<TClient> socketClients;
 
         /// <summary>
         /// 获取默认内存池
@@ -104,7 +104,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
-        public SocketCliectCollection<TClient> SocketClients
+        public SocketClientCollection<TClient> SocketClients
         {
             get { return socketClients; }
         }
@@ -433,7 +433,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected abstract void OnCreateSocketCliect(TClient socketClient, CreateOption createOption);
+        protected abstract void OnCreateSocketClient(TClient socketClient, CreateOption createOption);
 
         /// <summary>
         /// 在Socket初始化对象后，Bind之前调用。
@@ -450,7 +450,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="queueGroup"></param>
-        protected virtual void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
+        protected virtual void PreviewCreateSocketClient(Socket socket, BufferQueueGroup queueGroup)
         {
             try
             {
@@ -476,7 +476,7 @@ namespace RRQMSocket
 
                 CreateOption creatOption = new CreateOption();
                 creatOption.ID = this.SocketClients.GetDefaultID();
-                this.OnCreateSocketCliect(client, creatOption);
+                this.OnCreateSocketClient(client, creatOption);
                 client.id = creatOption.ID;
 
                 if (!this.socketClients.TryAdd(client))
@@ -635,7 +635,7 @@ namespace RRQMSocket
                         try
                         {
                             Socket newSocket = e.AcceptSocket;
-                            PreviewCreateSocketCliect(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                            PreviewCreateSocketClient(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
                         }
                         catch (Exception ex)
                         {

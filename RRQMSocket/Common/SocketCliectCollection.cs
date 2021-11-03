@@ -20,7 +20,7 @@ namespace RRQMSocket
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketCliectCollection<T> where T : ISocketClient
+    public class SocketClientCollection<T> where T : ISocketClient
     {
         private RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
 

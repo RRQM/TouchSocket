@@ -29,7 +29,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
-        SocketCliectCollection<TClient> SocketClients { get; }
+        SocketClientCollection<TClient> SocketClients { get; }
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。

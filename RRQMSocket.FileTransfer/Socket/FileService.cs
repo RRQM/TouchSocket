@@ -108,9 +108,9 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="creatOption"></param>
-        protected override void OnCreateSocketCliect(FileSocketClient socketClient, CreateOption creatOption)
+        protected override void OnCreateSocketClient(FileSocketClient socketClient, CreateOption creatOption)
         {
-            base.OnCreateSocketCliect(socketClient, creatOption);
+            base.OnCreateSocketClient(socketClient, creatOption);
             socketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
             socketClient.downloadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.DownloadRootProperty);

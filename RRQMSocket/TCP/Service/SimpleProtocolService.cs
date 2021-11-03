@@ -30,16 +30,16 @@ namespace RRQMSocket
         /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
         /// 例如事件等，请先判断CreatOption.NewCreat值再做处理。
         /// </summary>
-        public event Action<SimpleProtocolSocketClient, CreateOption> CreateSocketCliect;
+        public event Action<SimpleProtocolSocketClient, CreateOption> CreateSocketClient;
 
         /// <summary>
         /// 接收辅助类
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="createOption"></param>
-        protected override void OnCreateSocketCliect(SimpleProtocolSocketClient tcpSocketClient, CreateOption createOption)
+        protected override void OnCreateSocketClient(SimpleProtocolSocketClient tcpSocketClient, CreateOption createOption)
         {
-            this.CreateSocketCliect?.Invoke(tcpSocketClient, createOption);
+            this.CreateSocketClient?.Invoke(tcpSocketClient, createOption);
             tcpSocketClient.OnReceived = this.OnReceive;
         }
 

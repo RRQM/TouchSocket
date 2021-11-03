@@ -377,7 +377,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected override void OnCreateSocketCliect(TClient socketClient, CreateOption createOption)
+        protected override void OnCreateSocketClient(TClient socketClient, CreateOption createOption)
         {
             socketClient.IDAction = this.IDInvoke;
             socketClient.Received = this.OnReceived;

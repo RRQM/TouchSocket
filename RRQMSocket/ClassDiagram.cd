@@ -211,11 +211,11 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="RRQMSocket.SocketCliectCollection&lt;T&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+  <Class Name="RRQMSocket.SocketClientCollection&lt;T&gt;" Collapsed="true" BaseTypeListCollapsed="true">
     <Position X="23.25" Y="3.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAQAAACABQAAACAAAAASAQAAAAAAAAAAEACAAAQA=</HashCode>
-      <FileName>InternalClass\SocketCliectCollection.cs</FileName>
+      <FileName>InternalClass\SocketClientCollection.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>

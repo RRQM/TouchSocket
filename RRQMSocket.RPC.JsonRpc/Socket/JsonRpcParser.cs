@@ -437,11 +437,11 @@ namespace RRQMSocket.RPC.JsonRpc
         }
 
         /// <summary>
-        /// 创建SocketCliect
+        /// 创建SocketClient
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected override void OnCreateSocketCliect(JsonRpcSocketClient socketClient, CreateOption createOption)
+        protected override void OnCreateSocketClient(JsonRpcSocketClient socketClient, CreateOption createOption)
         {
             socketClient.OnReceived = this.OnReceived;
 

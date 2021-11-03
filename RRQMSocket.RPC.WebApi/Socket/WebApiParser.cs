@@ -212,7 +212,7 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
-        protected override void OnCreateSocketCliect(WebApiSocketClient socketClient, CreateOption createOption)
+        protected override void OnCreateSocketClient(WebApiSocketClient socketClient, CreateOption createOption)
         {
             socketClient.OnReceived = this.OnReceived;
             socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));

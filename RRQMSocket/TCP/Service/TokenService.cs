@@ -64,7 +64,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="queueGroup"></param>
-        protected override void PreviewCreateSocketCliect(Socket socket, BufferQueueGroup queueGroup)
+        protected override void PreviewCreateSocketClient(Socket socket, BufferQueueGroup queueGroup)
         {
             Task.Run(async () =>
             {
@@ -111,7 +111,7 @@ namespace RRQMSocket
 
                                     creatOption.ID = this.SocketClients.GetDefaultID();
 
-                                    this.OnCreateSocketCliect(client, creatOption);
+                                    this.OnCreateSocketClient(client, creatOption);
                                     client.id = creatOption.ID;
 
                                     if (!this.SocketClients.TryAdd(client))
