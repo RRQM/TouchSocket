@@ -26,25 +26,28 @@ namespace RRQMSocket
     public class Channel : IDisposable
     {
         internal byte[] current;
+
         internal int id = 0;
+
         internal ConcurrentDictionary<int, Channel> parent;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly BytePool bytePool;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IntelligentDataQueue<ChannelData> dataQueue;
+        private readonly ProtocolClient client1;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ProtocolClient client1;
-        
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly ProtocolSocketClient client2;
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly IntelligentDataQueue<ChannelData> dataQueue;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly AutoResetEvent waitHandle;
 
         private int bufferLength;
+
         private ChannelStatus status;
 
         internal Channel(ProtocolClient client)
@@ -56,7 +59,7 @@ namespace RRQMSocket
             this.bytePool = client.BytePool;
             this.bufferLength = client.BufferLength;
         }
-        
+
         internal Channel(ProtocolSocketClient client)
         {
             this.status = ChannelStatus.Success;
@@ -67,6 +70,13 @@ namespace RRQMSocket
             this.bufferLength = client.BufferLength;
         }
 
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~Channel()
+        {
+            this.Dispose();
+        }
         /// <summary>
         /// 获取当前的数据
         /// </summary>
@@ -99,6 +109,7 @@ namespace RRQMSocket
             ByteBlock byteBlock = this.bytePool.GetByteBlock(this.bufferLength);
             try
             {
+                this.RequestCancel();
                 byteBlock.Write(this.id);
                 if (this.client1 != null)
                 {
@@ -124,10 +135,11 @@ namespace RRQMSocket
         /// </summary>
         public void Complete()
         {
-            this.RequestComplete();
+
             ByteBlock byteBlock = this.bytePool.GetByteBlock(this.bufferLength);
             try
             {
+                this.RequestComplete();
                 byteBlock.Write(this.id);
                 if (this.client1 != null)
                 {
@@ -153,6 +165,11 @@ namespace RRQMSocket
         /// </summary>
         public void Dispose()
         {
+            if (this.status == ChannelStatus.Disposed)
+            {
+                return;
+            }
+            GC.SuppressFinalize(this);
             ByteBlock byteBlock = this.bytePool.GetByteBlock(this.bufferLength);
             try
             {
@@ -160,11 +177,18 @@ namespace RRQMSocket
                 byteBlock.Write(this.id);
                 if (this.client1 != null)
                 {
-                    this.client1.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                    if (this.client1.Online)
+                    {
+                        this.client1.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                    }
+
                 }
                 else
                 {
-                    this.client2.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                    if (this.client2.Online)
+                    {
+                        this.client2.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                    }
                 }
             }
             catch
@@ -239,9 +263,9 @@ namespace RRQMSocket
         public Task<bool> MoveNextAsync(int timeout = 60 * 1000)
         {
             return Task.Run(() =>
-             {
-                 return this.MoveNext(timeout);
-             });
+            {
+                return this.MoveNext(timeout);
+            });
         }
 
         /// <summary>
@@ -252,9 +276,9 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Write(byte[] data, int offset, int length)
         {
-            if ((byte)this.status>3)
+            if ((byte)this.status > 3)
             {
-                throw new RRQMException("通道已不允许使用");
+                throw new RRQMException($"通道已{this.status}");
             }
             ByteBlock byteBlock = this.bytePool.GetByteBlock(length + 4);
             try
@@ -299,8 +323,9 @@ namespace RRQMSocket
         {
             if ((byte)this.status > 3)
             {
-                throw new RRQMException("通道已不允许使用");
+                throw new RRQMException($"通道已{this.status}");
             }
+
             ByteBlock byteBlock = this.bytePool.GetByteBlock(length + 4);
             try
             {
@@ -338,6 +363,14 @@ namespace RRQMSocket
         {
             this.dataQueue.Enqueue(data);
             this.waitHandle.Set();
+            if (data.type == -5)
+            {
+                this.RequestCancel();
+            }
+            else if (data.type == -6)
+            {
+                this.RequestDispose();
+            }
         }
 
         private void RequestCancel()
@@ -356,6 +389,12 @@ namespace RRQMSocket
 
         private void RequestDispose()
         {
+            if (this.status == ChannelStatus.Disposed)
+            {
+                return;
+            }
+            this.status = ChannelStatus.Disposed;
+
             this.current = null;
             this.waitHandle.Dispose();
             this.status = ChannelStatus.Disposed;
