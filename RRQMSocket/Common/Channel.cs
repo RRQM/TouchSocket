@@ -221,6 +221,7 @@ namespace RRQMSocket
             moving = true;
             if (this.status != ChannelStatus.Moving)
             {
+                moving = false;
                 return false;
             }
 
@@ -251,7 +252,7 @@ namespace RRQMSocket
                     default:
                         break;
                 }
-
+                moving = false;
                 return false;
             }
             else
@@ -264,6 +265,7 @@ namespace RRQMSocket
                 else
                 {
                     this.status = ChannelStatus.Timeout;
+                    moving = false;
                     return false;
                 }
             }
