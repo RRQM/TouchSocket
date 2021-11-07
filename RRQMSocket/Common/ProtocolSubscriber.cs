@@ -9,7 +9,7 @@ namespace RRQMSocket
 {
     /// <summary>
     /// 协议订阅
-    /// </summary>
+    /// </summary> 
     public class ProtocolSubscriber : IClientBase, IDisposable
     {
         /// <summary>
