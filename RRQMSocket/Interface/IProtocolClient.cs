@@ -11,10 +11,22 @@ namespace RRQMSocket
     public interface IProtocolClient : ITokenClient
     {
         /// <summary>
+        /// 添加协议订阅
+        /// </summary>
+        /// <param name="protocolSubscriber"></param>
+        void AddProtocolSubscriber(ProtocolSubscriber protocolSubscriber);
+
+        /// <summary>
         /// 创建通道
         /// </summary>
         /// <returns></returns>
         Channel CreateChannel();
+
+        /// <summary>
+        /// 移除协议订阅
+        /// </summary>
+        /// <param name="protocolSubscriber"></param>
+        void RemoveProtocolSubscriber(ProtocolSubscriber protocolSubscriber);
 
         /// <summary>
         /// 发送字节
@@ -91,7 +103,6 @@ namespace RRQMSocket
         /// <param name="metadata"></param>
         /// <returns></returns>
         Task<AsyncResult> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = default);
-
         /// <summary>
         /// 订阅通道
         /// </summary>

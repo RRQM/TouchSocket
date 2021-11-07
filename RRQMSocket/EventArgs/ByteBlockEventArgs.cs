@@ -10,41 +10,31 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
-using RRQMCore.Log;
-using System;
-using System.Net.Sockets;
+using RRQMCore.Event;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 终端接口
+    /// 字节事件
     /// </summary>
-    public interface IClient : IClientBase, IDisposable
+    public class ByteBlockEventArgs : RRQMEventArgs
     {
         /// <summary>
-        /// IP地址
+        /// 构造函数
         /// </summary>
-        string IP { get; }
+        public ByteBlockEventArgs(ByteBlock byteBlock)
+        {
+            this.byteBlock = byteBlock;
+        }
 
+        private ByteBlock byteBlock;
         /// <summary>
-        /// 端口号
+        /// 数据块
         /// </summary>
-        int Port { get; }
+        public ByteBlock ByteBlock
+        {
+            get { return byteBlock; }
+        }
 
-        /// <summary>
-        /// 主通信器
-        /// </summary>
-        Socket MainSocket { get; }
-
-        /// <summary>
-        /// 内存池实例
-        /// </summary>
-        BytePool BytePool { get; }
-
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        ILog Logger { get; }
     }
 }

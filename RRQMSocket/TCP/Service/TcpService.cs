@@ -464,6 +464,8 @@ namespace RRQMSocket
 
                 TClient client = (TClient)Activator.CreateInstance(typeof(TClient));
 
+                client.serviceConfig = this.serviceConfig;
+
                 client.queueGroup = queueGroup;
                 client.service = this;
                 client.logger = this.Logger;

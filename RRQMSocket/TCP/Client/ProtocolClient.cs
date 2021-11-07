@@ -30,15 +30,23 @@ namespace RRQMSocket
     /// </summary>
     public abstract class ProtocolClient : TokenClient, IProtocolClient
     {
-        private static readonly Dictionary<short, string> usedProtocol = new Dictionary<short, string>();
-        private readonly ConcurrentDictionary<int, Channel> userChannels = new ConcurrentDictionary<int, Channel>();
+        private static readonly Dictionary<short, string> usedProtocol;
+        private readonly ConcurrentDictionary<int, Channel> userChannels;
+        private readonly ConcurrentDictionary<short, ProtocolSubscriberCollection> protocolSubscriberCollection;
         private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
+
+        static ProtocolClient()
+        {
+            usedProtocol = new Dictionary<short, string>();
+        }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public ProtocolClient()
         {
+            this.protocolSubscriberCollection = new ConcurrentDictionary<short, ProtocolSubscriberCollection>();
+            this.userChannels = new ConcurrentDictionary<int, Channel>();
             this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
         }
 
@@ -139,6 +147,55 @@ namespace RRQMSocket
         protected static void AddUsedProtocol(short procotol, string describe)
         {
             usedProtocol.Add(procotol, describe);
+        }
+
+        /// <summary>
+        /// 添加协议订阅
+        /// </summary>
+        /// <param name="protocolSubscriber"></param>
+        public void AddProtocolSubscriber(ProtocolSubscriber protocolSubscriber)
+        {
+            if (protocolSubscriber.client != null)
+            {
+                throw new RRQMException($"该实例已订阅其他服务");
+            }
+            if (protocolSubscriber.Protocol > 0)
+            {
+                if (usedProtocol.ContainsKey(protocolSubscriber.Protocol))
+                {
+                    throw new RRQMException($"该协议已被类协议使用，描述为：{usedProtocol[protocolSubscriber.Protocol]}");
+                }
+                else
+                {
+                    ProtocolSubscriberCollection protocolSubscribers= this.protocolSubscriberCollection.GetOrAdd(protocolSubscriber.Protocol,(p)=> 
+                    {
+                        return new ProtocolSubscriberCollection();
+                    });
+                    
+                    protocolSubscriber.client = this;
+                    protocolSubscribers.Add(protocolSubscriber);
+                }
+            }
+            else
+            {
+                throw new RRQMException("协议不能小于0");
+            }
+        }
+
+        /// <summary>
+        /// 移除协议订阅
+        /// </summary>
+        /// <param name="protocolSubscriber"></param>
+        public void RemoveProtocolSubscriber(ProtocolSubscriber protocolSubscriber)
+        {
+            ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(protocolSubscriber.Protocol, (p) =>
+            {
+                return new ProtocolSubscriberCollection();
+            });
+            if (protocolSubscribers.Remove(protocolSubscriber))
+            {
+                protocolSubscriber.client = null;
+            }
         }
 
         /// <summary>
@@ -273,6 +330,25 @@ namespace RRQMSocket
                     {
                         try
                         {
+                            if (this.protocolSubscriberCollection.TryGetValue(procotol, out ProtocolSubscriberCollection subscribers))
+                            {
+                                ProtocolSubscriberEventArgs args = new ProtocolSubscriberEventArgs(byteBlock);
+                                foreach (var protocolSubscriber in subscribers)
+                                {
+                                    try
+                                    {
+                                        protocolSubscriber.OnReceived(args);
+                                        if (args.Handled)
+                                        {
+                                            return;
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        this.Logger.Debug(LogType.Error, this, "处理订阅协议数据异常", ex);
+                                    }
+                                }
+                            }
                             HandleProtocolData(procotol, byteBlock);
                         }
                         catch (Exception ex)
@@ -541,11 +617,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Send(short procotol, byte[] buffer, int offset, int length)
         {
-            if (!usedProtocol.ContainsKey(procotol))
-            {
-                this.InternalSend(procotol, buffer, offset, length);
-            }
-            else
+            if (usedProtocol.ContainsKey(procotol))
             {
                 StringBuilder stringBuilder = new StringBuilder();
                 foreach (var item in usedProtocol.Keys)
@@ -553,6 +625,10 @@ namespace RRQMSocket
                     stringBuilder.AppendLine($"协议{item}已被使用，描述为：{usedProtocol[item]}");
                 }
                 throw new RRQMException(stringBuilder.ToString());
+            }
+            else
+            {
+                this.InternalSend(procotol, buffer, offset, length);
             }
         }
 
