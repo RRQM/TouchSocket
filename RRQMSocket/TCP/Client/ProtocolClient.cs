@@ -152,28 +152,28 @@ namespace RRQMSocket
         /// <summary>
         /// 添加协议订阅
         /// </summary>
-        /// <param name="protocolSubscriber"></param>
-        public void AddProtocolSubscriber(ProtocolSubscriber protocolSubscriber)
+        /// <param name="subscriber"></param>
+        public void AddProtocolSubscriber(SubscriberBase subscriber)
         {
-            if (protocolSubscriber.client != null)
+            if (subscriber.client != null)
             {
                 throw new RRQMException($"该实例已订阅其他服务");
             }
-            if (protocolSubscriber.Protocol > 0)
+            if (subscriber.Protocol > 0)
             {
-                if (usedProtocol.ContainsKey(protocolSubscriber.Protocol))
+                if (usedProtocol.ContainsKey(subscriber.Protocol))
                 {
-                    throw new RRQMException($"该协议已被类协议使用，描述为：{usedProtocol[protocolSubscriber.Protocol]}");
+                    throw new RRQMException($"该协议已被类协议使用，描述为：{usedProtocol[subscriber.Protocol]}");
                 }
                 else
                 {
-                    ProtocolSubscriberCollection protocolSubscribers= this.protocolSubscriberCollection.GetOrAdd(protocolSubscriber.Protocol,(p)=> 
+                    ProtocolSubscriberCollection protocolSubscribers= this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol,(p)=> 
                     {
                         return new ProtocolSubscriberCollection();
                     });
-                    
-                    protocolSubscriber.client = this;
-                    protocolSubscribers.Add(protocolSubscriber);
+
+                    subscriber.client = this;
+                    protocolSubscribers.Add(subscriber);
                 }
             }
             else
@@ -185,16 +185,16 @@ namespace RRQMSocket
         /// <summary>
         /// 移除协议订阅
         /// </summary>
-        /// <param name="protocolSubscriber"></param>
-        public void RemoveProtocolSubscriber(ProtocolSubscriber protocolSubscriber)
+        /// <param name="subscriber"></param>
+        public void RemoveProtocolSubscriber(SubscriberBase subscriber)
         {
-            ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(protocolSubscriber.Protocol, (p) =>
+            ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol, (p) =>
             {
                 return new ProtocolSubscriberCollection();
             });
-            if (protocolSubscribers.Remove(protocolSubscriber))
+            if (protocolSubscribers.Remove(subscriber))
             {
-                protocolSubscriber.client = null;
+                subscriber.client = null;
             }
         }
 
@@ -268,8 +268,8 @@ namespace RRQMSocket
                         {
                             byteBlock.Pos = 2;
                             int id = byteBlock.ReadInt32();
-                            byte[] data = byteBlock.ReadBytesPackage();
-                            this.ReceivedChannelData(id, -3, data);
+                            //byte[] data = byteBlock.ReadBytesPackage();
+                            this.ReceivedChannelData(id, -3, byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -337,7 +337,7 @@ namespace RRQMSocket
                                 {
                                     try
                                     {
-                                        protocolSubscriber.OnReceived(args);
+                                        protocolSubscriber.OnInternalReceived(args);
                                         if (args.Handled)
                                         {
                                             return;
@@ -426,6 +426,7 @@ namespace RRQMSocket
                 this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
             }
         }
+       
         /// <summary>
         /// 预处理流数据
         /// </summary>
@@ -434,16 +435,9 @@ namespace RRQMSocket
 
         private void P_9_RequestStreamToThis(WaitStream waitStream)
         {
-            StreamOperationEventArgs args = new StreamOperationEventArgs();
-            args.IsPermitOperation = true;
-            args.Metadata = waitStream.Metadata;
-
-            StreamInfo streamInfo = new StreamInfo();
-            streamInfo.Size = waitStream.Size;
-            args.StreamInfo = streamInfo;
-
             StreamOperator streamOperator = new StreamOperator();
-            args.StreamOperator = streamOperator;
+            StreamInfo streamInfo = new StreamInfo(waitStream.Size,waitStream.StreamType);
+            StreamOperationEventArgs args = new StreamOperationEventArgs(streamOperator,waitStream.Metadata, streamInfo);
 
             try
             {
@@ -467,13 +461,20 @@ namespace RRQMSocket
                                     channel.Cancel();
                                     break;
                                 }
-                                stream.Write(channel.Current, 0, channel.Current.Length);
-                                streamOperator.speedTemp += channel.Current.Length;
-                                streamOperator.completedLength += channel.Current.Length;
-                                streamOperator.progress = (float)((double)streamOperator.completedLength / waitStream.Size);
+                                ByteBlock block = channel.GetCurrentByteBlock();
+                                block.Pos = 6;
+
+                                if (block.TryReadBytesPackageInfo(out int pos, out int len))
+                                {
+                                    stream.Write(block.Buffer, pos, len);
+                                    streamOperator.speedTemp += len;
+                                    streamOperator.completedLength += len;
+                                    streamOperator.progress = (float)((double)streamOperator.completedLength / waitStream.Size);
+                                }
+                                block.SetHolding(false);
                             }
 
-                            HandleStream(new StreamStatusEventArgs() { Metadata = args.Metadata, Status = channel.Status, Bucket = stream, Message = args.Message, StreamInfo = args.StreamInfo });
+                            HandleStream(new StreamStatusEventArgs(channel.Status,args.Metadata, args.StreamInfo) { Bucket = stream, Message = args.Message});
                         });
                     }
                     else
@@ -865,7 +866,8 @@ namespace RRQMSocket
             waitStream.Metadata = metadata;
             long size = stream.Length - stream.Position;
             waitStream.Size = size;
-            int length = 1024 * 64;
+            waitStream.StreamType = stream.GetType().FullName;
+            int length = streamOperator.PackageSize;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(length).WriteObject(waitStream, SerializationType.Json);
 
             try
@@ -968,13 +970,18 @@ namespace RRQMSocket
 
         #endregion Stream发送
 
-        private void ReceivedChannelData(int id, short type, byte[] data)
+        private void ReceivedChannelData(int id, short type, ByteBlock byteBlock)
         {
             if (this.userChannels.TryGetValue(id, out Channel channel))
             {
                 ChannelData channelData = new ChannelData();
                 channelData.type = type;
-                channelData.data = data;
+
+                if (byteBlock != null)
+                {
+                    byteBlock.SetHolding(true);
+                    channelData.byteBlock = byteBlock;
+                }
                 channel.ReceivedData(channelData);
             }
         }

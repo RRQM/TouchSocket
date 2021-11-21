@@ -144,41 +144,7 @@ namespace RRQMCore.ByteManager
         }
 
         internal void Recycle(byte[] bytes)
-
-        /* 项目“RRQMCore (netcoreapp3.1)”的未合并的更改
-        在此之前:
-                {
-
-                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-        在此之后:
-                {
-
-                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-        */
-
-        /* 项目“RRQMCore (net461)”的未合并的更改
-        在此之前:
-                {
-
-                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-        在此之后:
-                {
-
-                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-        */
-
-        /* 项目“RRQMCore (netstandard2.0)”的未合并的更改
-        在此之前:
-                {
-
-                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-        在此之后:
-                {
-
-                    this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-        */
         {
-
             this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
             if (maxSize > fullSize)
             {

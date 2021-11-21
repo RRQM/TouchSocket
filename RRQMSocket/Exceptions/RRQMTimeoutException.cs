@@ -22,7 +22,7 @@ namespace RRQMSocket
         /// <summary>
         ///
         /// </summary>
-        public RRQMTimeoutException() : base() { }
+        public RRQMTimeoutException() : base("操作超时。") { }
 
         /// <summary>
         ///

@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
@@ -71,7 +72,12 @@ namespace RRQMSocket.FileTransfer
             AddUsedProtocol(118, "停止上传");
             AddUsedProtocol(119, "确认上传完成");
             AddUsedProtocol(120, "智能包调节");
-            for (short i = 121; i < 200; i++)
+
+            AddUsedProtocol(121, "服务器暂停当前任务");
+            AddUsedProtocol(122, "服务器恢复当前任务");
+            AddUsedProtocol(123, "服务器终止当前任务");
+            AddUsedProtocol(124, "服务器终止所有任务");
+            for (short i = 125; i < 200; i++)
             {
                 AddUsedProtocol(i, "保留协议");
             }
@@ -97,7 +103,7 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 当文件传输集合更改时
         /// </summary>
-        public event RRQMMessageEventHandler FileTransferCollectionChanged;
+        public event RRQMMessageEventHandler<FileClient> FileTransferCollectionChanged;
 
         /// <summary>
         /// 当文件传输完成时
@@ -211,16 +217,16 @@ namespace RRQMSocket.FileTransfer
                 fileClient.Connect();
 
                 fileClient.FinishedFileTransfer +=
-                    (object sender, TransferFileMessageArgs e) =>
+                    (IFileClient client, TransferFileMessageArgs e) =>
                     {
                         fileClient.Dispose();
-                        finishedCallBack?.Invoke(sender, e);
+                        finishedCallBack?.Invoke(client, e);
                     };
                 fileClient.TransferFileError +=
-                    (object sender, TransferFileMessageArgs e) =>
+                    (IFileClient client, TransferFileMessageArgs e) =>
                     {
                         fileClient.Dispose();
-                        errorCallBack?.Invoke(sender, e);
+                        errorCallBack?.Invoke(client, e);
                     };
                 fileClient.RequestTransfer(urlFileInfo);
                 return fileClient;
@@ -245,10 +251,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 断开连接
         /// </summary>
-        public override void Disconnect()
+        public override ITcpClient Disconnect()
         {
             base.Disconnect();
             this.ResetVariable();
+            return this;
         }
 
         /// <summary>
@@ -380,6 +387,26 @@ namespace RRQMSocket.FileTransfer
                         this.packetSize = byteBlock.ReadInt32();
                         break;
                     }
+                case 121:
+                    {
+                        this.PauseTransfer();
+                        break;
+                    }
+                case 122:
+                    {
+                        this.ResumeTransfer();
+                        break;
+                    }
+                case 123:
+                    {
+                        this.StopThisTransfer();
+                        break;
+                    }
+                case 124:
+                    {
+                        this.StopAllTransfer();
+                        break;
+                    }
                 default:
                     {
                         FileClientHandleDefaultData(procotol, byteBlock);
@@ -392,7 +419,7 @@ namespace RRQMSocket.FileTransfer
         {
             Task.Run(() =>
             {
-                lock (locker)
+                lock (this)
                 {
                     if (this.transferStatus == TransferStatus.None)
                     {
@@ -610,7 +637,7 @@ namespace RRQMSocket.FileTransfer
             this.OnTransferError(TransferType.Download, "确认下载完成状态重试次数已达到最大，具体信息请查看日志输出");
         }
 
-        private void FileTransferCollection_OnCollectionChanged(object sender, MesEventArgs e)
+        private void FileTransferCollection_OnCollectionChanged(MesEventArgs e)
         {
             this.FileTransferCollectionChanged?.Invoke(this, e);
         }
@@ -750,7 +777,7 @@ namespace RRQMSocket.FileTransfer
 
         private ByteBlock SingleSendWait(short procotol, int timeout, ByteBlock byteBlock = null)
         {
-            lock (locker)
+            lock (this)
             {
                 this.waitDataSend.Reset();
                 if (!this.Online)

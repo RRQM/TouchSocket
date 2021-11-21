@@ -13,8 +13,8 @@ namespace RRQMSocket
         /// <summary>
         /// 添加协议订阅
         /// </summary>
-        /// <param name="protocolSubscriber"></param>
-        void AddProtocolSubscriber(ProtocolSubscriber protocolSubscriber);
+        /// <param name="subscriber"></param>
+        void AddProtocolSubscriber(SubscriberBase subscriber);
 
         /// <summary>
         /// 创建通道
@@ -25,8 +25,8 @@ namespace RRQMSocket
         /// <summary>
         /// 移除协议订阅
         /// </summary>
-        /// <param name="protocolSubscriber"></param>
-        void RemoveProtocolSubscriber(ProtocolSubscriber protocolSubscriber);
+        /// <param name="subscriber"></param>
+        void RemoveProtocolSubscriber(SubscriberBase subscriber);
 
         /// <summary>
         /// 发送字节

@@ -20,22 +20,8 @@ namespace RRQMSocket
     /// <summary>
     /// 终端接口
     /// </summary>
-    public interface IClient : IClientBase, IDisposable
+    public interface IClient : IDisposable
     {
-        /// <summary>
-        /// IP地址
-        /// </summary>
-        string IP { get; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        int Port { get; }
-
-        /// <summary>
-        /// 主通信器
-        /// </summary>
-        Socket MainSocket { get; }
 
         /// <summary>
         /// 内存池实例

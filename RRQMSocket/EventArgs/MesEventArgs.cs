@@ -28,7 +28,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 直接构造函数
+        /// 构造函数
         /// </summary>
         public MesEventArgs()
         {

@@ -41,18 +41,25 @@ namespace RRQMSocket
         string ServerName { get; }
 
         /// <summary>
+        /// 网络监听集合
+        /// </summary>
+        NetworkMonitor[] Monitors { get; }
+
+        /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="serverConfig">配置</param>
         /// <exception cref="RRQMException"></exception>
-        void Setup(ServiceConfig serverConfig);
+        /// <returns>设置的服务实例</returns>
+        IService Setup(ServiceConfig serverConfig);
 
         /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="port"></param>
         /// <exception cref="RRQMException"></exception>
-        void Setup(int port);
+        /// <returns>设置的服务实例</returns>
+        IService Setup(int port);
 
         /// <summary>
         /// 启动
@@ -60,12 +67,14 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        void Start();
+        /// <returns>设置的服务实例</returns>
+        IService Start();
 
         /// <summary>
         /// 停止
         /// </summary>
         /// <exception cref="RRQMException"></exception>
-        void Stop();
+        /// <returns>设置的服务实例</returns>
+        IService Stop();
     }
 }

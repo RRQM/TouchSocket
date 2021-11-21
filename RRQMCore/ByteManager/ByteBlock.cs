@@ -347,6 +347,22 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
+        /// 从指定位置转化到有效内存
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public byte[] ToArray(int offset)
+        {
+            if (!this.@using)
+            {
+                throw new RRQMException("内存块已释放");
+            }
+            byte[] buffer = new byte[this.length-offset];
+            Array.Copy(this._buffer, offset, buffer, 0, buffer.Length);
+            return buffer;
+        }
+
+        /// <summary>
         /// 写入
         /// </summary>
         /// <param name="buffer"></param>
@@ -396,6 +412,26 @@ namespace RRQMCore.ByteManager
             Array.Copy(this._buffer, this.position, data, 0, length);
             this.position += length;
             return data;
+        }
+
+        /// <summary>
+        /// 尝试获取数据包信息，方便从Buffer操作数据
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public bool TryReadBytesPackageInfo(out int pos, out int len)
+        {
+            byte status = this.ReadByte();
+            if (status == 0)
+            {
+                pos = 0;
+                len = 0;
+                return false;
+            }
+            len = this.ReadInt32();
+            pos = (int)this.position;
+            return true;
         }
 
         /// <summary>

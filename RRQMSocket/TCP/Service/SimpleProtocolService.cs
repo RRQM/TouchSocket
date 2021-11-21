@@ -22,25 +22,23 @@ namespace RRQMSocket
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event Action<SimpleProtocolSocketClient, short?, ByteBlock> Received;
+        public event RRQMProtocolReceivedEventHandler<SimpleProtocolSocketClient> Received;
 
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
-        /// 用户可以在该方法中再进行自定义设置，
-        /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
-        /// 例如事件等，请先判断CreatOption.NewCreat值再做处理。
+        /// 用户可以在该方法中再进行自定义设置
         /// </summary>
-        public event Action<SimpleProtocolSocketClient, CreateOption> CreateSocketClient;
+        public event RRQMCreateSocketClientEventHandler<SimpleProtocolSocketClient> CreateSocketClient;
 
         /// <summary>
         /// 预处理流
         /// </summary>
-        public event RRQMStreamOperationEventHandler BeforeReceiveStream;
+        public event RRQMStreamOperationEventHandler<SimpleProtocolSocketClient> BeforeReceiveStream;
 
         /// <summary>
         /// 收到流数据
         /// </summary>
-        public event RRQMStreamStatusEventHandler ReceivedStream;
+        public event RRQMStreamStatusEventHandler<SimpleProtocolSocketClient> ReceivedStream;
 
 
         /// <summary>
@@ -51,9 +49,9 @@ namespace RRQMSocket
         protected override void OnCreateSocketClient(SimpleProtocolSocketClient socketClient, CreateOption createOption)
         {
             this.CreateSocketClient?.Invoke(socketClient, createOption);
-            socketClient.OnReceived = this.OnReceive;
-            socketClient.OnBeforeReceiveStream = this.OnBeforeReceiveStream;
-            socketClient.OnReceivedStream = this.OnReceivedStream;
+            socketClient.Received +=this.OnReceive;
+            socketClient.BeforeReceiveStream += this.OnBeforeReceiveStream;
+            socketClient.ReceivedStream += this.OnReceivedStream;
         }
 
         private void OnReceive(SimpleProtocolSocketClient socketClient, short? procotol, ByteBlock byteBlock)
@@ -61,12 +59,12 @@ namespace RRQMSocket
             this.Received?.Invoke(socketClient, procotol, byteBlock);
         }
 
-        private void OnBeforeReceiveStream(IProtocolClient client, StreamOperationEventArgs e)
+        private void OnBeforeReceiveStream(SimpleProtocolSocketClient client, StreamOperationEventArgs e)
         {
             this.BeforeReceiveStream?.Invoke(client, e);
         }
 
-        private void OnReceivedStream(IProtocolClient client, StreamStatusEventArgs e)
+        private void OnReceivedStream(SimpleProtocolSocketClient client, StreamStatusEventArgs e)
         {
             this.ReceivedStream?.Invoke(client, e);
         }

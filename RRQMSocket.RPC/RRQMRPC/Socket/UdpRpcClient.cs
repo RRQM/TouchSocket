@@ -35,7 +35,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 发现服务后
         /// </summary>
-        public event RRQMMessageEventHandler ServiceDiscovered;
+        public event RRQMMessageEventHandler<UdpRpcClient> ServiceDiscovered;
 
         /// <summary>
         /// 构造函数

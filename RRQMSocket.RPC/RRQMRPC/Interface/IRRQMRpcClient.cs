@@ -48,11 +48,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         RpcProxyInfo GetProxyInfo();
 
         /// <summary>
-        /// 服务发现完成后
-        /// </summary>
-        event RRQMMessageEventHandler ServiceDiscovered;
-
-        /// <summary>
         /// 发现服务
         /// </summary>
         /// <param name="isTrigger">是否触发初始化事件</param>

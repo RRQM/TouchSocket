@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace RRQMSocket.FileTransfer
             list = new List<UrlFileInfo>();
         }
 
-        internal event RRQMMessageEventHandler OnCollectionChanged;
+        internal event Action<MesEventArgs> OnCollectionChanged;
 
         private List<UrlFileInfo> list;
 
@@ -48,7 +49,7 @@ namespace RRQMSocket.FileTransfer
             this.list.Add(fileInfo);
             Task.Run(() =>
             {
-                OnCollectionChanged?.Invoke(null, new MesEventArgs("添加"));
+                OnCollectionChanged?.Invoke(new MesEventArgs("添加"));
             });
         }
 
@@ -57,7 +58,7 @@ namespace RRQMSocket.FileTransfer
             this.list.Clear();
             Task.Run(() =>
             {
-                OnCollectionChanged?.Invoke(null, new MesEventArgs("清空"));
+                OnCollectionChanged?.Invoke(new MesEventArgs("清空"));
             });
         }
 
@@ -65,7 +66,7 @@ namespace RRQMSocket.FileTransfer
         {
             Task.Run(() =>
             {
-                OnCollectionChanged?.Invoke(null, new MesEventArgs("移除"));
+                OnCollectionChanged?.Invoke(new MesEventArgs("移除"));
             });
             return this.list.Remove(fileInfo);
         }
@@ -80,7 +81,7 @@ namespace RRQMSocket.FileTransfer
                     this.list.RemoveAt(0);
                     Task.Run(() =>
                     {
-                        OnCollectionChanged?.Invoke(null, new MesEventArgs("进入传输"));
+                        OnCollectionChanged?.Invoke(new MesEventArgs("进入传输"));
                     });
                     return true;
                 }

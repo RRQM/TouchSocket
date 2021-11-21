@@ -115,18 +115,18 @@ namespace RRQMSocket.FileTransfer
             socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
             socketClient.downloadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.DownloadRootProperty);
             socketClient.uploadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.UploadRootProperty);
-            socketClient.BeforeFileTransfer = this.OnBeforeFileTransfer;
-            socketClient.FinishedFileTransfer = this.OnFinishedFileTransfer;
+            socketClient.BeforeFileTransfer += this.OnBeforeFileTransfer;
+            socketClient.FinishedFileTransfer += this.OnFinishedFileTransfer;
         }
 
-        private void OnBeforeFileTransfer(object sender, FileOperationEventArgs e)
+        private void OnBeforeFileTransfer(IFileClient client, FileOperationEventArgs e)
         {
-            this.BeforeFileTransfer?.Invoke(sender, e);
+            this.BeforeFileTransfer?.Invoke(client, e);
         }
 
-        private void OnFinishedFileTransfer(object sender, TransferFileMessageArgs e)
+        private void OnFinishedFileTransfer(IFileClient client, TransferFileMessageArgs e)
         {
-            this.FinishedFileTransfer?.Invoke(sender, e);
+            this.FinishedFileTransfer?.Invoke(client, e);
         }
     }
 }

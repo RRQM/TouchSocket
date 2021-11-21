@@ -24,31 +24,42 @@ namespace RRQMSocket
     public abstract class SocketClient : BaseSocket, ISocketClient, IHandleBuffer
     {
         internal bool breakOut;
-        internal ClearType clearType;
         internal string id;
         internal long lastTick;
         internal BufferQueueGroup queueGroup;
         internal bool separateThreadReceive;
         internal ITcpServiceBase service;
+        internal ServiceConfig serviceConfig;
+        private ClearType clearType;
         private DataHandlingAdapter dataHandlingAdapter;
         private SocketAsyncEventArgs eventArgs;
         private string ip;
         private Socket mainSocket;
         private int port;
-        internal ServiceConfig serviceConfig;
 
         /// <summary>
-        /// 服务配置
+        /// 连接
         /// </summary>
-        public ServiceConfig ServiceConfig
-        {
-            get { return serviceConfig; }
-        }
+        public event RRQMMessageEventHandler<SocketClient> Connected;
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        public event RRQMMessageEventHandler<SocketClient> Disconnected;
 
         /// <summary>
         /// 获取内存池实例
         /// </summary>
-        public BytePool BytePool { get { return this.queueGroup == null ? null : this.queueGroup.bytePool; } }
+        public BytePool BytePool{ get { return this.queueGroup == null ? BytePool.Default : this.queueGroup.bytePool; } }
+
+        /// <summary>
+        /// 选择清理类型
+        /// </summary>
+        public ClearType ClearType
+        {
+            get { return clearType; }
+            set { clearType = value; }
+        }
 
         /// <summary>
         /// 数据处理适配器
@@ -102,23 +113,46 @@ namespace RRQMSocket
         /// <summary>
         /// 判断该实例是否还在线
         /// </summary>
-        public bool Online { get { return !this.breakOut; } }
+        public bool Online
+        { get { return !this.breakOut; } }
 
         /// <summary>
-        /// 端口号
+        /// <inheritdoc/>
         /// </summary>
-
         public int Port
         {
             get { return port; }
         }
 
         /// <summary>
+        /// 端口号
+        /// </summary>
+        /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
         public ITcpServiceBase Service
         {
             get { return service; }
+        }
+
+        /// <summary>
+        /// 服务配置
+        /// </summary>
+        public ServiceConfig ServiceConfig
+        {
+            get { return serviceConfig; }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Close()
+        {
+            this.breakOut = true;
+            if (this.mainSocket != null)
+            {
+                this.mainSocket.Close();
+            }
         }
 
         /// <summary>
@@ -142,18 +176,6 @@ namespace RRQMSocket
             }
             this.MainSocket = null;
             this.breakOut = true;
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void Close()
-        {
-            this.breakOut = true;
-            if (this.mainSocket != null)
-            {
-                this.mainSocket.Close();
-            }
         }
 
         /// <summary>
@@ -268,7 +290,7 @@ namespace RRQMSocket
             }
             else
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
@@ -338,7 +360,7 @@ namespace RRQMSocket
             }
             else
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.bufferLength);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
@@ -355,6 +377,27 @@ namespace RRQMSocket
         }
 
         #endregion 异步发送
+
+        /// <summary>
+        /// 设置数据处理适配器
+        /// </summary>
+        /// <param name="adapter"></param>
+        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            if (adapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            if (this.BytePool == null)
+            {
+                throw new RRQMException($"数据处理适配器应当在初始化完成后赋值，建议在{nameof(this.OnInitCompleted)}赋值。");
+            }
+            adapter.BytePool = this.BytePool;
+            adapter.Logger = this.Logger;
+            adapter.ReceivedCallBack = this.HandleReceivedData;
+            adapter.SendCallBack = this.Sent;
+            this.dataHandlingAdapter = adapter;
+        }
 
         /// <summary>
         /// 禁用发送或接收
@@ -445,22 +488,12 @@ namespace RRQMSocket
         protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
 
         /// <summary>
-        /// 初始化完成
-        /// </summary>
-        protected virtual void OnInitCompleted()
-        {
-            if (this.dataHandlingAdapter == null)
-            {
-                this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
-            }
-        }
-
-        /// <summary>
         /// 当连接时
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnConnected(MesEventArgs e)
         {
+            this.Connected?.Invoke(this, e);
         }
 
         /// <summary>
@@ -469,6 +502,18 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected virtual void OnDisconnected(MesEventArgs e)
         {
+            this.Disconnected?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 初始化完成
+        /// </summary>
+        protected virtual void OnInitCompleted()
+        {
+            if (this.dataHandlingAdapter == null)
+            {
+                this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+            }
         }
 
         /// <summary>
@@ -485,27 +530,6 @@ namespace RRQMSocket
         protected virtual void ResetID(WaitSetID waitSetID)
         {
             this.Service.ResetID(waitSetID);
-        }
-
-        /// <summary>
-        /// 设置数据处理适配器
-        /// </summary>
-        /// <param name="adapter"></param>
-        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
-        {
-            if (adapter == null)
-            {
-                throw new RRQMException("数据处理适配器为空");
-            }
-            if (this.BytePool == null)
-            {
-                throw new RRQMException($"数据处理适配器应当在初始化完成后赋值，建议在{nameof(this.OnInitCompleted)}赋值。");
-            }
-            adapter.BytePool = this.BytePool;
-            adapter.Logger = this.Logger;
-            adapter.ReceivedCallBack = this.HandleReceivedData;
-            adapter.SendCallBack = this.Sent;
-            this.dataHandlingAdapter = adapter;
         }
 
         /// <summary>
@@ -624,6 +648,5 @@ namespace RRQMSocket
                 this.lastTick = DateTime.Now.Ticks;
             }
         }
-
     }
 }

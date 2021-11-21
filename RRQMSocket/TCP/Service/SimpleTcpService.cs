@@ -22,15 +22,13 @@ namespace RRQMSocket
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event Action<SimpleSocketClient, ByteBlock, object> Received;
+        public event RRQMReceivedEventHandler<SimpleSocketClient> Received;
 
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
-        /// 用户可以在该方法中再进行自定义设置，
-        /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
-        /// 例如事件等，请先判断CreatOption.NewCreat值再做处理。
+        /// 用户可以在该方法中再进行自定义设置。
         /// </summary>
-        public event Action<SimpleSocketClient, CreateOption> CreateSocketClient;
+        public event RRQMCreateSocketClientEventHandler<SimpleSocketClient> CreateSocketClient;
 
         /// <summary>
         /// 成功连接后创建（或从对象池中获得）辅助类,
@@ -43,7 +41,7 @@ namespace RRQMSocket
         protected override void OnCreateSocketClient(SimpleSocketClient tcpSocketClient, CreateOption creatOption)
         {
             this.CreateSocketClient?.Invoke(tcpSocketClient, creatOption);
-            tcpSocketClient.OnReceived = this.OnReceive;
+            tcpSocketClient.Received += this.OnReceive;
         }
 
         private void OnReceive(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)

@@ -22,26 +22,26 @@ namespace RRQMSocket
         /// <summary>
         /// 预处理流
         /// </summary>
-        public event RRQMStreamOperationEventHandler BeforeReceiveStream;
+        public event RRQMStreamOperationEventHandler<SimpleProtocolClient> BeforeReceiveStream;
 
         /// <summary>
         /// 接收到数据
         /// </summary>
-        public event Action<short?, ByteBlock> Received;
+        public event RRQMProtocolReceivedEventHandler<SimpleProtocolClient> Received;
 
         /// <summary>
         /// 收到流数据
         /// </summary>
-        public event RRQMStreamStatusEventHandler ReceivedStream;
+        public event RRQMStreamStatusEventHandler<SimpleProtocolClient> ReceivedStream;
 
         /// <summary>
         /// 处理协议数据
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
+        protected  override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
         {
-            this.Received?.Invoke(procotol, byteBlock);
+            this.Received.Invoke(this,procotol, byteBlock);
         }
 
         /// <summary>

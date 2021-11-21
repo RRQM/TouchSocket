@@ -35,8 +35,7 @@ namespace RRQMSocket
         #region 属性
 
         private int clearInterval;
-        private IPHost[] listenIPHosts;
-        private Socket[] listenSockets;
+        private NetworkMonitor[] monitors;
         private int maxCount;
         private string name;
         private ServerState serverState;
@@ -54,22 +53,6 @@ namespace RRQMSocket
         public int ClearInterval
         {
             get { return clearInterval; }
-        }
-
-        /// <summary>
-        /// 获取监听的地址组
-        /// </summary>
-        public IPHost[] ListenIPHosts
-        {
-            get { return listenIPHosts; }
-        }
-
-        /// <summary>
-        /// 获取正在监听的socket组
-        /// </summary>
-        public Socket[] ListenSockets
-        {
-            get { return listenSockets; }
         }
 
         /// <summary>
@@ -108,6 +91,14 @@ namespace RRQMSocket
         {
             get { return socketClients; }
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public NetworkMonitor[] Monitors
+        {
+            get { return monitors; }
+        }
         #endregion 属性
 
         #region 变量
@@ -125,12 +116,12 @@ namespace RRQMSocket
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        public event RRQMMessageEventHandler ClientConnected;
+        public event RRQMMessageEventHandler<TClient> Connected;
 
         /// <summary>
         /// 有用户断开连接的时候
         /// </summary>
-        public event RRQMMessageEventHandler ClientDisconnected;
+        public event RRQMMessageEventHandler<TClient> Disconnected;
 
         /// <summary>
         /// 在客户端连接时
@@ -139,7 +130,7 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected virtual void OnClientConnected(TClient client, MesEventArgs e)
         {
-            this.ClientConnected?.Invoke(client, e);
+            this.Connected?.Invoke(client, e);
             client.OnEvent(1, e);
         }
 
@@ -150,7 +141,7 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected virtual void OnClientDisconnected(TClient client, MesEventArgs e)
         {
-            this.ClientDisconnected?.Invoke(client, e);
+            this.Disconnected?.Invoke(client, e);
             client.OnEvent(2, e);
         }
 
@@ -170,16 +161,17 @@ namespace RRQMSocket
         public override void Dispose()
         {
             base.Dispose();
-            if (this.listenSockets != null)
+            if (this.monitors != null)
             {
-                foreach (var item in this.listenSockets)
+                foreach (var item in this.monitors)
                 {
-                    item.Dispose();
+                    if (item.Socket != null)
+                    {
+                        item.Socket.Dispose();
+                    }
                 }
             }
-            this.listenSockets = null;
-            this.listenIPHosts = null;
-
+            this.monitors = null;
             this.SocketClients.Clear();
             if (bufferQueueGroups != null)
             {
@@ -311,21 +303,22 @@ namespace RRQMSocket
         /// 配置服务器
         /// </summary>
         /// <param name="serviceConfig"></param>
-        public virtual void Setup(ServiceConfig serviceConfig)
+        public virtual IService Setup(ServiceConfig serviceConfig)
         {
             this.serviceConfig = serviceConfig;
             this.LoadConfig(serviceConfig);
+            return this;
         }
 
         /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="port"></param>
-        public virtual void Setup(int port)
+        public virtual IService Setup(int port)
         {
             TcpServiceConfig serviceConfig = new TcpServiceConfig();
             serviceConfig.ListenIPHosts = new IPHost[] { new IPHost(port) };
-            this.Setup(serviceConfig);
+            return this.Setup(serviceConfig);
         }
 
         /// <summary>
@@ -344,10 +337,10 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        public virtual void Start()
+        public virtual IService Start()
         {
             IPHost[] iPHosts = (IPHost[])this.ServiceConfig.GetValue(ServiceConfig.ListenIPHostsProperty);
-            if (iPHosts == null)
+            if (iPHosts == null || iPHosts.Length == 0)
             {
                 throw new RRQMException("IPHosts为空，无法绑定");
             }
@@ -361,7 +354,7 @@ namespace RRQMSocket
                     }
                 case ServerState.Running:
                     {
-                        return;
+                        return this;
                     }
                 case ServerState.Stopped:
                     {
@@ -373,28 +366,32 @@ namespace RRQMSocket
                         throw new RRQMException("无法重新利用已释放对象");
                     }
             }
-            this.listenIPHosts = iPHosts;
             this.serverState = ServerState.Running;
+            return this;
         }
 
         /// <summary>
         /// 停止服务器，可重新启动
         /// </summary>
-        public virtual void Stop()
+        public virtual IService Stop()
         {
-            if (listenSockets != null)
+            if (this.monitors != null)
             {
-                foreach (var item in listenSockets)
+                foreach (var item in this.monitors)
                 {
-                    item.Dispose();
+                    if (item.Socket != null)
+                    {
+                        item.Socket.Dispose();
+                    }
                 }
             }
-            this.listenSockets = null;
-            this.listenIPHosts = null;
+            this.monitors = null;
 
             this.SocketClients.Clear();
 
             this.serverState = ServerState.Stopped;
+
+            return this;
         }
 
         /// <summary>
@@ -422,7 +419,7 @@ namespace RRQMSocket
             this.clearInterval = (int)serviceConfig.GetValue(TcpServiceConfig.ClearIntervalProperty);
             this.backlog = (int)serviceConfig.GetValue(TcpServiceConfig.BacklogProperty);
             this.logger = (ILog)serviceConfig.GetValue(RRQMConfig.LoggerProperty);
-            this.bufferLength = (int)serviceConfig.GetValue(RRQMConfig.BufferLengthProperty);
+            this.BufferLength = (int)serviceConfig.GetValue(RRQMConfig.BufferLengthProperty);
             this.name = serviceConfig.ServerName;
             this.clearType = (ClearType)serviceConfig.GetValue(TcpServiceConfig.ClearTypeProperty);
             this.separateThreadReceive = serviceConfig.SeparateThreadReceive;
@@ -468,13 +465,13 @@ namespace RRQMSocket
 
                 client.queueGroup = queueGroup;
                 client.service = this;
-                client.logger = this.Logger;
-                client.clearType = this.clearType;
+                client.Logger = this.Logger;
+                client.ClearType = this.clearType;
                 client.separateThreadReceive = this.separateThreadReceive;
 
                 client.MainSocket = socket;
                 client.ReadIpPort();
-                client.bufferLength = this.bufferLength;
+                client.BufferLength = this.BufferLength;
 
                 CreateOption creatOption = new CreateOption();
                 creatOption.ID = this.SocketClients.GetDefaultID();
@@ -535,30 +532,39 @@ namespace RRQMSocket
 
         private void BeginListen(IPHost[] iPHosts)
         {
-            try
+            List<NetworkMonitor> networkMonitors = new List<NetworkMonitor>();
+            foreach (var iPHost in iPHosts)
             {
-                this.listenSockets = new Socket[iPHosts.Length];
-                int i = 0;
-                foreach (var iPHost in iPHosts)
+                try
                 {
                     Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    this.listenSockets[i++] = socket;
                     PreviewBind(socket);
                     socket.Bind(iPHost.EndPoint);
                     socket.Listen(this.backlog);
+
+                    networkMonitors.Add(new NetworkMonitor(iPHost, socket));
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Debug(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
                 }
             }
-            catch (Exception ex)
+
+            if (networkMonitors.Count > 0)
             {
-                throw ex;
+                this.monitors = networkMonitors.ToArray();
+            }
+            else
+            {
+                throw new RRQMException("监听地址全都不可用。");
             }
 
-            foreach (var socket in this.listenSockets)
+            foreach (var networkMonitor in this.monitors)
             {
                 SocketAsyncEventArgs e = new SocketAsyncEventArgs();
-                e.UserToken = socket;
+                e.UserToken = networkMonitor.Socket;
                 e.Completed += this.Args_Completed;
-                if (!socket.AcceptAsync(e))
+                if (!networkMonitor.Socket.AcceptAsync(e))
                 {
                     ProcessAccept(e);
                 }

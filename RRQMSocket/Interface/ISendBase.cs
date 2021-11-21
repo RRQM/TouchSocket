@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 namespace RRQMSocket
 {
     /// <summary>
-    /// 客户端发送基接口
+    /// 具有发送功能的接口
     /// </summary>
-    public interface IClientBase
+    public interface ISendBase
     {
         /// <summary>
         /// 发送字节流

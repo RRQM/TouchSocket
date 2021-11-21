@@ -15,14 +15,14 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 传输文件操作处理
     /// </summary>
-    /// <param name="sender"></param>
+    /// <param name="client"></param>
     /// <param name="e"></param>
-    public delegate void RRQMFileOperationEventHandler(object sender, FileOperationEventArgs e);
+    public delegate void RRQMFileOperationEventHandler(IFileClient client, FileOperationEventArgs e);
 
     /// <summary>
     /// 传输文件消息
     /// </summary>
-    /// <param name="sender"></param>
+    /// <param name="client"></param>
     /// <param name="e"></param>
-    public delegate void RRQMTransferFileMessageEventHandler(object sender, TransferFileMessageArgs e);
+    public delegate void RRQMTransferFileMessageEventHandler(IFileClient client, TransferFileMessageArgs e);
 }

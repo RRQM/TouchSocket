@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在RRQMCore.XREF命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MITClient开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
@@ -16,16 +16,46 @@ using System.Net;
 /// <summary>
 /// 显示信息
 /// </summary>
-/// <param name="sender"></param>
+/// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMMessageEventHandler(object sender, MesEventArgs e);
+public delegate void RRQMMessageEventHandler<TClient>(TClient client, MesEventArgs e) where TClient : IClient;
 
 /// <summary>
-/// ByteBlock
+/// 协议数据
 /// </summary>
-/// <param name="sender"></param>
+/// <param name="socketClient"></param>
+/// <param name="protocol"></param>
+/// <param name="byteBlock"></param>
+public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock)where TClient: IProtocolClient;
+
+/// <summary>
+/// 普通数据
+/// </summary>
+/// <param name="client"></param>
+/// <param name="byteBlock"></param>
+/// <param name="obj"></param>
+public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj)where TClient:IClient;
+
+/// <summary>
+/// 创建时
+/// </summary>
+/// <param name="socketClient"></param>
+/// <param name="createOption"></param>
+public delegate void RRQMCreateSocketClientEventHandler<TClient>(TClient socketClient, CreateOption createOption) where TClient : ISocketClient;
+
+/// <summary>
+/// 收到流操作
+/// </summary>
+/// <param name="socketClient"></param>
 /// <param name="e"></param>
-public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
+public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e)where TClient: IProtocolClient;
+
+/// <summary>
+/// 流状态
+/// </summary>
+/// <param name="socketClient"></param>
+/// <param name="e"></param>
+public delegate void RRQMStreamStatusEventHandler<TClient>(TClient socketClient, StreamStatusEventArgs e) where TClient : IProtocolClient;
 
 /// <summary>
 /// UDP接收
@@ -33,31 +63,3 @@ public delegate void RRQMByteBlockEventHandler(object sender, ByteBlock e);
 /// <param name="endpoint"></param>
 /// <param name="e"></param>
 public delegate void RRQMUDPByteBlockEventHandler(EndPoint endpoint, ByteBlock e);
-
-/// <summary>
-/// 字节数据
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMBytesEventHandler(object sender, BytesEventArgs e);
-
-/// <summary>
-/// 字节数据
-/// </summary>
-/// <param name="sender"></param>
-/// <param name="e"></param>
-public delegate void RRQMReturnBytesEventHandler(object sender, ReturnBytesEventArgs e);
-
-/// <summary>
-/// 收到流操作
-/// </summary>
-/// <param name="client"></param>
-/// <param name="e"></param>
-public delegate void RRQMStreamOperationEventHandler(IProtocolClient client, StreamOperationEventArgs e);
-
-/// <summary>
-/// 流状态
-/// </summary>
-/// <param name="client"></param>
-/// <param name="e"></param>
-public delegate void RRQMStreamStatusEventHandler(IProtocolClient client, StreamStatusEventArgs e);

@@ -30,12 +30,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 传输文件之前
         /// </summary>
-        internal RRQMFileOperationEventHandler BeforeFileTransfer;
+        public event RRQMFileOperationEventHandler BeforeFileTransfer;
 
         /// <summary>
         /// 当文件传输完成时
         /// </summary>
-        internal RRQMTransferFileMessageEventHandler FinishedFileTransfer;
+        public event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
 
         private long dataTransferLength;
 
@@ -78,7 +78,12 @@ namespace RRQMSocket.FileTransfer
             AddUsedProtocol(118, "停止上传");
             AddUsedProtocol(119, "确认上传完成");
             AddUsedProtocol(120, "智能包调节");
-            for (short i = 121; i < 200; i++)
+
+            AddUsedProtocol(121, "服务器暂停当前任务");
+            AddUsedProtocol(122, "服务器恢复当前任务");
+            AddUsedProtocol(123, "服务器终止当前任务");
+            AddUsedProtocol(124, "服务器终止所有任务");
+            for (short i = 125; i < 200; i++)
             {
                 AddUsedProtocol(i, "保留协议");
             }
@@ -747,6 +752,40 @@ namespace RRQMSocket.FileTransfer
             {
                 byteBlock.Dispose();
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void StopThisTransfer()
+        {
+            this.InternalSend(123,new byte[0]);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void StopAllTransfer()
+        {
+            this.InternalSend(124, new byte[0]);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void PauseTransfer()
+        {
+            this.InternalSend(121, new byte[0]);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public bool ResumeTransfer()
+        {
+            this.InternalSend(122, new byte[0]);
+            return true;
         }
     }
 }

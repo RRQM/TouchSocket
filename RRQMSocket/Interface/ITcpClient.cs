@@ -9,46 +9,55 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+
+using RRQMCore.Exceptions;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// TCP客户端接口
+    /// TCP客户端终端接口
     /// </summary>
-    public interface ITcpClient : IClient
+    public interface ITcpClient : ITcpClientBase, ISendBase
     {
         /// <summary>
-        /// 判断是否在线
+        /// 客户端配置
         /// </summary>
-        bool Online { get; }
+        TcpClientConfig ClientConfig { get; }
 
         /// <summary>
-        /// IP及端口号
+        /// 仅发送，即不会开启接收线程。
         /// </summary>
-        string Name { get; }
+        bool OnlySend { get; }
 
         /// <summary>
-        /// 数据处理适配器
+        /// 独立线程发送
         /// </summary>
-        DataHandlingAdapter DataHandlingAdapter { get; }
-
-        /// <summary>
-        /// 缓存池大小
-        /// </summary>
-        int BufferLength { get; }
-
-        /// <summary>
-        /// 禁用发送或接收
-        /// </summary>
-        /// <param name="how"></param>
-        void Shutdown(SocketShutdown how);
+        bool SeparateThreadSend { get; }
 
         /// <summary>
         /// 关闭Socket信道，并随后释放资源
         /// </summary>
         void Close();
+
+        /// <summary>
+        /// 连接服务器
+        /// </summary>
+        /// <exception cref="RRQMException"></exception>
+        ITcpClient Connect();
+
+        /// <summary>
+        /// 异步连接服务器
+        /// </summary>
+        /// <exception cref="RRQMException"></exception>
+        Task<ITcpClient> ConnectAsync();
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        ITcpClient Disconnect();
 
         /// <summary>
         /// 同步组合发送
@@ -61,5 +70,18 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="transferBytes"></param>
         void SendAsync(IList<TransferByte> transferBytes);
+
+        /// <summary>
+        /// 配置服务器
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        /// <exception cref="RRQMException"></exception>
+        ITcpClient Setup(TcpClientConfig clientConfig);
+
+        /// <summary>
+        /// 禁用发送或接收
+        /// </summary>
+        /// <param name="how"></param>
+        void Shutdown(SocketShutdown how);
     }
 }

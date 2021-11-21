@@ -19,8 +19,12 @@ namespace RRQMSocket
     /// </summary>
     public abstract class BaseSocket : ISocket, IDisposable
     {
-        internal int bufferLength;
-        internal ILog logger;
+        private int bufferLength;
+
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        protected ILog logger;
 
         /// <summary>
         /// 判断是否已释放资源
@@ -28,16 +32,19 @@ namespace RRQMSocket
         protected bool disposable = false;
 
         /// <summary>
-        /// 锁
-        /// </summary>
-        protected object locker = new object();
-
-        /// <summary>
-        /// 数据交互缓存池限制
+        /// 数据交互缓存池限制，min=1024 byte，Max=10Mb byte
         /// </summary>
         public int BufferLength
         {
             get { return bufferLength; }
+            set
+            {
+                if (value < 1024 || value > 1024 * 1024 * 10)
+                {
+                    value = 1024 * 64;
+                }
+                bufferLength = value;
+            }
         }
 
         /// <summary>
@@ -46,6 +53,7 @@ namespace RRQMSocket
         public ILog Logger
         {
             get { return logger; }
+            set { logger = value; }
         }
 
         /// <summary>

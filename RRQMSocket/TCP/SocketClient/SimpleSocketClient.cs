@@ -10,29 +10,27 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 服务器辅助类
     /// </summary>
-    public class SimpleSocketClient : TokenSocketClient
+    public class SimpleSocketClient : SocketClient
     {
         /// <summary>
         /// 收到消息
         /// </summary>
-        public Action<SimpleSocketClient, ByteBlock, object> OnReceived;
+        public event RRQMReceivedEventHandler<SimpleSocketClient> Received;
 
         /// <summary>
         /// 处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            this.OnReceived?.Invoke(this, byteBlock, obj);
+            this.Received.Invoke(this, byteBlock, obj);
         }
-
     }
 }

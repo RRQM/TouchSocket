@@ -13,11 +13,5 @@ using RRQMCore.ByteManager;
 
 namespace RRQMSocket.RPC
 {
-    /// <summary>
-    /// 收到字节数据
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="procotol"></param>
-    /// <param name="byteBlock"></param>
-    public delegate void RRQMReceivedProcotolEventHandler(IClient client, short? procotol, ByteBlock byteBlock);
+    
 }

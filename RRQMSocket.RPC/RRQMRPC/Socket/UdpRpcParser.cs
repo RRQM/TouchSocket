@@ -453,7 +453,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 byteBlock.Write(BitConverter.GetBytes(procotol));
                 byteBlock.Write(buffer, offset, length);
-                this.SendTo(byteBlock.Buffer, 0, byteBlock.Len, endPoint);
+                this.Send(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
             }
             finally
             {

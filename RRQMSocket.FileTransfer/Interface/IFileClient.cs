@@ -10,12 +10,14 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.Exceptions;
+
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 文件终端接口
     /// </summary>
-    public interface IFileClient
+    public interface IFileClient:IProtocolClient
     {
         /// <summary>
         /// 获取当前传输文件信息
@@ -36,5 +38,27 @@ namespace RRQMSocket.FileTransfer
         /// 获取当前传输状态
         /// </summary>
         TransferStatus TransferStatus { get; }
+
+        /// <summary>
+        /// 终止当前传输
+        /// </summary>
+        ///<exception cref="RRQMException"></exception>
+        void StopThisTransfer();
+
+        /// <summary>
+        /// 终止所有传输
+        /// </summary>
+        void StopAllTransfer();
+
+        /// <summary>
+        /// 暂停传输
+        /// </summary>
+        void PauseTransfer();
+
+        /// <summary>
+        /// 恢复传输
+        /// </summary>
+        /// <returns>是否有任务成功继续</returns>
+        bool ResumeTransfer();
     }
 }

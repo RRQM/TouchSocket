@@ -443,7 +443,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="createOption"></param>
         protected override void OnCreateSocketClient(JsonRpcSocketClient socketClient, CreateOption createOption)
         {
-            socketClient.OnReceived = this.OnReceived;
+            socketClient.Received += this.OnReceived;
 
             switch (this.protocolType)
             {

@@ -40,17 +40,17 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 收到协议数据
         /// </summary>
-        public event RRQMReceivedProcotolEventHandler Received;
+        public event RRQMProtocolReceivedEventHandler<TClient> Received;
 
         /// <summary>
         /// 预处理流
         /// </summary>
-        public event RRQMStreamOperationEventHandler BeforeReceiveStream;
+        public event RRQMStreamOperationEventHandler<TClient> BeforeReceiveStream;
 
         /// <summary>
         /// 收到流数据
         /// </summary>
-        public event RRQMStreamStatusEventHandler ReceivedStream;
+        public event RRQMStreamStatusEventHandler<TClient> ReceivedStream;
 
         /// <summary>
         /// <inheritdoc/>
@@ -389,9 +389,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected override void OnCreateSocketClient(TClient socketClient, CreateOption createOption)
         {
             socketClient.IDAction = this.IDInvoke;
-            socketClient.Received = this.OnReceived;
-            socketClient.OnBeforeReceiveStream = this.OnBeforeReceiveStream;
-            socketClient.OnReceivedStream = this.OnReceivedStream;
+            socketClient.Received += this.OnReceived;
+            socketClient.BeforeReceiveStream +=this.OnBeforeReceiveStream;
+            socketClient.ReceivedStream +=this.OnReceivedStream;
             socketClient.methodMap = this.MethodMap;
             socketClient.executeMethod = this.Execute;
             socketClient.serializationSelector = this.serializationSelector;
@@ -420,19 +420,19 @@ namespace RRQMSocket.RPC.RRQMRPC
             return context;
         }
 
-        private void OnReceived(IClient sender, short? procotol, ByteBlock byteBlock)
+        private void OnReceived(RpcSocketClient client, short? procotol, ByteBlock byteBlock)
         {
-            this.Received?.Invoke(sender, procotol, byteBlock);
+            this.Received?.Invoke((TClient)client, procotol, byteBlock);
         }
 
-        private void OnBeforeReceiveStream(IProtocolClient client, StreamOperationEventArgs e)
+        private void OnBeforeReceiveStream(RpcSocketClient client, StreamOperationEventArgs e)
         {
-            this.BeforeReceiveStream?.Invoke(client, e);
+            this.BeforeReceiveStream?.Invoke((TClient)client, e);
         }
 
-        private void OnReceivedStream(IProtocolClient client, StreamStatusEventArgs e)
+        private void OnReceivedStream(RpcSocketClient client, StreamStatusEventArgs e)
         {
-            this.ReceivedStream?.Invoke(client, e);
+            this.ReceivedStream?.Invoke((TClient)client, e);
         }
     }
 }

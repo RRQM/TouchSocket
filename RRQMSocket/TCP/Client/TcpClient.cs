@@ -23,7 +23,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端
     /// </summary>
-    public abstract class TcpClient : BaseSocket, IUserTcpClient, IClient, IHandleBuffer
+    public abstract class TcpClient : BaseSocket, ITcpClient, IHandleBuffer
     {
         private AsyncSender asyncSender;
         private BytePool bytePool;
@@ -40,12 +40,12 @@ namespace RRQMSocket
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
-        public event RRQMMessageEventHandler ConnectedService;
+        public event RRQMMessageEventHandler<ITcpClient> Connected;
 
         /// <summary>
         /// 断开连接
         /// </summary>
-        public event RRQMMessageEventHandler DisconnectedService;
+        public event RRQMMessageEventHandler<ITcpClient> Disconnected;
 
         /// <summary>
         /// 获取内存池实例
@@ -122,7 +122,7 @@ namespace RRQMSocket
         /// <summary>
         /// 连接到服务器
         /// </summary>
-        public virtual void Connect()
+        public virtual ITcpClient Connect()
         {
             if (this.disposable)
             {
@@ -145,40 +145,24 @@ namespace RRQMSocket
                 this.mainSocket = socket;
                 InitConnect();
             }
+            return this;
         }
 
         /// <summary>
         /// 异步连接服务器
         /// </summary>
-        /// <param name="callback"></param>
-        public async void ConnectAsync(Action<AsyncResult> callback = null)
+        public async Task<ITcpClient> ConnectAsync()
         {
-            await Task.Run(() =>
+            return await Task.Run(() =>
             {
-                try
-                {
-                    this.Connect();
-                    if (callback != null)
-                    {
-                        AsyncResult result = new AsyncResult(true);
-                        callback.Invoke(result);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (callback != null)
-                    {
-                        AsyncResult result = new AsyncResult(false, ex.Message);
-                        callback.Invoke(result);
-                    }
-                }
+                return this.Connect();
             });
         }
 
         /// <summary>
         /// 断开连接
         /// </summary>
-        public virtual void Disconnect()
+        public virtual ITcpClient Disconnect()
         {
             this.online = false;
             if (this.mainSocket != null)
@@ -194,6 +178,7 @@ namespace RRQMSocket
                 this.asyncSender.Dispose();
                 this.asyncSender = null;
             }
+            return this;
         }
 
         /// <summary>
@@ -304,7 +289,7 @@ namespace RRQMSocket
             }
             else
             {
-                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.bufferLength);
+                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
@@ -374,7 +359,7 @@ namespace RRQMSocket
             }
             else
             {
-                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.bufferLength);
+                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
@@ -397,10 +382,11 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="clientConfig"></param>
         /// <exception cref="RRQMException"></exception>
-        public void Setup(TcpClientConfig clientConfig)
+        public ITcpClient Setup(TcpClientConfig clientConfig)
         {
             this.clientConfig = clientConfig;
             this.LoadConfig(this.clientConfig);
+            return this;
         }
 
         /// <summary>
@@ -489,7 +475,7 @@ namespace RRQMSocket
                 this.SetDataHandlingAdapter(clientConfig.DataHandlingAdapter);
             }
             this.logger = (ILog)clientConfig.GetValue(RRQMConfig.LoggerProperty);
-            this.bufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
+            this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
             this.onlySend = clientConfig.OnlySend;
             this.separateThreadSend = clientConfig.SeparateThreadSend;
             this.separateThreadReceive = clientConfig.SeparateThreadReceive;
@@ -504,11 +490,11 @@ namespace RRQMSocket
             this.online = true;
             try
             {
-                this.ConnectedService?.Invoke(this, e);
+                this.Connected?.Invoke(this, e);
             }
             catch (Exception ex)
             {
-                this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.ConnectedService)}中发生错误。", ex);
+                this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
 
         }
@@ -522,11 +508,11 @@ namespace RRQMSocket
             this.online = false;
             try
             {
-                this.DisconnectedService?.Invoke(this, e);
+                this.Disconnected?.Invoke(this, e);
             }
             catch (Exception ex)
             {
-                this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.DisconnectedService)}中发生错误。", ex);
+                this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
             }
         }
 
@@ -553,7 +539,7 @@ namespace RRQMSocket
         /// 设置数据处理适配器
         /// </summary>
         /// <param name="adapter"></param>
-        protected virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
             if (adapter == null)
             {
@@ -648,7 +634,7 @@ namespace RRQMSocket
 
                 try
                 {
-                    ByteBlock newByteBlock = this.bytePool.GetByteBlock(this.bufferLength);
+                    ByteBlock newByteBlock = this.bytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 

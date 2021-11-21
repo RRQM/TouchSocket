@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Collections.Concurrent;
 using System.Net;
 
 namespace RRQMSocket
@@ -17,10 +18,14 @@ namespace RRQMSocket
     /// <summary>
     /// 处理
     /// </summary>
-    public struct ClientBuffer
+    public struct ClientBuffer: IQueueData
     {
         internal IHandleBuffer client;
         internal ByteBlock byteBlock;
         internal EndPoint endPoint;
+        /// <summary>
+        /// Size
+        /// </summary>
+        public int Size => byteBlock.Len;
     }
 }

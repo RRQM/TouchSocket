@@ -31,6 +31,18 @@ namespace RRQMSocket
             get { return progress; }
         }
 
+        private int packageSize=1024*64;
+
+        /// <summary>
+        /// 包长度，默认64Kb
+        /// </summary>
+        public int PackageSize
+        {
+            get { return packageSize; }
+            set { packageSize = value; }
+        }
+
+
         /// <summary>
         /// 可取消令箭
         /// </summary>

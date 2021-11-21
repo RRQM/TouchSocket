@@ -37,16 +37,6 @@ namespace RRQMSocket
         int ClearInterval { get; }
 
         /// <summary>
-        /// 客户端成功连接时
-        /// </summary>
-        event RRQMMessageEventHandler ClientConnected;
-
-        /// <summary>
-        /// 有用户断开连接的时候
-        /// </summary>
-        event RRQMMessageEventHandler ClientDisconnected;
-
-        /// <summary>
         /// 根据ID判断SocketClient是否存在
         /// </summary>
         /// <param name="id"></param>

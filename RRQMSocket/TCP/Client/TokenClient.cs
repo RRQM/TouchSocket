@@ -68,7 +68,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTokenVerifyException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
-        public override void Connect()
+        public override ITcpClient Connect()
         {
             if (this.ClientConfig == null)
             {
@@ -87,7 +87,7 @@ namespace RRQMSocket
 
             if (this.Online)
             {
-                return;
+                return this;
             }
 
             try
@@ -118,7 +118,7 @@ namespace RRQMSocket
                             {
                                 this.id = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
                                 InitConnect();
-                                return;
+                                return this;
                             }
                             else if (byteBlock.Buffer[0] == 2)
                             {

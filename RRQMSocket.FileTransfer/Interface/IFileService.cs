@@ -18,6 +18,16 @@ namespace RRQMSocket.FileTransfer
     public interface IFileService
     {
         /// <summary>
+        /// 传输文件之前
+        /// </summary>
+        event RRQMFileOperationEventHandler BeforeFileTransfer;
+
+        /// <summary>
+        /// 当文件传输完成时
+        /// </summary>
+        event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
+
+        /// <summary>
         /// 最大下载速度
         /// </summary>
         long MaxDownloadSpeed { get; set; }

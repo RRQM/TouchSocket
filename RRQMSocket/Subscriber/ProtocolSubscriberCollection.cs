@@ -11,7 +11,7 @@ namespace RRQMSocket
     /// <summary>
     /// 协议订阅集合
     /// </summary>
-    public class ProtocolSubscriberCollection : ConcurrentList<ProtocolSubscriber>
+    public class ProtocolSubscriberCollection : ConcurrentList<SubscriberBase>
     {
     }
 }

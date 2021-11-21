@@ -22,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient, new()
+    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : SocketClient, new()
     {
         private string verifyToken;
 
@@ -99,13 +99,13 @@ namespace RRQMSocket
 
                                     client.queueGroup = queueGroup;
                                     client.service = this;
-                                    client.logger = this.Logger;
-                                    client.clearType = this.clearType;
+                                    client.Logger = this.Logger;
+                                    client.ClearType = this.clearType;
                                     client.separateThreadReceive = this.separateThreadReceive;
 
                                     client.MainSocket = socket;
                                     client.ReadIpPort();
-                                    client.bufferLength = this.bufferLength;
+                                    client.BufferLength = this.BufferLength;
 
                                     CreateOption creatOption = new CreateOption();
 

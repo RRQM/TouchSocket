@@ -14,6 +14,11 @@ namespace RRQMSocket
         public long Size { get; set; }
 
         /// <summary>
+        /// 流类型
+        /// </summary>
+        public string StreamType { get; set; }
+
+        /// <summary>
         /// 元数据
         /// </summary>
         public Metadata Metadata { get; set; }

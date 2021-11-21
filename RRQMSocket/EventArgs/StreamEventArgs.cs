@@ -8,32 +8,39 @@ namespace RRQMSocket
     /// </summary>
     public class StreamEventArgs : MesEventArgs
     {
+        private Metadata metadata;
+
+        private StreamInfo streamInfo;
+
         /// <summary>
         /// 构造函数
         /// </summary>
-        public StreamEventArgs()
+        /// <param name="metadata"></param>
+        /// <param name="streamInfo"></param>
+        public StreamEventArgs(Metadata metadata, StreamInfo streamInfo)
         {
-            this.metadata = new Metadata();
+            this.metadata = metadata;
+            this.streamInfo = streamInfo;
         }
 
-        private Metadata metadata;
+        /// <summary>
+        /// 用于接收流的容器
+        /// </summary>
+        public Stream Bucket { get; set; }
+
         /// <summary>
         /// 用于可传输的元数据
         /// </summary>
         public Metadata Metadata
         {
             get { return metadata; }
-            internal set { metadata = value; }
         }
-
         /// <summary>
         /// 流信息
         /// </summary>
-        public StreamInfo StreamInfo { get; internal set; }
-
-        /// <summary>
-        /// 用于接收流的容器
-        /// </summary>
-        public Stream Bucket { get; set; }
+        public StreamInfo StreamInfo
+        {
+            get { return streamInfo; }
+        }
     }
 }

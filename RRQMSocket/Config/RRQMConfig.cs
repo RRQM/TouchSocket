@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.Dependency;
 using RRQMCore.Log;
 
@@ -78,6 +79,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty BufferLengthProperty =
             DependencyProperty.Register("BufferLength", typeof(int), typeof(RRQMConfig), 1024 * 64);
-
     }
 }

@@ -25,7 +25,7 @@ namespace RRQMSocket.RPC.JsonRpc
         internal string jsonString;
         internal JsonRpcProtocolType protocolType;
         internal MethodInvoker methodInvoker;
-        internal CancellationTokenSource tokenSource;
+        internal CancellationTokenSource tokenSource= default;
 
         /// <summary>
         /// Json字符串

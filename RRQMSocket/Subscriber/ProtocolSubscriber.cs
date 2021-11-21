@@ -9,61 +9,27 @@ namespace RRQMSocket
 {
     /// <summary>
     /// 协议订阅
-    /// </summary> 
-    public class ProtocolSubscriber : IClientBase, IDisposable
+    /// </summary>
+    public class ProtocolSubscriber : SubscriberBase,  ISendBase, IDisposable
     {
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~ProtocolSubscriber()
-        {
-            this.Dispose();
-        }
-
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="receivedAction"></param>
-        public ProtocolSubscriber(short protocol, Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> receivedAction)
+        public ProtocolSubscriber(short protocol, Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> receivedAction):base(protocol)
         {
-            this.protocol = protocol;
             this.Received = receivedAction;
         }
 
-        /// <summary>
-        /// 客户端
-        /// </summary>
-        internal IProtocolClient client;
-        /// <summary>
-        /// 客户端
-        /// </summary>
-        public IProtocolClient Client
-        {
-            get { return client; }
-        }
-
-        /// <summary>
-        /// 能否使用
-        /// </summary>
-        public bool CanUse
-        {
-            get { return client == null ? false : (client.Online ? true : false); }
-        }
 
         private Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> Received;
 
-        private short protocol;
         /// <summary>
-        /// 协议
+        /// <inheritdoc/>
         /// </summary>
-        public short Protocol
-        {
-            get { return protocol; }
-        }
-
-
-        internal void OnReceived(ProtocolSubscriberEventArgs e)
+        /// <param name="e"></param>
+        protected override void OnReceived(ProtocolSubscriberEventArgs e)
         {
             this.Received?.Invoke(this, e);
         }
@@ -124,18 +90,6 @@ namespace RRQMSocket
         public void SendAsync(ByteBlock byteBlock)
         {
             this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-            if (this.client != null)
-            {
-                this.client.RemoveProtocolSubscriber(this);
-            }
         }
     }
 }

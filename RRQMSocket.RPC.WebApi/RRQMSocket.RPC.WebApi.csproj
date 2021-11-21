@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net45;net461;netcoreapp3.1;netstandard2.0</TargetFrameworks>
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
-		<SignAssembly>false</SignAssembly>
+		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
 		<Version>5.7.1</Version>
 		<LangVersion>9.0</LangVersion>

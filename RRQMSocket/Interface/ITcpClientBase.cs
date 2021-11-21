@@ -9,32 +9,55 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// TCP客户端终端接口
+    /// TCP客户端接口
     /// </summary>
-    public interface IUserTcpClient : ITcpClient, IUserClient
+    public interface ITcpClientBase : IClient
     {
         /// <summary>
-        /// 仅发送，即不会开启接收线程。
+        /// IP地址
         /// </summary>
-        bool OnlySend { get; }
+        string IP { get; }
 
         /// <summary>
-        /// 客户端配置
+        /// 端口号
         /// </summary>
-        TcpClientConfig ClientConfig { get; }
+        int Port { get; }
 
         /// <summary>
-        /// 独立线程发送
+        /// 主通信器
         /// </summary>
-        bool SeparateThreadSend { get; }
+        Socket MainSocket { get; }
 
         /// <summary>
-        /// 断开连接
+        /// IP及端口号
         /// </summary>
-        void Disconnect();
+        string Name { get; }
+
+        /// <summary>
+        /// 判断是否在线
+        /// </summary>
+        bool Online { get; }
+
+        /// <summary>
+        /// 数据处理适配器
+        /// </summary>
+        DataHandlingAdapter DataHandlingAdapter { get; }
+
+        /// <summary>
+        /// 设置数据处理适配器
+        /// </summary>
+        /// <param name="adapter"></param>
+        void SetDataHandlingAdapter(DataHandlingAdapter adapter);
+
+        /// <summary>
+        /// 缓存池大小
+        /// </summary>
+        int BufferLength { get; }
     }
 }

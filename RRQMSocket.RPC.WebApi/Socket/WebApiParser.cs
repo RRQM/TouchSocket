@@ -214,11 +214,11 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="createOption"></param>
         protected override void OnCreateSocketClient(WebApiSocketClient socketClient, CreateOption createOption)
         {
-            socketClient.OnReceived = this.OnReceived;
+            socketClient.Received += this.OnReceived;
             socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
         }
 
-        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
+        private void OnReceived(IClient socketClient, ByteBlock byteBlock, object obj)
         {
             HttpRequest httpRequest = (HttpRequest)obj;
             MethodInvoker methodInvoker = new MethodInvoker();

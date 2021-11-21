@@ -72,22 +72,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 预处理流
         /// </summary>
-        public event RRQMStreamOperationEventHandler BeforeReceiveStream;
+        public event RRQMStreamOperationEventHandler<TcpRpcClient> BeforeReceiveStream;
 
         /// <summary>
         /// 收到协议数据
         /// </summary>
-        public event RRQMReceivedProcotolEventHandler Received;
+        public event RRQMProtocolReceivedEventHandler<TcpRpcClient> Received;
 
         /// <summary>
         /// 收到流数据
         /// </summary>
-        public event RRQMStreamStatusEventHandler ReceivedStream;
+        public event RRQMStreamStatusEventHandler<TcpRpcClient> ReceivedStream;
 
         /// <summary>
         /// RPC初始化后
         /// </summary>
-        public event RRQMMessageEventHandler ServiceDiscovered;
+        public event RRQMMessageEventHandler<TcpRpcClient> ServiceDiscovered;
 
         /// <summary>
         /// 获取反向RPC映射图
@@ -120,7 +120,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns>已发现的服务</returns>
         public MethodItem[] DiscoveryService(bool isTrigger = true)
         {
-            lock (locker)
+            lock (this)
             {
                 if (!this.Online)
                 {

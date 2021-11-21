@@ -174,7 +174,7 @@ namespace RRQMSocket.RPC.XmlRpc
 
         private HttpResponse WaitSend(ByteBlock byteBlock)
         {
-            lock (locker)
+            lock (this)
             {
                 this.Send(byteBlock.Buffer, 0, byteBlock.Len);
                 if (this.singleWaitHandle.Wait(1000 * this.timeout) == WaitDataStatus.SetRunning)

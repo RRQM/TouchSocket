@@ -25,7 +25,7 @@ namespace RRQMSocket
     /// </summary>
     public class Channel : IDisposable
     {
-        internal byte[] current;
+        internal ByteBlock currentByteBlock;
 
         internal int id = 0;
 
@@ -47,7 +47,7 @@ namespace RRQMSocket
         private readonly AutoResetEvent waitHandle;
 
         private int bufferLength;
-
+        private bool moving;
         private ChannelStatus status;
 
         internal Channel(ProtocolClient client)
@@ -77,12 +77,26 @@ namespace RRQMSocket
         {
             this.Dispose();
         }
+
         /// <summary>
         /// 获取当前的数据
         /// </summary>
-        public byte[] Current
+        public byte[] GetCurrent()
         {
-            get { return current; }
+            this.currentByteBlock.Pos = 6;
+            byte[] data = this.currentByteBlock.ReadBytesPackage();
+            this.currentByteBlock.SetHolding(false);
+            return data;
+        }
+
+        /// <summary>
+        /// 获取当前数据的存储块，设置pos=6，调用ReadBytesPackage获取数据。
+        /// 使用完成后的数据必须手动释放，且必须调用SetHolding(false)进行释放。
+        /// </summary>
+        /// <returns></returns>
+        public ByteBlock GetCurrentByteBlock()
+        {
+            return this.currentByteBlock;
         }
 
         /// <summary>
@@ -136,6 +150,18 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 异步取消
+        /// </summary>
+        /// <returns></returns>
+        public Task CancelAsync()
+        {
+            return Task.Run(() =>
+            {
+                this.Cancel();
+            });
+        }
+
+        /// <summary>
         /// 完成操作
         /// </summary>
         public void Complete()
@@ -170,6 +196,18 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 异步完成操作
+        /// </summary>
+        /// <returns></returns>
+        public Task CompleteAsync()
+        {
+            return Task.Run(() =>
+             {
+                 this.Complete();
+             });
+        }
+
+        /// <summary>
         /// 释放
         /// </summary>
         public void Dispose()
@@ -190,7 +228,6 @@ namespace RRQMSocket
                     {
                         this.client1.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
                     }
-
                 }
                 else
                 {
@@ -209,7 +246,17 @@ namespace RRQMSocket
             }
         }
 
-        private bool moving;
+        /// <summary>
+        /// 异步释放
+        /// </summary>
+        /// <returns></returns>
+        public Task DisposeAsync()
+        {
+            return Task.Run(() =>
+            {
+                this.Dispose();
+            });
+        }
 
         /// <summary>
         /// 转向下个元素
@@ -231,7 +278,7 @@ namespace RRQMSocket
                 {
                     case -3:
                         {
-                            this.current = channelData.data;
+                            this.currentByteBlock = channelData.byteBlock;
                             return true;
                         }
                     case -4:
@@ -397,14 +444,14 @@ namespace RRQMSocket
 
         private void RequestCancel()
         {
-            this.current = null;
+            this.currentByteBlock = null;
             this.status = ChannelStatus.Cancel;
             this.waitHandle.Set();
         }
 
         private void RequestComplete()
         {
-            this.current = null;
+            this.currentByteBlock = null;
             this.status = ChannelStatus.Completed;
             this.waitHandle.Set();
         }
@@ -417,13 +464,17 @@ namespace RRQMSocket
             }
             this.status = ChannelStatus.Disposed;
 
-            this.current = null;
+            this.currentByteBlock = null;
             this.waitHandle.Set();
             this.waitHandle.Dispose();
             this.status = ChannelStatus.Disposed;
             this.parent.TryRemove(this.id, out _);
-            while (this.dataQueue.TryDequeue(out _))
+            while (this.dataQueue.TryDequeue(out  ChannelData channelData))
             {
+                if (channelData.byteBlock!=null)
+                {
+                    channelData.byteBlock.SetHolding(false);
+                }
             }
         }
     }

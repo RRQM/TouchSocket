@@ -184,6 +184,10 @@ namespace RRQMCore.Serialization
                 PropertyInfo[] propertyInfos = this.GetProperties(type);
                 foreach (PropertyInfo property in propertyInfos)
                 {
+                    if (property.SetMethod == null || property.GetCustomAttribute<RRQMNonSerializedAttribute>() != null)
+                    {
+                        continue;
+                    }
                     if (reserveAttributeName)
                     {
                         byte[] propertyBytes = Encoding.UTF8.GetBytes(property.Name);
@@ -196,6 +200,7 @@ namespace RRQMCore.Serialization
                         stream.Write(propertyBytes, 0, propertyBytes.Length);
                         len += propertyBytes.Length + 1;
                     }
+
                     len += SerializeObject(stream, property.GetValue(obj, null));
                 }
             }

@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Collections.Concurrent;
 using System.Collections.Concurrent;
 
 namespace RRQMSocket
@@ -16,14 +17,14 @@ namespace RRQMSocket
     /// <summary>
     /// buffer队列
     /// </summary>
-    internal class BufferQueue
+    public class BufferQueue
     {
         internal BufferQueue()
         {
-            queue = new ConcurrentQueue<ClientBuffer>();
+            queue = new IntelligentDataQueue<ClientBuffer>(1024*1024*50);
         }
 
-        private ConcurrentQueue<ClientBuffer> queue;
+        private IntelligentDataQueue<ClientBuffer> queue;
 
         internal void Enqueue(ClientBuffer item)
         {

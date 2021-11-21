@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using RRQMCore.Collections.Concurrent;
 
 namespace RRQMSocket
@@ -18,12 +19,12 @@ namespace RRQMSocket
     /// </summary>
     public struct ChannelData : IQueueData
     {
-        internal byte[] data;
+        internal ByteBlock byteBlock;
         internal short type;
 
         /// <summary>
         /// 通道数据长度
         /// </summary>
-        public int Size => this.data != null ? this.data.Length : 0;
+        public int Size => this.byteBlock != null ? this.byteBlock.Len : 0;
     }
 }
