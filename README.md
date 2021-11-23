@@ -94,7 +94,7 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 - [【RRQMSocket】C#搭建Token系TCP服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/115586146)
 - [【RRQMSocket】C# 创建多租户模式的Token服务器](https://blog.csdn.net/qq_40374647/article/details/121471982)
 - [【RRQMSocket】C#搭建TCP自定义协议、Protocol服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/121472932)
-- [【RRQMSocket】基于TCP、自定义协议Channel持续传输大数据](https://blog.csdn.net/qq_40374647/article/details/121494319)
+- [【RRQMSocket】C#基于TCP、自定义协议Channel持续传输大数据](https://blog.csdn.net/qq_40374647/article/details/121494319)
 - [【RRQMSocket】C#基于TCP自定义协议Stream、文件等发送与接收](https://blog.csdn.net/qq_40374647/article/details/121496385)
 
 ## 应用场景模拟
