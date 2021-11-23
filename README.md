@@ -54,16 +54,6 @@
 
 ## 🌴RRQMSocket特点速览
 
-#### 对象池
-
-对象池在RRQMSocket有很多应用，最主要的两个就是**连接对象池**和**处理对象池**。连接对象池就是当客户端成功连接时，首先会去连接对象池中找SocketClient，然后没有的话，才会创建。如果哪个客户端掉线了，它的SocketClient就会被回收。
-
-然后就是处理对象池，在RRQMSocket中，接收数据的线程和IOCP内核线程是分开的（也可以设置拥塞接收），也就是比如说客户端给服务器发送了1w条数据，但是服务器收到后处理起来很慢，那传统的iocp肯定会放慢接收速率，然后通知客户端的tcp窗口，发生拥塞，然后让客户端暂缓发送。但是在RRQMSocket中会把收到的数据通过队列全都存起来，首先不影响iocp的接收，同时再分配线程去处理收到的报文信息，这样就相当于一个“泄洪湖泊”，能很大程度的提高处理数据的能力。
-
-#### 多线程
-
-由于有**处理对象池**的存在，使多线程处理变得简单。在客户端连接完成时，会自动分配该客户端辅助类（TcpSocketClient）的消息处理逻辑线程，假如服务器线程数量为10，则第一个连接的客户端会被分配到0号线程中，第二个连接将被分配到1号线程中，以此类推，循环分配。当某个客户端收到数据时，会将数据排入当前线程所独自拥有的队列当中，并唤醒线程执行。
-
 #### 传统IOCP和RRQMSocket
 
 RRQMSocket的IOCP和传统也不一样，就以微软官方示例为例，使用MemoryBuffer开辟一块内存，均分，然后给每个会话分配一个区接收，等收到数据后，再**复制**源数据，然后把复制的数据进行处理。而RRQMSocket是每次接收之前，从内存池拿一个可用内存块，然后**直接用于接收**，等收到数据以后，直接就把这个内存块抛出处理，这样就避免了**复制操作**，虽然只是细小的设计，但是在传输**1000w**次**64kb**的数据时，性能相差了**10倍**。
@@ -72,15 +62,9 @@ RRQMSocket的IOCP和传统也不一样，就以微软官方示例为例，使用
 
 相信大家都使用过其他的Socket产品，例如HPSocket，SuperSocket等，那么RRQMSocket在设计时也是借鉴了其他产品的优秀设计理念，数据处理适配器就是其中之一，但和其他产品的设计不同的是，RRQMSocket的适配器功能更加强大，它不仅可以提前解析数据包，还可以解析数据对象。例如：可以使用固定包头对数据进行预处理，从而解决数据分包、粘包的问题。也可以直接解析HTTP协议，经过适配器处理后传回一个HttpRequest对象等。
 
-#### 粘包、分包解决
-
-在RRQMSocket中处理TCP粘包、分包问题是非常简单的。只需要更改不同的**数据处理适配器**即可。例如：使用**固定包头**，只需要给SocketClient和TcpClient配置注入**FixedHeaderDataHandlingAdapter**的实例即可。同样对应的处理器也有**固定长度** 、 **终止字符分割** 等。
-
 #### 兼容性与适配
 
 RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的所有协议。例如：TcpService与TcpClient，其基础功能和Socket一模一样，只是增强了框架的**坚固性**和**并发性**，将**连接**和**接收数据**通过事件的形式抛出，让使用者能够更加友好的使用。
-
-其次，RRQMSocket也提供了一些特定的服务器和客户端，如TokenService和TokenClient，这两个就必须配套使用，不然在验证Token时会被主动断开。
 
 ## 🔗联系作者
 
@@ -96,278 +80,42 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 | [RRQMCore](https://gitee.com/RRQM_OS/RRQMCore) | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?style=flat-square)](https://www.nuget.org/packages/RRQMCore/) | [![Download](https://img.shields.io/nuget/dt/RRQMCore)](https://www.nuget.org/packages/RRQMCore/) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、**高性能序列化器**、**规范日志接口**等。 |
 | [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含： **无边框窗体** 、 **圆角窗体** 、 **水波纹按钮** 、 **输入提示筛选框** 、 **控件拖动效果** 、**圆角图片框**、 **弧形文字** 、 **扇形元素** 、 **指针元素** 、 **饼图** 、 **时钟** 、 **速度表盘** 等。|  
 
-## 一、TCP框架
+## 链接目录
+- [ API首页 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages)
+- [说明](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984529&doc_id=1402901)
+- [ 历史更新 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4255623&doc_id=1402901)
+- [ 商业运营 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4215572&doc_id=1402901)
+- [Config说明](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4164467&doc_id=1402901)
+- [疑难解答](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4245320&doc_id=1402901)
+- [【RRQMCore】RRQMSocket基类库基础用法，包含内存池、对象池、高性能序列化等](https://blog.csdn.net/qq_40374647/article/details/121485490)
+- [【RRQMSocket】C# 创建高并发、高性能TCP服务器，可用于解析HTTP、FTP、MQTT、搭建游戏服务器等](https://blog.csdn.net/qq_40374647/article/details/110679663)
+- [【RRQMSocket】C# 创建TCP客户端，对应RRQM服务器或其他服务器](https://blog.csdn.net/qq_40374647/article/details/121469610)
+- [【RRQMSocket】C#利用数据处理适配器解决粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179)
+- [【RRQMSocket】C#搭建Token系TCP服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/115586146)
+- [【RRQMSocket】C# 创建多租户模式的Token服务器](https://blog.csdn.net/qq_40374647/article/details/121471982)
+- [【RRQMSocket】C#搭建Protocol系TCP服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/121472932)
 
-#### 1.1 说明
+## 应用场景模拟
+***
+ **【场景一】** 
 
-TCP框架是RRQMSocket最基础的框架，它定制了后继成员的创建、管理，维护、使用等一系列的规则，让使用者无需关心连接、掉线、失活检测、多线程安全等问题，能够专注于数据处理。
+我的服务器（客户端）是物联网硬件（或PLC硬件），我可以使用什么吗？可以的话，应该从哪里学习？
 
-#### 1.2 安装
+ **【应用一】** 
 
-工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
+完全可以使用，一般的硬件通信，都是基于TCP协议的指定协议数据包，可以直接学习搭建**TCP服务器**（或**客户端**），然后使用数据数据处理器解析数据。不过一般的，在RRQM内置的解析器不足以应对所有的数据协议包，所以可能需要自己重写数据处理适配器。
 
-```CSharp
-Install-Package RRQMSocket
-```
+***
 
-#### 1.3 特点
+ **【场景二】** 
 
-- 简单易用。
-- 多线程。
-- **多地址监听**（可以一次性监听多个IP及端口）
-- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
-- 超简单的同步发送、异步发送、接收等操作。
-- 基于事件驱动，让每一步操作尽在掌握。
-- 高性能（服务器每秒可接收200w条信息）
-- **独立线程内存池**（每个线程拥有自己的内存池）
+我想搭建游戏服务器，性能够吗？如何选择应用组件？
 
-#### 1.4 应用场景
+ **【应用二】** 
 
-- C/S服务器开发。
-- 制造业自动化控制服务器。
-- 物联网数据采集服务器。
-- 游戏服务器开发。
+首先绝对性能是由物理机决定的，不同的物理机、操作系统，具有不同性能表现。在RRQM中，网络操作模式全遵循IOCP，该模式下在window平台性能显著，最大接收连接数在1w是没有任何问题的。经测试，在个人电脑上（i7-10H，8G RAM），服务器每秒处理数据流量可达1Gb，处理并发数据量200w次（每条4字节）。所以，性能基本上没什么问题的。组件的话，如果客户端也采用RRQM（Unity也可以使用的），那建议使用“TCP+固定包头”，这样解析数据比较方便。如果是其他客户端，就需要自己制定分包策略。
 
-#### 1.5 API文档
-
-[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984527&doc_id=1402901)
-
-#### 1.6 Demo
-
-[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
-
-## 二、Token框架
-
-#### 2.1 说明
-
-TokenService框架是RRQMSocket提供的派生自TcpService的基础框架，它在TCP基础之上，通过验证Token的方式，可以规范、筛选连接者。这样可以很大程度的**保护服务器**不疲于非法连接者的攻击。
-
-#### 2.2 安装
-
-工具➨Nuegt包管理器 ➨ 程序包管理器控制台
-
-```CSharp
-Install-Package RRQMSocket
-```
-
-#### 2.3 特点
-
-- **规范**、**筛选**连接者，保护服务器。
-- 客户端与服务器必须**配套**使用。
-
-#### 2.4 应用场景
-
-- C/S服务器开发。
-- 制造业自动化控制服务器。
-- 游戏服务器开发。
-
-#### 2.5 API文档
-
-[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984517&doc_id=1402901)
-
-#### 2.6 Demo
-
-[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
-
-## 三、Protocol框架
-
-#### 3.1 说明
-
-ProtocolService框架是RRQMSocket提供的派生自TokenService的基础框架，它在Token基础之上，提供**协议+数据**的形式发送，其中还包括**协议冲突检测**、**协议数据占位**等。
-
-#### 3.2 安装
-
-工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
-
-```CSharp
-Install-Package RRQMSocket
-```
-
-#### 3.3 特点
-
-- 支持**ID同步**。
-- 快捷**协议发送**。
-
-#### 3.4 应用场景
-
-- C/S服务器开发。
-- 制造业自动化控制服务器。
-- 游戏服务器开发。
-
-#### 3.5 API文档
-
-[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984517&doc_id=1402901)
-
-#### 3.6 Demo
-
-[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
-
-## 四、RPCService框架
-
-#### 4.1 说明
-
-RPCService框架是所有远程过程调用的微服务调用管理平台，在该平台的托管下，使多种协议、多种序列化方式调用成为可能。目前可使用RRQMRPC、WebApi、XmlRpc、JsonRpc共同调用。
-
-#### 4.2 RPC解析器
-
-**说明：** RPCService仅仅是对调用的服务进行管理和维护，并不参与实质性的通信过程。实际上由于通信协议、序列化方式的不同，需要创建相对应的解析器才能完成调用操作。
-
-#### 4.3 RPC解析器之RRQMRPC
-
-##### 4.3.1 说明
-
-RRQMRPC是基于Protocol框架、固定包头解析的远程调用框架，也是RRQM中性能最强悍、使用最简单、功能最强大的RPC框架。
-
-##### 4.3.2 特点
-
-- 支持**自定义**类型参数。
-- 支持具有**默认值**的参数设定。
-- 支持**out、ref** 关键字参数。
-- 支持服务器**回调客户端** 。
-- 支持**客户端**之间**相互调用**。
-- 支持TCP、UDP等不同的协议调用相同服务。
-- 支持异步调用。
-- 支持权限管理，让非法调用死在萌芽时期。
-- 支持**静态织入调用**，**静态编译调用**，也支持**方法名+参数**调用。
-- 支持**调用配置**（类似MQTT的AtMostOnce，AtLeastOnce，ExactlyOnce）。
-- **支持EventBus**（企业版支持）。
-- 支持**自定义序列化**。
-- **全异常反馈** ，服务器调用状态会完整的反馈到客户端（可以设置不反馈）。
-- 高性能，在保证送达但不返回的情况下，10w次调用用时0.8s，在返回的情况下，用时3.9s。
-
-##### 4.3.3 安装
-
-工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
-
-```CSharp
-Install-Package RRQMSocket.RPC
-```
-
-##### 4.3.4 RRQMRPC性能测试
-
- **说明：** 
-图一、图二、图三分别为`UDP无反馈调用`、`TCP有反馈调用`、`TCP连接池有反馈调用`。调用次数均为10w次，调用性能非常nice。在无反馈中，吞吐量达14.28w，在有反馈中达2.72w。
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191343_e5827d04_8553710.png "屏幕截图.png")
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191501_abec9e45_8553710.png "屏幕截图.png")
-
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0409/191531_d7f0a8d4_8553710.png "屏幕截图.png")
-
-
-
-#### 4.4 RPC解析器之WebApi
-
-##### 4.4.1 说明
-
-使用WebApi解析器，就可以在RPCService中通过WebApi的调用方式直接调用服务。
-
-##### 4.4.2 特点
-
-- 高性能，100个客户端，10w次调用，仅用时17s。
-- **全异常反馈** 。
-- 支持大部分路由规则。
-- 支持js、Android等调用。
-
-##### 4.4.3 安装
-
-工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
-
-```CSharp
-Install-Package RRQMSocket.RPC.WebApi
-```
-
-#### 4.5 RPC解析器之XmlRpc
-
-##### 4.5.1 说明
-
-使用XmlRpc解析器，就可以在RPCService中通过XmlRpc的调用方式直接调用服务，客户端可以使用**CookComputing.XmlRpcV2**进行对接。
-
-##### 4.5.2 特点
-
-- **异常反馈** 。
-- 支持自定义类型。
-- 支持类型嵌套。
-- 支持Array及自定义Array嵌套。
-- 支持js、Android等调用。
-
-##### 4.5.3 安装
-
-工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
-
-```CSharp
-Install-Package RRQMSocket.RPC.XmlRpc
-```
-
-#### 4.6 RPC解析器之JsonRpc
-
-##### 4.6.1 说明
-
-使用JsonRpc解析器，就可以在RPCService中通过Json字符串直接调用服务。
-
-##### 4.6.2 特点
-
-- **异常反馈** 。
-- 支持自定义类型。
-- 支持类型嵌套。
-- 支持js、Android等调用。
-
-##### 4.6.3 安装
-
-工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
-
-```CSharp
-Install-Package RRQMSocket.RPC.JsonRpc
-```
-
-#### 4.7 API文档
-
-[RRQMSocket API文档](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984517&doc_id=1402901)
-
-#### 4.8 Demo
-
-[RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
-
-## 五、文件传输框架
-
-#### 5.1 说明
-
-RRQMSocket.FileTransfer是一个高性能的文件传输框架，由于它派生自RRQMRPC，所以也具备RPC的全部特性。
-
-#### 5.2 特点
-
-- 简单易用。
-- 多线程处理。
-- 高性能，传输速度可达**1000Mb/s**。
-- 超简单的**传输限速**设置，1k-10Gb 无级调节。
-- 超简单的传输速度、传输进度获取。
-- 随心所欲的暂停、继续、停止传输。
-- 系统化的权限管理，让敏感文件只允许**私有化下载**。
-- **RPC交互**，让客户端和服务器交流不延迟。
-- 基于**事件驱动**，让每一步操作尽在掌握。
-- 可视化的文件块流，可以实现像迅雷一样的**填充式进度条**。
-- 超简单的**断点续传**设置，为大文件传输保驾护航。
-- 无状态上传断点续传设置，让同一个文件，在不同客户端之间**接力上传**。
-- **断网续传**（企业版支持）
-- 已经上传的文件，再次上传时，可实现**快速上传**。
-- 极少的GC释放。
-
-#### 5.3 安装
-
-工具 ➨ Nuegt包管理器 ➨ 程序包管理器控制台
-
-```CSharp
-Install-Package RRQMSocket.FileTransfer
-```
-
-#### 5.4 Demo示例
-
- **Demo位置：** [RRQMBox](https://gitee.com/RRQM_OS/RRQMBox)
-
-#### 5.5 性能测试
-
- **说明：** 可以看到，下图正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到800Mb/s，性能非常强悍。其次，GC基本上没有释放。
-![](https://s3.bmp.ovh/imgs/2021/08/08f17f67b9e06bc7.gif)
+***
 
 ## 致谢
 
