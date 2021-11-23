@@ -70,6 +70,24 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 创建通道
+        /// </summary>
+        /// <param name="id">指定ID</param>
+        /// <returns></returns>
+        public Channel CreateChannel(int id)
+        {
+            Channel channel = new Channel(this);
+            if (this.userChannels.TryAdd(id, channel))
+            {
+                channel.id = id;
+                channel.parent = this.userChannels;
+                this.SocketSend(-2, BitConverter.GetBytes(id));
+                return channel;
+            }
+            throw new RRQMException("指定ID已存在");
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public override void Dispose()
@@ -167,10 +185,10 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    ProtocolSubscriberCollection protocolSubscribers= this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol,(p)=> 
-                    {
-                        return new ProtocolSubscriberCollection();
-                    });
+                    ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol, (p) =>
+                      {
+                          return new ProtocolSubscriberCollection();
+                      });
 
                     subscriber.client = this;
                     protocolSubscribers.Add(subscriber);
@@ -426,7 +444,7 @@ namespace RRQMSocket
                 this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
             }
         }
-       
+
         /// <summary>
         /// 预处理流数据
         /// </summary>
@@ -436,8 +454,8 @@ namespace RRQMSocket
         private void P_9_RequestStreamToThis(WaitStream waitStream)
         {
             StreamOperator streamOperator = new StreamOperator();
-            StreamInfo streamInfo = new StreamInfo(waitStream.Size,waitStream.StreamType);
-            StreamOperationEventArgs args = new StreamOperationEventArgs(streamOperator,waitStream.Metadata, streamInfo);
+            StreamInfo streamInfo = new StreamInfo(waitStream.Size, waitStream.StreamType);
+            StreamOperationEventArgs args = new StreamOperationEventArgs(streamOperator, waitStream.Metadata, streamInfo);
 
             try
             {
@@ -459,6 +477,7 @@ namespace RRQMSocket
                                 if (streamOperator.Token.IsCancellationRequested)
                                 {
                                     channel.Cancel();
+                                    streamOperator.status = channel.Status;
                                     break;
                                 }
                                 ByteBlock block = channel.GetCurrentByteBlock();
@@ -473,27 +492,29 @@ namespace RRQMSocket
                                 }
                                 block.SetHolding(false);
                             }
-
-                            HandleStream(new StreamStatusEventArgs(channel.Status,args.Metadata, args.StreamInfo) { Bucket = stream, Message = args.Message});
+                            streamOperator.status = channel.Status;
+                            HandleStream(new StreamStatusEventArgs(channel.Status, args.Metadata, args.StreamInfo) { Bucket = stream, Message = args.Message });
                         });
                     }
                     else
                     {
                         waitStream.Status = 3;
                         waitStream.Message = "未设置流容器";
+                        streamOperator.status = ChannelStatus.Error;
                     }
                 }
                 else
                 {
                     waitStream.Status = 2;
                     waitStream.Message = args.Message;
+                    streamOperator.status = ChannelStatus.Cancel;
                 }
             }
             catch (Exception ex)
             {
+                streamOperator.status = ChannelStatus.Error;
                 waitStream.Status = 3;
                 waitStream.Message = ex.Message;
-
                 this.logger.Debug(LogType.Error, this, $"在{nameof(P_9_RequestStreamToThis)}中发生错误。", ex);
             }
 
@@ -887,22 +908,28 @@ namespace RRQMSocket
                             {
                                 if (this.TrySubscribeChannel(waitStreamResult.ChannelID, out Channel channel))
                                 {
+                                    FlowGate flowGate = new FlowGate() { Maximum = streamOperator.MaxSpeed };
                                     while (true)
                                     {
+                                        flowGate.CheckWait();
+
                                         if (streamOperator.Token.IsCancellationRequested)
                                         {
                                             channel.Cancel();
+                                            streamOperator.status = channel.Status;
                                             return new AsyncResult(false, "任务已取消");
                                         }
                                         int r = stream.Read(byteBlock.Buffer, 0, length);
                                         if (r <= 0)
                                         {
                                             channel.Complete();
+                                            streamOperator.status = channel.Status;
                                             return new AsyncResult(true, $"成功发送");
                                         }
 
                                         channel.Write(byteBlock.Buffer, 0, r);
 
+                                        flowGate.AddLength(r);
                                         streamOperator.speedTemp += r;
                                         streamOperator.completedLength += r;
                                         streamOperator.progress = (float)((double)streamOperator.completedLength / size);
@@ -911,40 +938,48 @@ namespace RRQMSocket
                                 }
                                 else
                                 {
+                                    streamOperator.status = ChannelStatus.Error;
                                     return new AsyncResult(false, $"建立通道失败。");
                                 }
                             }
                             else if (waitStreamResult.Status == 2)
                             {
+                                streamOperator.status = ChannelStatus.Error;
                                 return new AsyncResult(false, $"服务器拒绝接收，反馈信息：{waitStreamResult.Message}");
                             }
                             else if (waitStreamResult.Status == 3)
                             {
+                                streamOperator.status = ChannelStatus.Error;
                                 return new AsyncResult(false, $"服务器异常，信息：{waitStreamResult.Message}");
                             }
                             else
                             {
+                                streamOperator.status = ChannelStatus.Error;
                                 return new AsyncResult(false, "未知状态返回");
                             }
                         }
                     case WaitDataStatus.Overtime:
                         {
+                            streamOperator.status = ChannelStatus.Timeout;
                             throw new RRQMTimeoutException();
                         }
                     case WaitDataStatus.Canceled:
                         {
+                            streamOperator.status = ChannelStatus.Cancel;
                             return new AsyncResult(false, "任务已取消");
                         }
                     case WaitDataStatus.Waiting:
                     case WaitDataStatus.Disposed:
                     default:
                         {
+                            streamOperator.status = ChannelStatus.Disposed;
                             return new AsyncResult(false, "未知错误");
                         }
                 }
             }
             catch (Exception ex)
             {
+                streamOperator.status = ChannelStatus.Error;
                 return new AsyncResult(false, ex.Message);
             }
             finally

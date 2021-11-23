@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在RRQMCore.XREF命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MITClient开源协议授权
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
@@ -26,7 +26,7 @@ public delegate void RRQMMessageEventHandler<TClient>(TClient client, MesEventAr
 /// <param name="socketClient"></param>
 /// <param name="protocol"></param>
 /// <param name="byteBlock"></param>
-public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock)where TClient: IProtocolClient;
+public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock) where TClient : IProtocolClient;
 
 /// <summary>
 /// 普通数据
@@ -34,7 +34,7 @@ public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketCli
 /// <param name="client"></param>
 /// <param name="byteBlock"></param>
 /// <param name="obj"></param>
-public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj)where TClient:IClient;
+public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj) where TClient : IClient;
 
 /// <summary>
 /// 创建时
@@ -48,7 +48,7 @@ public delegate void RRQMCreateSocketClientEventHandler<TClient>(TClient socketC
 /// </summary>
 /// <param name="socketClient"></param>
 /// <param name="e"></param>
-public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e)where TClient: IProtocolClient;
+public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e) where TClient : IProtocolClient;
 
 /// <summary>
 /// 流状态

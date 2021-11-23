@@ -54,7 +54,7 @@ namespace RRQMSocket
         {
             this.status = ChannelStatus.Moving;
             this.client1 = client;
-            this.dataQueue = new IntelligentDataQueue<ChannelData>(1024 * 1024 * 20);
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity);
             this.waitHandle = new AutoResetEvent(false);
             this.bytePool = client.BytePool;
             this.bufferLength = client.BufferLength;
@@ -64,11 +64,30 @@ namespace RRQMSocket
         {
             this.status = ChannelStatus.Moving;
             this.client2 = client;
-            this.dataQueue = new IntelligentDataQueue<ChannelData>(1024 * 1024 * 20);
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity);
             this.waitHandle = new AutoResetEvent(false);
             this.bytePool = client.BytePool;
             this.bufferLength = client.BufferLength;
         }
+
+        private static int cacheCapacity = 1024 * 1024 * 20;
+
+        /// <summary>
+        /// 缓存容量
+        /// </summary>
+        public static int CacheCapacity
+        {
+            get { return cacheCapacity; }
+            set
+            {
+                if (value < 0)
+                {
+                    value = 1024;
+                }
+                cacheCapacity = value;
+            }
+        }
+
 
         /// <summary>
         /// 析构函数
@@ -469,9 +488,9 @@ namespace RRQMSocket
             this.waitHandle.Dispose();
             this.status = ChannelStatus.Disposed;
             this.parent.TryRemove(this.id, out _);
-            while (this.dataQueue.TryDequeue(out  ChannelData channelData))
+            while (this.dataQueue.TryDequeue(out ChannelData channelData))
             {
-                if (channelData.byteBlock!=null)
+                if (channelData.byteBlock != null)
                 {
                     channelData.byteBlock.SetHolding(false);
                 }

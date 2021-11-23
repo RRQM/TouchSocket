@@ -18,6 +18,11 @@ namespace RRQMSocket
     public enum ChannelStatus : byte
     {
         /// <summary>
+        /// 默认
+        /// </summary>
+        Default,
+
+        /// <summary>
         /// 继续下移
         /// </summary>
         Moving = 1,

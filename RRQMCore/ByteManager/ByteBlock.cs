@@ -357,7 +357,7 @@ namespace RRQMCore.ByteManager
             {
                 throw new RRQMException("内存块已释放");
             }
-            byte[] buffer = new byte[this.length-offset];
+            byte[] buffer = new byte[this.length - offset];
             Array.Copy(this._buffer, offset, buffer, 0, buffer.Length);
             return buffer;
         }

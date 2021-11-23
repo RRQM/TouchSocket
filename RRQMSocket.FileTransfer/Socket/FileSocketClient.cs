@@ -759,7 +759,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public void StopThisTransfer()
         {
-            this.InternalSend(123,new byte[0]);
+            this.InternalSend(123, new byte[0]);
         }
 
         /// <summary>

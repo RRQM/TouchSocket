@@ -18,7 +18,7 @@ namespace RRQMSocket
     /// <summary>
     /// 处理
     /// </summary>
-    public struct ClientBuffer: IQueueData
+    public struct ClientBuffer : IQueueData
     {
         internal IHandleBuffer client;
         internal ByteBlock byteBlock;

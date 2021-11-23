@@ -1,4 +1,15 @@
-﻿using System.Threading;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在RRQMCore.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+using System.Threading;
 
 namespace RRQMSocket
 {
@@ -17,6 +28,18 @@ namespace RRQMSocket
 
         private CancellationTokenSource tokenSource;
 
+        private int maxSpeed = 1024 * 1024;
+
+        /// <summary>
+        /// 最大传输速度（默认1024*1024字节）
+        /// </summary>
+        public int MaxSpeed
+        {
+            get { return maxSpeed; }
+            set { maxSpeed = value; }
+        }
+
+
         /// <summary>
         /// 已完成长度
         /// </summary>
@@ -31,7 +54,7 @@ namespace RRQMSocket
             get { return progress; }
         }
 
-        private int packageSize=1024*64;
+        private int packageSize = 1024 * 64;
 
         /// <summary>
         /// 包长度，默认64Kb
@@ -40,6 +63,15 @@ namespace RRQMSocket
         {
             get { return packageSize; }
             set { packageSize = value; }
+        }
+
+        internal ChannelStatus status;
+        /// <summary>
+        /// 状态
+        /// </summary>
+        public ChannelStatus Status
+        {
+            get { return status; }
         }
 
 

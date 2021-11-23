@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.ByteManager;
 using System;
 using System.Collections.Generic;
@@ -390,8 +389,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             socketClient.IDAction = this.IDInvoke;
             socketClient.Received += this.OnReceived;
-            socketClient.BeforeReceiveStream +=this.OnBeforeReceiveStream;
-            socketClient.ReceivedStream +=this.OnReceivedStream;
+            socketClient.BeforeReceiveStream += this.OnBeforeReceiveStream;
+            socketClient.ReceivedStream += this.OnReceivedStream;
             socketClient.methodMap = this.MethodMap;
             socketClient.executeMethod = this.Execute;
             socketClient.serializationSelector = this.serializationSelector;

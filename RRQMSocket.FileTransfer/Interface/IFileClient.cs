@@ -17,7 +17,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件终端接口
     /// </summary>
-    public interface IFileClient:IProtocolClient
+    public interface IFileClient : IProtocolClient
     {
         /// <summary>
         /// 获取当前传输文件信息

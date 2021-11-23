@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
 
 namespace RRQMSocket
 {
@@ -49,7 +48,7 @@ namespace RRQMSocket
         protected override void OnCreateSocketClient(SimpleProtocolSocketClient socketClient, CreateOption createOption)
         {
             this.CreateSocketClient?.Invoke(socketClient, createOption);
-            socketClient.Received +=this.OnReceive;
+            socketClient.Received += this.OnReceive;
             socketClient.BeforeReceiveStream += this.OnBeforeReceiveStream;
             socketClient.ReceivedStream += this.OnReceivedStream;
         }

@@ -1,8 +1,15 @@
-﻿using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在RRQMCore.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +18,7 @@ namespace RRQMSocket
     /// <summary>
     /// 协议订阅等待
     /// </summary>
-    public class WaitSenderSubscriber : SubscriberBase, IWaitSender
+    public class WaitSenderSubscriber : SubscriberBase, ISendBase, IWaitSender
     {
         /// <summary>
         /// 构造函数
@@ -48,6 +55,65 @@ namespace RRQMSocket
         }
 
 #pragma warning disable CS1591 
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void Send(byte[] buffer, int offset, int length)
+        {
+            client.Send(this.Protocol, buffer, offset, length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        public void Send(byte[] buffer)
+        {
+            this.Send(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public void Send(ByteBlock byteBlock)
+        {
+            this.Send(byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void SendAsync(byte[] buffer, int offset, int length)
+        {
+            this.client.SendAsync(this.Protocol, buffer, offset, length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        public void SendAsync(byte[] buffer)
+        {
+            this.SendAsync(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public void SendAsync(ByteBlock byteBlock)
+        {
+            this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
         public byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
             lock (this)
@@ -81,7 +147,7 @@ namespace RRQMSocket
 
         public byte[] SendThenReturn(byte[] buffer, CancellationToken token = default)
         {
-           return this.SendThenReturn(buffer,0,buffer.Length,token);
+            return this.SendThenReturn(buffer, 0, buffer.Length, token);
         }
 
         public byte[] SendThenReturn(ByteBlock byteBlock, CancellationToken token = default)
@@ -91,15 +157,15 @@ namespace RRQMSocket
 
         public Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
-           return Task.Run(()=> 
-            {
-               return this.SendThenReturn(buffer,offset,length,token);
-            });
+            return Task.Run(() =>
+             {
+                 return this.SendThenReturn(buffer, offset, length, token);
+             });
         }
 
         public Task<byte[]> SendThenReturnAsync(byte[] buffer, CancellationToken token = default)
         {
-           return this.SendThenReturnAsync(buffer,0,buffer.Length,token);
+            return this.SendThenReturnAsync(buffer, 0, buffer.Length, token);
         }
 
         public Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, CancellationToken token = default)
