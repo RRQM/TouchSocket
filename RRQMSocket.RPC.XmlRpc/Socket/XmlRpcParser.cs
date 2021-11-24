@@ -172,14 +172,15 @@ namespace RRQMSocket.RPC.XmlRpc
         }
 
         /// <summary>
-        /// 初始化
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="createOption"></param>
-        protected override void OnCreateSocketClient(XmlRpcSocketClient socketClient, CreateOption createOption)
+        /// <param name="e"></param>
+        protected override void OnConnecting(XmlRpcSocketClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.Received += this.OnReceived;
             socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
+            base.OnConnecting(socketClient, e);
         }
 
         private void OnReceived(IClient socketClient, ByteBlock byteBlock, object obj)

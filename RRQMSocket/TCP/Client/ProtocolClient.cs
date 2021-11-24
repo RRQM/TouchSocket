@@ -185,10 +185,10 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    ProtocolSubscriberCollection protocolSubscribers= this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol,(p)=> 
-                    {
-                        return new ProtocolSubscriberCollection();
-                    });
+                    ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol, (p) =>
+                      {
+                          return new ProtocolSubscriberCollection();
+                      });
 
                     subscriber.client = this;
                     protocolSubscribers.Add(subscriber);
@@ -444,7 +444,7 @@ namespace RRQMSocket
                 this.SetDataHandlingAdapter(new FixedHeaderDataHandlingAdapter());
             }
         }
-       
+
         /// <summary>
         /// 预处理流数据
         /// </summary>
@@ -454,8 +454,8 @@ namespace RRQMSocket
         private void P_9_RequestStreamToThis(WaitStream waitStream)
         {
             StreamOperator streamOperator = new StreamOperator();
-            StreamInfo streamInfo = new StreamInfo(waitStream.Size,waitStream.StreamType);
-            StreamOperationEventArgs args = new StreamOperationEventArgs(streamOperator,waitStream.Metadata, streamInfo);
+            StreamInfo streamInfo = new StreamInfo(waitStream.Size, waitStream.StreamType);
+            StreamOperationEventArgs args = new StreamOperationEventArgs(streamOperator, waitStream.Metadata, streamInfo);
 
             try
             {
@@ -493,7 +493,7 @@ namespace RRQMSocket
                                 block.SetHolding(false);
                             }
                             streamOperator.status = channel.Status;
-                            HandleStream(new StreamStatusEventArgs(channel.Status,args.Metadata, args.StreamInfo) { Bucket = stream, Message = args.Message});
+                            HandleStream(new StreamStatusEventArgs(channel.Status, args.Metadata, args.StreamInfo) { Bucket = stream, Message = args.Message });
                         });
                     }
                     else
@@ -908,7 +908,7 @@ namespace RRQMSocket
                             {
                                 if (this.TrySubscribeChannel(waitStreamResult.ChannelID, out Channel channel))
                                 {
-                                    FlowGate flowGate = new FlowGate() { Maximum= streamOperator.MaxSpeed};
+                                    FlowGate flowGate = new FlowGate() { Maximum = streamOperator.MaxSpeed };
                                     while (true)
                                     {
                                         flowGate.CheckWait();
@@ -938,7 +938,7 @@ namespace RRQMSocket
                                 }
                                 else
                                 {
-                                    streamOperator.status =  ChannelStatus.Error;
+                                    streamOperator.status = ChannelStatus.Error;
                                     return new AsyncResult(false, $"建立通道失败。");
                                 }
                             }

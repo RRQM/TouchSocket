@@ -907,8 +907,8 @@ namespace RRQMSocket
                                 }
                                 ByteBlock block = channel.GetCurrentByteBlock();
                                 block.Pos = 6;
-                               
-                                if (block.TryReadBytesPackageInfo(out int pos,out int len))
+
+                                if (block.TryReadBytesPackageInfo(out int pos, out int len))
                                 {
                                     stream.Write(block.Buffer, pos, len);
                                     streamOperator.speedTemp += len;
@@ -949,14 +949,14 @@ namespace RRQMSocket
             this.SocketSend(-8, byteBlock.Buffer, 0, byteBlock.Pos);
         }
 
-        private void ReceivedChannelData(int id, short type,ByteBlock byteBlock)
+        private void ReceivedChannelData(int id, short type, ByteBlock byteBlock)
         {
             if (this.userChannels.TryGetValue(id, out Channel channel))
             {
                 ChannelData channelData = new ChannelData();
                 channelData.type = type;
 
-                if (byteBlock!=null)
+                if (byteBlock != null)
                 {
                     byteBlock.SetHolding(true);
                     channelData.byteBlock = byteBlock;

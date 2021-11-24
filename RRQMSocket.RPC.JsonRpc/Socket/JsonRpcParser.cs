@@ -437,11 +437,11 @@ namespace RRQMSocket.RPC.JsonRpc
         }
 
         /// <summary>
-        /// 创建SocketClient
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="createOption"></param>
-        protected override void OnCreateSocketClient(JsonRpcSocketClient socketClient, CreateOption createOption)
+        /// <param name="e"></param>
+        protected override void OnConnecting(JsonRpcSocketClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.Received += this.OnReceived;
 
@@ -455,6 +455,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
                     break;
             }
+            base.OnConnecting(socketClient, e);
         }
 
         private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idTypeInstance;

@@ -44,7 +44,7 @@ namespace RRQMSocket
         private SocketClientCollection<TClient> socketClients;
         private System.Collections.Concurrent.ConcurrentQueue<TClient> rawClients;
         private static RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
-       
+
         /// <summary>
         /// 获取默认内存池
         /// </summary>
@@ -134,34 +134,34 @@ namespace RRQMSocket
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnected(TClient client, MesEventArgs e)
+        protected virtual void OnConnected(TClient socketClient, MesEventArgs e)
         {
-            this.Connected?.Invoke(client, e);
-            client.OnEvent(1, e);
+            this.Connected?.Invoke(socketClient, e);
+            socketClient.OnEvent(1, e);
         }
 
         /// <summary>
         /// 客户端断开连接
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(TClient client, MesEventArgs e)
+        protected virtual void OnDisconnected(TClient socketClient, MesEventArgs e)
         {
-            this.Disconnected?.Invoke(client, e);
-            client.OnEvent(2, e);
+            this.Disconnected?.Invoke(socketClient, e);
+            socketClient.OnEvent(2, e);
         }
 
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnecting(TClient client, ClientOperationEventArgs e)
+        protected virtual void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
-            this.Connecting?.Invoke(client, e);
-            client.OnEvent(3, e);
+            this.Connecting?.Invoke(socketClient, e);
+            socketClient.OnEvent(3, e);
         }
 
         #endregion 事件
@@ -454,14 +454,6 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 成功连接后。
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="createOption"></param>
-        [Obsolete("该方法已放弃使用，请重载Connecting相关函数")]
-        protected abstract void OnCreateSocketClient(TClient socketClient, CreateOption createOption);
-
-        /// <summary>
         /// 在Socket初始化对象后，Bind之前调用。
         /// 可用于设置Socket参数。
         /// 父类方法可覆盖。
@@ -504,7 +496,7 @@ namespace RRQMSocket
 
                 ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
                 clientArgs.ID = GetDefaultNewID();
-                this.OnConnecting(client,clientArgs);
+                this.OnConnecting(client, clientArgs);
                 if (clientArgs.IsPermitOperation)
                 {
                     client.id = clientArgs.ID;
@@ -646,7 +638,7 @@ namespace RRQMSocket
                     }
                 }
 
-               
+
                 try
                 {
                     int needCount = 1000 - this.rawClients.Count;

@@ -274,7 +274,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
-            if (this.dataHandlingAdapter==null)
+            if (this.dataHandlingAdapter == null)
             {
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
             }
@@ -326,7 +326,7 @@ namespace RRQMSocket
         {
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter),"数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
             }
             this.dataHandlingAdapter.Send(buffer, offset, length, true);
         }

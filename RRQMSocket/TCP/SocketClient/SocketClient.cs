@@ -55,7 +55,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取内存池实例
         /// </summary>
-        public BytePool BytePool{ get { return this.queueGroup == null ? BytePool.Default : this.queueGroup.bytePool; } }
+        public BytePool BytePool { get { return this.queueGroup == null ? BytePool.Default : this.queueGroup.bytePool; } }
 
         /// <summary>
         /// 选择清理类型
@@ -520,7 +520,7 @@ namespace RRQMSocket
         /// </summary>
         protected virtual void OnConnecting(ClientOperationEventArgs e)
         {
-            this.Connecting?.Invoke(this,e);
+            this.Connecting?.Invoke(this, e);
 
             if (this.dataHandlingAdapter == null)
             {

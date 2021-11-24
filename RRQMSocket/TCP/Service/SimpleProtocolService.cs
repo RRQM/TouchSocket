@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
 
 namespace RRQMSocket
 {
@@ -25,13 +24,6 @@ namespace RRQMSocket
         public event RRQMProtocolReceivedEventHandler<SimpleProtocolSocketClient> Received;
 
         /// <summary>
-        /// 成功连接后创建（或从对象池中获得）辅助类,
-        /// 用户可以在该方法中再进行自定义设置
-        /// </summary>
-        [Obsolete("该类型已放弃使用，请重载Connecting相关函数")]
-        public event RRQMCreateSocketClientEventHandler<SimpleProtocolSocketClient> CreateSocketClient;
-
-        /// <summary>
         /// 预处理流
         /// </summary>
         public event RRQMStreamOperationEventHandler<SimpleProtocolSocketClient> BeforeReceiveStream;
@@ -43,17 +35,16 @@ namespace RRQMSocket
 
 
         /// <summary>
-        /// 接收辅助类
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="createOption"></param>
-        [Obsolete("该类型已放弃使用，请重载Connecting相关函数")]
-        protected override void OnCreateSocketClient(SimpleProtocolSocketClient socketClient, CreateOption createOption)
+        /// <param name="e"></param>
+        protected override void OnConnecting(SimpleProtocolSocketClient socketClient, ClientOperationEventArgs e)
         {
-            this.CreateSocketClient?.Invoke(socketClient, createOption);
-            socketClient.Received +=this.OnReceive;
+            socketClient.Received += this.OnReceive;
             socketClient.BeforeReceiveStream += this.OnBeforeReceiveStream;
             socketClient.ReceivedStream += this.OnReceivedStream;
+            base.OnConnecting(socketClient, e);
         }
 
         private void OnReceive(SimpleProtocolSocketClient socketClient, short? procotol, ByteBlock byteBlock)

@@ -10,17 +10,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 订阅接口
     /// </summary>
-    public interface ISubscriber:IDisposable
+    public interface ISubscriber : IDisposable
     {
         /// <summary>
         /// 客户端

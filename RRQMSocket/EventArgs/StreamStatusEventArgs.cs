@@ -34,7 +34,7 @@ namespace RRQMSocket
         /// <param name="status"></param>
         /// <param name="metadata"></param>
         /// <param name="streamInfo"></param>
-        public StreamStatusEventArgs(ChannelStatus status, Metadata metadata, StreamInfo streamInfo) :base(metadata,streamInfo)
+        public StreamStatusEventArgs(ChannelStatus status, Metadata metadata, StreamInfo streamInfo) : base(metadata, streamInfo)
         {
             this.status = status;
         }

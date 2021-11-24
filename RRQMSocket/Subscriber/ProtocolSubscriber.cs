@@ -11,24 +11,20 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 协议订阅
     /// </summary>
-    public class ProtocolSubscriber : SubscriberBase,  ISendBase, IDisposable
+    public class ProtocolSubscriber : SubscriberBase, ISendBase, IDisposable
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="receivedAction"></param>
-        public ProtocolSubscriber(short protocol, Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> receivedAction):base(protocol)
+        public ProtocolSubscriber(short protocol, Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> receivedAction) : base(protocol)
         {
             this.Received = receivedAction;
         }

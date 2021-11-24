@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Collections.Concurrent;
-using System.Collections.Concurrent;
 
 namespace RRQMSocket
 {
@@ -21,7 +20,7 @@ namespace RRQMSocket
     {
         internal BufferQueue()
         {
-            queue = new IntelligentDataQueue<ClientBuffer>(1024*1024*50);
+            queue = new IntelligentDataQueue<ClientBuffer>(1024 * 1024 * 50);
         }
 
         private IntelligentDataQueue<ClientBuffer> queue;

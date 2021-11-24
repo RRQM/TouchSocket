@@ -104,19 +104,19 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 创建完成FileSocketClient
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="creatOption"></param>
-        protected override void OnCreateSocketClient(FileSocketClient socketClient, CreateOption creatOption)
+        /// <param name="e"></param>
+        protected override void OnConnecting(FileSocketClient socketClient, ClientOperationEventArgs e)
         {
-            base.OnCreateSocketClient(socketClient, creatOption);
             socketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
             socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
             socketClient.downloadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.DownloadRootProperty);
             socketClient.uploadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.UploadRootProperty);
             socketClient.BeforeFileTransfer += this.OnBeforeFileTransfer;
             socketClient.FinishedFileTransfer += this.OnFinishedFileTransfer;
+            base.OnConnecting(socketClient, e);
         }
 
         private void OnBeforeFileTransfer(IFileClient client, FileOperationEventArgs e)

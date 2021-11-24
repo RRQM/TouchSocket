@@ -21,7 +21,7 @@ namespace RRQMSocket
     [DebuggerDisplay("Count={Count}")]
     public class SocketClientCollection<T> where T : ISocketClient
     {
-       
+
 
         /// <summary>
         /// 数量

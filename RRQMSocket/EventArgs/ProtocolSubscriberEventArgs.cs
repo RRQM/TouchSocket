@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -27,9 +22,9 @@ namespace RRQMSocket
         /// 构造函数
         /// </summary>
         /// <param name="byteBlock"></param>
-        public ProtocolSubscriberEventArgs(ByteBlock byteBlock) :base(byteBlock)
-        { 
-        
+        public ProtocolSubscriberEventArgs(ByteBlock byteBlock) : base(byteBlock)
+        {
+
         }
 
         /// <summary>

@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

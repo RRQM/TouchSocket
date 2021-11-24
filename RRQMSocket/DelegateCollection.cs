@@ -42,7 +42,7 @@ public delegate void RRQMClientOperationEventHandler<TClient>(TClient client, Cl
 /// <param name="socketClient"></param>
 /// <param name="protocol"></param>
 /// <param name="byteBlock"></param>
-public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock)where TClient: IProtocolClient;
+public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock) where TClient : IProtocolClient;
 
 /// <summary>
 /// 普通数据
@@ -50,7 +50,7 @@ public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketCli
 /// <param name="client"></param>
 /// <param name="byteBlock"></param>
 /// <param name="obj"></param>
-public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj)where TClient:IClient;
+public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj) where TClient : IClient;
 
 /// <summary>
 /// 创建时
@@ -65,7 +65,7 @@ public delegate void RRQMCreateSocketClientEventHandler<TClient>(TClient socketC
 /// </summary>
 /// <param name="socketClient"></param>
 /// <param name="e"></param>
-public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e)where TClient: IProtocolClient;
+public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e) where TClient : IProtocolClient;
 
 /// <summary>
 /// 流状态

@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using System;
 using System.Collections.Generic;
@@ -384,8 +385,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="createOption"></param>
-        protected override void OnCreateSocketClient(TClient socketClient, CreateOption createOption)
+        /// <param name="e"></param>
+        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.IDAction = this.IDInvoke;
             socketClient.Received += this.OnReceived;
@@ -394,6 +395,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             socketClient.methodMap = this.MethodMap;
             socketClient.executeMethod = this.Execute;
             socketClient.serializationSelector = this.serializationSelector;
+            base.OnConnecting(socketClient, e);
         }
 
         private RpcContext IDInvoke(RpcSocketClient socketClient, RpcContext context)
