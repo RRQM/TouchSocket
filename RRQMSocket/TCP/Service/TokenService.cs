@@ -119,11 +119,11 @@ namespace RRQMSocket
                                         throw new RRQMException("ID重复");
                                     }
 
-                                    client.BeginReceive();
                                     byteBlock.Write((byte)1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
                                     socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
                                     this.OnClientConnected(client, new MesEventArgs("新客户端连接"));
+                                    client.BeginReceive();
                                     return;
                                 }
                             }

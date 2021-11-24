@@ -483,8 +483,8 @@ namespace RRQMSocket
                     throw new RRQMException("ID重复");
                 }
 
-                client.BeginReceive();
                 OnClientConnected(client, new MesEventArgs("新客户端连接"));
+                client.BeginReceive();
             }
             catch (Exception ex)
             {
