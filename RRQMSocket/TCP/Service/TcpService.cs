@@ -478,13 +478,15 @@ namespace RRQMSocket
                 this.OnCreateSocketClient(client, creatOption);
                 client.id = creatOption.ID;
 
+                
+
+                OnClientConnected(client, new MesEventArgs("新客户端连接"));
+                client.BeginReceive();
+
                 if (!this.socketClients.TryAdd(client))
                 {
                     throw new RRQMException("ID重复");
                 }
-
-                OnClientConnected(client, new MesEventArgs("新客户端连接"));
-                client.BeginReceive();
             }
             catch (Exception ex)
             {

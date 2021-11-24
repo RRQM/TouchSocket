@@ -114,16 +114,18 @@ namespace RRQMSocket
                                     this.OnCreateSocketClient(client, creatOption);
                                     client.id = creatOption.ID;
 
-                                    if (!this.SocketClients.TryAdd(client))
-                                    {
-                                        throw new RRQMException("ID重复");
-                                    }
+                                    
 
                                     byteBlock.Write((byte)1);
                                     byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
                                     socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
                                     this.OnClientConnected(client, new MesEventArgs("新客户端连接"));
                                     client.BeginReceive();
+
+                                    if (!this.SocketClients.TryAdd(client))
+                                    {
+                                        throw new RRQMException("ID重复");
+                                    }
                                     return;
                                 }
                             }
