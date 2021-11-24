@@ -21,12 +21,28 @@ using System.Net;
 public delegate void RRQMMessageEventHandler<TClient>(TClient client, MesEventArgs e) where TClient : IClient;
 
 /// <summary>
+/// 有操作的显示信息
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void RRQMOperationEventHandler<TClient>(TClient client, OperationEventArgs e) where TClient : IClient;
+
+/// <summary>
+/// 正在连接事件
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void RRQMClientOperationEventHandler<TClient>(TClient client, ClientOperationEventArgs e) where TClient : IClient;
+
+/// <summary>
 /// 协议数据
 /// </summary>
 /// <param name="socketClient"></param>
 /// <param name="protocol"></param>
 /// <param name="byteBlock"></param>
-public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock) where TClient : IProtocolClient;
+public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock)where TClient: IProtocolClient;
 
 /// <summary>
 /// 普通数据
@@ -34,13 +50,14 @@ public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketCli
 /// <param name="client"></param>
 /// <param name="byteBlock"></param>
 /// <param name="obj"></param>
-public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj) where TClient : IClient;
+public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj)where TClient:IClient;
 
 /// <summary>
 /// 创建时
 /// </summary>
 /// <param name="socketClient"></param>
 /// <param name="createOption"></param>
+[System.Obsolete("该类型已放弃使用，请重载Connecting相关函数")]
 public delegate void RRQMCreateSocketClientEventHandler<TClient>(TClient socketClient, CreateOption createOption) where TClient : ISocketClient;
 
 /// <summary>
@@ -48,7 +65,7 @@ public delegate void RRQMCreateSocketClientEventHandler<TClient>(TClient socketC
 /// </summary>
 /// <param name="socketClient"></param>
 /// <param name="e"></param>
-public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e) where TClient : IProtocolClient;
+public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e)where TClient: IProtocolClient;
 
 /// <summary>
 /// 流状态

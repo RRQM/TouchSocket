@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
 
 namespace RRQMSocket
 {
@@ -30,7 +31,7 @@ namespace RRQMSocket
         /// <param name="obj"></param>
         protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            this.Received?.Invoke(this, byteBlock, obj);
+            this.Received?.Invoke(this,byteBlock, obj);
         }
     }
 }

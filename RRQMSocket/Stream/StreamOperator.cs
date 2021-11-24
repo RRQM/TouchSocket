@@ -28,7 +28,7 @@ namespace RRQMSocket
 
         private CancellationTokenSource tokenSource;
 
-        private int maxSpeed = 1024 * 1024;
+        private int maxSpeed=1024*1024;
 
         /// <summary>
         /// 最大传输速度（默认1024*1024字节）

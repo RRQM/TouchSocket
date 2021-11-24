@@ -9,31 +9,24 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Collections.Concurrent;
-using System.Collections.Concurrent;
+using RRQMCore.Event;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// buffer队列
+    /// 消息操作事件
     /// </summary>
-    public class BufferQueue
+    public class OperationEventArgs : MesEventArgs
     {
-        internal BufferQueue()
-        {
-            queue = new IntelligentDataQueue<ClientBuffer>(1024*1024*50);
-        }
+        private bool isPermitOperation = true;
 
-        private IntelligentDataQueue<ClientBuffer> queue;
-
-        internal void Enqueue(ClientBuffer item)
+        /// <summary>
+        /// 是否允许操作
+        /// </summary>
+        public bool IsPermitOperation
         {
-            this.queue.Enqueue(item);
-        }
-
-        internal bool TryDequeue(out ClientBuffer result)
-        {
-            return this.queue.TryDequeue(out result);
+            get { return isPermitOperation; }
+            set { isPermitOperation = value; }
         }
     }
 }

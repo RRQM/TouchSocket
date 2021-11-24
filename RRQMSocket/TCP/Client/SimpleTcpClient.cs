@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
 
 namespace RRQMSocket
 {
@@ -28,7 +29,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected  override void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             OnReceived(byteBlock, obj);
         }
@@ -40,7 +41,7 @@ namespace RRQMSocket
         /// <param name="obj"></param>
         protected virtual void OnReceived(ByteBlock byteBlock, object obj)
         {
-            this.Received?.Invoke(this, byteBlock, obj);
+            this.Received?.Invoke(this,byteBlock, obj);
         }
     }
 }

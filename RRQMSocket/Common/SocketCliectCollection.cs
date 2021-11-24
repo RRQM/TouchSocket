@@ -21,7 +21,7 @@ namespace RRQMSocket
     [DebuggerDisplay("Count={Count}")]
     public class SocketClientCollection<T> where T : ISocketClient
     {
-        private RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
+       
 
         /// <summary>
         /// 数量
@@ -33,11 +33,6 @@ namespace RRQMSocket
         internal bool TryAdd(T socketClient)
         {
             return this.tokenDic.TryAdd(socketClient.ID, socketClient);
-        }
-
-        internal string GetDefaultID()
-        {
-            return iDGenerator.NextID().ToString();
         }
 
         /// <summary>

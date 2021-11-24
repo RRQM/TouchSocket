@@ -10,8 +10,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {

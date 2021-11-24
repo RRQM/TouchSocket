@@ -64,7 +64,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="queueGroup"></param>
-        protected override void PreviewCreateSocketClient(Socket socket, BufferQueueGroup queueGroup)
+        protected override void PreviewConnecting(Socket socket, BufferQueueGroup queueGroup)
         {
             Task.Run(async () =>
             {
@@ -94,7 +94,7 @@ namespace RRQMSocket
                                 }
                                 else
                                 {
-                                    TClient client = (TClient)Activator.CreateInstance(typeof(TClient));
+                                    TClient client = this.GetRawClient();
                                     client.Flag = verifyOption.Flag;
 
                                     client.queueGroup = queueGroup;
@@ -107,25 +107,34 @@ namespace RRQMSocket
                                     client.ReadIpPort();
                                     client.BufferLength = this.BufferLength;
 
-                                    CreateOption creatOption = new CreateOption();
-
-                                    creatOption.ID = this.SocketClients.GetDefaultID();
-
-                                    this.OnCreateSocketClient(client, creatOption);
-                                    client.id = creatOption.ID;
-
-                                    
-
-                                    byteBlock.Write((byte)1);
-                                    byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
-                                    socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
-                                    this.OnClientConnected(client, new MesEventArgs("新客户端连接"));
-                                    client.BeginReceive();
-
-                                    if (!this.SocketClients.TryAdd(client))
+                                    ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
+                                    clientArgs.ID = GetDefaultNewID();
+                                    this.OnConnecting(client, clientArgs);
+                                    if (clientArgs.IsPermitOperation)
                                     {
-                                        throw new RRQMException("ID重复");
+                                        client.id = clientArgs.ID;
+
+                                        client.BeginReceive();
+
+                                        byteBlock.Write((byte)1);
+                                        byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
+                                        socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
+
+                                        if (!this.SocketClients.TryAdd(client))
+                                        {
+                                            throw new RRQMException("ID重复");
+                                        }
+
+                                        this.OnConnected(client, new MesEventArgs("新客户端连接"));
                                     }
+                                    else
+                                    {
+                                        byteBlock.Write((byte)4);
+                                        socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
+                                        socket.Close();
+                                        socket.Dispose();
+                                    }
+
                                     return;
                                 }
                             }

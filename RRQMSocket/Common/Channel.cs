@@ -70,7 +70,7 @@ namespace RRQMSocket
             this.bufferLength = client.BufferLength;
         }
 
-        private static int cacheCapacity = 1024 * 1024 * 20;
+        private static int cacheCapacity= 1024 * 1024 * 20;
 
         /// <summary>
         /// 缓存容量
@@ -78,13 +78,13 @@ namespace RRQMSocket
         public static int CacheCapacity
         {
             get { return cacheCapacity; }
-            set
+            set 
             {
-                if (value < 0)
+                if (value<0)
                 {
                     value = 1024;
                 }
-                cacheCapacity = value;
+                cacheCapacity = value; 
             }
         }
 
@@ -488,9 +488,9 @@ namespace RRQMSocket
             this.waitHandle.Dispose();
             this.status = ChannelStatus.Disposed;
             this.parent.TryRemove(this.id, out _);
-            while (this.dataQueue.TryDequeue(out ChannelData channelData))
+            while (this.dataQueue.TryDequeue(out  ChannelData channelData))
             {
-                if (channelData.byteBlock != null)
+                if (channelData.byteBlock!=null)
                 {
                     channelData.byteBlock.SetHolding(false);
                 }

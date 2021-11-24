@@ -30,6 +30,7 @@ namespace RRQMSocket
         public TcpService()
         {
             this.socketClients = new SocketClientCollection<TClient>();
+            this.rawClients = new System.Collections.Concurrent.ConcurrentQueue<TClient>();
         }
 
         #region 属性
@@ -41,7 +42,9 @@ namespace RRQMSocket
         private ServerState serverState;
         private ServiceConfig serviceConfig;
         private SocketClientCollection<TClient> socketClients;
-
+        private System.Collections.Concurrent.ConcurrentQueue<TClient> rawClients;
+        private static RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
+       
         /// <summary>
         /// 获取默认内存池
         /// </summary>
@@ -114,21 +117,26 @@ namespace RRQMSocket
         #region 事件
 
         /// <summary>
-        /// 有用户连接的时候
+        /// 用户连接完成
         /// </summary>
         public event RRQMMessageEventHandler<TClient> Connected;
 
         /// <summary>
-        /// 有用户断开连接的时候
+        /// 有用户连接的时候
+        /// </summary>
+        public event RRQMClientOperationEventHandler<TClient> Connecting;
+
+        /// <summary>
+        /// 有用户断开连接
         /// </summary>
         public event RRQMMessageEventHandler<TClient> Disconnected;
 
         /// <summary>
-        /// 在客户端连接时
+        /// 用户连接完成
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnClientConnected(TClient client, MesEventArgs e)
+        protected virtual void OnConnected(TClient client, MesEventArgs e)
         {
             this.Connected?.Invoke(client, e);
             client.OnEvent(1, e);
@@ -139,13 +147,33 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnClientDisconnected(TClient client, MesEventArgs e)
+        protected virtual void OnDisconnected(TClient client, MesEventArgs e)
         {
             this.Disconnected?.Invoke(client, e);
             client.OnEvent(2, e);
         }
 
+        /// <summary>
+        /// 有用户连接的时候
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnConnecting(TClient client, ClientOperationEventArgs e)
+        {
+            this.Connecting?.Invoke(client, e);
+            client.OnEvent(3, e);
+        }
+
         #endregion 事件
+
+        /// <summary>
+        /// 获取默认的新ID
+        /// </summary>
+        /// <returns></returns>
+        public static string GetDefaultNewID()
+        {
+            return iDGenerator.NextID().ToString();
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -430,6 +458,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="createOption"></param>
+        [Obsolete("该方法已放弃使用，请重载Connecting相关函数")]
         protected abstract void OnCreateSocketClient(TClient socketClient, CreateOption createOption);
 
         /// <summary>
@@ -447,7 +476,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="queueGroup"></param>
-        protected virtual void PreviewCreateSocketClient(Socket socket, BufferQueueGroup queueGroup)
+        protected virtual void PreviewConnecting(Socket socket, BufferQueueGroup queueGroup)
         {
             try
             {
@@ -459,7 +488,7 @@ namespace RRQMSocket
                     return;
                 }
 
-                TClient client = (TClient)Activator.CreateInstance(typeof(TClient));
+                TClient client = this.GetRawClient();
 
                 client.serviceConfig = this.serviceConfig;
 
@@ -473,19 +502,25 @@ namespace RRQMSocket
                 client.ReadIpPort();
                 client.BufferLength = this.BufferLength;
 
-                CreateOption creatOption = new CreateOption();
-                creatOption.ID = this.SocketClients.GetDefaultID();
-                this.OnCreateSocketClient(client, creatOption);
-                client.id = creatOption.ID;
-
-                
-
-                OnClientConnected(client, new MesEventArgs("新客户端连接"));
-                client.BeginReceive();
-
-                if (!this.socketClients.TryAdd(client))
+                ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
+                clientArgs.ID = GetDefaultNewID();
+                this.OnConnecting(client,clientArgs);
+                if (clientArgs.IsPermitOperation)
                 {
-                    throw new RRQMException("ID重复");
+                    client.id = clientArgs.ID;
+
+                    client.BeginReceive();
+
+                    if (!this.socketClients.TryAdd(client))
+                    {
+                        throw new RRQMException("ID重复");
+                    }
+                    OnConnected(client, new MesEventArgs("新客户端连接"));
+                }
+                else
+                {
+                    socket.Close();
+                    socket.Dispose();
                 }
             }
             catch (Exception ex)
@@ -504,7 +539,7 @@ namespace RRQMSocket
 
         private void BeginClearAndHandle()
         {
-            threadClearClient = new Thread(ClearClient);
+            threadClearClient = new Thread(CheckClient);
             threadClearClient.IsBackground = true;
             threadClearClient.Name = "ClearClient";
             threadClearClient.Start();
@@ -573,7 +608,7 @@ namespace RRQMSocket
             }
         }
 
-        private void ClearClient()
+        private void CheckClient()
         {
             while (true)
             {
@@ -600,7 +635,7 @@ namespace RRQMSocket
                                 client.Dispose();
                                 if (this.SocketClients.TryRemove(token))
                                 {
-                                    this.OnClientDisconnected(client, new MesEventArgs("breakOut"));
+                                    this.OnDisconnected(client, new MesEventArgs("breakOut"));
                                 }
                             }
                             catch (Exception ex)
@@ -610,7 +645,36 @@ namespace RRQMSocket
                         }
                     }
                 }
+
+               
+                try
+                {
+                    int needCount = 1000 - this.rawClients.Count;
+                    for (int i = 0; i < needCount; i++)
+                    {
+                        TClient client = (TClient)Activator.CreateInstance(typeof(TClient));
+                        this.rawClients.Enqueue(client);
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Debug(LogType.Error, this, $"在新建客户端时发生错误，信息：{ex.Message}");
+                }
             }
+        }
+
+        /// <summary>
+        /// 获取新初始的客户端
+        /// </summary>
+        /// <returns></returns>
+        protected virtual TClient GetRawClient()
+        {
+            if (this.rawClients.TryDequeue(out TClient client))
+            {
+                return client;
+            }
+            return (TClient)Activator.CreateInstance(typeof(TClient));
         }
 
         private void Handle(object o)
@@ -645,7 +709,7 @@ namespace RRQMSocket
                         try
                         {
                             Socket newSocket = e.AcceptSocket;
-                            PreviewCreateSocketClient(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
+                            PreviewConnecting(newSocket, this.bufferQueueGroups[this.SocketClients.Count % this.bufferQueueGroups.Length]);
                         }
                         catch (Exception ex)
                         {

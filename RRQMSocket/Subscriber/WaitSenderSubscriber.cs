@@ -10,6 +10,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// 协议订阅等待
     /// </summary>
-    public class WaitSenderSubscriber : SubscriberBase, ISendBase, IWaitSender
+    public class WaitSenderSubscriber : SubscriberBase,ISendBase, IWaitSender
     {
         /// <summary>
         /// 构造函数
@@ -147,7 +151,7 @@ namespace RRQMSocket
 
         public byte[] SendThenReturn(byte[] buffer, CancellationToken token = default)
         {
-            return this.SendThenReturn(buffer, 0, buffer.Length, token);
+           return this.SendThenReturn(buffer,0,buffer.Length,token);
         }
 
         public byte[] SendThenReturn(ByteBlock byteBlock, CancellationToken token = default)
@@ -157,15 +161,15 @@ namespace RRQMSocket
 
         public Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
-            return Task.Run(() =>
-             {
-                 return this.SendThenReturn(buffer, offset, length, token);
-             });
+           return Task.Run(()=> 
+            {
+               return this.SendThenReturn(buffer,offset,length,token);
+            });
         }
 
         public Task<byte[]> SendThenReturnAsync(byte[] buffer, CancellationToken token = default)
         {
-            return this.SendThenReturnAsync(buffer, 0, buffer.Length, token);
+           return this.SendThenReturnAsync(buffer,0,buffer.Length,token);
         }
 
         public Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, CancellationToken token = default)

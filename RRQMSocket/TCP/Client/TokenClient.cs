@@ -130,6 +130,11 @@ namespace RRQMSocket
                                 this.MainSocket.Dispose();
                                 throw new RRQMException("连接数量已达到服务器设定最大值");
                             }
+                            else if (byteBlock.Buffer[0] == 4)
+                            {
+                                this.MainSocket.Dispose();
+                                throw new RRQMException("服务器拒绝连接");
+                            }
                         }
                     }
                     finally

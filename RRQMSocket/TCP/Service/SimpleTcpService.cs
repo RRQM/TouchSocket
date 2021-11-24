@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
 
 namespace RRQMSocket
 {
@@ -27,6 +28,7 @@ namespace RRQMSocket
         /// 成功连接后创建（或从对象池中获得）辅助类,
         /// 用户可以在该方法中再进行自定义设置。
         /// </summary>
+        [Obsolete("使用Connecting替代")]
         public event RRQMCreateSocketClientEventHandler<SimpleSocketClient> CreateSocketClient;
 
         /// <summary>
@@ -37,6 +39,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
+        [Obsolete("该类型已放弃使用，请重载Connecting相关函数")]
         protected override void OnCreateSocketClient(SimpleSocketClient tcpSocketClient, CreateOption creatOption)
         {
             this.CreateSocketClient?.Invoke(tcpSocketClient, creatOption);

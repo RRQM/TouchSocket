@@ -15,6 +15,7 @@ namespace RRQMSocket
     /// <summary>
     /// 创建设置
     /// </summary>
+    [System.Obsolete("该类型已放弃使用，请重载Connecting相关函数")]
     public class CreateOption
     {
         /// <summary>

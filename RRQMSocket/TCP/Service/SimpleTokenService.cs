@@ -30,6 +30,7 @@ namespace RRQMSocket
         /// 但是如果该对象是从对象池获得的话，为避免重复设定某些值，
         /// 例如事件等，请先判断CreatOption.NewCreat值再做处理。
         /// </summary>
+        [Obsolete("该类型已放弃使用，请重载Connecting相关函数")]
         public event Action<SimpleSocketClient, CreateOption> CreateSocketClient;
 
         /// <summary>
@@ -40,6 +41,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="tcpSocketClient"></param>
         /// <param name="creatOption"></param>
+        [Obsolete("该类型已放弃使用，请重载Connecting相关函数")]
         protected override void OnCreateSocketClient(SimpleSocketClient tcpSocketClient, CreateOption creatOption)
         {
             this.CreateSocketClient?.Invoke(tcpSocketClient, creatOption);

@@ -43,6 +43,11 @@ namespace RRQMSocket
         public event RRQMMessageEventHandler<SocketClient> Connected;
 
         /// <summary>
+        /// 正在连接
+        /// </summary>
+        public event RRQMMessageEventHandler<SocketClient> Connecting;
+
+        /// <summary>
         /// 断开连接
         /// </summary>
         public event RRQMMessageEventHandler<SocketClient> Disconnected;
@@ -50,7 +55,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取内存池实例
         /// </summary>
-        public BytePool BytePool { get { return this.queueGroup == null ? BytePool.Default : this.queueGroup.bytePool; } }
+        public BytePool BytePool{ get { return this.queueGroup == null ? BytePool.Default : this.queueGroup.bytePool; } }
 
         /// <summary>
         /// 选择清理类型
@@ -263,6 +268,10 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+            }
             this.dataHandlingAdapter.Send(buffer, offset, length, false);
         }
 
@@ -321,6 +330,10 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(byte[] buffer, int offset, int length)
         {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+            }
             this.dataHandlingAdapter.Send(buffer, offset, length, true);
         }
 
@@ -390,7 +403,7 @@ namespace RRQMSocket
             }
             if (this.BytePool == null)
             {
-                throw new RRQMException($"数据处理适配器应当在初始化完成后赋值，建议在{nameof(this.OnInitCompleted)}赋值。");
+                throw new RRQMException($"数据处理适配器应当在{nameof(Connecting)}执行后赋值。");
             }
             adapter.BytePool = this.BytePool;
             adapter.Logger = this.Logger;
@@ -417,14 +430,6 @@ namespace RRQMSocket
         /// </summary>
         internal void BeginReceive()
         {
-            try
-            {
-                this.OnInitCompleted();
-            }
-            catch (Exception ex)
-            {
-                this.logger.Debug(LogType.Error, this, $"在{nameof(OnInitCompleted)}中发生错误。", ex);
-            }
             try
             {
                 eventArgs = new SocketAsyncEventArgs();
@@ -475,6 +480,11 @@ namespace RRQMSocket
                         this.OnDisconnected(e);
                         break;
                     }
+                case 3:
+                    {
+                        this.OnConnecting((ClientOperationEventArgs)e);
+                        break;
+                    }
                 default:
                     break;
             }
@@ -506,13 +516,22 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 初始化完成
+        /// 正在连接
         /// </summary>
-        protected virtual void OnInitCompleted()
+        protected virtual void OnConnecting(ClientOperationEventArgs e)
         {
+            this.Connecting?.Invoke(this,e);
+
             if (this.dataHandlingAdapter == null)
             {
-                this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+                if (e.DataHandlingAdapter == null)
+                {
+                    this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+                }
+                else
+                {
+                    this.SetDataHandlingAdapter(e.DataHandlingAdapter);
+                }
             }
         }
 
