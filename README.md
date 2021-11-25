@@ -98,6 +98,7 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 - [【RRQMSocket】C# 基于TCP自定义协议Stream、文件等发送与接收](https://blog.csdn.net/qq_40374647/article/details/121496385)
 - [【RRQMSocket.RPC】C# 创建多协议、多方式、多语言、多平台RPC框架](https://blog.csdn.net/qq_40374647/article/details/109143243)
 - [【RRQMSocket.RPC】C# 创建基于TCP协议的支持ref和out关键字的RPC](https://blog.csdn.net/qq_40374647/article/details/121512993)
+- [【RRQMSocket.RPC】C# 基于TCP协议的RRQMRPC的高级使用设置](https://blog.csdn.net/qq_40374647/article/details/121533091)
 
 ## 应用场景模拟
 ***
