@@ -119,12 +119,13 @@ namespace RRQMSocket.RPC.RRQMRPC
                     MethodInfo method = methodInstance.Method;
                     string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
-                    codeString.AppendLine("///<summary>");
-                    foreach (var item in methodInstance.DescriptionAttributes)
+                    if (methodInstance.DescriptionAttribute!=null)
                     {
-                        codeString.AppendLine($"///{item.Description}");
+                        codeString.AppendLine("///<summary>");
+                        codeString.AppendLine($"///{methodInstance.DescriptionAttribute.Description}");
+                        codeString.AppendLine("///</summary>");
                     }
-                    codeString.AppendLine("///</summary>");
+                   
 
                     if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                     {
@@ -201,13 +202,14 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (!isOut && !isRef)//没有out或者ref
                     {
-                        codeString.AppendLine("///<summary>");
-                        foreach (var item in methodInstance.DescriptionAttributes)
+                        
+                        if (methodInstance.DescriptionAttribute!=null)
                         {
-                            codeString.AppendLine($"///{item.Description}");
+                            codeString.AppendLine("///<summary>");
+                            codeString.AppendLine($"///{methodInstance.DescriptionAttribute.Description}");
+                            codeString.AppendLine("///</summary>");
                         }
-                        codeString.AppendLine("///</summary>");
-
+                        
                         if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                         {
                             codeString.Append(string.Format("void {0} ", methodName + "Async"));
@@ -563,9 +565,8 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private void GetInterface(string interfaceName)
         {
-            codeString.AppendLine(string.Format("public interface {0}", interfaceName));//类开始
+            codeString.AppendLine(string.Format("public interface {0}:IRemoteServer", interfaceName));//类开始
             codeString.AppendLine("{");
-            codeString.AppendLine("IRpcClient Client{get;}");
             AppendInterfaceMethods();
             codeString.AppendLine("}");//类结束
         }

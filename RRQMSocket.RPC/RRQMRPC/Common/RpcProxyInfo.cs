@@ -22,21 +22,21 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 程序名
         /// </summary>
-        public string AssemblyName { get; internal set; }
+        public string AssemblyName { get; set; }
 
         /// <summary>
         /// 数据
         /// </summary>
-        public byte[] AssemblyData { get; internal set; }
+        public byte[] AssemblyData { get; set; }
 
         /// <summary>
         /// 版本号
         /// </summary>
-        public string Version { get; internal set; }
+        public string Version { get; set; }
 
         /// <summary>
         /// 源代码
         /// </summary>
-        public List<CellCode> Codes { get; internal set; }
+        public List<CellCode> Codes { get; set; }
     }
 }

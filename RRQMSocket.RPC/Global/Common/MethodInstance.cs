@@ -44,7 +44,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 描述属性集合
         /// </summary>
-        public DescriptionAttribute[] DescriptionAttributes { get; internal set; }
+        public DescriptionAttribute DescriptionAttribute { get; internal set; }
 
         /// <summary>
         /// 方法唯一令箭

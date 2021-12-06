@@ -49,8 +49,6 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         internal SerializationSelector serializationSelector;
 
-        internal RRQMWaitHandlePool<IWaitResult> waitPool;
-
         private ConcurrentDictionary<int, RpcServerCallContext> contextDic;
 
         private ConcurrentDictionary<Type, IServerProvider> serverProviderDic;
@@ -76,7 +74,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         public RpcSocketClient()
         {
             this.contextDic = new ConcurrentDictionary<int, RpcServerCallContext>();
-            this.waitPool = new RRQMWaitHandlePool<IWaitResult>();
             this.serverProviderDic = new ConcurrentDictionary<Type, IServerProvider>();
         }
 
@@ -91,7 +88,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public T CallBack<T>(int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
             RpcContext context = new RpcContext();
-            WaitData<IWaitResult> waitData = this.waitPool.GetWaitData(context);
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
@@ -142,7 +139,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        this.waitPool.Destroy(waitData);
+                        this.WaitHandlePool.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitSend:
@@ -151,7 +148,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             case WaitDataStatus.SetRunning:
                                 {
-                                    this.waitPool.Destroy(waitData);
+                                    this.WaitHandlePool.Destroy(waitData);
                                 }
                                 break;
                             case WaitDataStatus.Overtime:
@@ -168,7 +165,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             case WaitDataStatus.SetRunning:
                                 {
                                     RpcContext resultContext = (RpcContext)waitData.WaitResult;
-                                    this.waitPool.Destroy(waitData);
+                                    this.WaitHandlePool.Destroy(waitData);
                                     if (resultContext.Status == 1)
                                     {
                                         try
@@ -223,7 +220,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public void CallBack(int methodToken, InvokeOption invokeOption = null, params object[] parameters)
         {
             RpcContext context = new RpcContext();
-            WaitData<IWaitResult> waitData = this.waitPool.GetWaitData(context);
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
@@ -273,7 +270,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        this.waitPool.Destroy(waitData);
+                        this.WaitHandlePool.Destroy(waitData);
                         return;
                     }
                 case FeedbackType.WaitSend:
@@ -282,7 +279,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             case WaitDataStatus.SetRunning:
                                 {
-                                    this.waitPool.Destroy(waitData);
+                                    this.WaitHandlePool.Destroy(waitData);
                                 }
                                 break;
                             case WaitDataStatus.Overtime:
@@ -299,7 +296,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             case WaitDataStatus.SetRunning:
                                 {
                                     RpcContext resultContext = (RpcContext)waitData.WaitResult;
-                                    this.waitPool.Destroy(waitData);
+                                    this.WaitHandlePool.Destroy(waitData);
                                     if (resultContext.Status == 1)
                                     {
                                         return;
@@ -347,7 +344,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public byte[] CallBack(RpcContext invokeContext, int timeout)
         {
             RpcContext context = new RpcContext();
-            WaitData<IWaitResult> waitData = this.waitPool.GetWaitData(context);
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = invokeContext.methodToken;
             ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
 
@@ -392,7 +389,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case FeedbackType.OnlySend:
                     {
-                        this.waitPool.Destroy(waitData);
+                        this.WaitHandlePool.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitSend:
@@ -401,7 +398,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             case WaitDataStatus.SetRunning:
                                 {
-                                    this.waitPool.Destroy(waitData);
+                                    this.WaitHandlePool.Destroy(waitData);
                                 }
                                 break;
                             case WaitDataStatus.Overtime:
@@ -418,7 +415,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             case WaitDataStatus.SetRunning:
                                 {
                                     RpcContext resultContext = (RpcContext)waitData.WaitResult;
-                                    this.waitPool.Destroy(waitData);
+                                    this.WaitHandlePool.Destroy(waitData);
                                     if (resultContext.Status == 1)
                                     {
                                         try
@@ -471,7 +468,10 @@ namespace RRQMSocket.RPC.RRQMRPC
             context.Serialize(byteBlock);
             try
             {
-                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                if (this.Online)
+                {
+                    this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
             catch (Exception ex)
             {
@@ -569,7 +569,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             byteBlock.Pos = 2;
                             RpcContext content = RpcContext.Deserialize(byteBlock);
-                            this.waitPool.SetRun(content);
+                            this.WaitHandlePool.SetRun(content);
                         }
                         catch (Exception e)
                         {
