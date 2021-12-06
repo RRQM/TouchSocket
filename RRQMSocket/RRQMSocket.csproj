@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>5.8.6</Version>
+		<Version>6.0.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
@@ -12,15 +12,11 @@
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-增加：ProtocolSubscriber订阅协议发送与接收。
-增加：WaitSenderSubscriber订阅协议发送后同步等待返回。
-增加：Stream发送与接收。
-修改：SocketClient开放所有事件订阅。
-修改：所有的连接和断开事件名称，分别为Connected和Disconnected。
-修改：委托和事件的相关参数，更加能够鲜明的知道触发该事件的对象。
-修复：服务器在多地址监听时，一个失败即全部异常的情况。
-
-
+增加：BIO接收模式（每个连接使用单独线程）。
+增加：NetworkStream收发模式。
+修改：取消独立线程接收模式。
+修改：Token系的连接方式，直接通过Connect传参完成。
+优化：大幅度优化Token系的连接速度，几乎接近于TCP。
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
 Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
@@ -72,12 +68,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 		<DocumentationFile>bin\Release\netcoreapp3.1\RRQMSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 	</PropertyGroup>
-
-	<ItemGroup>
-	  <Compile Remove="Helper\**" />
-	  <EmbeddedResource Remove="Helper\**" />
-	  <None Remove="Helper\**" />
-	</ItemGroup>
+	
 	<ItemGroup>
 		<None Include="LICENSE">
 			<Pack>True</Pack>
@@ -89,7 +80,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="5.8.0" />
+	  <PackageReference Include="RRQMCore" Version="6.0.0" />
 	</ItemGroup>
 
 </Project>

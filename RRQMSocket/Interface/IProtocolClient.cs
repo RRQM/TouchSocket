@@ -111,7 +111,7 @@ namespace RRQMSocket
         /// <param name="streamOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        AsyncResult SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = default);
+        Result SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = default);
 
         /// <summary>
         /// 异步发送流数据
@@ -120,7 +120,8 @@ namespace RRQMSocket
         /// <param name="streamOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        Task<AsyncResult> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = default);
+        Task<Result> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = default);
+
         /// <summary>
         /// 订阅通道
         /// </summary>

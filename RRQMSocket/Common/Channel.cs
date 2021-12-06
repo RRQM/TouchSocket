@@ -31,6 +31,8 @@ namespace RRQMSocket
 
         internal ConcurrentDictionary<int, Channel> parent;
 
+        private static int cacheCapacity = 1024 * 1024 * 20;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly BytePool bytePool;
 
@@ -47,6 +49,7 @@ namespace RRQMSocket
         private readonly AutoResetEvent waitHandle;
 
         private int bufferLength;
+        private string lastOperationMes;
         private bool moving;
         private ChannelStatus status;
 
@@ -70,7 +73,19 @@ namespace RRQMSocket
             this.bufferLength = client.BufferLength;
         }
 
-        private static int cacheCapacity = 1024 * 1024 * 20;
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~Channel()
+        {
+            this.Dispose();
+        }
+
+        /// <summary>
+        /// 收到数据时触发，
+        /// 执行该事件时，数据还未到缓存池，所以无法触发已到缓存池的数据。
+        /// </summary>
+        public event RRQMChannelReceivedEventHandler Received;
 
         /// <summary>
         /// 缓存容量
@@ -87,36 +102,18 @@ namespace RRQMSocket
                 cacheCapacity = value;
             }
         }
-
-
         /// <summary>
-        /// 析构函数
+        /// 是否具有数据可读
         /// </summary>
-        ~Channel()
+        public bool Available
         {
-            this.Dispose();
+            get { return dataQueue.Count > 0 ? true : false; }
         }
 
         /// <summary>
-        /// 获取当前的数据
+        /// 能否写入
         /// </summary>
-        public byte[] GetCurrent()
-        {
-            this.currentByteBlock.Pos = 6;
-            byte[] data = this.currentByteBlock.ReadBytesPackage();
-            this.currentByteBlock.SetHolding(false);
-            return data;
-        }
-
-        /// <summary>
-        /// 获取当前数据的存储块，设置pos=6，调用ReadBytesPackage获取数据。
-        /// 使用完成后的数据必须手动释放，且必须调用SetHolding(false)进行释放。
-        /// </summary>
-        /// <returns></returns>
-        public ByteBlock GetCurrentByteBlock()
-        {
-            return this.currentByteBlock;
-        }
+        public bool CanWrite { get => (byte)this.status > 3 ? false : true; }
 
         /// <summary>
         /// ID
@@ -127,17 +124,25 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 最后一次操作时显示消息
+        /// </summary>
+        public string LastOperationMes
+        {
+            get { return lastOperationMes; }
+            set { lastOperationMes = value; }
+        }
+
+        /// <summary>
         /// 状态
         /// </summary>
         public ChannelStatus Status
         {
             get { return status; }
         }
-
         /// <summary>
         /// 取消
         /// </summary>
-        public void Cancel()
+        public void Cancel(string operationMes = null)
         {
             if ((byte)this.status > 3)
             {
@@ -149,6 +154,7 @@ namespace RRQMSocket
             {
                 this.RequestCancel();
                 byteBlock.Write(this.id);
+                byteBlock.Write(operationMes);
                 if (this.client1 != null)
                 {
                     this.client1.SocketSend(-5, byteBlock.Buffer, 0, byteBlock.Len);
@@ -172,18 +178,18 @@ namespace RRQMSocket
         /// 异步取消
         /// </summary>
         /// <returns></returns>
-        public Task CancelAsync()
+        public Task CancelAsync(string operationMes = null)
         {
             return Task.Run(() =>
             {
-                this.Cancel();
+                this.Cancel(operationMes);
             });
         }
 
         /// <summary>
         /// 完成操作
         /// </summary>
-        public void Complete()
+        public void Complete(string operationMes = null)
         {
             if ((byte)this.status > 3)
             {
@@ -195,6 +201,7 @@ namespace RRQMSocket
             {
                 this.RequestComplete();
                 byteBlock.Write(this.id);
+                byteBlock.Write(operationMes);
                 if (this.client1 != null)
                 {
                     this.client1.SocketSend(-4, byteBlock.Buffer, 0, byteBlock.Len);
@@ -218,11 +225,11 @@ namespace RRQMSocket
         /// 异步完成操作
         /// </summary>
         /// <returns></returns>
-        public Task CompleteAsync()
+        public Task CompleteAsync(string operationMes = null)
         {
             return Task.Run(() =>
              {
-                 this.Complete();
+                 this.Complete(operationMes);
              });
         }
 
@@ -278,6 +285,26 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 获取当前的数据
+        /// </summary>
+        public byte[] GetCurrent()
+        {
+            this.currentByteBlock.Pos = 6;
+            byte[] data = this.currentByteBlock.ReadBytesPackage();
+            this.currentByteBlock.SetHolding(false);
+            return data;
+        }
+
+        /// <summary>
+        /// 获取当前数据的存储块，设置pos=6，调用ReadBytesPackage获取数据。
+        /// 使用完成后的数据必须手动释放，且必须调用SetHolding(false)进行释放。
+        /// </summary>
+        /// <returns></returns>
+        public ByteBlock GetCurrentByteBlock()
+        {
+            return this.currentByteBlock;
+        }
+        /// <summary>
         /// 转向下个元素
         /// </summary>
         /// <param name="timeout"></param>
@@ -330,7 +357,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    this.status = ChannelStatus.Timeout;
+                    this.status = ChannelStatus.Overtime;
                     moving = false;
                     return false;
                 }
@@ -347,6 +374,72 @@ namespace RRQMSocket
              {
                  return this.MoveNext(timeout);
              });
+        }
+
+        /// <summary>
+        /// 尝试写入。
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public bool TryWrite(byte[] data, int offset, int length)
+        {
+            if (this.CanWrite)
+            {
+                try
+                {
+                    this.Write(data, offset, length);
+                    return true;
+                }
+                catch
+                {
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 尝试写入
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public bool TryWrite(byte[] data)
+        {
+            return this.TryWrite(data, 0, data.Length);
+        }
+
+        /// <summary>
+        /// 异步尝试写入
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public bool TryWriteAsync(byte[] data, int offset, int length)
+        {
+            if (this.CanWrite)
+            {
+                try
+                {
+                    this.WriteAsync(data, offset, length);
+                    return true;
+                }
+                catch
+                {
+                }
+            }
+            return false;
+        }
+       
+        /// <summary>
+        /// 异步尝试写入
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public bool TryWriteAsync(byte[] data)
+        {
+            return this.TryWriteAsync(data, 0, data.Length);
         }
 
         /// <summary>
@@ -442,20 +535,48 @@ namespace RRQMSocket
 
         internal void ReceivedData(ChannelData data)
         {
+            if (data.type == -3 && this.Received != null)
+            {
+                data.byteBlock.Pos = 6;
+                byte[] dataBuffer = data.byteBlock.ReadBytesPackage();
+                BytesHandledEventArgs args = new BytesHandledEventArgs(dataBuffer);
+                this.Received.Invoke(this, args);
+
+                data.byteBlock.Pos = 6;
+
+                if (args.Handled)
+                {
+                    data.byteBlock.SetHolding(false);
+                    return;
+                }
+            }
+
+
             this.dataQueue.Enqueue(data);
             this.waitHandle.Set();
             if (!moving)
             {
                 if (data.type == -4)
                 {
+                    data.byteBlock.Pos = 6;
+                    this.lastOperationMes = data.byteBlock.ReadString();
+                    data.byteBlock.Dispose();
+
                     this.RequestComplete();
+
                 }
                 else if (data.type == -5)
                 {
+                    data.byteBlock.Pos = 6;
+                    this.lastOperationMes = data.byteBlock.ReadString();
+                    data.byteBlock.Dispose();
                     this.RequestCancel();
                 }
                 else if (data.type == -6)
                 {
+                    data.byteBlock.Pos = 6;
+                    this.lastOperationMes = data.byteBlock.ReadString();
+                    data.byteBlock.Dispose();
                     this.RequestDispose();
                 }
             }
@@ -463,16 +584,14 @@ namespace RRQMSocket
 
         private void RequestCancel()
         {
-            this.currentByteBlock = null;
             this.status = ChannelStatus.Cancel;
-            this.waitHandle.Set();
+            this.Clear();
         }
 
         private void RequestComplete()
         {
-            this.currentByteBlock = null;
             this.status = ChannelStatus.Completed;
-            this.waitHandle.Set();
+            this.Clear();
         }
 
         private void RequestDispose()
@@ -482,11 +601,15 @@ namespace RRQMSocket
                 return;
             }
             this.status = ChannelStatus.Disposed;
+            this.Clear();
+            
+        }
 
+        private void Clear()
+        {
             this.currentByteBlock = null;
             this.waitHandle.Set();
             this.waitHandle.Dispose();
-            this.status = ChannelStatus.Disposed;
             this.parent.TryRemove(this.id, out _);
             while (this.dataQueue.TryDequeue(out ChannelData channelData))
             {

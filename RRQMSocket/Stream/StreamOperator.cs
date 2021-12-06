@@ -9,6 +9,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+using RRQMCore.Exceptions;
+using System;
 using System.Threading;
 
 namespace RRQMSocket
@@ -18,33 +21,54 @@ namespace RRQMSocket
     /// </summary>
     public class StreamOperator
     {
-        internal long completedLength;
+        /// <summary>
+        /// 已完成长度
+        /// </summary>
+        protected long completedLength;
 
-        internal float progress;
+        /// <summary>
+        /// 进度
+        /// </summary>
+        protected float progress;
+
+        private int packageSize = 1024 * 512;
+
+        /// <summary>
+        /// 结果
+        /// </summary>
+        protected Result result;
 
         private long speed;
 
-        internal long speedTemp;
+        /// <summary>
+        /// 临时速度
+        /// </summary>
+        protected long speedTemp;
 
         private CancellationTokenSource tokenSource;
-
-        private int maxSpeed = 1024 * 1024;
-
-        /// <summary>
-        /// 最大传输速度（默认1024*1024字节）
-        /// </summary>
-        public int MaxSpeed
-        {
-            get { return maxSpeed; }
-            set { maxSpeed = value; }
-        }
-
 
         /// <summary>
         /// 已完成长度
         /// </summary>
         /// <returns></returns>
         public long CompletedLength { get => completedLength; }
+
+        /// <summary>
+        /// 包长度，默认512Kb,
+        /// Max=10Mb,Min=1024Byte，可根据网络状况调节。
+        /// </summary>
+        public int PackageSize
+        {
+            get { return packageSize; }
+            set
+            {
+                if (value < 1024 || value > 1024 * 1024 * 10)
+                {
+                    value = 1024 * 64;
+                }
+                packageSize = value;
+            }
+        }
 
         /// <summary>
         /// 进度
@@ -54,26 +78,13 @@ namespace RRQMSocket
             get { return progress; }
         }
 
-        private int packageSize = 1024 * 64;
-
         /// <summary>
-        /// 包长度，默认64Kb
+        /// 执行结果
         /// </summary>
-        public int PackageSize
+        public Result Result
         {
-            get { return packageSize; }
-            set { packageSize = value; }
+            get { return result; }
         }
-
-        internal ChannelStatus status;
-        /// <summary>
-        /// 状态
-        /// </summary>
-        public ChannelStatus Status
-        {
-            get { return status; }
-        }
-
 
         /// <summary>
         /// 可取消令箭
@@ -86,6 +97,21 @@ namespace RRQMSocket
         public CancellationTokenSource TokenSource => this.tokenSource;
 
         /// <summary>
+        /// 取消任务
+        /// </summary>
+        public void Cancel()
+        {
+            if (this.tokenSource != null)
+            {
+                this.tokenSource.Cancel();
+            }
+            else
+            {
+                new System.ArgumentNullException(nameof(TokenSource), "可取消令箭源为空。");
+            }
+        }
+
+        /// <summary>
         /// 设置可取消令箭源
         /// </summary>
         /// <param name="tokenSource"></param>
@@ -96,19 +122,17 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 取消任务
+        /// 设置最大速度
         /// </summary>
-        public void Cancel()
+        /// <param name="speed"></param>
+        /// <returns></returns>
+        public bool SetMaxSpeed(int speed)
         {
-            if (this.tokenSource != null)
-            {
-                this.tokenSource.Cancel();
-            }
+            throw new RRQMException("开源版不支持传输限速。");
         }
 
-
         /// <summary>
-        /// 从上次获取到此次获得的发送速度
+        /// 从上次获取到此次获得的速度
         /// </summary>
         /// <returns></returns>
         public long Speed()
@@ -116,6 +140,24 @@ namespace RRQMSocket
             this.speed = this.speedTemp;
             this.speedTemp = 0;
             return this.speed;
+        }
+
+        internal void AddStreamFlow(int flow, long length)
+        {
+            this.speedTemp += flow;
+            this.completedLength += flow;
+            this.progress = (float)((double)this.completedLength / length);
+        }
+
+        /// <summary>
+        /// 设置状态
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        internal Result SetStreamResult(Result result)
+        {
+            this.result = result;
+            return result;
         }
     }
 }

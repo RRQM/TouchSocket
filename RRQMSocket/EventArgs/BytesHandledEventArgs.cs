@@ -9,21 +9,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
+using RRQMCore.Event;
+
 namespace RRQMSocket
 {
     /// <summary>
-    /// 返回通知接口
+    /// 处理字节事件
     /// </summary>
-    public interface IResult
+    public class BytesHandledEventArgs : BytesEventArgs
     {
         /// <summary>
-        /// 是否成功
+        /// 构造函数
         /// </summary>
-        bool IsSuccess { get; }
+        /// <param name="data"></param>
+        public BytesHandledEventArgs(byte[] data) : base(data)
+        { 
+        
+        }
 
         /// <summary>
-        /// 消息
+        /// 已处理
         /// </summary>
-        string Message { get; }
+        public bool Handled { get; set; }
     }
 }

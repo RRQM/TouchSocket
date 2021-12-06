@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.Log;
 using System;
 
@@ -17,8 +18,15 @@ namespace RRQMSocket
     /// <summary>
     /// 通讯基类
     /// </summary>
-    public abstract class BaseSocket : ISocket, IDisposable
+    public abstract class BaseSocket : RRQMObject, ISocket, IDisposable
     {
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~BaseSocket()
+        {
+            this.Dispose();
+        }
         private int bufferLength;
 
         /// <summary>
@@ -62,6 +70,7 @@ namespace RRQMSocket
         public virtual void Dispose()
         {
             this.disposable = true;
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -133,7 +133,6 @@ namespace RRQMSocket
                             throw new RRQMTimeoutException("操作已超时。");
                         case RRQMCore.Run.WaitDataStatus.Canceled:
                         case RRQMCore.Run.WaitDataStatus.Disposed:
-                        case RRQMCore.Run.WaitDataStatus.Waiting:
                         default:
                             return default;
                     }

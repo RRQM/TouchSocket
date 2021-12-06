@@ -30,7 +30,7 @@ namespace RRQMSocket
         /// <summary>
         /// 超时
         /// </summary>
-        Timeout = 2,
+        Overtime = 2,
 
         /// <summary>
         /// 错误

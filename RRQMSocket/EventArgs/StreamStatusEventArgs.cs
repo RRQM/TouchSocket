@@ -19,24 +19,25 @@ namespace RRQMSocket
     public class StreamStatusEventArgs : StreamEventArgs
     {
 
-        private ChannelStatus status;
+        private Result result;
         /// <summary>
-        /// 状态
+        /// 结果
         /// </summary>
-        public ChannelStatus Status
+        public Result Result
         {
-            get { return status; }
+            get { return result; }
         }
+
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="status"></param>
+        /// <param name="result"></param>
         /// <param name="metadata"></param>
         /// <param name="streamInfo"></param>
-        public StreamStatusEventArgs(ChannelStatus status, Metadata metadata, StreamInfo streamInfo) : base(metadata, streamInfo)
+        public StreamStatusEventArgs(Result result, Metadata metadata, StreamInfo streamInfo) : base(metadata, streamInfo)
         {
-            this.status = status;
+            this.result = result;
         }
     }
 }

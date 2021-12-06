@@ -25,16 +25,15 @@ namespace RRQMSocket
     /// </summary>
     public abstract class UdpSession : BaseSocket, IService, IClient
     {
-        private BufferQueueGroup[] bufferQueueGroups;
         private EndPoint defaultRemotePoint;
         private NetworkMonitor[] monitors;
         private string name;
         private long recivedCount;
         private Socket sendSocket;
-        private bool separateThreadReceive;
         private ServerState serverState;
         private ServiceConfig serviceConfig;
         private bool study;
+        private BytePool[] bytePools;
 
         /// <summary>
         /// 获取默认内存池
@@ -89,13 +88,12 @@ namespace RRQMSocket
         {
             base.Dispose();
             this.Stop();
-            if (this.bufferQueueGroups != null)
+            if (this.bytePools != null)
             {
-                foreach (var item in bufferQueueGroups)
+                foreach (var item in bytePools)
                 {
-                    item.Dispose();
+                    item.Clear();
                 }
-                bufferQueueGroups = null;
             }
             this.serverState = ServerState.Disposed;
         }
@@ -362,7 +360,6 @@ namespace RRQMSocket
             this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpSessionConfig.DefaultRemotePointProperty);
             this.BufferLength = serverConfig.BufferLength;
             this.name = serverConfig.ServerName;
-            this.separateThreadReceive = (bool)serverConfig.GetValue(UdpSessionConfig.SeparateThreadReceiveProperty);
         }
 
         /// <summary>
@@ -416,43 +413,13 @@ namespace RRQMSocket
 
         private void BeginThread()
         {
-            bufferQueueGroups = new BufferQueueGroup[serviceConfig.ThreadCount];
-            for (int i = 0; i < serviceConfig.ThreadCount; i++)
+            int threadCount = this.ServiceConfig.ThreadCount;
+            bytePools = new BytePool[threadCount];
+            for (int i = 0; i < threadCount; i++)
             {
-                BufferQueueGroup bufferQueueGroup = new BufferQueueGroup();
-                bufferQueueGroups[i] = bufferQueueGroup;
-                bufferQueueGroup.bytePool = new BytePool(this.serviceConfig.BytePoolMaxSize, this.serviceConfig.BytePoolMaxBlockSize);
-                bufferQueueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                bufferQueueGroup.bufferAndClient = new BufferQueue();
-
-                if (this.separateThreadReceive)
-                {
-                    bufferQueueGroup.Thread = new Thread(Handle);//处理用户的消息
-                    bufferQueueGroup.Thread.IsBackground = true;
-                    bufferQueueGroup.Thread.Name = i + "-Num Handler";
-                    bufferQueueGroup.Thread.Start(bufferQueueGroup);
-                }
-            }
-        }
-
-        private void Handle(object o)
-        {
-            BufferQueueGroup queueGroup = (BufferQueueGroup)o;
-            while (true)
-            {
-                if (disposable)
-                {
-                    break;
-                }
-                ClientBuffer clientBuffer;
-                if (queueGroup.bufferAndClient.TryDequeue(out clientBuffer))
-                {
-                    this.HandleBuffer(clientBuffer.endPoint, clientBuffer.byteBlock);
-                }
-                else
-                {
-                    queueGroup.waitHandleBuffer.WaitOne();
-                }
+                BytePool bytePool = new BytePool();
+                bytePool = new BytePool((long)(this.ServiceConfig.BytePoolMaxSize / (threadCount * 1.0)), this.ServiceConfig.BytePoolMaxBlockSize);
+                bytePools[i] = bytePool;
             }
         }
 
@@ -486,22 +453,11 @@ namespace RRQMSocket
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.SetLength(e.BytesTransferred);
 
-                    BufferQueueGroup queueGroup = this.bufferQueueGroups[++this.recivedCount % this.bufferQueueGroups.Length];
+                    BytePool bytePool = this.bytePools[++this.recivedCount % this.bytePools.Length];
 
-                    if (this.separateThreadReceive)
-                    {
-                        ClientBuffer clientBuffer = new ClientBuffer();
-                        clientBuffer.endPoint = e.RemoteEndPoint;
-                        clientBuffer.byteBlock = byteBlock;
-                        queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                        queueGroup.waitHandleBuffer.Set();
-                    }
-                    else
-                    {
-                        this.HandleBuffer(e.RemoteEndPoint, byteBlock);
-                    }
+                    this.HandleBuffer(e.RemoteEndPoint, byteBlock);
 
-                    ByteBlock newByteBlock = queueGroup.bytePool.GetByteBlock(this.BufferLength);
+                    ByteBlock newByteBlock = bytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
                     if (!socket.ReceiveFromAsync(e))

@@ -17,12 +17,12 @@ namespace RRQMSocket
     /// <summary>
     /// 处理数据
     /// </summary>
-    public interface IHandleBuffer
+    internal interface IHandleBuffer
     {
         /// <summary>
         ///  处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        void HandleBuffer(ByteBlock byteBlock);
+       internal void HandleBuffer(ByteBlock byteBlock);
     }
 }

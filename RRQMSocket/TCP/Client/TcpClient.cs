@@ -30,13 +30,11 @@ namespace RRQMSocket
         private TcpClientConfig clientConfig;
         private DataHandlingAdapter dataHandlingAdapter;
         private Socket mainSocket;
+        private NetworkStream networkStream;
         private bool online;
         private bool onlySend;
-        private BufferQueueGroup queueGroup;
         private SocketAsyncEventArgs receiveEventArgs;
-        private bool separateThreadReceive;
         private bool separateThreadSend;
-
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
@@ -120,6 +118,18 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Close()
+        {
+            if (this.mainSocket != null)
+            {
+                this.mainSocket.Close();
+            }
+            this.Dispose();
+        }
+
+        /// <summary>
         /// 连接到服务器
         /// </summary>
         public virtual ITcpClient Connect()
@@ -159,6 +169,7 @@ namespace RRQMSocket
             });
         }
 
+
         /// <summary>
         /// 断开连接
         /// </summary>
@@ -169,14 +180,15 @@ namespace RRQMSocket
             {
                 this.mainSocket.Dispose();
             }
-            if (this.queueGroup != null)
-            {
-                this.queueGroup.Dispose();
-            }
             if (this.asyncSender != null)
             {
                 this.asyncSender.Dispose();
                 this.asyncSender = null;
+            }
+            if (this.networkStream != null)
+            {
+                this.networkStream.Dispose();
+                this.networkStream = null;
             }
             return this;
         }
@@ -191,25 +203,43 @@ namespace RRQMSocket
             {
                 this.mainSocket.Dispose();
             }
-            if (this.queueGroup != null)
+            if (this.bytePool != null)
             {
-                this.queueGroup.Dispose();
+                this.bytePool.Clear();
             }
             if (this.asyncSender != null)
             {
                 this.asyncSender.Dispose();
                 this.asyncSender = null;
             }
+            if (this.networkStream != null)
+            {
+                this.networkStream.Dispose();
+                this.networkStream = null;
+            }
             base.Dispose();
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public NetworkStream GetNetworkStream()
+        {
+            if (this.networkStream == null)
+            {
+                throw new RRQMException($"请在连接成功，且在{ReceiveType.NetworkStream}模式下获取流");
+            }
+            return networkStream;
+        }
+        /// <summary>
         /// 处理数据
         /// </summary>
-        public void HandleBuffer(ByteBlock byteBlock)
+        void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
         {
             try
             {
+                this.PreviewHandleReceivedData(byteBlock);
                 if (this.dataHandlingAdapter == null)
                 {
                     throw new RRQMException("数据处理适配器为空");
@@ -223,17 +253,6 @@ namespace RRQMSocket
             finally
             {
                 byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 初始化完成
-        /// </summary>
-        protected virtual void OnInitCompleted()
-        {
-            if (this.dataHandlingAdapter == null)
-            {
-                this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
             }
         }
 
@@ -287,6 +306,11 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public virtual void Send(IList<TransferByte> transferBytes)
         {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+            }
+
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
                 this.dataHandlingAdapter.Send(transferBytes, false);
@@ -361,6 +385,10 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public virtual void SendAsync(IList<TransferByte> transferBytes)
         {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+            }
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
                 this.dataHandlingAdapter.Send(transferBytes, true);
@@ -386,6 +414,23 @@ namespace RRQMSocket
         #endregion 异步发送
 
         /// <summary>
+        /// 设置数据处理适配器
+        /// </summary>
+        /// <param name="adapter"></param>
+        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            if (adapter == null)
+            {
+                throw new RRQMException("数据处理适配器为空");
+            }
+            adapter.BytePool = this.bytePool;
+            adapter.Logger = this.Logger;
+            adapter.ReceivedCallBack = this.HandleReceivedData;
+            adapter.SendCallBack = this.Sent;
+            this.dataHandlingAdapter = adapter;
+        }
+
+        /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="clientConfig"></param>
@@ -407,38 +452,21 @@ namespace RRQMSocket
             {
                 mainSocket.Shutdown(how);
             }
+            if (this.networkStream != null)
+            {
+                this.networkStream.Dispose();
+                this.networkStream = null;
+            }
         }
 
         internal void InitConnect()
         {
             this.ReadIpPort();
-            try
-            {
-                this.OnInitCompleted();
-            }
-            catch (Exception ex)
-            {
-                this.logger.Debug(LogType.Error, this, $"在{nameof(OnInitCompleted)}中发生错误。", ex);
-            }
-            this.OnConnectedService(new MesEventArgs());
 
-            if (!this.onlySend)
-            {
-                if (this.separateThreadReceive)
-                {
-                    queueGroup = new BufferQueueGroup();
-                    queueGroup.Thread = new Thread(BeginHandleBuffer);//处理用户的消息
-                    queueGroup.waitHandleBuffer = new AutoResetEvent(false);
-                    queueGroup.bufferAndClient = new BufferQueue();
-                    queueGroup.Thread.IsBackground = true;
-                    queueGroup.Thread.Name = "客户端处理线程";
-                    queueGroup.Thread.Start();
-                }
+            this.OnConnected(new MesEventArgs());
 
-                this.receiveEventArgs = new SocketAsyncEventArgs();
-                this.receiveEventArgs.Completed += EventArgs_Completed;
-                BeginReceive();
-            }
+            this.BeginReceive();
+
             if (this.separateThreadSend)
             {
                 if (this.asyncSender != null)
@@ -447,6 +475,8 @@ namespace RRQMSocket
                 }
                 this.asyncSender = new AsyncSender(this.MainSocket, this.MainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
             }
+
+
         }
 
         /// <summary>
@@ -486,14 +516,13 @@ namespace RRQMSocket
             this.BufferLength = (int)clientConfig.GetValue(RRQMConfig.BufferLengthProperty);
             this.onlySend = clientConfig.OnlySend;
             this.separateThreadSend = clientConfig.SeparateThreadSend;
-            this.separateThreadReceive = clientConfig.SeparateThreadReceive;
         }
 
         /// <summary>
         /// 连接到服务器
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnConnectedService(MesEventArgs e)
+        protected virtual void OnConnected(MesEventArgs e)
         {
             this.online = true;
             try
@@ -511,7 +540,7 @@ namespace RRQMSocket
         /// 断开连接
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnDisconnectedService(MesEventArgs e)
+        protected virtual void OnDisconnected(MesEventArgs e)
         {
             this.online = false;
             try
@@ -542,42 +571,14 @@ namespace RRQMSocket
         protected virtual void PreviewConnect(Socket socket)
         {
         }
-
         /// <summary>
-        /// 设置数据处理适配器
+        /// 预处理收到数据，
+        /// 一般用于调试检验数据
         /// </summary>
-        /// <param name="adapter"></param>
-        public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        /// <param name="byteBlock"></param>
+        protected virtual void PreviewHandleReceivedData(ByteBlock byteBlock)
         {
-            if (adapter == null)
-            {
-                throw new RRQMException("数据处理适配器为空");
-            }
-            adapter.BytePool = this.bytePool;
-            adapter.Logger = this.Logger;
-            adapter.ReceivedCallBack = this.HandleReceivedData;
-            adapter.SendCallBack = this.Sent;
-            this.dataHandlingAdapter = adapter;
-        }
 
-        private void BeginHandleBuffer()
-        {
-            while (true)
-            {
-                if (disposable || !this.online)
-                {
-                    break;
-                }
-                ClientBuffer clientBuffer;
-                if (queueGroup.bufferAndClient.TryDequeue(out clientBuffer))
-                {
-                    clientBuffer.client.HandleBuffer(clientBuffer.byteBlock);
-                }
-                else
-                {
-                    queueGroup.waitHandleBuffer.WaitOne();
-                }
-            }
         }
 
         /// <summary>
@@ -587,17 +588,64 @@ namespace RRQMSocket
         {
             try
             {
-                ByteBlock byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
-                this.receiveEventArgs.UserToken = byteBlock;
-                this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                if (!this.MainSocket.ReceiveAsync(this.receiveEventArgs))
+                if (this.clientConfig.ReceiveType == ReceiveType.NetworkStream)
                 {
-                    ProcessReceived(this.receiveEventArgs);
+                    networkStream = new NetworkStream(this.mainSocket, true);
+                }
+                else if (this.onlySend)
+                {
+                    return;
+                }
+                else if (this.clientConfig.ReceiveType == ReceiveType.IOCP)
+                {
+                    this.receiveEventArgs = new SocketAsyncEventArgs();
+                    this.receiveEventArgs.Completed += EventArgs_Completed;
+
+                    ByteBlock byteBlock = this.bytePool.GetByteBlock(this.BufferLength);
+                    this.receiveEventArgs.UserToken = byteBlock;
+                    this.receiveEventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                    if (!this.MainSocket.ReceiveAsync(this.receiveEventArgs))
+                    {
+                        ProcessReceived(this.receiveEventArgs);
+                    }
+                }
+                else
+                {
+                    Thread thread = new Thread(this.BIOReceive);
+                    thread.IsBackground = true;
+                    thread.Name = "客户端接收线程";
+                    thread.Start();
                 }
             }
             catch (Exception ex)
             {
-                this.OnDisconnectedService(new MesEventArgs(ex.Message));
+                this.OnDisconnected(new MesEventArgs(ex.Message));
+            }
+        }
+
+        private void BIOReceive()
+        {
+            while (true)
+            {
+                ByteBlock byteBlock = bytePool.GetByteBlock(this.BufferLength);
+
+                try
+                {
+                    int r = this.mainSocket.Receive(byteBlock.Buffer);
+                    if (r == 0)
+                    {
+                        byteBlock.Dispose();
+                        break;
+                    }
+                    byteBlock.SetLength(r);
+                    ((IHandleBuffer)this).HandleBuffer(byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    this.OnDisconnected(new MesEventArgs(ex.Message));
+                    break;
+                }
+
             }
         }
 
@@ -611,35 +659,21 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    this.OnDisconnectedService(new MesEventArgs("BreakOut"));
+                    this.OnDisconnected(new MesEventArgs("BreakOut"));
                 }
             }
             catch (Exception ex)
             {
-                this.OnDisconnectedService(new MesEventArgs(ex.Message));
+                this.OnDisconnected(new MesEventArgs(ex.Message));
             }
         }
-
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
             if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
             {
-                if (this.separateThreadReceive)
-                {
-                    ClientBuffer clientBuffer = new ClientBuffer();
-                    clientBuffer.client = this;
-                    clientBuffer.byteBlock = (ByteBlock)e.UserToken;
-                    clientBuffer.byteBlock.SetLength(e.BytesTransferred);
-                    queueGroup.bufferAndClient.Enqueue(clientBuffer);
-                    queueGroup.waitHandleBuffer.Set();
-                }
-                else
-                {
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.SetLength(e.BytesTransferred);
-                    this.HandleBuffer(byteBlock);
-                }
-
+                ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                byteBlock.SetLength(e.BytesTransferred);
+                ((IHandleBuffer)this).HandleBuffer(byteBlock);
                 try
                 {
                     ByteBlock newByteBlock = this.bytePool.GetByteBlock(this.BufferLength);
@@ -657,7 +691,7 @@ namespace RRQMSocket
             }
             else
             {
-                this.OnDisconnectedService(new MesEventArgs("BreakOut"));
+                this.OnDisconnected(new MesEventArgs("BreakOut"));
             }
         }
 
@@ -720,18 +754,6 @@ namespace RRQMSocket
                     length -= r;
                 }
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void Close()
-        {
-            if (this.mainSocket != null)
-            {
-                this.mainSocket.Close();
-            }
-            this.Dispose();
         }
     }
 }

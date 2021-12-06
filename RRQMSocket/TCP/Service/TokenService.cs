@@ -12,6 +12,7 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
+using RRQMCore.Run;
 using System;
 using System.Net.Sockets;
 using System.Text;
@@ -22,7 +23,7 @@ namespace RRQMSocket
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : SocketClient, new()
+    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient, new()
     {
         private string verifyToken;
 
@@ -60,118 +61,92 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 创建对象
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="socket"></param>
-        /// <param name="queueGroup"></param>
-        protected override void PreviewConnecting(Socket socket, BufferQueueGroup queueGroup)
+        /// <param name="client"></param>
+        protected override void PreviewConnecting(TClient client)
         {
-            Task.Run(async () =>
+            Task.Run(()=> 
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                int waitCount = 0;
-                while (waitCount < this.verifyTimeout / 10)
+                WaitData<WaitVerify> waitData = new WaitData<WaitVerify>();
+                Task.Run(() =>
                 {
-                    if (socket.Available > 0)
+                    byte[] buffer = new byte[1024];
+                    int r = client.MainSocket.Receive(buffer);
+                    if (r > 0)
                     {
-                        try
-                        {
-                            int r = socket.Receive(byteBlock.Buffer);
+                        byte[] data = new byte[r];
 
+                        Array.Copy(buffer, data, r);
+                        WaitVerify verify = WaitVerify.GetVerifyInfo(data);
+                        waitData.Set(verify);
+                    }
+                });
+
+                switch (waitData.Wait(this.verifyTimeout))
+                {
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitVerify waitVerify = waitData.WaitResult;
                             VerifyOption verifyOption = new VerifyOption();
-                            verifyOption.Token = Encoding.UTF8.GetString(byteBlock.Buffer, 0, r);
-                            this.OnVerifyToken(verifyOption);
+                            verifyOption.Token = waitVerify.Token;
+                            this.OnVerifyToken(client, verifyOption);
 
                             if (verifyOption.Accept)
                             {
-                                if (this.SocketClients.Count > this.MaxCount)
+                                ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
+                                clientArgs.ID = GetDefaultNewID();
+                                this.OnConnecting(client, clientArgs);
+                                if (clientArgs.IsPermitOperation)
                                 {
-                                    byteBlock.Write((byte)3);
-                                    this.Logger.Debug(LogType.Error, this, "连接客户端数量已达到设定最大值");
-                                    socket.Send(byteBlock.Buffer, 0, 1, SocketFlags.None);
-                                    socket.Dispose();
-                                    return;
+                                    client.id = clientArgs.ID;
+
+                                    waitVerify.ID = client.id;
+                                    waitVerify.Status = 1;
+                                    client.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
+                                    if (!this.SocketClients.TryAdd(client))
+                                    {
+                                        throw new RRQMException("ID重复");
+                                    }
+                                    client.BeginReceive();
+                                    this.OnConnected(client, new MesEventArgs("新客户端连接"));
                                 }
                                 else
                                 {
-                                    TClient client = this.GetRawClient();
-                                    client.Flag = verifyOption.Flag;
-
-                                    client.queueGroup = queueGroup;
-                                    client.service = this;
-                                    client.Logger = this.Logger;
-                                    client.ClearType = this.clearType;
-                                    client.separateThreadReceive = this.separateThreadReceive;
-
-                                    client.MainSocket = socket;
-                                    client.ReadIpPort();
-                                    client.BufferLength = this.BufferLength;
-
-                                    ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
-                                    clientArgs.ID = GetDefaultNewID();
-                                    this.OnConnecting(client, clientArgs);
-                                    if (clientArgs.IsPermitOperation)
-                                    {
-                                        client.id = clientArgs.ID;
-
-                                        client.BeginReceive();
-
-                                        byteBlock.Write((byte)1);
-                                        byteBlock.Write(Encoding.UTF8.GetBytes(client.ID));
-                                        socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
-
-                                        if (!this.SocketClients.TryAdd(client))
-                                        {
-                                            throw new RRQMException("ID重复");
-                                        }
-
-                                        this.OnConnected(client, new MesEventArgs("新客户端连接"));
-                                    }
-                                    else
-                                    {
-                                        byteBlock.Write((byte)4);
-                                        socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
-                                        socket.Close();
-                                        socket.Dispose();
-                                    }
-
-                                    return;
+                                    waitVerify.Status = 4;
+                                    client.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
+                                    client.MainSocket.Dispose();
                                 }
                             }
                             else
                             {
-                                byteBlock.Write((byte)2);
-                                if (verifyOption.ErrorMessage != null)
-                                {
-                                    byteBlock.Write(Encoding.UTF8.GetBytes(verifyOption.ErrorMessage));
-                                }
-                                socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
-                                socket.Dispose();
-                                return;
+                                waitVerify.Status = 2;
+                                waitVerify.Message = verifyOption.ErrorMessage;
+                                client.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
+                                client.MainSocket.Dispose();
                             }
                         }
-                        catch (Exception ex)
+                        break;
+                    case WaitDataStatus.Overtime:
+                    case WaitDataStatus.Canceled:
+                    case WaitDataStatus.Disposed:
+                    default:
                         {
-                            Logger.Debug(LogType.Error, this, $"在验证客户端连接时发生错误，信息：{ex.Message}");
+                            client.MainSocket.Dispose();
+                            break;
                         }
-                        finally
-                        {
-                            byteBlock.Dispose();
-                        }
-                    }
-                    waitCount++;
-                    await Task.Delay(10);
-                }
 
-                socket.Dispose();
+                }
             });
+           
         }
 
         /// <summary>
         /// 当验证Token时
         /// </summary>
+        /// <param name="client"></param>
         /// <param name="verifyOption"></param>
-        protected virtual void OnVerifyToken(VerifyOption verifyOption)
+        protected virtual void OnVerifyToken(TClient client,VerifyOption verifyOption)
         {
             if (verifyOption.Token == this.verifyToken)
             {

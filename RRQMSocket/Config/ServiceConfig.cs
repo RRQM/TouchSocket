@@ -62,21 +62,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ServerNameProperty =
             DependencyProperty.Register("ServerName", typeof(string), typeof(ServiceConfig), "RRQMServer");
-
-        /// <summary>
-        /// 独立线程接收
-        /// </summary>
-        public bool SeparateThreadReceive
-        {
-            get { return (bool)GetValue(SeparateThreadReceiveProperty); }
-            set { SetValue(SeparateThreadReceiveProperty, value); }
-        }
-
-        /// <summary>
-        /// 独立线程接收，
-        /// 所需类型<see cref="bool"/>
-        /// </summary>
-        public static readonly DependencyProperty SeparateThreadReceiveProperty =
-            DependencyProperty.Register("SeparateThreadReceive", typeof(bool), typeof(ServiceConfig), false);
     }
 }

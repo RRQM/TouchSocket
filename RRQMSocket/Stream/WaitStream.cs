@@ -35,7 +35,7 @@ namespace RRQMSocket
         public Metadata Metadata { get; set; }
 
         /// <summary>
-        /// 开启得通道标识
+        /// 开启的通道标识
         /// </summary>
         public int ChannelID { get; set; }
     }

@@ -17,25 +17,25 @@ namespace RRQMSocket
     /// <summary>
     /// 简单Token服务器
     /// </summary>
-    public class SimpleTokenService : TokenService<SimpleSocketClient>
+    public class SimpleTokenService : TokenService<SimpleTokenSocketClient>
     {
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event RRQMReceivedEventHandler<SimpleSocketClient> Received;
+        public event RRQMReceivedEventHandler<SimpleTokenSocketClient> Received;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override void OnConnecting(SimpleSocketClient socketClient, ClientOperationEventArgs e)
+        protected override void OnConnecting(SimpleTokenSocketClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.Received += this.OnReceive;
             base.OnConnecting(socketClient, e);
         }
 
-        private void OnReceive(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
+        private void OnReceive(SimpleTokenSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             this.Received?.Invoke(socketClient, byteBlock, obj);
         }

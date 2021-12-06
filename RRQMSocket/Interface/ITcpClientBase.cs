@@ -58,5 +58,12 @@ namespace RRQMSocket
         /// 缓存池大小
         /// </summary>
         int BufferLength { get; }
+
+
+        /// <summary>
+        /// 获取网络流，接收方式为NetworkStream.Read。
+        /// </summary>
+        /// <returns></returns>
+        NetworkStream GetNetworkStream();
     }
 }

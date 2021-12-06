@@ -80,3 +80,10 @@ public delegate void RRQMStreamStatusEventHandler<TClient>(TClient socketClient,
 /// <param name="endpoint"></param>
 /// <param name="e"></param>
 public delegate void RRQMUDPByteBlockEventHandler(EndPoint endpoint, ByteBlock e);
+
+/// <summary>
+/// Channel收到数据
+/// </summary>
+/// <param name="channel"></param>
+/// <param name="e"></param>
+public delegate void RRQMChannelReceivedEventHandler(Channel channel, BytesHandledEventArgs e);

@@ -11,10 +11,12 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
+using RRQMCore.Run;
 using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -23,15 +25,22 @@ namespace RRQMSocket
     /// </summary>
     public abstract class TokenClient : TcpClient, ITokenClient
     {
-        private string verifyToken = "rrqm";
+        private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
 
         /// <summary>
-        /// 验证令箭
+        /// 构造函数
         /// </summary>
-        public string VerifyToken
+        public TokenClient()
         {
-            get { return verifyToken; }
+            this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
         }
+
+
+        /// <summary>
+        /// 等待返回池
+        /// </summary>
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
+
 
         private string id;
 
@@ -41,16 +50,6 @@ namespace RRQMSocket
         public string ID
         {
             get { return id; }
-        }
-
-        private int verifyTimeout;
-
-        /// <summary>
-        /// 验证超时时间,默认为3000ms；
-        /// </summary>
-        public int VerifyTimeout
-        {
-            get { return verifyTimeout; }
         }
 
         /// <summary>
@@ -69,6 +68,17 @@ namespace RRQMSocket
         /// <exception cref="RRQMTokenVerifyException"></exception>
         /// <exception cref="RRQMTimeoutException"></exception>
         public override ITcpClient Connect()
+        {
+            return this.Connect("rrqm");
+        }
+
+        /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="RRQMTokenVerifyException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        public virtual ITcpClient Connect(string verifyToken, CancellationToken token = default)
         {
             if (this.ClientConfig == null)
             {
@@ -90,64 +100,86 @@ namespace RRQMSocket
                 return this;
             }
 
+            WaitVerify waitVerify = new WaitVerify()
+            {
+                Token = verifyToken
+            };
+            WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
+            waitData.SetCancellationToken(token);
+
             try
             {
                 Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 PreviewConnect(socket);
                 socket.Connect(iPHost.EndPoint);
                 this.MainSocket = socket;
-                this.MainSocket.Send(Encoding.UTF8.GetBytes(this.verifyToken == null ? string.Empty : this.verifyToken));
+                this.MainSocket.Send(waitVerify.GetData());
             }
             catch (Exception e)
             {
                 throw new RRQMException(e.Message);
             }
+            
 
-            int waitCount = 0;
-            while (waitCount < this.verifyTimeout / 10)
+            Task.Run(() =>
             {
-                if (this.MainSocket.Available > 0)
+                try
                 {
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    try
+                    byte[] buffer = new byte[1024];
+                    int r = this.MainSocket.Receive(buffer);
+                    if (r > 0)
                     {
-                        int r = this.MainSocket.Receive(byteBlock.Buffer);
-                        if (r > 0)
+                        byte[] data = new byte[r];
+
+                        Array.Copy(buffer, data, r);
+                        WaitVerify verify = WaitVerify.GetVerifyInfo(data);
+                        this.waitHandlePool.SetRun(verify);
+                    }
+
+                }
+                catch
+                {
+
+                }
+            });
+
+            switch (waitData.Wait(1000 * 10))
+            {
+                case WaitDataStatus.SetRunning:
+                    {
+                        WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
+                        if (verifyResult.Status == 1)
                         {
-                            if (byteBlock.Buffer[0] == 1)
-                            {
-                                this.id = Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1);
-                                InitConnect();
-                                return this;
-                            }
-                            else if (byteBlock.Buffer[0] == 2)
-                            {
-                                this.MainSocket.Dispose();
-                                throw new RRQMTokenVerifyException(Encoding.UTF8.GetString(byteBlock.Buffer, 1, r - 1));
-                            }
-                            else if (byteBlock.Buffer[0] == 3)
-                            {
-                                this.MainSocket.Dispose();
-                                throw new RRQMException("连接数量已达到服务器设定最大值");
-                            }
-                            else if (byteBlock.Buffer[0] == 4)
-                            {
-                                this.MainSocket.Dispose();
-                                throw new RRQMException("服务器拒绝连接");
-                            }
+                            this.id = verifyResult.ID;
+                            InitConnect();
+                            return this;
+                        }
+                        else if (verifyResult.Status == 3)
+                        {
+                            this.MainSocket.Dispose();
+                            throw new RRQMException("连接数量已达到服务器设定最大值");
+                        }
+                        else if (verifyResult.Status == 4)
+                        {
+                            this.MainSocket.Dispose();
+                            throw new RRQMException("服务器拒绝连接");
+                        }
+                        else
+                        {
+                            this.MainSocket.Dispose();
+                            throw new RRQMTokenVerifyException(verifyResult.Message);
                         }
                     }
-                    finally
-                    {
-                        byteBlock.Dispose();
-                    }
-                }
-                waitCount++;
-                Thread.Sleep(10);
+                case WaitDataStatus.Overtime:
+                    this.MainSocket.Dispose();
+                    throw new RRQMTimeoutException("连接超时");
+                case WaitDataStatus.Canceled:
+                case WaitDataStatus.Disposed:
+                default:
+                    return this;
             }
 
-            this.MainSocket.Dispose();
-            throw new RRQMTimeoutException("验证Token超时");
+            
         }
 
         /// <summary>
@@ -157,12 +189,6 @@ namespace RRQMSocket
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
             base.LoadConfig(clientConfig);
-            this.verifyToken = (string)clientConfig.GetValue(TokenClientConfig.VerifyTokenProperty);
-            this.verifyTimeout = (int)clientConfig.GetValue(TokenClientConfig.VerifyTimeoutProperty);
-            if (string.IsNullOrEmpty(this.verifyToken))
-            {
-                this.verifyToken = "rrqm";
-            }
         }
     }
 }

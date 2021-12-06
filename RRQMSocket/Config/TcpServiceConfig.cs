@@ -79,5 +79,20 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ClearTypeProperty =
             DependencyProperty.Register("ClearType", typeof(ClearType), typeof(TcpServiceConfig), ClearType.Send | ClearType.Receive);
+
+        /// <summary>
+        /// 接收类型
+        /// </summary>
+        public ReceiveType ReceiveType
+        {
+            get { return (ReceiveType)GetValue(ReceiveTypeProperty); }
+            set { SetValue(ReceiveTypeProperty, value); }
+        }
+
+        /// <summary>
+        /// 接收类型，所需类型<see cref="RRQMSocket. ReceiveType"/>
+        /// </summary>
+        public static readonly DependencyProperty ReceiveTypeProperty =
+            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(TcpServiceConfig), ReceiveType.IOCP);
     }
 }
