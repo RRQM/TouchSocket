@@ -20,12 +20,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 传输文件之前
         /// </summary>
-        event RRQMFileOperationEventHandler BeforeFileTransfer;
+        event RRQMFileOperationEventHandler<FileSocketClient> BeforeFileTransfer;
 
         /// <summary>
         /// 当文件传输完成时
         /// </summary>
-        event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
+        event RRQMTransferFileEventHandler<FileSocketClient> FinishedFileTransfer;
 
         /// <summary>
         /// 最大下载速度

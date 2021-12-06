@@ -28,65 +28,38 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 最大下载速度
+        /// 根目录
         /// </summary>
-        public long MaxDownloadSpeed
+        public string RootPath
         {
-            get { return (long)GetValue(MaxDownloadSpeedProperty); }
-            set { SetValue(MaxDownloadSpeedProperty, value); }
-        }
-
-        /// <summary>
-        /// 最大下载速度, 所需类型<see cref="long"/>
-        /// </summary>
-        public static readonly DependencyProperty MaxDownloadSpeedProperty =
-            DependencyProperty.Register("MaxDownloadSpeed", typeof(long), typeof(FileServiceConfig), 1024 * 1024L);
-
-        /// <summary>
-        /// 最大上传速度
-        /// </summary>
-        public long MaxUploadSpeed
-        {
-            get { return (long)GetValue(MaxUploadSpeedProperty); }
-            set { SetValue(MaxUploadSpeedProperty, value); }
-        }
-
-        /// <summary>
-        /// 最大上传速度, 所需类型<see cref="long"/>
-        /// </summary>
-        public static readonly DependencyProperty MaxUploadSpeedProperty =
-            DependencyProperty.Register("MaxUploadSpeed", typeof(long), typeof(FileServiceConfig), 1024 * 1024L);
-
-        /// <summary>
-        /// 下载根目录
-        /// </summary>
-        public string DownloadRoot
-        {
-            get { return (string)GetValue(DownloadRootProperty); }
-            set { SetValue(DownloadRootProperty, value); }
+            get { return (string)GetValue(RootPathProperty); }
+            set { SetValue(RootPathProperty, value); }
         }
 
         /// <summary>
         /// 下载根目录，
         /// 所需类型<see cref="string"/>
         /// </summary>
-        public static readonly DependencyProperty DownloadRootProperty =
-            DependencyProperty.Register("DownloadRoot", typeof(string), typeof(FileServiceConfig), string.Empty);
+        public static readonly DependencyProperty RootPathProperty =
+            DependencyProperty.Register("RootPath", typeof(string), typeof(FileServiceConfig), string.Empty);
+
 
         /// <summary>
-        /// 上传根目录
+        /// 允许的响应类型
         /// </summary>
-        public string UploadRoot
+        public ResponseType ResponseType
         {
-            get { return (string)GetValue(UploadRootProperty); }
-            set { SetValue(UploadRootProperty, value); }
+            get { return (ResponseType)GetValue(ResponseTypeProperty); }
+            set { SetValue(ResponseTypeProperty, value); }
         }
 
         /// <summary>
-        /// 下载根目录，
-        /// 所需类型<see cref="string"/>
+        /// 允许的响应类型,
+        ///  所需类型<see cref="RRQMSocket.FileTransfer.ResponseType"/>
         /// </summary>
-        public static readonly DependencyProperty UploadRootProperty =
-            DependencyProperty.Register("UploadRoot", typeof(string), typeof(FileServiceConfig), string.Empty);
+        public static readonly DependencyProperty ResponseTypeProperty =
+            DependencyProperty.Register("ResponseType", typeof(ResponseType), typeof(FileServiceConfig), ResponseType.Both);
+
+
     }
 }

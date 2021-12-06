@@ -13,28 +13,16 @@
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 文件块
+    /// 传输文件操作处理
     /// </summary>
-    public class FileBlock
-    {
-        /// <summary>
-        /// 文件快索引
-        /// </summary>
-        public int Index { get; internal set; }
+    /// <param name="client"></param>
+    /// <param name="e"></param>
+    public delegate void RRQMFileOperationEventHandler<TClient>(TClient client, FileOperationEventArgs e);
 
-        /// <summary>
-        /// 文件流位置
-        /// </summary>
-        public long Position { get; internal set; }
-
-        /// <summary>
-        /// 文件块长度
-        /// </summary>
-        public long UnitLength { get; internal set; }
-
-        /// <summary>
-        /// 请求状态
-        /// </summary>
-        public RequestStatus RequestStatus { get; internal set; }
-    }
+    /// <summary>
+    /// 传输文件消息
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="e"></param>
+    public delegate void RRQMTransferFileEventHandler<TClient>(TClient client, FileTransferStatusEventArgs e);
 }

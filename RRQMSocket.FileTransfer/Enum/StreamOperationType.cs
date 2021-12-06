@@ -24,6 +24,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 写
         /// </summary>
-        Write
+        Write,
+
+        /// <summary>
+        /// 缓存文件写入
+        /// </summary>
+        RRQMWrite
     }
 }

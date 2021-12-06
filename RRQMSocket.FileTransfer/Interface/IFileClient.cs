@@ -10,7 +10,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore;
 using RRQMCore.Exceptions;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -20,45 +22,49 @@ namespace RRQMSocket.FileTransfer
     public interface IFileClient : IProtocolClient
     {
         /// <summary>
-        /// 获取当前传输文件信息
+        /// 根路径
         /// </summary>
-        UrlFileInfo TransferFileInfo { get; }
+        string RootPath { get; set; }
 
         /// <summary>
-        /// 获取当前传输进度
+        /// 允许响应远程请求的类型。
         /// </summary>
-        float TransferProgress { get; }
+        ResponseType ResponseType { get; set; }
 
         /// <summary>
-        /// 获取当前传输速度
+        /// 从对点拉取文件
         /// </summary>
-        long TransferSpeed { get; }
+        /// <param name="fileRequest"></param>
+        /// <param name="fileOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        Result PullFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
         /// <summary>
-        /// 获取当前传输状态
+        /// 异步从对点拉取文件
         /// </summary>
-        TransferStatus TransferStatus { get; }
+        /// <param name="fileRequest"></param>
+        /// <param name="fileOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        Task<Result> PullFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
         /// <summary>
-        /// 终止当前传输
+        /// 向对点推送文件
         /// </summary>
-        ///<exception cref="RRQMException"></exception>
-        void StopThisTransfer();
+        /// <param name="fileRequest"></param>
+        /// <param name="fileOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        Result PushFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
         /// <summary>
-        /// 终止所有传输
+        /// 异步向对点推送文件
         /// </summary>
-        void StopAllTransfer();
-
-        /// <summary>
-        /// 暂停传输
-        /// </summary>
-        void PauseTransfer();
-
-        /// <summary>
-        /// 恢复传输
-        /// </summary>
-        /// <returns>是否有任务成功继续</returns>
-        bool ResumeTransfer();
+        /// <param name="fileRequest"></param>
+        /// <param name="fileOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        Task<Result> PushFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
     }
 }

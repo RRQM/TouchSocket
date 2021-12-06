@@ -12,33 +12,28 @@
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 传输类型
+    /// 允许的响应类型
     /// </summary>
-    public enum TransferStatus
+    public enum ResponseType
     {
         /// <summary>
-        /// 无下载
+        /// 不响应任何请求
         /// </summary>
         None,
 
         /// <summary>
-        /// 上传
+        /// 仅响应推送
         /// </summary>
-        Upload,
+        Push,
 
         /// <summary>
-        /// 下载
+        /// 仅响应下拉
         /// </summary>
-        Download,
+        Pull,
 
         /// <summary>
-        /// 暂停下载状态
+        /// 都响应
         /// </summary>
-        PauseDownload,
-
-        /// <summary>
-        /// 暂停上传状态
-        /// </summary>
-        PauseUpload
+        Both
     }
 }

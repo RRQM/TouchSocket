@@ -17,78 +17,29 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯服务端主类
     /// </summary>
-    public class FileService : TcpParser<FileSocketClient>, IFileService
+    public class FileService : TcpParser<FileSocketClient>
     {
         #region 属性
 
-        private long maxDownloadSpeed;
-
-        private long maxUploadSpeed;
-
-        /// <summary>
-        /// 获取下载速度
-        /// </summary>
-        public long DownloadSpeed
-        {
-            get
-            {
-                this.downloadSpeed = Speed.downloadSpeed;
-                Speed.downloadSpeed = 0;
-                return this.downloadSpeed;
-            }
-        }
-
-        /// <summary>
-        /// 最大下载速度
-        /// </summary>
-        public long MaxDownloadSpeed
-        {
-            get { return maxDownloadSpeed; }
-            set { maxDownloadSpeed = value; }
-        }
-
-        /// <summary>
-        /// 最大上传速度
-        /// </summary>
-        public long MaxUploadSpeed
-        {
-            get { return maxUploadSpeed; }
-            set { maxUploadSpeed = value; }
-        }
-
-        /// <summary>
-        /// 获取上传速度
-        /// </summary>
-        public long UploadSpeed
-        {
-            get
-            {
-                this.uploadSpeed = Speed.uploadSpeed;
-                Speed.uploadSpeed = 0;
-                return this.uploadSpeed;
-            }
-        }
 
         #endregion 属性
 
         #region 字段
-
-        private long downloadSpeed;
-        private long uploadSpeed;
-
+        private ResponseType responseType;
+        private string rootPath;
         #endregion 字段
 
         #region 事件
 
         /// <summary>
-        /// 传输文件之前
+        /// 文件传输开始之前
         /// </summary>
-        public event RRQMFileOperationEventHandler BeforeFileTransfer;
+        public event RRQMFileOperationEventHandler<FileSocketClient> BeforeFileTransfer;
 
         /// <summary>
-        /// 当文件传输完成时
+        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
-        public event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
+        public event RRQMTransferFileEventHandler<FileSocketClient> FinishedFileTransfer;
 
         #endregion 事件
 
@@ -98,9 +49,9 @@ namespace RRQMSocket.FileTransfer
         /// <param name="serviceConfig"></param>
         protected override void LoadConfig(ServiceConfig serviceConfig)
         {
+            this.responseType = serviceConfig.GetValue<ResponseType>(FileServiceConfig.ResponseTypeProperty);
+            this.rootPath = serviceConfig.GetValue<string>(FileServiceConfig.RootPathProperty);
             base.LoadConfig(serviceConfig);
-            this.maxDownloadSpeed = (long)serviceConfig.GetValue(FileServiceConfig.MaxDownloadSpeedProperty);
-            this.maxUploadSpeed = (long)serviceConfig.GetValue(FileServiceConfig.MaxUploadSpeedProperty);
         }
 
         /// <summary>
@@ -110,21 +61,19 @@ namespace RRQMSocket.FileTransfer
         /// <param name="e"></param>
         protected override void OnConnecting(FileSocketClient socketClient, ClientOperationEventArgs e)
         {
-            socketClient.MaxDownloadSpeed = this.MaxDownloadSpeed;
-            socketClient.MaxUploadSpeed = this.MaxUploadSpeed;
-            socketClient.downloadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.DownloadRootProperty);
-            socketClient.uploadRoot = this.ServiceConfig.GetValue<string>(FileServiceConfig.UploadRootProperty);
             socketClient.BeforeFileTransfer += this.OnBeforeFileTransfer;
             socketClient.FinishedFileTransfer += this.OnFinishedFileTransfer;
+            socketClient.ResponseType = this.responseType;
+            socketClient.RootPath = this.rootPath;
             base.OnConnecting(socketClient, e);
         }
 
-        private void OnBeforeFileTransfer(IFileClient client, FileOperationEventArgs e)
+        private void OnBeforeFileTransfer(FileSocketClient client, FileOperationEventArgs e)
         {
             this.BeforeFileTransfer?.Invoke(client, e);
         }
 
-        private void OnFinishedFileTransfer(IFileClient client, TransferFileMessageArgs e)
+        private void OnFinishedFileTransfer(FileSocketClient client, FileTransferStatusEventArgs e)
         {
             this.FinishedFileTransfer?.Invoke(client, e);
         }

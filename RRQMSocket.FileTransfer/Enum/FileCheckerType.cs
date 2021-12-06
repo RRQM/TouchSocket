@@ -9,14 +9,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    ///
+    /// 文件检验类型
     /// </summary>
-    internal class Speed
+    public enum FileCheckerType
     {
-        internal static long downloadSpeed;
-        internal static long uploadSpeed;
+        /// <summary>
+        /// 不验证
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// MD5
+        /// </summary>
+        MD5,
+
+        /// <summary>
+        /// SHA1
+        /// </summary>
+        SHA1
     }
 }

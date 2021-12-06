@@ -18,13 +18,13 @@ namespace RRQMSocket.FileTransfer
     public enum TransferType
     {
         /// <summary>
-        /// 上传
+        /// 推送
         /// </summary>
-        Upload,
+        Push,
 
         /// <summary>
-        /// 下载
+        /// 拉去
         /// </summary>
-        Download,
+        Pull,
     }
 }

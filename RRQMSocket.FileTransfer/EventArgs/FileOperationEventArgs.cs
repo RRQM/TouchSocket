@@ -9,21 +9,49 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 操作文件事件类
     /// </summary>
-    public class FileOperationEventArgs : TransferFileMessageArgs
+    public class FileOperationEventArgs : FileTransferEventArgs
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="transferType"></param>
+        /// <param name="fileRequest"></param>
+        /// <param name="fileOperator"></param>
+        /// <param name="metadata"></param>
+        /// <param name="fileInfo"></param>
+        public FileOperationEventArgs(TransferType transferType,FileRequest fileRequest,FileOperator fileOperator, Metadata metadata, RRQMFileInfo fileInfo) 
+            : base(transferType, fileRequest,metadata,fileInfo)
+        {
+            this.isPermitOperation = true;
+            this.fileOperator = fileOperator;
+        }
+
+        private bool isPermitOperation;
         /// <summary>
         /// 是否允许操作
         /// </summary>
-        public bool IsPermitOperation { get; set; }
+        public bool IsPermitOperation
+        {
+            get { return isPermitOperation; }
+            set { isPermitOperation = value; }
+        }
+
+        private FileOperator fileOperator;
 
         /// <summary>
-        /// 是否包含根目录
+        /// 文件操作器
         /// </summary>
-        public bool IsPathRooted { get; internal set; }
+        public FileOperator FileOperator
+        {
+            get { return fileOperator; }
+        }
+
     }
 }

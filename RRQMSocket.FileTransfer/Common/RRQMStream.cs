@@ -15,143 +15,100 @@ using System.IO;
 
 namespace RRQMSocket.FileTransfer
 {
-    internal class RRQMStream
+    /// <summary>
+    /// 文件流
+    /// </summary>
+    public class RRQMStream : FileStream
     {
+        internal RRQMStream(string path, FileMode mode, FileAccess access) : base(path, mode, access)
+        {
+        }
+
         internal int reference;
+        internal RRQMFileInfo fileInfo;
+        internal StreamOperationType streamType;
+        internal string rrqmPath;
+        internal object owner;
 
-        private ProgressBlockCollection blocks;
+        /// <summary>
+        /// 文件信息
+        /// </summary>
+        public RRQMFileInfo FileInfo { get => fileInfo; }
 
-        private FileStream fileStream;
-        private string rrqmPath;
-        private StreamOperationType streamType;
-
-        private UrlFileInfo urlFileInfo;
-
-        private RRQMStream()
-        {
-        }
-
-        public ProgressBlockCollection Blocks { get { return blocks; } }
-
-        public FileStream FileStream
-        {
-            get { return fileStream; }
-        }
-
+        /// <summary>
+        /// 流类型
+        /// </summary>
         public StreamOperationType StreamType
         {
             get { return streamType; }
         }
 
-        public UrlFileInfo UrlFileInfo { get => urlFileInfo; }
-
-        internal static bool CreateReadStream(out RRQMStream stream, ref UrlFileInfo urlFileInfo, out string mes)
+        /// <summary>
+        /// 不支持操作
+        /// </summary>
+        public new void Dispose()
         {
-            stream = new RRQMStream();
-            try
-            {
-                stream.streamType = StreamOperationType.Read;
-                stream.fileStream = File.OpenRead(urlFileInfo.FilePath);
-                urlFileInfo.FileLength = stream.fileStream.Length;
-                stream.urlFileInfo = urlFileInfo;
-                mes = null;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                stream.Dispose();
-                stream = null;
-                mes = ex.Message;
-                return false;
-            }
+            throw new InvalidOperationException($"RRQM流不允许直接释放，请在{nameof(RRQMStreamPool)}中操作。");
         }
 
-        internal static bool CreateWriteStream(out RRQMStream stream, ref ProgressBlockCollection blocks, out string mes)
+        internal void AbsoluteDispose()
         {
-            stream = new RRQMStream();
-            stream.rrqmPath = blocks.UrlFileInfo.SaveFullPath + ".rrqm";
-            stream.urlFileInfo = blocks.UrlFileInfo;
-            stream.streamType = StreamOperationType.Write;
-            try
-            {
-                if (blocks.UrlFileInfo.Flags.HasFlag(TransferFlags.BreakpointResume) && File.Exists(stream.rrqmPath))
-                {
-                    stream.fileStream = new FileStream(stream.rrqmPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                    int blocksLength = (int)(stream.fileStream.Length - blocks.UrlFileInfo.FileLength);
-                    if (blocksLength > 0)
-                    {
-                        stream.fileStream.Position = blocks.UrlFileInfo.FileLength;
-                        byte[] buffer = new byte[blocksLength];
-                        stream.fileStream.Read(buffer, 0, buffer.Length);
-                        try
-                        {
-                            PBCollectionTemp readBlocks = SerializeConvert.RRQMBinaryDeserialize<PBCollectionTemp>(buffer);
-                            if (readBlocks.UrlFileInfo != null && blocks.UrlFileInfo != null && readBlocks.UrlFileInfo.FileHash != null)
-                            {
-                                if (readBlocks.UrlFileInfo.FileHash == blocks.UrlFileInfo.FileHash)
-                                {
-                                    stream.blocks = blocks = readBlocks.ToPBCollection();
-                                    mes = null;
-                                    return true;
-                                }
-                            }
-                        }
-                        catch
-                        {
-                        }
-                    }
-                    stream.fileStream.Dispose();
-                }
-                stream.blocks = blocks;
-                if (File.Exists(stream.rrqmPath))
-                {
-                    File.Delete(stream.rrqmPath);
-                }
-                stream.fileStream = new FileStream(stream.rrqmPath, FileMode.Create, FileAccess.ReadWrite);
-                stream.SaveProgressBlockCollection();
-                mes = null;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                mes = ex.Message;
-                stream.Dispose();
-                stream = null;
-                return false;
-            }
+            base.Dispose();
         }
 
-        internal bool FinishStream()
+        internal bool FinishStream(bool overwrite)
         {
-            this.fileStream.SetLength(this.urlFileInfo.FileLength);
-            this.fileStream.Flush();
-            UrlFileInfo info = this.urlFileInfo;
-            this.Dispose();
-            if (File.Exists(info.SaveFullPath))
+            string path = this.rrqmPath.Replace(".rrqm", string.Empty);
+            if (overwrite && File.Exists(path))
             {
-                File.Delete(info.SaveFullPath);
+                File.Delete(path);
             }
-            File.Move(info.SaveFullPath + ".rrqm", info.SaveFullPath);
+            this.SetLength(this.fileInfo.FileLength);
+            this.Flush();
+            base.Dispose();
+            File.Move(this.rrqmPath, path);
+            path = this.rrqmPath.Replace(".rrqm", string.Empty) + ".temp";
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
             return true;
         }
 
-        internal void Dispose()
+        private static int saveInterval = 1000;
+
+        /// <summary>
+        /// 进度保存时间，默认1000毫秒。
+        /// </summary>
+        public static int SaveInterval
         {
-            this.blocks = null;
-            this.urlFileInfo = null;
-            if (this.fileStream != null)
+            get { return saveInterval; }
+            set
             {
-                this.fileStream.Dispose();
-                this.fileStream = null;
+                if (value < 0)
+                {
+                    value = 0;
+                }
+                saveInterval = value;
             }
         }
 
-        internal void SaveProgressBlockCollection()
+
+        TimeSpan lastTime;
+       
+        /// <summary>
+        /// 保存进度
+        /// </summary>
+        public void SaveProgress()
         {
-            byte[] dataBuffer = SerializeConvert.RRQMBinarySerialize(PBCollectionTemp.GetFromProgressBlockCollection(blocks), true);
-            this.fileStream.Position = this.urlFileInfo.FileLength;
-            this.fileStream.WriteAsync(dataBuffer, 0, dataBuffer.Length);
-            this.fileStream.Flush();
+            if (this.streamType == StreamOperationType.RRQMWrite)
+            {
+                if (DateTime.Now.TimeOfDay - lastTime > TimeSpan.FromMilliseconds(saveInterval))
+                {
+                    SerializeConvert.XmlSerializeToFile(this.fileInfo, this.rrqmPath.Replace(".rrqm", string.Empty) + ".temp");
+                    lastTime = DateTime.Now.TimeOfDay;
+                }
+            }
         }
     }
 }

@@ -11,15 +11,14 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
+using RRQMSocket.Helper;
 using RRQMSocket.RPC.RRQMRPC;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
@@ -27,1027 +26,990 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 通讯客户端主类
     /// </summary>
-    public class FileClient : TcpRpcClient, IFileClient, IDisposable
+    public class FileClient : TcpRpcClient, IFileClient
     {
-        private ProgressBlockCollection fileBlocks;
+        private ConcurrentDictionary<int, FileOperationEventArgs> eventArgs;
 
-        private TransferCollection fileTransferCollection;
+        private ResponseType responseType;
 
-        private int packetSize = 1024 * 64;
-
-        private long position;
-
-        private float progress;
-
-        private string receiveDirectory = string.Empty;
-
-        private string rrqmPath;
-
-        private long speed;
-
-        private bool stop;
-
-        private long tempLength;
-
-        private int timeout = 60 * 1000;
-
-        private TransferStatus transferStatus;
-
-        private UrlFileInfo transferUrlFileInfo;
-
-        private EventWaitHandle transferWaitHandle;
-
-        private WaitData<ByteBlock> waitDataSend;
+        private string rootPath = string.Empty;
 
         static FileClient()
         {
-            AddUsedProtocol(110, "同步设置");
-            AddUsedProtocol(111, "通用信道返回");
-            AddUsedProtocol(112, "请求下载");
-            AddUsedProtocol(113, "下载文件分块");
-            AddUsedProtocol(114, "退出下载通道");
-            AddUsedProtocol(115, "确认下载完成");
-            AddUsedProtocol(116, "请求上传");
-            AddUsedProtocol(117, "上传分块");
-            AddUsedProtocol(118, "停止上传");
-            AddUsedProtocol(119, "确认上传完成");
-            AddUsedProtocol(120, "智能包调节");
+            AddUsedProtocol(200, "Client pull file from SocketClient.");
+            AddUsedProtocol(201, "Client begin pull file from SocketClient.");
+            AddUsedProtocol(202, "Client push file to SocketClient.");
+            AddUsedProtocol(203, "SocketClient pull file from client.");
+            AddUsedProtocol(204, "SocketClient begin pull file from client.");
+            AddUsedProtocol(205, "SocketClient push file to client.");
 
-            AddUsedProtocol(121, "服务器暂停当前任务");
-            AddUsedProtocol(122, "服务器恢复当前任务");
-            AddUsedProtocol(123, "服务器终止当前任务");
-            AddUsedProtocol(124, "服务器终止所有任务");
-            for (short i = 125; i < 200; i++)
+            for (short i = 206; i < 300; i++)
             {
                 AddUsedProtocol(i, "保留协议");
             }
         }
 
         /// <summary>
-        /// 无参数构造函数
+        /// 构造函数
         /// </summary>
         public FileClient()
         {
-            this.waitDataSend = new WaitData<ByteBlock>();
-            this.transferWaitHandle = new AutoResetEvent(false);
-            this.fileTransferCollection = new TransferCollection();
-            this.transferStatus = TransferStatus.None;
-            this.fileTransferCollection.OnCollectionChanged += this.FileTransferCollection_OnCollectionChanged;
+            this.eventArgs = new ConcurrentDictionary<int, FileOperationEventArgs>();
         }
+        
+        /// <summary>
+        /// 文件传输开始之前
+        /// </summary>
+        public event RRQMFileOperationEventHandler<FileClient> BeforeFileTransfer;
 
         /// <summary>
-        /// 传输文件之前
+        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
-        public event RRQMFileOperationEventHandler BeforeFileTransfer;
+        public event RRQMTransferFileEventHandler<FileClient> FinishedFileTransfer;
 
         /// <summary>
-        /// 当文件传输集合更改时
+        /// <inheritdoc/>
         /// </summary>
-        public event RRQMMessageEventHandler<FileClient> FileTransferCollectionChanged;
-
-        /// <summary>
-        /// 当文件传输完成时
-        /// </summary>
-        public event RRQMTransferFileMessageEventHandler FinishedFileTransfer;
-
-        /// <summary>
-        /// 传输文件错误
-        /// </summary>
-        public event RRQMTransferFileMessageEventHandler TransferFileError;
-
-        /// <summary>
-        /// 获取当前传输文件包
-        /// </summary>
-        public ProgressBlockCollection FileBlocks { get { return fileBlocks == null ? null : fileBlocks; } }
-
-        /// <summary>
-        /// 文件传输队列集合
-        /// </summary>
-        public TransferCollection FileTransferCollection
+        public ResponseType ResponseType
         {
-            get { return fileTransferCollection; }
+            get { return responseType; }
+            set { responseType = value; }
         }
-
+       
         /// <summary>
-        /// 默认接收文件的存放目录
+        /// 根路径
         /// </summary>
-        public string ReceiveDirectory
+        public string RootPath
         {
-            get { return receiveDirectory; }
-        }
-
-        /// <summary>
-        /// 单次请求超时时间 min=5000,max=60*1000 ms
-        /// </summary>
-        public int Timeout
-        {
-            get { return timeout; }
-        }
-
-        /// <summary>
-        /// 获取当前传输文件信息
-        /// </summary>
-        public UrlFileInfo TransferFileInfo { get { return this.transferUrlFileInfo; } }
-
-        /// <summary>
-        /// 获取当前传输进度
-        /// </summary>
-        public float TransferProgress
-        {
-            get
+            get { return rootPath; }
+            set
             {
-                if (fileBlocks == null)
+                if (value == null)
                 {
-                    return 0;
+                    value = string.Empty;
                 }
-                if (fileBlocks.UrlFileInfo != null)
-                {
-                    this.progress = fileBlocks.UrlFileInfo.FileLength > 0 ? (float)position / fileBlocks.UrlFileInfo.FileLength : 0;//计算下载完成进度
-                }
-                else
-                {
-                    this.progress = 0;
-                }
-                return progress <= 1 ? progress : 1;
+                rootPath = value;
             }
         }
 
         /// <summary>
-        /// 获取当前传输速度
+        /// 从对点拉取文件
         /// </summary>
-        public long TransferSpeed
+        public Result PullFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
         {
-            get
+            if (fileRequest is null)
             {
-                this.speed = tempLength;
-                tempLength = 0;
-                return speed;
+                return new Result(ResultCode.Error, ResType.ArgumentNull.GetResString(nameof(fileRequest)));
             }
-        }
 
-        /// <summary>
-        /// 获取当前传输状态
-        /// </summary>
-        public TransferStatus TransferStatus
-        {
-            get { return transferStatus; }
-        }
+            if (fileOperator is null)
+            {
+                return new Result(ResultCode.Error, ResType.ArgumentNull.GetResString(nameof(fileOperator)));
+            }
 
-        /// <summary>
-        /// 请求下载文件
-        /// </summary>
-        /// <param name="urlFileInfo"></param>
-        /// <param name="host">IP及端口</param>
-        /// <param name="verifyToken">验证令箭</param>
-        /// <param name="finishedCallBack">完成时回调</param>
-        /// <param name="errorCallBack"></param>
-        /// <returns></returns>
-        public static FileClient RequestFile(UrlFileInfo urlFileInfo, string host, string verifyToken = null,
-            RRQMTransferFileMessageEventHandler finishedCallBack = null,
-            RRQMTransferFileMessageEventHandler errorCallBack = null)
-        {
-            FileClient fileClient = new FileClient();
+            if (string.IsNullOrEmpty(fileRequest.SavePath))
+            {
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetResString(nameof(fileRequest.SavePath), fileRequest.SavePath)));
+            }
+
+            if (!fileRequest.Overwrite)
+            {
+                if (File.Exists(fileRequest.SavePath))
+                {
+                    return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.FileExists.GetResString(fileRequest.SavePath)));
+                }
+            }
+
+            WaitFileInfo waitFileInfo = new WaitFileInfo();
+            waitFileInfo.PackageSize = fileOperator.PackageSize;
+            waitFileInfo.Metadata = metadata;
+            waitFileInfo.FileRequest = fileRequest;
+
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
+
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength).WriteObject(waitFileInfo, SerializationType.Json);
+            LoopAction loopAction = null;
             try
             {
-                var config = new FileClientConfig();
-                config.SetValue(TcpClientConfig.RemoteIPHostProperty, new IPHost(host))
-                    .SetValue(TokenClientConfig.VerifyTokenProperty, verifyToken);
+                this.InternalSend(200, byteBlock.Buffer, 0, byteBlock.Len);
+                waitData.SetCancellationToken(fileOperator.Token);
 
-                fileClient.Setup(config);
-                fileClient.Connect();
+                waitData.Wait(60 * 1000);
 
-                fileClient.FinishedFileTransfer +=
-                    (IFileClient client, TransferFileMessageArgs e) =>
-                    {
-                        fileClient.Dispose();
-                        finishedCallBack?.Invoke(client, e);
-                    };
-                fileClient.TransferFileError +=
-                    (IFileClient client, TransferFileMessageArgs e) =>
-                    {
-                        fileClient.Dispose();
-                        errorCallBack?.Invoke(client, e);
-                    };
-                fileClient.RequestTransfer(urlFileInfo);
-                return fileClient;
+                switch (waitData.Status)
+                {
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitFileInfo waitFileResult = (WaitFileInfo)waitData.WaitResult;
+                            if (waitFileResult.Status == 1)
+                            {
+                                return this.OnPreviewPullFile(fileOperator, waitFileResult);
+                            }
+                            else if (waitFileResult.Status == 2)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetResString()));
+                            }
+                            else if (waitFileResult.Status == 3)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetResString(nameof(waitFileResult.FileRequest.Path), waitFileResult.FileRequest.Path)));
+                            }
+                            else if (waitFileResult.Status == 4)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteFileNotExists.GetResString(waitFileResult.FileRequest.Path)));
+                            }
+                            else if (waitFileResult.Status == 6)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteNotSupported.GetResString()));
+                            }
+                            else
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, waitFileResult.Message));
+                            }
+                        }
+                    case WaitDataStatus.Overtime:
+                        {
+                            return fileOperator.SetFileResult(new Result(ResultCode.Overtime));
+                        }
+                    case WaitDataStatus.Canceled:
+                        {
+                            return fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                        }
+                    case WaitDataStatus.Disposed:
+                    default:
+                        {
+                            return fileOperator.SetFileResult(new Result(ResultCode.Error));
+                        }
+                }
             }
             catch (Exception ex)
             {
-                fileClient.Dispose();
-                throw new RRQMException(ex.Message);
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                if (loopAction != null)
+                {
+                    loopAction.Dispose();
+                }
+                byteBlock.Dispose();
             }
         }
 
         /// <summary>
-        /// 取消指定传输任务
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="fileInfo"></param>
+        /// <param name="fileRequest"></param>
+        /// <param name="fileOperator"></param>
+        /// <param name="metadata"></param>
         /// <returns></returns>
-        public bool CancelTransfer(UrlFileInfo fileInfo)
+        public Task<Result> PullFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
         {
-            return this.fileTransferCollection.Remove(fileInfo);
+            return Task.Run(() =>
+             {
+                 return this.PullFile(fileRequest, fileOperator, metadata);
+             });
         }
 
         /// <summary>
-        /// 断开连接
+        /// 将文件推送到对点
         /// </summary>
-        public override ITcpClient Disconnect()
+        public Result PushFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
         {
-            base.Disconnect();
-            this.ResetVariable();
-            return this;
-        }
+            if (fileRequest is null)
+            {
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ArgumentNull.GetResString(nameof(fileRequest))));
+            }
 
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-            if (this.transferStatus == TransferStatus.Download)
+            if (fileOperator is null)
             {
-                this.StopDownload();
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ArgumentNull.GetResString(nameof(fileOperator))));
             }
-            else if (this.transferStatus == TransferStatus.Upload)
-            {
-                this.StopUpload();
-            }
-            this.waitDataSend.Dispose();
-            this.transferStatus = TransferStatus.None;
-            this.progress = 0;
-            this.speed = 0;
-        }
 
-        /// <summary>
-        /// 暂停传输
-        /// </summary>
-        public void PauseTransfer()
-        {
-            if (this.transferStatus == TransferStatus.Download)
+            if (string.IsNullOrEmpty(fileRequest.SavePath))
             {
-                this.transferStatus = TransferStatus.PauseDownload;
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetResString(nameof(fileRequest.SavePath), fileRequest.SavePath)));
             }
-            else if (this.transferStatus == TransferStatus.Upload)
+            string fullPath;
+            if (Path.IsPathRooted(fileRequest.Path))
             {
-                this.transferStatus = TransferStatus.PauseUpload;
-            }
-        }
-
-        /// <summary>
-        /// 请求传输文件
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        public void RequestTransfer(UrlFileInfo fileInfo)
-        {
-            this.fileTransferCollection.Add(fileInfo);
-            BeginTransfer();
-        }
-
-        /// <summary>
-        /// 恢复传输
-        /// </summary>
-        /// <returns>是否有任务成功继续</returns>
-        public bool ResumeTransfer()
-        {
-            if (this.transferStatus == TransferStatus.PauseDownload)
-            {
-                this.transferStatus = TransferStatus.Download;
-            }
-            else if (this.transferStatus == TransferStatus.PauseUpload)
-            {
-                this.transferStatus = TransferStatus.Upload;
+                fullPath = fileRequest.Path;
             }
             else
             {
-                return false;
+                fullPath = Path.GetFullPath(Path.Combine(this.rootPath, fileRequest.Path));
+            }
+            if (!File.Exists(fullPath))
+            {
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetResString(nameof(fullPath), fullPath)));
             }
 
-            return this.transferWaitHandle.Set();
+            RRQMFileInfo fileInfo;
+            try
+            {
+                fileInfo = FileTool.GetFileInfo(fullPath, fileRequest.FileCheckerType);
+            }
+            catch (Exception ex)
+            {
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
+            }
+
+            WaitFileInfo waitFileInfo = new WaitFileInfo();
+            waitFileInfo.FileInfo = fileInfo;
+            waitFileInfo.PackageSize = fileOperator.PackageSize;
+            waitFileInfo.Metadata = metadata;
+            waitFileInfo.FileRequest = fileRequest;
+
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
+
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength).WriteObject(waitFileInfo, SerializationType.Json);
+            LoopAction loopAction = null;
+            try
+            {
+                this.InternalSend(202, byteBlock.Buffer, 0, byteBlock.Len);
+                waitData.SetCancellationToken(fileOperator.Token);
+
+                waitData.Wait(60 * 1000);
+
+                switch (waitData.Status)
+                {
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitTransfer waitTransferResult = (WaitTransfer)waitData.WaitResult;
+                            if (waitTransferResult.Status == 1)
+                            {
+                                return this.OnPreviewPushFile(fileOperator, waitTransferResult);
+                            }
+                            else if (waitTransferResult.Status == 2)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetResString()));
+                            }
+                            else if (waitTransferResult.Status == 3)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.FileExists.GetResString()));
+                            }
+                            else if (waitTransferResult.Status == 4)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetResString()));
+                            }
+                            else if (waitTransferResult.Status == 6)
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteNotSupported.GetResString()));
+                            }
+                            else
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, waitTransferResult.Message));
+                            }
+                        }
+                    case WaitDataStatus.Overtime:
+                        {
+                            return fileOperator.SetFileResult(new Result(ResultCode.Overtime));
+                        }
+                    case WaitDataStatus.Canceled:
+                        {
+                            return fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                        }
+                    case WaitDataStatus.Disposed:
+                    default:
+                        {
+                            return fileOperator.SetFileResult(new Result(ResultCode.Error));
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+                return fileOperator.SetFileResult(new Result(ResultCode.Overtime, ex.Message));
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                if (loopAction != null)
+                {
+                    loopAction.Dispose();
+                }
+                byteBlock.Dispose();
+            }
         }
 
         /// <summary>
-        /// 终止所有传输
+        /// <inheritdoc/>
         /// </summary>
-        public void StopAllTransfer()
+        /// <param name="fileRequest"></param>
+        /// <param name="fileOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public Task<Result> PushFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
         {
-            this.stop = true;
-            this.fileTransferCollection.Clear();
+            return Task.Run(() =>
+            {
+                return this.PushFile(fileRequest, fileOperator, metadata);
+            });
         }
 
         /// <summary>
-        /// 终止当前传输
-        /// </summary>
-        ///<exception cref="RRQMException"></exception>
-        public void StopThisTransfer()
-        {
-            this.stop = true;
-            this.BeginTransfer();
-        }
-
-        /// <summary>
-        /// 文件客户端处理其他协议
+        /// 文件终端处理其他协议
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void FileClientHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        protected virtual void FileTransferHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
             this.OnHandleDefaultData(procotol, byteBlock);
         }
 
         /// <summary>
-        /// 加载配置
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="clientConfig"></param>
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
+            this.ResponseType = clientConfig.GetValue<ResponseType>(FileClientConfig.ResponseTypeProperty);
+            this.RootPath = clientConfig.GetValue<string>(FileClientConfig.RootPathProperty);
             base.LoadConfig(clientConfig);
-            this.receiveDirectory = (string)clientConfig.GetValue(FileClientConfig.ReceiveDirectoryProperty);
-            this.timeout = (int)clientConfig.GetValue(FileClientConfig.TimeoutProperty);
         }
-
+       
         /// <summary>
-        /// 密封方法
+        /// 在传输之前
         /// </summary>
-        /// <param name="procotol"></param>
-        /// <param name="byteBlock"></param>
-        protected sealed override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        /// <param name="e"></param>
+        protected virtual void OnBeforeFileTransfer(FileOperationEventArgs e)
         {
-            switch (procotol)
-            {
-                case 111:
-                    {
-                        byteBlock.SetHolding(true);
-                        this.waitDataSend.Set(byteBlock);
-                        break;
-                    }
-
-                case 120:
-                    {
-                        byteBlock.Pos = 2;
-                        this.packetSize = byteBlock.ReadInt32();
-                        break;
-                    }
-                case 121:
-                    {
-                        this.PauseTransfer();
-                        break;
-                    }
-                case 122:
-                    {
-                        this.ResumeTransfer();
-                        break;
-                    }
-                case 123:
-                    {
-                        this.StopThisTransfer();
-                        break;
-                    }
-                case 124:
-                    {
-                        this.StopAllTransfer();
-                        break;
-                    }
-                default:
-                    {
-                        FileClientHandleDefaultData(procotol, byteBlock);
-                        break;
-                    }
-            }
-        }
-
-        private void BeginTransfer()
-        {
-            Task.Run(() =>
-            {
-                lock (this)
-                {
-                    if (this.transferStatus == TransferStatus.None)
-                    {
-                        if (this.fileTransferCollection.GetFirst(out UrlFileInfo urlFileInfo))
-                        {
-                            try
-                            {
-                                if (urlFileInfo.TransferType == TransferType.Download)
-                                {
-                                    this.DownloadFile(urlFileInfo, true);
-                                }
-                                else
-                                {
-                                    this.UploadFile(urlFileInfo, true);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                this.OnTransferError(urlFileInfo.TransferType, ex.Message, urlFileInfo);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        private void DownloadFile(UrlFileInfo urlFileInfo, bool triggerEvent)
-        {
-            if (!this.Online)
-            {
-                throw new RRQMException("未连接服务器");
-            }
-            else if (this.transferStatus != TransferStatus.None)
-            {
-                throw new RRQMTransferingException("已有传输任务在进行中");
-            }
-
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-
             try
             {
-                SerializeConvert.RRQMBinarySerialize(byteBlock, urlFileInfo, true);
-                ByteBlock returnByteBlock = this.SingleSendWait(112, urlFileInfo.Timeout, byteBlock);
-                FileWaitResult waitResult = SerializeConvert.RRQMBinaryDeserialize<FileWaitResult>(returnByteBlock.Buffer, 2);
-                returnByteBlock.SetHolding(false);
-                if (waitResult.Status == 2)
-                {
-                    throw new RRQMTransferErrorException(waitResult.Message);
-                }
-                urlFileInfo = waitResult.PBCollectionTemp.UrlFileInfo;
-
-                ProgressBlockCollection blocks = ProgressBlockCollection.CreateProgressBlockCollection(urlFileInfo);
-                if (triggerEvent)
-                {
-                    this.OnBeforeFileTransfer(blocks);
-                }
-                if (!FileStreamPool.LoadWriteStream(ref blocks, !triggerEvent, out string mes))
-                {
-                    this.OnTransferError(urlFileInfo.TransferType, mes, urlFileInfo);
-                    return;
-                }
-
-                this.transferStatus = TransferStatus.Download;
-                this.fileBlocks = blocks;
-                this.transferUrlFileInfo = blocks.UrlFileInfo;
-                this.rrqmPath = blocks.UrlFileInfo.SaveFullPath + ".rrqm";
-                Thread thread_Transfer = new Thread(this.DownloadFileBlock);
-                thread_Transfer.IsBackground = true;
-                thread_Transfer.Name = "文件下载线程";
-                thread_Transfer.Start();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        private void DownloadFileBlock()
-        {
-            this.stop = false;
-            while (true)
-            {
-                if (FileStreamPool.GetFreeFileBlock(this.rrqmPath, out FileBlock fileBlock, out string errorMes))
-                {
-                    if (fileBlock == null)
-                    {
-                        break;
-                    }
-                    this.position = fileBlock.Position;
-                    long surplusLength = fileBlock.UnitLength;
-                    int reTryCount = 0;
-                    while (surplusLength > 0)
-                    {
-                        if (!this.Online)
-                        {
-                            fileBlock.RequestStatus = RequestStatus.Hovering;
-                            this.OnTransferError(TransferType.Download, "客户端已断开连接！！！");
-                            return;
-                        }
-                        if (disposable || stop)
-                        {
-                            fileBlock.RequestStatus = RequestStatus.Hovering;
-                            StopDownload();
-                            return;
-                        }
-                        if (this.transferStatus == TransferStatus.PauseDownload)
-                        {
-                            transferWaitHandle.WaitOne();
-                        }
-
-                        ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                        byteBlock.Write(this.position);
-                        int requestLength = surplusLength > this.packetSize ? this.packetSize : (int)surplusLength;
-                        byteBlock.Write(requestLength);
-
-                        try
-                        {
-                            ByteBlock returnByteBlock = this.SingleSendWait(113, this.timeout, byteBlock);
-                            if (returnByteBlock.Buffer[2] == 1)
-                            {
-                                if (this.transferStatus != TransferStatus.Download && this.transferStatus != TransferStatus.PauseDownload)
-                                {
-                                    fileBlock.RequestStatus = RequestStatus.Hovering;
-                                    return;
-                                }
-                                if (FileStreamPool.WriteFile(this.rrqmPath, out string mes, out RRQMStream _, this.position, returnByteBlock.Buffer, 3, returnByteBlock.Len - 3))
-                                {
-                                    tempLength += requestLength;
-                                    this.position += requestLength;
-                                    surplusLength -= requestLength;
-                                    reTryCount = 0;
-                                }
-                                else
-                                {
-                                    throw new RRQMException($"文件写入错误，信息：{mes}");
-                                }
-                            }
-                            else if (returnByteBlock.Buffer[2] == 2)
-                            {
-                                string mes = Encoding.UTF8.GetString(returnByteBlock.Buffer, 3, returnByteBlock.Len - 3);
-                                throw new RRQMException($"文件请求错误，信息：{mes}");
-                            }
-                            returnByteBlock.SetHolding(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            reTryCount++;
-                            Logger.Debug(LogType.Message, this, $"下载文件错误，信息：{ex.Message}，即将进行第{reTryCount}次重试");
-
-                            if (reTryCount > 10)
-                            {
-                                fileBlock.RequestStatus = RequestStatus.Hovering;
-                                this.OnTransferError(TransferType.Download, "重试次数达到最大，详细信息请查看日志");
-                                return;
-                            }
-                        }
-                        finally
-                        {
-                            byteBlock.Dispose();
-                        }
-                    }
-                    fileBlock.RequestStatus = RequestStatus.Finished;
-                    if (this.transferUrlFileInfo.Flags.HasFlag(TransferFlags.BreakpointResume))
-                    {
-                        try
-                        {
-                            FileStreamPool.SaveProgressBlockCollection(this.rrqmPath);
-                        }
-                        catch (Exception ex)
-                        {
-                            this.Logger.Debug(LogType.Error, this, "保存进度文件错误", ex);
-                        }
-                    }
-                }
-                else
-                {
-                    this.Logger.Debug(LogType.Error, this, $"获取文件块错误，信息：{errorMes}");
-                }
-            }
-            if (FileStreamPool.CheckAllFileBlockFinished(this.rrqmPath))
-            {
-                this.DownloadFinished();
-            }
-        }
-
-        private void DownloadFinished()
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                try
-                {
-                    ByteBlock returnByteBlock = this.SingleSendWait(115, this.timeout);
-
-                    if (returnByteBlock.Buffer[2] == 1)
-                    {
-                        OnDownloadFileFinished();
-                        return;
-                    }
-                    else
-                    {
-                        this.Logger.Debug(LogType.Warning, this, $"确认下载完成返回状态错误，即将进行第{i + 1}次重试");
-                    }
-                    returnByteBlock.SetHolding(false);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.Debug(LogType.Warning, this, $"确认下载完成错误，信息：{ex.Message}，即将进行第{i + 1}次重试");
-                }
-            }
-
-            this.OnTransferError(TransferType.Download, "确认下载完成状态重试次数已达到最大，具体信息请查看日志输出");
-        }
-
-        private void FileTransferCollection_OnCollectionChanged(MesEventArgs e)
-        {
-            this.FileTransferCollectionChanged?.Invoke(this, e);
-        }
-
-        private void OnBeforeFileTransfer(ProgressBlockCollection blocks)
-        {
-            FileOperationEventArgs args = new FileOperationEventArgs();
-            args.UrlFileInfo = blocks.UrlFileInfo;
-            if (blocks.UrlFileInfo.TransferType == TransferType.Download)
-            {
-                //下载
-                if (string.IsNullOrEmpty(blocks.UrlFileInfo.SaveFullPath))
-                {
-                    blocks.UrlFileInfo.SaveFullPath = Path.Combine(this.receiveDirectory, blocks.UrlFileInfo.FileName);
-                }
-            }
-
-            args.TransferType = blocks.UrlFileInfo.TransferType;
-            args.IsPermitOperation = true;
-            try
-            {
-                this.BeforeFileTransfer?.Invoke(this, args);
+                this.BeforeFileTransfer?.Invoke(this, e);
             }
             catch (Exception ex)
             {
                 this.Logger.Debug(LogType.Error, this, $"在事件{nameof(BeforeFileTransfer)}中发生异常", ex);
             }
-            if (blocks.UrlFileInfo.TransferType == TransferType.Download)
-            {
-                //下载
-                blocks.UrlFileInfo.SaveFullPath = Path.GetFullPath(args.UrlFileInfo.SaveFullPath);
-            }
-            else
-            {
-                blocks.UrlFileInfo.FilePath = Path.GetFullPath(args.UrlFileInfo.FilePath);
-            }
         }
 
-        private void OnDownloadFileFinished()
+        /// <summary>
+        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnFinishedFileTransfer(FileTransferStatusEventArgs e)
         {
             try
             {
-                FileStreamPool.DisposeWriteStream(this.rrqmPath, true);
-                TransferFileMessageArgs args = new TransferFileMessageArgs();
-                args.UrlFileInfo = this.transferUrlFileInfo;
-                args.TransferType = TransferType.Download;
-                TransferFileHashDictionary.AddFile(this.transferUrlFileInfo);
-
-                ResetVariable();
-                try
-                {
-                    this.FinishedFileTransfer?.Invoke(this, args);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FinishedFileTransfer)}中发生异常", ex);
-                }
-                this.BeginTransfer();
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Debug(LogType.Error, this, $"在完成下载时中发生异常", ex);
-            }
-        }
-
-        private void OnTransferError(TransferType transferType, string msg, UrlFileInfo urlFileInfo = null)
-        {
-            TransferFileMessageArgs args = new TransferFileMessageArgs();
-            args.UrlFileInfo = urlFileInfo == null ? this.TransferFileInfo : urlFileInfo;
-            args.TransferType = transferType;
-            args.Message = msg;
-            switch (transferType)
-            {
-                case TransferType.Upload:
-                    {
-                        StopUpload();
-                        break;
-                    }
-                case TransferType.Download:
-                    {
-                        StopDownload();
-                        break;
-                    }
-            }
-
-            try
-            {
-                this.TransferFileError?.Invoke(this, args);
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.TransferFileError)}中发生异常。", ex);
-            }
-
-            this.BeginTransfer();
-        }
-
-        private void OnUploadFileFinished()
-        {
-            TransferFileMessageArgs args = new TransferFileMessageArgs();
-            try
-            {
-                FileStreamPool.DisposeReadStream(this.transferUrlFileInfo.FilePath);
-                args.UrlFileInfo = this.transferUrlFileInfo;
-                args.TransferType = TransferType.Upload;
-                ResetVariable();
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Debug(LogType.Error, this, "未知异常", ex);
-            }
-
-            try
-            {
-                this.FinishedFileTransfer?.Invoke(this, args);
+                this.FinishedFileTransfer?.Invoke(this, e);
             }
             catch (Exception ex)
             {
                 this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FinishedFileTransfer)}中发生异常", ex);
             }
-            this.BeginTransfer();
         }
 
-        private void ResetVariable()
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="procotol"></param>
+        /// <param name="byteBlock"></param>
+        protected override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
-            this.fileBlocks = null;
-            this.transferStatus = TransferStatus.None;
-            this.transferUrlFileInfo = null;
-            this.progress = 0;
-            this.speed = 0;
-            if (!string.IsNullOrEmpty(this.rrqmPath))
+            switch (procotol)
             {
-                FileStreamPool.DisposeWriteStream(this.rrqmPath, false);
-            }
-            this.rrqmPath = null;
-        }
-
-        private ByteBlock SingleSendWait(short procotol, int timeout, ByteBlock byteBlock = null)
-        {
-            lock (this)
-            {
-                this.waitDataSend.Reset();
-                if (!this.Online)
-                {
-                    throw new RRQMNotConnectedException("客户端未连接");
-                }
-                if (byteBlock == null)
-                {
-                    this.InternalSend(procotol, new byte[0], 0, 0);
-                }
-                else
-                {
-                    this.InternalSend(procotol, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                if (this.waitDataSend.Wait(timeout) == WaitDataStatus.Overtime)
-                {
-                    throw new RRQMTimeoutException("请求超时");
-                }
-                return this.waitDataSend.WaitResult;
-            }
-        }
-
-        private void StopDownload()
-        {
-            if (this.disposable)
-            {
-                return;
-            }
-            this.stop = true;
-            FileStreamPool.DisposeWriteStream(this.rrqmPath, false);
-            if (!this.Online)
-            {
-                ResetVariable();
-                return;
-            }
-            try
-            {
-                ByteBlock returnByteBlock = this.SingleSendWait(114, this.timeout);
-                returnByteBlock.SetHolding(false);
-                ResetVariable();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        private void StopUpload()
-        {
-            try
-            {
-                if (this.transferUrlFileInfo == null)
-                {
-                    return;
-                }
-                FileStreamPool.DisposeReadStream(this.transferUrlFileInfo.FilePath);
-                if (!this.Online)
-                {
-                    ResetVariable();
-                    return;
-                }
-                ByteBlock returnByteBlock = this.SingleSendWait(118, this.timeout);
-                returnByteBlock.SetHolding(false);
-                ResetVariable();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        private void UploadFile(UrlFileInfo urlFileInfo, bool triggerEvent)
-        {
-            if (!this.Online)
-            {
-                throw new RRQMNotConnectedException("未连接到服务器");
-            }
-            else if (this.transferStatus != TransferStatus.None)
-            {
-                throw new RRQMTransferingException("已有传输任务在进行中");
-            }
-            byte[] datas = SerializeConvert.RRQMBinarySerialize(urlFileInfo, true);
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(datas.Length);
-            byteBlock.Write(datas);
-
-            try
-            {
-                ByteBlock returnByteBlock = this.SingleSendWait(116, this.timeout, byteBlock);
-                FileWaitResult waitResult = SerializeConvert.RRQMBinaryDeserialize<FileWaitResult>(returnByteBlock.Buffer, 2);
-                returnByteBlock.SetHolding(false);
-                if (waitResult.Status == 0)
-                {
-                    throw new RRQMTimeoutException("等待结果超时");
-                }
-                else if (waitResult.Status == 2)
-                {
-                    throw new RRQMTransferErrorException(waitResult.Message);
-                }
-                else if (waitResult.Status == 3)
-                {
-                    this.transferStatus = TransferStatus.Upload;
-                    this.transferUrlFileInfo = urlFileInfo;
-                    this.fileBlocks = ProgressBlockCollection.CreateProgressBlockCollection(urlFileInfo);
-                    if (triggerEvent)
+                case 200:
                     {
-                        this.OnBeforeFileTransfer(this.fileBlocks);
+                        byteBlock.Pos = 2;
+                        WaitFileInfo waitFile = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                        this.WaitHandlePool.SetRun(waitFile);
+                        break;
                     }
-                    Task.Run(() =>
+                case 201:
                     {
-                        UploadFinished();
-                    });
+                        byteBlock.Pos = 2;
+                        WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                        this.WaitHandlePool.SetRun(waitTransfer);
+                        break;
+                    }
+                case 202:
+                    {
+                        byteBlock.Pos = 2;
+                        WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                        this.WaitHandlePool.SetRun(waitTransfer);
+                        break;
+                    }
+                case 203:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+
+                            EasyAction.TaskRun(waitFileInfo, (w) =>
+                            {
+                                this.SendDefaultObject(203, this.P203_RequestPullFile(w));
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        break;
+                    }
+                case 204:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            EasyAction.TaskRun(waitTransfer, (w) =>
+                            {
+                                this.P204_BeginPullFile(w);
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        break;
+                    }
+                case 205:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            EasyAction.TaskRun(waitFileInfo, (w) =>
+                            {
+                                this.P205_RequestPushFile(w);
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        break;
+                    }
+                default:
+                    {
+                        this.FileTransferHandleDefaultData(procotol,byteBlock);
+                        break;
+                    }
+            }
+        }
+       
+        private Result OnPreviewPullFile(FileOperator fileOperator, WaitFileInfo waitFileInfo)
+        {
+            FileRequest fileRequest = waitFileInfo.FileRequest;
+            string savePath;
+            if (Path.IsPathRooted(fileRequest.SavePath))
+            {
+                savePath = fileRequest.SavePath + ".rrqm";
+            }
+            else
+            {
+                savePath = Path.GetFullPath(Path.Combine(this.rootPath, fileRequest.SavePath)) + ".rrqm";
+            }
+            RRQMFileInfo remoteFileInfo = waitFileInfo.FileInfo;
+
+            if (RRQMStreamPool.LoadWriteStream(savePath, fileOperator, waitFileInfo.FileRequest.Flags, ref remoteFileInfo, out RRQMStream stream, out string mes))
+            {
+                Channel channel = this.CreateChannel();
+
+                WaitTransfer waitTransfer = new WaitTransfer()
+                {
+                    PackageSize = waitFileInfo.PackageSize,
+                    EventHashCode = waitFileInfo.EventHashCode,
+                    ChannelID = channel.ID,
+                    Path = remoteFileInfo.FilePath,
+                    Position = remoteFileInfo.Posotion
+                };
+
+                WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitTransfer);
+                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength).WriteObject(waitTransfer, SerializationType.Json);
+                try
+                {
+                    this.InternalSend(201, byteBlock.Buffer, 0, byteBlock.Len);
+                    waitData.SetCancellationToken(fileOperator.Token);
+
+                    waitData.Wait(60 * 1000);
+
+                    switch (waitData.Status)
+                    {
+                        case WaitDataStatus.SetRunning:
+                            {
+                                WaitTransfer waitTransferResult = (WaitTransfer)waitData.WaitResult;
+                                if (waitTransferResult.Status == 1)
+                                {
+                                    stream.Position = remoteFileInfo.Posotion;
+                                    fileOperator.SetFileCompletedLength(remoteFileInfo.Posotion);
+                                    while (channel.MoveNext())
+                                    {
+                                        if (fileOperator.Token.IsCancellationRequested)
+                                        {
+                                            channel.Cancel();
+                                            fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                                            break;
+                                        }
+                                        ByteBlock block = channel.GetCurrentByteBlock();
+                                        block.Pos = 6;
+
+                                        if (block.TryReadBytesPackageInfo(out int pos, out int len))
+                                        {
+                                            stream.Write(block.Buffer, pos, len);
+                                            stream.fileInfo.Posotion = stream.Position;
+                                            fileOperator.AddFileFlow(len, remoteFileInfo.FileLength);
+                                            stream.SaveProgress();
+                                        }
+                                        block.SetHolding(false);
+                                    }
+
+                                    if (channel.Status == ChannelStatus.Completed)
+                                    {
+                                        stream.FinishStream(fileRequest.Overwrite);
+                                        return fileOperator.SetFileResult(new Result(ResultCode.Success));
+                                    }
+                                    else
+                                    {
+                                        return fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
+                                    }
+                                }
+                                else if (waitTransferResult.Status == 2)
+                                {
+                                    return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetResString(remoteFileInfo.FilePath)));
+                                }
+                                else if (waitTransferResult.Status == 3)
+                                {
+                                    return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.GetEventArgsFail.GetResString()));
+                                }
+                                else if (waitTransferResult.Status == 4)
+                                {
+                                    return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.SetChannelFail.GetResString()));
+                                }
+                                else
+                                {
+                                    return fileOperator.SetFileResult(new Result(ResultCode.Error));
+                                }
+                            }
+                        case WaitDataStatus.Overtime:
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Overtime));
+                            }
+                        case WaitDataStatus.Canceled:
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                            }
+                        case WaitDataStatus.Disposed:
+                        default:
+                            {
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error));
+                            }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
+                }
+                finally
+                {
+                    this.WaitHandlePool.Destroy(waitData);
+                    RRQMStreamPool.TryReleaseWriteStream(savePath, fileOperator);
+                    byteBlock.Dispose();
+                    channel.Dispose();
+                }
+            }
+            else
+            {
+                return new Result(ResultCode.Error, ResType.CreateWriteStreamFail.GetResString(savePath, mes));
+            }
+        }
+
+        private Result OnPreviewPushFile(FileOperator fileOperator, WaitTransfer waitTransfer)
+        {
+            if (RRQMStreamPool.LoadReadStream(waitTransfer.Path, out RRQMFileInfo fileInfo, out string mes))
+            {
+                if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
+                {
+                    ByteBlock byteBlock = this.BytePool.GetByteBlock(waitTransfer.PackageSize);
+                    LoopAction loopAction = null;
+                    try
+                    {
+                        long position = waitTransfer.Position;
+                        fileOperator.SetFileCompletedLength(waitTransfer.Position);
+                        loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
+                        {
+                            while (channel.Available && channel.MoveNext())
+                            {
+                                fileOperator.SetMaxSpeed(BitConverter.ToInt32(channel.GetCurrent(), 0));
+                            }
+                        });
+
+                        loopAction.RunAsync();
+
+                        while (true)
+                        {
+                            if (fileOperator.Token.IsCancellationRequested)
+                            {
+                                channel.Cancel("主动取消");
+                                fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                                break;
+                            }
+                            int r = RRQMStreamPool.ReadBytes(waitTransfer.Path, out mes, position, byteBlock.Buffer, 0, byteBlock.Capacity);
+                            if (r == -1)
+                            {
+                                channel.Cancel(mes);
+                                break;
+                            }
+                            else if (r == 0)
+                            {
+                                channel.Complete();
+                                break;
+                            }
+                            else
+                            {
+                                position += r;
+                                if (channel.TryWrite(byteBlock.Buffer, 0, r))
+                                {
+                                    fileOperator.AddFileFlow(r, fileInfo.FileLength);
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                    }
+                    finally
+                    {
+                        RRQMStreamPool.FinishedReadStream(waitTransfer.Path);
+                        RRQMStreamPool.TryReleaseReadStream(waitTransfer.Path);
+                        loopAction?.Dispose();
+                        byteBlock.Dispose();
+                    }
+                    return fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
                 }
                 else
                 {
-                    if (FileStreamPool.LoadReadStream(ref urlFileInfo, out string mes))
+                    return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.SetChannelFail.GetResString()));
+                }
+            }
+            else
+            {
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetResString()));
+            }
+        }
+
+        /// <summary>
+        /// 客户端请求下拉文件
+        /// </summary>
+        private WaitFileInfo P203_RequestPullFile(WaitFileInfo waitFileInfo)
+        {
+            //2.不允许
+            //3.路径无效
+            //4.文件不存在
+            //5.其他
+
+            if (this.responseType == ResponseType.None || this.responseType == ResponseType.Push)
+            {
+                waitFileInfo.Status = 6;
+                return waitFileInfo;
+            }
+            string fullPath;
+
+            if (Path.IsPathRooted(waitFileInfo.FileRequest.Path))
+            {
+                fullPath = waitFileInfo.FileRequest.Path;
+            }
+            else
+            {
+                fullPath = Path.GetFullPath(Path.Combine(this.rootPath, waitFileInfo.FileRequest.Path));
+            }
+            waitFileInfo.FileRequest.Path = fullPath;
+
+            FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Pull, waitFileInfo.FileRequest, new FileOperator(), waitFileInfo.Metadata, null);
+            this.OnBeforeFileTransfer(args);
+
+            if (string.IsNullOrEmpty(args.FileRequest.Path))
+            {
+                waitFileInfo.Status = 3;
+                return waitFileInfo;
+            }
+
+            if (args.IsPermitOperation)
+            {
+                if (File.Exists(fullPath))
+                {
+                    //合法传输
+                    waitFileInfo.FileInfo = FileTool.GetFileInfo(fullPath, args.FileRequest.FileCheckerType);
+                    waitFileInfo.Status = 1;
+                    waitFileInfo.EventHashCode = args.GetHashCode();
+
+                    this.eventArgs.TryAdd(args.GetHashCode(), args);
+                    RRQMCore.Run.EasyAction.DelayRun(1000 * 60, () =>
                     {
-                        this.transferStatus = TransferStatus.Upload;
-                        ProgressBlockCollection blocks = waitResult.PBCollectionTemp.ToPBCollection();
-                        blocks.UrlFileInfo = urlFileInfo;
-                        this.transferUrlFileInfo = urlFileInfo;
-                        this.fileBlocks = blocks;
-                        if (triggerEvent)
+                        if (this.eventArgs.TryRemove(args.GetHashCode(), out FileOperationEventArgs eventArgs))
                         {
-                            this.OnBeforeFileTransfer(blocks);
+                            FileTransferStatusEventArgs e = new FileTransferStatusEventArgs(
+                                 TransferType.Pull,
+                                 eventArgs.FileRequest,
+                                 eventArgs.Metadata,
+                                 new Result(ResultCode.Overtime, ResType.NoResponse.GetResString()), null);
+                            this.OnFinishedFileTransfer(e);
+                        }
+                    });
+                    return waitFileInfo;
+                }
+                else
+                {
+                    waitFileInfo.Status = 4;
+                    return waitFileInfo;
+                }
+            }
+            else
+            {
+                waitFileInfo.Status = 2;
+                return waitFileInfo;
+            }
+        }
+
+        private void P204_BeginPullFile(WaitTransfer waitTransfer)
+        {
+            //2.加载流异常
+            //3.事件操作器异常
+            //4.通道建立异常
+
+            FileTransferStatusEventArgs e;
+            if (this.eventArgs.TryRemove(waitTransfer.EventHashCode, out FileOperationEventArgs args))
+            {
+                if (RRQMStreamPool.LoadReadStream(waitTransfer.Path, out RRQMFileInfo fileInfo, out string mes))
+                {
+                    if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
+                    {
+                        ByteBlock byteBlock = this.BytePool.GetByteBlock(waitTransfer.PackageSize);
+                        LoopAction loopAction = null;
+                        FileOperator fileOperator = args.FileOperator;
+                        try
+                        {
+                            waitTransfer.Status = 1;
+                            this.SendDefaultObject(204, waitTransfer);
+                            long position = waitTransfer.Position;
+
+                            loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
+                            {
+                                while (channel.Available && channel.MoveNext())
+                                {
+                                    fileOperator.SetMaxSpeed(BitConverter.ToInt32(channel.GetCurrent(), 0));
+                                }
+                            });
+
+                            loopAction.RunAsync();
+
+                            while (true)
+                            {
+                                if (fileOperator.Token.IsCancellationRequested)
+                                {
+                                    channel.Cancel("主动取消");
+                                    fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                                    break;
+                                }
+                                int r = RRQMStreamPool.ReadBytes(waitTransfer.Path, out mes, position, byteBlock.Buffer, 0, byteBlock.Capacity);
+                                if (r == -1)
+                                {
+                                    channel.Cancel(mes);
+                                    break;
+                                }
+                                else if (r == 0)
+                                {
+                                    channel.Complete();
+                                    break;
+                                }
+                                else
+                                {
+                                    position += r;
+                                    if (channel.TryWrite(byteBlock.Buffer, 0, r))
+                                    {
+                                        fileOperator.AddFileFlow(r, fileInfo.FileLength);
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+                        }
+                        finally
+                        {
+                            RRQMStreamPool.FinishedReadStream(waitTransfer.Path);
+                            RRQMStreamPool.TryReleaseReadStream(waitTransfer.Path);
+                            loopAction?.Dispose();
+                            byteBlock.Dispose();
+
+                            e = new FileTransferStatusEventArgs(TransferType.Pull, args.FileRequest, args.Metadata,
+                               fileOperator.SetFileResult(new Result(channel.Status.ToResultCode())), null);
+                            this.OnFinishedFileTransfer(e);
                         }
 
-                        Thread thread_Transfer = new Thread(this.UploadFileBlock);
-                        thread_Transfer.IsBackground = true;
-                        thread_Transfer.Name = "文件上传线程";
-                        thread_Transfer.Start();
+                        return;
                     }
                     else
                     {
-                        throw new RRQMException(mes);
+                        waitTransfer.Status = 4;
+                        e = new FileTransferStatusEventArgs(TransferType.Pull,
+                            args.FileRequest, args.Metadata, new Result(ResultCode.Error, ResType.SetChannelFail.GetResString()), null);
                     }
                 }
+                else
+                {
+                    waitTransfer.Status = 2;
+                    waitTransfer.Message = mes;
+                    e = new FileTransferStatusEventArgs(TransferType.Pull,
+                         args.FileRequest, args.Metadata, new Result(ResultCode.Error, ResType.LoadStreamFail.GetResString()), null);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                throw ex;
+                e = new FileTransferStatusEventArgs(TransferType.Pull, null, null,
+                    new Result(ResultCode.Overtime, ResType.GetEventArgsFail.GetResString()), null);
+                waitTransfer.Status = 3;
+            }
+
+            this.SendDefaultObject(204, waitTransfer);
+
+            this.OnFinishedFileTransfer(e);
+        }
+
+        /// <summary>
+        /// 客户端请求推送文件
+        /// </summary>
+        private void P205_RequestPushFile(WaitFileInfo waitRemoteFileInfo)
+        {
+            //2.不允许
+            //3.文件已存在
+            //4.加载流异常
+            //5.其他
+
+            if (this.responseType == ResponseType.None || this.responseType == ResponseType.Pull)
+            {
+                this.SendDefaultObject(205, new WaitTransfer() { Sign = waitRemoteFileInfo.Sign, Status = 6 });
+                return;
+            }
+
+            string savePath;
+            if (Path.IsPathRooted(waitRemoteFileInfo.FileRequest.SavePath))
+            {
+                savePath = waitRemoteFileInfo.FileRequest.SavePath;
+            }
+            else
+            {
+                savePath = Path.GetFullPath(Path.Combine(this.rootPath, waitRemoteFileInfo.FileRequest.SavePath));
+            }
+            waitRemoteFileInfo.FileRequest.SavePath = savePath;
+
+            FileOperator fileOperator = new FileOperator() { PackageSize = waitRemoteFileInfo.PackageSize };
+            FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Push, waitRemoteFileInfo.FileRequest,
+                fileOperator, waitRemoteFileInfo.Metadata, waitRemoteFileInfo.FileInfo);
+            this.OnBeforeFileTransfer(args);
+
+            WaitTransfer waitTransfer = new WaitTransfer()
+            {
+                Message = args.Message,
+                PackageSize = args.FileOperator.PackageSize,
+                Sign = waitRemoteFileInfo.Sign,
+                Path = args.FileRequest.Path,
+            };
+
+            if (args.IsPermitOperation)
+            {
+                if (!args.FileRequest.Overwrite)
+                {
+                    if (File.Exists(args.FileRequest.SavePath))
+                    {
+                        waitTransfer.Status = 3;
+                        this.SendDefaultObject(205, waitTransfer);
+                        return;
+                    }
+                }
+
+                savePath = savePath + ".rrqm";
+
+                RRQMFileInfo fileInfo = args.FileInfo;
+                if (RRQMStreamPool.LoadWriteStream(savePath, args.FileOperator, args.FileRequest.Flags, ref fileInfo, out RRQMStream stream, out string mes))
+                {
+                    Channel channel = this.CreateChannel();
+
+                    try
+                    {
+                        waitTransfer.ChannelID = channel.ID;
+                        waitTransfer.Position = fileInfo.Posotion;
+                        waitTransfer.Status = 1;
+                        this.SendDefaultObject(205, waitTransfer);
+
+                        stream.Position = fileInfo.Posotion;
+                        fileOperator.SetFileCompletedLength(fileInfo.Posotion);
+                        while (channel.MoveNext())
+                        {
+                            if (fileOperator.Token.IsCancellationRequested)
+                            {
+                                channel.Cancel();
+                                fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                                break;
+                            }
+                            ByteBlock block = channel.GetCurrentByteBlock();
+                            block.Pos = 6;
+
+                            if (block.TryReadBytesPackageInfo(out int pos, out int len))
+                            {
+                                stream.Write(block.Buffer, pos, len);
+                                stream.fileInfo.Posotion = stream.Position;
+                                fileOperator.AddFileFlow(len, fileInfo.FileLength);
+                                stream.SaveProgress();
+                            }
+                            block.SetHolding(false);
+                        }
+
+                        if (channel.Status == ChannelStatus.Completed)
+                        {
+                            stream.FinishStream(args.FileRequest.Overwrite);
+                            fileOperator.SetFileResult(new Result(ResultCode.Success));
+                        }
+                        else
+                        {
+                            fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
+                        }
+                    }
+                    catch
+                    {
+                    }
+                    finally
+                    {
+                        channel.Dispose();
+                        RRQMStreamPool.TryReleaseWriteStream(savePath, fileOperator);
+                    }
+                    return;
+                }
+                else
+                {
+                    waitTransfer.Status = 4;
+                    waitTransfer.Message = mes;
+                }
+            }
+            else
+            {
+                waitTransfer.Status = 2;
+            }
+
+            this.SendDefaultObject(205, waitTransfer);
+        }
+
+        private void SendDefaultObject(short protocol, object obj)
+        {
+            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            byteBlock.WriteObject(obj, SerializationType.Json);
+            try
+            {
+                this.InternalSend(protocol, byteBlock);
             }
             finally
             {
                 byteBlock.Dispose();
             }
-        }
-
-        private void UploadFileBlock()
-        {
-            this.stop = false;
-
-            foreach (FileBlock fileBlock in this.fileBlocks)
-            {
-                if (fileBlock.RequestStatus == RequestStatus.Hovering)
-                {
-                    this.position = fileBlock.Position;
-                    long surplusLength = fileBlock.UnitLength;
-                    int reTryCount = 0;
-                    while (surplusLength > 0)
-                    {
-                        if (!this.Online)
-                        {
-                            fileBlock.RequestStatus = RequestStatus.Hovering;
-                            this.OnTransferError(TransferType.Download, "客户端已断开连接！！！");
-                            return;
-                        }
-                        if (disposable || stop)
-                        {
-                            StopUpload();
-                            return;
-                        }
-                        if (this.transferStatus == TransferStatus.PauseUpload)
-                        {
-                            transferWaitHandle.WaitOne();
-                        }
-
-                        int submitLength = surplusLength > this.packetSize ? this.packetSize : (int)surplusLength;
-                        ByteBlock byteBlock = this.BytePool.GetByteBlock(this.packetSize + 17);
-                        if (this.position + submitLength == fileBlock.Position + fileBlock.UnitLength)
-                        {
-                            byteBlock.Write((byte)1);//1
-                        }
-                        else
-                        {
-                            byteBlock.Write((byte)1);
-                        }
-
-                        byteBlock.Write(fileBlock.Index);//4
-                        byteBlock.Write(this.position);//8
-                        byteBlock.Write(submitLength);//4
-                        //17=23
-                        try
-                        {
-                            if (this.transferStatus != TransferStatus.Upload && this.transferStatus != TransferStatus.PauseUpload)
-                            {
-                                return;
-                            }
-                            if (FileStreamPool.ReadFile(this.transferUrlFileInfo.FilePath, out string mes, this.position, byteBlock, 17, submitLength))
-                            {
-                                ByteBlock returnByteBlock = this.SingleSendWait(117, this.timeout, byteBlock);
-
-                                if (returnByteBlock.Buffer[2] == 1)
-                                {
-                                    reTryCount = 0;
-                                    this.tempLength += submitLength;
-                                    this.position += submitLength;
-                                    surplusLength -= submitLength;
-                                }
-                                else if (returnByteBlock.Buffer[2] == 2)
-                                {
-                                    throw new RRQMException(Encoding.UTF8.GetString(returnByteBlock.Buffer, 3, returnByteBlock.Len - 3));
-                                }
-                                else
-                                {
-                                    this.OnTransferError(TransferType.Upload, "服务器无此传输信息，已终止本次传输");
-                                    return;
-                                }
-                                returnByteBlock.SetHolding(false);
-                            }
-                            else
-                            {
-                                throw new RRQMException(mes);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            reTryCount++;
-                            Logger.Debug(LogType.Message, this, $"上传文件错误，正在尝试第{reTryCount}次重试", ex);
-                            if (reTryCount > 10)
-                            {
-                                this.OnTransferError(TransferType.Upload, "重试次数达到最大，详细信息请查看日志");
-                                return;
-                            }
-                        }
-                        finally
-                        {
-                            byteBlock.Dispose();
-                        }
-                    }
-                }
-            }
-            UploadFinished();
-        }
-
-        private void UploadFinished()
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                try
-                {
-                    ByteBlock returnByteBlock = this.SingleSendWait(119, this.timeout);
-                    if (returnByteBlock.Length == 3 && returnByteBlock.Buffer[2] == 1)
-                    {
-                        this.OnUploadFileFinished();
-                        return;
-                    }
-                    else
-                    {
-                        this.Logger.Debug(LogType.Warning, this, $"确认上传完成返回状态错误，即将进行第{i + 1}次重试");
-                    }
-                    returnByteBlock.SetHolding(false);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.Debug(LogType.Warning, this, $"确认下载完成错误，信息：{ex.Message}，即将进行第{i + 1}次重试");
-                }
-            }
-
-            this.OnTransferError(TransferType.Upload, "确认上传完成状态重试次数已达到最大，具体信息请查看日志输出");
         }
     }
 }

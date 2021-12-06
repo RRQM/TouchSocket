@@ -26,45 +26,38 @@ namespace RRQMSocket.FileTransfer
         {
             this.BufferLength = 64 * 1024;
         }
-
         /// <summary>
-        /// 默认接收文件的存放目录
+        /// 根目录
         /// </summary>
-        public string ReceiveDirectory
+        public string RootPath
         {
-            get { return (string)GetValue(ReceiveDirectoryProperty); }
-            set
-            {
-                if (value == null)
-                {
-                    value = string.Empty;
-                }
-                SetValue(ReceiveDirectoryProperty, value);
-            }
+            get { return (string)GetValue(RootPathProperty); }
+            set { SetValue(RootPathProperty, value); }
         }
 
         /// <summary>
-        /// 默认接收文件的存放目录, 所需类型<see cref="string"/>
+        /// 下载根目录，
+        /// 所需类型<see cref="string"/>
         /// </summary>
-        public static readonly DependencyProperty ReceiveDirectoryProperty =
-            DependencyProperty.Register("ReceiveDirectory", typeof(string), typeof(FileClientConfig), string.Empty);
+        public static readonly DependencyProperty RootPathProperty =
+            DependencyProperty.Register("RootPath", typeof(string), typeof(FileClientConfig), string.Empty);
+
 
         /// <summary>
-        /// 单次请求超时时间 min=5000,max=60*1000 ms
+        /// 允许的响应类型
         /// </summary>
-        public int Timeout
+        public ResponseType ResponseType
         {
-            get { return (int)GetValue(TimeoutProperty); }
-            set
-            {
-                SetValue(TimeoutProperty, value);
-            }
+            get { return (ResponseType)GetValue(ResponseTypeProperty); }
+            set { SetValue(ResponseTypeProperty, value); }
         }
 
         /// <summary>
-        /// 单次请求超时时间 min=5000,max=60*1000 ms, 所需类型<see cref="int"/>
+        /// 允许的响应类型,
+        ///  所需类型<see cref="RRQMSocket.FileTransfer.ResponseType"/>
         /// </summary>
-        public static readonly DependencyProperty TimeoutProperty =
-            DependencyProperty.Register("Timeout", typeof(int), typeof(FileClientConfig), 30 * 1000);
+        public static readonly DependencyProperty ResponseTypeProperty =
+            DependencyProperty.Register("ResponseType", typeof(ResponseType), typeof(FileClientConfig), ResponseType.Both);
+
     }
 }

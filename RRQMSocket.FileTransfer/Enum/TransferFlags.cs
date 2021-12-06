@@ -27,11 +27,6 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 断点续传
         /// </summary>
-        BreakpointResume = 1,
-
-        /// <summary>
-        /// 快速传输
-        /// </summary>
-        QuickTransfer = 2
+        BreakpointResume = 1
     }
 }
