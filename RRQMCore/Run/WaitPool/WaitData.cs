@@ -74,7 +74,6 @@ namespace RRQMCore.Run
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             this.status = WaitDataStatus.Disposed;
             this._dispose = true;
             this.waitResult = default;
@@ -86,6 +85,7 @@ namespace RRQMCore.Run
         /// </summary>
         public bool Reset()
         {
+            this.status = WaitDataStatus.Default;
             this.waitResult = default;
             return this.waitHandle.Reset();
         }
@@ -139,7 +139,6 @@ namespace RRQMCore.Run
         /// <param name="millisecond"></param>
         public WaitDataStatus Wait(int millisecond)
         {
-            this.status = WaitDataStatus.Waiting;
             if (!this.waitHandle.WaitOne(millisecond))
             {
                 this.status = WaitDataStatus.Overtime;

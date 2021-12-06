@@ -121,5 +121,16 @@ namespace RRQMCore.Helper
 
             return obj;
         }
+
+        /// <summary>
+        /// 按格式填充
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ps"></param>
+        /// <returns></returns>
+        public static string Format(this string str, params object[] ps)
+        {
+            return string.Format(str, ps);
+        }
     }
 }

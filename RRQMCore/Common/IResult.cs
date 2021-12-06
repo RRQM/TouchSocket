@@ -9,36 +9,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-namespace RRQMCore.Run
+namespace RRQMCore
 {
     /// <summary>
-    /// 等待数据状态
+    /// 返回通知接口
     /// </summary>
-    public enum WaitDataStatus : byte
+    public interface IResult
     {
         /// <summary>
-        /// 默认
+        /// 是否成功
         /// </summary>
-        Default,
+        ResultCode ResultCode { get; }
 
         /// <summary>
-        /// 收到信号运行
+        /// 消息
         /// </summary>
-        SetRunning,
-
-        /// <summary>
-        /// 超时
-        /// </summary>
-        Overtime,
-
-        /// <summary>
-        /// 已取消
-        /// </summary>
-        Canceled,
-
-        /// <summary>
-        /// 已释放
-        /// </summary>
-        Disposed
+        string Message { get; }
     }
 }

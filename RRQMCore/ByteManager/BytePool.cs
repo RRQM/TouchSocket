@@ -166,6 +166,14 @@ namespace RRQMCore.ByteManager
             }
         }
 
+        /// <summary>
+        /// 清理
+        /// </summary>
+        public void Clear()
+        {
+            this.bytesDictionary.Clear();
+        }
+
         private byte[] GetBytesCore(long byteSize, bool equalSize)
         {
             if (byteSize < 0)

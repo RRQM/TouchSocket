@@ -37,10 +37,24 @@ namespace RRQMCore.Run
         /// 延迟执行
         /// </summary>
         /// <param name="action"></param>
-        /// <param name="seconds"></param>
-        public static void DelayRun(double seconds, Action action)
+        /// <param name="ticks"></param>
+        public static void DelayRun(int ticks, Action action)
         {
-            DelayRun(TimeSpan.FromSeconds(seconds), action);
+            DelayRun(TimeSpan.FromMilliseconds(ticks), action);
+        }
+
+        /// <summary>
+        /// Task异步
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="statu"></param>
+        /// <param name="action"></param>
+        public static void TaskRun<T>(T statu,Action<T> action)
+        {
+            Task.Run(()=> 
+            {
+                action.Invoke(statu);
+            });
         }
     }
 }
