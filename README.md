@@ -85,8 +85,8 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 - [说明](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984529&doc_id=1402901)
 - [ 历史更新 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4255623&doc_id=1402901)
 - [ 商业运营 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4215572&doc_id=1402901)
-- [Config说明](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4164467&doc_id=1402901)
 - [疑难解答](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4245320&doc_id=1402901)
+- [【RRQM系】Config配置及其他配置信息介绍](https://blog.csdn.net/qq_40374647/article/details/121760852)
 - [【RRQMCore】RRQMSocket基类库基础用法，包含内存池、对象池、高性能序列化等](https://blog.csdn.net/qq_40374647/article/details/121485490)
 - [【RRQMSocket】C# 创建高并发、高性能TCP服务器，可用于解析HTTP、FTP、MQTT、搭建游戏服务器等](https://blog.csdn.net/qq_40374647/article/details/110679663)
 - [【RRQMSocket】C# 创建TCP客户端，对应RRQM服务器或其他服务器](https://blog.csdn.net/qq_40374647/article/details/121469610)
@@ -99,6 +99,7 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 - [【RRQMSocket.RPC】C# 创建多协议、多方式、多语言、多平台RPC框架](https://blog.csdn.net/qq_40374647/article/details/109143243)
 - [【RRQMSocket.RPC】C# 创建基于TCP协议的支持ref和out关键字的RPC](https://blog.csdn.net/qq_40374647/article/details/121512993)
 - [【RRQMSocket.RPC】C# 基于TCP协议的RRQMRPC的高级使用设置](https://blog.csdn.net/qq_40374647/article/details/121533091)
+- [【RRQMSocket.FileTransfer】C# 超大文件传输、续传、可高性能、高并发运行、断点续传、换网续传、快速上传等功能](https://blog.csdn.net/qq_40374647/article/details/100546120)
 
 ## 应用场景模拟
 ***
