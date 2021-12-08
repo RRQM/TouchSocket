@@ -76,6 +76,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         CreateReadStream(path, out fileInfo, out stream);
                         pathStream.TryAdd(path, stream);
+                        stream.reference++;
                         mes = null;
                         return true;
                     }
