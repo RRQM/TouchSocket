@@ -21,20 +21,19 @@ namespace RRQMSocket
     /// </summary>
     public abstract class DataHandlingAdapter
     {
+        internal bool locked;
+
         /// <summary>
         /// 拼接发送
         /// </summary>
         public abstract bool CanSplicingSend { get; }
-
         /// <summary>
-        /// 内存池
+        /// 标识该适配器已被赋值使用，不可再应用于其他终端。
         /// </summary>
-        protected internal BytePool BytePool { get; internal set; }
-
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        protected internal ILog Logger { get; internal set; }
+        public bool Locked
+        {
+            get { return locked; }
+        }
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -47,10 +46,28 @@ namespace RRQMSocket
         internal Action<byte[], int, int, bool> SendCallBack { get; set; }
 
         /// <summary>
-        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock,object)"/>处理数据
+        /// 内存池
         /// </summary>
-        /// <param name="byteBlock">数据流</param>
-        protected abstract void PreviewReceived(ByteBlock byteBlock);
+        protected internal BytePool BytePool { get; internal set; }
+
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        protected internal ILog Logger { get; internal set; }
+        internal void Received(ByteBlock byteBlock)
+        {
+            this.PreviewReceived(byteBlock);
+        }
+
+        internal void Send(byte[] buffer, int offset, int length, bool isAsync)
+        {
+            this.PreviewSend(buffer, offset, length, isAsync);
+        }
+
+        internal void Send(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            this.PreviewSend(transferBytes, isAsync);
+        }
 
         /// <summary>
         /// 处理已经经过预先处理后的数据
@@ -70,6 +87,23 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 发送已经经过预先处理后的数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="isAsync">是否使用IOCP发送</param>
+        protected void GoSend(byte[] buffer, int offset, int length, bool isAsync)
+        {
+            this.SendCallBack.Invoke(buffer, offset, length, isAsync);
+        }
+
+        /// <summary>
+        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock,object)"/>处理数据
+        /// </summary>
+        /// <param name="byteBlock">数据流</param>
+        protected abstract void PreviewReceived(ByteBlock byteBlock);
+        /// <summary>
         /// 当发送数据前预先处理数据
         /// </summary>
         /// <param name="buffer">数据</param>
@@ -85,32 +119,5 @@ namespace RRQMSocket
         /// <param name="transferBytes">代发送数据组合</param>
         /// <param name="isAsync">是否使用IOCP发送</param>
         protected abstract void PreviewSend(IList<TransferByte> transferBytes, bool isAsync);
-
-        /// <summary>
-        /// 发送已经经过预先处理后的数据
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected void GoSend(byte[] buffer, int offset, int length, bool isAsync)
-        {
-            this.SendCallBack.Invoke(buffer, offset, length, isAsync);
-        }
-
-        internal void Received(ByteBlock byteBlock)
-        {
-            this.PreviewReceived(byteBlock);
-        }
-
-        internal void Send(byte[] buffer, int offset, int length, bool isAsync)
-        {
-            this.PreviewSend(buffer, offset, length, isAsync);
-        }
-
-        internal void Send(IList<TransferByte> transferBytes, bool isAsync)
-        {
-            this.PreviewSend(transferBytes, isAsync);
-        }
     }
 }
