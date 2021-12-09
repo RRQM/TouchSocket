@@ -368,6 +368,9 @@ namespace RRQMCore.Serialization
                                 PropertyInfo propertyInfo = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                                 if (propertyInfo == null)
                                 {
+                                    int pLen = BitConverter.ToInt32(datas, offset);
+                                    offset += 4;
+                                    offset += pLen;
                                     continue;
                                 }
                                 object obj = Deserialize(propertyInfo.PropertyType, datas, ref offset);
