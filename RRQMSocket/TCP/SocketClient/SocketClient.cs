@@ -280,6 +280,12 @@ namespace RRQMSocket
             {
                 throw new RRQMException($"数据处理适配器应当在{nameof(Connecting)}执行后赋值。");
             }
+
+            if (adapter.locked)
+            {
+                throw new RRQMException("此适配器已被其他终端使用，请重新创建对象。");
+            }
+            adapter.locked = true;
             adapter.BytePool = this.BytePool;
             adapter.Logger = this.Logger;
             adapter.ReceivedCallBack = this.HandleReceivedData;
