@@ -712,7 +712,9 @@ namespace RRQMSocket.FileTransfer
             FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Pull, waitFileInfo.FileRequest, new FileOperator(), waitFileInfo.Metadata, null);
             this.OnBeforeFileTransfer(args);
 
-            if (string.IsNullOrEmpty(args.FileRequest.Path))
+            fullPath = waitFileInfo.FileRequest.Path;
+
+            if (string.IsNullOrEmpty(fullPath))
             {
                 waitFileInfo.Status = 3;
                 return waitFileInfo;
