@@ -130,6 +130,12 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 
 [![Giteye chart](https://chart.giteye.net/gitee/dotnetchina/RRQMSocket/RJ9NH249.png)](https://giteye.net/chart/RJ9NH249)
 
+## 后续开发计划
+
+1. KCP功能开发
+2. WebSocket组件
+
+
 ## 💕 支持本项目
 您的支持就是我不懈努力的动力。
 
