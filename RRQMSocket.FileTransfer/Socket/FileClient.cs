@@ -906,7 +906,7 @@ namespace RRQMSocket.FileTransfer
             FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Push, waitRemoteFileInfo.FileRequest,
                 fileOperator, waitRemoteFileInfo.Metadata, waitRemoteFileInfo.FileInfo);
             this.OnBeforeFileTransfer(args);
-
+            savePath = waitRemoteFileInfo.FileRequest.SavePath;
             WaitTransfer waitTransfer = new WaitTransfer()
             {
                 Message = args.Message,
