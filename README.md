@@ -90,6 +90,7 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 - [【RRQMSocket】C# 创建高并发、高性能TCP服务器，可用于解析HTTP、FTP、MQTT、搭建游戏服务器等](https://blog.csdn.net/qq_40374647/article/details/110679663)
 - [【RRQMSocket】C# 创建TCP客户端，对应RRQM服务器或其他服务器](https://blog.csdn.net/qq_40374647/article/details/121469610)
 - [【RRQMSocket】C# 利用数据处理适配器解决粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179)
+- [【RRQMSocket】C# 自定义数据处理适配器](https://blog.csdn.net/qq_40374647/article/details/121824453)
 - [【RRQMSocket】C# TcpService和TcpClient高级设置及用法解释。](https://blog.csdn.net/qq_40374647/article/details/121767091)
 - [【RRQMSocket】C# 搭建Token系TCP服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/115586146)
 - [【RRQMSocket】C# 创建多租户模式的Token服务器](https://blog.csdn.net/qq_40374647/article/details/121471982)
