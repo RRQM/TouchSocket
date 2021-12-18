@@ -23,11 +23,6 @@ namespace RRQMCore.Serialization
         RRQMBinary,
 
         /// <summary>
-        /// 系统二进制
-        /// </summary>
-        SystemBinary,
-
-        /// <summary>
         /// Json
         /// </summary>
         Json,

@@ -58,12 +58,14 @@ namespace RRQMCore.Collections.Concurrent
         /// <summary>
         /// 获取集合中包含的元素数。
         /// </summary>
-        public int Count { get { lock (locker) { return this.list.Count; } } }
+        public int Count
+        { get { lock (locker) { return this.list.Count; } } }
 
         /// <summary>
         /// 是否只读
         /// </summary>
-        public bool IsReadOnly { get { return false; } }
+        public bool IsReadOnly
+        { get { return false; } }
 
         /// <summary>
         /// 将某项添加到 System.Collections.Generic.ICollection`1 中。

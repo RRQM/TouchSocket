@@ -25,8 +25,6 @@ namespace RRQMCore.ByteManager
     {
         internal bool @using;
 
-        internal BytePool _bytePool;
-
         internal long length;
 
         private static float ratio = 1.5f;
@@ -41,19 +39,19 @@ namespace RRQMCore.ByteManager
         ///  构造函数
         /// </summary>
         /// <param name="capacity"></param>
-        public ByteBlock(int capacity = 1024 * 10) : this(new byte[capacity])
+        /// <param name="equalSize"></param>
+        public ByteBlock(int capacity = 1024 * 10, bool equalSize=false) : this(BytePool.GetByteCore(capacity, false))
         {
-
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="buffer"></param>
-        public ByteBlock(byte[] buffer)
+        /// <param name="bytes"></param>
+        internal ByteBlock(byte[] bytes)
         {
             this.@using = true;
-            this._buffer = buffer;
+            this._buffer = bytes;
         }
 
         /// <summary>
@@ -61,8 +59,25 @@ namespace RRQMCore.ByteManager
         /// </summary>
         ~ByteBlock()
         {
-            this.AbsoluteDispose();
+            if (this.@using)
+            {
+                BytePool.Recycle(this._buffer);
+                this.AbsoluteDispose();
+            }
         }
+
+        /// <summary>
+        /// 清空数据
+        /// </summary>
+        public void Clear()
+        {
+            if (!this.@using)
+            {
+                throw new RRQMException("内存块已释放");
+            }
+            Array.Clear(this._buffer, 0, this._buffer.Length);
+        }
+
         /// <summary>
         /// 扩容增长比，默认为1.5，
         /// min：1
@@ -89,25 +104,10 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        ///  该字节流块所属内存池，若值为null则意味着该流块未被管理，可能会被GC
-        /// </summary>
-        public BytePool BytePool
-        {
-            get { return _bytePool; }
-        }
-
-        /// <summary>
         /// 可读取
         /// </summary>
         public override bool CanRead => this.@using;
 
-        /// <summary>
-        /// 能否回收
-        /// </summary>
-        public bool CanRecycle
-        {
-            get { return this._bytePool == null ? false : true; }
-        }
         /// <summary>
         /// 支持查找
         /// </summary>
@@ -121,7 +121,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 容量
         /// </summary>
-        public int Capacity => this._buffer == null ? 0 : this._buffer.Length;
+        public int Capacity => this._buffer.Length;
 
         /// <summary>
         /// 表示持续性持有，为True时，Dispose将调用无效。
@@ -134,12 +134,14 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// Int真实长度
         /// </summary>
-        public int Len { get { return (int)length; } }
+        public int Len
+        { get { return (int)length; } }
 
         /// <summary>
         /// 真实长度
         /// </summary>
-        public override long Length { get { return length; } }
+        public override long Length
+        { get { return length; } }
 
         /// <summary>
         /// int型流位置
@@ -168,43 +170,15 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 直接完全释放，游离该对象，然后GC
+        /// 直接完全释放，游离该对象，然后等待GC
         /// </summary>
         public void AbsoluteDispose()
         {
-            this._bytePool = null;
-            this._buffer = null;
-            this.Disposed();
-            GC.Collect();
-        }
-
-        private void Disposed()
-        {
-            if (this.holding)
-            {
-                return;
-            }
-            if (this.@using)
-            {
-                this.@using = false;
-                this.position = 0;
-                this.length = 0;
-
-                GC.SuppressFinalize(this);
-
-                if (this.BytePool != null)
-                {
-                    lock (this)
-                    {
-                        if (this._buffer != null)
-                        {
-                            this.BytePool.Recycle(this._buffer);
-                        }
-                        this._bytePool = null;
-                        this._buffer = null;
-                    }
-                }
-            }
+            this.holding = false;
+            this.@using = false;
+            this.position = 0;
+            this.length = 0;
+            this._buffer = default;
         }
 
         /// <summary>
@@ -212,8 +186,22 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public new void Dispose()
         {
-            GC.SuppressFinalize(this);
-            this.Disposed();
+            if (this.holding)
+            {
+                return;
+            }
+            if (this.@using)
+            {
+                lock (this)
+                {
+                    if (this.@using)
+                    {
+                        GC.SuppressFinalize(this);
+                        BytePool.Recycle(this._buffer);
+                        this.AbsoluteDispose();
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -282,18 +270,24 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 重新指定Buffer
+        /// 重新设置容量
         /// </summary>
-        public void SetBuffer(byte[] buffer)
+        /// <param name="size">新尺寸</param>
+        /// <param name="retainedData">是否保留元数据</param>
+        public void SetCapacity(int size, bool retainedData=false)
         {
             if (!this.@using)
             {
                 throw new RRQMException("内存块已释放");
             }
-            if (buffer != null)
+            byte[] bytes = new byte[size];
+            
+            if (retainedData)
             {
-                this._buffer = buffer;
+                Array.Copy(this._buffer, 0, bytes, 0, this.Len);
             }
+            BytePool.Recycle(this._buffer);
+            this._buffer = bytes;
         }
 
         /// <summary>
@@ -337,13 +331,7 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public byte[] ToArray()
         {
-            if (!this.@using)
-            {
-                throw new RRQMException("内存块已释放");
-            }
-            byte[] buffer = new byte[this.length];
-            Array.Copy(this._buffer, 0, buffer, 0, this.length);
-            return buffer;
+            return ToArray(0);
         }
 
         /// <summary>
@@ -376,9 +364,7 @@ namespace RRQMCore.ByteManager
             }
             if (this._buffer.Length - this.position < count)
             {
-                byte[] newBuffer = new byte[this._buffer.Length + (int)((count + this.position - this._buffer.Length) * ratio)];
-                Array.Copy(this._buffer, newBuffer, this._buffer.Length);
-                this._buffer = newBuffer;
+                this.SetCapacity(this._buffer.Length + (int)((count + this.position - this._buffer.Length) * ratio),true);
             }
             Array.Copy(buffer, offset, _buffer, this.position, count);
             this.position += count;
@@ -841,12 +827,6 @@ namespace RRQMCore.ByteManager
                     }
                     break;
 
-                case SerializationType.SystemBinary:
-                    {
-                        obj = SerializeConvert.BinaryDeserialize<T>(this._buffer, (int)this.position, length);
-                    }
-                    break;
-
                 case SerializationType.Json:
                     {
                         string jsonString = Encoding.UTF8.GetString(this._buffer, (int)this.position, length);
@@ -880,12 +860,6 @@ namespace RRQMCore.ByteManager
                 case SerializationType.RRQMBinary:
                     {
                         data = SerializeConvert.RRQMBinarySerialize(value, true);
-                    }
-                    break;
-
-                case SerializationType.SystemBinary:
-                    {
-                        data = SerializeConvert.BinarySerialize(value);
                     }
                     break;
 

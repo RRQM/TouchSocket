@@ -9,10 +9,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Exceptions;
+using RRQMCore.Helper;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace RRQMCore.ByteManager
 {
@@ -20,11 +20,11 @@ namespace RRQMCore.ByteManager
     /// 字节块集合
     /// </summary>
     [DebuggerDisplay("Count = {bytesQueue.Count}")]
-    public class BytesQueue
+    internal class BytesQueue
     {
-        internal long size;
+        internal int size;
 
-        internal BytesQueue(long size)
+        internal BytesQueue(int size)
         {
             this.size = size;
         }
@@ -32,10 +32,12 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 占用空间
         /// </summary>
-        public long FullSize { get { return this.size * this.bytesQueue.Count; } }
-
+        public long FullSize
+        { get { return this.size * this.bytesQueue.Count; } }
 
         private ConcurrentQueue<byte[]> bytesQueue = new ConcurrentQueue<byte[]>();
+
+        internal long referenced;
 
         /// <summary>
         /// 获取当前实例中的空闲的Block
@@ -43,6 +45,7 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public bool TryGet(out byte[] bytes)
         {
+            referenced++;
             return this.bytesQueue.TryDequeue(out bytes);
         }
 
@@ -55,9 +58,9 @@ namespace RRQMCore.ByteManager
             this.bytesQueue.Enqueue(bytes);
         }
 
-        internal List<byte[]> ToList()
+        internal void Clear()
         {
-            return this.bytesQueue.ToList();
+            this.bytesQueue.Clear();
         }
     }
 }

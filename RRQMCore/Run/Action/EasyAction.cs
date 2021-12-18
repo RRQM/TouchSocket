@@ -49,9 +49,9 @@ namespace RRQMCore.Run
         /// <typeparam name="T"></typeparam>
         /// <param name="statu"></param>
         /// <param name="action"></param>
-        public static void TaskRun<T>(T statu,Action<T> action)
+        public static void TaskRun<T>(T statu, Action<T> action)
         {
-            Task.Run(()=> 
+            Task.Run(() =>
             {
                 action.Invoke(statu);
             });

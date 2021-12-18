@@ -24,6 +24,8 @@ namespace RRQMCore.Serialization
     /// </summary>
     public static class SerializeConvert
     {
+#if NET45_OR_GREATER
+
         #region 普通二进制序列化
 
         /// <summary>
@@ -173,6 +175,8 @@ namespace RRQMCore.Serialization
 
         #endregion 普通二进制反序列化
 
+#endif
+
         #region RRQM二进制序列化
 
         /// <summary>
@@ -198,7 +202,6 @@ namespace RRQMCore.Serialization
         {
             using (ByteBlock byteBlock = new ByteBlock() { @using = true })
             {
-                byteBlock.SetBuffer(new byte[1024 * 10]);
                 RRQMBinarySerialize(byteBlock, obj, reserveAttributeName);
                 return byteBlock.ToArray();
             }

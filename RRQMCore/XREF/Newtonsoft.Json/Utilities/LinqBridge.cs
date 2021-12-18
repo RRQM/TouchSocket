@@ -3043,5 +3043,6 @@ namespace System.Runtime.CompilerServices
     /// </remarks>
 
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
-    internal sealed class ExtensionAttribute : Attribute { }
+    internal sealed class ExtensionAttribute : Attribute
+    { }
 }
