@@ -37,7 +37,8 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <summary>
         /// 服务键映射图
         /// </summary>
-        public ActionMap ActionMap { get { return this.actionMap; } }
+        public ActionMap ActionMap
+        { get { return this.actionMap; } }
 
         private int maxPackageSize;
 
@@ -77,7 +78,7 @@ namespace RRQMSocket.RPC.XmlRpc
             HttpResponse httpResponse = new HttpResponse();
 
             httpResponse.ProtocolVersion = httpRequest.ProtocolVersion;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
 
             XmlDataTool.CreatResponse(httpResponse, methodInvoker.ReturnParameter);
             try

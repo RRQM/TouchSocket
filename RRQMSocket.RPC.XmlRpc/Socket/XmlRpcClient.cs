@@ -32,6 +32,20 @@ namespace RRQMSocket.RPC.XmlRpc
             singleWaitHandle = new WaitData<HttpResponse>();
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSetDataHandlingAdapter => false;
+
+        /// <summary>
+        /// 禁用适配器赋值
+        /// </summary>
+        /// <param name="adapter"></param>
+        public override sealed void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            throw new RRQMException($"{nameof(XmlRpcSocketClient)}不允许设置适配器。");
+        }
+
         private int maxPackageSize;
 
         /// <summary>
@@ -55,7 +69,16 @@ namespace RRQMSocket.RPC.XmlRpc
             base.LoadConfig(clientConfig);
             this.timeout = (int)clientConfig.GetValue(XmlRpcClientConfig.TimeoutProperty);
             this.maxPackageSize = (int)clientConfig.GetValue(XmlRpcClientConfig.MaxPackageSizeProperty);
-            this.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnConnecting(ClientConnectingEventArgs e)
+        {
+            base.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
+            base.OnConnecting(e);
         }
 
         /// <summary>
@@ -71,7 +94,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <returns></returns>
         public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             HttpResponse response;
             try
             {
@@ -88,10 +111,6 @@ namespace RRQMSocket.RPC.XmlRpc
                 {
                     return (T)XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, typeof(T));
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
@@ -112,7 +131,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             HttpResponse response;
             try
             {
@@ -122,10 +141,6 @@ namespace RRQMSocket.RPC.XmlRpc
                 {
                     throw new RRQMException("调用错误");
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
