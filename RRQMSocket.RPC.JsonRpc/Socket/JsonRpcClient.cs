@@ -34,6 +34,11 @@ namespace RRQMSocket.RPC.JsonRpc
         private RRQMWaitHandlePool<IWaitResult> waitHandle;
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSetDataHandlingAdapter => false;
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public JsonRpcClient()
@@ -73,7 +78,7 @@ namespace RRQMSocket.RPC.JsonRpc
             JsonRpcWaitContext context = new JsonRpcWaitContext();
             WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -127,10 +132,6 @@ namespace RRQMSocket.RPC.JsonRpc
                     default:
                         break;
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
@@ -159,23 +160,17 @@ namespace RRQMSocket.RPC.JsonRpc
                         {
                             throw new RRQMRPCException(resultContext.error.message);
                         }
-                        try
-                        {
-                            if (resultContext.Return == null)
-                            {
-                                return default;
-                            }
-                            if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
-                            {
-                                return (T)resultContext.Return.ToString().ParseToType(typeof(T));
-                            }
 
-                            return JsonConvert.DeserializeObject<T>(resultContext.Return.ToString());
-                        }
-                        catch (Exception ex)
+                        if (resultContext.Return == null)
                         {
-                            throw ex;
+                            return default;
                         }
+                        if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
+                        {
+                            return (T)resultContext.Return.ToString().ParseToType(typeof(T));
+                        }
+
+                        return JsonConvert.DeserializeObject<T>(resultContext.Return.ToString());
                     }
                 default:
                     return default;
@@ -197,7 +192,7 @@ namespace RRQMSocket.RPC.JsonRpc
             JsonRpcWaitContext context = new JsonRpcWaitContext();
             WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -251,10 +246,6 @@ namespace RRQMSocket.RPC.JsonRpc
                     default:
                         break;
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
@@ -363,6 +354,15 @@ namespace RRQMSocket.RPC.JsonRpc
         }
 
         /// <summary>
+        /// 禁用适配器赋值
+        /// </summary>
+        /// <param name="adapter"></param>
+        public override sealed void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            throw new RRQMException($"{nameof(JsonRpcSocketClient)}不允许设置适配器。");
+        }
+
+        /// <summary>
         /// 载入配置
         /// </summary>
         /// <param name="clientConfig"></param>
@@ -370,8 +370,15 @@ namespace RRQMSocket.RPC.JsonRpc
         {
             base.LoadConfig(clientConfig);
             this.maxPackageSize = (int)clientConfig.GetValue(JsonRpcClientConfig.MaxPackageSizeProperty);
-
             this.protocolType = (JsonRpcProtocolType)clientConfig.GetValue(JsonRpcClientConfig.ProtocolTypeProperty);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnConnecting(ClientConnectingEventArgs e)
+        {
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
@@ -382,6 +389,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     base.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
                     break;
             }
+            base.OnConnecting(e);
         }
     }
 }

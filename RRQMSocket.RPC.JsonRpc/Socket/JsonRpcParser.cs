@@ -43,7 +43,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 函数键映射图
         /// </summary>
-        public ActionMap ActionMap { get { return this.actionMap; } }
+        public ActionMap ActionMap
+        { get { return this.actionMap; } }
 
         private int maxPackageSize;
 
@@ -142,7 +143,7 @@ namespace RRQMSocket.RPC.JsonRpc
             JsonRpcContext jsonRpcContext = (JsonRpcContext)methodInvoker.Flag;
             if (jsonRpcContext.needResponse)
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
                 this.BuildResponseByteBlock(byteBlock, methodInvoker, jsonRpcContext.id, methodInvoker.ReturnParameter, error);
                 if (socketClient.Online)
                 {
@@ -249,11 +250,11 @@ namespace RRQMSocket.RPC.JsonRpc
                     jsonRpcContext.needResponse = true;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 jsonRpcContext = new JsonRpcContext();
                 jsonRpcContext.needResponse = true;
-                throw ex;
+                throw;
             }
 
             if (this.actionMap.TryGet(jsonRpcContext.method, out methodInstance))

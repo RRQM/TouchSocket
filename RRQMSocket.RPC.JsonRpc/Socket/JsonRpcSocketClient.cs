@@ -19,10 +19,15 @@ namespace RRQMSocket.RPC.JsonRpc
     public class JsonRpcSocketClient : SimpleSocketClient, ICaller
     {
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSetDataHandlingAdapter => false;
+
+        /// <summary>
         /// 禁用适配器赋值
         /// </summary>
         /// <param name="adapter"></param>
-        public sealed override void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        public override sealed void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
             throw new RRQMException($"{nameof(JsonRpcSocketClient)}不允许设置适配器。");
         }
