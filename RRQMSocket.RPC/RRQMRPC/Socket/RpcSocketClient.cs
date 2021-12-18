@@ -90,7 +90,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext context = new RpcContext();
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodToken;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -126,10 +126,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                 }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
             finally
             {
                 byteBlock.Dispose();
@@ -151,6 +147,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.WaitHandlePool.Destroy(waitData);
                                 }
                                 break;
+
                             case WaitDataStatus.Overtime:
                                 {
                                     throw new RRQMTimeoutException("等待结果超时");
@@ -168,14 +165,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.WaitHandlePool.Destroy(waitData);
                                     if (resultContext.Status == 1)
                                     {
-                                        try
-                                        {
-                                            return (T)this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            throw ex;
-                                        }
+                                        return (T)this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
                                     }
                                     else if (resultContext.Status == 2)
                                     {
@@ -222,7 +212,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext context = new RpcContext();
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodToken;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -257,10 +247,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                 }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
             finally
             {
                 byteBlock.Dispose();
@@ -282,6 +268,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.WaitHandlePool.Destroy(waitData);
                                 }
                                 break;
+
                             case WaitDataStatus.Overtime:
                                 {
                                     throw new RRQMTimeoutException("等待结果超时");
@@ -346,7 +333,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext context = new RpcContext();
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = invokeContext.methodToken;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
 
             InvokeOption invokeOption = new InvokeOption();
             try
@@ -376,10 +363,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                 }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
             finally
             {
                 byteBlock.Dispose();
@@ -401,6 +384,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.WaitHandlePool.Destroy(waitData);
                                 }
                                 break;
+
                             case WaitDataStatus.Overtime:
                                 {
                                     throw new RRQMTimeoutException("等待结果超时");
@@ -418,14 +402,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     this.WaitHandlePool.Destroy(waitData);
                                     if (resultContext.Status == 1)
                                     {
-                                        try
-                                        {
-                                            return resultContext.ReturnParameterBytes;
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            throw ex;
-                                        }
+                                        return resultContext.ReturnParameterBytes;
                                     }
                                     else if (resultContext.Status == 2)
                                     {
@@ -464,7 +441,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal void EndInvoke(RpcContext context)
         {
             this.contextDic.TryRemove(context.Sign, out _);
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             context.Serialize(byteBlock);
             try
             {
@@ -488,7 +465,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
+        protected override sealed void HandleProtocolData(short? procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
@@ -545,7 +522,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                 RpcContext content = RpcContext.Deserialize(byteBlock);
                                 content = this.IDAction(this, content);
 
-                                ByteBlock retuenByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                                ByteBlock retuenByteBlock = BytePool.GetByteBlock(this.BufferLength);
                                 try
                                 {
                                     content.Serialize(retuenByteBlock);
@@ -710,7 +687,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 List<byte[]> ps = context.parametersBytes;
 
-                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                ByteBlock returnByteBlock = BytePool.GetByteBlock(this.BufferLength);
                 try
                 {
                     context.parametersBytes = null;

@@ -48,19 +48,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 默认设置。
         /// Timeout=5000ms
         /// </summary>
-        public static InvokeOption OnlySend { get { return onlySend; } }
+        public static InvokeOption OnlySend
+        { get { return onlySend; } }
 
         /// <summary>
         /// 默认设置。
         /// Timeout=5000ms
         /// </summary>
-        public static InvokeOption WaitInvoke { get { return waitInvoke; } }
+        public static InvokeOption WaitInvoke
+        { get { return waitInvoke; } }
 
         /// <summary>
         /// 默认设置。
         /// Timeout=5000 ms
         /// </summary>
-        public static InvokeOption WaitSend { get { return waitSend; } }
+        public static InvokeOption WaitSend
+        { get { return waitSend; } }
 
         /// <summary>
         /// 调用反馈

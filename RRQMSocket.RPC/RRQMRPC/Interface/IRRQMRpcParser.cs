@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using System;
 using System.Collections.Generic;
 
@@ -20,11 +19,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public interface IRRQMRpcParser
     {
-        /// <summary>
-        /// 内存池实例
-        /// </summary>
-        BytePool BytePool { get; }
-
         /// <summary>
         /// 获取生成的代理代码
         /// </summary>
@@ -67,7 +61,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="caller">调用作用者/></param>
         /// <returns></returns>
         RpcProxyInfo GetProxyInfo(string proxyToken, ICaller caller);
-
 
         /// <summary>
         /// 获取注册函数

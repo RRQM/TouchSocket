@@ -63,6 +63,16 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
+        /// <summary>
+        /// 添加代理类型
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="deepSearch"></param>
+        public static void AddProxyType<T>(bool deepSearch = true)
+        {
+            AddProxyType(typeof(T), deepSearch);
+        }
+
         internal static string GetAssemblyInfo(string assemblyName, string version)
         {
             CodeGenerator codeMap = new CodeGenerator();
@@ -119,13 +129,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                     MethodInfo method = methodInstance.Method;
                     string methodName = method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey == null ? method.Name : method.GetCustomAttribute<RRQMRPCAttribute>().MemberKey;
 
-                    if (methodInstance.DescriptionAttribute!=null)
+                    if (methodInstance.DescriptionAttribute != null)
                     {
                         codeString.AppendLine("///<summary>");
                         codeString.AppendLine($"///{methodInstance.DescriptionAttribute.Description}");
                         codeString.AppendLine("///</summary>");
                     }
-                   
 
                     if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                     {
@@ -202,14 +211,13 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (!isOut && !isRef)//没有out或者ref
                     {
-                        
-                        if (methodInstance.DescriptionAttribute!=null)
+                        if (methodInstance.DescriptionAttribute != null)
                         {
                             codeString.AppendLine("///<summary>");
                             codeString.AppendLine($"///{methodInstance.DescriptionAttribute.Description}");
                             codeString.AppendLine("///</summary>");
                         }
-                        
+
                         if (method.ReturnType.FullName == "System.Void" || method.ReturnType.FullName == "System.Threading.Tasks.Task")
                         {
                             codeString.Append(string.Format("void {0} ", methodName + "Async"));

@@ -87,6 +87,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public T this[int index] { get { return list[index]; } }
+        public T this[int index]
+        { get { return list[index]; } }
     }
 }

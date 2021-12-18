@@ -168,7 +168,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -298,7 +298,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -414,7 +414,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -515,7 +515,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             RpcContext context = new RpcContext();
             WaitData<RpcContext> waitData = this.waitHandle.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             if (invokeOption == null)
             {
                 invokeOption = InvokeOption.WaitInvoke;
@@ -683,7 +683,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private void UDPSend(short procotol, byte[] buffer, int offset, int length)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(length + 2);
+            ByteBlock byteBlock = BytePool.GetByteBlock(length + 2);
             try
             {
                 byteBlock.Write(BitConverter.GetBytes(procotol));

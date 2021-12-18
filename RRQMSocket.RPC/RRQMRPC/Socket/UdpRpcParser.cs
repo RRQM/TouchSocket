@@ -213,7 +213,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 return;
             }
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             try
             {
                 switch (methodInvoker.Status)
@@ -362,7 +362,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        protected override sealed void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
@@ -395,7 +395,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             {
                                 List<byte[]> ps = content.parametersBytes;
 
-                                ByteBlock returnByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                                ByteBlock returnByteBlock = BytePool.GetByteBlock(this.BufferLength);
                                 try
                                 {
                                     content.parametersBytes = null;
@@ -448,7 +448,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         private void UDPSend(short procotol, EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(length + 2);
+            ByteBlock byteBlock = BytePool.GetByteBlock(length + 2);
             try
             {
                 byteBlock.Write(BitConverter.GetBytes(procotol));
