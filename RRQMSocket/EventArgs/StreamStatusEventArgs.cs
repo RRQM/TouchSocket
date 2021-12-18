@@ -18,8 +18,8 @@ namespace RRQMSocket
     /// </summary>
     public class StreamStatusEventArgs : StreamEventArgs
     {
-
         private Result result;
+
         /// <summary>
         /// 结果
         /// </summary>
@@ -27,7 +27,6 @@ namespace RRQMSocket
         {
             get { return result; }
         }
-
 
         /// <summary>
         /// 构造函数

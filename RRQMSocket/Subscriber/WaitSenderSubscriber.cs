@@ -17,6 +17,13 @@ namespace RRQMSocket
 {
     /// <summary>
     /// 协议订阅等待
+    ///<list type="bullet">
+    /// <listheader>
+    ///  <term>使用注意事项</term>
+    ///  <description><see cref="SendThenReturn(ByteBlock, CancellationToken)"/>函数在执行时，为Lock同步。
+    ///  但是也有可能收到上次未返回的数据。</description>
+    ///</listheader>
+    ///</list>
     /// </summary>
     public class WaitSenderSubscriber : SubscriberBase, ISendBase, IWaitSender
     {
@@ -29,7 +36,7 @@ namespace RRQMSocket
             this.waitData = new RRQMCore.Run.WaitData<byte[]>();
         }
 
-        RRQMCore.Run.WaitData<byte[]> waitData;
+        private RRQMCore.Run.WaitData<byte[]> waitData;
 
         private int timeout = 60 * 1000;
 
@@ -42,7 +49,6 @@ namespace RRQMSocket
             set { timeout = value; }
         }
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -54,7 +60,7 @@ namespace RRQMSocket
             this.waitData.Set(data);
         }
 
-#pragma warning disable CS1591 
+#pragma warning disable CS1591
 
         /// <summary>
         /// <inheritdoc/>
@@ -118,28 +124,22 @@ namespace RRQMSocket
         {
             lock (this)
             {
-                try
-                {
-                    this.client.Send(this.protocol, buffer, offset, length);
-                    this.waitData.SetCancellationToken(token);
+                this.waitData.Reset();
+                this.client.Send(this.protocol, buffer, offset, length);
+                this.waitData.SetCancellationToken(token);
 
-                    switch (this.waitData.Wait(this.timeout))
-                    {
-                        case RRQMCore.Run.WaitDataStatus.SetRunning:
-                            {
-                                return this.waitData.WaitResult;
-                            }
-                        case RRQMCore.Run.WaitDataStatus.Overtime:
-                            throw new RRQMTimeoutException("操作已超时。");
-                        case RRQMCore.Run.WaitDataStatus.Canceled:
-                        case RRQMCore.Run.WaitDataStatus.Disposed:
-                        default:
-                            return default;
-                    }
-                }
-                finally
+                switch (this.waitData.Wait(this.timeout))
                 {
-                    this.waitData.Reset();
+                    case RRQMCore.Run.WaitDataStatus.SetRunning:
+                        {
+                            return this.waitData.WaitResult;
+                        }
+                    case RRQMCore.Run.WaitDataStatus.Overtime:
+                        throw new RRQMTimeoutException("操作已超时。");
+                    case RRQMCore.Run.WaitDataStatus.Canceled:
+                    case RRQMCore.Run.WaitDataStatus.Disposed:
+                    default:
+                        return default;
                 }
             }
         }
@@ -171,6 +171,7 @@ namespace RRQMSocket
         {
             return this.SendThenReturnAsync(byteBlock.Buffer, 0, byteBlock.Len, token);
         }
+
 #pragma warning restore CS1591
     }
 }

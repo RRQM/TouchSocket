@@ -9,14 +9,38 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Collections.Concurrent;
+
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 协议订阅集合
+    /// 客户端连接事件。
     /// </summary>
-    public class ProtocolSubscriberCollection : ConcurrentList<SubscriberBase>
+    public class ClientConnectingEventArgs : MesEventArgs
     {
+        private Socket socket;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="socket"></param>
+        public ClientConnectingEventArgs(Socket socket)
+        {
+            this.socket = socket;
+        }
+
+        /// <summary>
+        /// 数据处理适配器
+        /// </summary>
+        public DataHandlingAdapter DataHandlingAdapter { get; set; }
+
+        /// <summary>
+        /// 新初始化的通信器
+        /// </summary>
+        public Socket Socket
+        {
+            get { return socket; }
+        }
     }
 }

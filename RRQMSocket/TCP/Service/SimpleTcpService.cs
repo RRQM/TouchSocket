@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
 
 namespace RRQMSocket
 {
@@ -34,7 +33,6 @@ namespace RRQMSocket
             socketClient.Received += this.OnReceive;
             base.OnConnecting(socketClient, e);
         }
-
 
         private void OnReceive(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {

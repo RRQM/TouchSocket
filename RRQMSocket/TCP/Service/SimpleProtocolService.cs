@@ -33,7 +33,6 @@ namespace RRQMSocket
         /// </summary>
         public event RRQMStreamStatusEventHandler<SimpleProtocolSocketClient> ReceivedStream;
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>

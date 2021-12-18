@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
-using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
 
@@ -123,7 +122,7 @@ namespace RRQMSocket
         /// <param name="r"></param>
         private void SeamPackage(byte[] buffer, int r)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(r + agreementTempBytes.Length);
+            ByteBlock byteBlock = BytePool.GetByteBlock(r + agreementTempBytes.Length);
             byteBlock.Write(agreementTempBytes);
             byteBlock.Write(buffer, 0, r);
             r += agreementTempBytes.Length;
@@ -167,31 +166,28 @@ namespace RRQMSocket
 
                 if (length < 0)
                 {
-                    Logger.Debug(LogType.Error, this, "接收数据长度错误，已放弃接收");
-                    return;
+                    throw new RRQMException("接收数据长度错误，已放弃接收");
                 }
                 else if (length < this.minSizeHeader)
                 {
-                    Logger.Debug(LogType.Error, this, "接收数据长度小于设定值，已放弃接收");
-                    return;
+                    throw new RRQMException("接收数据长度小于设定值，已放弃接收");
                 }
                 else if (length > this.maxSizeHeader)
                 {
-                    Logger.Debug(LogType.Error, this, "接收数据长度大于设定值，已放弃接收");
-                    return;
+                    throw new RRQMException("接收数据长度大于设定值，已放弃接收");
                 }
 
                 int recedSurPlusLength = r - index - (byte)this.fixedHeaderType;
                 if (recedSurPlusLength >= length)
                 {
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(length);
+                    ByteBlock byteBlock = BytePool.GetByteBlock(length);
                     byteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, length);
                     PreviewHandle(byteBlock);
                     surPlusLength = 0;
                 }
                 else//半包
                 {
-                    this.tempByteBlock = this.BytePool.GetByteBlock(length);
+                    this.tempByteBlock = BytePool.GetByteBlock(length);
                     surPlusLength = length - recedSurPlusLength;
                     this.tempByteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, recedSurPlusLength);
                 }
@@ -238,21 +234,21 @@ namespace RRQMSocket
                 case FixedHeaderType.Byte:
                     {
                         byte dataLen = (byte)(length - offset);
-                        byteBlock = this.BytePool.GetByteBlock(dataLen + 1);
+                        byteBlock = BytePool.GetByteBlock(dataLen + 1);
                         lenBytes = new byte[] { dataLen };
                         break;
                     }
                 case FixedHeaderType.Ushort:
                     {
                         ushort dataLen = (ushort)(length - offset);
-                        byteBlock = this.BytePool.GetByteBlock(dataLen + 2);
+                        byteBlock = BytePool.GetByteBlock(dataLen + 2);
                         lenBytes = BitConverter.GetBytes(dataLen);
                         break;
                     }
                 case FixedHeaderType.Int:
                     {
                         int dataLen = length - offset;
-                        byteBlock = this.BytePool.GetByteBlock(dataLen + 4);
+                        byteBlock = BytePool.GetByteBlock(dataLen + 4);
                         lenBytes = BitConverter.GetBytes(dataLen);
                         break;
                     }
@@ -271,10 +267,6 @@ namespace RRQMSocket
                 {
                     this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
@@ -313,20 +305,20 @@ namespace RRQMSocket
                 case FixedHeaderType.Byte:
                     {
                         byte dataLen = (byte)length;
-                        byteBlock = this.BytePool.GetByteBlock(dataLen + 1);
+                        byteBlock = BytePool.GetByteBlock(dataLen + 1);
                         lenBytes = new byte[] { dataLen };
                         break;
                     }
                 case FixedHeaderType.Ushort:
                     {
                         ushort dataLen = (ushort)length;
-                        byteBlock = this.BytePool.GetByteBlock(dataLen + 2);
+                        byteBlock = BytePool.GetByteBlock(dataLen + 2);
                         lenBytes = BitConverter.GetBytes(dataLen);
                         break;
                     }
                 case FixedHeaderType.Int:
                     {
-                        byteBlock = this.BytePool.GetByteBlock(length + 4);
+                        byteBlock = BytePool.GetByteBlock(length + 4);
                         lenBytes = BitConverter.GetBytes(length);
                         break;
                     }
@@ -350,10 +342,6 @@ namespace RRQMSocket
                 {
                     this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {

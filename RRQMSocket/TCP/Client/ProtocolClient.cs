@@ -35,7 +35,6 @@ namespace RRQMSocket
         private readonly ConcurrentDictionary<int, Channel> userChannels;
         private readonly ConcurrentDictionary<short, ProtocolSubscriberCollection> protocolSubscriberCollection;
 
-
         static ProtocolClient()
         {
             usedProtocol = new Dictionary<short, string>();
@@ -48,7 +47,6 @@ namespace RRQMSocket
         {
             this.protocolSubscriberCollection = new ConcurrentDictionary<short, ProtocolSubscriberCollection>();
             this.userChannels = new ConcurrentDictionary<int, Channel>();
-
         }
 
         /// <summary>
@@ -232,7 +230,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             short procotol = BitConverter.ToInt16(byteBlock.Buffer, 0);
             switch (procotol)
@@ -374,6 +372,20 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
+        protected override void OnConnecting(ClientConnectingEventArgs e)
+        {
+            if (e.DataHandlingAdapter == null)
+            {
+                e.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            }
+            base.OnConnecting(e);
+        }
+
+        LoopAction heartbeatLoopAction;
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnConnected(MesEventArgs e)
         {
             base.OnConnected(e);
@@ -381,29 +393,17 @@ namespace RRQMSocket
 
             if (heartbeatFrequency > 0)
             {
-                Thread thread = new Thread(() =>
+                heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency,(loop)=> 
                 {
-                    while (true)
+                    try
                     {
-                        if (!this.Online)
-                        {
-                            break;
-                        }
-                        try
-                        {
-                            this.SocketSend(-7);
-                        }
-                        catch (Exception)
-                        {
-                            this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
-                        }
-
-                        Thread.Sleep(heartbeatFrequency);
+                        this.SocketSend(-7);
+                    }
+                    catch (Exception)
+                    {
+                        this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
                     }
                 });
-                thread.Name = "Heartbeat";
-                thread.IsBackground = true;
-                thread.Start();
             }
         }
 
@@ -417,6 +417,11 @@ namespace RRQMSocket
             foreach (var item in this.userChannels.Values)
             {
                 item.Dispose();
+            }
+            if (this.heartbeatLoopAction!=null)
+            {
+                this.heartbeatLoopAction.Dispose();
+                this.heartbeatLoopAction = null;
             }
         }
 
@@ -443,6 +448,7 @@ namespace RRQMSocket
                         waitStream.Status = 1;
                         Channel channel = this.CreateChannel();
                         waitStream.ChannelID = channel.ID;
+                        streamOperator.SetMaxSpeed(streamOperator.MaxSpeed);
                         Task.Run(() =>
                         {
                             Stream stream = args.Bucket;
@@ -505,7 +511,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void Send(byte[] buffer, int offset, int length)
+        public override sealed void Send(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -514,7 +520,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"><inheritdoc/></param>
-        public sealed override void Send(byte[] buffer)
+        public override sealed void Send(byte[] buffer)
         {
             this.Send(buffer, 0, buffer.Length);
         }
@@ -523,7 +529,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public sealed override void Send(ByteBlock byteBlock)
+        public override sealed void Send(ByteBlock byteBlock)
         {
             this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -532,7 +538,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void Send(IList<TransferByte> transferBytes)
+        public override sealed void Send(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(BitConverter.GetBytes(-1)));
             base.Send(transferBytes);
@@ -546,7 +552,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
-        public sealed override void SendAsync(byte[] buffer)
+        public override sealed void SendAsync(byte[] buffer)
         {
             this.SendAsync(buffer, 0, buffer.Length);
         }
@@ -566,7 +572,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void SendAsync(byte[] buffer, int offset, int length)
+        public override sealed void SendAsync(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -575,7 +581,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void SendAsync(IList<TransferByte> transferBytes)
+        public override sealed void SendAsync(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(BitConverter.GetBytes(-1)));
             base.SendAsync(transferBytes);
@@ -863,7 +869,7 @@ namespace RRQMSocket
             waitStream.Size = size;
             waitStream.StreamType = stream.GetType().FullName;
             int length = streamOperator.PackageSize;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(length).WriteObject(waitStream, SerializationType.Json);
+            ByteBlock byteBlock = BytePool.GetByteBlock(length).WriteObject(waitStream, SerializationType.Json);
             LoopAction loopAction = null;
             try
             {
@@ -894,6 +900,7 @@ namespace RRQMSocket
 
                                     while (true)
                                     {
+
                                         if (streamOperator.Token.IsCancellationRequested)
                                         {
                                             channel.Cancel();
@@ -907,9 +914,9 @@ namespace RRQMSocket
                                         }
 
                                         channel.Write(byteBlock.Buffer, 0, r);
+
                                         streamOperator.AddStreamFlow(r, size);
                                     }
-
                                 }
                                 else
                                 {

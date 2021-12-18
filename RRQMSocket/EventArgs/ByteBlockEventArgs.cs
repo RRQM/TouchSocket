@@ -28,6 +28,7 @@ namespace RRQMSocket
         }
 
         private ByteBlock byteBlock;
+
         /// <summary>
         /// 数据块
         /// </summary>
@@ -35,6 +36,5 @@ namespace RRQMSocket
         {
             get { return byteBlock; }
         }
-
     }
 }

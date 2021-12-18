@@ -9,8 +9,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Dependency;
+using System;
 
 namespace RRQMSocket
 {
@@ -22,6 +22,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数据处理适配器
         /// </summary>
+        [Obsolete("已放弃Config注入适配器，请在客户端使用数据处理适配器之前，任意时刻赋值，例如在构造函数、Connecting事件等")]
         public DataHandlingAdapter DataHandlingAdapter
         {
             get { return (DataHandlingAdapter)GetValue(DataHandlingAdapterProperty); }
@@ -31,6 +32,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数据处理适配器，所需类型<see cref="RRQMSocket.DataHandlingAdapter"/>
         /// </summary>
+        [Obsolete("已放弃Config注入适配器，请在客户端使用数据处理适配器之前，任意时刻赋值，例如在构造函数、Connecting事件等")]
         public static readonly DependencyProperty DataHandlingAdapterProperty =
             DependencyProperty.Register("DataHandlingAdapter", typeof(DataHandlingAdapter), typeof(TcpClientConfig), null);
 
@@ -48,21 +50,6 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty RemoteIPHostProperty =
             DependencyProperty.Register("RemoteIPHost", typeof(IPHost), typeof(TcpClientConfig), null);
-
-        /// <summary>
-        /// 内存池实例
-        /// </summary>
-        public BytePool BytePool
-        {
-            get { return (BytePool)GetValue(BytePoolProperty); }
-            set { SetValue(BytePoolProperty, value); }
-        }
-
-        /// <summary>
-        /// 内存池实例，所需类型<see cref="RRQMCore.ByteManager.BytePool"/>
-        /// </summary>
-        public static readonly DependencyProperty BytePoolProperty =
-            DependencyProperty.Register("BytePool", typeof(BytePool), typeof(TcpClientConfig), new BytePool());
 
         /// <summary>
         /// 仅发送，即不开启接收线程，
@@ -96,7 +83,6 @@ namespace RRQMSocket
         public static readonly DependencyProperty SeparateThreadSendProperty =
             DependencyProperty.Register("SeparateThreadSend", typeof(bool), typeof(TcpClientConfig), false);
 
-
         /// <summary>
         /// 接收类型
         /// </summary>
@@ -111,7 +97,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ReceiveTypeProperty =
             DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(TcpClientConfig), ReceiveType.IOCP);
-
-
     }
 }

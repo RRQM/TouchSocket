@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Log;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -55,17 +54,13 @@ namespace RRQMSocket
         /// <param name="logger"></param>
         /// <param name="bufferLength"></param>
         /// <returns></returns>
-        public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, Action<ByteBlock, object> receivedCallBack, ILog logger, int bufferLength = 1024)
+        public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, Action<ByteBlock, object> receivedCallBack, int bufferLength = 1024)
         {
             DataAdapterTester tester = new DataAdapterTester();
             tester.adapter = adapter;
             tester.bufferLength = bufferLength;
-
-            adapter.Logger = logger;
             adapter.SendCallBack = tester.SendCallback;
-            adapter.BytePool = new BytePool();
             adapter.ReceivedCallBack = receivedCallBack;
-
             return tester;
         }
 
@@ -120,42 +115,39 @@ namespace RRQMSocket
         private bool tryGet(out List<ByteBlock> byteBlocks)
         {
             byteBlocks = new List<ByteBlock>();
-
             ByteBlock block = null;
-
             while (true)
             {
                 if (this.asyncBytes.TryDequeue(out TransferByte asyncByte))
                 {
                     if (block == null)
                     {
-                        block = this.adapter.BytePool.GetByteBlock(bufferLength);
+                        block = BytePool.GetByteBlock(bufferLength);
                         byteBlocks.Add(block);
                     }
-
-                    int surLen = block.Capacity - (int)block.Position;
-                    if (surLen >= asyncByte.Length)
-                    {
-                        block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
-                    }
-                    else
+                    int surLen = bufferLength - block.Pos;
+                    if (surLen < asyncByte.Length)//不能完成写入
                     {
                         block.Write(asyncByte.Buffer, asyncByte.Offset, surLen);
-
-                        int surDataLen = asyncByte.Length - surLen;
-                        int offset = asyncByte.Offset + surLen;
-
-                        while (surDataLen > 0)
+                        int offset = surLen;
+                        while (offset < asyncByte.Length)
                         {
-                            block = this.adapter.BytePool.GetByteBlock(bufferLength);
+                            block = this.Write(asyncByte, ref offset);
                             byteBlocks.Add(block);
-                            int len = Math.Min(surDataLen, bufferLength);
-                            block.Write(asyncByte.Buffer, offset, len);
-                            surDataLen -= len;
-                            offset += len;
                         }
 
-                        break;
+                        if (byteBlocks.Count > 10)
+                        {
+                            break;
+                        }
+                    }
+                    else//本次能完成写入
+                    {
+                        block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
+                        if (byteBlocks.Count > 10)
+                        {
+                            break;
+                        }
                     }
                 }
                 else
@@ -171,6 +163,16 @@ namespace RRQMSocket
                 }
             }
             return true;
+        }
+
+        private ByteBlock Write(TransferByte transferByte, ref int offset)
+        {
+            ByteBlock block = BytePool.GetByteBlock(bufferLength, true);
+            int len = Math.Min(transferByte.Length - offset, bufferLength);
+            block.Write(transferByte.Buffer, offset, len);
+            offset += len;
+
+            return block;
         }
 
         private void SendCallback(byte[] buffer, int offset, int length, bool isAsync)

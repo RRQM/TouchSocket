@@ -104,7 +104,6 @@
 //            this.socket = new Socket();
 //        }
 
-
 //        public void SetDataHandlingAdapter(DataHandlingAdapter adapter)
 //        {
 //            if (adapter == null)
@@ -112,7 +111,7 @@
 //                throw new RRQMException("数据处理适配器为空");
 //            }
 
-//            adapter.BytePool = this.BytePool;
+//            adapter.BytePool = BytePool;
 //            adapter.Logger = this.Logger;
 //            adapter.ReceivedCallBack = this.HandleReceivedData;
 //            adapter.SendCallBack = this.Sent;
@@ -120,8 +119,7 @@
 //        }
 
 //        private void HandleReceivedData(ByteBlock byteBlock, object obj)
-//        { 
-
+//        {
 //        }
 
 //        private void Sent(byte[] buffer, int offset, int length, bool isAsync)

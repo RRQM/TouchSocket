@@ -29,7 +29,6 @@ namespace RRQMSocket
             this.Received = receivedAction;
         }
 
-
         private Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> Received;
 
         /// <summary>

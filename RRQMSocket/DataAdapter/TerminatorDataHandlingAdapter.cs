@@ -12,8 +12,6 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Helper;
-using RRQMCore.Log;
-using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -125,12 +123,11 @@ namespace RRQMSocket
                         this.tempByteBlock = null;
                     }
 
-                    Logger.Debug(LogType.Error, this, "在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
-                    return;
+                    throw new RRQMOverlengthException("在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
                 }
                 else if (this.tempByteBlock == null)
                 {
-                    this.tempByteBlock = this.BytePool.GetByteBlock(r * 2);
+                    this.tempByteBlock = BytePool.GetByteBlock(r * 2);
                     this.tempByteBlock.Write(buffer, 0, r);
                 }
             }
@@ -149,7 +146,7 @@ namespace RRQMSocket
                         length = lastIndex - startIndex - this.terminatorCode.Length + 1;
                     }
 
-                    ByteBlock packageByteBlock = this.BytePool.GetByteBlock(length);
+                    ByteBlock packageByteBlock = BytePool.GetByteBlock(length);
                     packageByteBlock.Write(buffer, startIndex, length);
 
                     string mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, (int)packageByteBlock.Position);
@@ -164,7 +161,7 @@ namespace RRQMSocket
                 }
                 if (startIndex < r)
                 {
-                    this.tempByteBlock = this.BytePool.GetByteBlock((r - startIndex) * 2);
+                    this.tempByteBlock = BytePool.GetByteBlock((r - startIndex) * 2);
                     this.tempByteBlock.Write(buffer, startIndex, r - startIndex);
                 }
             }
@@ -196,7 +193,7 @@ namespace RRQMSocket
                 throw new RRQMException("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
             int dataLen = length - offset + this.terminatorCode.Length;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
+            ByteBlock byteBlock = BytePool.GetByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);
             byteBlock.Write(this.terminatorCode);
 
@@ -211,10 +208,6 @@ namespace RRQMSocket
                 {
                     this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
@@ -239,7 +232,7 @@ namespace RRQMSocket
                 throw new RRQMException("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
             int dataLen = length + this.terminatorCode.Length;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(dataLen);
+            ByteBlock byteBlock = BytePool.GetByteBlock(dataLen);
             foreach (var item in transferBytes)
             {
                 byteBlock.Write(item.Buffer, item.Offset, item.Length);
@@ -258,10 +251,6 @@ namespace RRQMSocket
                 {
                     this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {

@@ -9,12 +9,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Run;
 using System;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,12 +33,10 @@ namespace RRQMSocket
             this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
         }
 
-
         /// <summary>
         /// 等待返回池
         /// </summary>
         public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
-
 
         private string id;
 
@@ -107,26 +103,23 @@ namespace RRQMSocket
             WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
             waitData.SetCancellationToken(token);
 
+            Socket socket;
             try
             {
-                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                PreviewConnect(socket);
-                socket.Connect(iPHost.EndPoint);
-                this.MainSocket = socket;
-                this.MainSocket.Send(waitVerify.GetData());
+                socket = PCon(iPHost);
+                socket.Send(waitVerify.GetData());
             }
             catch (Exception e)
             {
                 throw new RRQMException(e.Message);
             }
-            
 
             Task.Run(() =>
             {
                 try
                 {
                     byte[] buffer = new byte[1024];
-                    int r = this.MainSocket.Receive(buffer);
+                    int r = socket.Receive(buffer);
                     if (r > 0)
                     {
                         byte[] data = new byte[r];
@@ -135,11 +128,9 @@ namespace RRQMSocket
                         WaitVerify verify = WaitVerify.GetVerifyInfo(data);
                         this.waitHandlePool.SetRun(verify);
                     }
-
                 }
                 catch
                 {
-
                 }
             });
 
@@ -151,35 +142,33 @@ namespace RRQMSocket
                         if (verifyResult.Status == 1)
                         {
                             this.id = verifyResult.ID;
-                            InitConnect();
+                            InitConnect(socket);
                             return this;
                         }
                         else if (verifyResult.Status == 3)
                         {
-                            this.MainSocket.Dispose();
+                            socket.Dispose();
                             throw new RRQMException("连接数量已达到服务器设定最大值");
                         }
                         else if (verifyResult.Status == 4)
                         {
-                            this.MainSocket.Dispose();
+                            socket.Dispose();
                             throw new RRQMException("服务器拒绝连接");
                         }
                         else
                         {
-                            this.MainSocket.Dispose();
+                            socket.Dispose();
                             throw new RRQMTokenVerifyException(verifyResult.Message);
                         }
                     }
                 case WaitDataStatus.Overtime:
-                    this.MainSocket.Dispose();
+                    socket.Dispose();
                     throw new RRQMTimeoutException("连接超时");
                 case WaitDataStatus.Canceled:
                 case WaitDataStatus.Disposed:
                 default:
                     return this;
             }
-
-            
         }
 
         /// <summary>

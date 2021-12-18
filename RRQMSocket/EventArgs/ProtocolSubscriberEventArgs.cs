@@ -24,7 +24,6 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         public ProtocolSubscriberEventArgs(ByteBlock byteBlock) : base(byteBlock)
         {
-
         }
 
         /// <summary>

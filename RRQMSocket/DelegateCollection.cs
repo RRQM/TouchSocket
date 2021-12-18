@@ -21,6 +21,14 @@ using System.Net;
 public delegate void RRQMMessageEventHandler<TClient>(TClient client, MesEventArgs e) where TClient : IClient;
 
 /// <summary>
+/// 客户端连接
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void RRQMTcpClientConnectingEventHandler<TClient>(TClient client, ClientConnectingEventArgs e) where TClient : ITcpClient;
+
+/// <summary>
 /// 有操作的显示信息
 /// </summary>
 /// <typeparam name="TClient"></typeparam>

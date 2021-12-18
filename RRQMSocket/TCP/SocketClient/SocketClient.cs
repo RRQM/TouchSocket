@@ -25,7 +25,6 @@ namespace RRQMSocket
     public abstract class SocketClient : BaseSocket, ISocketClient, IHandleBuffer
     {
         internal bool breakOut;
-        internal BytePool bytePool;
         internal string id;
         internal long lastTick;
         internal ReceiveType receiveType;
@@ -55,10 +54,9 @@ namespace RRQMSocket
         public event RRQMMessageEventHandler<SocketClient> Disconnected;
 
         /// <summary>
-        /// 获取内存池实例
+        /// <inheritdoc/>
         /// </summary>
-        public BytePool BytePool
-        { get { return this.bytePool; } }
+        public virtual bool CanSetDataHandlingAdapter { get => true; }
 
         /// <summary>
         /// 选择清理类型
@@ -79,11 +77,6 @@ namespace RRQMSocket
                 return dataHandlingAdapter;
             }
         }
-
-        /// <summary>
-        /// 标记
-        /// </summary>
-        public object Flag { get; set; }
 
         /// <summary>
         /// 用于索引的ID
@@ -276,18 +269,11 @@ namespace RRQMSocket
             {
                 throw new RRQMException("数据处理适配器为空");
             }
-            if (this.BytePool == null)
-            {
-                throw new RRQMException($"数据处理适配器应当在{nameof(Connecting)}执行后赋值。");
-            }
-
-            if (adapter.locked)
+            if (adapter.owner != null)
             {
                 throw new RRQMException("此适配器已被其他终端使用，请重新创建对象。");
             }
-            adapter.locked = true;
-            adapter.BytePool = this.BytePool;
-            adapter.Logger = this.Logger;
+            adapter.owner = this;
             adapter.ReceivedCallBack = this.HandleReceivedData;
             adapter.SendCallBack = this.Sent;
             this.dataHandlingAdapter = adapter;
@@ -319,7 +305,7 @@ namespace RRQMSocket
                         {
                             eventArgs = new SocketAsyncEventArgs();
                             eventArgs.Completed += this.EventArgs_Completed;
-                            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
                             eventArgs.UserToken = byteBlock;
                             eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
                             if (!MainSocket.ReceiveAsync(eventArgs))
@@ -371,12 +357,11 @@ namespace RRQMSocket
             }
             else
             {
-                if (nowTick - this.lastTick / 10000000 > time)
+                if (nowTick - (this.lastTick / 10000000.0) > time)
                 {
                     this.breakOut = true;
                 }
             }
-           
         }
 
         internal void OnEvent(int type, MesEventArgs e)
@@ -426,7 +411,7 @@ namespace RRQMSocket
         {
             this.Connecting?.Invoke(this, e);
 
-            if (this.dataHandlingAdapter == null)
+            if (this.CanSetDataHandlingAdapter && this.dataHandlingAdapter == null)
             {
                 if (e.DataHandlingAdapter == null)
                 {
@@ -526,7 +511,7 @@ namespace RRQMSocket
             }
             else
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
@@ -604,7 +589,7 @@ namespace RRQMSocket
             }
             else
             {
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
@@ -646,7 +631,7 @@ namespace RRQMSocket
                 {
                     break;
                 }
-                ByteBlock byteBlock = bytePool.GetByteBlock(this.BufferLength);
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
 
                 try
                 {
@@ -712,7 +697,7 @@ namespace RRQMSocket
 
                     try
                     {
-                        ByteBlock newByteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+                        ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
                         e.UserToken = newByteBlock;
                         e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 

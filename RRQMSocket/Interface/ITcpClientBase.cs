@@ -44,6 +44,11 @@ namespace RRQMSocket
         bool Online { get; }
 
         /// <summary>
+        /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
+        /// </summary>
+        bool CanSetDataHandlingAdapter { get; }
+
+        /// <summary>
         /// 数据处理适配器
         /// </summary>
         DataHandlingAdapter DataHandlingAdapter { get; }
@@ -58,7 +63,6 @@ namespace RRQMSocket
         /// 缓存池大小
         /// </summary>
         int BufferLength { get; }
-
 
         /// <summary>
         /// 获取网络流，接收方式为NetworkStream.Read。
