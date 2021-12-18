@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using RRQMCore.Helper;
-using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -114,7 +113,7 @@ namespace RRQMSocket.Http
 
                 if (this.httpBase.Content_Length > 0)
                 {
-                    this.bodyByteBlock = this.BytePool.GetByteBlock(this.httpBase.Content_Length);
+                    this.bodyByteBlock = BytePool.GetByteBlock(this.httpBase.Content_Length);
                     int surLength = length - (index + 1);
                     if (surLength - this.httpBase.Content_Length == 0)
                     {
@@ -145,13 +144,11 @@ namespace RRQMSocket.Http
                     this.tempByteBlock.Dispose();
                     this.tempByteBlock = null;
                 }
-
-                Logger.Debug(LogType.Error, this, "在已接收数据大于设定值的情况下未找到终止符号，已放弃接收");
-                return;
+                throw new RRQMOverlengthException("在已接收数据大于设定值的情况下未找到终止符号，已放弃接收");
             }
             else if (this.tempByteBlock == null)
             {
-                this.tempByteBlock = this.BytePool.GetByteBlock(length * 2);
+                this.tempByteBlock = BytePool.GetByteBlock(length * 2);
                 this.tempByteBlock.Write(buffer, offset, length - offset);
             }
         }
@@ -159,21 +156,14 @@ namespace RRQMSocket.Http
         private void PreviewHandle(HttpBase httpBase)
         {
             this.httpBase = null;
-            try
+            if (this.bodyByteBlock != null)
             {
-                if (this.bodyByteBlock != null)
-                {
-                    httpBase.SetContent(this.bodyByteBlock.ToArray());
-                    this.bodyByteBlock.Dispose();
-                    this.bodyByteBlock = null;
-                }
-                httpBase.ReadFromBase();
-                this.GoReceived(null, httpBase);
+                httpBase.SetContent(this.bodyByteBlock.ToArray());
+                this.bodyByteBlock.Dispose();
+                this.bodyByteBlock = null;
             }
-            catch (Exception ex)
-            {
-                this.Logger.Debug(LogType.Error, this, "处理数据错误", ex);
-            }
+            httpBase.ReadFromBase();
+            this.GoReceived(null, httpBase);
         }
 
         /// <summary>

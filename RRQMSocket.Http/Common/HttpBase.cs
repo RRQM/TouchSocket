@@ -42,7 +42,8 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 字符数据
         /// </summary>
-        public string Body { get { return this.content == null ? null : this.encoding.GetString(this.content); } }
+        public string Body
+        { get { return this.content == null ? null : this.encoding.GetString(this.content); } }
 
         private byte[] content;
 
@@ -93,7 +94,8 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 请求头集合
         /// </summary>
-        public Dictionary<string, string> Headers { get { return this.headers; } }
+        public Dictionary<string, string> Headers
+        { get { return this.headers; } }
 
         private Dictionary<string, string> headers;
 
