@@ -36,9 +36,9 @@ namespace RRQMSocket.FileTransfer
 
         static FileSocketClient()
         {
-            AddUsedProtocol(200,"Client pull file from SocketClient.");
-            AddUsedProtocol(201,"Client begin pull file from SocketClient.");
-            AddUsedProtocol(202,"Client push file to SocketClient.");
+            AddUsedProtocol(200, "Client pull file from SocketClient.");
+            AddUsedProtocol(201, "Client begin pull file from SocketClient.");
+            AddUsedProtocol(202, "Client push file to SocketClient.");
             AddUsedProtocol(203, "SocketClient pull file from client.");
             AddUsedProtocol(204, "SocketClient begin pull file from client.");
             AddUsedProtocol(205, "SocketClient push file to client.");
@@ -65,7 +65,7 @@ namespace RRQMSocket.FileTransfer
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         public event RRQMTransferFileEventHandler<FileSocketClient> FinishedFileTransfer;
-       
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -126,7 +126,7 @@ namespace RRQMSocket.FileTransfer
 
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
 
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength).WriteObject(waitFileInfo, SerializationType.Json);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength).WriteObject(waitFileInfo, SerializationType.Json);
             LoopAction loopAction = null;
             try
             {
@@ -202,9 +202,9 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        public Task<Result> PullFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public async Task<Result> PullFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
         {
-            return Task.Run(() =>
+            return await Task.Run(() =>
             {
                 return this.PullFile(fileRequest, fileOperator, metadata);
             });
@@ -261,7 +261,7 @@ namespace RRQMSocket.FileTransfer
 
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
 
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength).WriteObject(waitFileInfo, SerializationType.Json);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength).WriteObject(waitFileInfo, SerializationType.Json);
             LoopAction loopAction = null;
             try
             {
@@ -329,6 +329,7 @@ namespace RRQMSocket.FileTransfer
                 byteBlock.Dispose();
             }
         }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -477,7 +478,7 @@ namespace RRQMSocket.FileTransfer
                     }
             }
         }
-       
+
         private Result OnPreviewPullFile(FileOperator fileOperator, WaitFileInfo waitFileInfo)
         {
             FileRequest fileRequest = waitFileInfo.FileRequest;
@@ -492,7 +493,7 @@ namespace RRQMSocket.FileTransfer
             }
             RRQMFileInfo remoteFileInfo = waitFileInfo.FileInfo;
 
-            if (RRQMStreamPool.LoadWriteStream(savePath, fileOperator, waitFileInfo.FileRequest.Flags, ref remoteFileInfo, out RRQMStream stream, out string mes))
+            if (RRQMStreamPool.LoadWriteStream(savePath, fileOperator, waitFileInfo.FileRequest, ref remoteFileInfo, out RRQMStream stream, out string mes))
             {
                 Channel channel = this.CreateChannel();
 
@@ -506,7 +507,7 @@ namespace RRQMSocket.FileTransfer
                 };
 
                 WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitTransfer);
-                ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength).WriteObject(waitTransfer, SerializationType.Json);
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength).WriteObject(waitTransfer, SerializationType.Json);
                 try
                 {
                     this.InternalSend(204, byteBlock.Buffer, 0, byteBlock.Len);
@@ -600,7 +601,7 @@ namespace RRQMSocket.FileTransfer
             }
             else
             {
-                return new Result(ResultCode.Error, ResType.CreateWriteStreamFail.GetResString(savePath, mes));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.CreateWriteStreamFail.GetResString(savePath, mes)));
             }
         }
 
@@ -610,7 +611,7 @@ namespace RRQMSocket.FileTransfer
             {
                 if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
                 {
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(waitTransfer.PackageSize);
+                    ByteBlock byteBlock = BytePool.GetByteBlock(waitTransfer.PackageSize);
                     LoopAction loopAction = null;
                     try
                     {
@@ -658,9 +659,19 @@ namespace RRQMSocket.FileTransfer
                                 }
                             }
                         }
+
+                        if (channel.Status == ChannelStatus.Cancel && !string.IsNullOrEmpty(channel.LastOperationMes))
+                        {
+                            return fileOperator.SetFileResult(new Result(ResultCode.Canceled, channel.LastOperationMes));
+                        }
+                        else
+                        {
+                            return fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        return fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
                     }
                     finally
                     {
@@ -669,7 +680,6 @@ namespace RRQMSocket.FileTransfer
                         loopAction?.Dispose();
                         byteBlock.Dispose();
                     }
-                    return fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
                 }
                 else
                 {
@@ -711,9 +721,7 @@ namespace RRQMSocket.FileTransfer
 
             FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Pull, waitFileInfo.FileRequest, new FileOperator(), waitFileInfo.Metadata, null);
             this.OnBeforeFileTransfer(args);
-
             fullPath = waitFileInfo.FileRequest.Path;
-
             if (string.IsNullOrEmpty(fullPath))
             {
                 waitFileInfo.Status = 3;
@@ -770,7 +778,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
                     {
-                        ByteBlock byteBlock = this.BytePool.GetByteBlock(waitTransfer.PackageSize);
+                        ByteBlock byteBlock = BytePool.GetByteBlock(waitTransfer.PackageSize);
                         LoopAction loopAction = null;
                         FileOperator fileOperator = args.FileOperator;
                         try
@@ -897,7 +905,9 @@ namespace RRQMSocket.FileTransfer
             FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Push, waitRemoteFileInfo.FileRequest,
                 fileOperator, waitRemoteFileInfo.Metadata, waitRemoteFileInfo.FileInfo);
             this.OnBeforeFileTransfer(args);
+
             savePath = waitRemoteFileInfo.FileRequest.SavePath;
+
             WaitTransfer waitTransfer = new WaitTransfer()
             {
                 Message = args.Message,
@@ -921,7 +931,7 @@ namespace RRQMSocket.FileTransfer
                 savePath = savePath + ".rrqm";
 
                 RRQMFileInfo fileInfo = args.FileInfo;
-                if (RRQMStreamPool.LoadWriteStream(savePath, args.FileOperator, args.FileRequest.Flags, ref fileInfo, out RRQMStream stream, out string mes))
+                if (RRQMStreamPool.LoadWriteStream(savePath, args.FileOperator, args.FileRequest, ref fileInfo, out RRQMStream stream, out string mes))
                 {
                     Channel channel = this.CreateChannel();
                     try
@@ -964,8 +974,10 @@ namespace RRQMSocket.FileTransfer
                             fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
+                        channel.Cancel(ex.Message);
                     }
                     finally
                     {
@@ -990,7 +1002,7 @@ namespace RRQMSocket.FileTransfer
 
         private void SendDefaultObject(short protocol, object obj)
         {
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
             byteBlock.WriteObject(obj, SerializationType.Json);
             try
             {

@@ -54,6 +54,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         private Metadata metadata;
+
         /// <summary>
         /// 元数据
         /// </summary>
@@ -63,6 +64,7 @@ namespace RRQMSocket.FileTransfer
         }
 
         private RRQMFileInfo fileInfo;
+
         /// <summary>
         /// 文件信息
         /// </summary>
@@ -70,6 +72,5 @@ namespace RRQMSocket.FileTransfer
         {
             get { return fileInfo; }
         }
-
     }
 }

@@ -93,9 +93,8 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
+        private TimeSpan lastTime;
 
-        TimeSpan lastTime;
-       
         /// <summary>
         /// 保存进度
         /// </summary>

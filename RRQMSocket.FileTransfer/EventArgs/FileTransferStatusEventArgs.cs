@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -33,8 +28,8 @@ namespace RRQMSocket.FileTransfer
         /// <param name="metadata"></param>
         /// <param name="result"></param>
         /// <param name="fileInfo"></param>
-        public FileTransferStatusEventArgs(TransferType transferType, FileRequest fileRequest, Metadata metadata, Result result, RRQMFileInfo fileInfo) 
-            :base(transferType,fileRequest,metadata,fileInfo)
+        public FileTransferStatusEventArgs(TransferType transferType, FileRequest fileRequest, Metadata metadata, Result result, RRQMFileInfo fileInfo)
+            : base(transferType, fileRequest, metadata, fileInfo)
         {
             this.result = result;
         }
@@ -46,6 +41,5 @@ namespace RRQMSocket.FileTransfer
         {
             get { return result; }
         }
-
     }
 }

@@ -19,14 +19,11 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public class FileService : TcpParser<FileSocketClient>
     {
-        #region 属性
-
-
-        #endregion 属性
-
         #region 字段
+
         private ResponseType responseType;
         private string rootPath;
+
         #endregion 字段
 
         #region 事件
