@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.IO;
-using System;
 using System.IO;
 using System.Security.Cryptography;
 
@@ -48,9 +47,11 @@ namespace RRQMSocket.FileTransfer
                 case FileCheckerType.MD5:
                     HashAlgorithm hash = MD5.Create();
                     return FileControler.GetStreamHash(fileStream, hash);
+
                 case FileCheckerType.SHA1:
                     HashAlgorithm hashShA1 = SHA1.Create();
                     return FileControler.GetStreamHash(fileStream, hashShA1);
+
                 default:
                     return string.Empty;
             }
@@ -105,7 +106,7 @@ namespace RRQMSocket.FileTransfer
                 try
                 {
                     fileInfo = RRQMCore.Serialization.SerializeConvert.XmlDeserializeFromFile<RRQMFileInfo>(tempPath);
-                    if (fileInfo == null||fileInfo.Posotion>stream.Length)
+                    if (fileInfo == null || fileInfo.Posotion > stream.Length)
                     {
                         stream.AbsoluteDispose();
                         return false;

@@ -43,7 +43,6 @@ namespace RRQMSocket.FileTransfer
         public static readonly DependencyProperty RootPathProperty =
             DependencyProperty.Register("RootPath", typeof(string), typeof(FileServiceConfig), string.Empty);
 
-
         /// <summary>
         /// 允许的响应类型
         /// </summary>
@@ -59,7 +58,5 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public static readonly DependencyProperty ResponseTypeProperty =
             DependencyProperty.Register("ResponseType", typeof(ResponseType), typeof(FileServiceConfig), ResponseType.Both);
-
-
     }
 }

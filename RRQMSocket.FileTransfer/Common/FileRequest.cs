@@ -10,10 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
 {
@@ -26,15 +22,15 @@ namespace RRQMSocket.FileTransfer
         /// 构造函数
         /// </summary>
         public FileRequest()
-        { 
-        
+        {
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="path"></param>
         /// <param name="savePath"></param>
-        public FileRequest(string path,string savePath)
+        public FileRequest(string path, string savePath)
         {
             this.SavePath = savePath ?? throw new ArgumentNullException(nameof(savePath));
             this.Path = path ?? throw new ArgumentNullException(nameof(path));
@@ -44,7 +40,7 @@ namespace RRQMSocket.FileTransfer
         /// 构造函数
         /// </summary>
         /// <param name="path"></param>
-        public FileRequest(string path):this(path,System.IO.Path.GetFileName(path))
+        public FileRequest(string path) : this(path, System.IO.Path.GetFileName(path))
         {
         }
 

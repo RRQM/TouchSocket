@@ -26,14 +26,15 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileOperator"></param>
         /// <param name="metadata"></param>
         /// <param name="fileInfo"></param>
-        public FileOperationEventArgs(TransferType transferType,FileRequest fileRequest,FileOperator fileOperator, Metadata metadata, RRQMFileInfo fileInfo) 
-            : base(transferType, fileRequest,metadata,fileInfo)
+        public FileOperationEventArgs(TransferType transferType, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata, RRQMFileInfo fileInfo)
+            : base(transferType, fileRequest, metadata, fileInfo)
         {
             this.isPermitOperation = true;
             this.fileOperator = fileOperator;
         }
 
         private bool isPermitOperation;
+
         /// <summary>
         /// 是否允许操作
         /// </summary>
@@ -52,6 +53,5 @@ namespace RRQMSocket.FileTransfer
         {
             get { return fileOperator; }
         }
-
     }
 }

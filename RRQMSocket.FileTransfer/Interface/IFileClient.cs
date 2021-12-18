@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using RRQMCore;
-using RRQMCore.Exceptions;
 using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer

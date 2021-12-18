@@ -27,7 +27,7 @@ namespace RRQMSocket.FileTransfer
         /// 完成读取信号
         /// </summary>
         /// <param name="path"></param>
-        public static IResult FinishedReadStream(string path)
+        public static Result FinishedReadStream(string path)
         {
             RRQMStream stream;
             if (pathStream.TryGetValue(path, out stream))
@@ -95,12 +95,12 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="path"></param>
         /// <param name="owner"></param>
-        /// <param name="flags"></param>
+        /// <param name="fileRequest"></param>
         /// <param name="fileInfo"></param>
         /// <param name="stream"></param>
         /// <param name="mes"></param>
         /// <returns></returns>
-        public static bool LoadWriteStream(string path, object owner, TransferFlags flags, ref RRQMFileInfo fileInfo, out RRQMStream stream, out string mes)
+        public static bool LoadWriteStream(string path, object owner, FileRequest fileRequest, ref RRQMFileInfo fileInfo, out RRQMStream stream, out string mes)
         {
             lock (typeof(RRQMStreamPool))
             {
@@ -114,7 +114,7 @@ namespace RRQMSocket.FileTransfer
                 {
                     try
                     {
-                        CreateWriteStream(path, owner, flags, ref fileInfo, out stream);
+                        CreateWriteStream(path, owner, fileRequest, ref fileInfo, out stream);
                         pathStream.TryAdd(path, stream);
                         mes = null;
                         return true;
@@ -191,7 +191,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static IResult TryReleaseReadStream(string path)
+        public static Result TryReleaseReadStream(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -219,6 +219,7 @@ namespace RRQMSocket.FileTransfer
                 return new Result(ResultCode.Error, ResType.NotFindStream.GetResString(path));
             }
         }
+
         /// <summary>
         /// 释放写入流
         /// </summary>
@@ -265,13 +266,22 @@ namespace RRQMSocket.FileTransfer
             stream.fileInfo = fileInfo;
         }
 
-        private static void CreateWriteStream(string path, object owner, TransferFlags flags, ref RRQMFileInfo fileInfo, out RRQMStream stream)
+        private static void CreateWriteStream(string path, object owner, FileRequest fileRequest, ref RRQMFileInfo fileInfo, out RRQMStream stream)
         {
-            if (flags.HasFlag(TransferFlags.BreakpointResume))
+            if (fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume))
             {
                 if (FileTool.TryReadFileInfoFromPath(path, out RRQMFileInfo info, out stream))
                 {
-                    if (!string.IsNullOrEmpty(fileInfo.FileHashID) && (info.FileHashID == fileInfo.FileHashID))
+                    if (fileRequest.FileCheckerType == FileCheckerType.None)
+                    {
+                        stream.owner = owner;
+                        fileInfo.Posotion = info.Posotion;
+                        stream.fileInfo = fileInfo;
+                        stream.streamType = StreamOperationType.RRQMWrite;
+                        stream.rrqmPath = path;
+                        return;
+                    }
+                    else if (!string.IsNullOrEmpty(fileInfo.FileHashID) && (info.FileHashID == fileInfo.FileHashID))
                     {
                         stream.owner = owner;
                         fileInfo.Posotion = info.Posotion;
