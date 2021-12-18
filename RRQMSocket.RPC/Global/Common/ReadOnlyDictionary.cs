@@ -26,12 +26,14 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 值集合
         /// </summary>
-        public ICollection<TValue> Values { get { return this.dic.Values; } }
+        public ICollection<TValue> Values
+        { get { return this.dic.Values; } }
 
         /// <summary>
         /// 键集合
         /// </summary>
-        public ICollection<TKey> Keys { get { return this.dic.Keys; } }
+        public ICollection<TKey> Keys
+        { get { return this.dic.Keys; } }
 
         internal void Add(TKey key, TValue value)
         {
@@ -51,7 +53,8 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 键值对数目
         /// </summary>
-        public int Count { get { return this.dic.Count; } }
+        public int Count
+        { get { return this.dic.Count; } }
 
         /// <summary>
         /// 尝试获取值

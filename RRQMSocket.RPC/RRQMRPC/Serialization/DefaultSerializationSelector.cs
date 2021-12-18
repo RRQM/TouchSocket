@@ -41,10 +41,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         return SerializeConvert.RRQMBinaryDeserialize(parameterBytes, 0, parameterType);
                     }
-                case SerializationType.SystemBinary:
-                    {
-                        return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
-                    }
                 case SerializationType.Json:
                     {
                         return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(parameterBytes), parameterType);
@@ -75,10 +71,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 case SerializationType.RRQMBinary:
                     {
                         return SerializeConvert.RRQMBinarySerialize(parameter, true);
-                    }
-                case SerializationType.SystemBinary:
-                    {
-                        return SerializeConvert.BinarySerialize(parameter);
                     }
                 case SerializationType.Json:
                     {

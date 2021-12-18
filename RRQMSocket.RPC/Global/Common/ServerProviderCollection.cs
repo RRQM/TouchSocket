@@ -25,7 +25,8 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 服务数量
         /// </summary>
-        public int Count { get { return this.servers.Count; } }
+        public int Count
+        { get { return this.servers.Count; } }
 
         private List<IServerProvider> servers = new List<IServerProvider>();
 

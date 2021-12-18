@@ -145,7 +145,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
