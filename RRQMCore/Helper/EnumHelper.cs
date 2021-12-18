@@ -10,11 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMCore.Helper
 {
@@ -24,7 +20,7 @@ namespace RRQMCore.Helper
     public static class EnumHelper
     {
         /// <summary>
-        /// 获取自定义attribute 
+        /// 获取自定义attribute
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="enumObj"></param>

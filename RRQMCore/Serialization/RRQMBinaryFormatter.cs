@@ -81,6 +81,10 @@ namespace RRQMCore.Serialization
                 {
                     data = new byte[] { by };
                 }
+                else if (graph is sbyte sby)
+                {
+                    data = BitConverter.GetBytes((short)sby);
+                }
                 else if (graph is bool b)
                 {
                     data = BitConverter.GetBytes(b);
@@ -89,13 +93,25 @@ namespace RRQMCore.Serialization
                 {
                     data = BitConverter.GetBytes(s);
                 }
-                else if (graph is int)
+                else if (graph is ushort us)
                 {
-                    data = BitConverter.GetBytes((int)graph);
+                    data = BitConverter.GetBytes(us);
+                }
+                else if (graph is int i)
+                {
+                    data = BitConverter.GetBytes(i);
+                }
+                else if (graph is uint ui)
+                {
+                    data = BitConverter.GetBytes(ui);
                 }
                 else if (graph is long l)
                 {
                     data = BitConverter.GetBytes(l);
+                }
+                else if (graph is ulong ul)
+                {
+                    data = BitConverter.GetBytes(ul);
                 }
                 else if (graph is float f)
                 {
@@ -108,6 +124,10 @@ namespace RRQMCore.Serialization
                 else if (graph is DateTime time)
                 {
                     data = Encoding.UTF8.GetBytes(time.Ticks.ToString());
+                }
+                else if (graph is char c)
+                {
+                    data = BitConverter.GetBytes(c);
                 }
                 else if (graph is Enum)
                 {
@@ -184,7 +204,7 @@ namespace RRQMCore.Serialization
                 PropertyInfo[] propertyInfos = this.GetProperties(type);
                 foreach (PropertyInfo property in propertyInfos)
                 {
-                    if (property.SetMethod == null || property.GetCustomAttribute<RRQMNonSerializedAttribute>() != null)
+                    if (property.GetCustomAttribute<RRQMNonSerializedAttribute>() != null)
                     {
                         continue;
                     }
@@ -274,6 +294,10 @@ namespace RRQMCore.Serialization
                 {
                     obj = datas[offset];
                 }
+                else if (type == RRQMReadonly.sbyteType)
+                {
+                    obj = (sbyte)(BitConverter.ToInt16(datas, offset));
+                }
                 else if (type == RRQMReadonly.boolType)
                 {
                     obj = (BitConverter.ToBoolean(datas, offset));
@@ -281,14 +305,26 @@ namespace RRQMCore.Serialization
                 else if (type == RRQMReadonly.shortType)
                 {
                     obj = (BitConverter.ToInt16(datas, offset));
+                } 
+                else if (type == RRQMReadonly.ushortType)
+                {
+                    obj = (BitConverter.ToUInt16(datas, offset));
                 }
                 else if (type == RRQMReadonly.intType)
                 {
                     obj = (BitConverter.ToInt32(datas, offset));
                 }
+                else if (type == RRQMReadonly.uintType)
+                {
+                    obj = (BitConverter.ToUInt32(datas, offset));
+                }
                 else if (type == RRQMReadonly.longType)
                 {
                     obj = (BitConverter.ToInt64(datas, offset));
+                }
+                else if (type == RRQMReadonly.ulongType)
+                {
+                    obj = (BitConverter.ToUInt64(datas, offset));
                 }
                 else if (type == RRQMReadonly.floatType)
                 {
@@ -301,6 +337,10 @@ namespace RRQMCore.Serialization
                 else if (type == RRQMReadonly.decimalType)
                 {
                     obj = (BitConverter.ToDouble(datas, offset));
+                }
+                else if (type == RRQMReadonly.charType)
+                {
+                    obj = (BitConverter.ToChar(datas, offset));
                 }
                 else if (type == RRQMReadonly.dateTimeType)
                 {

@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace RRQMCore.ByteManager
+namespace RRQMCore.Pool
 {
     /// <summary>
     /// 对象池接口

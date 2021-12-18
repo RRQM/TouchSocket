@@ -225,9 +225,9 @@ namespace RRQMCore.Run
         public Task RunAsync()
         {
             return Task.Run(() =>
-             {
-                 this.Run();
-             });
+            {
+                this.Run();
+            });
         }
 
         /// <summary>

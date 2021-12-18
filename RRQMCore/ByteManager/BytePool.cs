@@ -9,99 +9,118 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RRQMCore.ByteManager
 {
     /// <summary>
     /// 字节池
     /// </summary>
-    public class BytePool
+    public static class BytePool
     {
-        private static BytePool bytePool = new BytePool(1024 * 1024 * 512, 1024 * 1024 * 5);
+        private static readonly ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
 
-        private ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
+        private static bool autoZero;
+        private static long fullSize;
+        private static int keyCapacity;
+        private static int maxBlockSize;
+        private static long maxSize;
+        private static int minBlockSize;
 
-        private long createdBlockSize;
-
-        private long fullSize;
-
-        private int maxBlockSize = 1024 * 1024;
-
-        private long maxSize = 1024 * 1024 * 100;
-
-        private int minBlockSize = 1024 * 64;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public BytePool()
+        static BytePool()
         {
+            keyCapacity = 100;
+            autoZero = false;
+            maxSize = 1024 * 1024 * 512;
+            SetBlockSize(1024 * 64, 1024 * 1024 * 5);
+            AddSizeKey(10240);
         }
 
         /// <summary>
-        /// 构造函数
+        /// 回收内存时，自动归零
         /// </summary>
-        /// <param name="maxSize">字节池最大值</param>
-        /// <param name="maxBlockSize">单个Block最大值</param>
-        public BytePool(long maxSize, int maxBlockSize)
+        public static bool AutoZero
         {
-            this.maxSize = maxSize;
-            this.maxBlockSize = maxBlockSize;
+            get { return autoZero; }
+            set { autoZero = value; }
         }
 
         /// <summary>
-        /// 构造函数
+        /// 键容量
         /// </summary>
-        /// <param name="maxSize">字节池最大值</param>
-        public BytePool(long maxSize) : this(maxSize, 1024 * 1024)
+        public static int KeyCapacity
         {
-            this.maxSize = maxSize;
+            get { return keyCapacity; }
+            set { keyCapacity = value; }
         }
 
         /// <summary>
-        /// 默认内存池，
-        /// 内存池最大512Mb，
-        /// 单体最大5Mb。
+        /// 单个块最大值
         /// </summary>
-        public static BytePool Default { get { return bytePool; } }
-
-        /// <summary>
-        /// 已创建的块的最大值
-        /// </summary>
-        public long CreatedBlockSize
-        {
-            get { return createdBlockSize; }
-        }
-
-
-        /// <summary>
-        /// 单个块最大值，默认为1024*1024字节
-        /// </summary>
-        public int MaxBlockSize
+        public static int MaxBlockSize
         {
             get { return maxBlockSize; }
-            set { maxBlockSize = value; }
         }
 
         /// <summary>
-        /// 允许的内存池最大值,默认为100M Byte
+        /// 允许的内存池最大值
         /// </summary>
-        public long MaxSize
+        public static long MaxSize
         {
             get { return maxSize; }
-            set { maxSize = value; }
         }
 
         /// <summary>
-        /// 单个块最小值，默认64*1024字节
+        /// 单个块最小值
         /// </summary>
-        public int MinBlockSize
+        public static int MinBlockSize
         {
             get { return minBlockSize; }
-            set { minBlockSize = value; }
+        }
+
+        /// <summary>
+        /// 添加尺寸键
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <returns></returns>
+        public static bool AddSizeKey(int byteSize)
+        {
+            if (bytesDictionary.TryAdd(byteSize, new BytesQueue(byteSize)))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 清理
+        /// </summary>
+        public static void Clear()
+        {
+            bytesDictionary.Clear();
+            GC.Collect();
+        }
+
+        /// <summary>
+        /// 确定是否包含指定尺寸键
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <returns></returns>
+        public static bool ContainsSizeKey(int byteSize)
+        {
+            return bytesDictionary.ContainsKey(byteSize);
+        }
+
+        /// <summary>
+        /// 获取所以内存键
+        /// </summary>
+        /// <returns></returns>
+        public static long[] GetAllSizeKeys()
+        {
+            return bytesDictionary.Keys.ToArray();
         }
 
         /// <summary>
@@ -110,13 +129,9 @@ namespace RRQMCore.ByteManager
         /// <param name="byteSize">长度</param>
         /// <param name="equalSize">要求长度相同</param>
         /// <returns></returns>
-        public ByteBlock GetByteBlock(long byteSize, bool equalSize)
+        public static ByteBlock GetByteBlock(int byteSize, bool equalSize)
         {
-            ByteBlock byteBlock = new ByteBlock(this.GetBytesCore(byteSize, equalSize));
-            if (byteSize < maxBlockSize)
-            {
-                byteBlock._bytePool = this;
-            }
+            ByteBlock byteBlock = new ByteBlock(GetByteCore(byteSize, equalSize));
             return byteBlock;
         }
 
@@ -125,102 +140,235 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="byteSize"></param>
         /// <returns></returns>
-        public ByteBlock GetByteBlock(long byteSize)
+        public static ByteBlock GetByteBlock(int byteSize)
         {
-            if (byteSize < this.minBlockSize)
+            if (byteSize < minBlockSize)
             {
-                return this.GetByteBlock(this.minBlockSize, false);
+                byteSize = minBlockSize;
             }
-            return this.GetByteBlock(byteSize, false);
+            return GetByteBlock(byteSize, false);
         }
 
         /// <summary>
         /// 获取最大长度的ByteBlock
         /// </summary>
         /// <returns></returns>
-        public ByteBlock GetByteBlock()
+        public static ByteBlock GetByteBlock()
         {
-            return this.GetByteBlock(this.MaxBlockSize, true);
+            return GetByteBlock(maxBlockSize, true);
         }
 
-        internal void Recycle(byte[] bytes)
+        /// <summary>
+        /// 获取内存池容量
+        /// </summary>
+        /// <returns></returns>
+        public static long GetPoolSize()
         {
-            this.createdBlockSize = Math.Max(CreatedBlockSize, bytes.Length);
-            if (maxSize > fullSize)
+            long size = 0;
+            foreach (var item in bytesDictionary.Values)
             {
-                this.fullSize += bytes.Length;
-                BytesQueue bytesCollection = this.bytesDictionary.GetOrAdd(bytes.Length, (size) =>
+                size += item.FullSize;
+            }
+            return size;
+        }
+
+        /// <summary>
+        /// 移除尺寸键
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <returns></returns>
+        public static bool RemoveSizeKey(int byteSize)
+        {
+            if (bytesDictionary.TryRemove(byteSize, out BytesQueue queue))
+            {
+                queue.Clear();
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 设置内存块参数
+        /// </summary>
+        /// <param name="minBlockSize"></param>
+        /// <param name="maxBlockSize"></param>
+        public static void SetBlockSize(int minBlockSize, int maxBlockSize)
+        {
+            BytePool.maxBlockSize = maxBlockSize;
+            BytePool.minBlockSize = minBlockSize;
+
+            bytesDictionary.Clear();
+        }
+
+        /// <summary>
+        /// 获取内存核心
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <param name="equalSize"></param>
+        /// <returns></returns>
+        public static byte[] GetByteCore(int byteSize, bool equalSize)
+        {
+            BytesQueue bytesCollection;
+            if (equalSize)
+            {
+                //等长
+                if (bytesDictionary.TryGetValue(byteSize, out bytesCollection) && bytesCollection.TryGet(out byte[] bytes))
                 {
-                    return new BytesQueue(size);
-                });
-                bytesCollection.Add(bytes);
+                    fullSize -= byteSize;
+                    return bytes;
+                }
+                CheckKeyCapacity(byteSize);
+                return new byte[byteSize];
             }
             else
             {
-                long size = 0;
-                foreach (var collection in this.bytesDictionary.Values)
+                byteSize = HitSize(byteSize);
+                //搜索已创建集合
+                if (bytesDictionary.TryGetValue(byteSize, out bytesCollection) && bytesCollection.TryGet(out byte[] bytes))
                 {
-                    size += collection.FullSize;
+                    fullSize -= byteSize;
+                    return bytes;
                 }
-                this.fullSize = size;
+                CheckKeyCapacity(byteSize);
+                return new byte[byteSize];
             }
         }
 
         /// <summary>
-        /// 清理
+        /// 回收内存核心
         /// </summary>
-        public void Clear()
+        /// <param name="bytes"></param>
+        public static void Recycle(byte[] bytes)
         {
-            this.bytesDictionary.Clear();
-        }
-
-        private byte[] GetBytesCore(long byteSize, bool equalSize)
-        {
-            if (byteSize < 0)
+            if (maxSize > fullSize)
             {
-                throw new RRQMException("申请内存的长度不能小于0");
-            }
-
-            if (byteSize > maxBlockSize)
-            {
-                return new byte[byteSize];
-            }
-
-            if (this.createdBlockSize < byteSize)
-            {
-                return new byte[byteSize];
+                if (bytesDictionary.TryGetValue(bytes.Length, out BytesQueue bytesQueue))
+                {
+                    if (autoZero)
+                    {
+                        Array.Clear(bytes, 0, bytes.Length);
+                    }
+                    fullSize += bytes.Length;
+                    bytesQueue.Add(bytes);
+                }
             }
             else
             {
-                BytesQueue bytesCollection;
-                //搜索已创建集合
-                if (bytesDictionary.TryGetValue(byteSize, out bytesCollection))
+                long size = 0;
+                foreach (var collection in bytesDictionary.Values)
                 {
-                    if (bytesCollection.TryGet(out byte[] bytes))
-                    {
-                        this.fullSize -= byteSize;
-                        return bytes;
-                    }
+                    size += collection.FullSize;
                 }
+                fullSize = size;
+            }
+        }
 
-                if (!equalSize)
+        private static void CheckKeyCapacity(int byteSize)
+        {
+            if (byteSize < minBlockSize || byteSize > maxBlockSize)
+            {
+                return;
+            }
+            if (bytesDictionary.Count < keyCapacity)
+            {
+                bytesDictionary.TryAdd(byteSize, new BytesQueue(byteSize));
+            }
+            else
+            {
+                List<BytesQueue> bytesQueues = bytesDictionary.Values.ToList();
+                bytesQueues.Sort((x, y) => { return x.referenced > y.referenced ? -1 : 1; });
+                for (int i = (int)(bytesQueues.Count * 0.2); i < bytesQueues.Count; i++)
                 {
-                    foreach (var size in bytesDictionary.Keys)
+                    if (bytesDictionary.TryRemove(bytesQueues[i].size, out BytesQueue queue))
                     {
-                        if (size > byteSize)
-                        {
-                            if (this.bytesDictionary.TryGetValue(size, out bytesCollection))
-                            {
-                                if (bytesCollection.TryGet(out byte[] bytes))
-                                {
-                                    this.fullSize -= byteSize;
-                                    return bytes;
-                                }
-                            }
-                        }
+                        queue.Clear();
                     }
                 }
-                return new byte[byteSize];
+            }
+        }
+
+        private static int HitSize(int num)
+        {
+            switch (num)
+            {
+                case <= 1024:
+                    {
+                        return 1024;
+                    }
+                case <= 2048:
+                    {
+                        return 2048;
+                    }
+                case <= 4096:
+                    {
+                        return 4096;
+                    }
+                case <= 8192:
+                    {
+                        return 8192;
+                    }
+                case <= 10240:
+                    {
+                        return 10240;
+                    }
+                case <= 16384:
+                    {
+                        return 16384;
+                    }
+                case <= 32768:
+                    {
+                        return 32768;
+                    }
+                case <= 65536:
+                    {
+                        return 65536;
+                    }
+                case <= 131072:
+                    {
+                        return 131072;
+                    }
+                case <= 262144:
+                    {
+                        return 262144;
+                    }
+                case <= 524288:
+                    {
+                        return 524288;
+                    }
+                case <= 1048576:
+                    {
+                        return 1048576;
+                    }
+                case <= 2097152:
+                    {
+                        return 2097152;
+                    }
+                case <= 4194304:
+                    {
+                        return 4194304;
+                    }
+                case <= 8388608:
+                    {
+                        return 8388608;
+                    }
+                case <= 16777216:
+                    {
+                        return 16777216;
+                    }
+                case <= 33554432:
+                    {
+                        return 33554432;
+                    }
+                case <= 67108864:
+                    {
+                        return 67108864;
+                    }
+                case <= 134217728:
+                    {
+                        return 134217728;
+                    }
+                default:
+                    return num;
             }
         }
     }

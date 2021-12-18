@@ -9,27 +9,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMCore
 {
     /// <summary>
     /// 结果返回
     /// </summary>
-    public struct Result:IResult
+    public struct Result : IResult
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="resultCode"></param>
         /// <param name="message"></param>
-        public Result(ResultCode resultCode, string message )
+        public Result(ResultCode resultCode, string message)
         {
             this.ResultCode = resultCode;
             this.Message = message;
@@ -42,14 +35,13 @@ namespace RRQMCore
         public Result(ResultCode resultCode)
         {
             this.ResultCode = resultCode;
-            this.Message =resultCode.GetResString();
+            this.Message = resultCode.GetResString();
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public ResultCode ResultCode { get; private set; }
-
 
         /// <summary>
         /// <inheritdoc/>

@@ -10,11 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMCore.Helper
 {
@@ -30,9 +26,9 @@ namespace RRQMCore.Helper
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static string ToUtf8String(this ByteBlock byteBlock,int offset,int length)
+        public static string ToUtf8String(this ByteBlock byteBlock, int offset, int length)
         {
-            return Encoding.UTF8.GetString(byteBlock.Buffer,offset,length);
+            return Encoding.UTF8.GetString(byteBlock.Buffer, offset, length);
         }
     }
 }

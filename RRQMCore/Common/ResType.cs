@@ -9,11 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMCore
 {
@@ -56,6 +51,7 @@ namespace RRQMCore
         /// 通道设置失败
         /// </summary>
         SetChannelFail,
+
         /// <summary>
         /// 路径无效
         /// </summary>
@@ -105,6 +101,5 @@ namespace RRQMCore
         /// 长时间没有响应。
         /// </summary>
         NoResponse,
-
     }
 }

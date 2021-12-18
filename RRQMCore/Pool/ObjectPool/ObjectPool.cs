@@ -14,7 +14,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace RRQMCore.ByteManager
+namespace RRQMCore.Pool
 {
     /// <summary>
     /// 对象池
@@ -59,7 +59,8 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 可使用（创建）数量
         /// </summary>
-        public int FreeSize { get { return this.freeSize; } }
+        public int FreeSize
+        { get { return this.freeSize; } }
 
         private int freeSize;
 
