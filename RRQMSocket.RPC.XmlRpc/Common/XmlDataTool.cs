@@ -127,7 +127,7 @@ namespace RRQMSocket.RPC.XmlRpc
                 CreateParam(xml, valueElement, param);
             }
 
-            ByteBlock xmlBlock = BytePool.Default.GetByteBlock(byteBlock.Capacity);
+            ByteBlock xmlBlock = BytePool.GetByteBlock(byteBlock.Capacity);
             xml.Save(xmlBlock);
 
             StringBuilder stringBuilder = new StringBuilder();
@@ -258,7 +258,7 @@ namespace RRQMSocket.RPC.XmlRpc
 
             CreateParam(xml, valueElement, value);
 
-            ByteBlock xmlBlock = BytePool.Default.GetByteBlock(1024 * 4);
+            ByteBlock xmlBlock = BytePool.GetByteBlock(1024 * 4);
             xml.Save(xmlBlock);
 
             string xmlString = Encoding.UTF8.GetString(xmlBlock.Buffer, 0, xmlBlock.Len);
