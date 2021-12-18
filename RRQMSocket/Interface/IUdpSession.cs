@@ -9,14 +9,43 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Collections.Concurrent;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 协议订阅集合
+    /// UDP会话
     /// </summary>
-    public class ProtocolSubscriberCollection : ConcurrentList<SubscriberBase>
+    public interface IUdpSession : IClient
     {
+        /// <summary>
+        /// IP地址
+        /// </summary>
+        string IP { get; }
+
+        /// <summary>
+        /// 端口号
+        /// </summary>
+        int Port { get; }
+
+        /// <summary>
+        /// 主通信器
+        /// </summary>
+        Socket MainSocket { get; }
+
+        /// <summary>
+        /// IP及端口号
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// 判断是否在线
+        /// </summary>
+        bool Online { get; }
+
+        /// <summary>
+        /// 缓存池大小
+        /// </summary>
+        int BufferLength { get; }
     }
 }

@@ -54,6 +54,14 @@ namespace RRQMSocket
         public long CompletedLength { get => completedLength; }
 
         /// <summary>
+        /// 最大传输速度（企业版默认1024*1024字节，开源版不限速，所以此值无效。）
+        /// </summary>
+        public int MaxSpeed
+        {
+            get { return int.MaxValue; }
+        }
+
+        /// <summary>
         /// 包长度，默认512Kb,
         /// Max=10Mb,Min=1024Byte，可根据网络状况调节。
         /// </summary>

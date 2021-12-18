@@ -36,7 +36,6 @@ namespace RRQMSocket
         {
         }
 
-
         /// <summary>
         /// 旧ID
         /// </summary>

@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Dependency;
 
 namespace RRQMSocket
 {
@@ -18,6 +17,5 @@ namespace RRQMSocket
     /// </summary>
     public class TokenClientConfig : TcpClientConfig
     {
-        
     }
 }

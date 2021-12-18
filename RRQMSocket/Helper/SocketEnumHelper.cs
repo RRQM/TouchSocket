@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.Helper
 {
@@ -33,15 +28,20 @@ namespace RRQMSocket.Helper
             switch (channelStatus)
             {
                 case ChannelStatus.Default:
-                    return  ResultCode.Default;
+                    return ResultCode.Default;
+
                 case ChannelStatus.Overtime:
                     return ResultCode.Overtime;
+
                 case ChannelStatus.Error:
                     return ResultCode.Error;
+
                 case ChannelStatus.Cancel:
                     return ResultCode.Canceled;
+
                 case ChannelStatus.Completed:
                     return ResultCode.Success;
+
                 case ChannelStatus.Moving:
                 case ChannelStatus.Disposed:
                 default:

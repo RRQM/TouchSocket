@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using System;
 
@@ -20,11 +19,6 @@ namespace RRQMSocket
     /// </summary>
     public interface IService : IDisposable
     {
-        /// <summary>
-        /// 获取默认内存池实例
-        /// </summary>
-        BytePool BytePool { get; }
-
         /// <summary>
         /// 服务器状态
         /// </summary>
@@ -39,11 +33,6 @@ namespace RRQMSocket
         /// 名称
         /// </summary>
         string ServerName { get; }
-
-        /// <summary>
-        /// 网络监听集合
-        /// </summary>
-        NetworkMonitor[] Monitors { get; }
 
         /// <summary>
         /// 配置服务器

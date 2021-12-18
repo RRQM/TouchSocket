@@ -21,12 +21,11 @@ namespace RRQMSocket
     [DebuggerDisplay("Count={Count}")]
     public class SocketClientCollection<T> where T : ISocketClient
     {
-
-
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count { get { return this.tokenDic.Count; } }
+        public int Count
+        { get { return this.tokenDic.Count; } }
 
         private ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
 
@@ -88,7 +87,6 @@ namespace RRQMSocket
                 return t;
             }
         }
-
 
         internal void Clear()
         {

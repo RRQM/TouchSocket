@@ -36,36 +36,6 @@ namespace RRQMSocket
             DependencyProperty.Register("Logger", typeof(ILog), typeof(RRQMConfig), new Log());
 
         /// <summary>
-        /// 内存池最大尺寸
-        /// </summary>
-        public long BytePoolMaxSize
-        {
-            get { return (long)GetValue(BytePoolMaxSizeProperty); }
-            set { SetValue(BytePoolMaxSizeProperty, value); }
-        }
-
-        /// <summary>
-        /// 内存池最大尺寸依赖属性，所需类型<see cref="long"/>
-        /// </summary>
-        public static readonly DependencyProperty BytePoolMaxSizeProperty =
-            DependencyProperty.Register("BytePoolMaxSize", typeof(long), typeof(RRQMConfig), 1024 * 1024 * 512L);
-
-        /// <summary>
-        /// 内存池块最大尺寸
-        /// </summary>
-        public int BytePoolMaxBlockSize
-        {
-            get { return (int)GetValue(BytePoolMaxBlockSizeProperty); }
-            set { SetValue(BytePoolMaxBlockSizeProperty, value); }
-        }
-
-        /// <summary>
-        /// 内存池块最大尺寸，所需类型<see cref="int"/>
-        /// </summary>
-        public static readonly DependencyProperty BytePoolMaxBlockSizeProperty =
-            DependencyProperty.Register("BytePoolMaxBlockSize", typeof(int), typeof(RRQMConfig), 1024 * 1024 * 20);
-
-        /// <summary>
         /// 缓存池容量
         /// </summary>
         public int BufferLength

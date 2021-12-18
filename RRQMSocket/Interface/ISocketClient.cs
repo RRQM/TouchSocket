@@ -22,11 +22,6 @@ namespace RRQMSocket
         string ID { get; }
 
         /// <summary>
-        /// 标记
-        /// </summary>
-        object Flag { get; set; }
-
-        /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
         ITcpServiceBase Service { get; }

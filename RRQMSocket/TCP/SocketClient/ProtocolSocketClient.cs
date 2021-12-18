@@ -38,6 +38,7 @@ namespace RRQMSocket
         {
             usedProtocol = new Dictionary<short, string>();
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -55,7 +56,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void Send(byte[] buffer, int offset, int length)
+        public override sealed void Send(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -64,7 +65,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"><inheritdoc/></param>
-        public sealed override void Send(byte[] buffer)
+        public override sealed void Send(byte[] buffer)
         {
             this.Send(buffer, 0, buffer.Length);
         }
@@ -73,7 +74,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public sealed override void Send(ByteBlock byteBlock)
+        public override sealed void Send(ByteBlock byteBlock)
         {
             this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -82,7 +83,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void Send(IList<TransferByte> transferBytes)
+        public override sealed void Send(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(BitConverter.GetBytes(-1)));
             base.Send(transferBytes);
@@ -96,7 +97,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
-        public sealed override void SendAsync(byte[] buffer)
+        public override sealed void SendAsync(byte[] buffer)
         {
             this.SendAsync(buffer, 0, buffer.Length);
         }
@@ -116,7 +117,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void SendAsync(byte[] buffer, int offset, int length)
+        public override sealed void SendAsync(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -125,7 +126,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void SendAsync(IList<TransferByte> transferBytes)
+        public override sealed void SendAsync(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(BitConverter.GetBytes(-1)));
             base.SendAsync(transferBytes);
@@ -413,7 +414,7 @@ namespace RRQMSocket
             waitStream.Size = size;
             waitStream.StreamType = stream.GetType().FullName;
             int length = streamOperator.PackageSize;
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(length).WriteObject(waitStream, SerializationType.Json);
+            ByteBlock byteBlock = BytePool.GetByteBlock(length).WriteObject(waitStream, SerializationType.Json);
             LoopAction loopAction = null;
             try
             {
@@ -441,7 +442,6 @@ namespace RRQMSocket
                                     });
 
                                     loopAction.RunAsync();
-
                                     while (true)
                                     {
                                         if (streamOperator.Token.IsCancellationRequested)
@@ -460,7 +460,6 @@ namespace RRQMSocket
 
                                         streamOperator.AddStreamFlow(r, size);
                                     }
-
                                 }
                                 else
                                 {
@@ -653,7 +652,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
             short procotol = BitConverter.ToInt16(byteBlock.Buffer, 0);
             switch (procotol)
@@ -875,7 +874,7 @@ namespace RRQMSocket
                         waitStream.Status = 1;
                         Channel channel = this.CreateChannel();
                         waitStream.ChannelID = channel.ID;
-
+                        streamOperator.SetMaxSpeed(streamOperator.MaxSpeed);
                         Task.Run(() =>
                         {
                             Stream stream = args.Bucket;
@@ -893,17 +892,18 @@ namespace RRQMSocket
                                 if (block.TryReadBytesPackageInfo(out int pos, out int len))
                                 {
                                     stream.Write(block.Buffer, pos, len);
-                                    streamOperator.AddStreamFlow(len,waitStream.Size);
+                                    streamOperator.AddStreamFlow(len, waitStream.Size);
                                 }
                                 block.SetHolding(false);
                             }
                             HandleStream(new StreamStatusEventArgs(streamOperator.SetStreamResult(new Result(channel.Status.ToResultCode())),
-                                args.Metadata, args.StreamInfo) { Bucket = stream, Message = args.Message });
+                                args.Metadata, args.StreamInfo)
+                            { Bucket = stream, Message = args.Message });
                         });
                     }
                     else
                     {
-                        streamOperator.SetStreamResult(new Result( ResultCode.Error,ResType.StreamBucketNull.GetResString()));
+                        streamOperator.SetStreamResult(new Result(ResultCode.Error, ResType.StreamBucketNull.GetResString()));
                         waitStream.Status = 3;
                         waitStream.Message = "未设置流容器";
                     }

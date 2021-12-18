@@ -18,6 +18,11 @@ namespace RRQMSocket
     public interface ITcpServiceBase : IService
     {
         /// <summary>
+        /// 网络监听集合
+        /// </summary>
+        NetworkMonitor[] Monitors { get; }
+
+        /// <summary>
         /// 重新设置ID
         /// </summary>
         /// <param name="waitSetID"></param>

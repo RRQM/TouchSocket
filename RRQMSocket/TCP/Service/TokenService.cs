@@ -9,13 +9,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
-using RRQMCore.Log;
 using RRQMCore.Run;
 using System;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RRQMSocket
@@ -66,7 +63,7 @@ namespace RRQMSocket
         /// <param name="client"></param>
         protected override void PreviewConnecting(TClient client)
         {
-            Task.Run(()=> 
+            Task.Run(() =>
             {
                 WaitData<WaitVerify> waitData = new WaitData<WaitVerify>();
                 Task.Run(() =>
@@ -127,6 +124,7 @@ namespace RRQMSocket
                             }
                         }
                         break;
+
                     case WaitDataStatus.Overtime:
                     case WaitDataStatus.Canceled:
                     case WaitDataStatus.Disposed:
@@ -135,10 +133,8 @@ namespace RRQMSocket
                             client.MainSocket.Dispose();
                             break;
                         }
-
                 }
             });
-           
         }
 
         /// <summary>
@@ -146,7 +142,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="verifyOption"></param>
-        protected virtual void OnVerifyToken(TClient client,VerifyOption verifyOption)
+        protected virtual void OnVerifyToken(TClient client, VerifyOption verifyOption)
         {
             if (verifyOption.Token == this.verifyToken)
             {

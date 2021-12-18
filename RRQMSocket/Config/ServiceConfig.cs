@@ -19,6 +19,21 @@ namespace RRQMSocket
     public class ServiceConfig : RRQMConfig
     {
         /// <summary>
+        /// 接收类型
+        /// </summary>
+        public ReceiveType ReceiveType
+        {
+            get { return (ReceiveType)GetValue(ReceiveTypeProperty); }
+            set { SetValue(ReceiveTypeProperty, value); }
+        }
+
+        /// <summary>
+        /// 接收类型，所需类型<see cref="RRQMSocket. ReceiveType"/>
+        /// </summary>
+        public static readonly DependencyProperty ReceiveTypeProperty =
+            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(ServiceConfig), ReceiveType.IOCP);
+
+        /// <summary>
         /// 多线程数量
         /// </summary>
         public int ThreadCount
@@ -32,21 +47,6 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ThreadCountProperty =
             DependencyProperty.Register("ThreadCount", typeof(int), typeof(ServiceConfig), 10);
-
-        /// <summary>
-        /// 监听IP和端口号组
-        /// </summary>
-        public IPHost[] ListenIPHosts
-        {
-            get { return (IPHost[])GetValue(ListenIPHostsProperty); }
-            set { SetValue(ListenIPHostsProperty, value); }
-        }
-
-        /// <summary>
-        /// IP和端口号依赖属性，所需类型<see cref="IPHost"/>数组
-        /// </summary>
-        public static readonly DependencyProperty ListenIPHostsProperty =
-            DependencyProperty.Register("ListenIPHosts", typeof(IPHost[]), typeof(ServiceConfig), null);
 
         /// <summary>
         /// 名称

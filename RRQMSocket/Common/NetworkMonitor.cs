@@ -49,7 +49,5 @@ namespace RRQMSocket
         {
             get { return socket; }
         }
-
-
     }
 }

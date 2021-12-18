@@ -46,12 +46,6 @@ namespace RRQMSocket
         private static RRQMCore.SnowflakeIDGenerator iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
 
         /// <summary>
-        /// 获取默认内存池
-        /// </summary>
-        public BytePool BytePool
-        { get { return BytePool.Default; } }
-
-        /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
         public int ClearInterval
@@ -109,14 +103,16 @@ namespace RRQMSocket
         /// 清理选择类型
         /// </summary>
         public ClearType ClearType { get => this.clearType; set => this.clearType = value; }
+
         #endregion 属性
 
         #region 变量
+
         private ClearType clearType;
         private int backlog;
         private Thread threadClearClient;
-        private BytePool[] bytePools;
         private ReceiveType receiveType;
+
         #endregion 变量
 
         #region 事件
@@ -206,13 +202,6 @@ namespace RRQMSocket
             }
             this.monitors = null;
             this.SocketClients.Clear();
-            if (this.bytePools != null)
-            {
-                foreach (var item in this.bytePools)
-                {
-                    item.Clear();
-                }
-            }
             this.serverState = ServerState.Disposed;
         }
 
@@ -371,7 +360,7 @@ namespace RRQMSocket
         /// <exception cref="Exception"></exception>
         public virtual IService Start()
         {
-            IPHost[] iPHosts = (IPHost[])this.ServiceConfig.GetValue(ServiceConfig.ListenIPHostsProperty);
+            IPHost[] iPHosts = (IPHost[])this.ServiceConfig.GetValue(TcpServiceConfig.ListenIPHostsProperty);
             if (iPHosts == null || iPHosts.Length == 0)
             {
                 throw new RRQMException("IPHosts为空，无法绑定");
@@ -380,8 +369,8 @@ namespace RRQMSocket
             {
                 case ServerState.None:
                     {
-                        this.BeginListen(iPHosts);
                         this.BeginClearAndHandle();
+                        this.BeginListen(iPHosts);
                         break;
                     }
                 case ServerState.Running:
@@ -511,15 +500,7 @@ namespace RRQMSocket
             threadClearClient.Start();
 
             int threadCount = this.ServiceConfig.ThreadCount;
-            this.bytePools = new BytePool[threadCount];
-            for (int i = 0; i < this.serviceConfig.ThreadCount; i++)
-            {
-                BytePool bytePool = new BytePool();
-                bytePool = new BytePool((long)(this.ServiceConfig.BytePoolMaxSize / (threadCount * 1.0)), this.ServiceConfig.BytePoolMaxBlockSize);
-                this.bytePools[i] = bytePool;
-
-                ThreadPool.SetMinThreads(this.serviceConfig.ThreadCount, this.serviceConfig.ThreadCount);
-            }
+            ThreadPool.SetMinThreads(this.serviceConfig.ThreadCount, this.serviceConfig.ThreadCount);
         }
 
         private void BeginListen(IPHost[] iPHosts)
@@ -580,7 +561,7 @@ namespace RRQMSocket
                     {
                         if (this.clearInterval > 0)
                         {
-                            client.GetTimeout(this.clearInterval / 1000, tick);
+                            client.GetTimeout((int)(this.clearInterval / 1000.0), tick);
                         }
 
                         if (client.breakOut)
@@ -651,7 +632,6 @@ namespace RRQMSocket
                             TClient client = this.GetRawClient();
                             client.lastTick = DateTime.Now.Ticks;
                             client.serviceConfig = this.serviceConfig;
-                            client.bytePool = this.bytePools[this.SocketClients.Count % this.bytePools.Length];
                             client.service = this;
                             client.Logger = this.Logger;
                             client.ClearType = this.clearType;
@@ -661,7 +641,6 @@ namespace RRQMSocket
                             client.receiveType = this.receiveType;
 
                             PreviewConnecting(client);
-
                         }
                         catch (Exception ex)
                         {

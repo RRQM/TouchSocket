@@ -46,6 +46,7 @@ namespace RRQMSocket
         {
             get { return metadata; }
         }
+
         /// <summary>
         /// 流信息
         /// </summary>

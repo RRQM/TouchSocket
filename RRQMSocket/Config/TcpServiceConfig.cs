@@ -19,6 +19,21 @@ namespace RRQMSocket
     public class TcpServiceConfig : ServiceConfig
     {
         /// <summary>
+        /// 监听IP和端口号组
+        /// </summary>
+        public IPHost[] ListenIPHosts
+        {
+            get { return (IPHost[])GetValue(ListenIPHostsProperty); }
+            set { SetValue(ListenIPHostsProperty, value); }
+        }
+
+        /// <summary>
+        /// IP和端口号依赖属性，所需类型<see cref="IPHost"/>数组
+        /// </summary>
+        public static readonly DependencyProperty ListenIPHostsProperty =
+            DependencyProperty.Register("ListenIPHosts", typeof(IPHost[]), typeof(TcpServiceConfig), null);
+
+        /// <summary>
         /// 挂起连接队列的最大长度。默认为100
         /// </summary>
         public int Backlog
@@ -31,7 +46,7 @@ namespace RRQMSocket
         /// 挂起连接队列的最大长度，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty BacklogProperty =
-            DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServiceConfig), 100);
+            DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServiceConfig), 30);
 
         /// <summary>
         /// 最大可连接数，默认为10000
@@ -79,20 +94,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ClearTypeProperty =
             DependencyProperty.Register("ClearType", typeof(ClearType), typeof(TcpServiceConfig), ClearType.Send | ClearType.Receive);
-
-        /// <summary>
-        /// 接收类型
-        /// </summary>
-        public ReceiveType ReceiveType
-        {
-            get { return (ReceiveType)GetValue(ReceiveTypeProperty); }
-            set { SetValue(ReceiveTypeProperty, value); }
-        }
-
-        /// <summary>
-        /// 接收类型，所需类型<see cref="RRQMSocket. ReceiveType"/>
-        /// </summary>
-        public static readonly DependencyProperty ReceiveTypeProperty =
-            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(TcpServiceConfig), ReceiveType.IOCP);
     }
 }

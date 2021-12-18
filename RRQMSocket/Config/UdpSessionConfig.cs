@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System.Net;
 
 namespace RRQMSocket
 {
@@ -20,33 +19,34 @@ namespace RRQMSocket
     public class UdpSessionConfig : ServiceConfig
     {
         /// <summary>
-        /// 默认远程节点
+        /// 远程IPHost
         /// </summary>
-        public EndPoint DefaultRemotePoint
+        public IPHost RemoteIPHost
         {
-            get { return (EndPoint)GetValue(DefaultRemotePointProperty); }
-            set { SetValue(DefaultRemotePointProperty, value); }
+            get { return (IPHost)GetValue(RemoteIPHostProperty); }
+            set { SetValue(RemoteIPHostProperty, value); }
         }
 
         /// <summary>
-        /// 默认远程节点, 所需类型<see cref="EndPoint"/>
+        /// 远程IPHost，所需类型<see cref="IPHost"/>
         /// </summary>
-        public static readonly DependencyProperty DefaultRemotePointProperty =
-            DependencyProperty.Register("DefaultRemotePoint", typeof(EndPoint), typeof(UdpSessionConfig), null);
+        public static readonly DependencyProperty RemoteIPHostProperty =
+            DependencyProperty.Register("RemoteIPHost", typeof(IPHost), typeof(TcpClientConfig), null);
 
         /// <summary>
-        /// 使用绑定
+        /// UDP绑定
         /// </summary>
-        public bool UseBind
+        public IPHost BindIPHost
         {
-            get { return (bool)GetValue(UseBindProperty); }
-            set { SetValue(UseBindProperty, value); }
+            get { return (IPHost)GetValue(BindIPHostProperty); }
+            set { SetValue(BindIPHostProperty, value); }
         }
 
         /// <summary>
-        /// 使用绑定, 所需类型<see cref="bool"/>
+        /// UDP绑定值，
+        /// 所需类型<see cref="IPHost"/>
         /// </summary>
-        public static readonly DependencyProperty UseBindProperty =
-            DependencyProperty.Register("UseBind", typeof(bool), typeof(UdpSessionConfig), false);
+        public static readonly DependencyProperty BindIPHostProperty =
+            DependencyProperty.Register("BindIPHost", typeof(IPHost), typeof(UdpSessionConfig), null);
     }
 }

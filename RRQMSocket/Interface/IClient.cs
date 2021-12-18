@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
 
@@ -20,12 +19,6 @@ namespace RRQMSocket
     /// </summary>
     public interface IClient : IDisposable
     {
-
-        /// <summary>
-        /// 内存池实例
-        /// </summary>
-        BytePool BytePool { get; }
-
         /// <summary>
         /// 日志记录器
         /// </summary>

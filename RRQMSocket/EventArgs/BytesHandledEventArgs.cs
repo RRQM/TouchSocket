@@ -9,8 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using RRQMCore.Event;
 
 namespace RRQMSocket
 {
@@ -24,8 +22,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="data"></param>
         public BytesHandledEventArgs(byte[] data) : base(data)
-        { 
-        
+        {
         }
 
         /// <summary>

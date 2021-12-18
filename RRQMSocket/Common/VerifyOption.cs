@@ -31,10 +31,5 @@ namespace RRQMSocket
         /// 不接受时，返回客户端信息
         /// </summary>
         public string ErrorMessage { get; set; }
-
-        /// <summary>
-        /// 标记，会同步至TcpSocketClient
-        /// </summary>
-        public object Flag { get; set; }
     }
 }

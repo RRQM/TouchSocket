@@ -13,7 +13,6 @@ using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -25,36 +24,28 @@ namespace RRQMSocket
     /// </summary>
     public abstract class UdpSession : BaseSocket, IService, IClient
     {
-        private EndPoint defaultRemotePoint;
-        private NetworkMonitor[] monitors;
+        private IPHost remoteIPHost;
+        private NetworkMonitor monitor;
         private string name;
         private long recivedCount;
-        private Socket sendSocket;
         private ServerState serverState;
         private ServiceConfig serviceConfig;
         private bool study;
-        private BytePool[] bytePools;
-
-        /// <summary>
-        /// 获取默认内存池
-        /// </summary>
-        public BytePool BytePool
-        { get { return BytePool.Default; } }
 
         /// <summary>
         /// 默认远程节点
         /// </summary>
-        public EndPoint DefaultRemotePoint
+        public IPHost RemoteIPHost
         {
-            get { return defaultRemotePoint; }
+            get { return remoteIPHost; }
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 监听器
         /// </summary>
-        public NetworkMonitor[] Monitors
+        public NetworkMonitor Monitor
         {
-            get { return monitors; }
+            get { return monitor; }
         }
 
         /// <summary>
@@ -88,17 +79,11 @@ namespace RRQMSocket
         {
             base.Dispose();
             this.Stop();
-            if (this.bytePools != null)
-            {
-                foreach (var item in bytePools)
-                {
-                    item.Clear();
-                }
-            }
             this.serverState = ServerState.Disposed;
         }
 
         #region 向默认远程同步发送
+
         /// <summary>
         /// 向默认终结点发送
         /// </summary>
@@ -107,11 +92,11 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Send(byte[] buffer, int offset, int length)
         {
-            if (this.DefaultRemotePoint == null)
+            if (this.remoteIPHost == null)
             {
                 throw new RRQMException("默认终结点为空");
             }
-            this.Send(this.defaultRemotePoint, buffer, offset, length);
+            this.Send(this.remoteIPHost.EndPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -131,9 +116,11 @@ namespace RRQMSocket
         {
             this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
+
         #endregion 向默认远程同步发送
 
         #region 向默认远程异步发送
+
         /// <summary>
         /// IOCP发送
         /// </summary>
@@ -145,7 +132,11 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(byte[] buffer, int offset, int length)
         {
-            this.SendAsync(this.defaultRemotePoint, buffer, offset, length);
+            if (this.remoteIPHost == null)
+            {
+                throw new RRQMException("默认终结点为空");
+            }
+            this.SendAsync(this.remoteIPHost.EndPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -171,9 +162,11 @@ namespace RRQMSocket
         {
             this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
         }
+
         #endregion 向默认远程异步发送
 
         #region 向设置的远程同步发送
+
         /// <summary>
         /// 向设置的远程同步发送
         /// </summary>
@@ -186,7 +179,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(EndPoint remoteEP, byte[] buffer, int offset, int length)
         {
-            this.sendSocket.SendTo(buffer, offset, length, SocketFlags.None, remoteEP);
+            this.monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, remoteEP);
         }
 
         /// <summary>
@@ -196,7 +189,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         public virtual void Send(EndPoint remoteEP, byte[] buffer)
         {
-            this.sendSocket.SendTo(buffer, 0, buffer.Length, SocketFlags.None, remoteEP);
+            this.monitor.Socket.SendTo(buffer, 0, buffer.Length, SocketFlags.None, remoteEP);
         }
 
         /// <summary>
@@ -206,11 +199,13 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         public virtual void Send(EndPoint remoteEP, ByteBlock byteBlock)
         {
-            this.sendSocket.SendTo(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None, remoteEP);
+            this.monitor.Socket.SendTo(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None, remoteEP);
         }
+
         #endregion 向设置的远程同步发送
 
         #region 向设置的远程异步发送
+
         /// <summary>
         /// 向设置的远程异步发送
         /// </summary>
@@ -223,7 +218,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(EndPoint remoteEP, byte[] buffer, int offset, int length)
         {
-            this.sendSocket.BeginSendTo(buffer, offset, length, SocketFlags.None, remoteEP, null, null);
+            this.monitor.Socket.BeginSendTo(buffer, offset, length, SocketFlags.None, remoteEP, null, null);
         }
 
         /// <summary>
@@ -233,7 +228,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         public virtual void SendAsync(EndPoint remoteEP, byte[] buffer)
         {
-            this.sendSocket.BeginSendTo(buffer, 0, buffer.Length, SocketFlags.None, remoteEP, null, null);
+            this.monitor.Socket.BeginSendTo(buffer, 0, buffer.Length, SocketFlags.None, remoteEP, null, null);
         }
 
         /// <summary>
@@ -243,8 +238,9 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         public virtual void SendAsync(EndPoint remoteEP, ByteBlock byteBlock)
         {
-            this.sendSocket.BeginSendTo(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None, remoteEP, null, null);
+            this.monitor.Socket.BeginSendTo(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None, remoteEP, null, null);
         }
+
         #endregion 向设置的远程异步发送
 
         /// <summary>
@@ -265,7 +261,6 @@ namespace RRQMSocket
         public IService Setup(int port)
         {
             UdpSessionConfig serverConfig = new UdpSessionConfig();
-            serverConfig.ListenIPHosts = new IPHost[] { new IPHost(port) };
             return this.Setup(serverConfig);
         }
 
@@ -278,22 +273,14 @@ namespace RRQMSocket
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
-            this.sendSocket = new Socket(SocketType.Dgram, ProtocolType.Udp);
-            bool useBind = this.serviceConfig.GetValue<bool>(UdpSessionConfig.UseBindProperty);
-            IPHost[] iPHosts = this.serviceConfig.GetValue<IPHost[]>(ServiceConfig.ListenIPHostsProperty);
-            if (iPHosts == null || iPHosts.Length == 0)
-            {
-                throw new RRQMException("ListenIPHosts为空，无法绑定");
-            }
 
             switch (this.serverState)
             {
                 case ServerState.None:
                     {
-                        if (useBind)
+                        if (this.serviceConfig.GetValue<IPHost>(UdpSessionConfig.BindIPHostProperty) is IPHost iPHost)
                         {
-                            this.BeginReceive(iPHosts);
-                            BeginThread();
+                            this.BeginReceive(iPHost);
                         }
 
                         break;
@@ -303,9 +290,9 @@ namespace RRQMSocket
 
                 case ServerState.Stopped:
                     {
-                        if (useBind)
+                        if (this.serviceConfig.GetValue<IPHost>(UdpSessionConfig.BindIPHostProperty) is IPHost iPHost)
                         {
-                            this.BeginReceive(iPHosts);
+                            this.BeginReceive(iPHost);
                         }
                         break;
                     }
@@ -324,17 +311,11 @@ namespace RRQMSocket
         /// </summary>
         public IService Stop()
         {
-            if (this.monitors != null)
+            if (this.monitor != null)
             {
-                foreach (var item in this.monitors)
-                {
-                    if (item.Socket != null)
-                    {
-                        item.Socket.Dispose();
-                    }
-                }
+                this.monitor.Socket.Dispose();
             }
-            this.monitors = null;
+            this.monitor = null;
             this.serverState = ServerState.Stopped;
             return this;
         }
@@ -357,7 +338,7 @@ namespace RRQMSocket
                 throw new RRQMException("配置文件为空");
             }
             this.logger = serverConfig.Logger;
-            this.defaultRemotePoint = (EndPoint)serverConfig.GetValue(UdpSessionConfig.DefaultRemotePointProperty);
+            this.remoteIPHost = serverConfig.GetValue<IPHost>(UdpSessionConfig.RemoteIPHostProperty);
             this.BufferLength = serverConfig.BufferLength;
             this.name = serverConfig.ServerName;
         }
@@ -372,54 +353,64 @@ namespace RRQMSocket
         {
         }
 
-        private void BeginReceive(IPHost[] iPHosts)
+        private void BeginReceive(IPHost iPHost)
         {
-            List<NetworkMonitor> networkMonitors = new List<NetworkMonitor>();
-            foreach (var iPHost in iPHosts)
+            int threadCount = this.ServiceConfig.ThreadCount;
+            try
             {
-                try
-                {
-                    Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                    PreviewBind(socket);
-                    socket.Bind(iPHost.EndPoint);
+                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                PreviewBind(socket);
+                socket.Bind(iPHost.EndPoint);
 
-                    SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
-                    eventArg.Completed += this.IO_Completed;
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.BufferLength);
-                    eventArg.UserToken = byteBlock;
-                    eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-                    eventArg.RemoteEndPoint = iPHost.EndPoint;
-                    if (!socket.ReceiveFromAsync(eventArg))
-                    {
-                        ProcessReceive(socket, eventArg);
-                    }
-                    networkMonitors.Add(new NetworkMonitor(iPHost, socket));
-                }
-                catch (Exception ex)
+                this.monitor = new NetworkMonitor(iPHost, socket);
+
+                switch (this.serviceConfig.ReceiveType)
                 {
-                    this.logger.Debug(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
+                    case ReceiveType.IOCP:
+                        {
+                            SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
+                            eventArg.Completed += this.IO_Completed;
+                            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                            eventArg.UserToken = byteBlock;
+                            eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
+                            eventArg.RemoteEndPoint = iPHost.EndPoint;
+                            if (!socket.ReceiveFromAsync(eventArg))
+                            {
+                                ProcessReceive(socket, eventArg);
+                            }
+                            break;
+                        }
+
+                    case ReceiveType.BIO:
+                        {
+                            Thread thread = new Thread(Received);
+                            thread.IsBackground = true;
+                            thread.Start(monitor);
+                            break;
+                        }
+
+                    case ReceiveType.NetworkStream:
+                    default:
+                        throw new RRQMException("UDP中只支持IOCP和BIO模式");
                 }
             }
-
-            if (networkMonitors.Count > 0)
+            catch (Exception ex)
             {
-                this.monitors = networkMonitors.ToArray();
-            }
-            else
-            {
-                throw new RRQMException("监听地址全都不可用。");
+                this.logger.Debug(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
             }
         }
 
-        private void BeginThread()
+        private void Received(object o)
         {
-            int threadCount = this.ServiceConfig.ThreadCount;
-            bytePools = new BytePool[threadCount];
-            for (int i = 0; i < threadCount; i++)
+            NetworkMonitor monitor = (NetworkMonitor)o;
+
+            EndPoint endPoint = monitor.IPHost.EndPoint;
+            while (true)
             {
-                BytePool bytePool = new BytePool();
-                bytePool = new BytePool((long)(this.ServiceConfig.BytePoolMaxSize / (threadCount * 1.0)), this.ServiceConfig.BytePoolMaxBlockSize);
-                bytePools[i] = bytePool;
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                int r = monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
+                byteBlock.SetLength(r);
+                this.HandleBuffer(endPoint, byteBlock);
             }
         }
 
@@ -453,11 +444,9 @@ namespace RRQMSocket
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.SetLength(e.BytesTransferred);
 
-                    BytePool bytePool = this.bytePools[++this.recivedCount % this.bytePools.Length];
-
                     this.HandleBuffer(e.RemoteEndPoint, byteBlock);
 
-                    ByteBlock newByteBlock = bytePool.GetByteBlock(this.BufferLength);
+                    ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
                     if (!socket.ReceiveFromAsync(e))

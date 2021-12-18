@@ -91,14 +91,14 @@ namespace RRQMSocket
             {
                 if (r - index >= this.FixedSize)
                 {
-                    ByteBlock byteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+                    ByteBlock byteBlock = BytePool.GetByteBlock(this.FixedSize);
                     byteBlock.Write(dataBuffer, index, this.FixedSize);
                     PreviewHandle(byteBlock);
                     surPlusLength = 0;
                 }
                 else//半包
                 {
-                    this.tempByteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+                    this.tempByteBlock = BytePool.GetByteBlock(this.FixedSize);
                     surPlusLength = this.FixedSize - (r - index);
                     this.tempByteBlock.Write(dataBuffer, index, r - index);
                 }
@@ -132,7 +132,7 @@ namespace RRQMSocket
             {
                 throw new RRQMOverlengthException("发送的数据包长度大于FixedSize");
             }
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.FixedSize);
 
             byteBlock.Write(buffer, offset, length);
             for (int i = (int)byteBlock.Position; i < this.FixedSize; i++)
@@ -151,10 +151,6 @@ namespace RRQMSocket
                 {
                     this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
@@ -179,7 +175,7 @@ namespace RRQMSocket
             {
                 throw new RRQMOverlengthException("发送的数据包长度大于FixedSize");
             }
-            ByteBlock byteBlock = this.BytePool.GetByteBlock(this.FixedSize);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.FixedSize);
 
             foreach (var item in transferBytes)
             {
@@ -199,10 +195,6 @@ namespace RRQMSocket
                 {
                     this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
