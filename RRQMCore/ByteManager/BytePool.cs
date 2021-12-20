@@ -71,6 +71,14 @@ namespace RRQMCore.ByteManager
         public static long MaxSize
         {
             get { return maxSize; }
+            set
+            {
+                if (value < 1024)
+                {
+                    value = 1024;
+                }
+                maxSize = value;
+            }
         }
 
         /// <summary>
@@ -212,24 +220,36 @@ namespace RRQMCore.ByteManager
             if (equalSize)
             {
                 //等长
-                if (bytesDictionary.TryGetValue(byteSize, out bytesCollection) && bytesCollection.TryGet(out byte[] bytes))
+                if (bytesDictionary.TryGetValue(byteSize, out bytesCollection))
                 {
-                    fullSize -= byteSize;
-                    return bytes;
+                    if (bytesCollection.TryGet(out byte[] bytes))
+                    {
+                        fullSize -= byteSize;
+                        return bytes;
+                    }
                 }
-                CheckKeyCapacity(byteSize);
+                else
+                {
+                    CheckKeyCapacity(byteSize);
+                }
                 return new byte[byteSize];
             }
             else
             {
                 byteSize = HitSize(byteSize);
                 //搜索已创建集合
-                if (bytesDictionary.TryGetValue(byteSize, out bytesCollection) && bytesCollection.TryGet(out byte[] bytes))
+                if (bytesDictionary.TryGetValue(byteSize, out bytesCollection))
                 {
-                    fullSize -= byteSize;
-                    return bytes;
+                    if (bytesCollection.TryGet(out byte[] bytes))
+                    {
+                        fullSize -= byteSize;
+                        return bytes;
+                    }
                 }
-                CheckKeyCapacity(byteSize);
+                else
+                {
+                    CheckKeyCapacity(byteSize);
+                }
                 return new byte[byteSize];
             }
         }
