@@ -449,11 +449,11 @@ namespace RRQMSocket.RPC.JsonRpc
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
-                    socketClient.SetAdapter(new TerminatorDataHandlingAdapter(this.maxPackageSize, "\r\n"));
+                    socketClient.InternalSetAdapter(new TerminatorDataHandlingAdapter(this.maxPackageSize, "\r\n"));
                     break;
 
                 case JsonRpcProtocolType.Http:
-                    socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
+                    socketClient.InternalSetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
                     break;
             }
             base.OnConnecting(socketClient, e);
