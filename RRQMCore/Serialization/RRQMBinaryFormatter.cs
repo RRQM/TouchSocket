@@ -201,7 +201,7 @@ namespace RRQMCore.Serialization
             int len = 0;
             if (obj != null)
             {
-                PropertyInfo[] propertyInfos = this.GetProperties(type);
+                PropertyInfo[] propertyInfos = GetProperties(type);
                 foreach (PropertyInfo property in propertyInfos)
                 {
                     if (property.GetCustomAttribute<RRQMNonSerializedAttribute>() != null)
@@ -305,7 +305,7 @@ namespace RRQMCore.Serialization
                 else if (type == RRQMReadonly.shortType)
                 {
                     obj = (BitConverter.ToInt16(datas, offset));
-                } 
+                }
                 else if (type == RRQMReadonly.ushortType)
                 {
                     obj = (BitConverter.ToUInt16(datas, offset));
@@ -393,10 +393,13 @@ namespace RRQMCore.Serialization
         private dynamic DeserializeClass(Type type, byte[] datas, int offset, int length)
         {
             InstanceObject instanceObject = GetOrAddInstance(type);
+
+            object instance;
             switch (instanceObject.instanceType)
             {
                 case InstanceType.Class:
                     {
+                        instance = instanceObject.GetInstance();
                         if (reserveAttributeName)
                         {
                             int index = offset;
@@ -414,7 +417,7 @@ namespace RRQMCore.Serialization
                                     continue;
                                 }
                                 object obj = Deserialize(propertyInfo.PropertyType, datas, ref offset);
-                                propertyInfo.SetValue(instanceObject.Instance, obj);
+                                propertyInfo.SetValue(instance, obj);
                             }
                         }
                         else
@@ -422,7 +425,7 @@ namespace RRQMCore.Serialization
                             foreach (var item in instanceObject.Properties)
                             {
                                 object obj = Deserialize(item.PropertyType, datas, ref offset);
-                                item.SetValue(instanceObject.Instance, obj);
+                                item.SetValue(instance, obj);
                             }
                         }
 
@@ -430,6 +433,7 @@ namespace RRQMCore.Serialization
                     }
                 case InstanceType.List:
                     {
+                        instance = instanceObject.GetInstance();
                         if (length > 0)
                         {
                             uint paramLen = BitConverter.ToUInt32(datas, offset);
@@ -437,12 +441,12 @@ namespace RRQMCore.Serialization
                             for (uint i = 0; i < paramLen; i++)
                             {
                                 object obj = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
-                                instanceObject.AddMethod.Invoke(instanceObject.Instance, new object[] { obj });
+                                instanceObject.AddMethod.Invoke(instance, new object[] { obj });
                             }
                         }
                         else
                         {
-                            instanceObject.Instance = null;
+                            instance = null;
                         }
                         break;
                     }
@@ -459,16 +463,17 @@ namespace RRQMCore.Serialization
                                 object obj = Deserialize(instanceObject.ArrayType, datas, ref offset);
                                 array.SetValue(obj, i);
                             }
-                            instanceObject.Instance = array;
+                            instance = array;
                         }
                         else
                         {
-                            instanceObject.Instance = null;
+                            instance = null;
                         }
                         break;
                     }
                 case InstanceType.Dictionary:
                     {
+                        instance = instanceObject.GetInstance();
                         if (length > 0)
                         {
                             uint paramLen = BitConverter.ToUInt32(datas, offset);
@@ -491,34 +496,40 @@ namespace RRQMCore.Serialization
                                 object value = Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
                                 if (key != null)
                                 {
-                                    instanceObject.AddMethod.Invoke(instanceObject.Instance, new object[] { key, value });
+                                    instanceObject.AddMethod.Invoke(instance, new object[] { key, value });
                                 }
                             }
                         }
                         else
                         {
-                            instanceObject.Instance = null;
+                            instance = null;
                         }
                         break;
                     }
                 default:
+                    instance = null;
                     break;
             }
 
-            return instanceObject.Instance;
+            return instance;
         }
 
         #endregion Deserialize
 
-        private PropertyInfo[] GetProperties(Type type)
+        private static PropertyInfo[] GetProperties(Type type)
         {
             return type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
         }
 
         private static readonly ConcurrentDictionary<string, InstanceObject> InstanceCache = new ConcurrentDictionary<string, InstanceObject>();
 
-        private InstanceObject GetOrAddInstance(Type type)
+        private static InstanceObject GetOrAddInstance(Type type)
         {
+            if (InstanceCache.TryGetValue(type.FullName, out InstanceObject instance))
+            {
+                return instance;
+            }
+
             if (type.IsArray && !type.IsGenericType)//数组
             {
                 InstanceObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (v) =>
@@ -527,7 +538,7 @@ namespace RRQMCore.Serialization
                     instanceObject.Type = type;
                     instanceObject.ArrayType = type.GetElementType();
                     instanceObject.instanceType = InstanceType.Array;
-                    instanceObject.Properties = this.GetProperties(type);
+                    instanceObject.Properties = GetProperties(type);
                     instanceObject.ProTypes = instanceObject.Properties.Select(a => a.PropertyType).ToArray();
                     return instanceObject;
                 });
@@ -539,7 +550,7 @@ namespace RRQMCore.Serialization
                 {
                     InstanceObject instanceObject = new InstanceObject();
                     instanceObject.Type = type;
-                    instanceObject.Properties = this.GetProperties(type);
+                    instanceObject.Properties = GetProperties(type);
                     instanceObject.ProTypes = instanceObject.Properties.Select(a => a.PropertyType).ToArray();
 
                     if (type.IsGenericType)
@@ -557,13 +568,35 @@ namespace RRQMCore.Serialization
                             instanceObject.instanceType = InstanceType.Dictionary;
                         }
                     }
+                    else if (RRQMReadonly.listType.IsAssignableFrom(type))
+                    {
+                        Type baseType = type.BaseType;
+                        while (!baseType.IsGenericType)
+                        {
+                            baseType = baseType.BaseType;
+                        }
+                        instanceObject.ArgTypes = baseType.GetGenericArguments();
+
+                        instanceObject.AddMethod = type.GetMethod("Add");
+                        instanceObject.instanceType = InstanceType.List;
+                    }
+                    else if (RRQMReadonly.dicType.IsAssignableFrom(type))
+                    {
+                        Type baseType = type.BaseType;
+                        while (!baseType.IsGenericType)
+                        {
+                            baseType = baseType.BaseType;
+                        }
+                        instanceObject.ArgTypes = baseType.GetGenericArguments();
+                        instanceObject.AddMethod = type.GetMethod("Add");
+                        instanceObject.instanceType = InstanceType.Dictionary;
+                    }
                     else
                     {
                         instanceObject.instanceType = InstanceType.Class;
                     }
                     return instanceObject;
                 });
-                typeInfo.Instance = Activator.CreateInstance(type);
                 return typeInfo;
             }
             return null;

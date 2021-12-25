@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace RRQMCore.Helper
@@ -131,6 +133,18 @@ namespace RRQMCore.Helper
         public static string Format(this string str, params object[] ps)
         {
             return string.Format(str, ps);
+        }
+
+        /// <summary>
+        /// 转换为SHA1。
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static byte[] ToSha1(this string value, Encoding encoding)
+        {
+            SHA1 sha1 = new SHA1CryptoServiceProvider();
+            return sha1.ComputeHash(encoding.GetBytes(value));
         }
     }
 }
