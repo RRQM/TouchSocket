@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using RRQMCore.Run;
@@ -17,7 +18,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -26,21 +26,6 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class RpcSocketClient : ProtocolSocketClient, ICaller
     {
-        /// <summary>
-        /// 预处理流
-        /// </summary>
-        public event RRQMStreamOperationEventHandler<RpcSocketClient> BeforeReceiveStream;
-
-        /// <summary>
-        /// 收到流数据
-        /// </summary>
-        public event RRQMStreamStatusEventHandler<RpcSocketClient> ReceivedStream;
-
-        /// <summary>
-        /// 收到数据
-        /// </summary>
-        public event RRQMProtocolReceivedEventHandler<RpcSocketClient> Received;
-
         internal Action<MethodInvoker, MethodInstance> executeMethod;
 
         internal Func<RpcSocketClient, RpcContext, RpcContext> IDAction;
@@ -61,8 +46,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             AddUsedProtocol(103, "ID调用客户端");
             AddUsedProtocol(104, "RPC回调");
             AddUsedProtocol(105, "取消RPC调用");
+            AddUsedProtocol(106, "发布事件");
+            AddUsedProtocol(107, "取消发布事件");
+            AddUsedProtocol(108, "订阅事件");
+            AddUsedProtocol(109, "请求触发事件");
+            AddUsedProtocol(110, "分发触发");
 
-            for (short i = 106; i < 110; i++)
+            for (short i = 111; i < 200; i++)
             {
                 AddUsedProtocol(i, "保留协议");
             }
@@ -76,6 +66,21 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.contextDic = new ConcurrentDictionary<int, RpcServerCallContext>();
             this.serverProviderDic = new ConcurrentDictionary<Type, IServerProvider>();
         }
+
+        /// <summary>
+        /// 预处理流
+        /// </summary>
+        public event RRQMStreamOperationEventHandler<RpcSocketClient> BeforeReceiveStream;
+
+        /// <summary>
+        /// 收到数据
+        /// </summary>
+        public event RRQMProtocolReceivedEventHandler<RpcSocketClient> Received;
+
+        /// <summary>
+        /// 收到流数据
+        /// </summary>
+        public event RRQMStreamStatusEventHandler<RpcSocketClient> ReceivedStream;
 
         /// <summary>
         /// 回调RPC
@@ -438,6 +443,26 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override void Dispose()
+        {
+            if (this.disposable)
+            {
+                return;
+            }
+
+            base.Dispose();
+
+            foreach (var item in this.contextDic.Values)
+            {
+                item.tokenSource.Cancel();
+            }
+            this.contextDic.Clear();
+            this.serverProviderDic.Clear();
+        }
+
         internal void EndInvoke(RpcContext context)
         {
             this.contextDic.TryRemove(context.Sign, out _);
@@ -480,7 +505,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 100, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -494,7 +519,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -508,36 +533,37 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 102, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
                 case 103:/*ID调用客户端*/
                     {
-                        Task.Run(() =>
-                        {
-                            try
-                            {
-                                byteBlock.Pos = 2;
-                                RpcContext content = RpcContext.Deserialize(byteBlock);
-                                content = this.IDAction(this, content);
+                        byteBlock.Pos = 2;
+                        RpcContext content = RpcContext.Deserialize(byteBlock);
 
-                                ByteBlock retuenByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                                try
-                                {
-                                    content.Serialize(retuenByteBlock);
-                                    this.InternalSend(103, retuenByteBlock.Buffer, 0, (int)retuenByteBlock.Length);
-                                }
-                                finally
-                                {
-                                    byteBlock.Dispose();
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Logger.Debug(LogType.Error, this, $"错误代码: 103, 错误详情:{e.Message}");
-                            }
-                        });
+                        RRQMCore.Run.EasyAction.TaskRun(content, (con) =>
+                         {
+                             try
+                             {
+                                 con = this.IDAction(this, con);
+
+                                 ByteBlock retuenByteBlock = BytePool.GetByteBlock(this.BufferLength);
+                                 try
+                                 {
+                                     con.Serialize(retuenByteBlock);
+                                     this.InternalSend(103, retuenByteBlock.Buffer, 0, (int)retuenByteBlock.Length);
+                                 }
+                                 finally
+                                 {
+                                     byteBlock.Dispose();
+                                 }
+                             }
+                             catch (Exception e)
+                             {
+                                 Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
+                             }
+                         });
                         break;
                     }
                 case 104:/*回调函数调用*/
@@ -550,7 +576,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 104, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -566,11 +592,11 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: 105, 错误详情:{e.Message}");
+                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
-                case < 110:
+                case < 200:
                     {
                         break;
                     }
@@ -581,6 +607,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        protected override void HandleStream(StreamStatusEventArgs args)
+        {
+            this.ReceivedStream.Invoke(this, args);
+        }
+
+        /// <summary>
         /// 处理其余协议的事件触发
         /// </summary>
         /// <param name="procotol"></param>
@@ -588,6 +623,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         protected void OnHandleDefaultData(short? procotol, ByteBlock byteBlock)
         {
             Received?.Invoke(this, procotol, byteBlock);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        protected override void PreviewHandleStream(StreamOperationEventArgs args)
+        {
+            this.BeforeReceiveStream.Invoke(this, args);
         }
 
         /// <summary>
@@ -703,44 +747,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
 
             this.ExecuteContext(context);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override void Dispose()
-        {
-            if (this.disposable)
-            {
-                return;
-            }
-
-            base.Dispose();
-
-            foreach (var item in this.contextDic.Values)
-            {
-                item.tokenSource.Cancel();
-            }
-            this.contextDic.Clear();
-            this.serverProviderDic.Clear();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="args"></param>
-        protected override void HandleStream(StreamStatusEventArgs args)
-        {
-            this.ReceivedStream.Invoke(this, args);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="args"></param>
-        protected override void PreviewHandleStream(StreamOperationEventArgs args)
-        {
-            this.BeforeReceiveStream.Invoke(this, args);
         }
     }
 }

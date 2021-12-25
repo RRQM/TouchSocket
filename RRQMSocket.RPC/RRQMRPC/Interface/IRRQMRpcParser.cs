@@ -70,6 +70,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         List<MethodItem> GetRegisteredMethodItems(string proxyToken, ICaller caller);
 
+
 #if NET45_OR_GREATER
 
         /// <summary>
