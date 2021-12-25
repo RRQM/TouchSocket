@@ -76,98 +76,76 @@ namespace RRQMSocket
         /// <exception cref="RRQMTimeoutException"></exception>
         public virtual ITcpClient Connect(string verifyToken, CancellationToken token = default)
         {
-            if (this.ClientConfig == null)
+            lock (this)
             {
-                throw new ArgumentNullException("配置文件不能为空。");
-            }
-            IPHost iPHost = this.ClientConfig.RemoteIPHost;
-            if (iPHost == null)
-            {
-                throw new ArgumentNullException("iPHost不能为空。");
-            }
-
-            if (this.disposable)
-            {
-                throw new RRQMException("无法重新利用已释放对象");
-            }
-
-            if (this.Online)
-            {
-                return this;
-            }
-
-            WaitVerify waitVerify = new WaitVerify()
-            {
-                Token = verifyToken
-            };
-            WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
-            waitData.SetCancellationToken(token);
-
-            Socket socket;
-            try
-            {
-                socket = PCon(iPHost);
-                socket.Send(waitVerify.GetData());
-            }
-            catch (Exception e)
-            {
-                throw new RRQMException(e.Message);
-            }
-
-            Task.Run(() =>
-            {
-                try
+                if (this.online)
                 {
-                    byte[] buffer = new byte[1024];
-                    int r = socket.Receive(buffer);
-                    if (r > 0)
-                    {
-                        byte[] data = new byte[r];
-
-                        Array.Copy(buffer, data, r);
-                        WaitVerify verify = WaitVerify.GetVerifyInfo(data);
-                        this.waitHandlePool.SetRun(verify);
-                    }
-                }
-                catch
-                {
-                }
-            });
-
-            switch (waitData.Wait(1000 * 10))
-            {
-                case WaitDataStatus.SetRunning:
-                    {
-                        WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
-                        if (verifyResult.Status == 1)
-                        {
-                            this.id = verifyResult.ID;
-                            InitConnect(socket);
-                            return this;
-                        }
-                        else if (verifyResult.Status == 3)
-                        {
-                            socket.Dispose();
-                            throw new RRQMException("连接数量已达到服务器设定最大值");
-                        }
-                        else if (verifyResult.Status == 4)
-                        {
-                            socket.Dispose();
-                            throw new RRQMException("服务器拒绝连接");
-                        }
-                        else
-                        {
-                            socket.Dispose();
-                            throw new RRQMTokenVerifyException(verifyResult.Message);
-                        }
-                    }
-                case WaitDataStatus.Overtime:
-                    socket.Dispose();
-                    throw new RRQMTimeoutException("连接超时");
-                case WaitDataStatus.Canceled:
-                case WaitDataStatus.Disposed:
-                default:
                     return this;
+                }
+                ClientConnectingEventArgs args = this.ConnectService();
+                WaitVerify waitVerify = new WaitVerify()
+                {
+                    Token = verifyToken
+                };
+                WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
+                waitData.SetCancellationToken(token);
+
+                this.MainSocket.Send(waitVerify.GetData());
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        byte[] buffer = new byte[1024];
+                        int r = this.MainSocket.Receive(buffer);
+                        if (r > 0)
+                        {
+                            byte[] data = new byte[r];
+
+                            Array.Copy(buffer, data, r);
+                            WaitVerify verify = WaitVerify.GetVerifyInfo(data);
+                            this.waitHandlePool.SetRun(verify);
+                        }
+                    }
+                    catch
+                    {
+                    }
+                });
+
+                switch (waitData.Wait(1000 * 10))
+                {
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
+                            if (verifyResult.Status == 1)
+                            {
+                                this.id = verifyResult.ID;
+                                this.PreviewConnected(args);
+                                return this;
+                            }
+                            else if (verifyResult.Status == 3)
+                            {
+                                this.MainSocket.Dispose();
+                                throw new RRQMException("连接数量已达到服务器设定最大值");
+                            }
+                            else if (verifyResult.Status == 4)
+                            {
+                                this.MainSocket.Dispose();
+                                throw new RRQMException("服务器拒绝连接");
+                            }
+                            else
+                            {
+                                this.MainSocket.Dispose();
+                                throw new RRQMTokenVerifyException(verifyResult.Message);
+                            }
+                        }
+                    case WaitDataStatus.Overtime:
+                        this.MainSocket.Dispose();
+                        throw new RRQMTimeoutException("连接超时");
+                    case WaitDataStatus.Canceled:
+                    case WaitDataStatus.Disposed:
+                    default:
+                        return this;
+                }
             }
         }
 

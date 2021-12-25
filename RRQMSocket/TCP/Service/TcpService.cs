@@ -457,31 +457,49 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 创建客户端之前
+        /// 成功建立Tcp连接，但还未在<see cref="OnConnecting(TClient, ClientOperationEventArgs)"/>中进行连接筛选。
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="socketClient"></param>
         /// <returns></returns>
-        protected virtual void PreviewConnecting(TClient client)
+        protected virtual void PreviewConnecting(TClient socketClient)
         {
             ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
             clientArgs.ID = GetDefaultNewID();
-            this.OnConnecting(client, clientArgs);
+            this.OnConnecting(socketClient, clientArgs);
             if (clientArgs.IsPermitOperation)
             {
-                client.id = clientArgs.ID;
-
-                client.BeginReceive();
-
-                if (!this.socketClients.TryAdd(client))
-                {
-                    throw new RRQMException("ID重复");
-                }
-                OnConnected(client, new MesEventArgs("新客户端连接"));
+                MakeClientReceive(socketClient, clientArgs.ID);
+                OnConnected(socketClient, new MesEventArgs("新客户端连接"));
             }
             else
             {
-                client.Dispose();
+                socketClient.Dispose();
             }
+        }
+
+        /// <summary>
+        /// 添加客户端辅助类，然后开始接收
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="id"></param>
+        protected void MakeClientReceive(TClient client, string id)
+        {
+            if (client is null)
+            {
+                throw new ArgumentNullException(nameof(client));
+            }
+
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException($"“{nameof(id)}”不能为 null 或空。", nameof(id));
+            }
+
+            client.id = id;
+            if (!this.socketClients.TryAdd(client))
+            {
+                throw new RRQMException("ID重复");
+            }
+            client.BeginReceive();
         }
 
         private void Args_Completed(object sender, SocketAsyncEventArgs e)

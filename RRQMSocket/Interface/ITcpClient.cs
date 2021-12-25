@@ -23,6 +23,21 @@ namespace RRQMSocket
     public interface ITcpClient : ITcpClientBase, ISendBase
     {
         /// <summary>
+        /// 成功连接到服务器
+        /// </summary>
+        event RRQMMessageEventHandler<ITcpClient> Connected;
+
+        /// <summary>
+        /// 准备连接的时候
+        /// </summary>
+        event RRQMTcpClientConnectingEventHandler<ITcpClient> Connecting;
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        event RRQMMessageEventHandler<ITcpClient> Disconnected;
+
+        /// <summary>
         /// 客户端配置
         /// </summary>
         TcpClientConfig ClientConfig { get; }
@@ -36,11 +51,6 @@ namespace RRQMSocket
         /// 独立线程发送
         /// </summary>
         bool SeparateThreadSend { get; }
-
-        /// <summary>
-        /// 关闭Socket信道，并随后释放资源
-        /// </summary>
-        void Close();
 
         /// <summary>
         /// 连接服务器
@@ -60,18 +70,6 @@ namespace RRQMSocket
         ITcpClient Disconnect();
 
         /// <summary>
-        /// 同步组合发送
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        void Send(IList<TransferByte> transferBytes);
-
-        /// <summary>
-        /// 异步组合发送
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        void SendAsync(IList<TransferByte> transferBytes);
-
-        /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="clientConfig"></param>
@@ -79,9 +77,10 @@ namespace RRQMSocket
         ITcpClient Setup(TcpClientConfig clientConfig);
 
         /// <summary>
-        /// 禁用发送或接收
+        /// 配置服务器
         /// </summary>
-        /// <param name="how"></param>
-        void Shutdown(SocketShutdown how);
+        /// <param name="ipHost"></param>
+        /// <returns></returns>
+        ITcpClient Setup(string ipHost);
     }
 }

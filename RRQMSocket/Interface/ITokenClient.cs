@@ -9,12 +9,22 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Exceptions;
+using System.Threading;
+
 namespace RRQMSocket
 {
     /// <summary>
     /// 具有验证功能的终端接口
     /// </summary>
-    public interface ITokenClient : ITcpClientBase
+    public interface ITokenClient :ITcpClient, ITokenClientBase
     {
+        /// <summary>
+        /// 连接到服务器
+        /// </summary>
+        /// <exception cref="RRQMException"></exception>
+        /// <exception cref="RRQMTokenVerifyException"></exception>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        ITcpClient Connect(string verifyToken, CancellationToken token = default);
     }
 }

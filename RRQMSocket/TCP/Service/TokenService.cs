@@ -60,8 +60,8 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="client"></param>
-        protected override void PreviewConnecting(TClient client)
+        /// <param name="socketClient"></param>
+        protected override void PreviewConnecting(TClient socketClient)
         {
             Task.Run(() =>
             {
@@ -69,7 +69,7 @@ namespace RRQMSocket
                 Task.Run(() =>
                 {
                     byte[] buffer = new byte[1024];
-                    int r = client.MainSocket.Receive(buffer);
+                    int r = socketClient.MainSocket.Receive(buffer);
                     if (r > 0)
                     {
                         byte[] data = new byte[r];
@@ -87,40 +87,34 @@ namespace RRQMSocket
                             WaitVerify waitVerify = waitData.WaitResult;
                             VerifyOption verifyOption = new VerifyOption();
                             verifyOption.Token = waitVerify.Token;
-                            this.OnVerifyToken(client, verifyOption);
+                            this.OnVerifyToken(socketClient, verifyOption);
 
                             if (verifyOption.Accept)
                             {
                                 ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
                                 clientArgs.ID = GetDefaultNewID();
-                                this.OnConnecting(client, clientArgs);
+                                this.OnConnecting(socketClient, clientArgs);
                                 if (clientArgs.IsPermitOperation)
                                 {
-                                    client.id = clientArgs.ID;
-
-                                    waitVerify.ID = client.id;
+                                    waitVerify.ID = clientArgs.ID;
                                     waitVerify.Status = 1;
-                                    client.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
-                                    if (!this.SocketClients.TryAdd(client))
-                                    {
-                                        throw new RRQMException("ID重复");
-                                    }
-                                    client.BeginReceive();
-                                    this.OnConnected(client, new MesEventArgs("新客户端连接"));
+                                    socketClient.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
+                                    MakeClientReceive(socketClient, clientArgs.ID);
+                                    this.OnConnected(socketClient, new MesEventArgs("新客户端连接"));
                                 }
                                 else
                                 {
                                     waitVerify.Status = 4;
-                                    client.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
-                                    client.MainSocket.Dispose();
+                                    socketClient.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
+                                    socketClient.MainSocket.Dispose();
                                 }
                             }
                             else
                             {
                                 waitVerify.Status = 2;
                                 waitVerify.Message = verifyOption.ErrorMessage;
-                                client.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
-                                client.MainSocket.Dispose();
+                                socketClient.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
+                                socketClient.MainSocket.Dispose();
                             }
                         }
                         break;
@@ -130,7 +124,7 @@ namespace RRQMSocket
                     case WaitDataStatus.Disposed:
                     default:
                         {
-                            client.MainSocket.Dispose();
+                            socketClient.MainSocket.Dispose();
                             break;
                         }
                 }

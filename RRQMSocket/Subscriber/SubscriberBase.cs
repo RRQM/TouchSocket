@@ -21,7 +21,7 @@ namespace RRQMSocket
         /// <summary>
         /// 客户端
         /// </summary>
-        internal IProtocolClient client;
+        internal IProtocolClientBase client;
 
         /// <summary>
         /// 协议
@@ -56,7 +56,7 @@ namespace RRQMSocket
         /// <summary>
         /// 客户端
         /// </summary>
-        public IProtocolClient Client
+        public IProtocolClientBase Client
         {
             get { return client; }
         }

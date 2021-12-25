@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace RRQMSocket
@@ -19,14 +20,24 @@ namespace RRQMSocket
     public interface ITcpClientBase : IClient
     {
         /// <summary>
+        /// 缓存池大小
+        /// </summary>
+        int BufferLength { get; }
+
+        /// <summary>
+        /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
+        /// </summary>
+        bool CanSetDataHandlingAdapter { get; }
+
+        /// <summary>
+        /// 数据处理适配器
+        /// </summary>
+        DataHandlingAdapter DataHandlingAdapter { get; }
+
+        /// <summary>
         /// IP地址
         /// </summary>
         string IP { get; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        int Port { get; }
 
         /// <summary>
         /// 主通信器
@@ -44,14 +55,37 @@ namespace RRQMSocket
         bool Online { get; }
 
         /// <summary>
-        /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
+        /// 端口号
         /// </summary>
-        bool CanSetDataHandlingAdapter { get; }
+        int Port { get; }
 
         /// <summary>
-        /// 数据处理适配器
+        /// 是否处于工作（接收中）
         /// </summary>
-        DataHandlingAdapter DataHandlingAdapter { get; }
+        bool Working { get; }
+
+        /// <summary>
+        /// 关闭Socket信道，并随后释放资源
+        /// </summary>
+        void Close();
+
+        /// <summary>
+        /// 获取网络流，接收方式为NetworkStream.Read。
+        /// </summary>
+        /// <returns></returns>
+        NetworkStream GetNetworkStream();
+
+        /// <summary>
+        /// 同步组合发送
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        void Send(IList<TransferByte> transferBytes);
+
+        /// <summary>
+        /// 异步组合发送
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        void SendAsync(IList<TransferByte> transferBytes);
 
         /// <summary>
         /// 设置数据处理适配器
@@ -60,14 +94,9 @@ namespace RRQMSocket
         void SetDataHandlingAdapter(DataHandlingAdapter adapter);
 
         /// <summary>
-        /// 缓存池大小
+        /// 禁用发送或接收
         /// </summary>
-        int BufferLength { get; }
-
-        /// <summary>
-        /// 获取网络流，接收方式为NetworkStream.Read。
-        /// </summary>
-        /// <returns></returns>
-        NetworkStream GetNetworkStream();
+        /// <param name="how"></param>
+        void Shutdown(SocketShutdown how);
     }
 }

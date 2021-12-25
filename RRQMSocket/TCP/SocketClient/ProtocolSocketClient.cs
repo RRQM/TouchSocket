@@ -28,7 +28,7 @@ namespace RRQMSocket
     /// <summary>
     /// 协议辅助类
     /// </summary>
-    public abstract class ProtocolSocketClient : TokenSocketClient, IProtocolClient
+    public abstract class ProtocolSocketClient : TokenSocketClient, IProtocolClientBase
     {
         private static readonly Dictionary<short, string> usedProtocol;
         private readonly ConcurrentDictionary<short, ProtocolSubscriberCollection> protocolSubscriberCollection;
@@ -442,6 +442,7 @@ namespace RRQMSocket
                                     });
 
                                     loopAction.RunAsync();
+
                                     while (true)
                                     {
                                         if (streamOperator.Token.IsCancellationRequested)

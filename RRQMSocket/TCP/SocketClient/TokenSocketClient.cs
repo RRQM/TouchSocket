@@ -16,7 +16,7 @@ namespace RRQMSocket
     /// <summary>
     /// 令箭辅助类
     /// </summary>
-    public abstract class TokenSocketClient : SocketClient
+    public abstract class TokenSocketClient : SocketClient,ITokenClientBase
     {
         private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
 

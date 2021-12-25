@@ -51,7 +51,6 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="adapter"></param>
         /// <param name="receivedCallBack"></param>
-        /// <param name="logger"></param>
         /// <param name="bufferLength"></param>
         /// <returns></returns>
         public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, Action<ByteBlock, object> receivedCallBack, int bufferLength = 1024)
