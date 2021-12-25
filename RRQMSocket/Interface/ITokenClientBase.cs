@@ -10,27 +10,17 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 订阅接口
+    /// Token客户端基类
     /// </summary>
-    public interface ISubscriber : IDisposable
+    public interface ITokenClientBase:ITcpClientBase
     {
-        /// <summary>
-        /// 客户端
-        /// </summary>
-        public IProtocolClientBase Client { get; }
-
-        /// <summary>
-        /// 能否使用
-        /// </summary>
-        public bool CanUse { get; }
-
-        /// <summary>
-        /// 协议
-        /// </summary>
-        public short Protocol { get; }
     }
 }

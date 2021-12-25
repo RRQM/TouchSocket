@@ -37,7 +37,7 @@ namespace RRQMSocket
         private Socket mainSocket;
         private NetworkStream networkStream;
         private int port;
-
+        private bool working;
         /// <summary>
         /// 连接
         /// </summary>
@@ -77,6 +77,11 @@ namespace RRQMSocket
                 return dataHandlingAdapter;
             }
         }
+
+        /// <summary>
+        /// 是否处于工作（接收中）
+        /// </summary>
+        public bool Working => this.working;
 
         /// <summary>
         /// 用于索引的ID
@@ -147,7 +152,7 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public void Close()
+        public virtual void Close()
         {
             this.breakOut = true;
             if (this.mainSocket != null)
@@ -180,7 +185,6 @@ namespace RRQMSocket
                 this.networkStream.Dispose();
                 this.networkStream = null;
             }
-            this.MainSocket = null;
             this.breakOut = true;
         }
 
@@ -265,6 +269,20 @@ namespace RRQMSocket
         /// <param name="adapter"></param>
         public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
+            if (!this.CanSetDataHandlingAdapter)
+            {
+                throw new RRQMException($"不允许自由调用{nameof(SetDataHandlingAdapter)}进行赋值。");
+            }
+
+            this.SetAdapter(adapter);
+        }
+
+        /// <summary>
+        /// 设置适配器，该方法不会检验<see cref="CanSetDataHandlingAdapter"/>的值。
+        /// </summary>
+        /// <param name="adapter"></param>
+        protected void SetAdapter(DataHandlingAdapter adapter)
+        {
             if (adapter == null)
             {
                 throw new RRQMException("数据处理适配器为空");
@@ -285,7 +303,6 @@ namespace RRQMSocket
         /// <param name="how"></param>
         public void Shutdown(SocketShutdown how)
         {
-            this.breakOut = true;
             if (this.MainSocket != null)
             {
                 MainSocket.Shutdown(how);
@@ -299,6 +316,10 @@ namespace RRQMSocket
         {
             try
             {
+                if (working)
+                {
+                    throw new RRQMException("该客户端已经在运行时。");
+                }
                 switch (this.receiveType)
                 {
                     case ReceiveType.IOCP:
@@ -334,6 +355,10 @@ namespace RRQMSocket
             catch
             {
                 this.breakOut = true;
+            }
+            finally
+            {
+                this.working = true;
             }
         }
 

@@ -900,7 +900,6 @@ namespace RRQMSocket
 
                                     while (true)
                                     {
-
                                         if (streamOperator.Token.IsCancellationRequested)
                                         {
                                             channel.Cancel();

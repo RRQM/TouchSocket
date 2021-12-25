@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>6.1.0</Version>
+		<Version>6.2.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
@@ -12,15 +12,9 @@
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。它具有高并发、事件订阅、插件式扩展、自动活性检测、多线程处理等特点，让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-增加：TCP客户端取消PreviewConnect函数，统一改为OnConnecting（或Connecting事件）。
-增加：Channel在发出操作指令时，可携带相关信息，接收方可通过LastOperationMes获取。
-修改：BaseSocket继承自RRQMDependencyObject，可以随意注入RRQM依赖属性。
-修改：Udp相关运行逻辑。
-修改：Config中取消关于内存池的相关设置，改为BytePool静态设置。
-修改：数据处理适配器中关于Logger的使用，如果有输出，直接抛出异常即可。
-优化：数据处理适配器测试器的多样性。
-优化：数据处理适配器的安全性，避免一个适配器多用的情况。
-优化：数据处理适配器的赋值时机，新版本可以在任何时候设置适配器（包括构造函数），但是如果客户端有重连需求，则最好在Connecting中设置。
+增加：TCP客户端断线重连功能（暂不支持Token系重连）。
+修改：数据处理适配器逻辑。
+
 
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages
 Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
@@ -85,7 +79,7 @@ Demo：https://gitee.com/RRQM_OS/RRQMBox</Description>
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="6.1.0" />
+	  <PackageReference Include="RRQMCore" Version="6.2.0" />
 	</ItemGroup>
 
 </Project>
