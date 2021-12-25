@@ -382,11 +382,11 @@ namespace RRQMSocket.RPC.JsonRpc
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
-                    base.SetDataHandlingAdapter(new TerminatorDataHandlingAdapter(this.maxPackageSize, "\r\n"));
+                    base.SetAdapter(new TerminatorDataHandlingAdapter(this.maxPackageSize, "\r\n"));
                     break;
 
                 case JsonRpcProtocolType.Http:
-                    base.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
+                    base.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
                     break;
             }
             base.OnConnecting(e);
