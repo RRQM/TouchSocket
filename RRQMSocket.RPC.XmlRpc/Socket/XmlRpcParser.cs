@@ -180,7 +180,7 @@ namespace RRQMSocket.RPC.XmlRpc
         protected override void OnConnecting(XmlRpcSocketClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.Received += this.OnReceived;
-            socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
+            socketClient.InternalSetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
             base.OnConnecting(socketClient, e);
         }
 

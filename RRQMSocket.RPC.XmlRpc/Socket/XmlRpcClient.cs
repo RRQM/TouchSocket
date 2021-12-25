@@ -77,7 +77,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <param name="e"></param>
         protected override void OnConnecting(ClientConnectingEventArgs e)
         {
-            base.SetDataHandlingAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
+            base.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
             base.OnConnecting(e);
         }
 
