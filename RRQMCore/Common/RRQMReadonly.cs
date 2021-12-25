@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections;
 
 namespace RRQMCore
 {
@@ -35,6 +36,9 @@ namespace RRQMCore
         public static readonly Type decimalType = typeof(decimal);
         public static readonly Type dateTimeType = typeof(DateTime);
         public static readonly Type bytesType = typeof(byte[]);
+        public static readonly Type dicType = typeof(IDictionary);
+        public static readonly Type iEnumerableType = typeof(IEnumerable);
+        public static readonly Type listType = typeof(IList);
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释
     }
 }

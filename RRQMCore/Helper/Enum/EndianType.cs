@@ -10,22 +10,26 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Reflection;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace RRQMCore.Serialization
+namespace RRQMCore.Helper
 {
-    internal class InstanceObject
+    /// <summary>
+    /// 大小端类型
+    /// </summary>
+    public enum EndianType
     {
-        internal InstanceType instanceType;
-        internal Type Type;
-        internal object GetInstance()
-        {
-            return Activator.CreateInstance(Type);
-        }
-        internal Type[] ArgTypes;
-        internal Type ArrayType;
-        internal Type[] ProTypes;
-        internal PropertyInfo[] Properties;
-        internal MethodInfo AddMethod;
+        /// <summary>
+        /// 小端模式
+        /// </summary>
+        Little,
+
+        /// <summary>
+        /// 大端模式
+        /// </summary>
+        Big
     }
 }

@@ -40,7 +40,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="capacity"></param>
         /// <param name="equalSize"></param>
-        public ByteBlock(int capacity = 1024 * 10, bool equalSize = false) : this(BytePool.GetByteCore(capacity, false))
+        public ByteBlock(int capacity = 1024 * 10, bool equalSize=false) : this(BytePool.GetByteCore(capacity, false))
         {
         }
 
@@ -262,14 +262,14 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="size">新尺寸</param>
         /// <param name="retainedData">是否保留元数据</param>
-        public void SetCapacity(int size, bool retainedData = false)
+        public void SetCapacity(int size, bool retainedData=false)
         {
             if (!this.@using)
             {
                 throw new RRQMException("内存块已释放");
             }
             byte[] bytes = new byte[size];
-
+            
             if (retainedData)
             {
                 Array.Copy(this._buffer, 0, bytes, 0, this.Len);
@@ -352,7 +352,7 @@ namespace RRQMCore.ByteManager
             }
             if (this._buffer.Length - this.position < count)
             {
-                this.SetCapacity(this._buffer.Length + (int)((count + this.position - this._buffer.Length) * ratio), true);
+                this.SetCapacity(this._buffer.Length + (int)((count + this.position - this._buffer.Length) * ratio),true);
             }
             Array.Copy(buffer, offset, _buffer, this.position, count);
             this.position += count;

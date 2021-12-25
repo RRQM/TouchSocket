@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 
 namespace RRQMCore.Helper
@@ -89,6 +90,16 @@ namespace RRQMCore.Helper
             }
 
             return -1;
+        }
+
+        /// <summary>
+        /// 转Base64。
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string ToBase64(this byte[] data)
+        {
+            return Convert.ToBase64String(data);
         }
     }
 }
