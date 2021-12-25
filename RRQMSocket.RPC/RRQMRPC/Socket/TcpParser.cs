@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
+using RRQMCore.Serialization;
+using RRQMCore.XREF.Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
