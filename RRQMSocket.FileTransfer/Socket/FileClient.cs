@@ -524,6 +524,7 @@ namespace RRQMSocket.FileTransfer
                     waitData.SetCancellationToken(fileOperator.Token);
 
                     waitData.Wait(60 * 1000);
+                    fileOperator.SetMaxSpeed(fileOperator.MaxSpeed);
 
                     switch (waitData.Status)
                     {

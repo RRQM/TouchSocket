@@ -26,7 +26,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 已接收的客户端
     /// </summary>
-    public class FileSocketClient : RpcSocketClient, IFileClient
+    public class FileSocketClient : RpcSocketClient, IFileClientBase
     {
         private ConcurrentDictionary<int, FileOperationEventArgs> eventArgs;
 
@@ -934,6 +934,7 @@ namespace RRQMSocket.FileTransfer
                 if (RRQMStreamPool.LoadWriteStream(savePath, args.FileOperator, args.FileRequest, ref fileInfo, out RRQMStream stream, out string mes))
                 {
                     Channel channel = this.CreateChannel();
+
                     try
                     {
                         waitTransfer.ChannelID = channel.ID;

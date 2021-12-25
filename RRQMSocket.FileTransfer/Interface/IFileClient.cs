@@ -18,52 +18,8 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件终端接口
     /// </summary>
-    public interface IFileClient : IProtocolClient
+    public interface IFileClient : IProtocolClient, IFileClientBase
     {
-        /// <summary>
-        /// 根路径
-        /// </summary>
-        string RootPath { get; set; }
 
-        /// <summary>
-        /// 允许响应远程请求的类型。
-        /// </summary>
-        ResponseType ResponseType { get; set; }
-
-        /// <summary>
-        /// 从对点拉取文件
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        Result PullFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
-
-        /// <summary>
-        /// 异步从对点拉取文件
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        Task<Result> PullFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
-
-        /// <summary>
-        /// 向对点推送文件
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        Result PushFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
-
-        /// <summary>
-        /// 异步向对点推送文件
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        Task<Result> PushFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
     }
 }
