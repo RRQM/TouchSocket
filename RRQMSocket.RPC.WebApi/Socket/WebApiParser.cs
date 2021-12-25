@@ -216,7 +216,7 @@ namespace RRQMSocket.RPC.WebApi
         protected override void OnConnecting(WebApiSocketClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.Received += this.OnReceived;
-            socketClient.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
+            socketClient.InternalSetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
             base.OnConnecting(socketClient, e);
         }
 
