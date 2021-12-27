@@ -31,7 +31,7 @@ namespace RRQMSocket.FileTransfer.Helper
         /// <param name="fileRequests">批量请求头</param>
         /// <param name="fileOperators">批量操作器</param>
         /// <param name="metadatas">批量元数据</param>
-        public static void PushFiles(this IFileClient client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
+        public static void PushFiles(this IFileClientBase client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
         {
             if (multipleCount < 1)
             {
@@ -106,7 +106,7 @@ namespace RRQMSocket.FileTransfer.Helper
         /// <param name="fileRequests">批量请求头</param>
         /// <param name="fileOperators">批量操作器</param>
         /// <param name="metadatas">批量元数据</param>
-        public static void PullFiles(this IFileClient client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
+        public static void PullFiles(this IFileClientBase client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
         {
             if (multipleCount < 1)
             {
@@ -181,7 +181,7 @@ namespace RRQMSocket.FileTransfer.Helper
         /// <param name="fileRequests">批量请求头</param>
         /// <param name="fileOperators">批量操作器</param>
         /// <param name="metadatas">批量元数据</param>
-        public static void PushFilesAsync(this IFileClient client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
+        public static void PushFilesAsync(this IFileClientBase client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
         {
             if (multipleCount < 1)
             {
@@ -256,7 +256,7 @@ namespace RRQMSocket.FileTransfer.Helper
         /// <param name="fileRequests">批量请求头</param>
         /// <param name="fileOperators">批量操作器</param>
         /// <param name="metadatas">批量元数据</param>
-        public static void PullFilesAsync(this IFileClient client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
+        public static void PullFilesAsync(this IFileClientBase client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
         {
             if (multipleCount < 1)
             {
