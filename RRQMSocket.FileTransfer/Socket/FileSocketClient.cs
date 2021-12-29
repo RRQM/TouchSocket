@@ -882,99 +882,107 @@ namespace RRQMSocket.FileTransfer
                 fileOperator, waitRemoteFileInfo.Metadata, waitRemoteFileInfo.FileInfo);
             this.OnBeforeFileTransfer(args);
 
-            savePath = waitRemoteFileInfo.FileRequest.SavePath;
-
-            WaitTransfer waitTransfer = new WaitTransfer()
+            try
             {
-                Message = args.Message,
-                PackageSize = args.FileOperator.PackageSize,
-                Sign = waitRemoteFileInfo.Sign,
-                Path = args.FileRequest.Path,
-            };
+                savePath = waitRemoteFileInfo.FileRequest.SavePath;
 
-            if (args.IsPermitOperation)
-            {
-                if (!args.FileRequest.Overwrite)
+                WaitTransfer waitTransfer = new WaitTransfer()
                 {
-                    if (File.Exists(args.FileRequest.SavePath))
+                    Message = args.Message,
+                    PackageSize = args.FileOperator.PackageSize,
+                    Sign = waitRemoteFileInfo.Sign,
+                    Path = args.FileRequest.Path,
+                };
+
+                if (args.IsPermitOperation)
+                {
+                    if (!args.FileRequest.Overwrite)
                     {
-                        waitTransfer.Status = 3;
-                        this.SendDefaultObject(202, waitTransfer);
+                        if (File.Exists(args.FileRequest.SavePath))
+                        {
+                            waitTransfer.Status = 3;
+                            this.SendDefaultObject(202, waitTransfer);
+                            fileOperator.SetFileResult(new Result(ResultCode.Error,ResType.FileExists.GetResString()));
+                            return;
+                        }
+                    }
+
+                    savePath = savePath + ".rrqm";
+
+                    RRQMFileInfo fileInfo = args.FileInfo;
+                    if (RRQMStreamPool.LoadWriteStream(savePath, args.FileOperator, args.FileRequest, ref fileInfo, out RRQMStream stream, out string mes))
+                    {
+                        Channel channel = this.CreateChannel();
+
+                        try
+                        {
+                            waitTransfer.ChannelID = channel.ID;
+                            waitTransfer.Position = fileInfo.Posotion;
+                            waitTransfer.Status = 1;
+                            this.SendDefaultObject(202, waitTransfer);
+
+                            stream.Position = fileInfo.Posotion;
+                            fileOperator.SetFileCompletedLength(fileInfo.Posotion);
+                            while (channel.MoveNext())
+                            {
+                                if (fileOperator.Token.IsCancellationRequested)
+                                {
+                                    channel.Cancel();
+                                    fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                                    break;
+                                }
+                                ByteBlock block = channel.GetCurrentByteBlock();
+                                block.Pos = 6;
+
+                                if (block.TryReadBytesPackageInfo(out int pos, out int len))
+                                {
+                                    stream.Write(block.Buffer, pos, len);
+                                    stream.fileInfo.Posotion = stream.Position;
+                                    fileOperator.AddFileFlow(len, fileInfo.FileLength);
+                                    stream.SaveProgress();
+                                }
+                                block.SetHolding(false);
+                            }
+
+                            if (channel.Status == ChannelStatus.Completed)
+                            {
+                                stream.FinishStream(args.FileRequest.Overwrite);
+                                fileOperator.SetFileResult(new Result(ResultCode.Success));
+                            }
+                            else
+                            {
+                                fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
+                            channel.Cancel(ex.Message);
+                        }
+                        finally
+                        {
+                            channel.Dispose();
+                            RRQMStreamPool.TryReleaseWriteStream(savePath, fileOperator);
+                        }
                         return;
                     }
-                }
-
-                savePath = savePath + ".rrqm";
-
-                RRQMFileInfo fileInfo = args.FileInfo;
-                if (RRQMStreamPool.LoadWriteStream(savePath, args.FileOperator, args.FileRequest, ref fileInfo, out RRQMStream stream, out string mes))
-                {
-                    Channel channel = this.CreateChannel();
-
-                    try
+                    else
                     {
-                        waitTransfer.ChannelID = channel.ID;
-                        waitTransfer.Position = fileInfo.Posotion;
-                        waitTransfer.Status = 1;
-                        this.SendDefaultObject(202, waitTransfer);
-
-                        stream.Position = fileInfo.Posotion;
-                        fileOperator.SetFileCompletedLength(fileInfo.Posotion);
-                        while (channel.MoveNext())
-                        {
-                            if (fileOperator.Token.IsCancellationRequested)
-                            {
-                                channel.Cancel();
-                                fileOperator.SetFileResult(new Result(ResultCode.Canceled));
-                                break;
-                            }
-                            ByteBlock block = channel.GetCurrentByteBlock();
-                            block.Pos = 6;
-
-                            if (block.TryReadBytesPackageInfo(out int pos, out int len))
-                            {
-                                stream.Write(block.Buffer, pos, len);
-                                stream.fileInfo.Posotion = stream.Position;
-                                fileOperator.AddFileFlow(len, fileInfo.FileLength);
-                                stream.SaveProgress();
-                            }
-                            block.SetHolding(false);
-                        }
-
-                        if (channel.Status == ChannelStatus.Completed)
-                        {
-                            stream.FinishStream(args.FileRequest.Overwrite);
-                            fileOperator.SetFileResult(new Result(ResultCode.Success));
-                        }
-                        else
-                        {
-                            fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
-                        }
+                        waitTransfer.Status = 4;
+                        waitTransfer.Message = mes;
                     }
-                    catch (Exception ex)
-                    {
-                        fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
-                        channel.Cancel(ex.Message);
-                    }
-                    finally
-                    {
-                        channel.Dispose();
-                        RRQMStreamPool.TryReleaseWriteStream(savePath, fileOperator);
-                    }
-                    return;
                 }
                 else
                 {
-                    waitTransfer.Status = 4;
-                    waitTransfer.Message = mes;
+                    waitTransfer.Status = 2;
                 }
-            }
-            else
-            {
-                waitTransfer.Status = 2;
-            }
 
-            this.SendDefaultObject(202, waitTransfer);
+                this.SendDefaultObject(202, waitTransfer);
+            }
+            finally
+            {
+
+            }
         }
 
         private void SendDefaultObject(short protocol, object obj)
