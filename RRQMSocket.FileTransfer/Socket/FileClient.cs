@@ -524,7 +524,6 @@ namespace RRQMSocket.FileTransfer
                     waitData.SetCancellationToken(fileOperator.Token);
 
                     waitData.Wait(60 * 1000);
-
                     switch (waitData.Status)
                     {
                         case WaitDataStatus.SetRunning:
@@ -911,6 +910,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         waitTransfer.Status = 3;
                         this.SendDefaultObject(205, waitTransfer);
+                        fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.FileExists.GetResString()));
                         return;
                     }
                 }
@@ -972,17 +972,21 @@ namespace RRQMSocket.FileTransfer
                         channel.Dispose();
                         RRQMStreamPool.TryReleaseWriteStream(savePath, fileOperator);
                     }
+                    this.OnFinishedFileTransfer(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                     return;
                 }
                 else
                 {
                     waitTransfer.Status = 4;
                     waitTransfer.Message = mes;
+                    fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetResString()));
+                    this.OnFinishedFileTransfer(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                 }
             }
             else
             {
                 waitTransfer.Status = 2;
+                this.OnFinishedFileTransfer(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
             }
 
             this.SendDefaultObject(205, waitTransfer);
