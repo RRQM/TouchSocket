@@ -130,16 +130,6 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 设置最大速度
-        /// </summary>
-        /// <param name="speed"></param>
-        /// <returns></returns>
-        public bool SetMaxSpeed(int speed)
-        {
-            throw new RRQMException("开源版不支持传输限速。");
-        }
-
-        /// <summary>
         /// 从上次获取到此次获得的速度
         /// </summary>
         /// <returns></returns>

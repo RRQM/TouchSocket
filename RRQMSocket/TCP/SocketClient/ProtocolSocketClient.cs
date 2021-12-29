@@ -415,7 +415,6 @@ namespace RRQMSocket
             waitStream.StreamType = stream.GetType().FullName;
             int length = streamOperator.PackageSize;
             ByteBlock byteBlock = BytePool.GetByteBlock(length).WriteObject(waitStream, SerializationType.Json);
-            LoopAction loopAction = null;
             try
             {
                 this.SocketSend(-9, byteBlock.Buffer, 0, byteBlock.Len);
@@ -433,16 +432,6 @@ namespace RRQMSocket
                             {
                                 if (this.TrySubscribeChannel(waitStreamResult.ChannelID, out Channel channel))
                                 {
-                                    loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
-                                    {
-                                        while (channel.Available && channel.MoveNext())
-                                        {
-                                            streamOperator.SetMaxSpeed(BitConverter.ToInt32(channel.GetCurrent(), 0));
-                                        }
-                                    });
-
-                                    loopAction.RunAsync();
-
                                     while (true)
                                     {
                                         if (streamOperator.Token.IsCancellationRequested)
@@ -501,10 +490,6 @@ namespace RRQMSocket
             }
             finally
             {
-                if (loopAction != null)
-                {
-                    loopAction.Dispose();
-                }
                 byteBlock.Dispose();
             }
         }
@@ -875,7 +860,6 @@ namespace RRQMSocket
                         waitStream.Status = 1;
                         Channel channel = this.CreateChannel();
                         waitStream.ChannelID = channel.ID;
-                        streamOperator.SetMaxSpeed(streamOperator.MaxSpeed);
                         Task.Run(() =>
                         {
                             Stream stream = args.Bucket;

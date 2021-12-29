@@ -612,21 +612,10 @@ namespace RRQMSocket.FileTransfer
                 if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
                 {
                     ByteBlock byteBlock = BytePool.GetByteBlock(waitTransfer.PackageSize);
-                    LoopAction loopAction = null;
                     try
                     {
                         long position = waitTransfer.Position;
                         fileOperator.SetFileCompletedLength(waitTransfer.Position);
-                        loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
-                        {
-                            while (channel.Available && channel.MoveNext())
-                            {
-                                fileOperator.SetMaxSpeed(BitConverter.ToInt32(channel.GetCurrent(), 0));
-                            }
-                        });
-
-                        loopAction.RunAsync();
-
                         while (true)
                         {
                             if (fileOperator.Token.IsCancellationRequested)
@@ -677,7 +666,6 @@ namespace RRQMSocket.FileTransfer
                     {
                         RRQMStreamPool.FinishedReadStream(waitTransfer.Path);
                         RRQMStreamPool.TryReleaseReadStream(waitTransfer.Path);
-                        loopAction?.Dispose();
                         byteBlock.Dispose();
                     }
                 }
@@ -779,23 +767,12 @@ namespace RRQMSocket.FileTransfer
                     if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
                     {
                         ByteBlock byteBlock = BytePool.GetByteBlock(waitTransfer.PackageSize);
-                        LoopAction loopAction = null;
                         FileOperator fileOperator = args.FileOperator;
                         try
                         {
                             waitTransfer.Status = 1;
                             this.SendDefaultObject(201, waitTransfer);
                             long position = waitTransfer.Position;
-
-                            loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
-                            {
-                                while (channel.Available && channel.MoveNext())
-                                {
-                                    fileOperator.SetMaxSpeed(BitConverter.ToInt32(channel.GetCurrent(), 0));
-                                }
-                            });
-
-                            loopAction.RunAsync();
 
                             while (true)
                             {
@@ -837,7 +814,6 @@ namespace RRQMSocket.FileTransfer
                         {
                             RRQMStreamPool.FinishedReadStream(waitTransfer.Path);
                             RRQMStreamPool.TryReleaseReadStream(waitTransfer.Path);
-                            loopAction?.Dispose();
                             byteBlock.Dispose();
 
                             e = new FileTransferStatusEventArgs(TransferType.Pull, args.FileRequest, args.Metadata,
