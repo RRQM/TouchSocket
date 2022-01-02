@@ -32,37 +32,13 @@ namespace RRQMCore.Serialization
         /// </summary>
         /// <param name="stream">流</param>
         /// <param name="graph">对象</param>
-        /// <param name="reserveAttributeName">保留属性名</param>
-        public void Serialize(ByteBlock stream, object graph, bool reserveAttributeName)
-        {
-            this.reserveAttributeName = reserveAttributeName;
-            stream.Position = 1;
-            SerializeObject(stream, graph);
-            if (reserveAttributeName)
-            {
-                stream.Buffer[0] = 1;
-            }
-            else
-            {
-                stream.Buffer[0] = 0;
-            }
-            stream.SetLength(stream.Position);
-        }
-
-        /// <summary>
-        /// 序列化对象
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="graph"></param>
         public void Serialize(ByteBlock stream, object graph)
         {
-            Serialize(stream, graph, false);
+            stream.Position = 1;
+            SerializeObject(stream, graph);
+            stream.Buffer[0] = 1;
+            stream.SetLength(stream.Position);
         }
-
-        /// <summary>
-        /// 保留属性名
-        /// </summary>
-        private bool reserveAttributeName;
 
         private int SerializeObject(ByteBlock stream, object graph)
         {
@@ -83,43 +59,43 @@ namespace RRQMCore.Serialization
                 }
                 else if (graph is sbyte sby)
                 {
-                    data = BitConverter.GetBytes((short)sby);
+                    data = RRQMBitConverter.Default.GetBytes((short)sby);
                 }
                 else if (graph is bool b)
                 {
-                    data = BitConverter.GetBytes(b);
+                    data = RRQMBitConverter.Default.GetBytes(b);
                 }
                 else if (graph is short s)
                 {
-                    data = BitConverter.GetBytes(s);
+                    data = RRQMBitConverter.Default.GetBytes(s);
                 }
                 else if (graph is ushort us)
                 {
-                    data = BitConverter.GetBytes(us);
+                    data = RRQMBitConverter.Default.GetBytes(us);
                 }
                 else if (graph is int i)
                 {
-                    data = BitConverter.GetBytes(i);
+                    data = RRQMBitConverter.Default.GetBytes(i);
                 }
                 else if (graph is uint ui)
                 {
-                    data = BitConverter.GetBytes(ui);
+                    data = RRQMBitConverter.Default.GetBytes(ui);
                 }
                 else if (graph is long l)
                 {
-                    data = BitConverter.GetBytes(l);
+                    data = RRQMBitConverter.Default.GetBytes(l);
                 }
                 else if (graph is ulong ul)
                 {
-                    data = BitConverter.GetBytes(ul);
+                    data = RRQMBitConverter.Default.GetBytes(ul);
                 }
                 else if (graph is float f)
                 {
-                    data = BitConverter.GetBytes(f);
+                    data = RRQMBitConverter.Default.GetBytes(f);
                 }
                 else if (graph is double d)
                 {
-                    data = BitConverter.GetBytes(d);
+                    data = RRQMBitConverter.Default.GetBytes(d);
                 }
                 else if (graph is DateTime time)
                 {
@@ -127,7 +103,7 @@ namespace RRQMCore.Serialization
                 }
                 else if (graph is char c)
                 {
-                    data = BitConverter.GetBytes(c);
+                    data = RRQMBitConverter.Default.GetBytes(c);
                 }
                 else if (graph is Enum)
                 {
@@ -139,15 +115,15 @@ namespace RRQMCore.Serialization
                     }
                     else if (enumValType == RRQMReadonly.shortType)
                     {
-                        data = BitConverter.GetBytes((short)graph);
+                        data = RRQMBitConverter.Default.GetBytes((short)graph);
                     }
                     else if (enumValType == RRQMReadonly.intType)
                     {
-                        data = BitConverter.GetBytes((int)graph);
+                        data = RRQMBitConverter.Default.GetBytes((int)graph);
                     }
                     else
                     {
-                        data = BitConverter.GetBytes((long)graph);
+                        data = RRQMBitConverter.Default.GetBytes((long)graph);
                     }
                 }
                 else if (graph is byte[])
@@ -184,7 +160,7 @@ namespace RRQMCore.Serialization
                 endPosition = startPosition + 4;
             }
 
-            byte[] lenBuffer = BitConverter.GetBytes(len);
+            byte[] lenBuffer = RRQMBitConverter.Default.GetBytes(len);
             stream.Position = startPosition;
             stream.Write(lenBuffer, 0, lenBuffer.Length);
 
@@ -208,19 +184,15 @@ namespace RRQMCore.Serialization
                     {
                         continue;
                     }
-                    if (reserveAttributeName)
+                    byte[] propertyBytes = Encoding.UTF8.GetBytes(property.Name);
+                    if (propertyBytes.Length > byte.MaxValue)
                     {
-                        byte[] propertyBytes = Encoding.UTF8.GetBytes(property.Name);
-                        if (propertyBytes.Length > byte.MaxValue)
-                        {
-                            throw new Exceptions.RRQMException($"属性名：{property.Name}超长");
-                        }
-                        byte lenBytes = (byte)propertyBytes.Length;
-                        stream.Write(lenBytes);
-                        stream.Write(propertyBytes, 0, propertyBytes.Length);
-                        len += propertyBytes.Length + 1;
+                        throw new Exceptions.RRQMException($"属性名：{property.Name}超长");
                     }
-
+                    byte lenBytes = (byte)propertyBytes.Length;
+                    stream.Write(lenBytes);
+                    stream.Write(propertyBytes, 0, propertyBytes.Length);
+                    len += propertyBytes.Length + 1;
                     len += SerializeObject(stream, property.GetValue(obj, null));
                 }
             }
@@ -244,7 +216,7 @@ namespace RRQMCore.Serialization
                 }
                 long newPosition = stream.Position;
                 stream.Position = oldPosition;
-                stream.Write(BitConverter.GetBytes(paramLen));
+                stream.Write(RRQMBitConverter.Default.GetBytes(paramLen));
                 stream.Position = newPosition;
             }
             return len;
@@ -263,15 +235,7 @@ namespace RRQMCore.Serialization
         /// <returns></returns>
         public object Deserialize(byte[] data, int offset, Type type)
         {
-            if (data[offset] == 0)
-            {
-                this.reserveAttributeName = false;
-            }
-            else if (data[offset] == 1)
-            {
-                this.reserveAttributeName = true;
-            }
-            else
+            if (data[offset] != 1)
             {
                 throw new Exceptions.RRQMException("数据流解析错误");
             }
@@ -282,7 +246,7 @@ namespace RRQMCore.Serialization
         private dynamic Deserialize(Type type, byte[] datas, ref int offset)
         {
             dynamic obj;
-            int len = BitConverter.ToInt32(datas, offset);
+            int len = RRQMBitConverter.Default.ToInt32(datas, offset);
             offset += 4;
             if (len > 0)
             {
@@ -296,51 +260,51 @@ namespace RRQMCore.Serialization
                 }
                 else if (type == RRQMReadonly.sbyteType)
                 {
-                    obj = (sbyte)(BitConverter.ToInt16(datas, offset));
+                    obj = (sbyte)(RRQMBitConverter.Default.ToInt16(datas, offset));
                 }
                 else if (type == RRQMReadonly.boolType)
                 {
-                    obj = (BitConverter.ToBoolean(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToBoolean(datas, offset));
                 }
                 else if (type == RRQMReadonly.shortType)
                 {
-                    obj = (BitConverter.ToInt16(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToInt16(datas, offset));
                 }
                 else if (type == RRQMReadonly.ushortType)
                 {
-                    obj = (BitConverter.ToUInt16(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToUInt16(datas, offset));
                 }
                 else if (type == RRQMReadonly.intType)
                 {
-                    obj = (BitConverter.ToInt32(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToInt32(datas, offset));
                 }
                 else if (type == RRQMReadonly.uintType)
                 {
-                    obj = (BitConverter.ToUInt32(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToUInt32(datas, offset));
                 }
                 else if (type == RRQMReadonly.longType)
                 {
-                    obj = (BitConverter.ToInt64(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToInt64(datas, offset));
                 }
                 else if (type == RRQMReadonly.ulongType)
                 {
-                    obj = (BitConverter.ToUInt64(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToUInt64(datas, offset));
                 }
                 else if (type == RRQMReadonly.floatType)
                 {
-                    obj = (BitConverter.ToSingle(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToSingle(datas, offset));
                 }
                 else if (type == RRQMReadonly.doubleType)
                 {
-                    obj = (BitConverter.ToDouble(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToDouble(datas, offset));
                 }
                 else if (type == RRQMReadonly.decimalType)
                 {
-                    obj = (BitConverter.ToDouble(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToDouble(datas, offset));
                 }
                 else if (type == RRQMReadonly.charType)
                 {
-                    obj = (BitConverter.ToChar(datas, offset));
+                    obj = (RRQMBitConverter.Default.ToChar(datas, offset));
                 }
                 else if (type == RRQMReadonly.dateTimeType)
                 {
@@ -356,15 +320,15 @@ namespace RRQMCore.Serialization
                     }
                     else if (enumType == typeof(short))
                     {
-                        obj = Enum.ToObject(type, BitConverter.ToInt16(datas, offset));
+                        obj = Enum.ToObject(type, RRQMBitConverter.Default.ToInt16(datas, offset));
                     }
                     else if (enumType == typeof(int))
                     {
-                        obj = Enum.ToObject(type, BitConverter.ToInt32(datas, offset));
+                        obj = Enum.ToObject(type, RRQMBitConverter.Default.ToInt32(datas, offset));
                     }
                     else
                     {
-                        obj = Enum.ToObject(type, BitConverter.ToInt64(datas, offset));
+                        obj = Enum.ToObject(type, RRQMBitConverter.Default.ToInt64(datas, offset));
                     }
                 }
                 else if (type == RRQMReadonly.bytesType)
@@ -400,35 +364,23 @@ namespace RRQMCore.Serialization
                 case InstanceType.Class:
                     {
                         instance = instanceObject.GetInstance();
-                        if (reserveAttributeName)
+                        int index = offset;
+                        while (offset - index < length && (length >= 4))
                         {
-                            int index = offset;
-                            while (offset - index < length && (length >= 4))
+                            int len = datas[offset];
+                            string propertyName = Encoding.UTF8.GetString(datas, offset + 1, len);
+                            offset += len + 1;
+                            PropertyInfo propertyInfo = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                            if (propertyInfo == null)
                             {
-                                int len = datas[offset];
-                                string propertyName = Encoding.UTF8.GetString(datas, offset + 1, len);
-                                offset += len + 1;
-                                PropertyInfo propertyInfo = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                                if (propertyInfo == null)
-                                {
-                                    int pLen = BitConverter.ToInt32(datas, offset);
-                                    offset += 4;
-                                    offset += pLen;
-                                    continue;
-                                }
-                                object obj = Deserialize(propertyInfo.PropertyType, datas, ref offset);
-                                propertyInfo.SetValue(instance, obj);
+                                int pLen = RRQMBitConverter.Default.ToInt32(datas, offset);
+                                offset += 4;
+                                offset += pLen;
+                                continue;
                             }
+                            object obj = Deserialize(propertyInfo.PropertyType, datas, ref offset);
+                            propertyInfo.SetValue(instance, obj);
                         }
-                        else
-                        {
-                            foreach (var item in instanceObject.Properties)
-                            {
-                                object obj = Deserialize(item.PropertyType, datas, ref offset);
-                                item.SetValue(instance, obj);
-                            }
-                        }
-
                         break;
                     }
                 case InstanceType.List:
@@ -436,7 +388,7 @@ namespace RRQMCore.Serialization
                         instance = instanceObject.GetInstance();
                         if (length > 0)
                         {
-                            uint paramLen = BitConverter.ToUInt32(datas, offset);
+                            uint paramLen = RRQMBitConverter.Default.ToUInt32(datas, offset);
                             offset += 4;
                             for (uint i = 0; i < paramLen; i++)
                             {
@@ -454,7 +406,7 @@ namespace RRQMCore.Serialization
                     {
                         if (length > 0)
                         {
-                            uint paramLen = BitConverter.ToUInt32(datas, offset);
+                            uint paramLen = RRQMBitConverter.Default.ToUInt32(datas, offset);
                             Array array = Array.CreateInstance(instanceObject.ArrayType, paramLen);
 
                             offset += 4;
@@ -476,23 +428,15 @@ namespace RRQMCore.Serialization
                         instance = instanceObject.GetInstance();
                         if (length > 0)
                         {
-                            uint paramLen = BitConverter.ToUInt32(datas, offset);
+                            uint paramLen = RRQMBitConverter.Default.ToUInt32(datas, offset);
                             offset += 4;
                             for (uint i = 0; i < paramLen; i++)
                             {
                                 offset += 4;
-                                if (reserveAttributeName)
-                                {
-                                    offset += datas[offset] + 1;
-                                }
-
+                                offset += datas[offset] + 1;
                                 object key = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
 
-                                if (reserveAttributeName)
-                                {
-                                    offset += datas[offset] + 1;
-                                }
-
+                                offset += datas[offset] + 1;
                                 object value = Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
                                 if (key != null)
                                 {

@@ -5,14 +5,14 @@
 		<Authors>若汝棋茗</Authors>
 		<PackageIcon>RRQM.png</PackageIcon>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Version>6.2.0</Version>
+		<Version>6.3.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<SignAssembly>true</SignAssembly>
 		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
 
 更新内容：
-修复：RRQM序列化数组bug。
-增加：数据大小端判断。
+修复：RRQM序列化多数据bug。
+增加：大小端转换器RRQMBitConverter，其用法与BitConverter基本一致。
 
 特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
 特此感谢其作者！！！
