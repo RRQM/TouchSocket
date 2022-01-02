@@ -35,7 +35,7 @@ namespace RRQMSocket
         /// <returns></returns>
         internal byte[] GetData()
         {
-            return RRQMCore.Data.Security.DataLock.EncryptDES(SerializeConvert.RRQMBinarySerialize(this, true), "RRQMRRQM");
+            return RRQMCore.Data.Security.DataLock.EncryptDES(SerializeConvert.RRQMBinarySerialize(this), "RRQMRRQM");
         }
 
         /// <summary>

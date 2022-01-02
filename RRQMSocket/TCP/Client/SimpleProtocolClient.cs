@@ -38,7 +38,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected override void HandleProtocolData(short? procotol, ByteBlock byteBlock)
+        protected override void HandleProtocolData(short procotol, ByteBlock byteBlock)
         {
             this.Received.Invoke(this, procotol, byteBlock);
         }

@@ -31,20 +31,16 @@ namespace RRQMSocket
     /// </summary>
     public abstract class ProtocolClient : TokenClient, IProtocolClient
     {
-        private static readonly Dictionary<short, string> usedProtocol;
+        private readonly Dictionary<short, string> usedProtocol;
         private readonly ConcurrentDictionary<int, Channel> userChannels;
         private readonly ConcurrentDictionary<short, ProtocolSubscriberCollection> protocolSubscriberCollection;
-
-        static ProtocolClient()
-        {
-            usedProtocol = new Dictionary<short, string>();
-        }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public ProtocolClient()
         {
+            this.usedProtocol = new Dictionary<short, string>();
             this.protocolSubscriberCollection = new ConcurrentDictionary<short, ProtocolSubscriberCollection>();
             this.userChannels = new ConcurrentDictionary<int, Channel>();
         }
@@ -62,7 +58,7 @@ namespace RRQMSocket
                 {
                     channel.id = channel.GetHashCode();
                     channel.parent = this.userChannels;
-                    this.SocketSend(-2, BitConverter.GetBytes(channel.GetHashCode()));
+                    this.SocketSend(-2, RRQMBitConverter.Default.GetBytes(channel.GetHashCode()));
                     return channel;
                 }
             }
@@ -80,7 +76,7 @@ namespace RRQMSocket
             {
                 channel.id = id;
                 channel.parent = this.userChannels;
-                this.SocketSend(-2, BitConverter.GetBytes(id));
+                this.SocketSend(-2, RRQMBitConverter.Default.GetBytes(id));
                 return channel;
             }
             throw new RRQMException("指定ID已存在");
@@ -161,7 +157,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="describe"></param>
-        protected static void AddUsedProtocol(short procotol, string describe)
+        protected void AddUsedProtocol(short procotol, string describe)
         {
             usedProtocol.Add(procotol, describe);
         }
@@ -223,7 +219,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected abstract void HandleProtocolData(short? procotol, ByteBlock byteBlock);
+        protected abstract void HandleProtocolData(short procotol, ByteBlock byteBlock);
 
         /// <summary>
         /// 密封方法
@@ -232,7 +228,7 @@ namespace RRQMSocket
         /// <param name="obj"></param>
         protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            short procotol = BitConverter.ToInt16(byteBlock.Buffer, 0);
+            short procotol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
             switch (procotol)
             {
                 case 0:
@@ -257,7 +253,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            HandleProtocolData(null, byteBlock);
+                            HandleProtocolData(-1, byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -269,7 +265,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            int id = BitConverter.ToInt32(byteBlock.Buffer, 2);
+                            int id = RRQMBitConverter.Default.ToInt32(byteBlock.Buffer, 2);
                             this.RequestCreateChannel(id);
                         }
                         catch (Exception ex)
@@ -298,8 +294,17 @@ namespace RRQMSocket
                         break;
                     }
                 case -7://心跳
-                    break;
-
+                    {
+                        try
+                        {
+                            this.OnPong();
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "在OnPong发送异常。", ex);
+                        }
+                        break;
+                    }
                 case -8://StreamStatusToThis
                     {
                         try
@@ -363,6 +368,14 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 收到服务器回应
+        /// </summary>
+        protected virtual void OnPong()
+        {
+
+        }
+
+        /// <summary>
         /// 流数据处理
         /// </summary>
         /// <param name="args"></param>
@@ -393,17 +406,18 @@ namespace RRQMSocket
 
             if (heartbeatFrequency > 0)
             {
-                heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency,(loop)=> 
-                {
-                    try
-                    {
-                        this.SocketSend(-7);
-                    }
-                    catch (Exception)
-                    {
-                        this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
-                    }
-                });
+                heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency, (loop) =>
+                 {
+                     try
+                     {
+                         this.SocketSend(-7);
+                     }
+                     catch (Exception)
+                     {
+                         this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
+                     }
+                 });
+                heartbeatLoopAction.RunAsync();
             }
         }
 
@@ -418,7 +432,7 @@ namespace RRQMSocket
             {
                 item.Dispose();
             }
-            if (this.heartbeatLoopAction!=null)
+            if (this.heartbeatLoopAction != null)
             {
                 this.heartbeatLoopAction.Dispose();
                 this.heartbeatLoopAction = null;
@@ -539,7 +553,7 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public override sealed void Send(IList<TransferByte> transferBytes)
         {
-            transferBytes.Insert(0, new TransferByte(BitConverter.GetBytes(-1)));
+            transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.Send(transferBytes);
         }
 
@@ -582,7 +596,7 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public override sealed void SendAsync(IList<TransferByte> transferBytes)
         {
-            transferBytes.Insert(0, new TransferByte(BitConverter.GetBytes(-1)));
+            transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.SendAsync(transferBytes);
         }
 
@@ -818,7 +832,7 @@ namespace RRQMSocket
         {
             TransferByte[] transferBytes = new TransferByte[]
             {
-            new TransferByte(BitConverter.GetBytes(procotol)),
+            new TransferByte(RRQMBitConverter.Default.GetBytes(procotol)),
             new TransferByte(dataBuffer,offset,length)
             };
             base.Send(transferBytes);
@@ -842,7 +856,7 @@ namespace RRQMSocket
         {
             TransferByte[] transferBytes = new TransferByte[]
              {
-            new TransferByte(BitConverter.GetBytes(procotol)),
+            new TransferByte(RRQMBitConverter.Default.GetBytes(procotol)),
             new TransferByte(dataBuffer,offset,length)
              };
             base.SendAsync(transferBytes);

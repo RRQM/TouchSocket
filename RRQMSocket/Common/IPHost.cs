@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
+using RRQMSocket.Common;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -24,15 +25,55 @@ namespace RRQMSocket
         /// <summary>
         /// 从字符串获取ip和port
         /// </summary>
-        public IPHost(string ipHost)
+        public IPHost(string host)
+        {
+            if (RRQMSocketTools.IsURL(host))
+            {
+                int start = host.IndexOf("://");
+                int end = host.LastIndexOf(":");
+                this.scheme = host.Substring(0, start);
+
+                string hostName;
+                string port;
+                if (end > start)
+                {
+                    hostName = host.Substring(start + 3, end - (start + 3));
+                    port = host.Substring(end + 1, host.Length - (end + 1));
+                }
+                else
+                {
+                    throw new RRQMException("必须包含端口信息。");
+                }
+                
+               
+                if (RRQMSocketTools.IsIPv4(hostName) && RRQMSocketTools.IsIPv4(hostName))
+                {
+                    Analysis(hostName, port);
+                }
+                else
+                {
+                    if (HostNameToIP(hostName,out IPAddress[] addresses))
+                    {
+                        Analysis(addresses[0].ToString(), port);
+                    }
+                }
+            }
+            else
+            {
+                int r = host.LastIndexOf(":");
+                string ip = host.Substring(0, r);
+                Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
+            }
+
+        }
+
+        private void Analysis(string ip, string port)
         {
             try
             {
-                int r = ipHost.LastIndexOf(":");
-                this.IP = ipHost.Substring(0, r);
-                this.Port = Convert.ToInt32(ipHost.Substring(r + 1, ipHost.Length - (r + 1)));
-                this.EndPoint = new IPEndPoint(IPAddress.Parse(this.IP), this.Port);
-                if (this.IP.Contains(":"))
+                int portNum = int.Parse(port);
+                IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(ip), portNum);
+                if (ip.Contains(":"))
                 {
                     this.AddressFamily = AddressFamily.InterNetworkV6;
                 }
@@ -40,12 +81,46 @@ namespace RRQMSocket
                 {
                     this.AddressFamily = AddressFamily.InterNetwork;
                 }
+                this.EndPoint = endPoint;
+                this.IP = ip;
+                this.Port = portNum;
+
             }
             catch
             {
                 throw new RRQMException("IPHost不合法");
             }
         }
+
+        private static bool HostNameToIP(string hostname, out IPAddress[] address)
+        {
+            try
+            {
+                IPHostEntry hostInfo = Dns.GetHostEntry(hostname);
+                address = hostInfo.AddressList;
+                if (address.Length > 0)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            catch
+            {
+                address = null;
+                return false;
+            }
+        }
+
+        private string scheme;
+        /// <summary>
+        /// 协议名
+        /// </summary>
+        public string Scheme
+        {
+            get { return scheme; }
+        }
+
 
         /// <summary>
         /// 从IPAddress和端口号
@@ -82,7 +157,7 @@ namespace RRQMSocket
         /// <summary>
         /// 终结点
         /// </summary>
-        public EndPoint EndPoint { get; private set; }
+        public IPEndPoint EndPoint { get; private set; }
 
         /// <summary>
         /// 返回对象字符串

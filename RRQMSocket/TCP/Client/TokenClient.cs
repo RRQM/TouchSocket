@@ -111,41 +111,49 @@ namespace RRQMSocket
                     }
                 });
 
-                switch (waitData.Wait(1000 * 10))
+                try
                 {
-                    case WaitDataStatus.SetRunning:
-                        {
-                            WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
-                            if (verifyResult.Status == 1)
+                    switch (waitData.Wait(1000 * 10))
+                    {
+                        case WaitDataStatus.SetRunning:
                             {
-                                this.id = verifyResult.ID;
-                                this.PreviewConnected(args);
-                                return this;
+                                WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
+                                if (verifyResult.Status == 1)
+                                {
+                                    this.id = verifyResult.ID;
+                                    this.PreviewConnected(args);
+                                    return this;
+                                }
+                                else if (verifyResult.Status == 3)
+                                {
+                                    this.MainSocket.Dispose();
+                                    throw new RRQMException("连接数量已达到服务器设定最大值");
+                                }
+                                else if (verifyResult.Status == 4)
+                                {
+                                    this.MainSocket.Dispose();
+                                    throw new RRQMException("服务器拒绝连接");
+                                }
+                                else
+                                {
+                                    this.MainSocket.Dispose();
+                                    throw new RRQMTokenVerifyException(verifyResult.Message);
+                                }
                             }
-                            else if (verifyResult.Status == 3)
-                            {
-                                this.MainSocket.Dispose();
-                                throw new RRQMException("连接数量已达到服务器设定最大值");
-                            }
-                            else if (verifyResult.Status == 4)
-                            {
-                                this.MainSocket.Dispose();
-                                throw new RRQMException("服务器拒绝连接");
-                            }
-                            else
-                            {
-                                this.MainSocket.Dispose();
-                                throw new RRQMTokenVerifyException(verifyResult.Message);
-                            }
-                        }
-                    case WaitDataStatus.Overtime:
-                        this.MainSocket.Dispose();
-                        throw new RRQMTimeoutException("连接超时");
-                    case WaitDataStatus.Canceled:
-                    case WaitDataStatus.Disposed:
-                    default:
-                        return this;
+                        case WaitDataStatus.Overtime:
+                            this.MainSocket.Dispose();
+                            throw new RRQMTimeoutException("连接超时");
+                        case WaitDataStatus.Canceled:
+                        case WaitDataStatus.Disposed:
+                        default:
+                            return this;
+                    }
                 }
+                finally
+                {
+                    this.WaitHandlePool.Destroy(waitData); 
+                }
+               
             }
         }
 

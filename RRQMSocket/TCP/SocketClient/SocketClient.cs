@@ -22,7 +22,7 @@ namespace RRQMSocket
     /// <summary>
     /// 服务器辅助类
     /// </summary>
-    public abstract class SocketClient : BaseSocket, ISocketClient, IHandleBuffer
+    public abstract class SocketClient : BaseSocket, ISocketClient
     {
         internal bool breakOut;
         internal string id;
@@ -38,6 +38,7 @@ namespace RRQMSocket
         private NetworkStream networkStream;
         private int port;
         private bool working;
+
         /// <summary>
         /// 连接
         /// </summary>
@@ -205,7 +206,7 @@ namespace RRQMSocket
         /// 处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
+        private void HandleBuffer(ByteBlock byteBlock)
         {
             try
             {
@@ -667,7 +668,7 @@ namespace RRQMSocket
                         break;
                     }
                     byteBlock.SetLength(r);
-                    ((IHandleBuffer)this).HandleBuffer(byteBlock);
+                    this.HandleBuffer(byteBlock);
                 }
                 catch
                 {
@@ -709,7 +710,7 @@ namespace RRQMSocket
 
                     ByteBlock byteBlock = (ByteBlock)e.UserToken;
                     byteBlock.SetLength(e.BytesTransferred);
-                    ((IHandleBuffer)this).HandleBuffer(byteBlock);
+                    this.HandleBuffer(byteBlock);
 
                     try
                     {

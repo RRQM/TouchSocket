@@ -46,7 +46,7 @@ namespace RRQMSocket
             base.OnConnecting(socketClient, e);
         }
 
-        private void OnReceive(SimpleProtocolSocketClient socketClient, short? procotol, ByteBlock byteBlock)
+        private void OnReceive(SimpleProtocolSocketClient socketClient, short procotol, ByteBlock byteBlock)
         {
             this.Received?.Invoke(socketClient, procotol, byteBlock);
         }
