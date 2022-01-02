@@ -24,6 +24,12 @@ namespace RRQMSocket.RPC.XmlRpc
     /// </summary>
     public class XmlRpcClient : TcpClient, IRpcClient
     {
+        private int maxPackageSize;
+
+        private WaitData<HttpResponse> singleWaitHandle;
+
+        private int timeout;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -38,47 +44,11 @@ namespace RRQMSocket.RPC.XmlRpc
         public override bool CanSetDataHandlingAdapter => false;
 
         /// <summary>
-        /// 禁用适配器赋值
-        /// </summary>
-        /// <param name="adapter"></param>
-        public override sealed void SetDataHandlingAdapter(DataHandlingAdapter adapter)
-        {
-            throw new RRQMException($"{nameof(XmlRpcSocketClient)}不允许设置适配器。");
-        }
-
-        private int maxPackageSize;
-
-        /// <summary>
         /// 最大数据包长度
         /// </summary>
         public int MaxPackageSize
         {
             get { return maxPackageSize; }
-        }
-
-        private WaitData<HttpResponse> singleWaitHandle;
-
-        private int timeout;
-
-        /// <summary>
-        /// 载入配置
-        /// </summary>
-        /// <param name="clientConfig"></param>
-        protected override void LoadConfig(TcpClientConfig clientConfig)
-        {
-            base.LoadConfig(clientConfig);
-            this.timeout = (int)clientConfig.GetValue(XmlRpcClientConfig.TimeoutProperty);
-            this.maxPackageSize = (int)clientConfig.GetValue(XmlRpcClientConfig.MaxPackageSizeProperty);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnConnecting(ClientConnectingEventArgs e)
-        {
-            base.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
-            base.OnConnecting(e);
         }
 
         /// <summary>
@@ -102,7 +72,7 @@ namespace RRQMSocket.RPC.XmlRpc
                 response = this.WaitSend(byteBlock);
                 if (response.StatusCode != "200")
                 {
-                    throw new RRQMException("调用错误");
+                    throw new RRQMException(response.StatusMessage);
                 }
                 XmlDocument xml = new XmlDocument();
                 xml.LoadXml(response.Body);
@@ -139,7 +109,7 @@ namespace RRQMSocket.RPC.XmlRpc
                 response = this.WaitSend(byteBlock);
                 if (response.StatusCode != "200")
                 {
-                    throw new RRQMException("调用错误");
+                    throw new RRQMException(response.StatusMessage);
                 }
             }
             finally
@@ -178,6 +148,15 @@ namespace RRQMSocket.RPC.XmlRpc
         }
 
         /// <summary>
+        /// 禁用适配器赋值
+        /// </summary>
+        /// <param name="adapter"></param>
+        public override sealed void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            throw new RRQMException($"{nameof(XmlRpcSocketClient)}不允许设置适配器。");
+        }
+      
+        /// <summary>
         /// 处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
@@ -187,6 +166,27 @@ namespace RRQMSocket.RPC.XmlRpc
             this.singleWaitHandle.Set((HttpResponse)obj);
         }
 
+        /// <summary>
+        /// 载入配置
+        /// </summary>
+        /// <param name="clientConfig"></param>
+        protected override void LoadConfig(TcpClientConfig clientConfig)
+        {
+            base.LoadConfig(clientConfig);
+            this.timeout = (int)clientConfig.GetValue(XmlRpcClientConfig.TimeoutProperty);
+            this.maxPackageSize = (int)clientConfig.GetValue(XmlRpcClientConfig.MaxPackageSizeProperty);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnConnecting(ClientConnectingEventArgs e)
+        {
+            base.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
+            base.OnConnecting(e);
+        }
+        
         private HttpResponse WaitSend(ByteBlock byteBlock)
         {
             lock (this)

@@ -26,6 +26,10 @@ namespace RRQMSocket.RPC.XmlRpc
     {
         private ActionMap actionMap;
 
+        private int maxPackageSize;
+
+        private string proxyToken;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -39,8 +43,6 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public ActionMap ActionMap
         { get { return this.actionMap; } }
-
-        private int maxPackageSize;
 
         /// <summary>
         /// 最大数据包长度
@@ -56,14 +58,43 @@ namespace RRQMSocket.RPC.XmlRpc
         public MethodMap MethodMap { get; private set; }
 
         /// <summary>
+        /// 代理令箭，当获取代理文件时需验证令箭
+        /// </summary>
+        public string ProxyToken
+        {
+            get { return proxyToken; }
+        }
+
+        /// <summary>
         /// 所属服务器
         /// </summary>
         public RPCService RPCService { get; private set; }
-
         /// <summary>
         /// 执行函数
         /// </summary>
         public Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        public void GetProxyInfo(GetProxyInfoArgs args)
+        {
+            if (args.RpcType.HasFlag(RpcType.XmlRpc))
+            {
+                if (args.ProxyToken != this.ProxyToken)
+                {
+                    args.ErrorMessage = "在验证RRQMRPC时令箭不正确。";
+                    args.IsSuccess = false;
+                    return;
+                }
+                foreach (var item in this.RPCService.ServerProviders)
+                {
+                    var serverCellCode = CodeGenerator.Generator<XmlRpcAttribute>(item.GetType());
+                    args.Codes.Add(serverCellCode);
+                }
+            }
+        }
 
         /// <summary>
         /// 结束调用
@@ -80,7 +111,15 @@ namespace RRQMSocket.RPC.XmlRpc
             httpResponse.ProtocolVersion = httpRequest.ProtocolVersion;
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
 
-            XmlDataTool.CreatResponse(httpResponse, methodInvoker.ReturnParameter);
+            if (methodInvoker.Status == InvokeStatus.Success)
+            {
+                XmlDataTool.CreatResponse(httpResponse, methodInvoker.ReturnParameter);
+            }
+            else
+            {
+                httpResponse.StatusCode = "201";
+                httpResponse.StatusMessage = methodInvoker.StatusMessage;
+            }
             try
             {
                 httpResponse.Build(byteBlock);
@@ -118,7 +157,7 @@ namespace RRQMSocket.RPC.XmlRpc
                         {
                             throw new RRQMRPCException("XmlRpc服务中不允许有out及ref关键字");
                         }
-                        string actionKey = string.IsNullOrEmpty(attribute.ActionKey) ? $"{methodInstance.Method.Name}" : attribute.ActionKey;
+                        string actionKey = CodeGenerator.GetMethodName<XmlRpcAttribute>(methodInstance);
 
                         this.actionMap.Add(actionKey, methodInstance);
                     }
@@ -133,16 +172,6 @@ namespace RRQMSocket.RPC.XmlRpc
         /// <param name="methodInstances"></param>
         public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
-        }
-
-        /// <summary>
-        /// 载入配置
-        /// </summary>
-        /// <param name="serviceConfig"></param>
-        protected override void LoadConfig(ServiceConfig serviceConfig)
-        {
-            base.LoadConfig(serviceConfig);
-            this.maxPackageSize = (int)serviceConfig.GetValue(XmlRpcParserConfig.MaxPackageSizeProperty);
         }
 
         /// <summary>
@@ -173,6 +202,17 @@ namespace RRQMSocket.RPC.XmlRpc
         }
 
         /// <summary>
+        /// 载入配置
+        /// </summary>
+        /// <param name="serviceConfig"></param>
+        protected override void LoadConfig(ServiceConfig serviceConfig)
+        {
+            this.maxPackageSize = (int)serviceConfig.GetValue(XmlRpcParserConfig.MaxPackageSizeProperty);
+            this.proxyToken = serviceConfig.GetValue<string>(XmlRpcParserConfig.ProxyTokenProperty);
+            base.LoadConfig(serviceConfig);
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
@@ -184,7 +224,7 @@ namespace RRQMSocket.RPC.XmlRpc
             base.OnConnecting(socketClient, e);
         }
 
-        private void OnReceived(IClient socketClient, ByteBlock byteBlock, object obj)
+        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             HttpRequest httpRequest = (HttpRequest)obj;
             MethodInvoker methodInvoker = new MethodInvoker();
@@ -224,11 +264,13 @@ namespace RRQMSocket.RPC.XmlRpc
                 else
                 {
                     methodInvoker.Status = InvokeStatus.UnEnable;
+                    methodInvoker.StatusMessage = "服务不可用";
                 }
             }
             else
             {
                 methodInvoker.Status = InvokeStatus.UnFound;
+                methodInvoker.StatusMessage = "没有找到这个服务。";
             }
 
             this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
