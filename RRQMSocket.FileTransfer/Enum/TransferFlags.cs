@@ -22,11 +22,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 无任何标识
         /// </summary>
-        None = 0,
+        None = 1,
 
         /// <summary>
         /// 断点续传
         /// </summary>
-        BreakpointResume = 1
+        BreakpointResume = 2
     }
 }
