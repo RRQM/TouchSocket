@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Helper;
 using System;
@@ -91,12 +92,12 @@ namespace RRQMSocket.WebSocket
             else if (length < 65536)
             {
                 payloadLength = 126;
-                extLen = ((ushort)length).ConvertToBytes(EndianType.Big);
+                extLen =RRQMBitConverter.BigEndian.GetBytes((ushort)length);
             }
             else
             {
                 payloadLength = 127;
-                extLen = ((ulong)length).ConvertToBytes(EndianType.Big);
+                extLen = RRQMBitConverter.BigEndian.GetBytes((ulong)length);
             }
 
             int header = dataFrame.FIN ? 1 : 0;
@@ -116,7 +117,7 @@ namespace RRQMSocket.WebSocket
 
             header = (header << 7) + payloadLength;
 
-            byteBlock.Write(((ushort)header).ConvertToBytes(EndianType.Big));
+            byteBlock.Write(RRQMBitConverter.BigEndian.GetBytes((ushort)header));
 
             if (payloadLength > 125)
             {
