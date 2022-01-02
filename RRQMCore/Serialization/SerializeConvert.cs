@@ -184,25 +184,23 @@ namespace RRQMCore.Serialization
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="obj"></param>
-        /// <param name="reserveAttributeName"></param>
         /// <returns></returns>
-        public static void RRQMBinarySerialize(ByteBlock stream, object obj, bool reserveAttributeName)
+        public static void RRQMBinarySerialize(ByteBlock stream, object obj)
         {
             RRQMBinaryFormatter bf = new RRQMBinaryFormatter();
-            bf.Serialize(stream, obj, reserveAttributeName);
+            bf.Serialize(stream, obj);
         }
 
         /// <summary>
         /// RRQM二进制序列化对象
         /// </summary>
         /// <param name="obj"></param>
-        /// <param name="reserveAttributeName"></param>
         /// <returns></returns>
-        public static byte[] RRQMBinarySerialize(object obj, bool reserveAttributeName)
+        public static byte[] RRQMBinarySerialize(object obj)
         {
-            using (ByteBlock byteBlock = new ByteBlock() { @using = true })
+            using (ByteBlock byteBlock = new ByteBlock())
             {
-                RRQMBinarySerialize(byteBlock, obj, reserveAttributeName);
+                RRQMBinarySerialize(byteBlock, obj);
                 return byteBlock.ToArray();
             }
         }

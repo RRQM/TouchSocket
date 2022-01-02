@@ -40,7 +40,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="capacity"></param>
         /// <param name="equalSize"></param>
-        public ByteBlock(int capacity = 1024 * 10, bool equalSize=false) : this(BytePool.GetByteCore(capacity, false))
+        public ByteBlock(int capacity = 1024 * 10, bool equalSize = false) : this(BytePool.GetByteCore(capacity, equalSize))
         {
         }
 
@@ -55,29 +55,17 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 清空数据
-        /// </summary>
-        public void Clear()
-        {
-            if (!this.@using)
-            {
-                throw new RRQMException("内存块已释放");
-            }
-            Array.Clear(this._buffer, 0, this._buffer.Length);
-        }
-
-        /// <summary>
         /// 扩容增长比，默认为1.5，
-        /// min：1
+        /// min：1.5
         /// </summary>
         public static float Ratio
         {
             get { return ratio; }
             set
             {
-                if (value < 1)
+                if (value < 1.5)
                 {
-                    value = 1;
+                    value = 1.5f;
                 }
                 ratio = value;
             }
@@ -169,6 +157,17 @@ namespace RRQMCore.ByteManager
             this._buffer = default;
         }
 
+        /// <summary>
+        /// 清空数据
+        /// </summary>
+        public void Clear()
+        {
+            if (!this.@using)
+            {
+                throw new RRQMException("内存块已释放");
+            }
+            Array.Clear(this._buffer, 0, this._buffer.Length);
+        }
         /// <summary>
         /// 回收资源
         /// </summary>
@@ -262,17 +261,17 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="size">新尺寸</param>
         /// <param name="retainedData">是否保留元数据</param>
-        public void SetCapacity(int size, bool retainedData=false)
+        public void SetCapacity(int size, bool retainedData = false)
         {
             if (!this.@using)
             {
                 throw new RRQMException("内存块已释放");
             }
             byte[] bytes = new byte[size];
-            
+
             if (retainedData)
             {
-                Array.Copy(this._buffer, 0, bytes, 0, this.Len);
+                Array.Copy(this._buffer, 0, bytes, 0, this._buffer.Length);
             }
             BytePool.Recycle(this._buffer);
             this._buffer = bytes;
@@ -352,11 +351,21 @@ namespace RRQMCore.ByteManager
             }
             if (this._buffer.Length - this.position < count)
             {
-                this.SetCapacity(this._buffer.Length + (int)((count + this.position - this._buffer.Length) * ratio),true);
+                int need = this._buffer.Length + count - ((int)(this._buffer.Length - this.position));
+                int lend = this._buffer.Length;
+                while (need > lend)
+                {
+                    lend = (int)(lend * ratio);
+                }
+                this.SetCapacity(lend, true);
             }
             Array.Copy(buffer, offset, _buffer, this.position, count);
             this.position += count;
             this.length += count;
+            if (this.length<this.position)
+            {
+                this.length = this.position;
+            }
         }
 
         /// <summary>
@@ -451,7 +460,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public int ReadInt32()
         {
-            int value = BitConverter.ToInt32(this._buffer, (int)this.position);
+            int value = RRQMBitConverter.Default.ToInt32(this._buffer, (int)this.position);
             this.position += 4;
             return value;
         }
@@ -462,7 +471,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(int value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -475,7 +484,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public short ReadInt16()
         {
-            short value = BitConverter.ToInt16(this._buffer, (int)this.position);
+            short value = RRQMBitConverter.Default.ToInt16(this._buffer, (int)this.position);
             this.position += 2;
             return value;
         }
@@ -486,7 +495,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(short value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -499,7 +508,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public long ReadInt64()
         {
-            long value = BitConverter.ToInt64(this._buffer, (int)this.position);
+            long value = RRQMBitConverter.Default.ToInt64(this._buffer, (int)this.position);
             this.position += 8;
             return value;
         }
@@ -510,7 +519,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(long value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -523,7 +532,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public bool ReadBoolean()
         {
-            bool value = BitConverter.ToBoolean(this._buffer, (int)this.position);
+            bool value = RRQMBitConverter.Default.ToBoolean(this._buffer, (int)this.position);
             this.position += 1;
             return value;
         }
@@ -534,7 +543,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(bool value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -627,7 +636,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public char ReadChar()
         {
-            char value = BitConverter.ToChar(this._buffer, (int)this.position);
+            char value = RRQMBitConverter.Default.ToChar(this._buffer, (int)this.position);
             this.position += 2;
             return value;
         }
@@ -638,7 +647,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(char value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -651,7 +660,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public double ReadDouble()
         {
-            double value = BitConverter.ToDouble(this._buffer, (int)this.position);
+            double value = RRQMBitConverter.Default.ToDouble(this._buffer, (int)this.position);
             this.position += 8;
             return value;
         }
@@ -662,7 +671,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(double value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -675,7 +684,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public double ReadFloat()
         {
-            float value = BitConverter.ToSingle(this._buffer, (int)this.position);
+            float value = RRQMBitConverter.Default.ToSingle(this._buffer, (int)this.position);
             this.position += 4;
             return value;
         }
@@ -686,7 +695,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(float value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -699,7 +708,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public ushort ReadUInt16()
         {
-            ushort value = BitConverter.ToUInt16(this._buffer, (int)this.position);
+            ushort value = RRQMBitConverter.Default.ToUInt16(this._buffer, (int)this.position);
             this.position += 2;
             return value;
         }
@@ -710,7 +719,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(ushort value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -723,7 +732,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public uint ReadUInt32()
         {
-            uint value = BitConverter.ToUInt32(this._buffer, (int)this.position);
+            uint value = RRQMBitConverter.Default.ToUInt32(this._buffer, (int)this.position);
             this.position += 4;
             return value;
         }
@@ -734,7 +743,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(uint value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -747,7 +756,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public ulong ReadUInt64()
         {
-            ulong value = BitConverter.ToUInt64(this._buffer, (int)this.position);
+            ulong value = RRQMBitConverter.Default.ToUInt64(this._buffer, (int)this.position);
             this.position += 8;
             return value;
         }
@@ -758,7 +767,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(ulong value)
         {
-            this.Write(BitConverter.GetBytes(value));
+            this.Write(RRQMBitConverter.Default.GetBytes(value));
             return this;
         }
 
@@ -771,7 +780,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public DateTime ReadDateTime()
         {
-            long value = BitConverter.ToInt64(this._buffer, (int)this.position);
+            long value = RRQMBitConverter.Default.ToInt64(this._buffer, (int)this.position);
             this.position += 8;
             return DateTime.FromBinary(value);
         }
@@ -782,7 +791,7 @@ namespace RRQMCore.ByteManager
         /// <param name="value"></param>
         public ByteBlock Write(DateTime value)
         {
-            this.Write(BitConverter.GetBytes(value.ToBinary()));
+            this.Write(RRQMBitConverter.Default.GetBytes(value.ToBinary()));
             return this;
         }
 
@@ -847,7 +856,7 @@ namespace RRQMCore.ByteManager
             {
                 case SerializationType.RRQMBinary:
                     {
-                        data = SerializeConvert.RRQMBinarySerialize(value, true);
+                        data = SerializeConvert.RRQMBinarySerialize(value);
                     }
                     break;
 

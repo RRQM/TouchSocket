@@ -15,7 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RRQMCore.Helper
+namespace RRQMCore
 {
     /// <summary>
     /// 大小端类型
