@@ -280,5 +280,14 @@ namespace RRQMSocket.RPC.WebApi
 
             this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
         }
+
+        /// <summary>
+        /// 获取代理，在WebApi中无意义。
+        /// </summary>
+        /// <param name="args"></param>
+        public void GetProxyInfo(GetProxyInfoArgs args)
+        {
+            
+        }
     }
 }

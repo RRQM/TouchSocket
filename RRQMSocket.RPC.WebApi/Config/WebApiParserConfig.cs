@@ -18,6 +18,7 @@ namespace RRQMSocket.RPC.WebApi
     /// </summary>
     public class WebApiParserConfig : TcpServiceConfig
     {
+
         /// <summary>
         /// 数据转化器
         /// </summary>
