@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Dependency;
 using RRQMCore.Helper;
@@ -170,7 +171,7 @@ namespace RRQMSocket.WebSocket
             }
             else if (payloadLength == 126)
             {
-                payloadLength = dataBuffer.ToUshort(++offset, EndianType.Big);
+                payloadLength = RRQMBitConverter.BigEndian.ToUInt16(dataBuffer, ++offset);
                 offset += 2;
             }
             else if (payloadLength == 127)
@@ -185,7 +186,7 @@ namespace RRQMSocket.WebSocket
                     offset = index;
                     return false;
                 }
-                payloadLength = (int)dataBuffer.ToUlong(++offset, EndianType.Big);
+                payloadLength = (int)RRQMBitConverter.BigEndian.ToUInt64(dataBuffer, ++offset);
                 offset += 8;
             }
 
