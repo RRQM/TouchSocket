@@ -17,20 +17,8 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// RPC方法标记属性类
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class RRQMRPCCallBackMethodAttribute : RPCAttribute
+    public sealed class RRQMRPCCallBackAttribute : RPCAttribute
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodToken">指定函数键</param>
-        public RRQMRPCCallBackMethodAttribute(int methodToken)
-        {
-            this.MethodToken = methodToken;
-        }
-
-        /// <summary>
-        /// 注册键
-        /// </summary>
-        public int MethodToken { get; private set; }
+        
     }
 }

@@ -35,37 +35,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             DependencyProperty.Register("SerializationSelector", typeof(SerializationSelector), typeof(TcpRpcParserConfig), new DefaultSerializationSelector());
 
         /// <summary>
-        /// 代理源文件命名空间
-        /// </summary>
-        public string NameSpace
-        {
-            get { return (string)GetValue(NameSpaceProperty); }
-            set { SetValue(NameSpaceProperty, value); }
-        }
-
-        /// <summary>
-        /// 代理源文件命名空间, 所需类型<see cref="string"/>
-        /// </summary>
-        public static readonly DependencyProperty NameSpaceProperty =
-            DependencyProperty.Register("NameSpace", typeof(string), typeof(TcpRpcParserConfig), null);
-
-        /// <summary>
-        /// RPC代理版本
-        /// </summary>
-        public Version RPCVersion
-        {
-            get { return (Version)GetValue(RPCVersionProperty); }
-            set { SetValue(RPCVersionProperty, value); }
-        }
-
-        /// <summary>
-        /// RPC代理版本, 所需类型<see cref="Version"/>
-        /// </summary>
-        public static readonly DependencyProperty RPCVersionProperty =
-            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(TcpRpcParserConfig), null);
-
-        /// <summary>
-        /// 代理令箭，当客户端获取代理文件时需验证令箭
+        /// 代理令箭，当获取代理文件时需验证令箭，
         /// </summary>
         public string ProxyToken
         {
@@ -74,7 +44,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 代理令箭，当客户端获取代理文件时需验证令箭, 所需类型<see cref="string"/>
+        /// 代理令箭，当获取代理文件时需验证令箭, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
             DependencyProperty.Register("ProxyToken", typeof(string), typeof(TcpRpcParserConfig), null);

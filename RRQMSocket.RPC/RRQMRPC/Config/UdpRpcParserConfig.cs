@@ -20,22 +20,10 @@ namespace RRQMSocket.RPC.RRQMRPC
     public class UdpRpcParserConfig : UdpSessionConfig
     {
         /// <summary>
-        /// 代理源文件命名空间, 所需类型<see cref="string"/>
-        /// </summary>
-        public static readonly DependencyProperty NameSpaceProperty =
-            DependencyProperty.Register("NameSpace", typeof(string), typeof(UdpRpcParserConfig), null);
-
-        /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
             DependencyProperty.Register("ProxyToken", typeof(string), typeof(UdpRpcParserConfig), null);
-
-        /// <summary>
-        /// RPC代理版本, 所需类型<see cref="Version"/>
-        /// </summary>
-        public static readonly DependencyProperty RPCVersionProperty =
-            DependencyProperty.Register("RPCVersion", typeof(Version), typeof(UdpRpcParserConfig), null);
 
         /// <summary>
         /// 序列化转换器, 所需类型<see cref="RRQMRPC.SerializationSelector"/>
@@ -44,30 +32,12 @@ namespace RRQMSocket.RPC.RRQMRPC
             DependencyProperty.Register("SerializationSelector", typeof(SerializationSelector), typeof(UdpRpcParserConfig), new DefaultSerializationSelector());
 
         /// <summary>
-        /// 代理源文件命名空间
-        /// </summary>
-        public string NameSpace
-        {
-            get { return (string)GetValue(NameSpaceProperty); }
-            set { SetValue(NameSpaceProperty, value); }
-        }
-
-        /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭
         /// </summary>
         public string ProxyToken
         {
             get { return (string)GetValue(ProxyTokenProperty); }
             set { SetValue(ProxyTokenProperty, value); }
-        }
-
-        /// <summary>
-        /// RPC代理版本
-        /// </summary>
-        public Version RPCVersion
-        {
-            get { return (Version)GetValue(RPCVersionProperty); }
-            set { SetValue(RPCVersionProperty, value); }
         }
 
         /// <summary>

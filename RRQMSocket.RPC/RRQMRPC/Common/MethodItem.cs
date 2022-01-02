@@ -20,21 +20,21 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 服务名称
         /// </summary>
-        public string ServerName { get; internal set; }
+        public string ServerName { get; set; }
 
         /// <summary>
         /// 方法唯一标识
         /// </summary>
-        public int MethodToken { get; internal set; }
+        public int MethodToken { get; set; }
 
         /// <summary>
         /// 方法名
         /// </summary>
-        public string Method { get; internal set; }
+        public string Method { get; set; }
 
         /// <summary>
         /// 是否含有Out或Ref
         /// </summary>
-        public bool IsOutOrRef { get; internal set; }
+        public bool IsOutOrRef { get; set; }
     }
 }

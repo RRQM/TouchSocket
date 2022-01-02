@@ -70,7 +70,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case SerializationType.RRQMBinary:
                     {
-                        return SerializeConvert.RRQMBinarySerialize(parameter, true);
+                        return SerializeConvert.RRQMBinarySerialize(parameter);
                     }
                 case SerializationType.Json:
                     {

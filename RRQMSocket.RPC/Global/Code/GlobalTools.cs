@@ -25,6 +25,40 @@ namespace RRQMSocket.RPC
     /// </summary>
     internal static class GlobalTools
     {
+        internal static bool MethodEquals(MethodInfo m1, MethodInfo m2)
+        {
+            if (m1.GetCustomAttributes().Count() != m2.GetCustomAttributes().Count())
+            {
+                return false;
+            }
+            if (m1.Name != m2.Name)
+            {
+                return false;
+            }
+            if (m1.ReturnType.FullName != m2.ReturnType.FullName)
+            {
+                return false;
+            }
+
+            ParameterInfo[] ps1 = m1.GetParameters();
+            ParameterInfo[] ps2 = m2.GetParameters();
+            if (ps1.Length != ps2.Length)
+            {
+                return false;
+            }
+            else
+            {
+                for (int i = 0; i < ps1.Length; i++)
+                {
+                    if (ps1[i].ParameterType.FullName != ps2[i].ParameterType.FullName)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         private static int nullReturnNullParameters = 100000000;
         private static int nullReturnExistParameters = 300000000;
         private static int ExistReturnNullParameters = 500000000;
@@ -55,13 +89,17 @@ namespace RRQMSocket.RPC
                     methodInstance.Parameters = method.GetParameters();
                     foreach (var item in attributes)
                     {
+                        if (item.Async)
+                        {
+                            methodInstance.AsyncType |=  AsyncType.Async;
+                        }
                         methodInstance.MethodFlags |= item.MethodFlags;
                     }
                     if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
-                        if (methodInstance.Parameters.Length == 0 || !typeof(IServerCallContext).IsAssignableFrom(methodInstance.Parameters[0].ParameterType))
+                        if (methodInstance.Parameters.Length == 0 || !typeof(ICallContext).IsAssignableFrom(methodInstance.Parameters[0].ParameterType))
                         {
-                            throw new RRQMRPCException($"函数：{method}，标识包含{MethodFlags.IncludeCallContext}时，必须包含{nameof(IServerCallContext)}或其派生类参数，且为第一参数。");
+                            throw new RRQMRPCException($"函数：{method}，标识包含{MethodFlags.IncludeCallContext}时，必须包含{nameof(ICallContext)}或其派生类参数，且为第一参数。");
                         }
                     }
                     List<string> names = new List<string>();
@@ -72,7 +110,7 @@ namespace RRQMSocket.RPC
                     methodInstance.ParameterNames = names.ToArray();
                     if (typeof(Task).IsAssignableFrom(method.ReturnType))
                     {
-                        methodInstance.Async = true;
+                        methodInstance.AsyncType = methodInstance.AsyncType | AsyncType.Task;
                     }
 
                     ParameterInfo[] parameters = method.GetParameters();
@@ -105,7 +143,7 @@ namespace RRQMSocket.RPC
                     }
                     else
                     {
-                        if (methodInstance.Async)
+                        if (methodInstance.AsyncType.HasFlag(AsyncType.Task))
                         {
                             Type[] ts = method.ReturnType.GetGenericArguments();
                             if (ts.Length == 1)

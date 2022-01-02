@@ -13,7 +13,7 @@
 using RRQMCore.Serialization;
 using System.Threading;
 
-namespace RRQMSocket.RPC.RRQMRPC
+namespace RRQMSocket.RPC
 {
     /// <summary>
     /// RPC调用设置

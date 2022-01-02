@@ -23,12 +23,12 @@ namespace RRQMSocket.RPC.RRQMRPC
     {
         internal string id;
         internal int methodToken;
+        internal string methodName;
         internal List<byte[]> parametersBytes;
         internal byte[] returnParameterBytes;
         private byte feedback;
         private byte invokeType;
         private byte serializationType;
-
         /// <summary>
         /// 反馈类型
         /// </summary>
@@ -62,11 +62,19 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// 函数名
+        /// </summary>
+        public string MethodName
+        {
+            get { return methodName; }
+        }
+
+        /// <summary>
         /// 参数数据
         /// </summary>
-        public byte[][] ParametersBytes
+        public List<byte[]> ParametersBytes
         {
-            get { return parametersBytes.ToArray(); }
+            get { return parametersBytes; }
         }
 
         /// <summary>
@@ -85,7 +93,12 @@ namespace RRQMSocket.RPC.RRQMRPC
             get { return (SerializationType)serializationType; }
         }
 
-        internal static RpcContext Deserialize(ByteBlock byteBlock)
+        /// <summary>
+        /// 解包
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <returns></returns>
+        public static RpcContext Deserialize(ByteBlock byteBlock)
         {
             RpcContext context = new RpcContext();
             context.sign = byteBlock.ReadInt32();
@@ -94,6 +107,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             context.feedback = byteBlock.ReadByte();
             context.serializationType = byteBlock.ReadByte();
             context.methodToken = byteBlock.ReadInt32();
+            context.methodName = byteBlock.ReadString();
             context.id = byteBlock.ReadString();
             context.message = byteBlock.ReadString();
             context.returnParameterBytes = byteBlock.ReadBytesPackage();
@@ -114,7 +128,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.serializationType = (byte)invokeOption.SerializationType;
         }
 
-        internal void Serialize(ByteBlock byteBlock)
+        /// <summary>
+        /// 编包
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public void Serialize(ByteBlock byteBlock)
         {
             byteBlock.Write(this.sign);
             byteBlock.Write(this.status);
@@ -122,6 +140,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             byteBlock.Write(this.feedback);
             byteBlock.Write(this.serializationType);
             byteBlock.Write(this.methodToken);
+            byteBlock.Write(this.methodName);
             byteBlock.Write(this.id);
             byteBlock.Write(this.message);
             byteBlock.WriteBytesPackage(this.returnParameterBytes);

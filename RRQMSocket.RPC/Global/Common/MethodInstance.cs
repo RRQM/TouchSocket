@@ -74,7 +74,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 是否异步执行
         /// </summary>
-        public bool Async { get; internal set; }
+        public AsyncType AsyncType { get; internal set; }
 
         /// <summary>
         /// 是否有引用类型

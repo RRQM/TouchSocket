@@ -4,14 +4,21 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>6.2.1</Version>
+    <Version>6.3.0</Version>
 	  <LangVersion>9.0</LangVersion>
     <Company>若汝棋茗</Company>
     <Copyright>Copyright © 2021 若汝棋茗</Copyright>
     <Description>介绍：这是一个高性能的RPC微服务框架，支持异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
 
 更新说明：
-修复：EventBus相关Bug（该仅企业版）。
+重构RPC，优化调用框架。
+修改：发现服务时，由配置文件的ProxyToken转换为直接传参ProxyToken。
+修改：代理文件的生成不再由RRQMRPC提供，转而由RpcService直接提供。提供的代理也直接支持JsonRpc和XmlRpc。
+修改：代理文件的生成，不再一次性生成，由系统提供的方法转义，可供更加细微的筛选服务。
+修改：反向调用时，不再让TcpRpcClient注册服务，而是由RpcService注册，同时，反向RPC也能使用代理生成、服务筛选、out和ref关键字、调用中断取消、获取调用上下文等。
+修改：UdpRpc解析器和客户端均改名为UdpRpc。
+优化：在服务定义时，可通过Async属性标识本服务异步执行，但同步返回，因此，这使得反向调用变得简单，不再使用Task。
+修复：ID调用的异常bug。
 
 Demo：https://gitee.com/RRQM_OS/RRQMBox
 API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
@@ -83,6 +90,6 @@ API：https://gitee.com/RRQM_OS/RRQM/wikis/pages</Description>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="RRQMSocket" Version="6.2.1" />
+	  <PackageReference Include="RRQMSocket" Version="6.3.0" />
 	</ItemGroup>
 </Project>

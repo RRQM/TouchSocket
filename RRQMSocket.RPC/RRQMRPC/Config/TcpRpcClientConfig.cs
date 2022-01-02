@@ -19,7 +19,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     public class TcpRpcClientConfig : ProtocolClientConfig
     {
         /// <summary>
-        /// 代理文件令箭
+        /// 反向代理文件令箭
         /// </summary>
         public string ProxyToken
         {
@@ -28,7 +28,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 代理文件令箭, 所需类型<see cref="string"/>
+        /// 反向代理文件令箭, 所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ProxyTokenProperty =
             DependencyProperty.Register("ProxyToken", typeof(string), typeof(TcpRpcClientConfig), null);

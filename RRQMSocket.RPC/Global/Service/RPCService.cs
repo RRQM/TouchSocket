@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
+using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using System;
 using System.Collections.Concurrent;
@@ -25,6 +26,8 @@ namespace RRQMSocket.RPC
     /// </summary>
     public class RPCService : IDisposable
     {
+        private SimpleProtocolService service;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -34,6 +37,16 @@ namespace RRQMSocket.RPC
             this.RPCParsers = new RPCParserCollection();
             this.MethodMap = new MethodMap();
         }
+
+        /// <summary>
+        /// 版本号
+        /// </summary>
+        public string Version { get; set; }
+
+        /// <summary>
+        /// 命名空间
+        /// </summary>
+        public string NameSpace { get; set; }
 
         /// <summary>
         /// 获取函数映射图实例
@@ -103,11 +116,47 @@ namespace RRQMSocket.RPC
         /// </summary>
         public void Dispose()
         {
+            this.StopShareProxy();
             foreach (var item in this.RPCParsers)
             {
                 item.Dispose();
             }
             this.RPCParsers = null;
+        }
+
+        /// <summary>
+        /// 从远程获取代理
+        /// </summary>
+        /// <param name="iPHost"></param>
+        /// <param name="rpcType"></param>
+        /// <param name="proxyToken"></param>
+        /// <returns></returns>
+        public RpcProxyInfo GetProxyInfo(IPHost iPHost, RpcType rpcType, string proxyToken)
+        {
+            SimpleProtocolClient client = new SimpleProtocolClient();
+            client.Connecting += (client, e) =>
+            {
+                e.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            };
+            ByteBlock byteBlock = new ByteBlock();
+            try
+            {
+                ProtocolClientConfig config = new ProtocolClientConfig();
+                config.RemoteIPHost = iPHost;
+                client.Setup(config).Connect();
+                WaitSenderSubscriber subscriber = new WaitSenderSubscriber(100) {  Timeout=3*1000};
+                client.AddProtocolSubscriber(subscriber);
+
+                byteBlock.Write((int)rpcType);
+                byteBlock.Write(proxyToken);
+                byte[] data = subscriber.SendThenReturn(byteBlock);
+                return RRQMCore.Serialization.SerializeConvert.RRQMBinaryDeserialize<RpcProxyInfo>(data, 0);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+                client.Dispose();
+            }
         }
 
         /// <summary>
@@ -209,6 +258,38 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
+        /// 分享代理。
+        /// </summary>
+        /// <param name="iPHost"></param>
+        public void ShareProxy(IPHost iPHost)
+        {
+            if (this.service != null)
+            {
+                return;
+            }
+            this.service = new SimpleProtocolService();
+            this.service.Connecting += (client,e) =>
+            {
+                e.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            };
+            this.service.Received += Service_Received;
+            this.service.Setup(new ProtocolServiceConfig() { ListenIPHosts = new IPHost[] { iPHost } });
+            this.service.Start();
+        }
+
+        /// <summary>
+        /// 停止分享代理。
+        /// </summary>
+        public void StopShareProxy()
+        {
+            if (this.service != null)
+            {
+                this.service.Dispose();
+                this.service = null;
+            }
+        }
+
+        /// <summary>
         /// 获取解析器
         /// </summary>
         /// <param name="parserKey"></param>
@@ -263,39 +344,15 @@ namespace RRQMSocket.RPC
             return this.UnregisterServer(typeof(T));
         }
 
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idInvokeType = new ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>>();
-
-        private IServerProvider GetServerProvider(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        private void ExecuteMethod(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            switch (methodInvoker.InvokeType)
-            {
-                default:
-                case InvokeType.GlobalInstance:
-                    {
-                        return methodInstance.Provider;
-                    }
-                case InvokeType.CustomInstance:
-                    {
-                        if (methodInvoker.CustomServerProvider == null)
-                        {
-                            throw new RRQMRPCException($"调用类型为{InvokeType.CustomInstance}时，{methodInvoker.CustomServerProvider}不能为空。");
-                        }
-                        return methodInvoker.CustomServerProvider;
-                    }
-                case InvokeType.NewInstance:
-                    return (IServerProvider)Activator.CreateInstance(methodInstance.Provider.GetType());
-            }
-        }
-
-        private void ExecuteMethod(bool isAsync, IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
-        {
-            if (methodInvoker.Status == InvokeStatus.Ready && methodInstance != null)
+            if (methodInvoker.Status == InvokeStatus.Ready)
             {
                 IServerProvider serverProvider = this.GetServerProvider(methodInvoker, methodInstance);
                 try
                 {
                     serverProvider.RPCEnter(parser, methodInvoker, methodInstance);
-                    if (isAsync)
+                    if (methodInstance.AsyncType.HasFlag(AsyncType.Task))
                     {
                         dynamic task = methodInstance.Method.Invoke(serverProvider, methodInvoker.Parameters);
                         task.Wait();
@@ -340,28 +397,91 @@ namespace RRQMSocket.RPC
             parser.OnEndInvoke(methodInvoker, methodInstance);
         }
 
+        private IServerProvider GetServerProvider(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        {
+            switch (methodInvoker.InvokeType)
+            {
+                default:
+                case InvokeType.GlobalInstance:
+                    {
+                        return methodInstance.Provider;
+                    }
+                case InvokeType.CustomInstance:
+                    {
+                        if (methodInvoker.CustomServerProvider == null)
+                        {
+                            throw new RRQMRPCException($"调用类型为{InvokeType.CustomInstance}时，{methodInvoker.CustomServerProvider}不能为空。");
+                        }
+                        return methodInvoker.CustomServerProvider;
+                    }
+                case InvokeType.NewInstance:
+                    return (IServerProvider)Activator.CreateInstance(methodInstance.Provider.GetType());
+            }
+        }
+
+        /// <summary>
+        /// 从本地获取代理
+        /// </summary>
+        /// <param name="rpcType"></param>
+        /// <param name="proxyToken"></param>
+        /// <returns></returns>
+        public RpcProxyInfo GetProxyInfo(RpcType rpcType, string proxyToken)
+        {
+            GetProxyInfoArgs args = new GetProxyInfoArgs(proxyToken, rpcType)
+            {
+                IsSuccess = true,
+            };
+            if (this.RPCParsers.Count == 0)
+            {
+                return new RpcProxyInfo() { IsSuccess = false, ErrorMessage = "没有可用解析器提供代理。" };
+            }
+            foreach (var item in this.RPCParsers)
+            {
+                item.GetProxyInfo(args);
+                if (!args.IsSuccess)
+                {
+                    return new RpcProxyInfo()
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = args.ErrorMessage,
+                        Namespace = this.NameSpace,
+                        Version = this.Version
+                    };
+                }
+            }
+            return new RpcProxyInfo() { IsSuccess = true,Version=this.Version, Namespace=this.NameSpace, Codes = args.Codes.ToArray() };
+        }
+
         private void PreviewExecuteMethod(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            if (methodInstance != null && methodInstance.Async)
+            if (methodInvoker.Status == InvokeStatus.Ready && methodInstance.AsyncType.HasFlag(AsyncType.Async))
             {
                 Task.Run(() =>
                 {
-                    ExecuteMethod(true, parser, methodInvoker, methodInstance);
+                    ExecuteMethod(parser, methodInvoker, methodInstance);
                 });
             }
             else
             {
-                if (methodInvoker.AsyncRun)
-                {
-                    Task.Run(() =>
+                ExecuteMethod(parser, methodInvoker, methodInstance);
+            }
+        }
+
+        private void Service_Received(SimpleProtocolSocketClient socketClient, short protocol, ByteBlock byteBlock)
+        {
+            switch (protocol)
+            {
+                case 100:
                     {
-                        ExecuteMethod(false, parser, methodInvoker, methodInstance);
-                    });
-                }
-                else
-                {
-                    ExecuteMethod(false, parser, methodInvoker, methodInstance);
-                }
+                        byteBlock.Pos = 2;
+                        RpcType rpcType = (RpcType)byteBlock.ReadInt32();
+                        string token = byteBlock.ReadString();
+                        RpcProxyInfo rpcProxyInfo = this.GetProxyInfo(rpcType, token);
+                        socketClient.Send(100, RRQMCore.Serialization.SerializeConvert.RRQMBinarySerialize(rpcProxyInfo));
+                        break;
+                    }
+                default:
+                    break;
             }
         }
     }

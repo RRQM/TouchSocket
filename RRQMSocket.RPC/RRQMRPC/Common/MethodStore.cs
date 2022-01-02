@@ -69,9 +69,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 获取所有
         /// </summary>
         /// <returns></returns>
-        public List<MethodItem> GetAllMethodItem()
+        public MethodItem[] GetAllMethodItem()
         {
-            return this.tokenToMethodItem.Values.ToList();
+            return this.tokenToMethodItem.Values.ToArray();
         }
 
         /// <summary>

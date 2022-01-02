@@ -39,10 +39,6 @@ namespace RRQMSocket.RPC
                     throw new RRQMRPCException("相同类型的服务已添加");
                 }
             }
-            if (ServerProvider.DefaultAssembly == null)
-            {
-                ServerProvider.DefaultAssembly = serverProvider.GetType().Assembly;
-            }
             servers.Add(serverProvider);
         }
 

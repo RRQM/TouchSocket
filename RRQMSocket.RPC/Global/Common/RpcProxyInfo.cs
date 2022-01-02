@@ -9,27 +9,39 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Run;
+using System.Collections.Generic;
 
-namespace RRQMSocket.RPC.RRQMRPC
+namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 反馈类型
+    /// RPC代理文件程序
     /// </summary>
-    public enum FeedbackType : byte
+    public class RpcProxyInfo
     {
         /// <summary>
-        /// 仅发送
+        /// 是否成功
         /// </summary>
-        OnlySend,
+        public bool IsSuccess { get; set; }
 
         /// <summary>
-        /// 等待，直到发送抵达
+        /// 错误消息
         /// </summary>
-        WaitSend,
+        public string ErrorMessage { get; set; }
 
         /// <summary>
-        /// 等待，直到调用完成
+        /// 版本号
         /// </summary>
-        WaitInvoke
+        public string Version { get; set; }
+
+        /// <summary>
+        /// 命名空间
+        /// </summary>
+        public string Namespace { get; set; }
+
+        /// <summary>
+        /// 代理源代码
+        /// </summary>
+        public ServerCellCode[] Codes { get; set; }
     }
 }

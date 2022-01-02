@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
+using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
@@ -24,23 +25,21 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC服务器辅助类
     /// </summary>
-    public class RpcSocketClient : ProtocolSocketClient, ICaller
+    public class RpcSocketClient : ProtocolSocketClient, ICaller, IRpcClient, IIDInvoke
     {
         internal Action<MethodInvoker, MethodInstance> executeMethod;
-
-        internal Func<RpcSocketClient, RpcContext, RpcContext> IDAction;
-
+        internal Action<RpcContext> IDAction;
         internal MethodMap methodMap;
-
         internal SerializationSelector serializationSelector;
-
-        private ConcurrentDictionary<int, RpcServerCallContext> contextDic;
-
+        private ConcurrentDictionary<int, RpcCallContext> contextDic;
         private ConcurrentDictionary<Type, IServerProvider> serverProviderDic;
 
-        static RpcSocketClient()
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public RpcSocketClient()
         {
-            AddUsedProtocol(100, "请求RPC代理文件");
+            AddUsedProtocol(100, "请求RPC代理文件(弃用)");
             AddUsedProtocol(101, "RPC调用");
             AddUsedProtocol(102, "获取注册服务");
             AddUsedProtocol(103, "ID调用客户端");
@@ -51,19 +50,15 @@ namespace RRQMSocket.RPC.RRQMRPC
             AddUsedProtocol(108, "订阅事件");
             AddUsedProtocol(109, "请求触发事件");
             AddUsedProtocol(110, "分发触发");
+            AddUsedProtocol(111, "获取所有事件");
+            AddUsedProtocol(112, "请求取消订阅");
+            AddUsedProtocol(113, "取消RPC回调");
 
-            for (short i = 111; i < 200; i++)
+            for (short i = 114; i < 200; i++)
             {
                 AddUsedProtocol(i, "保留协议");
             }
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public RpcSocketClient()
-        {
-            this.contextDic = new ConcurrentDictionary<int, RpcServerCallContext>();
+            this.contextDic = new ConcurrentDictionary<int, RpcCallContext>();
             this.serverProviderDic = new ConcurrentDictionary<Type, IServerProvider>();
         }
 
@@ -81,367 +76,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 收到流数据
         /// </summary>
         public event RRQMStreamStatusEventHandler<RpcSocketClient> ReceivedStream;
-
-        /// <summary>
-        /// 回调RPC
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="methodToken"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public T CallBack<T>(int methodToken, InvokeOption invokeOption = null, params object[] parameters)
-        {
-            RpcContext context = new RpcContext();
-            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
-            context.methodToken = methodToken;
-            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-
-            try
-            {
-                context.LoadInvokeOption(invokeOption);
-                List<byte[]> datas = new List<byte[]>();
-                foreach (object parameter in parameters)
-                {
-                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
-                }
-                context.parametersBytes = datas;
-                context.Serialize(byteBlock);
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
-                        }
-                        break;
-
-                    case FeedbackType.WaitSend:
-                    case FeedbackType.WaitInvoke:
-                        {
-                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                    {
-                        this.WaitHandlePool.Destroy(waitData);
-                        return default;
-                    }
-                case FeedbackType.WaitSend:
-                    {
-                        switch (waitData.Wait(invokeOption.Timeout))
-                        {
-                            case WaitDataStatus.SetRunning:
-                                {
-                                    this.WaitHandlePool.Destroy(waitData);
-                                }
-                                break;
-
-                            case WaitDataStatus.Overtime:
-                                {
-                                    throw new RRQMTimeoutException("等待结果超时");
-                                }
-                        }
-                        return default;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        switch (waitData.Wait(invokeOption.Timeout))
-                        {
-                            case WaitDataStatus.SetRunning:
-                                {
-                                    RpcContext resultContext = (RpcContext)waitData.WaitResult;
-                                    this.WaitHandlePool.Destroy(waitData);
-                                    if (resultContext.Status == 1)
-                                    {
-                                        return (T)this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
-                                    }
-                                    else if (resultContext.Status == 2)
-                                    {
-                                        throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
-                                    }
-                                    else if (resultContext.Status == 3)
-                                    {
-                                        throw new RRQMRPCException("该方法已被禁用");
-                                    }
-                                    else if (resultContext.Status == 4)
-                                    {
-                                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
-                                    }
-                                    else if (resultContext.Status == 5)
-                                    {
-                                        throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
-                                    }
-                                    else if (resultContext.Status == 6)
-                                    {
-                                        throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
-                                    }
-                                    break;
-                                }
-                            case WaitDataStatus.Overtime:
-                                {
-                                    throw new RRQMTimeoutException("等待结果超时");
-                                }
-                        }
-                        return default;
-                    }
-                default:
-                    return default;
-            }
-        }
-
-        /// <summary>
-        /// 回调RPC
-        /// </summary>
-        /// <param name="methodToken"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        public void CallBack(int methodToken, InvokeOption invokeOption = null, params object[] parameters)
-        {
-            RpcContext context = new RpcContext();
-            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
-            context.methodToken = methodToken;
-            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-            try
-            {
-                context.LoadInvokeOption(invokeOption);
-                List<byte[]> datas = new List<byte[]>();
-                foreach (object parameter in parameters)
-                {
-                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
-                }
-                context.parametersBytes = datas;
-                context.Serialize(byteBlock);
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
-                        }
-                        break;
-
-                    case FeedbackType.WaitSend:
-                    case FeedbackType.WaitInvoke:
-                        {
-                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                    {
-                        this.WaitHandlePool.Destroy(waitData);
-                        return;
-                    }
-                case FeedbackType.WaitSend:
-                    {
-                        switch (waitData.Wait(invokeOption.Timeout))
-                        {
-                            case WaitDataStatus.SetRunning:
-                                {
-                                    this.WaitHandlePool.Destroy(waitData);
-                                }
-                                break;
-
-                            case WaitDataStatus.Overtime:
-                                {
-                                    throw new RRQMTimeoutException("等待结果超时");
-                                }
-                        }
-                        return;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        switch (waitData.Wait(invokeOption.Timeout))
-                        {
-                            case WaitDataStatus.SetRunning:
-                                {
-                                    RpcContext resultContext = (RpcContext)waitData.WaitResult;
-                                    this.WaitHandlePool.Destroy(waitData);
-                                    if (resultContext.Status == 1)
-                                    {
-                                        return;
-                                    }
-                                    else if (resultContext.Status == 2)
-                                    {
-                                        throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
-                                    }
-                                    else if (resultContext.Status == 3)
-                                    {
-                                        throw new RRQMRPCException("该方法已被禁用");
-                                    }
-                                    else if (resultContext.Status == 4)
-                                    {
-                                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
-                                    }
-                                    else if (resultContext.Status == 5)
-                                    {
-                                        throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
-                                    }
-                                    else if (resultContext.Status == 6)
-                                    {
-                                        throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
-                                    }
-                                    break;
-                                }
-                            case WaitDataStatus.Overtime:
-                                {
-                                    throw new RRQMTimeoutException("等待结果超时");
-                                }
-                        }
-                        return;
-                    }
-                default:
-                    return;
-            }
-        }
-
-        /// <summary>
-        /// 回调RPC
-        /// </summary>
-        /// <param name="invokeContext"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public byte[] CallBack(RpcContext invokeContext, int timeout)
-        {
-            RpcContext context = new RpcContext();
-            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
-            context.methodToken = invokeContext.methodToken;
-            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-
-            InvokeOption invokeOption = new InvokeOption();
-            try
-            {
-                invokeOption.FeedbackType = (FeedbackType)invokeContext.Feedback;
-                invokeOption.SerializationType = (SerializationType)invokeContext.SerializationType;
-                context.LoadInvokeOption(invokeOption);
-                context.parametersBytes = invokeContext.parametersBytes;
-                context.Serialize(byteBlock);
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
-                        }
-                        break;
-
-                    case FeedbackType.WaitSend:
-                    case FeedbackType.WaitInvoke:
-                        {
-                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                    {
-                        this.WaitHandlePool.Destroy(waitData);
-                        return default;
-                    }
-                case FeedbackType.WaitSend:
-                    {
-                        switch (waitData.Wait(invokeOption.Timeout))
-                        {
-                            case WaitDataStatus.SetRunning:
-                                {
-                                    this.WaitHandlePool.Destroy(waitData);
-                                }
-                                break;
-
-                            case WaitDataStatus.Overtime:
-                                {
-                                    throw new RRQMTimeoutException("等待结果超时");
-                                }
-                        }
-                        return default;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        switch (waitData.Wait(invokeOption.Timeout))
-                        {
-                            case WaitDataStatus.SetRunning:
-                                {
-                                    RpcContext resultContext = (RpcContext)waitData.WaitResult;
-                                    this.WaitHandlePool.Destroy(waitData);
-                                    if (resultContext.Status == 1)
-                                    {
-                                        return resultContext.ReturnParameterBytes;
-                                    }
-                                    else if (resultContext.Status == 2)
-                                    {
-                                        throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
-                                    }
-                                    else if (resultContext.Status == 3)
-                                    {
-                                        throw new RRQMRPCException("该方法已被禁用");
-                                    }
-                                    else if (resultContext.Status == 4)
-                                    {
-                                        throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
-                                    }
-                                    else if (resultContext.Status == 5)
-                                    {
-                                        throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
-                                    }
-                                    else if (resultContext.Status == 6)
-                                    {
-                                        throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
-                                    }
-                                    break;
-                                }
-                            case WaitDataStatus.Overtime:
-                                {
-                                    throw new RRQMTimeoutException("等待结果超时");
-                                }
-                        }
-                        return default;
-                    }
-                default:
-                    return default;
-            }
-        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -490,7 +124,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected override sealed void HandleProtocolData(short? procotol, ByteBlock byteBlock)
+        protected override sealed void HandleProtocolData(short procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = (int)byteBlock.Position;
@@ -498,15 +132,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case 100:/*100，请求RPC文件*/
                     {
-                        try
-                        {
-                            string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
-                            this.P100_RequestProxy(proxyToken);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
-                        }
                         break;
                     }
                 case 101:/*函数调用*/
@@ -527,8 +152,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            string proxyToken = Encoding.UTF8.GetString(buffer, 2, r - 2);
-                            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRpcParser)this.Service).GetRegisteredMethodItems(proxyToken, this), true);
+                            DiscoveryServiceWaitResult waitResult = RRQMCore.Serialization.SerializeConvert.RRQMBinaryDeserialize<DiscoveryServiceWaitResult>(buffer, 2);
+                            waitResult.Methods = ((IRRQMRpcParser)this.Service).GetRegisteredMethodItems(waitResult.PT, this);
+                            byte[] data = SerializeConvert.RRQMBinarySerialize(waitResult);
                             this.InternalSend(102, data, 0, data.Length);
                         }
                         catch (Exception e)
@@ -539,29 +165,22 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 case 103:/*ID调用客户端*/
                     {
+
                         byteBlock.Pos = 2;
                         RpcContext content = RpcContext.Deserialize(byteBlock);
 
-                        RRQMCore.Run.EasyAction.TaskRun(content, (con) =>
+                        EasyAction.TaskRun(content, (con) =>
                          {
+                             ByteBlock retuenByteBlock = BytePool.GetByteBlock(this.BufferLength);
                              try
                              {
-                                 con = this.IDAction(this, con);
-
-                                 ByteBlock retuenByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                                 try
-                                 {
-                                     con.Serialize(retuenByteBlock);
-                                     this.InternalSend(103, retuenByteBlock.Buffer, 0, (int)retuenByteBlock.Length);
-                                 }
-                                 finally
-                                 {
-                                     byteBlock.Dispose();
-                                 }
+                                 this.IDAction.Invoke(con);
+                                 con.Serialize(retuenByteBlock);
+                                 this.InternalSend(103, retuenByteBlock.Buffer, 0, retuenByteBlock.Len);
                              }
-                             catch (Exception e)
+                             finally
                              {
-                                 Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
+                                 retuenByteBlock.Dispose();
                              }
                          });
                         break;
@@ -584,8 +203,8 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            int sign = BitConverter.ToInt32(byteBlock.Buffer, 2);
-                            if (this.contextDic.TryGetValue(sign, out RpcServerCallContext context))
+                            int sign = RRQMBitConverter.Default.ToInt32(byteBlock.Buffer, 2);
+                            if (this.contextDic.TryGetValue(sign, out RpcCallContext context))
                             {
                                 context.tokenSource.Cancel();
                             }
@@ -594,6 +213,32 @@ namespace RRQMSocket.RPC.RRQMRPC
                         {
                             Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
                         }
+                        break;
+                    }
+                case 106:/*发布事件*/
+                    {
+                        break;
+                    }
+                case 107:/*取消发布事件*/
+                    {
+                        break;
+                    }
+                case 108:/*订阅事件*/
+                    {
+                        break;
+                    }
+                case 109:/*触发事件*/
+                    {
+                        
+                        break;
+                    }
+                case 111:/*获取所有事件*/
+                    {
+                        break;
+                    }
+
+                case 112:/*取消订阅*/
+                    {
                         break;
                     }
                 case < 200:
@@ -620,7 +265,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected void OnHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        protected void OnHandleDefaultData(short procotol, ByteBlock byteBlock)
         {
             Received?.Invoke(this, procotol, byteBlock);
         }
@@ -639,7 +284,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        protected virtual void RPCHandleDefaultData(short procotol, ByteBlock byteBlock)
         {
             this.OnHandleDefaultData(procotol, byteBlock);
         }
@@ -662,7 +307,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             methodInvoker.AsyncRun = true;
 
                             ps = new object[methodInstance.ParameterTypes.Length];
-                            RpcServerCallContext serverCallContext = new RpcServerCallContext();
+                            RpcCallContext serverCallContext = new RpcCallContext();
                             serverCallContext.tokenSource = new System.Threading.CancellationTokenSource();
                             serverCallContext.caller = this;
                             serverCallContext.methodInvoker = methodInvoker;
@@ -719,12 +364,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        private void P100_RequestProxy(string proxyToken)
-        {
-            byte[] data = SerializeConvert.RRQMBinarySerialize(((IRRQMRpcParser)this.Service).GetProxyInfo(proxyToken, this), true);
-            this.InternalSend(100, data, 0, data.Length);
-        }
-
         private void P101_Execute(RpcContext context)
         {
             if (context.Feedback == 1)
@@ -748,5 +387,517 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             this.ExecuteContext(context);
         }
+
+        private void CanceledInvoke(int sign)
+        {
+            this.InternalSend(113, RRQMBitConverter.Default.GetBytes(sign));
+        }
+
+        #region RPC
+
+        /// <summary>
+        /// RPC调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="types"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns></returns>
+        public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
+        {
+            RpcContext context = new RpcContext();
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
+            context.methodName = method;
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+            if (invokeOption == null)
+            {
+                invokeOption = InvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.CancellationToken.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.CancellationToken);
+                invokeOption.CancellationToken.Register(() =>
+                {
+                    this.CanceledInvoke(context.Sign);
+                });
+            }
+
+            try
+            {
+                context.LoadInvokeOption(invokeOption);
+                List<byte[]> datas = new List<byte[]>();
+                foreach (object parameter in parameters)
+                {
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
+                }
+                context.parametersBytes = datas;
+                context.Serialize(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            return default;
+                        }
+                    case FeedbackType.WaitSend:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        RpcContext resultContext = (RpcContext)waitData.WaitResult;
+                                    }
+                                    break;
+
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            return default;
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        RpcContext resultContext = (RpcContext)waitData.WaitResult;
+                                        RRQMRPCTools.ThrowRPCStatus(resultContext);
+                                        return (T)this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            return default;
+                        }
+                    default:
+                        return default;
+                }
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// RPC调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="types"></param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
+        {
+            RpcContext context = new RpcContext();
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
+            context.methodName = method;
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+            if (invokeOption == null)
+            {
+                invokeOption = InvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.CancellationToken.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.CancellationToken);
+                invokeOption.CancellationToken.Register(() =>
+                {
+                    this.CanceledInvoke(context.Sign);
+                });
+            }
+
+            try
+            {
+                context.LoadInvokeOption(invokeOption);
+                List<byte[]> datas = new List<byte[]>();
+                foreach (object parameter in parameters)
+                {
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
+                }
+                context.parametersBytes = datas;
+                context.Serialize(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
+                        }
+                        break;
+
+                    case FeedbackType.WaitSend:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        RpcContext resultContext = (RpcContext)waitData.WaitResult;
+                                    }
+                                    break;
+
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        RpcContext resultContext = (RpcContext)waitData.WaitResult;
+                                        RRQMRPCTools.ThrowRPCStatus(resultContext);
+                                        break;
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    default:
+                        break;
+                }
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// RPC调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
+        /// <param name="parameters">参数</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Invoke(string method, InvokeOption invokeOption, params object[] parameters)
+        {
+            RpcContext context = new RpcContext();
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
+            context.methodName = method;
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+            if (invokeOption == null)
+            {
+                invokeOption = InvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.CancellationToken.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.CancellationToken);
+                invokeOption.CancellationToken.Register(() =>
+                {
+                    this.CanceledInvoke(context.Sign);
+                });
+            }
+
+            try
+            {
+                context.LoadInvokeOption(invokeOption);
+                List<byte[]> datas = new List<byte[]>();
+                foreach (object parameter in parameters)
+                {
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
+                }
+                context.parametersBytes = datas;
+                context.Serialize(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
+                        }
+                        break;
+
+                    case FeedbackType.WaitSend:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    break;
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        RpcContext resultContext = (RpcContext)waitData.WaitResult;
+                                        RRQMRPCTools.ThrowRPCStatus(resultContext);
+                                        break;
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    default:
+                        break;
+                }
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// RPC调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="invokeOption">调用配置</param>
+        /// <param name="parameters">参数</param>
+        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCNoRegisterException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns></returns>
+        public T Invoke<T>(string method, InvokeOption invokeOption, params object[] parameters)
+        {
+            RpcContext context = new RpcContext();
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
+            context.methodName = method;
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+            if (invokeOption == null)
+            {
+                invokeOption = InvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.CancellationToken.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.CancellationToken);
+                invokeOption.CancellationToken.Register(() =>
+                {
+                    this.CanceledInvoke(context.Sign);
+                });
+            }
+
+            try
+            {
+                context.LoadInvokeOption(invokeOption);
+                List<byte[]> datas = new List<byte[]>();
+                foreach (object parameter in parameters)
+                {
+                    datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
+                }
+                context.parametersBytes = datas;
+                context.Serialize(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            return default;
+                        }
+                    case FeedbackType.WaitSend:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            return default;
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        RpcContext resultContext = (RpcContext)waitData.WaitResult;
+                                        RRQMRPCTools.ThrowRPCStatus(resultContext);
+                                        return (T)this.serializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            return default;
+                        }
+
+                    default:
+                        return default;
+                }
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 选择ID然后调用反向RPC
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="method"></param>
+        /// <param name="invokeOption"></param>
+        /// <param name="parameters"></param>
+        public void Invoke(string id, string method, InvokeOption invokeOption, params object[] parameters)
+        {
+            RpcContext context = new RpcContext();
+            context.methodName = method;
+            if (invokeOption == null)
+            {
+                invokeOption = InvokeOption.WaitInvoke;
+            }
+            context.LoadInvokeOption(invokeOption);
+            List<byte[]> datas = new List<byte[]>();
+            foreach (object parameter in parameters)
+            {
+                datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
+            }
+            context.parametersBytes = datas;
+            this.IDAction.Invoke(context);
+        }
+
+        /// <summary>
+        /// 选择ID然后调用反向RPC
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="method"></param>
+        /// <param name="invokeOption"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public T Invoke<T>(string id, string method, InvokeOption invokeOption, params object[] parameters)
+        {
+            RpcContext context = new RpcContext();
+            context.methodName = method;
+            if (invokeOption == null)
+            {
+                invokeOption = InvokeOption.WaitInvoke;
+            }
+            context.LoadInvokeOption(invokeOption);
+            List<byte[]> datas = new List<byte[]>();
+            foreach (object parameter in parameters)
+            {
+                datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
+            }
+            context.parametersBytes = datas;
+            this.IDAction.Invoke(context);
+            return (T)this.serializationSelector.DeserializeParameter(context.SerializationType, context.ReturnParameterBytes, typeof(T));
+        }
+
+        /// <summary>
+        /// 回调RPC
+        /// </summary>
+        /// <param name="invokeContext"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        internal RpcContext Invoke(RpcContext invokeContext, int timeout)
+        {
+            RpcContext context = new RpcContext();
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
+            context.methodName = invokeContext.methodName;
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+
+            InvokeOption invokeOption = new InvokeOption();
+            try
+            {
+                invokeOption.FeedbackType = (FeedbackType)invokeContext.Feedback;
+                invokeOption.SerializationType = invokeContext.SerializationType;
+                context.LoadInvokeOption(invokeOption);
+                context.parametersBytes = invokeContext.parametersBytes;
+                context.Serialize(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.InternalSendAsync(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            return default;
+                        }
+                    case FeedbackType.WaitSend:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(timeout))
+                            {
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            return default;
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.InternalSend(104, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (waitData.Wait(timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                       return (RpcContext)waitData.WaitResult;
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new RRQMTimeoutException("等待结果超时");
+                                    }
+                            }
+                            return default;
+                        }
+
+                    default:
+                        return default;
+                }
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
+        }
+
+        #endregion
     }
 }
