@@ -27,6 +27,11 @@ namespace RRQMSocket.Http
         public string StatusCode { get; set; }
 
         /// <summary>
+        /// 状态消息
+        /// </summary>
+        public string StatusMessage { get; set; }
+
+        /// <summary>
         /// 获取头数据
         /// </summary>
         /// <param name="fieldName"></param>
@@ -64,7 +69,7 @@ namespace RRQMSocket.Http
         {
             StringBuilder stringBuilder = new StringBuilder();
             if (!string.IsNullOrEmpty(StatusCode))
-                stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {StatusCode}");
+                stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {StatusCode} {StatusMessage}");
             if (!string.IsNullOrEmpty(this.Content_Type))
                 stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
             stringBuilder.AppendLine("Content-Length: " + this.Content_Length);
@@ -114,6 +119,10 @@ namespace RRQMSocket.Http
             if (first.Length > 1)
             {
                 this.StatusCode = first[1];
+            }
+            if (first.Length > 2)
+            {
+                this.StatusMessage = first[2];
             }
             string contentLength = this.GetHeader(HttpHeaders.ContentLength);
             int.TryParse(contentLength, out int content_Length);
