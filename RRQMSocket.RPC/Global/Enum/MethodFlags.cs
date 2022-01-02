@@ -22,11 +22,11 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 空
         /// </summary>
-        None = 0,
+        None = 1,
 
         /// <summary>
-        /// 包含调用者
+        /// 包含调用上下文
         /// </summary>
-        IncludeCallContext = 1
+        IncludeCallContext = 2
     }
 }

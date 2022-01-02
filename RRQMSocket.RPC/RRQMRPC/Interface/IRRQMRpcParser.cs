@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Collections.Generic;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -20,34 +19,14 @@ namespace RRQMSocket.RPC.RRQMRPC
     public interface IRRQMRpcParser
     {
         /// <summary>
-        /// 获取生成的代理代码
-        /// </summary>
-        CellCode[] Codes { get; }
-
-        /// <summary>
-        /// 代理源文件命名空间
-        /// </summary>
-        string NameSpace { get; }
-
-        /// <summary>
-        /// 获取代理文件实例
-        /// </summary>
-        RpcProxyInfo ProxyInfo { get; }
-
-        /// <summary>
-        /// 函数库
-        /// </summary>
-        MethodStore MethodStore { get; }
-
-        /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭
         /// </summary>
         string ProxyToken { get; }
 
         /// <summary>
-        /// RPC代理版本
+        /// 函数仓库
         /// </summary>
-        Version RPCVersion { get; }
+        MethodStore MethodStore { get; }
 
         /// <summary>
         /// 序列化选择器
@@ -55,30 +34,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         SerializationSelector SerializationSelector { get; }
 
         /// <summary>
-        /// 获取代理文件
-        /// </summary>
-        /// <param name="proxyToken">代理令箭</param>
-        /// <param name="caller">调用作用者/></param>
-        /// <returns></returns>
-        RpcProxyInfo GetProxyInfo(string proxyToken, ICaller caller);
-
-        /// <summary>
         /// 获取注册函数
         /// </summary>
         /// <param name="proxyToken"></param>
         /// <param name="caller">调用作用者/></param>
         /// <returns></returns>
-        List<MethodItem> GetRegisteredMethodItems(string proxyToken, ICaller caller);
-
-
-#if NET45_OR_GREATER
-
-        /// <summary>
-        /// 编译代理
-        /// </summary>
-        /// <param name="targetDic">存放目标文件夹</param>
-        void CompilerProxy(string targetDic = "");
-
-#endif
+        MethodItem[] GetRegisteredMethodItems(string proxyToken, ICaller caller);
     }
 }

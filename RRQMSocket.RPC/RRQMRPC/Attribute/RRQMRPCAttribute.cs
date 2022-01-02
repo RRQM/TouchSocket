@@ -16,7 +16,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RPC方法标记属性类
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Event | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class RRQMRPCAttribute : RPCAttribute
     {
         /// <summary>
@@ -29,8 +29,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="memberKey">指定键</param>
-        public RRQMRPCAttribute(string memberKey) : this(memberKey, MethodFlags.None)
+        /// <param name="methodName">指定键</param>
+        public RRQMRPCAttribute(string methodName) : this(methodName, MethodFlags.None)
         {
         }
 
@@ -45,16 +45,39 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="memberKey"></param>
-        /// <param name="methodFlags"></param>
-        public RRQMRPCAttribute(string memberKey, MethodFlags methodFlags) : base(methodFlags)
+        /// <param name="async"></param>
+        public RRQMRPCAttribute(bool async) : this(null, MethodFlags.None, async)
         {
-            this.MemberKey = memberKey;
         }
 
         /// <summary>
-        /// 注册键
+        /// 构造函数
         /// </summary>
-        public string MemberKey { get; private set; }
+        /// <param name="methodFlags"></param>
+        /// <param name="async"></param>
+        public RRQMRPCAttribute(MethodFlags methodFlags, bool async) : this(null, methodFlags, async)
+        {
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="methodFlags"></param>
+        public RRQMRPCAttribute(string methodName, MethodFlags methodFlags) : base(methodFlags)
+        {
+            this.MethodName = methodName;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="methodFlags"></param>
+        /// <param name="async"></param>
+        public RRQMRPCAttribute(string methodName, MethodFlags methodFlags, bool async) : base(methodFlags)
+        {
+            this.MethodName = methodName;
+        }
     }
 }

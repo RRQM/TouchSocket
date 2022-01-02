@@ -18,6 +18,8 @@ namespace RRQMSocket.RPC
     /// </summary>
     public abstract class RPCAttribute : Attribute
     {
+        private MethodFlags methodFlags = MethodFlags.None;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -34,7 +36,31 @@ namespace RRQMSocket.RPC
             this.methodFlags = methodFlags;
         }
 
-        private MethodFlags methodFlags = MethodFlags.None;
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="methodFlags"></param>
+        public RPCAttribute(string methodName, MethodFlags methodFlags)
+        {
+            this.MethodName = methodName;
+            this.methodFlags = methodFlags;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodName"></param>
+        public RPCAttribute(string methodName)
+        {
+            this.MethodName = methodName;
+        }
+
+
+        /// <summary>
+        /// 异步执行。
+        /// </summary>
+        public bool Async { get; set; }
 
         /// <summary>
         /// 函数标识
@@ -42,6 +68,12 @@ namespace RRQMSocket.RPC
         public MethodFlags MethodFlags
         {
             get { return methodFlags; }
+            set { methodFlags=value; }
         }
+
+        /// <summary>
+        /// 函数名
+        /// </summary>
+        public string MethodName { get; set; }
     }
 }

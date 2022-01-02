@@ -19,11 +19,6 @@ namespace RRQMSocket.RPC
     public abstract class ServerProvider : IServerProvider
     {
         /// <summary>
-        /// 默认复刻程序集
-        /// </summary>
-        public static Assembly DefaultAssembly { get; set; }
-
-        /// <summary>
         /// 该服务所属的服务器
         /// </summary>
         public RPCService RPCService { get; set; }

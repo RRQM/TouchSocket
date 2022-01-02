@@ -9,39 +9,50 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
+using RRQMCore.Serialization;
 using System.Threading;
 
-namespace RRQMSocket.RPC
+namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// 服务器调用上下文
+    /// RRQMRPC上下文
     /// </summary>
-    public interface IServerCallContext
+    public class RpcCallContext : ICallContext
     {
-        /// <summary>
-        /// 函数实例
-        /// </summary>
-        MethodInstance MethodInstance { get; }
+        internal ICaller caller;
+        internal CancellationTokenSource tokenSource;
+        internal RpcContext context;
+        internal MethodInstance methodInstance;
+        internal MethodInvoker methodInvoker;
 
         /// <summary>
-        /// 实际调用者
+        /// <inheritdoc/>
         /// </summary>
-        ICaller Caller { get; }
+        public ICaller Caller => this.caller;
 
         /// <summary>
-        /// 调用信使
+        /// 能取消的调用令箭，在客户端主动取消或网络故障时生效
         /// </summary>
-        MethodInvoker MethodInvoker { get; }
+        public CancellationTokenSource TokenSource => tokenSource;
 
         /// <summary>
-        /// RPC请求实际
+        /// <inheritdoc/>
         /// </summary>
-        IRpcContext Context { get; }
+        public IRpcContext Context => this.context;
 
         /// <summary>
-        /// 可取消的调用令箭
+        /// <inheritdoc/>
         /// </summary>
-        CancellationTokenSource TokenSource { get; }
+        public MethodInstance MethodInstance => this.methodInstance;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public MethodInvoker MethodInvoker => methodInvoker;
+
+        /// <summary>
+        /// 序列化类型
+        /// </summary>
+        public SerializationType SerializationType => this.context == null ? (SerializationType)byte.MaxValue : this.context.SerializationType;
     }
 }

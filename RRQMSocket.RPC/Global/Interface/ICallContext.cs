@@ -9,34 +9,39 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Run;
-using System.Collections.Generic;
 
-namespace RRQMSocket.RPC.RRQMRPC
+using System.Threading;
+
+namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC代理文件程序
+    /// 调用上下文
     /// </summary>
-    public class RpcProxyInfo : WaitResult
+    public interface ICallContext
     {
         /// <summary>
-        /// 程序名
+        /// 函数实例
         /// </summary>
-        public string AssemblyName { get; set; }
+        MethodInstance MethodInstance { get; }
 
         /// <summary>
-        /// 数据
+        /// 实际调用者
         /// </summary>
-        public byte[] AssemblyData { get; set; }
+        ICaller Caller { get; }
 
         /// <summary>
-        /// 版本号
+        /// 调用信使
         /// </summary>
-        public string Version { get; set; }
+        MethodInvoker MethodInvoker { get; }
 
         /// <summary>
-        /// 源代码
+        /// RPC请求实际
         /// </summary>
-        public List<CellCode> Codes { get; set; }
+        IRpcContext Context { get; }
+
+        /// <summary>
+        /// 可取消的调用令箭
+        /// </summary>
+        CancellationTokenSource TokenSource { get; }
     }
 }

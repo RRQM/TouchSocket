@@ -34,18 +34,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         SerializationSelector SerializationSelector { get; }
 
         /// <summary>
-        /// 获取远程服务器RPC服务文件
+        ///  发现服务
         /// </summary>
-        /// <returns></returns>
-        /// <exception cref="RRQMRPCException"></exception>
-        /// <exception cref="RRQMTimeoutException"></exception>
-        RpcProxyInfo GetProxyInfo();
-
-        /// <summary>
-        /// 发现服务
-        /// </summary>
-        /// <param name="isTrigger">是否触发初始化事件</param>
-        /// <returns>已发现的服务</returns>
-        MethodItem[] DiscoveryService(bool isTrigger = true);
+        /// <param name="proxyToken">代理令箭</param>
+        /// <param name="token"></param>
+        /// <returns>发现的服务</returns>
+        MethodItem[] DiscoveryService(string proxyToken,System.Threading.CancellationToken token=default);
     }
 }

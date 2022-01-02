@@ -19,6 +19,17 @@ namespace RRQMSocket.RPC
     public interface IRPCParser : IDisposable
     {
         /// <summary>
+        /// 设置执行函数
+        /// </summary>
+        /// <param name="executeMethod"></param>
+        void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod);
+
+        /// <summary>
+        /// 执行函数
+        /// </summary>
+        Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; }
+
+        /// <summary>
         /// 获取函数映射图
         /// </summary>
         MethodMap MethodMap { get; }
@@ -29,9 +40,11 @@ namespace RRQMSocket.RPC
         RPCService RPCService { get; }
 
         /// <summary>
-        /// 执行函数
+        /// 结束调用
         /// </summary>
-        Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; }
+        /// <param name="methodInvoker"></param>
+        /// <param name="methodInstance"></param>
+        void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
         /// 注册服务
@@ -48,13 +61,6 @@ namespace RRQMSocket.RPC
         void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances);
 
         /// <summary>
-        /// 结束调用
-        /// </summary>
-        /// <param name="methodInvoker"></param>
-        /// <param name="methodInstance"></param>
-        void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance);
-
-        /// <summary>
         /// 设置函数映射
         /// </summary>
         /// <param name="methodMap"></param>
@@ -67,9 +73,9 @@ namespace RRQMSocket.RPC
         void SetRPCService(RPCService service);
 
         /// <summary>
-        /// 设置执行函数
+        /// 获取代理信息
         /// </summary>
-        /// <param name="executeMethod"></param>
-        void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod);
+        /// <param name="args">如果接受处理，设置Handled，并且返回代理。</param>
+        void GetProxyInfo(GetProxyInfoArgs args);
     }
 }

@@ -10,22 +10,26 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace RRQMSocket.RPC.RRQMRPC
+namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 代码类型
+    /// 反馈类型
     /// </summary>
-
-    public enum CodeType
+    public enum FeedbackType : byte
     {
         /// <summary>
-        /// 类代码
+        /// 仅发送
         /// </summary>
-        ClassArgs,
+        OnlySend,
 
         /// <summary>
-        /// 服务代码
+        /// 等待，直到发送抵达
         /// </summary>
-        Service
+        WaitSend,
+
+        /// <summary>
+        /// 等待，直到调用完成
+        /// </summary>
+        WaitInvoke
     }
 }
