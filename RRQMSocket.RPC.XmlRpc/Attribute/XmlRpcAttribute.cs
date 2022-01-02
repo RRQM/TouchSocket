@@ -19,25 +19,5 @@ namespace RRQMSocket.RPC.XmlRpc
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class XmlRpcAttribute : RPCAttribute
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public XmlRpcAttribute()
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="actionKey"></param>
-        public XmlRpcAttribute(string actionKey)
-        {
-            this.ActionKey = actionKey;
-        }
-
-        /// <summary>
-        /// 服务唯一标识
-        /// </summary>
-        public string ActionKey { get; private set; }
     }
 }

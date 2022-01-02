@@ -20,6 +20,21 @@ namespace RRQMSocket.RPC.XmlRpc
     public class XmlRpcParserConfig : TcpServiceConfig
     {
         /// <summary>
+        /// 代理令箭，当获取代理文件时需验证令箭
+        /// </summary>
+        public string ProxyToken
+        {
+            get { return (string)GetValue(ProxyTokenProperty); }
+            set { SetValue(ProxyTokenProperty, value); }
+        }
+
+        /// <summary>
+        /// 代理令箭，当获取代理文件时需验证令箭, 所需类型<see cref="string"/>
+        /// </summary>
+        public static readonly DependencyProperty ProxyTokenProperty =
+            DependencyProperty.Register("ProxyToken", typeof(string), typeof(XmlRpcParserConfig), null);
+
+        /// <summary>
         /// 最大数据包长度
         /// </summary>
         public int MaxPackageSize
