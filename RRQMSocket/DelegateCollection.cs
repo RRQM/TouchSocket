@@ -50,7 +50,7 @@ public delegate void RRQMClientOperationEventHandler<TClient>(TClient client, Cl
 /// <param name="socketClient"></param>
 /// <param name="protocol"></param>
 /// <param name="byteBlock"></param>
-public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short? protocol, ByteBlock byteBlock) where TClient : IProtocolClientBase;
+public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short protocol, ByteBlock byteBlock) where TClient : IProtocolClientBase;
 
 /// <summary>
 /// 普通数据

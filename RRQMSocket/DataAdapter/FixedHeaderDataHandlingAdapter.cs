@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using System;
@@ -156,11 +157,11 @@ namespace RRQMSocket
                         break;
 
                     case FixedHeaderType.Ushort:
-                        length = BitConverter.ToUInt16(dataBuffer, index);
+                        length = RRQMBitConverter.Default.ToUInt16(dataBuffer, index);
                         break;
 
                     case FixedHeaderType.Int:
-                        length = BitConverter.ToInt32(dataBuffer, index);
+                        length = RRQMBitConverter.Default.ToInt32(dataBuffer, index);
                         break;
                 }
 
@@ -242,14 +243,14 @@ namespace RRQMSocket
                     {
                         ushort dataLen = (ushort)(length - offset);
                         byteBlock = BytePool.GetByteBlock(dataLen + 2);
-                        lenBytes = BitConverter.GetBytes(dataLen);
+                        lenBytes = RRQMBitConverter.Default.GetBytes(dataLen);
                         break;
                     }
                 case FixedHeaderType.Int:
                     {
                         int dataLen = length - offset;
                         byteBlock = BytePool.GetByteBlock(dataLen + 4);
-                        lenBytes = BitConverter.GetBytes(dataLen);
+                        lenBytes = RRQMBitConverter.Default.GetBytes(dataLen);
                         break;
                     }
             }
@@ -313,13 +314,13 @@ namespace RRQMSocket
                     {
                         ushort dataLen = (ushort)length;
                         byteBlock = BytePool.GetByteBlock(dataLen + 2);
-                        lenBytes = BitConverter.GetBytes(dataLen);
+                        lenBytes = RRQMBitConverter.Default.GetBytes(dataLen);
                         break;
                     }
                 case FixedHeaderType.Int:
                     {
                         byteBlock = BytePool.GetByteBlock(length + 4);
-                        lenBytes = BitConverter.GetBytes(length);
+                        lenBytes = RRQMBitConverter.Default.GetBytes(length);
                         break;
                     }
             }

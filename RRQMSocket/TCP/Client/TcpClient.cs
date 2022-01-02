@@ -23,7 +23,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP客户端
     /// </summary>
-    public abstract class TcpClient : BaseSocket, ITcpClient, IHandleBuffer
+    public abstract class TcpClient : BaseSocket, ITcpClient
     {
         /// <summary>
         /// 设置在线状态。
@@ -225,7 +225,7 @@ namespace RRQMSocket
         /// <summary>
         /// 处理数据
         /// </summary>
-        void IHandleBuffer.HandleBuffer(ByteBlock byteBlock)
+        private void HandleBuffer(ByteBlock byteBlock)
         {
             try
             {
@@ -507,7 +507,7 @@ namespace RRQMSocket
                     {
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
-                    this.dataHandlingAdapter.Send(byteBlock.Buffer, 0, byteBlock.Len,false);
+                    this.dataHandlingAdapter.Send(byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
                 finally
                 {
@@ -691,7 +691,7 @@ namespace RRQMSocket
                         break;
                     }
                     byteBlock.SetLength(r);
-                    ((IHandleBuffer)this).HandleBuffer(byteBlock);
+                    this.HandleBuffer(byteBlock);
                 }
                 catch (Exception ex)
                 {
@@ -767,7 +767,7 @@ namespace RRQMSocket
             {
                 ByteBlock byteBlock = (ByteBlock)e.UserToken;
                 byteBlock.SetLength(e.BytesTransferred);
-                ((IHandleBuffer)this).HandleBuffer(byteBlock);
+                this.HandleBuffer(byteBlock);
                 try
                 {
                     ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
