@@ -19,42 +19,6 @@ namespace RRQMSocket.RPC.JsonRpc
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class JsonRpcAttribute : RPCAttribute
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public JsonRpcAttribute()
-        {
-        }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="memberKey">指定键</param>
-        public JsonRpcAttribute(string memberKey) : this(memberKey, MethodFlags.None)
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodFlags"></param>
-        public JsonRpcAttribute(MethodFlags methodFlags) : this(null, methodFlags)
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="memberKey"></param>
-        /// <param name="methodFlags"></param>
-        public JsonRpcAttribute(string memberKey, MethodFlags methodFlags) : base(methodFlags)
-        {
-            this.MemberKey = memberKey;
-        }
-
-        /// <summary>
-        /// 注册键
-        /// </summary>
-        public string MemberKey { get; private set; }
     }
 }

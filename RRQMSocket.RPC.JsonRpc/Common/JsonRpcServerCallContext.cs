@@ -17,7 +17,7 @@ namespace RRQMSocket.RPC.JsonRpc
     /// <summary>
     /// JsonRpc调用上下文
     /// </summary>
-    public class JsonRpcServerCallContext : IServerCallContext
+    public class JsonRpcServerCallContext : ICallContext
     {
         internal ICaller caller;
         internal JsonRpcContext context;

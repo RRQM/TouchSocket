@@ -63,5 +63,20 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public static readonly DependencyProperty InvokeTypeProperty =
             DependencyProperty.Register("InvokeType", typeof(InvokeType), typeof(JsonRpcParserConfig), InvokeType.GlobalInstance);
+
+        /// <summary>
+        /// 代理令箭，当获取代理文件时需验证令箭
+        /// </summary>
+        public string ProxyToken
+        {
+            get { return (string)GetValue(ProxyTokenProperty); }
+            set { SetValue(ProxyTokenProperty, value); }
+        }
+
+        /// <summary>
+        /// 代理令箭，当获取代理文件时需验证令箭, 所需类型<see cref="string"/>
+        /// </summary>
+        public static readonly DependencyProperty ProxyTokenProperty =
+            DependencyProperty.Register("ProxyToken", typeof(string), typeof(JsonRpcParserConfig), null);
     }
 }

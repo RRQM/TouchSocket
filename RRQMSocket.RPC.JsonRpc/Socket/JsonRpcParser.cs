@@ -72,6 +72,16 @@ namespace RRQMSocket.RPC.JsonRpc
             get { return protocolType; }
         }
 
+        private string proxyToken;
+        /// <summary>
+        /// 代理令箭，当获取代理文件时需验证令箭
+        /// </summary>
+        public string ProxyToken
+        {
+            get { return proxyToken; }
+        }
+
+
         /// <summary>
         /// 所属服务器
         /// </summary>
@@ -181,7 +191,8 @@ namespace RRQMSocket.RPC.JsonRpc
                         {
                             throw new RRQMRPCException($"JsonRpc服务中不允许有out及ref关键字，服务：{methodInstance.Method.Name}");
                         }
-                        string actionKey = string.IsNullOrEmpty(attribute.MemberKey) ? methodInstance.Method.Name : attribute.MemberKey;
+
+                        string actionKey = CodeGenerator.GetMethodName<JsonRpcAttribute>(methodInstance);
 
                         try
                         {
@@ -431,10 +442,11 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="serviceConfig"></param>
         protected override void LoadConfig(ServiceConfig serviceConfig)
         {
-            base.LoadConfig(serviceConfig);
             this.protocolType = (JsonRpcProtocolType)serviceConfig.GetValue(JsonRpcParserConfig.ProtocolTypeProperty);
             this.maxPackageSize = (int)serviceConfig.GetValue(JsonRpcParserConfig.MaxPackageSizeProperty);
             this.invokeType = (InvokeType)serviceConfig.GetValue(JsonRpcParserConfig.InvokeTypeProperty);
+            this.proxyToken = serviceConfig.GetValue<string>(JsonRpcParserConfig.ProxyTokenProperty);
+            base.LoadConfig(serviceConfig);
         }
 
         /// <summary>
@@ -529,6 +541,28 @@ namespace RRQMSocket.RPC.JsonRpc
             methodInvoker.Flag = context;
 
             this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="args"></param>
+        public void GetProxyInfo(GetProxyInfoArgs args)
+        {
+            if (args.RpcType.HasFlag(RpcType.JsonRpc))
+            {
+                if (args.ProxyToken != this.ProxyToken)
+                {
+                    args.ErrorMessage = "在验证JsonRpc时令箭不正确。";
+                    args.IsSuccess = false;
+                    return;
+                }
+                foreach (var item in this.RPCService.ServerProviders)
+                {
+                    var serverCellCode = CodeGenerator.Generator<JsonRpcAttribute>(item.GetType());
+                    args.Codes.Add(serverCellCode);
+                }
+            }
         }
     }
 }
