@@ -34,7 +34,11 @@ namespace RRQMSocket.FileTransfer
 
         private string rootPath = string.Empty;
 
-        static FileClient()
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public FileClient()
         {
             AddUsedProtocol(200, "Client pull file from SocketClient.");
             AddUsedProtocol(201, "Client begin pull file from SocketClient.");
@@ -47,13 +51,6 @@ namespace RRQMSocket.FileTransfer
             {
                 AddUsedProtocol(i, "保留协议");
             }
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public FileClient()
-        {
             this.eventArgs = new ConcurrentDictionary<int, FileOperationEventArgs>();
         }
 
@@ -351,7 +348,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void FileTransferHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        protected virtual void FileTransferHandleDefaultData(short procotol, ByteBlock byteBlock)
         {
             this.OnHandleDefaultData(procotol, byteBlock);
         }
@@ -404,7 +401,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected override void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        protected override void RPCHandleDefaultData(short procotol, ByteBlock byteBlock)
         {
             switch (procotol)
             {
@@ -524,6 +521,7 @@ namespace RRQMSocket.FileTransfer
                     waitData.SetCancellationToken(fileOperator.Token);
 
                     waitData.Wait(60 * 1000);
+
                     switch (waitData.Status)
                     {
                         case WaitDataStatus.SetRunning:
@@ -625,6 +623,7 @@ namespace RRQMSocket.FileTransfer
                     {
                         long position = waitTransfer.Position;
                         fileOperator.SetFileCompletedLength(waitTransfer.Position);
+
                         while (true)
                         {
                             if (fileOperator.Token.IsCancellationRequested)

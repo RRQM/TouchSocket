@@ -34,7 +34,11 @@ namespace RRQMSocket.FileTransfer
 
         private string rootPath = string.Empty;
 
-        static FileSocketClient()
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public FileSocketClient()
         {
             AddUsedProtocol(200, "Client pull file from SocketClient.");
             AddUsedProtocol(201, "Client begin pull file from SocketClient.");
@@ -46,13 +50,6 @@ namespace RRQMSocket.FileTransfer
             {
                 AddUsedProtocol(i, "保留协议");
             }
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public FileSocketClient()
-        {
             this.eventArgs = new ConcurrentDictionary<int, FileOperationEventArgs>();
         }
 
@@ -350,7 +347,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void FileTransferHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        protected virtual void FileTransferHandleDefaultData(short procotol, ByteBlock byteBlock)
         {
             this.OnHandleDefaultData(procotol, byteBlock);
         }
@@ -392,7 +389,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="procotol"></param>
         /// <param name="byteBlock"></param>
-        protected override sealed void RPCHandleDefaultData(short? procotol, ByteBlock byteBlock)
+        protected override sealed void RPCHandleDefaultData(short procotol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
 
