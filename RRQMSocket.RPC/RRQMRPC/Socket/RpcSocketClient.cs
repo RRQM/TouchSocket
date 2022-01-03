@@ -241,10 +241,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         break;
                     }
-                case < 200:
-                    {
-                        break;
-                    }
                 default:
                     RPCHandleDefaultData(procotol, byteBlock);
                     break;
