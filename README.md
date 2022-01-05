@@ -81,51 +81,117 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 |------|----------|-------------|-------|
 | [RRQMSkin](https://gitee.com/RRQM_OS/RRQMSkin) | [![NuGet version (RRQMSkin)](https://img.shields.io/nuget/v/RRQMSkin.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSkin/) | [![Download](https://img.shields.io/nuget/dt/RRQMSkin)](https://www.nuget.org/packages/RRQMSkin/) | RRQMSkin是WPF的控件样式库，其中包含： **无边框窗体** 、 **圆角窗体** 、 **水波纹按钮** 、 **输入提示筛选框** 、 **控件拖动效果** 、**圆角图片框**、 **弧形文字** 、 **扇形元素** 、 **指针元素** 、 **饼图** 、 **时钟** 、 **速度表盘** 等。|  
 
-## 链接目录
+## 🌟API手册
 - [ API首页 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages)
 - [说明](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=3984529&doc_id=1402901)
 - [ 历史更新 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4255623&doc_id=1402901)
 - [ 商业运营 ](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4215572&doc_id=1402901)
 - [疑难解答](https://gitee.com/RRQM_OS/RRQM/wikis/pages?sort_id=4245320&doc_id=1402901)
-- [【RRQM系】Config配置及其他配置信息介绍](https://blog.csdn.net/qq_40374647/article/details/121760852)
-- [【RRQMCore】RRQMSocket基类库基础用法，包含内存池、对象池、高性能序列化等](https://blog.csdn.net/qq_40374647/article/details/121485490)
+
+
+## ✨简单示例
+【TcpService】
+
+```
+SimpleTcpService service = new SimpleTcpService();
+
+service.Connected += (client, e) =>
+{
+    //有客户端连接
+};
+
+service.Disconnected += (client, e) =>
+{
+    //有客户端断开连接
+};
+
+service.Connecting += (client, e) =>
+{
+    //e.IsPermitOperation = false;//是否允许连接
+};
+
+service.Received += (client, byteBlock, obj) =>
+{
+    //从客户端收到信息
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    Console.WriteLine($"已从{client.Name}接收到信息：{mes}");//Name即IP+Port
+};
+
+//声明配置
+var config = new TcpServiceConfig();
+config.ListenIPHosts = new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) };//同时监听两个地址
+
+//载入配置
+service.Setup(config);
+
+//启动
+
+try
+{
+    service.Start();
+    Console.WriteLine("简单服务器启动成功");
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
+
+```
+
+【TcpClient】
+
+```
+SimpleTcpClient tcpClient = new SimpleTcpClient();
+
+tcpClient.Connected += (client, e) =>
+{
+    //成功连接到服务器
+};
+
+tcpClient.Disconnected += (client, e) =>
+{
+    //从服务器断开连接，当连接不成功时不会触发。
+};
+
+//声明配置
+var config = new TcpClientConfig();
+config.RemoteIPHost = new IPHost("127.0.0.1:7789");//远程IPHost
+
+//载入配置
+tcpClient.Setup(config);
+
+tcpClient.Connect();
+
+while (true)
+{
+    tcpClient.Send(new byte[]{1,2,3});
+}
+```
+
+## 应用场景模拟
+***
+ **【场景】** 
+
+我的服务器（客户端）是物联网硬件（或PLC硬件），我可以使用什么？
+
+ **【应用建议】** 
+
+可以使用TcpService或TcpClient组件，这两个组件和原生Socket功能完全一样，只是可靠性、并发性能有很大的保障。不过一般的，RRQM内置的数据处理适配器可能不足以应对所有的数据协议包，所以可能需要自己重写数据处理适配器，具体详情可以参考一下连接内容。
+
 - [【RRQMSocket】C# 创建高并发、高性能TCP服务器，可用于解析HTTP、FTP、MQTT、搭建游戏服务器等](https://blog.csdn.net/qq_40374647/article/details/110679663)
 - [【RRQMSocket】C# 创建TCP客户端，对应RRQM服务器或其他服务器](https://blog.csdn.net/qq_40374647/article/details/121469610)
 - [【RRQMSocket】C# 利用数据处理适配器解决粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179)
 - [【RRQMSocket】C# 自定义数据处理适配器](https://blog.csdn.net/qq_40374647/article/details/121824453)
-- [【RRQMSocket】C# TcpService和TcpClient高级设置及用法解释。](https://blog.csdn.net/qq_40374647/article/details/121767091)
-- [【RRQMSocket】C# 搭建Token系TCP服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/115586146)
-- [【RRQMSocket】C# 创建多租户模式的Token服务器](https://blog.csdn.net/qq_40374647/article/details/121471982)
-- [【RRQMSocket】C# 搭建TCP自定义协议、Protocol服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/121472932)
-- [【RRQMSocket】C# 基于TCP、自定义协议Channel持续传输大数据](https://blog.csdn.net/qq_40374647/article/details/121494319)
-- [【RRQMSocket】C# 基于TCP自定义协议Stream、文件等发送与接收](https://blog.csdn.net/qq_40374647/article/details/121496385)
-- [【RRQMSocket.RPC】C# 创建多协议、多方式、多语言、多平台RPC框架](https://blog.csdn.net/qq_40374647/article/details/109143243)
-- [【RRQMSocket.RPC】C# 创建基于TCP协议的支持ref和out关键字的RPC](https://blog.csdn.net/qq_40374647/article/details/121512993)
-- [【RRQMSocket.RPC】C# 基于TCP协议的RRQMRPC的高级使用设置](https://blog.csdn.net/qq_40374647/article/details/121533091)
-- [【RRQMSocket.RPC】C# RRQMRPC反向调用（服务器主动调用客户端）](https://blog.csdn.net/qq_40374647/article/details/122154250)
-- [【RRQMSocket.RPC】C# RRQMRPC事务总线EventBus使用。](https://blog.csdn.net/qq_40374647/article/details/122156553)
-- [【RRQMSocket.FileTransfer】C# 超大文件传输、续传、可高性能、高并发运行、断点续传、换网续传、快速上传等功能](https://blog.csdn.net/qq_40374647/article/details/100546120)
-- [【RRQMSocket.WebSocket】C#搭建WebSocket服务器和客户端](https://blog.csdn.net/qq_40374647/article/details/122169738)
-
-## 应用场景模拟
-***
- **【场景一】** 
-
-我的服务器（客户端）是物联网硬件（或PLC硬件），我可以使用什么吗？可以的话，应该从哪里学习？
-
- **【应用一】** 
-
-完全可以使用，一般的硬件通信，都是基于TCP协议的指定协议数据包，可以直接学习搭建**TCP服务器**（或**客户端**），然后使用数据数据处理器解析数据。不过一般的，在RRQM内置的解析器不足以应对所有的数据协议包，所以可能需要自己重写数据处理适配器。
 
 ***
 
- **【场景二】** 
+ **【场景】** 
 
-我想搭建游戏服务器，性能够吗？如何选择应用组件？
+我想搭建一个服务器，能够实现文件传输，且需要一定交互能力，比如：客户端注册、客户端提交自身数据、服务器分发文件等。应该如何实现？
 
- **【应用二】** 
+ **【应用建议】** 
 
-首先绝对性能是由物理机决定的，不同的物理机、操作系统，具有不同性能表现。在RRQM中，网络操作模式全遵循IOCP，该模式下在window平台性能显著，最大接收连接数在1w是没有任何问题的。经测试，在个人电脑上（i7-10H，8G RAM），服务器每秒处理数据流量可达1Gb，处理并发数据量200w次（每条4字节）。所以，性能基本上没什么问题的。组件的话，如果客户端也采用RRQM（Unity也可以使用的），那建议使用“TCP+固定包头”，这样解析数据比较方便。如果是其他客户端，就需要自己制定分包策略。
+
 
 ***
 
