@@ -390,6 +390,89 @@ namespace RRQMCore.ByteManager
                 default:
                     return num;
             }
+
+            //U3D无法编译时替换。
+
+            //if (num <= 1024)
+            //{
+            //    return 1024;
+            //}
+            //else if (num <= 2048)
+            //{
+            //    return 2048;
+            //}
+            //else if (num <= 4096)
+            //{
+            //    return 4096;
+            //}
+            //else if (num <= 8192)
+            //{
+            //    return 8192;
+            //}
+            //else if (num <= 10240)
+            //{
+            //    return 10240;
+            //}
+            //else if (num <= 16384)
+            //{
+            //    return 16384;
+            //}
+            //else if (num <= 32768)
+            //{
+            //    return 32768;
+            //}
+            //else if (num <= 65536)
+            //{
+            //    return 65536;
+            //}
+            //else if (num <= 131072)
+            //{
+            //    return 131072;
+            //}
+            //else if (num <= 262144)
+            //{
+            //    return 262144;
+            //}
+            //else if (num <= 524288)
+            //{
+            //    return 524288;
+            //}
+            //else if (num <= 1048576)
+            //{
+            //    return 1048576;
+            //}
+            //else if (num <= 2097152)
+            //{
+            //    return 2097152;
+            //}
+            //else if (num <= 4194304)
+            //{
+            //    return 4194304;
+            //}
+            //else if (num <= 8388608)
+            //{
+            //    return 8388608;
+            //}
+            //else if (num <= 16777216)
+            //{
+            //    return 16777216;
+            //}
+            //else if (num <= 33554432)
+            //{
+            //    return 33554432;
+            //}
+            //else if (num <= 67108864)
+            //{
+            //    return 67108864;
+            //}
+            //else if (num <= 134217728)
+            //{
+            //    return 134217728;
+            //}
+            //else
+            //{
+            //    return num;
+            //}
         }
     }
 }
