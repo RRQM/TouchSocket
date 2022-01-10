@@ -12,7 +12,7 @@
 using RRQMCore.ByteManager;
 using System.Net;
 
-namespace RRQMSocket 
+namespace RRQMSocket
 {
     /// <summary>
     /// 若汝棋茗内置UDP会话
