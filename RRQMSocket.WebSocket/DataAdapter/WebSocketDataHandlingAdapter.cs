@@ -27,12 +27,6 @@ namespace RRQMSocket.WebSocket
     /// </summary>
     public class WebSocketDataHandlingAdapter : DataHandlingAdapter
     {
-        /// <summary>
-        /// WebSocket版本号。
-        /// </summary>
-        public static readonly DependencyProperty WebSocketVersionProperty =
-            DependencyProperty.Register("WebSocketVersion", typeof(string), typeof(WebSocketDataHandlingAdapter), "13");
-
         private static int maxSize = 1024 * 1024;
 
         /// <summary>

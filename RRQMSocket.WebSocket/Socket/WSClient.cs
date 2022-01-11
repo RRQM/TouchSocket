@@ -12,13 +12,12 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Run;
+using RRQMSocket.Http;
 using RRQMSocket.WebSocket.Helper;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
@@ -27,14 +26,17 @@ namespace RRQMSocket.WebSocket
     /// </summary>
     public abstract class WSClient : TcpClient, IWSClient
     {
-        WaitData<byte[]> waitData;
+        private bool isHandshaked;
+        private WaitData<Http.HttpResponse> waitData;
+        private string webSocketVersion;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public WSClient()
         {
-            this.waitData = new WaitData<byte[]>();
+            this.waitData = new WaitData<Http.HttpResponse>();
+            this.SetAdapter(new Http.HttpDataHandlingAdapter(2048, Http.HttpType.Client));
         }
 
         /// <summary>
@@ -47,8 +49,8 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         public string WebSocketVersion
         {
-            get { return (string)GetValue(WebSocketDataHandlingAdapter.WebSocketVersionProperty); }
-            set { SetValue(WebSocketDataHandlingAdapter.WebSocketVersionProperty, value); }
+            get { return webSocketVersion; }
+            set { webSocketVersion = value; }
         }
 
         /// <summary>
@@ -77,72 +79,42 @@ namespace RRQMSocket.WebSocket
         {
             lock (this)
             {
-                if (this.online)
+                if (this.Online)
                 {
                     return this;
                 }
 
+                this.ConnectService();
+                this.BeginReceive();
+
                 waitData.SetCancellationToken(token);
-
-                ClientConnectingEventArgs args = this.ConnectService();
-
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.AppendLine("GET / HTTP/1.1");
-                stringBuilder.AppendLine($"Host: {this.Name}");
-                stringBuilder.AppendLine("Connection: Upgrade");
-                stringBuilder.AppendLine("Pragma: no-cache");
-                stringBuilder.AppendLine("User-Agent: RRQMSocket.WebSocket");
-                stringBuilder.AppendLine("Upgrade: websocket");
-                stringBuilder.AppendLine("Origin: RRQM");
-                stringBuilder.AppendLine($"Sec-WebSocket-Version: {this.WebSocketVersion}");
-                stringBuilder.AppendLine("Accept-Encoding: gzip, deflate, br");
-                stringBuilder.AppendLine("Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6");
-
-                string base64Key = WSTools.CreateBase64Key();
-                stringBuilder.AppendLine($"Sec-WebSocket-Key: {base64Key}");
-                stringBuilder.AppendLine("Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits");
-                stringBuilder.AppendLine();
-
-
-                this.MainSocket.Send(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
-                Task.Run(() =>
+                string base64Key;
+                var data = this.GetRequestHeader(out base64Key);
+                if (UseSsl)
                 {
-                    Task.Run(() =>
-                    {
-                        try
-                        {
-                            byte[] buffer = new byte[1024];
-                            int r = this.MainSocket.Receive(buffer);
-                            if (r > 0)
-                            {
-                                byte[] data = new byte[r];
-
-                                Array.Copy(buffer, data, r);
-                                this.waitData.Set(data);
-                            }
-                        }
-                        catch
-                        {
-                        }
-                    });
-                });
+                    this.GetStream().Write(data, 0, data.Length);
+                }
+                else
+                {
+                    this.MainSocket.Send(data);
+                }
 
                 switch (waitData.Wait(1000 * 10))
                 {
                     case WaitDataStatus.SetRunning:
                         {
-                            byte[] data = waitData.WaitResult;
-
-                            Http.HttpResponse httpResponse = new Http.HttpResponse();
-                            httpResponse.ReadHeaders(data, 0, data.Length);
-
+                            Http.HttpResponse httpResponse = waitData.WaitResult;
                             if (httpResponse.GetHeader("Sec-WebSocket-Accept") != WSTools.CalculateBase64Key(base64Key, Encoding.UTF8))
                             {
                                 this.MainSocket.Dispose();
                                 throw new RRQMException("返回的应答码不正确。");
                             }
 
-                            this.PreviewConnected(args);
+                            this.SetAdapter(new WebSocketDataHandlingAdapter());
+                            this.isHandshaked = true;
+                            this.online = true;
+                            this.OnConnected(new MesEventArgs());
+                            httpResponse.Flag = true;
                             break;
                         }
                     case WaitDataStatus.Overtime:
@@ -151,33 +123,11 @@ namespace RRQMSocket.WebSocket
                     case WaitDataStatus.Canceled:
                     case WaitDataStatus.Disposed:
                     default:
+                        this.MainSocket.Dispose();
                         return this;
                 }
                 return this;
             }
-        }
-
-        /// <summary>
-        /// 发送Close报文，并关闭TCP。
-        /// </summary>
-        /// <returns></returns>
-        public override ITcpClient Disconnect()
-        {
-            try
-            {
-                WSDataFrame dataFrame = new WSDataFrame();
-                dataFrame.FIN = true;
-                dataFrame.Opcode = WSDataType.Close;
-                if (this.online)
-                {
-                    this.Send(dataFrame);
-                }
-                base.Disconnect();
-            }
-            catch
-            {
-            }
-            return base.Disconnect();
         }
 
         /// <summary>
@@ -217,26 +167,42 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            WSDataFrame dataFrame = (WSDataFrame)obj;
-            switch (dataFrame.Opcode)
+            if (isHandshaked)
             {
-                case WSDataType.Close:
-                    this.Close();
-                    break;
-                case WSDataType.Ping:
-                    this.OnPing();
-                    break;
-                case WSDataType.Pong:
-                    this.OnPong();
-                    break;
-                case WSDataType.Cont:
-                case WSDataType.Text:
-                case WSDataType.Binary:
-                default:
-                    this.HandleWSDataFrame(dataFrame);
-                    break;
+                WSDataFrame dataFrame = (WSDataFrame)obj;
+                switch (dataFrame.Opcode)
+                {
+                    case WSDataType.Close:
+                        this.Close();
+                        break;
+
+                    case WSDataType.Ping:
+                        this.OnPing();
+                        break;
+
+                    case WSDataType.Pong:
+                        this.OnPong();
+                        break;
+
+                    case WSDataType.Cont:
+                    case WSDataType.Text:
+                    case WSDataType.Binary:
+                    default:
+                        this.HandleWSDataFrame(dataFrame);
+                        break;
+                }
+            }
+            else
+            {
+                HttpResponse httpResponse = (HttpResponse)obj;
+                httpResponse.Flag = false;
+                this.waitData.Set(httpResponse);
+                SpinWait.SpinUntil(()=> 
+                {
+                    return (bool)httpResponse.Flag;
+                },1000);
             }
         }
 
@@ -249,11 +215,10 @@ namespace RRQMSocket.WebSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="e"></param>
-        protected override void OnConnecting(ClientConnectingEventArgs e)
+        protected override void OnBreakOut()
         {
-            this.SetAdapter(new WebSocketDataHandlingAdapter());
-            base.OnConnecting(e);
+            this.isHandshaked = false;
+            base.OnBreakOut();
         }
 
         /// <summary>
@@ -261,7 +226,6 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         protected virtual void OnPing()
         {
-
         }
 
         /// <summary>
@@ -269,10 +233,31 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         protected virtual void OnPong()
         {
+        }
 
+        private byte[] GetRequestHeader(out string base64Key)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("GET / HTTP/1.1");
+            stringBuilder.AppendLine($"Host: {this.Name}");
+            stringBuilder.AppendLine("Connection: Upgrade");
+            stringBuilder.AppendLine("Pragma: no-cache");
+            stringBuilder.AppendLine("User-Agent: RRQMSocket.WebSocket");
+            stringBuilder.AppendLine("Upgrade: websocket");
+            stringBuilder.AppendLine("Origin: RRQM");
+            stringBuilder.AppendLine($"Sec-WebSocket-Version: {this.WebSocketVersion}");
+            stringBuilder.AppendLine("Accept-Encoding: deflate, br");
+            stringBuilder.AppendLine("Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6");
+
+            base64Key = WSTools.CreateBase64Key();
+            stringBuilder.AppendLine($"Sec-WebSocket-Key: {base64Key}");
+            stringBuilder.AppendLine("Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits");
+            stringBuilder.AppendLine();
+            return Encoding.UTF8.GetBytes(stringBuilder.ToString());
         }
 
         #region 同步发送
+
         /// <summary>
         /// 采用WebSocket协议，发送二进制流数据。
         /// </summary>
@@ -292,7 +277,6 @@ namespace RRQMSocket.WebSocket
             {
                 byteBlock.Dispose();
             }
-
         }
 
         /// <summary>
@@ -358,9 +342,11 @@ namespace RRQMSocket.WebSocket
                 byteBlock.Dispose();
             }
         }
+
         #endregion 同步发送
 
         #region 异步发送
+
         /// <summary>
         /// 采用WebSocket协议，发送二进制流数据。
         /// </summary>
@@ -380,7 +366,6 @@ namespace RRQMSocket.WebSocket
             {
                 byteBlock.Dispose();
             }
-
         }
 
         /// <summary>
@@ -446,6 +431,7 @@ namespace RRQMSocket.WebSocket
                 byteBlock.Dispose();
             }
         }
+
         #endregion 异步发送
 
         #region 同步分包发送
@@ -477,17 +463,16 @@ namespace RRQMSocket.WebSocket
             int count;
             if (length % packageSize == 0)
             {
-                 count = length / packageSize;
+                count = length / packageSize;
             }
             else
             {
-                 count = length / packageSize + 1;
+                count = length / packageSize + 1;
             }
-           
 
             for (int i = 0; i < count; i++)
             {
-                if (i>0)
+                if (i > 0)
                 {
                     dataFrame.Opcode = WSDataType.Cont;
                 }
@@ -500,7 +485,7 @@ namespace RRQMSocket.WebSocket
                 {
                     int thisLen = Math.Min(packageSize, length - sentLen);
                     WSTools.Build(byteBlock, dataFrame, buffer, offset, thisLen);
-                    base.Send(byteBlock.Buffer,0,byteBlock.Len);
+                    base.Send(byteBlock.Buffer, 0, byteBlock.Len);
                     sentLen += thisLen;
                     offset += thisLen;
                 }
@@ -518,7 +503,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="packageSize"></param>
         public void SubpackageSend(byte[] buffer, int packageSize)
         {
-            this.SubpackageSend(buffer, 0, buffer.Length,packageSize) ;
+            this.SubpackageSend(buffer, 0, buffer.Length, packageSize);
         }
 
         /// <summary>
@@ -530,7 +515,8 @@ namespace RRQMSocket.WebSocket
         {
             this.SubpackageSend(byteBlock.Buffer, 0, byteBlock.Len, packageSize);
         }
-        #endregion
+
+        #endregion 同步分包发送
 
         #region 异步分包发送
 
@@ -567,7 +553,6 @@ namespace RRQMSocket.WebSocket
             {
                 count = length / packageSize + 1;
             }
-
 
             for (int i = 0; i < count; i++)
             {
@@ -614,6 +599,7 @@ namespace RRQMSocket.WebSocket
         {
             this.SubpackageSendAsync(byteBlock.Buffer, 0, byteBlock.Len, packageSize);
         }
-        #endregion
+
+        #endregion 异步分包发送
     }
 }
