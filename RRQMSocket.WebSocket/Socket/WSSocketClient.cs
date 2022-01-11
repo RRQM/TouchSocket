@@ -10,13 +10,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Dependency;
+using RRQMSocket.Http;
 using RRQMSocket.WebSocket.Helper;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
@@ -25,25 +23,30 @@ namespace RRQMSocket.WebSocket
     /// </summary>
     public abstract class WSSocketClient : SocketClient, IWSClientBase
     {
+        private bool isHandshaked;
+
+        private string webSocketVersion;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         public WSSocketClient()
         {
-            this.SetAdapter(new WebSocketDataHandlingAdapter());
+            this.SetAdapter(new Http.HttpDataHandlingAdapter(2048, Http.HttpType.Server));
         }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public sealed override bool CanSetDataHandlingAdapter => false;
+        public override sealed bool CanSetDataHandlingAdapter => false;
 
         /// <summary>
         /// WebSocket版本号
         /// </summary>
         public string WebSocketVersion
         {
-            get { return (string)GetValue(WebSocketDataHandlingAdapter.WebSocketVersionProperty); }
-            set { SetValue(WebSocketDataHandlingAdapter.WebSocketVersionProperty, value); }
+            get { return webSocketVersion; }
+            set { webSocketVersion = value; }
         }
 
         /// <summary>
@@ -62,7 +65,6 @@ namespace RRQMSocket.WebSocket
             catch
             {
             }
-
         }
 
         /// <summary>
@@ -102,28 +104,67 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
         {
-            WSDataFrame dataFrame = (WSDataFrame)obj;
-            switch (dataFrame.Opcode)
+            if (this.isHandshaked)
             {
-                case WSDataType.Close:
-                    this.Close();
-                    break;
-                case WSDataType.Ping:
-                    this.OnPing();
-                    break;
-                case WSDataType.Pong:
-                    this.OnPong();
-                    break;
-                case WSDataType.Cont:
-                case WSDataType.Text:
-                case WSDataType.Binary:
-                default:
-                    this.HandleWSDataFrame(dataFrame);
-                    break;
-            }
+                WSDataFrame dataFrame = (WSDataFrame)obj;
+                switch (dataFrame.Opcode)
+                {
+                    case WSDataType.Close:
+                        this.Close();
+                        break;
 
+                    case WSDataType.Ping:
+                        this.OnPing();
+                        break;
+
+                    case WSDataType.Pong:
+                        this.OnPong();
+                        break;
+
+                    case WSDataType.Cont:
+                    case WSDataType.Text:
+                    case WSDataType.Binary:
+                    default:
+                        this.HandleWSDataFrame(dataFrame);
+                        break;
+                }
+            }
+            else
+            {
+                try
+                {
+                    HttpRequest httpRequest = (HttpRequest)obj;
+                    if ((httpRequest.GetHeader("Upgrade").ToLower().Trim() == "websocket") && (httpRequest.GetHeader("Connection").ToLower().Trim() == "upgrade") && (!string.IsNullOrEmpty(httpRequest.GetHeader("Sec-WebSocket-Key"))))
+                    {
+                        this.WebSocketVersion = httpRequest.GetHeader("Sec-WebSocket-Version");
+                        ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
+
+                        if (this.UseSsl)
+                        {
+                            var data = GetResponse(httpRequest);
+                            this.GetStream().Write(data, 0, data.Length);
+                        }
+                        else
+                        {
+                            this.MainSocket.Send(GetResponse(httpRequest));
+                        }
+                        this.online = true;
+                        this.isHandshaked = true;
+                        this.SetAdapter(new WebSocketDataHandlingAdapter());
+                        this.OnConnected(new MesEventArgs("WebSocket连接成功"));
+                    }
+                    else
+                    {
+                        this.BreakOut("WebSocket连接协议不正确");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.BreakOut(ex.Message);
+                }
+            }
         }
 
         /// <summary>
@@ -137,7 +178,6 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         protected virtual void OnPing()
         {
-
         }
 
         /// <summary>
@@ -145,10 +185,37 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         protected virtual void OnPong()
         {
-
         }
-       
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void PreviewConnected(MesEventArgs e)
+        {
+            this.BeginReceive();
+            RRQMCore.Run.EasyAction.DelayRun(10 * 1000, () =>
+              {
+                  if (!isHandshaked)
+                  {
+                      this.BreakOut("WebSocket验证超时");
+                  }
+              });
+        }
+
+        private static byte[] GetResponse(HttpRequest httpRequest)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("HTTP/1.1 101 Switching Protocols");
+            stringBuilder.AppendLine("Connection: Upgrade");
+            stringBuilder.AppendLine("Upgrade: websocket");
+            stringBuilder.AppendLine($"Sec-WebSocket-Accept: {WSTools.CalculateBase64Key(httpRequest.GetHeader("Sec-WebSocket-Key"), httpRequest.Encoding)}");
+            stringBuilder.AppendLine();
+            return httpRequest.Encoding.GetBytes(stringBuilder.ToString());
+        }
+
         #region 同步发送
+
         /// <summary>
         /// 采用WebSocket协议，发送二进制流数据。
         /// </summary>
@@ -168,7 +235,6 @@ namespace RRQMSocket.WebSocket
             {
                 byteBlock.Dispose();
             }
-
         }
 
         /// <summary>
@@ -234,9 +300,11 @@ namespace RRQMSocket.WebSocket
                 byteBlock.Dispose();
             }
         }
+
         #endregion 同步发送
 
         #region 异步发送
+
         /// <summary>
         /// 采用WebSocket协议，发送二进制流数据。
         /// </summary>
@@ -256,7 +324,6 @@ namespace RRQMSocket.WebSocket
             {
                 byteBlock.Dispose();
             }
-
         }
 
         /// <summary>
@@ -322,6 +389,7 @@ namespace RRQMSocket.WebSocket
                 byteBlock.Dispose();
             }
         }
+
         #endregion 异步发送
 
         #region 同步分包发送
@@ -357,7 +425,6 @@ namespace RRQMSocket.WebSocket
             {
                 count = length / packageSize + 1;
             }
-
 
             for (int i = 0; i < count; i++)
             {
@@ -404,7 +471,8 @@ namespace RRQMSocket.WebSocket
         {
             this.SubpackageSend(byteBlock.Buffer, 0, byteBlock.Len, packageSize);
         }
-        #endregion
+
+        #endregion 同步分包发送
 
         #region 异步分包发送
 
@@ -439,7 +507,6 @@ namespace RRQMSocket.WebSocket
             {
                 count = length / packageSize + 1;
             }
-
 
             for (int i = 0; i < count; i++)
             {
@@ -486,6 +553,7 @@ namespace RRQMSocket.WebSocket
         {
             this.SubpackageSendAsync(byteBlock.Buffer, 0, byteBlock.Len, packageSize);
         }
-        #endregion
+
+        #endregion 异步分包发送
     }
 }

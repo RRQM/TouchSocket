@@ -27,87 +27,78 @@ namespace RRQMSocket.WebSocket
     {
         
 
-        private static byte[] GetResponse(HttpRequest httpRequest)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine("HTTP/1.1 101 Switching Protocols");
-            stringBuilder.AppendLine("Connection: Upgrade");
-            stringBuilder.AppendLine("Upgrade: websocket");
-            stringBuilder.AppendLine($"Sec-WebSocket-Accept: {WSTools.CalculateBase64Key(httpRequest.GetHeader("Sec-WebSocket-Key"),httpRequest.Encoding)}");
-            stringBuilder.AppendLine();
-            return httpRequest.Encoding.GetBytes(stringBuilder.ToString());
-        }
+      
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="socketClient"></param>
-        protected override void PreviewConnecting(TClient socketClient)
-        {
-            Task.Run(() =>
-            {
-                WaitData<byte[]> waitData = new WaitData<byte[]>();
-                Task.Run(() =>
-                {
-                    byte[] buffer = new byte[1024];
-                    int r = socketClient.MainSocket.Receive(buffer);
-                    if (r > 0)
-                    {
-                        byte[] data = new byte[r];
+        ///// <summary>
+        ///// <inheritdoc/>
+        ///// </summary>
+        ///// <param name="socketClient"></param>
+        //protected override void PreviewConnecting(TClient socketClient)
+        //{
+        //    Task.Run(() =>
+        //    {
+        //        WaitData<byte[]> waitData = new WaitData<byte[]>();
+        //        Task.Run(() =>
+        //        {
+        //            byte[] buffer = new byte[1024];
+        //            int r = socketClient.MainSocket.Receive(buffer);
+        //            if (r > 0)
+        //            {
+        //                byte[] data = new byte[r];
 
-                        Array.Copy(buffer, data, r);
-                        waitData.Set(data);
-                    }
-                });
+        //                Array.Copy(buffer, data, r);
+        //                waitData.Set(data);
+        //            }
+        //        });
 
-                switch (waitData.Wait(3000))
-                {
-                    case WaitDataStatus.SetRunning:
-                        {
-                            byte[] data = waitData.WaitResult;
-                            Http.HttpRequest httpRequest = new Http.HttpRequest();
-                            httpRequest.ReadHeaders(data, 0, data.Length);
-                            if (httpRequest.GetHeader("Upgrade").ToLower() != "websocket")
-                            {
-                                return;
-                            }
-                            if (httpRequest.GetHeader("Connection").ToLower() != "upgrade")
-                            {
-                                return;
-                            }
+        //        switch (waitData.Wait(3000))
+        //        {
+        //            case WaitDataStatus.SetRunning:
+        //                {
+        //                    byte[] data = waitData.WaitResult;
+        //                    Http.HttpRequest httpRequest = new Http.HttpRequest();
+        //                    httpRequest.ReadHeaders(data, 0, data.Length);
+        //                    if (httpRequest.GetHeader("Upgrade").ToLower() != "websocket")
+        //                    {
+        //                        return;
+        //                    }
+        //                    if (httpRequest.GetHeader("Connection").ToLower() != "upgrade")
+        //                    {
+        //                        return;
+        //                    }
 
-                            if (string.IsNullOrEmpty(httpRequest.GetHeader("Sec-WebSocket-Key")))
-                            {
-                                return;
-                            }
-                            socketClient.SetValue(WebSocketDataHandlingAdapter.WebSocketVersionProperty, httpRequest.GetHeader("Sec-WebSocket-Version"));
-                            ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
-                            clientArgs.ID = GetDefaultNewID();
-                            this.OnConnecting(socketClient, clientArgs);
-                            if (clientArgs.IsPermitOperation)
-                            {
-                                MakeClientReceive(socketClient, clientArgs.ID);
-                                socketClient.MainSocket.Send(GetResponse(httpRequest));
+        //                    if (string.IsNullOrEmpty(httpRequest.GetHeader("Sec-WebSocket-Key")))
+        //                    {
+        //                        return;
+        //                    }
+        //                    socketClient.WebSocketVersion=httpRequest.GetHeader("Sec-WebSocket-Version");
+        //                    ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
+        //                    clientArgs.ID = GetDefaultNewID();
+        //                    this.OnConnecting(socketClient, clientArgs);
+        //                    if (clientArgs.IsPermitOperation)
+        //                    {
+        //                        MakeClientReceive(socketClient, clientArgs.ID);
+        //                        socketClient.MainSocket.Send(GetResponse(httpRequest));
 
-                                this.OnConnected(socketClient, new MesEventArgs("新客户端连接"));
-                            }
-                            else
-                            {
-                                socketClient.MainSocket.Dispose();
-                            }
-                        }
-                        break;
+        //                        this.OnConnected(socketClient, new MesEventArgs("新客户端连接"));
+        //                    }
+        //                    else
+        //                    {
+        //                        socketClient.MainSocket.Dispose();
+        //                    }
+        //                }
+        //                break;
 
-                    case WaitDataStatus.Overtime:
-                    case WaitDataStatus.Canceled:
-                    case WaitDataStatus.Disposed:
-                    default:
-                        {
-                            socketClient.Dispose();
-                            break;
-                        }
-                }
-            });
-        }
+        //            case WaitDataStatus.Overtime:
+        //            case WaitDataStatus.Canceled:
+        //            case WaitDataStatus.Disposed:
+        //            default:
+        //                {
+        //                    socketClient.Dispose();
+        //                    break;
+        //                }
+        //        }
+        //    });
+        //}
     }
 }
