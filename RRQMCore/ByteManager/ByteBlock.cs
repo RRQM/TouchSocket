@@ -160,14 +160,16 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 清空数据
         /// </summary>
+        /// <exception cref="ByteBlockDisposedException">内存块已释放</exception>
         public void Clear()
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             Array.Clear(this._buffer, 0, this._buffer.Length);
         }
+
         /// <summary>
         /// 回收资源
         /// </summary>
@@ -205,11 +207,12 @@ namespace RRQMCore.ByteManager
         /// <param name="offset"></param>
         /// <param name="count"></param>
         /// <returns></returns>
+        /// <exception cref="ByteBlockDisposedException"></exception>
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             int len = this._buffer.Length - this.position > count ? count : this._buffer.Length - (int)this.position;
             Array.Copy(this._buffer, this.position, buffer, offset, len);
@@ -233,11 +236,12 @@ namespace RRQMCore.ByteManager
         /// <param name="offset"></param>
         /// <param name="origin"></param>
         /// <returns></returns>
+        /// <exception cref="ByteBlockDisposedException"></exception>
         public override long Seek(long offset, SeekOrigin origin)
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             switch (origin)
             {
@@ -246,7 +250,7 @@ namespace RRQMCore.ByteManager
                     break;
 
                 case SeekOrigin.Current:
-                    this.position = offset;
+                    this.position += offset;
                     break;
 
                 case SeekOrigin.End:
@@ -261,11 +265,12 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="size">新尺寸</param>
         /// <param name="retainedData">是否保留元数据</param>
+        /// <exception cref="ByteBlockDisposedException"></exception>
         public void SetCapacity(int size, bool retainedData = false)
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             byte[] bytes = new byte[size];
 
@@ -282,11 +287,12 @@ namespace RRQMCore.ByteManager
         /// 当为False时，会自动调用Dispose。
         /// </summary>
         /// <param name="holding"></param>
+        /// <exception cref="ByteBlockDisposedException"></exception>
         public void SetHolding(bool holding)
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             this.holding = holding;
             if (!holding)
@@ -299,11 +305,12 @@ namespace RRQMCore.ByteManager
         /// 设置实际长度
         /// </summary>
         /// <param name="value"></param>
+        /// <exception cref="ByteBlockDisposedException"></exception>
         public override void SetLength(long value)
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             if (value > this._buffer.Length)
             {
@@ -326,11 +333,12 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
+        /// <exception cref="ByteBlockDisposedException"></exception>
         public byte[] ToArray(int offset)
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             byte[] buffer = new byte[this.length - offset];
             Array.Copy(this._buffer, offset, buffer, 0, buffer.Length);
@@ -343,11 +351,12 @@ namespace RRQMCore.ByteManager
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="count"></param>
+        /// <exception cref="ByteBlockDisposedException"></exception>
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (!this.@using)
             {
-                throw new RRQMException("内存块已释放");
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
             if (this._buffer.Length - this.position < count)
             {
@@ -362,7 +371,7 @@ namespace RRQMCore.ByteManager
             Array.Copy(buffer, offset, _buffer, this.position, count);
             this.position += count;
             this.length += count;
-            if (this.length<this.position)
+            if (this.length < this.position)
             {
                 this.length = this.position;
             }

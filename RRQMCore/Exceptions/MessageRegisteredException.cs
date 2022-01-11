@@ -24,7 +24,7 @@ namespace RRQMCore.Exceptions
     public class MessageRegisteredException : RRQMException
     {
         /// <summary>
-        ///
+        ///构造函数
         /// </summary>
         /// <param name="mes"></param>
         public MessageRegisteredException(string mes) : base(mes)

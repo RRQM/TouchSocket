@@ -120,6 +120,9 @@
   <data name="ArgumentNull" xml:space="preserve">
     <value>参数‘{0}’为空。</value>
   </data>
+  <data name="ByteBlockDisposed" xml:space="preserve">
+    <value>内存块已释放。</value>
+  </data>
   <data name="Canceled" xml:space="preserve">
     <value>取消操作</value>
   </data>
@@ -143,6 +146,9 @@
   </data>
   <data name="LoadStreamFail" xml:space="preserve">
     <value>从‘{0}’路径加载流异常。</value>
+  </data>
+  <data name="MessageNotFound" xml:space="preserve">
+    <value>Token消息为‘{0}’的未注册。</value>
   </data>
   <data name="NoResponse" xml:space="preserve">
     <value>长时间没有响应。</value>
@@ -179,6 +185,9 @@
   </data>
   <data name="Success" xml:space="preserve">
     <value>操作成功。</value>
+  </data>
+  <data name="TokenExist" xml:space="preserve">
+    <value>Token消息为‘{0}’的已注册。</value>
   </data>
   <data name="Unknown" xml:space="preserve">
     <value>未知原因。</value>

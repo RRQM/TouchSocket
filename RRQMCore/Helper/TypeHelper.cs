@@ -27,21 +27,9 @@ namespace RRQMCore.Helper
         /// <returns></returns>
         public static Type GetRefOutType(this Type type)
         {
-            if (type.FullName.Contains("&"))
+            if (type.IsByRef)
             {
-                string typeName = type.FullName.Replace("&", string.Empty);
-                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in assemblies)
-                {
-                    type = assembly.GetType(typeName);
-
-                    if (type != null)
-                    {
-                        return type;
-                    }
-                }
-
-                throw new RRQMException($"未能识别类型{typeName}");
+                return type.GetElementType();
             }
             else
             {

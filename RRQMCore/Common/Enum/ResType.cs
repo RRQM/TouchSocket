@@ -18,14 +18,9 @@ namespace RRQMCore
     public enum ResType
     {
         /// <summary>
-        /// 未知错误
+        /// 未知知错误
         /// </summary>
         UnknownError,
-
-        /// <summary>
-        /// 已知错误
-        /// </summary>
-        KnownError,
 
         /// <summary>
         /// 参数为空
@@ -101,5 +96,20 @@ namespace RRQMCore
         /// 长时间没有响应。
         /// </summary>
         NoResponse,
+
+        /// <summary>
+        /// 该Token消息已注册
+        /// </summary>
+        TokenExist,
+
+        /// <summary>
+        /// 信息未找到
+        /// </summary>
+        MessageNotFound,
+
+        /// <summary>
+        /// 内存块已释放
+        /// </summary>
+        ByteBlockDisposed
     }
 }
