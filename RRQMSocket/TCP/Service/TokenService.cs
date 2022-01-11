@@ -9,18 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
-using RRQMCore.Run;
-using System;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 需要验证的TCP服务器
     /// </summary>
-    public abstract class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient, new()
+    public class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient, new()
     {
         private string verifyToken;
 
@@ -58,94 +53,15 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 客户端请求连接
         /// </summary>
         /// <param name="socketClient"></param>
-        protected override void PreviewConnecting(TClient socketClient)
+        /// <param name="e"></param>
+        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
-            Task.Run(() =>
-            {
-                WaitData<WaitVerify> waitData = new WaitData<WaitVerify>();
-                Task.Run(() =>
-                {
-                    byte[] buffer = new byte[1024];
-                    int r = socketClient.MainSocket.Receive(buffer);
-                    if (r > 0)
-                    {
-                        byte[] data = new byte[r];
-
-                        Array.Copy(buffer, data, r);
-                        WaitVerify verify = WaitVerify.GetVerifyInfo(data);
-                        waitData.Set(verify);
-                    }
-                });
-
-                switch (waitData.Wait(this.verifyTimeout))
-                {
-                    case WaitDataStatus.SetRunning:
-                        {
-                            WaitVerify waitVerify = waitData.WaitResult;
-                            VerifyOption verifyOption = new VerifyOption();
-                            verifyOption.Token = waitVerify.Token;
-                            this.OnVerifyToken(socketClient, verifyOption);
-
-                            if (verifyOption.Accept)
-                            {
-                                ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
-                                clientArgs.ID = GetDefaultNewID();
-                                this.OnConnecting(socketClient, clientArgs);
-                                if (clientArgs.IsPermitOperation)
-                                {
-                                    waitVerify.ID = clientArgs.ID;
-                                    waitVerify.Status = 1;
-                                    socketClient.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
-                                    MakeClientReceive(socketClient, clientArgs.ID);
-                                    this.OnConnected(socketClient, new MesEventArgs("新客户端连接"));
-                                }
-                                else
-                                {
-                                    waitVerify.Status = 4;
-                                    socketClient.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
-                                    socketClient.MainSocket.Dispose();
-                                }
-                            }
-                            else
-                            {
-                                waitVerify.Status = 2;
-                                waitVerify.Message = verifyOption.ErrorMessage;
-                                socketClient.MainSocket.Send(waitVerify.GetData(), SocketFlags.None);
-                                socketClient.MainSocket.Dispose();
-                            }
-                        }
-                        break;
-
-                    case WaitDataStatus.Overtime:
-                    case WaitDataStatus.Canceled:
-                    case WaitDataStatus.Disposed:
-                    default:
-                        {
-                            socketClient.MainSocket.Dispose();
-                            break;
-                        }
-                }
-            });
-        }
-
-        /// <summary>
-        /// 当验证Token时
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="verifyOption"></param>
-        protected virtual void OnVerifyToken(TClient client, VerifyOption verifyOption)
-        {
-            if (verifyOption.Token == this.verifyToken)
-            {
-                verifyOption.Accept = true;
-            }
-            else
-            {
-                verifyOption.ErrorMessage = "Token不受理";
-            }
+            socketClient.verifyTimeout = this.verifyTimeout;
+            socketClient.verifyToken = this.verifyToken;
+            base.OnConnecting(socketClient, e);
         }
     }
 }

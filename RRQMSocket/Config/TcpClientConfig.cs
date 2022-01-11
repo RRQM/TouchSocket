@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System;
 
 namespace RRQMSocket
 {
@@ -20,21 +19,20 @@ namespace RRQMSocket
     public class TcpClientConfig : ClientConfig
     {
         /// <summary>
-        /// 数据处理适配器
+        /// Ssl配置，为Null时则不启用
         /// </summary>
-        [Obsolete("已放弃Config注入适配器，请在客户端使用数据处理适配器之前，任意时刻赋值，例如在构造函数、Connecting事件等")]
-        public DataHandlingAdapter DataHandlingAdapter
+        public ClientSslOption SslOption
         {
-            get { return (DataHandlingAdapter)GetValue(DataHandlingAdapterProperty); }
-            set { SetValue(DataHandlingAdapterProperty, value); }
+            get { return (ClientSslOption)GetValue(SslOptionProperty); }
+            set { SetValue(SslOptionProperty, value); }
         }
 
         /// <summary>
-        /// 数据处理适配器，所需类型<see cref="RRQMSocket.DataHandlingAdapter"/>
+        /// Ssl配置，为Null时则不启用
+        /// 所需类型<see cref="RRQMSocket.ClientSslOption"/>
         /// </summary>
-        [Obsolete("已放弃Config注入适配器，请在客户端使用数据处理适配器之前，任意时刻赋值，例如在构造函数、Connecting事件等")]
-        public static readonly DependencyProperty DataHandlingAdapterProperty =
-            DependencyProperty.Register("DataHandlingAdapter", typeof(DataHandlingAdapter), typeof(TcpClientConfig), null);
+        public static readonly DependencyProperty SslOptionProperty =
+            DependencyProperty.Register("SslOption", typeof(ClientSslOption), typeof(TcpClientConfig), null);
 
         /// <summary>
         /// 远程IPHost
@@ -97,5 +95,55 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ReceiveTypeProperty =
             DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(TcpClientConfig), ReceiveType.IOCP);
+
+
+        /// <summary>
+        /// 在Socket配置KeepAlive属性
+        /// </summary>
+        public bool KeepAlive
+        {
+            get { return (bool)GetValue(KeepAliveProperty); }
+            set { SetValue(KeepAliveProperty, value); }
+        }
+
+        /// <summary>
+        /// 在Socket配置KeepAlive属性，
+        /// 所需类型<see cref="bool"/>
+        /// </summary>
+        public static readonly DependencyProperty KeepAliveProperty =
+            DependencyProperty.Register("KeepAlive", typeof(bool), typeof(TcpClientConfig),false);
+
+
+        /// <summary>
+        /// 设置Socket不使用Delay算法
+        /// </summary>
+        public bool NoDelay
+        {
+            get { return (bool)GetValue(NoDelayProperty); }
+            set { SetValue(NoDelayProperty, value); }
+        }
+
+        /// <summary>
+        /// 设置Socket不使用Delay算法，
+        /// 所需类型<see cref="bool"/>
+        /// </summary>
+        public static readonly DependencyProperty NoDelayProperty =
+            DependencyProperty.Register("NoDelay", typeof(bool), typeof(TcpClientConfig), false);
+
+        /// <summary>
+        /// TCP固定端口绑定
+        /// </summary>
+        public IPHost BindIPHost
+        {
+            get { return (IPHost)GetValue(BindIPHostProperty); }
+            set { SetValue(BindIPHostProperty, value); }
+        }
+
+        /// <summary>
+        /// TCP固定端口绑定，
+        /// 所需类型<see cref="IPHost"/>
+        /// </summary>
+        public static readonly DependencyProperty BindIPHostProperty =
+            DependencyProperty.Register("BindIPHost", typeof(IPHost), typeof(TcpClientConfig), null);
     }
 }

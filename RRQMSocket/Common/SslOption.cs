@@ -9,44 +9,41 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Net.Security;
+using System.Security.Authentication;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// TCP服务器辅助接口
+    /// Ssl配置
     /// </summary>
-    public interface ITcpServiceBase : IService
+    public abstract class SslOption
     {
-        /// <summary>
-        /// 使用Ssl加密
-        /// </summary>
-        bool UseSsl { get; }
+        private SslProtocols sslProtocols;
 
         /// <summary>
-        /// 获取当前连接的所有客户端
+        /// 协议版本
         /// </summary>
-        SocketClientCollection SocketClients { get; }
+        public SslProtocols SslProtocols
+        {
+            get { return sslProtocols; }
+            set { sslProtocols = value; }
+        }
+
+        private bool checkCertificateRevocation;
 
         /// <summary>
-        /// 网络监听集合
+        /// 该值指定身份验证期间是否检查证书吊销列表
         /// </summary>
-        NetworkMonitor[] Monitors { get; }
+        public bool CheckCertificateRevocation
+        {
+            get { return checkCertificateRevocation; }
+            set { checkCertificateRevocation = value; }
+        }
 
         /// <summary>
-        /// 重新设置ID
+        /// SSL验证回调。
         /// </summary>
-        /// <param name="waitSetID"></param>
-        void ResetID(WaitSetID waitSetID);
-
-        /// <summary>
-        /// 获取当前在线的所有ID集合
-        /// </summary>
-        /// <returns></returns>
-        string[] GetIDs();
-
-        /// <summary>
-        /// 清理当前已连接的所有客户端
-        /// </summary>
-        void Clear();
+        public RemoteCertificateValidationCallback CertificateValidationCallback { get; set; }
     }
 }

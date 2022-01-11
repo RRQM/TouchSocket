@@ -19,17 +19,27 @@ namespace RRQMSocket
     /// <summary>
     /// TCP系列服务器接口
     /// </summary>
-    public interface ITcpService<TClient> : IService where TClient : ISocketClient
+    public interface ITcpService<TClient> : ITcpServiceBase where TClient : ISocketClient
     {
+        /// <summary>
+        /// 用户连接完成
+        /// </summary>
+        event RRQMMessageEventHandler<TClient> Connected;
+
+        /// <summary>
+        /// 有用户连接的时候
+        /// </summary>
+        event RRQMClientOperationEventHandler<TClient> Connecting;
+
+        /// <summary>
+        /// 有用户断开连接
+        /// </summary>
+        event RRQMMessageEventHandler<TClient> Disconnected;
+
         /// <summary>
         /// 获取最大可连接数
         /// </summary>
         int MaxCount { get; }
-
-        /// <summary>
-        /// 获取当前连接的所有客户端
-        /// </summary>
-        SocketClientCollection<TClient> SocketClients { get; }
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
@@ -50,11 +60,6 @@ namespace RRQMSocket
         /// <param name="socketClient">TClient</param>
         /// <returns></returns>
         bool TryGetSocketClient(string id, out TClient socketClient);
-
-        /// <summary>
-        /// 清理当前已连接的所有客户端
-        /// </summary>
-        void Clear();
 
         /// <summary>
         /// 发送字节流

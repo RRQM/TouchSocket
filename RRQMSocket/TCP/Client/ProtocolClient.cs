@@ -31,9 +31,10 @@ namespace RRQMSocket
     /// </summary>
     public abstract class ProtocolClient : TokenClient, IProtocolClient
     {
+        private readonly ConcurrentDictionary<short, ProtocolSubscriberCollection> protocolSubscriberCollection;
         private readonly Dictionary<short, string> usedProtocol;
         private readonly ConcurrentDictionary<int, Channel> userChannels;
-        private readonly ConcurrentDictionary<short, ProtocolSubscriberCollection> protocolSubscriberCollection;
+        private LoopAction heartbeatLoopAction;
 
         /// <summary>
         /// 构造函数
@@ -43,6 +44,39 @@ namespace RRQMSocket
             this.usedProtocol = new Dictionary<short, string>();
             this.protocolSubscriberCollection = new ConcurrentDictionary<short, ProtocolSubscriberCollection>();
             this.userChannels = new ConcurrentDictionary<int, Channel>();
+        }
+
+        /// <summary>
+        /// 添加协议订阅
+        /// </summary>
+        /// <param name="subscriber"></param>
+        public void AddProtocolSubscriber(SubscriberBase subscriber)
+        {
+            if (subscriber.client != null)
+            {
+                throw new RRQMException($"该实例已订阅其他服务");
+            }
+            if (subscriber.Protocol > 0)
+            {
+                if (usedProtocol.ContainsKey(subscriber.Protocol))
+                {
+                    throw new RRQMException($"该协议已被类协议使用，描述为：{usedProtocol[subscriber.Protocol]}");
+                }
+                else
+                {
+                    ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol, (p) =>
+                      {
+                          return new ProtocolSubscriberCollection();
+                      });
+
+                    subscriber.client = this;
+                    protocolSubscribers.Add(subscriber);
+                }
+            }
+            else
+            {
+                throw new RRQMException("协议不能小于0");
+            }
         }
 
         /// <summary>
@@ -88,6 +122,22 @@ namespace RRQMSocket
         public override void Dispose()
         {
             base.Dispose();
+        }
+
+        /// <summary>
+        /// 移除协议订阅
+        /// </summary>
+        /// <param name="subscriber"></param>
+        public void RemoveProtocolSubscriber(SubscriberBase subscriber)
+        {
+            ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol, (p) =>
+            {
+                return new ProtocolSubscriberCollection();
+            });
+            if (protocolSubscribers.Remove(subscriber))
+            {
+                subscriber.client = null;
+            }
         }
 
         /// <summary>
@@ -163,55 +213,6 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 添加协议订阅
-        /// </summary>
-        /// <param name="subscriber"></param>
-        public void AddProtocolSubscriber(SubscriberBase subscriber)
-        {
-            if (subscriber.client != null)
-            {
-                throw new RRQMException($"该实例已订阅其他服务");
-            }
-            if (subscriber.Protocol > 0)
-            {
-                if (usedProtocol.ContainsKey(subscriber.Protocol))
-                {
-                    throw new RRQMException($"该协议已被类协议使用，描述为：{usedProtocol[subscriber.Protocol]}");
-                }
-                else
-                {
-                    ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol, (p) =>
-                      {
-                          return new ProtocolSubscriberCollection();
-                      });
-
-                    subscriber.client = this;
-                    protocolSubscribers.Add(subscriber);
-                }
-            }
-            else
-            {
-                throw new RRQMException("协议不能小于0");
-            }
-        }
-
-        /// <summary>
-        /// 移除协议订阅
-        /// </summary>
-        /// <param name="subscriber"></param>
-        public void RemoveProtocolSubscriber(SubscriberBase subscriber)
-        {
-            ProtocolSubscriberCollection protocolSubscribers = this.protocolSubscriberCollection.GetOrAdd(subscriber.Protocol, (p) =>
-            {
-                return new ProtocolSubscriberCollection();
-            });
-            if (protocolSubscribers.Remove(subscriber))
-            {
-                subscriber.client = null;
-            }
-        }
-
-        /// <summary>
         /// 收到协议数据，由于性能考虑，
         /// byteBlock数据源并未剔除协议数据，
         /// 所以真实数据起点为2，
@@ -222,11 +223,17 @@ namespace RRQMSocket
         protected abstract void HandleProtocolData(short procotol, ByteBlock byteBlock);
 
         /// <summary>
+        /// 流数据处理
+        /// </summary>
+        /// <param name="args"></param>
+        protected abstract void HandleStream(StreamStatusEventArgs args);
+
+        /// <summary>
         /// 密封方法
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, object obj)
         {
             short procotol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
             switch (procotol)
@@ -279,6 +286,7 @@ namespace RRQMSocket
                 case -4:
                 case -5:
                 case -6:
+                case -10:
                     {
                         try
                         {
@@ -368,44 +376,19 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 收到服务器回应
-        /// </summary>
-        protected virtual void OnPong()
-        {
-
-        }
-
-        /// <summary>
-        /// 流数据处理
-        /// </summary>
-        /// <param name="args"></param>
-        protected abstract void HandleStream(StreamStatusEventArgs args);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnConnecting(ClientConnectingEventArgs e)
-        {
-            if (e.DataHandlingAdapter == null)
-            {
-                e.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
-            }
-            base.OnConnecting(e);
-        }
-
-        LoopAction heartbeatLoopAction;
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
         protected override void OnConnected(MesEventArgs e)
         {
-            base.OnConnected(e);
             int heartbeatFrequency = this.ClientConfig.GetValue<int>(ProtocolClientConfig.HeartbeatFrequencyProperty);
 
             if (heartbeatFrequency > 0)
             {
+                if (heartbeatLoopAction != null)
+                {
+                    heartbeatLoopAction.Dispose();
+                }
                 heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency, (loop) =>
                  {
                      try
@@ -419,6 +402,21 @@ namespace RRQMSocket
                  });
                 heartbeatLoopAction.RunAsync();
             }
+
+            base.OnConnected(e);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnConnecting(ClientConnectingEventArgs e)
+        {
+            if (e.DataHandlingAdapter == null)
+            {
+                e.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+            }
+            base.OnConnecting(e);
         }
 
         /// <summary>
@@ -437,6 +435,13 @@ namespace RRQMSocket
                 this.heartbeatLoopAction.Dispose();
                 this.heartbeatLoopAction = null;
             }
+        }
+
+        /// <summary>
+        /// 收到服务器回应
+        /// </summary>
+        protected virtual void OnPong()
+        {
         }
 
         /// <summary>
@@ -915,7 +920,6 @@ namespace RRQMSocket
                                         }
 
                                         channel.Write(byteBlock.Buffer, 0, r);
-
                                         streamOperator.AddStreamFlow(r, size);
                                     }
                                 }

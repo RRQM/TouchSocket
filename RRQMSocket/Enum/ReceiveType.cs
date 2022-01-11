@@ -18,7 +18,7 @@ namespace RRQMSocket
     public enum ReceiveType : byte
     {
         /// <summary>
-        /// 完成端口
+        /// 完成端口，在该模式下，不支持Ssl。
         /// </summary>
         IOCP,
 
@@ -28,9 +28,13 @@ namespace RRQMSocket
         BIO,
 
         /// <summary>
-        /// 网络流模式，接收、发送方式由IOCP切换为NetworkStream.Read/Write
-        /// 同时服务器超时清理将变得不可用，且适配也将失效。
+        /// 在Select模式下工作
         /// </summary>
-        NetworkStream
+        Select,
+
+        /// <summary>
+        /// 在该模式下，不会投递接收申请，用户可以自由发挥。
+        /// </summary>
+        None
     }
 }

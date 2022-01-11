@@ -9,12 +9,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 using RRQMCore.Run;
-using System;
-using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -68,6 +66,37 @@ namespace RRQMSocket
             return this.Connect("rrqm");
         }
 
+        private bool isHandshaked;
+
+        /// <summary>
+        /// 处理接收数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        {
+            if (isHandshaked)
+            {
+                this.HandleTokenReceivedData(byteBlock, obj);
+            }
+            else
+            {
+                WaitVerify waitVerify = WaitVerify.GetVerifyInfo(byteBlock.ToArray());
+                this.waitHandlePool.SetRun(waitVerify);
+                System.Threading.SpinWait.SpinUntil(() =>
+                {
+                    return waitVerify.Handle;
+                }, 3000);
+            }
+        }
+
+        /// <summary>
+        /// 处理Token数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, object obj);
+
         /// <summary>
         /// 连接到服务器
         /// </summary>
@@ -78,11 +107,12 @@ namespace RRQMSocket
         {
             lock (this)
             {
-                if (this.online)
+                if (this.Online)
                 {
                     return this;
                 }
-                ClientConnectingEventArgs args = this.ConnectService();
+                this.ConnectService();
+                this.BeginReceive();
                 WaitVerify waitVerify = new WaitVerify()
                 {
                     Token = verifyToken
@@ -90,27 +120,8 @@ namespace RRQMSocket
                 WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
                 waitData.SetCancellationToken(token);
 
-                this.MainSocket.Send(waitVerify.GetData());
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        byte[] buffer = new byte[1024];
-                        int r = this.MainSocket.Receive(buffer);
-                        if (r > 0)
-                        {
-                            byte[] data = new byte[r];
-
-                            Array.Copy(buffer, data, r);
-                            WaitVerify verify = WaitVerify.GetVerifyInfo(data);
-                            this.waitHandlePool.SetRun(verify);
-                        }
-                    }
-                    catch
-                    {
-                    }
-                });
-
+                byte[] data = waitVerify.GetData();
+                base.Send(data,0,data.Length);
                 try
                 {
                     switch (waitData.Wait(1000 * 10))
@@ -121,39 +132,49 @@ namespace RRQMSocket
                                 if (verifyResult.Status == 1)
                                 {
                                     this.id = verifyResult.ID;
-                                    this.PreviewConnected(args);
+                                    this.isHandshaked = true;
+                                    this.PreviewConnected(new MesEventArgs("Token客户端成功连接"));
+                                    verifyResult.Handle = true;
                                     return this;
                                 }
                                 else if (verifyResult.Status == 3)
                                 {
+                                    verifyResult.Handle = true;
+                                    this.BreakOut("连接数量已达到服务器设定最大值");
                                     this.MainSocket.Dispose();
                                     throw new RRQMException("连接数量已达到服务器设定最大值");
                                 }
                                 else if (verifyResult.Status == 4)
                                 {
+                                    verifyResult.Handle = true;
+                                    this.BreakOut("服务器拒绝连接");
                                     this.MainSocket.Dispose();
                                     throw new RRQMException("服务器拒绝连接");
                                 }
                                 else
                                 {
+                                    verifyResult.Handle = true;
+                                    this.BreakOut(verifyResult.Message);
                                     this.MainSocket.Dispose();
                                     throw new RRQMTokenVerifyException(verifyResult.Message);
                                 }
                             }
                         case WaitDataStatus.Overtime:
+                            this.BreakOut("连接超时");
                             this.MainSocket.Dispose();
                             throw new RRQMTimeoutException("连接超时");
                         case WaitDataStatus.Canceled:
                         case WaitDataStatus.Disposed:
                         default:
+                            this.MainSocket.Dispose();
+                            this.BreakOut(null);
                             return this;
                     }
                 }
                 finally
                 {
-                    this.WaitHandlePool.Destroy(waitData); 
+                    this.WaitHandlePool.Destroy(waitData);
                 }
-               
             }
         }
 
@@ -164,6 +185,25 @@ namespace RRQMSocket
         protected override void LoadConfig(TcpClientConfig clientConfig)
         {
             base.LoadConfig(clientConfig);
+        }
+
+        /// <summary>
+        /// 准备连接前设置。
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void PreviewConnected(MesEventArgs e)
+        {
+            this.online = true;
+            this.OnConnected(e);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void OnBreakOut()
+        {
+            this.isHandshaked = false;
+            base.OnBreakOut();
         }
     }
 }

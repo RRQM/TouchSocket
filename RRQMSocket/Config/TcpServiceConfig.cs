@@ -94,5 +94,21 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty ClearTypeProperty =
             DependencyProperty.Register("ClearType", typeof(ClearType), typeof(TcpServiceConfig), ClearType.Send | ClearType.Receive);
+
+        /// <summary>
+        /// Ssl配置，为Null时则不启用
+        /// </summary>
+        public ServiceSslOption SslOption
+        {
+            get { return (ServiceSslOption)GetValue(SslOptionProperty); }
+            set { SetValue(SslOptionProperty, value); }
+        }
+
+        /// <summary>
+        /// Ssl配置，为Null时则不启用
+        /// 所需类型<see cref="RRQMSocket.ServiceSslOption"/>
+        /// </summary>
+        public static readonly DependencyProperty SslOptionProperty =
+            DependencyProperty.Register("SslOption", typeof(ServiceSslOption), typeof(TcpServiceConfig), null);
     }
 }

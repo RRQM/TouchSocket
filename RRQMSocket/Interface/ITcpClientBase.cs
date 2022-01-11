@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Collections.Generic;
+using System.IO;
+using System.Net.Security;
 using System.Net.Sockets;
 
 namespace RRQMSocket
@@ -33,6 +35,11 @@ namespace RRQMSocket
         /// 数据处理适配器
         /// </summary>
         DataHandlingAdapter DataHandlingAdapter { get; }
+
+        /// <summary>
+        /// 使用Ssl加密
+        /// </summary>
+        bool UseSsl { get; }
 
         /// <summary>
         /// IP地址
@@ -60,20 +67,20 @@ namespace RRQMSocket
         int Port { get; }
 
         /// <summary>
-        /// 是否处于工作（接收中）
-        /// </summary>
-        bool Working { get; }
-
-        /// <summary>
         /// 关闭Socket信道，并随后释放资源
         /// </summary>
         void Close();
 
         /// <summary>
-        /// 获取网络流，接收方式为NetworkStream.Read。
+        /// 获取流，在正常模式下为<see cref="System.Net.Sockets.NetworkStream"/>，在Ssl模式下为<see cref="SslStream"/>。
         /// </summary>
         /// <returns></returns>
-        NetworkStream GetNetworkStream();
+        Stream GetStream();
+
+        /// <summary>
+        /// 接收模式
+        /// </summary>
+        public ReceiveType ReceiveType { get; }
 
         /// <summary>
         /// 同步组合发送

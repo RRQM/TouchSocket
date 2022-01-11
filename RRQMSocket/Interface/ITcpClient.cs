@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using RRQMCore.Exceptions;
-using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace RRQMSocket
@@ -67,6 +65,7 @@ namespace RRQMSocket
         /// <summary>
         /// 断开连接
         /// </summary>
+        /// <returns></returns>
         ITcpClient Disconnect();
 
         /// <summary>

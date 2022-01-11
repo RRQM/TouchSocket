@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
 using RRQMSocket.Common;
-using System;
 using System.Net;
 using System.Net.Sockets;
 
@@ -44,15 +43,14 @@ namespace RRQMSocket
                 {
                     throw new RRQMException("必须包含端口信息。");
                 }
-                
-               
+
                 if (RRQMSocketTools.IsIPv4(hostName) && RRQMSocketTools.IsIPv4(hostName))
                 {
                     Analysis(hostName, port);
                 }
                 else
                 {
-                    if (HostNameToIP(hostName,out IPAddress[] addresses))
+                    if (HostNameToIP(hostName, out IPAddress[] addresses))
                     {
                         Analysis(addresses[0].ToString(), port);
                     }
@@ -64,7 +62,6 @@ namespace RRQMSocket
                 string ip = host.Substring(0, r);
                 Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
             }
-
         }
 
         private void Analysis(string ip, string port)
@@ -84,7 +81,6 @@ namespace RRQMSocket
                 this.EndPoint = endPoint;
                 this.IP = ip;
                 this.Port = portNum;
-
             }
             catch
             {
@@ -113,6 +109,7 @@ namespace RRQMSocket
         }
 
         private string scheme;
+
         /// <summary>
         /// 协议名
         /// </summary>
@@ -120,7 +117,6 @@ namespace RRQMSocket
         {
             get { return scheme; }
         }
-
 
         /// <summary>
         /// 从IPAddress和端口号

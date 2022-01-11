@@ -17,13 +17,17 @@ namespace RRQMSocket
     /// <summary>
     /// 通讯基类
     /// </summary>
-    public abstract class BaseSocket : RRQMCore.Dependency.RRQMDependencyObject, ISocket, IDisposable
+    public abstract class BaseSocket : ISocket, IDisposable
     {
         /// <summary>
         /// 析构函数
         /// </summary>
         ~BaseSocket()
         {
+            if (this.disposable)
+            {
+                return;
+            }
             this.Dispose();
         }
 

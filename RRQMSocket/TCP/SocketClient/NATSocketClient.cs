@@ -12,12 +12,8 @@
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -26,7 +22,8 @@ namespace RRQMSocket
     /// </summary>
     public class NATSocketClient : SocketClient
     {
-        SocketAsyncEventArgs eventArgs;
+        private SocketAsyncEventArgs eventArgs;
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -45,7 +42,7 @@ namespace RRQMSocket
         internal void BeginRunTargetSocket(Socket socket)
         {
             this.targetSocket = socket;
-            switch (this.receiveType)
+            switch (this.ReceiveType)
             {
                 case ReceiveType.IOCP:
                     {
@@ -79,6 +76,7 @@ namespace RRQMSocket
             {
                 if (this.disposable)
                 {
+                    this.BreakOut(null);
                     break;
                 }
                 ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
@@ -89,79 +87,59 @@ namespace RRQMSocket
                     if (r == 0)
                     {
                         byteBlock.Dispose();
+                        this.BreakOut("远程终端主动断开");
                         break;
                     }
                     byteBlock.SetLength(r);
                     this.HandleReceivedDataFromTarget(byteBlock);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    this.BreakOut(ex.Message);
                     break;
                 }
             }
-            this.breakOut = true;
         }
+
         private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
             try
             {
-                if (e.LastOperation == SocketAsyncOperation.Receive)
-                {
-                    ProcessReceived(e);
-                }
-                else
-                {
-                    this.breakOut = true;
-                }
+                ProcessReceived(e);
             }
-            catch
+            catch (Exception ex)
             {
-                this.breakOut = true;
+                this.BreakOut(ex.Message);
             }
         }
 
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
-            if (!this.disposable)
+            if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
             {
-                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
+                ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                byteBlock.SetLength(e.BytesTransferred);
+                this.HandleReceivedDataFromTarget(byteBlock);
+
+                try
                 {
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.SetLength(e.BytesTransferred);
-                    this.HandleReceivedDataFromTarget(byteBlock);
+                    ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
+                    e.UserToken = newByteBlock;
+                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 
-                    try
+                    if (!targetSocket.ReceiveAsync(e))
                     {
-                        WaitReceive();
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger.Debug(LogType.Error, this, ex.Message);
-                    }
-
-                    try
-                    {
-                        ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                        e.UserToken = newByteBlock;
-                        e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-
-                        if (!targetSocket.ReceiveAsync(e))
-                        {
-                            ProcessReceived(e);
-                        }
-                    }
-                    catch
-                    {
+                        ProcessReceived(e);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    this.breakOut = true;
+                    this.BreakOut(ex.Message);
                 }
             }
             else
             {
-                this.breakOut = true;
+                this.BreakOut("远程终端主动断开");
             }
         }
 

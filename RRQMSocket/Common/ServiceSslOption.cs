@@ -9,44 +9,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Security.Cryptography.X509Certificates;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// TCP服务器辅助接口
+    /// 服务器Ssl设置
     /// </summary>
-    public interface ITcpServiceBase : IService
+    public class ServiceSslOption : SslOption
     {
-        /// <summary>
-        /// 使用Ssl加密
-        /// </summary>
-        bool UseSsl { get; }
+        private X509Certificate certificate;
 
         /// <summary>
-        /// 获取当前连接的所有客户端
+        /// 证书
         /// </summary>
-        SocketClientCollection SocketClients { get; }
+        public X509Certificate Certificate
+        {
+            get { return certificate; }
+            set { certificate = value; }
+        }
+
+        private bool clientCertificateRequired;
 
         /// <summary>
-        /// 网络监听集合
+        /// 该值指定是否向客户端请求证书用于进行身份验证。 请注意，这只是一个请求 - 如果没有提供任何证书，服务器仍然可接受连接请求
         /// </summary>
-        NetworkMonitor[] Monitors { get; }
-
-        /// <summary>
-        /// 重新设置ID
-        /// </summary>
-        /// <param name="waitSetID"></param>
-        void ResetID(WaitSetID waitSetID);
-
-        /// <summary>
-        /// 获取当前在线的所有ID集合
-        /// </summary>
-        /// <returns></returns>
-        string[] GetIDs();
-
-        /// <summary>
-        /// 清理当前已连接的所有客户端
-        /// </summary>
-        void Clear();
+        public bool ClientCertificateRequired
+        {
+            get { return clientCertificateRequired; }
+            set { clientCertificateRequired = value; }
+        }
     }
 }

@@ -31,7 +31,7 @@ namespace RRQMSocket
 
         internal ConcurrentDictionary<int, Channel> parent;
 
-        private static int cacheCapacity = 1024 * 1024 * 20;
+        private int cacheCapacity;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly ProtocolClient client1;
@@ -43,28 +43,42 @@ namespace RRQMSocket
         private readonly IntelligentDataQueue<ChannelData> dataQueue;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly AutoResetEvent waitHandle;
+        private readonly AutoResetEvent moveWaitHandle;
 
         private int bufferLength;
+        private bool canFree;
         private string lastOperationMes;
         private bool moving;
         private ChannelStatus status;
-
         internal Channel(ProtocolClient client)
         {
+            this.cacheCapacity = 1024 * 1024 * 20;
             this.status = ChannelStatus.Moving;
             this.client1 = client;
-            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity);
-            this.waitHandle = new AutoResetEvent(false);
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity)
+            {
+                OverflowWait = false,
+
+                OnQueueChanged = OnQueueChanged
+            };
+            this.moveWaitHandle = new AutoResetEvent(false);
+            this.canFree = true;
             this.bufferLength = client.BufferLength;
         }
 
         internal Channel(ProtocolSocketClient client)
         {
             this.status = ChannelStatus.Moving;
+            this.cacheCapacity = 1024 * 1024 * 20;
             this.client2 = client;
-            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity);
-            this.waitHandle = new AutoResetEvent(false);
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity)
+            {
+                OverflowWait = false,
+
+                OnQueueChanged = OnQueueChanged
+            };
+            this.moveWaitHandle = new AutoResetEvent(false);
+            this.canFree = true;
             this.bufferLength = client.BufferLength;
         }
 
@@ -77,15 +91,9 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 收到数据时触发，
-        /// 执行该事件时，数据还未到缓存池，所以无法触发已到缓存池的数据。
-        /// </summary>
-        public event RRQMChannelReceivedEventHandler Received;
-
-        /// <summary>
         /// 缓存容量
         /// </summary>
-        public static int CacheCapacity
+        public int CacheCapacity
         {
             get { return cacheCapacity; }
             set
@@ -95,6 +103,7 @@ namespace RRQMSocket
                     value = 1024;
                 }
                 cacheCapacity = value;
+                this.dataQueue.MaxSize = value;
             }
         }
 
@@ -161,10 +170,6 @@ namespace RRQMSocket
                     this.client2.SocketSend(-5, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
-            catch (Exception)
-            {
-                throw;
-            }
             finally
             {
                 byteBlock.Dispose();
@@ -207,10 +212,6 @@ namespace RRQMSocket
                 {
                     this.client2.SocketSend(-4, byteBlock.Buffer, 0, byteBlock.Len);
                 }
-            }
-            catch (Exception)
-            {
-                throw;
             }
             finally
             {
@@ -332,37 +333,36 @@ namespace RRQMSocket
                     case -4:
                         {
                             this.RequestComplete();
-                            break;
+                            moving = false;
+                            return false;
                         }
                     case -5:
                         {
                             this.RequestCancel();
-                            break;
+                            moving = false;
+                            return false;
                         }
                     case -6:
                         {
                             this.RequestDispose();
-                            break;
+                            moving = false;
+                            return false;
                         }
                     default:
                         break;
                 }
-                moving = false;
-                return false;
+            }
+
+            this.moveWaitHandle.Reset();
+            if (this.moveWaitHandle.WaitOne(timeout))
+            {
+                return this.MoveNext(timeout);
             }
             else
             {
-                this.waitHandle.Reset();
-                if (this.waitHandle.WaitOne(timeout))
-                {
-                    return this.MoveNext(timeout);
-                }
-                else
-                {
-                    this.status = ChannelStatus.Overtime;
-                    moving = false;
-                    return false;
-                }
+                this.status = ChannelStatus.Overtime;
+                moving = false;
+                return false;
             }
         }
 
@@ -456,6 +456,8 @@ namespace RRQMSocket
             {
                 throw new RRQMException($"通道已{this.status}");
             }
+
+            SpinWait.SpinUntil(() => { return this.canFree; });
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
             try
             {
@@ -537,24 +539,8 @@ namespace RRQMSocket
 
         internal void ReceivedData(ChannelData data)
         {
-            if (data.type == -3 && this.Received != null)
-            {
-                data.byteBlock.Pos = 6;
-                byte[] dataBuffer = data.byteBlock.ReadBytesPackage();
-                BytesHandledEventArgs args = new BytesHandledEventArgs(dataBuffer);
-                this.Received.Invoke(this, args);
-
-                data.byteBlock.Pos = 6;
-
-                if (args.Handled)
-                {
-                    data.byteBlock.SetHolding(false);
-                    return;
-                }
-            }
-
             this.dataQueue.Enqueue(data);
-            this.waitHandle.Set();
+            this.moveWaitHandle.Set();
             if (!moving)
             {
                 if (data.type == -4)
@@ -579,6 +565,63 @@ namespace RRQMSocket
                     data.byteBlock.Dispose();
                     this.RequestDispose();
                 }
+                else if (data.type == -10)
+                {
+                    data.byteBlock.Pos = 6;
+                    this.canFree = data.byteBlock.ReadBoolean();
+                    data.byteBlock.Dispose();
+                }
+            }
+        }
+        
+        private void Clear()
+        {
+            try
+            {
+                this.moveWaitHandle.Set();
+                this.moveWaitHandle.Dispose();
+                this.parent.TryRemove(this.id, out _);
+
+                this.dataQueue.Clear((data) =>
+                {
+                    if (data.byteBlock != null)
+                    {
+                        data.byteBlock.SetHolding(false);
+                    }
+                });
+            }
+            catch
+            {
+            }
+        }
+
+        private void OnQueueChanged(bool free)
+        {
+            if ((byte)this.status > 3)
+            {
+                return;
+            }
+
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.bufferLength);
+            try
+            {
+                byteBlock.Write(this.id);
+                byteBlock.Write(free);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSend(-10, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSend(-10, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+            }
+            catch
+            {
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 
@@ -602,27 +645,6 @@ namespace RRQMSocket
             }
             this.status = ChannelStatus.Disposed;
             this.Clear();
-        }
-
-        private void Clear()
-        {
-            try
-            {
-                this.currentByteBlock = null;
-                this.waitHandle.Set();
-                this.waitHandle.Dispose();
-                this.parent.TryRemove(this.id, out _);
-                while (this.dataQueue.TryDequeue(out ChannelData channelData))
-                {
-                    if (channelData.byteBlock != null)
-                    {
-                        channelData.byteBlock.SetHolding(false);
-                    }
-                }
-            }
-            catch
-            {
-            }
         }
     }
 }

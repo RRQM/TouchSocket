@@ -49,5 +49,6 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty BufferLengthProperty =
             DependencyProperty.Register("BufferLength", typeof(int), typeof(RRQMConfig), 1024 * 64);
+
     }
 }
