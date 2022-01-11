@@ -60,7 +60,6 @@ public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketCli
 /// <param name="obj"></param>
 public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj) where TClient : IClient;
 
-
 /// <summary>
 /// 收到流操作
 /// </summary>

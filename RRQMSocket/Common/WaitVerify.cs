@@ -24,6 +24,8 @@ namespace RRQMSocket
         /// </summary>
         public string Token { get; set; }
 
+        internal bool Handle;
+
         /// <summary>
         /// ID
         /// </summary>

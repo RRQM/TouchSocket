@@ -9,18 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// Token客户端基类
     /// </summary>
-    public interface ITokenClientBase:ITcpClientBase
+    public interface ITokenClientBase : ITcpClientBase
     {
     }
 }

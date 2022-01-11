@@ -9,18 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
-using RRQMCore.ByteManager;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 定制协议的终端接口
     /// </summary>
-    public interface IProtocolClient : ITokenClient,IProtocolClientBase
+    public interface IProtocolClient : ITokenClient, IProtocolClientBase
     {
-        
     }
 }

@@ -9,44 +9,46 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Security.Cryptography.X509Certificates;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// TCP服务器辅助接口
+    /// 客户端Ssl验证
     /// </summary>
-    public interface ITcpServiceBase : IService
+    public class ClientSslOption : SslOption
     {
         /// <summary>
-        /// 使用Ssl加密
+        /// 构造函数
         /// </summary>
-        bool UseSsl { get; }
+        public ClientSslOption()
+        {
+            X509Store store = new X509Store(StoreName.Root);
+            store.Open(OpenFlags.ReadWrite);
+            this.ClientCertificates = store.Certificates;
+            store.Close();
+        }
+
+        private string targetHost;
 
         /// <summary>
-        /// 获取当前连接的所有客户端
+        /// 目标Host
         /// </summary>
-        SocketClientCollection SocketClients { get; }
+        public string TargetHost
+        {
+            get { return targetHost; }
+            set { targetHost = value; }
+        }
+
+        private X509CertificateCollection clientCertificates;
 
         /// <summary>
-        /// 网络监听集合
+        /// 验证组合
         /// </summary>
-        NetworkMonitor[] Monitors { get; }
-
-        /// <summary>
-        /// 重新设置ID
-        /// </summary>
-        /// <param name="waitSetID"></param>
-        void ResetID(WaitSetID waitSetID);
-
-        /// <summary>
-        /// 获取当前在线的所有ID集合
-        /// </summary>
-        /// <returns></returns>
-        string[] GetIDs();
-
-        /// <summary>
-        /// 清理当前已连接的所有客户端
-        /// </summary>
-        void Clear();
+        public X509CertificateCollection ClientCertificates
+        {
+            get { return clientCertificates; }
+            set { clientCertificates = value; }
+        }
     }
 }

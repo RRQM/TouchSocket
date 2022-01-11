@@ -19,7 +19,7 @@ namespace RRQMSocket
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketClientCollection<T> where T : ISocketClient
+    public class SocketClientCollection
     {
         /// <summary>
         /// 数量
@@ -27,9 +27,9 @@ namespace RRQMSocket
         public int Count
         { get { return this.tokenDic.Count; } }
 
-        private ConcurrentDictionary<string, T> tokenDic = new ConcurrentDictionary<string, T>();
+        private ConcurrentDictionary<string, ISocketClient> tokenDic = new ConcurrentDictionary<string, ISocketClient>();
 
-        internal bool TryAdd(T socketClient)
+        internal bool TryAdd(ISocketClient socketClient)
         {
             return this.tokenDic.TryAdd(socketClient.ID, socketClient);
         }
@@ -43,6 +43,15 @@ namespace RRQMSocket
             return this.tokenDic.Keys.ToArray();
         }
 
+        /// <summary>
+        /// 获取所有的客户端
+        /// </summary>
+        /// <returns></returns>
+        public ISocketClient[] GetClients()
+        {
+            return this.tokenDic.Values.ToArray();
+        }
+
         internal bool TryRemove(string id)
         {
             return this.tokenDic.TryRemove(id, out _);
@@ -54,9 +63,27 @@ namespace RRQMSocket
         /// <param name="id"></param>
         /// <param name="socketClient"></param>
         /// <returns></returns>
-        public bool TryGetSocketClient(string id, out T socketClient)
+        public bool TryGetSocketClient(string id, out ISocketClient socketClient)
         {
             return this.tokenDic.TryGetValue(id, out socketClient);
+        }
+
+        /// <summary>
+        /// 尝试获取实例
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="socketClient"></param>
+        /// <returns></returns>
+        public bool TryGetSocketClient<TClient>(string id, out TClient socketClient) where TClient : ISocketClient
+        {
+            if (this.tokenDic.TryGetValue(id, out ISocketClient client))
+            {
+                socketClient = (TClient)client;
+                return true;
+            }
+            socketClient = default;
+            return false;
         }
 
         /// <summary>
@@ -78,11 +105,11 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public T this[string id]
+        public ISocketClient this[string id]
         {
             get
             {
-                T t;
+                ISocketClient t;
                 this.TryGetSocketClient(id, out t);
                 return t;
             }

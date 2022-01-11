@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -23,7 +18,6 @@ namespace RRQMSocket
     /// </summary>
     public class NATServiceConfig : TcpServiceConfig
     {
-
         /// <summary>
         /// 转发的目标地址
         /// </summary>
@@ -39,7 +33,5 @@ namespace RRQMSocket
         /// </summary>
         public static readonly DependencyProperty TargetIPHostProperty =
             DependencyProperty.Register("TargetIPHost", typeof(IPHost), typeof(NATServiceConfig), null);
-
-
     }
 }

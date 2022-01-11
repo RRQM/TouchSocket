@@ -14,8 +14,11 @@ using RRQMCore.Exceptions;
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -24,35 +27,24 @@ namespace RRQMSocket
     /// </summary>
     public abstract class SocketClient : BaseSocket, ISocketClient
     {
-        internal bool breakOut;
         internal string id;
         internal long lastTick;
         internal ReceiveType receiveType;
-        internal ITcpServiceBase service;
+        internal TcpServiceBase service;
         internal ServiceConfig serviceConfig;
+        internal bool useSsl;
+        /// <summary>
+        /// 设置在线状态
+        /// </summary>
+        protected bool online;
         private ClearType clearType;
         private DataHandlingAdapter dataHandlingAdapter;
         private SocketAsyncEventArgs eventArgs;
         private string ip;
         private Socket mainSocket;
-        private NetworkStream networkStream;
         private int port;
-        private bool working;
-
-        /// <summary>
-        /// 连接
-        /// </summary>
-        public event RRQMMessageEventHandler<SocketClient> Connected;
-
-        /// <summary>
-        /// 正在连接
-        /// </summary>
-        public event RRQMMessageEventHandler<SocketClient> Connecting;
-
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        public event RRQMMessageEventHandler<SocketClient> Disconnected;
+        private bool receiving;
+        private Stream workStream;
 
         /// <summary>
         /// <inheritdoc/>
@@ -80,11 +72,6 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 是否处于工作（接收中）
-        /// </summary>
-        public bool Working => this.working;
-
-        /// <summary>
         /// 用于索引的ID
         /// </summary>
         public string ID
@@ -106,10 +93,6 @@ namespace RRQMSocket
         public Socket MainSocket
         {
             get { return mainSocket; }
-            internal set
-            {
-                mainSocket = value;
-            }
         }
 
         /// <summary>
@@ -120,8 +103,7 @@ namespace RRQMSocket
         /// <summary>
         /// 判断该实例是否还在线
         /// </summary>
-        public bool Online
-        { get { return !this.breakOut; } }
+        public bool Online => online;
 
         /// <summary>
         /// <inheritdoc/>
@@ -132,12 +114,20 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ReceiveType ReceiveType
+        {
+            get { return receiveType; }
+        }
+
+        /// <summary>
         /// 端口号
         /// </summary>
         /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
-        public ITcpServiceBase Service
+        public TcpServiceBase Service
         {
             get { return service; }
         }
@@ -153,13 +143,17 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public bool UseSsl
+        {
+            get { return useSsl; }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public virtual void Close()
         {
-            this.breakOut = true;
-            if (this.mainSocket != null)
-            {
-                this.mainSocket.Close();
-            }
+            this.BreakOut($"主动调用{nameof(Close)}");
         }
 
         /// <summary>
@@ -171,97 +165,21 @@ namespace RRQMSocket
             {
                 return;
             }
+            this.BreakOut($"主动调用{nameof(Dispose)}");
             base.Dispose();
-            if (this.mainSocket != null)
-            {
-                this.mainSocket.Dispose();
-            }
-            if (this.eventArgs != null)
-            {
-                this.eventArgs.Dispose();
-                this.eventArgs = null;
-            }
-            if (this.networkStream != null)
-            {
-                this.networkStream.Dispose();
-                this.networkStream = null;
-            }
-            this.breakOut = true;
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <returns></returns>
-        public NetworkStream GetNetworkStream()
+        public Stream GetStream()
         {
-            if (this.networkStream == null)
+            if (this.workStream == null)
             {
-                throw new RRQMException($"请在连接成功，且在{ReceiveType.NetworkStream}模式下获取流");
+                workStream = new NetworkStream(this.mainSocket, true);
             }
-            return networkStream;
-        }
-
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        private void HandleBuffer(ByteBlock byteBlock)
-        {
-            try
-            {
-                this.OnPreviewHandleReceivedData(byteBlock);
-
-                if (this.disposable)
-                {
-                    return;
-                }
-                if (this.dataHandlingAdapter == null)
-                {
-                    logger.Debug(LogType.Error, this, "数据处理适配器为空");
-                    return;
-                }
-                this.dataHandlingAdapter.Received(byteBlock);
-            }
-            catch (Exception ex)
-            {
-                Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 读取IP、Port
-        /// </summary>
-        public void ReadIpPort()
-        {
-            if (MainSocket == null)
-            {
-                this.ip = null;
-                this.port = -1;
-                return;
-            }
-
-            string ipport;
-            if (MainSocket.Connected && MainSocket.RemoteEndPoint != null)
-            {
-                ipport = MainSocket.RemoteEndPoint.ToString();
-            }
-            else if (MainSocket.IsBound && MainSocket.LocalEndPoint != null)
-            {
-                ipport = MainSocket.LocalEndPoint.ToString();
-            }
-            else
-            {
-                return;
-            }
-
-            int r = ipport.LastIndexOf(":");
-            this.ip = ipport.Substring(0, r);
-            this.port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
+            return workStream;
         }
 
         /// <summary>
@@ -276,6 +194,295 @@ namespace RRQMSocket
             }
 
             this.SetAdapter(adapter);
+        }
+
+        /// <summary>
+        /// 禁用发送或接收
+        /// </summary>
+        /// <param name="how"></param>
+        public void Shutdown(SocketShutdown how)
+        {
+            this.mainSocket.Shutdown(how);
+        }
+
+        internal void GetTimeout(int time, long nowTick)
+        {
+            if (nowTick - (this.lastTick / 10000000.0) > time)
+            {
+                this.BreakOut($"超时无数据交互，被主动清理");
+            }
+        }
+
+        /// <summary>
+        /// 读取IP、Port
+        /// </summary>
+        internal void LoadSocketAndReadIpPort(Socket socket)
+        {
+            this.mainSocket = socket;
+
+            if (this.mainSocket == null)
+            {
+                this.ip = null;
+                this.port = -1;
+                return;
+            }
+
+            string ipport;
+            if (this.mainSocket.Connected && this.mainSocket.RemoteEndPoint != null)
+            {
+                ipport = this.mainSocket.RemoteEndPoint.ToString();
+            }
+            else if (this.mainSocket.IsBound && this.mainSocket.LocalEndPoint != null)
+            {
+                ipport = this.mainSocket.LocalEndPoint.ToString();
+            }
+            else
+            {
+                return;
+            }
+
+            int r = ipport.LastIndexOf(":");
+            this.ip = ipport.Substring(0, r);
+            this.port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
+        }
+
+        internal void OnEvent(int type, MesEventArgs e)
+        {
+            switch (type)
+            {
+                case 1:
+                    {
+                        this.OnConnecting((ClientOperationEventArgs)e);
+                        break;
+                    }
+                case 2:
+                    {
+                        this.PreviewConnected(e);
+                        break;
+                    }
+            }
+        }
+
+        internal long TryReceive()
+        {
+            try
+            {
+                if (this.receiving)
+                {
+                    int available = this.mainSocket.Available;
+                    if (available > 0)
+                    {
+                        Task.Run(() =>
+                        {
+                            SelectReceiveData();
+                        });
+                        return available;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.BreakOut(ex.Message);
+            }
+            return default;
+        }
+
+        /// <summary>
+        /// 启动消息接收，并且如果需要Ssl验证，则会验证，一般的，该方法会由系统自动调用。
+        /// </summary>
+        protected void BeginReceive()
+        {
+            lock (this)
+            {
+                try
+                {
+                    if (receiving)
+                    {
+                        return;
+                    }
+
+                    if (useSsl)
+                    {
+                        ServiceSslOption sslOption = this.serviceConfig.GetValue<ServiceSslOption>(TcpServiceConfig.SslOptionProperty);
+                        SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.mainSocket, false), false);
+                        sslStream.AuthenticateAsServer(sslOption.Certificate, sslOption.ClientCertificateRequired, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
+                        this.workStream = sslStream;
+                    }
+                    switch (this.receiveType)
+                    {
+                        case ReceiveType.IOCP:
+                            {
+                                eventArgs = new SocketAsyncEventArgs();
+                                eventArgs.Completed += this.EventArgs_Completed;
+                                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                                eventArgs.UserToken = byteBlock;
+                                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                                if (!MainSocket.ReceiveAsync(eventArgs))
+                                {
+                                    ProcessReceived(eventArgs);
+                                }
+                                break;
+                            }
+                        case ReceiveType.BIO:
+                            {
+                                Thread thread;
+                                if (useSsl)
+                                {
+                                    thread = new Thread(this.BIOSslStreamReceive);
+                                }
+                                else
+                                {
+                                    thread = new Thread(this.BIOReceive);
+                                }
+                                thread.IsBackground = true;
+                                thread.Name = $"{this.id}客户端接收线程";
+                                thread.Start();
+                                break;
+                            }
+                        default:
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.BreakOut(ex.Message);
+                    this.logger.Debug(LogType.Error, this, $"在{nameof(BeginReceive)}发生错误", ex);
+                }
+                finally
+                {
+                    this.receiving = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 中断终端，传递中断消息，但不实际作用Socket，如需关闭Socket，请手动释放。
+        /// </summary>
+        /// <param name="msg"></param>
+        protected void BreakOut(string msg)
+        {
+            lock (this)
+            {
+                if (this.disposable)
+                {
+                    return;
+                }
+                if (this.mainSocket != null)
+                {
+                    this.mainSocket.Close();
+                }
+                if (this.eventArgs != null)
+                {
+                    this.eventArgs.Dispose();
+                }
+                if (this.workStream != null)
+                {
+                    this.workStream.Dispose();
+                }
+                if (this.service != null)
+                {
+                    this.service.SocketClients.TryRemove(this.id);
+                }
+
+                if (this.Online)
+                {
+                    this.online = false;
+                    this.OnDisconnected(new MesEventArgs(msg));
+                }
+                this.OnBreakOut();
+            }
+        }
+
+        /// <summary>
+        /// 处理已接收到的数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+
+        /// <summary>
+        /// 当调用<see cref="BreakOut(string, bool)"/>
+        /// </summary>
+        protected virtual void OnBreakOut()
+        {
+        }
+
+        /// <summary>
+        /// 当客户端完整建立TCP连接
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnConnected(MesEventArgs e)
+        {
+            this.service.OnInternalConnected(this, e);
+        }
+
+        /// <summary>
+        /// 客户端正在连接
+        /// </summary>
+        protected virtual void OnConnecting(ClientOperationEventArgs e)
+        {
+            this.service.OnInternalConnecting(this, e);
+            if (e.IsPermitOperation)
+            {
+                if (this.CanSetDataHandlingAdapter && this.dataHandlingAdapter == null)
+                {
+                    if (e.DataHandlingAdapter == null)
+                    {
+                        this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+                    }
+                    else
+                    {
+                        this.SetDataHandlingAdapter(e.DataHandlingAdapter);
+                    }
+                }
+            }
+            else
+            {
+                BreakOut("拒绝连接");
+            }
+        }
+
+        /// <summary>
+        /// 客户端已断开连接
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnected(MesEventArgs e)
+        {
+            this.service.OnInternalDisconnected(this, e);
+        }
+
+        /// <summary>
+        ///  预处理收到数据，
+        /// 一般用于调试检验数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <returns>返回值标识该数据是否继续向下执行</returns>
+        protected virtual bool OnPreviewHandleReceivedData(ByteBlock byteBlock)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// 准备连接前设置。
+        /// <para>1.<see cref="online"/>设置在线状态</para>
+        /// <para>2.<see cref="BeginReceive"/>启动接收</para>
+        /// <para>3.<see cref="OnConnected"/>回调用连接完成</para>
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void PreviewConnected(MesEventArgs e)
+        {
+            this.online = true;
+            this.BeginReceive();
+            this.OnConnected(e);
+        }
+
+        /// <summary>
+        /// 重新设置ID
+        /// </summary>
+        /// <param name="waitSetID"></param>
+        protected virtual void ResetID(WaitSetID waitSetID)
+        {
+            this.Service.ResetID(waitSetID);
         }
 
         /// <summary>
@@ -298,183 +505,174 @@ namespace RRQMSocket
             this.dataHandlingAdapter = adapter;
         }
 
-        /// <summary>
-        /// 禁用发送或接收
-        /// </summary>
-        /// <param name="how"></param>
-        public void Shutdown(SocketShutdown how)
+        private void BIOReceive()
         {
-            if (this.MainSocket != null)
+            while (true)
             {
-                MainSocket.Shutdown(how);
-            }
-        }
-
-        /// <summary>
-        /// 启动消息接收
-        /// </summary>
-        internal void BeginReceive()
-        {
-            try
-            {
-                if (working)
+                if (this.disposable)
                 {
-                    throw new RRQMException("该客户端已经在运行时。");
+                    this.BreakOut(null);
+                    break;
                 }
-                switch (this.receiveType)
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+
+                try
                 {
-                    case ReceiveType.IOCP:
-                        {
-                            eventArgs = new SocketAsyncEventArgs();
-                            eventArgs.Completed += this.EventArgs_Completed;
-                            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                            eventArgs.UserToken = byteBlock;
-                            eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                            if (!MainSocket.ReceiveAsync(eventArgs))
-                            {
-                                ProcessReceived(eventArgs);
-                            }
-                            break;
-                        }
-                    case ReceiveType.BIO:
-                        {
-                            Thread thread = new Thread(this.BIOReceive);
-                            thread.IsBackground = true;
-                            thread.Name = $"{this.id}客户端接收线程";
-                            thread.Start();
-                            break;
-                        }
-                    case ReceiveType.NetworkStream:
-                        {
-                            this.networkStream = new NetworkStream(this.mainSocket, true);
-                            break;
-                        }
-                    default:
+                    int r = this.mainSocket.Receive(byteBlock.Buffer);
+                    if (r == 0)
+                    {
+                        byteBlock.Dispose();
+                        this.BreakOut("远程终端主动断开");
                         break;
+                    }
+                    byteBlock.SetLength(r);
+                    this.HandleBuffer(byteBlock);
                 }
-            }
-            catch
-            {
-                this.breakOut = true;
-            }
-            finally
-            {
-                this.working = true;
+                catch (Exception ex)
+                {
+                    this.BreakOut(ex.Message);
+                    break;
+                }
             }
         }
 
-        internal void GetTimeout(int time, long nowTick)
+        private void BIOSslStreamReceive()
+        {
+            while (true)
+            {
+                if (this.disposable)
+                {
+                    this.BreakOut(null);
+                    break;
+                }
+
+                try
+                {
+                    ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                    int r = this.workStream.Read(byteBlock.Buffer, 0, byteBlock.Capacity);
+                    if (r == 0)
+                    {
+                        byteBlock.Dispose();
+                        this.BreakOut("远程终端主动断开");
+                        break;
+                    }
+                    byteBlock.SetLength(r);
+                    this.HandleBuffer(byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    this.BreakOut(ex.Message);
+                    break;
+                }
+            }
+        }
+
+        private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
             try
             {
-                this.OnPerSecond();
+                ProcessReceived(e);
             }
             catch (Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在{nameof(OnPerSecond)}中发生异常", ex);
-            }
-
-            if (this.receiveType == ReceiveType.NetworkStream)
-            {
-                if (!this.mainSocket.Connected)
-                {
-                    this.breakOut = true;
-                }
-            }
-            else
-            {
-                if (nowTick - (this.lastTick / 10000000.0) > time)
-                {
-                    this.breakOut = true;
-                }
-            }
-        }
-
-        internal void OnEvent(int type, MesEventArgs e)
-        {
-            switch (type)
-            {
-                case 1:
-                    {
-                        this.OnConnected(e);
-                        break;
-                    }
-                case 2:
-                    {
-                        this.OnDisconnected(e);
-                        break;
-                    }
-                case 3:
-                    {
-                        this.OnConnecting((ClientOperationEventArgs)e);
-                        break;
-                    }
-                default:
-                    break;
+                this.BreakOut(ex.Message);
             }
         }
 
         /// <summary>
-        /// 处理已接收到的数据
+        /// 处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
-
-        /// <summary>
-        /// 当连接时
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnConnected(MesEventArgs e)
+        private void HandleBuffer(ByteBlock byteBlock)
         {
-            this.Connected?.Invoke(this, e);
+            try
+            {
+                if (this.clearType.HasFlag(ClearType.Receive))
+                {
+                    this.lastTick = DateTime.Now.Ticks;
+                }
+
+                if (this.OnPreviewHandleReceivedData(byteBlock))
+                {
+                    if (this.disposable)
+                    {
+                        return;
+                    }
+                    if (this.dataHandlingAdapter == null)
+                    {
+                        logger.Debug(LogType.Error, this, "数据处理适配器为空");
+                        return;
+                    }
+                    this.dataHandlingAdapter.Received(byteBlock);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
         }
 
-        /// <summary>
-        /// 正在连接
-        /// </summary>
-        protected virtual void OnConnecting(ClientOperationEventArgs e)
+        private void ProcessReceived(SocketAsyncEventArgs e)
         {
-            this.Connecting?.Invoke(this, e);
-
-            if (this.CanSetDataHandlingAdapter && this.dataHandlingAdapter == null)
+            if (!this.disposable)
             {
-                if (e.DataHandlingAdapter == null)
+                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
                 {
-                    this.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                    byteBlock.SetLength(e.BytesTransferred);
+                    this.HandleBuffer(byteBlock);
+                    try
+                    {
+                        ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
+                        e.UserToken = newByteBlock;
+                        e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+
+                        if (!MainSocket.ReceiveAsync(e))
+                        {
+                            ProcessReceived(e);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.BreakOut(ex.Message);
+                    }
                 }
                 else
                 {
-                    this.SetDataHandlingAdapter(e.DataHandlingAdapter);
+                    this.BreakOut("远程主机主动断开连接");
                 }
             }
         }
 
-        /// <summary>
-        /// 当断开连接时
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnDisconnected(MesEventArgs e)
+        private void SelectReceiveData()
         {
-            this.Disconnected?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 每一秒执行
-        /// </summary>
-        protected virtual void OnPerSecond()
-        {
-        }
-
-        /// <summary>
-        ///  预处理收到数据，
-        /// 一般用于调试检验数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>返回值标识该数据是否继续向下执行</returns>
-        protected virtual bool OnPreviewHandleReceivedData(ByteBlock byteBlock)
-        {
-            return true;
+            lock (this)
+            {
+                if (this.mainSocket.Available == 0)
+                {
+                    return;
+                }
+                try
+                {
+                    ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                    int r = this.GetStream().Read(byteBlock.Buffer, 0, byteBlock.Capacity);
+                    if (r == 0)
+                    {
+                        byteBlock.Dispose();
+                        this.BreakOut("远程终端主动断开");
+                    }
+                    byteBlock.SetLength(r);
+                    this.HandleBuffer(byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    this.BreakOut(ex.Message);
+                }
+            }
         }
 
         #region 同步发送
@@ -633,144 +831,32 @@ namespace RRQMSocket
 
         #endregion 异步发送
 
-        /// <summary>
-        /// 重新设置ID
-        /// </summary>
-        /// <param name="waitSetID"></param>
-        protected virtual void ResetID(WaitSetID waitSetID)
-        {
-            this.Service.ResetID(waitSetID);
-        }
-
-        /// <summary>
-        /// 等待接收
-        /// </summary>
-        protected virtual void WaitReceive()
-        {
-        }
-
-        private void BIOReceive()
-        {
-            while (true)
-            {
-                if (this.disposable)
-                {
-                    break;
-                }
-                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-
-                try
-                {
-                    int r = this.mainSocket.Receive(byteBlock.Buffer);
-                    if (r == 0)
-                    {
-                        byteBlock.Dispose();
-                        break;
-                    }
-                    byteBlock.SetLength(r);
-                    this.HandleBuffer(byteBlock);
-                }
-                catch
-                {
-                    break;
-                }
-            }
-            this.breakOut = true;
-        }
-
-        private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            try
-            {
-                if (e.LastOperation == SocketAsyncOperation.Receive)
-                {
-                    ProcessReceived(e);
-                }
-                else
-                {
-                    this.breakOut = true;
-                }
-            }
-            catch
-            {
-                this.breakOut = true;
-            }
-        }
-
-        private void ProcessReceived(SocketAsyncEventArgs e)
-        {
-            if (!this.disposable)
-            {
-                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
-                {
-                    if (this.clearType.HasFlag(ClearType.Receive))
-                    {
-                        this.lastTick = DateTime.Now.Ticks;
-                    }
-
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.SetLength(e.BytesTransferred);
-                    this.HandleBuffer(byteBlock);
-
-                    try
-                    {
-                        WaitReceive();
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger.Debug(LogType.Error, this, ex.Message);
-                    }
-
-                    try
-                    {
-                        ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                        e.UserToken = newByteBlock;
-                        e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-
-                        if (!MainSocket.ReceiveAsync(e))
-                        {
-                            ProcessReceived(e);
-                        }
-                    }
-                    catch
-                    {
-                    }
-                }
-                else
-                {
-                    this.breakOut = true;
-                }
-            }
-            else
-            {
-                this.breakOut = true;
-            }
-        }
-
         private void Sent(byte[] buffer, int offset, int length, bool isAsync)
         {
-            if (!this.Online)
+            if (this.useSsl)
             {
-                throw new RRQMNotConnectedException("该实例已断开");
-            }
-            if (isAsync)
-            {
-                this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
+                this.workStream.Write(buffer, offset, length);
             }
             else
             {
-                while (length > 0)
+                if (isAsync)
                 {
-                    int r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
-                    if (r == 0 && length > 0)
+                    this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
+                }
+                else
+                {
+                    while (length > 0)
                     {
-                        throw new RRQMException("发送数据不完全");
+                        int r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                        if (r == 0 && length > 0)
+                        {
+                            throw new RRQMException("发送数据不完全");
+                        }
+                        offset += r;
+                        length -= r;
                     }
-                    offset += r;
-                    length -= r;
                 }
             }
-
             if (this.clearType.HasFlag(ClearType.Send))
             {
                 this.lastTick = DateTime.Now.Ticks;

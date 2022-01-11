@@ -356,47 +356,40 @@ namespace RRQMSocket
         private void BeginReceive(IPHost iPHost)
         {
             int threadCount = this.ServiceConfig.ThreadCount;
-            try
+            Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            PreviewBind(socket);
+            socket.Bind(iPHost.EndPoint);
+
+            this.monitor = new NetworkMonitor(iPHost, socket);
+
+            switch (this.serviceConfig.ReceiveType)
             {
-                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                PreviewBind(socket);
-                socket.Bind(iPHost.EndPoint);
-
-                this.monitor = new NetworkMonitor(iPHost, socket);
-
-                switch (this.serviceConfig.ReceiveType)
-                {
-                    case ReceiveType.IOCP:
+                case ReceiveType.IOCP:
+                    {
+                        SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
+                        eventArg.Completed += this.IO_Completed;
+                        ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                        eventArg.UserToken = byteBlock;
+                        eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
+                        eventArg.RemoteEndPoint = iPHost.EndPoint;
+                        if (!socket.ReceiveFromAsync(eventArg))
                         {
-                            SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
-                            eventArg.Completed += this.IO_Completed;
-                            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                            eventArg.UserToken = byteBlock;
-                            eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-                            eventArg.RemoteEndPoint = iPHost.EndPoint;
-                            if (!socket.ReceiveFromAsync(eventArg))
-                            {
-                                ProcessReceive(socket, eventArg);
-                            }
-                            break;
+                            ProcessReceive(socket, eventArg);
                         }
+                        break;
+                    }
 
-                    case ReceiveType.BIO:
-                        {
-                            Thread thread = new Thread(Received);
-                            thread.IsBackground = true;
-                            thread.Start(monitor);
-                            break;
-                        }
+                case ReceiveType.BIO:
+                    {
+                        Thread thread = new Thread(Received);
+                        thread.IsBackground = true;
+                        thread.Start(monitor);
+                        break;
+                    }
 
-                    case ReceiveType.NetworkStream:
-                    default:
-                        throw new RRQMException("UDP中只支持IOCP和BIO模式");
-                }
-            }
-            catch (Exception ex)
-            {
-                this.logger.Debug(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
+                case ReceiveType.Select:
+                default:
+                    throw new RRQMException("UDP中只支持IOCP和BIO模式");
             }
         }
 

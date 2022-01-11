@@ -16,7 +16,7 @@ namespace RRQMSocket
     /// <summary>
     /// 协议服务器
     /// </summary>
-    public abstract class ProtocolService<TClient> : TokenService<TClient> where TClient : ProtocolSocketClient, new()
+    public class ProtocolService<TClient> : TokenService<TClient> where TClient : ProtocolSocketClient, new()
     {
         private bool canResetID;
 

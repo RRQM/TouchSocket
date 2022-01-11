@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using RRQMCore.Run;
 
 namespace RRQMSocket
@@ -16,8 +17,11 @@ namespace RRQMSocket
     /// <summary>
     /// 令箭辅助类
     /// </summary>
-    public abstract class TokenSocketClient : SocketClient,ITokenClientBase
+    public abstract class TokenSocketClient : SocketClient, ITokenClientBase
     {
+        internal int verifyTimeout;
+        internal string verifyToken;
+        private bool isHandshaked;
         private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
 
         /// <summary>
@@ -29,8 +33,102 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 验证超时时间,默认为3000ms
+        /// </summary>
+        public int VerifyTimeout
+        {
+            get { return verifyTimeout; }
+        }
+
+        /// <summary>
+        /// 连接令箭
+        /// </summary>
+        public string VerifyToken
+        {
+            get { return verifyToken; }
+        }
+
+        /// <summary>
         /// 等待返回池
         /// </summary>
         public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
+
+        /// <summary>
+        /// 处理接收数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        {
+            if (isHandshaked)
+            {
+                this.HandleTokenReceivedData(byteBlock, obj);
+            }
+            else
+            {
+                WaitVerify waitVerify = WaitVerify.GetVerifyInfo(byteBlock.ToArray());
+
+                VerifyOption verifyOption = new VerifyOption();
+                verifyOption.Token = waitVerify.Token;
+                this.OnVerifyToken(verifyOption);
+                if (verifyOption.Accept)
+                {
+                    waitVerify.ID = this.ID;
+                    waitVerify.Status = 1;
+                    var data = waitVerify.GetData();
+                    base.Send(data,0,data.Length);
+                    this.isHandshaked = true;
+                    this.online = true;
+                    this.OnConnected(new MesEventArgs("Token客户端成功连接"));
+                }
+                else
+                {
+                    waitVerify.Status = 2;
+                    waitVerify.Message = verifyOption.ErrorMessage;
+                    var data = waitVerify.GetData();
+                    base.Send(data, 0, data.Length);
+                    this.BreakOut(verifyOption.ErrorMessage);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理Token数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="obj"></param>
+        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, object obj);
+
+        /// <summary>
+        /// 当验证Token时
+        /// </summary>
+        /// <param name="verifyOption"></param>
+        protected virtual void OnVerifyToken(VerifyOption verifyOption)
+        {
+            if (verifyOption.Token == this.verifyToken)
+            {
+                verifyOption.Accept = true;
+            }
+            else
+            {
+                verifyOption.ErrorMessage = "Token不受理";
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void PreviewConnected(MesEventArgs e)
+        {
+            this.BeginReceive();
+            RRQMCore.Run.EasyAction.DelayRun(this.verifyTimeout, () =>
+             {
+                 if (!isHandshaked)
+                 {
+                     this.BreakOut("验证超时");
+                 }
+             });
+        }
     }
 }

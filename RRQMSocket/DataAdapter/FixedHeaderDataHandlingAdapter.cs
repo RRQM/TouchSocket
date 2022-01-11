@@ -25,7 +25,7 @@ namespace RRQMSocket
         private int maxSizeHeader = 1024 * 1024 * 10;
 
         /// <summary>
-        /// 获取或设置包头的最大值（默认为10Mb）
+        /// 获取或设置包数据的最大值（默认为1024*1024*10）
         /// </summary>
         public int MaxSizeHeader
         {
@@ -36,7 +36,7 @@ namespace RRQMSocket
         private int minSizeHeader = 0;
 
         /// <summary>
-        /// 获取或设置包头的最小值（默认为0）
+        /// 获取或设置包数据的最小值（默认为0）
         /// </summary>
         public int MinSizeHeader
         {

@@ -443,7 +443,6 @@ namespace RRQMSocket
                                         }
 
                                         channel.Write(byteBlock.Buffer, 0, r);
-
                                         streamOperator.AddStreamFlow(r, size);
                                     }
                                 }
@@ -634,7 +633,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, object obj)
         {
             short procotol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
             switch (procotol)
@@ -696,6 +695,7 @@ namespace RRQMSocket
                 case -4:
                 case -5:
                 case -6:
+                case -10:
                     {
                         try
                         {
