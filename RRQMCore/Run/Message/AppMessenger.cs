@@ -94,7 +94,7 @@ namespace RRQMCore.Run
             }
             catch (Exception)
             {
-                throw new MessageRegisteredException("该Token消息已注册");
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
             }
         }
 
@@ -140,7 +140,7 @@ namespace RRQMCore.Run
             }
             catch (Exception)
             {
-                throw new MessageRegisteredException("该Token消息已注册");
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
             }
         }
 
@@ -163,7 +163,7 @@ namespace RRQMCore.Run
             }
             catch (Exception)
             {
-                throw new MessageRegisteredException("该Token消息已注册");
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
             }
         }
 
@@ -186,7 +186,7 @@ namespace RRQMCore.Run
             }
             catch (Exception)
             {
-                throw new MessageRegisteredException("该Token消息已注册");
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
             }
         }
 
@@ -208,7 +208,7 @@ namespace RRQMCore.Run
             }
             catch (Exception)
             {
-                throw new MessageRegisteredException("该Token消息已注册");
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
             }
         }
 
@@ -256,7 +256,7 @@ namespace RRQMCore.Run
             }
             catch (KeyNotFoundException)
             {
-                throw new MessageNotFoundException("未找到该消息");
+                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
             }
         }
 
@@ -276,7 +276,7 @@ namespace RRQMCore.Run
             }
             catch (KeyNotFoundException)
             {
-                throw new MessageNotFoundException("未找到该消息");
+                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
             }
         }
     }
