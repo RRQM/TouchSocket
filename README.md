@@ -55,7 +55,7 @@
 - Blazor
 - Xamarin
 - Mono
-- Unity
+- Unity（在IL2cpp编译时，需要导入源码）
 - 其他（即所有C#系）
 
 ## 🌴RRQMSocket特点速览
@@ -134,36 +134,7 @@ tcpClient.Send(new byte[]{1,2,3});
 ```
 
 ## 🧲应用场景模拟
-***
- **【场景】** 
-
-我的服务器（客户端）是物联网硬件（或PLC硬件），我可以使用什么？
-
- **【应用建议】** 
-
-可以使用TcpService或TcpClient组件，这两个组件和原生Socket功能完全一样，只是可靠性、并发性能有很大的保障。不过一般的，RRQM内置的数据处理适配器可能不足以应对所有的数据协议包，所以可能需要自己重写数据处理适配器，具体详情可以参考一下连接内容。
-
-- [【RRQMSocket】C# 创建高并发、高性能TCP服务器，可用于解析HTTP、FTP、MQTT、搭建游戏服务器等](https://blog.csdn.net/qq_40374647/article/details/110679663)
-- [【RRQMSocket】C# 创建TCP客户端，对应RRQM服务器或其他服务器](https://blog.csdn.net/qq_40374647/article/details/121469610)
-- [【RRQMSocket】C# 利用数据处理适配器解决粘包、分包问题](https://blog.csdn.net/qq_40374647/article/details/110680179)
-- [【RRQMSocket】C# 自定义数据处理适配器](https://blog.csdn.net/qq_40374647/article/details/121824453)
-
-***
-
- **【场景】** 
-
-我想搭建一个服务器，能够实现文件传输，且需要一定交互能力，比如：客户端注册、客户端提交自身数据、服务器分发文件等。应该如何实现？
-
- **【应用建议】** 
-实现方式有很多，此处就最简单的方式推荐给大家。
-服务器搭建FileService+RPCService的组合即可（仅用一个端口实现的哦），然后客户端仅一个FileClient即可。可以参考下列内容。
-
->  **说明：FileService继承自TcpRpcParser，所以在添加解析器时，直接把FileService添加即可。同理，FileClient继承自TcpRpcClient。** 
-
-- [【RRQMSocket.RPC】C# 创建多协议、多方式、多语言、多平台RPC框架](https://blog.csdn.net/qq_40374647/article/details/109143243)
-- [【RRQMSocket.RPC】C# 创建基于TCP协议的支持ref和out关键字的RPC](https://blog.csdn.net/qq_40374647/article/details/121512993)
-- [【RRQMSocket.FileTransfer】C# 超大文件传输、续传、可高性能、高并发运行、断点续传、换网续传、快速上传等功能](https://blog.csdn.net/qq_40374647/article/details/100546120)
-
+[场景入口](https://gitee.com/RRQM_Home/RRQMBox/wikis/%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%E6%A8%A1%E6%8B%9F)
 
 ***
 
@@ -175,39 +146,8 @@ tcpClient.Send(new byte[]{1,2,3});
 
 ## 后续开发计划
 
-1. KCP功能开发
-2. WebSocket组件
+1. FTP功能开发
 
+## 支持作者
 
-## 💕 支持本项目
-您的支持就是我不懈努力的动力。
-
-#### 爱心赞助名单（以下排名只按照打赏时间顺序）
-
- 1. Bobo Joker（200￥）
- 2. UnitySir（66￥）
- 3. Coffee（100￥）
- 4. Ninety（50￥）
- 5. *琼（100￥）
- 6. **安（5￥）
- 7. **文（200￥）
- 8. tonychen899（50￥）
- 9. *平（50￥）
- 10. 杜（400+100￥）
- 11. 施*双（666￥）
-
-#### 商业授权名单（以下排名只按照商业采购时间顺序）
-
- 1. 凯斯得****有限公司
- 2. 爱你三千遍
- 3. 小老虎
- 4. 三只松鼠
- 5. 午后的阳光
- 6. 菜鸟老何
- 7. 泉州市自发****有限公司
-
-#### 免费版提名名单（以下排名只按照时间顺序）（欢迎大家提供信息）
- 1. 上海建勖****有限公司
-
-<img src="https://images.gitee.com/uploads/images/2021/0330/234046_7662fb8c_8553710.png" width = "600" height = "400" alt="图片名称" align=center />
-
+[支持入口](https://gitee.com/RRQM_Home/RRQMBox/wikis/%E6%94%AF%E6%8C%81%E4%BD%9C%E8%80%85)
