@@ -133,6 +133,32 @@ tcpClient.Connect();
 tcpClient.Send(new byte[]{1,2,3});
 ```
 
+【Ssl加密】
+
+在[RRQMBox](https://gitee.com/RRQM_Home/RRQMBox/tree/master/Ssl%E8%AF%81%E4%B9%A6%E7%9B%B8%E5%85%B3)中，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
+
+在服务器中只需设置配置SslOption属性和接收模式（接收模式在Ssl模式下只支持BIO和Select）。
+
+```
+config.SslOption = new ServiceSslOption() { Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), SslProtocols = SslProtocols.Tls12 };
+config.ReceiveType = ReceiveType.Select;
+
+```
+
+客户端配置
+
+```
+config.ReceiveType = ReceiveType.BIO;
+config.SslOption = new ClientSslOption()
+{
+    ClientCertificates = new X509CertificateCollection() { new X509Certificate2("RRQMSocket.pfx", "RRQMSocket") },
+    SslProtocols = SslProtocols.Tls12,
+    TargetHost = "127.0.0.1",
+    CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
+};
+```
+
+
 ## 🧲应用场景模拟
 [场景入口](https://gitee.com/RRQM_Home/RRQMBox/wikis/%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%E6%A8%A1%E6%8B%9F)
 
