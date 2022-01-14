@@ -718,7 +718,7 @@ namespace RRQMSocket
                             }
                             else
                             {
-                                client.Dispose();
+                                newSocket.Dispose();
                             }
                         }
                         catch (Exception ex)
