@@ -22,7 +22,7 @@ namespace RRQMSocket.Http
     /// <summary>
     /// Http基础头部
     /// </summary>
-    public abstract class HttpBase
+    public abstract class HttpBase : IUnfixedHeaderRequestInfo
     {
         /// <summary>
         /// 构造函数
@@ -63,7 +63,7 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 内容长度
         /// </summary>
-        public int Content_Length { get; set; }
+        public int BodyLength { get; set; }
 
         /// <summary>
         /// 内容类型
@@ -157,7 +157,7 @@ namespace RRQMSocket.Http
 
             string contentLength = this.GetHeader(HttpHeaders.ContentLength);
             int.TryParse(contentLength, out int content_Length);
-            this.Content_Length = content_Length;
+            this.BodyLength = content_Length;
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace RRQMSocket.Http
         public void SetContent(byte[] content)
         {
             this.content = content;
-            this.Content_Length = content.Length;
+            this.BodyLength = content.Length;
         }
 
         /// <summary>
@@ -255,6 +255,44 @@ namespace RRQMSocket.Http
             //初始化内容
             encoding = encoding != null ? encoding : Encoding.UTF8;
             SetContent(encoding.GetBytes(content));
+        }
+        static byte[] terminatorCode = Encoding.UTF8.GetBytes("\r\n\r\n");
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        public DataResult OnParsingBody(byte[] body)
+        {
+            if (body.Length==this.BodyLength)
+            {
+                this.SetContent(body);
+                return DataResult.SuccessResult;
+            }
+            return DataResult.ErrorResult;
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public bool OnParsingHeader(ByteBlock byteBlock, int length)
+        {
+            int index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, length, terminatorCode);
+            if (index > 0)
+            {
+                int headerLength = index - byteBlock.Pos;
+                this.ReadHeaders(byteBlock.Buffer, byteBlock.Pos, headerLength);
+                byteBlock.Pos += headerLength;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

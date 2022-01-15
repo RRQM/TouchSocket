@@ -22,6 +22,16 @@ namespace RRQMSocket.Http
     /// </summary>
     public class HttpDataHandlingAdapter : DataHandlingAdapter
     {
+        private ByteBlock bodyByteBlock;
+
+        private HttpBase httpBase;
+
+        private HttpType httpType;
+
+        private ByteBlock tempByteBlock;
+
+        private byte[] terminatorCode;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -34,8 +44,10 @@ namespace RRQMSocket.Http
             this.httpType = httpType;
         }
 
-        private HttpType httpType;
-        private byte[] terminatorCode;
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => false;
 
         /// <summary>
         /// 允许的最大长度
@@ -45,12 +57,13 @@ namespace RRQMSocket.Http
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanSplicingSend => false;
-
-        private ByteBlock tempByteBlock;
-        private ByteBlock bodyByteBlock;
-
-        private HttpBase httpBase;
+        /// <param name="dataResult"></param>
+        /// <returns></returns>
+        protected override bool OnReceivingError(DataResult dataResult)
+        {
+            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
+            return true;
+        }
 
         /// <summary>
         /// 预处理
@@ -74,7 +87,7 @@ namespace RRQMSocket.Http
             }
             else
             {
-                int surLen = this.httpBase.Content_Length - this.bodyByteBlock.Len;
+                int surLen = this.httpBase.BodyLength - this.bodyByteBlock.Len;
                 if (r == surLen)
                 {
                     this.bodyByteBlock.Write(buffer, 0, surLen);
@@ -91,79 +104,6 @@ namespace RRQMSocket.Http
                     this.bodyByteBlock.Write(buffer, 0, r);
                 }
             }
-        }
-
-        private void Split(byte[] buffer, int offset, int length)
-        {
-            int index = buffer.IndexOfFirst(offset, length, this.terminatorCode);
-            if (index > 0)
-            {
-                switch (this.httpType)
-                {
-                    case HttpType.Server:
-                        this.httpBase = new HttpRequest();
-                        break;
-
-                    case HttpType.Client:
-                        this.httpBase = new HttpResponse();
-                        break;
-                }
-
-                this.httpBase.ReadHeaders(buffer, 0, index);
-
-                if (this.httpBase.Content_Length > 0)
-                {
-                    this.bodyByteBlock = BytePool.GetByteBlock(this.httpBase.Content_Length);
-                    int surLength = length - (index + 1);
-                    if (surLength - this.httpBase.Content_Length == 0)
-                    {
-                        this.bodyByteBlock.Write(buffer, index + 1, this.httpBase.Content_Length);
-                        this.PreviewHandle(this.httpBase);
-                    }
-                    else if (surLength - this.httpBase.Content_Length > 0)
-                    {
-                        this.bodyByteBlock.Write(buffer, index + 1, this.httpBase.Content_Length);
-                        int indexBuffer = index + 1 + this.httpBase.Content_Length;
-                        this.PreviewHandle(this.httpBase);
-                        this.Split(buffer, indexBuffer, length);
-                    }
-                    else
-                    {
-                        this.bodyByteBlock.Write(buffer, index + 1, surLength);
-                    }
-                }
-                else
-                {
-                    this.PreviewHandle(this.httpBase);
-                }
-            }
-            else if (length > this.MaxSize)
-            {
-                if (this.tempByteBlock != null)
-                {
-                    this.tempByteBlock.Dispose();
-                    this.tempByteBlock = null;
-                }
-                throw new RRQMOverlengthException("在已接收数据大于设定值的情况下未找到终止符号，已放弃接收");
-            }
-            else if (this.tempByteBlock == null)
-            {
-                this.tempByteBlock = BytePool.GetByteBlock(length * 2);
-                this.tempByteBlock.Write(buffer, offset, length - offset);
-            }
-        }
-
-        private void PreviewHandle(HttpBase httpBase)
-        {
-            this.httpBase = null;
-            if (this.bodyByteBlock != null)
-            {
-                httpBase.SetContent(this.bodyByteBlock.ToArray());
-                this.bodyByteBlock.Dispose();
-                this.bodyByteBlock = null;
-            }
-            httpBase.ReadFromBase();
-            this.GoReceived(null, httpBase);
         }
 
         /// <summary>
@@ -186,6 +126,91 @@ namespace RRQMSocket.Http
         protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void Reset()
+        {
+            this.httpBase = null;
+            this.tempByteBlock = null;
+            this.bodyByteBlock = null;
+        }
+
+        private void PreviewHandle(HttpBase httpBase)
+        {
+            this.httpBase = null;
+            if (this.bodyByteBlock != null)
+            {
+                httpBase.SetContent(this.bodyByteBlock.ToArray());
+                this.bodyByteBlock.Dispose();
+                this.bodyByteBlock = null;
+            }
+            httpBase.ReadFromBase();
+            this.GoReceived(null, httpBase);
+        }
+
+        private void Split(byte[] buffer, int offset, int length)
+        {
+            int index = buffer.IndexOfFirst(offset, length, this.terminatorCode);
+            if (index > 0)
+            {
+                switch (this.httpType)
+                {
+                    case HttpType.Server:
+                        this.httpBase = new HttpRequest();
+                        break;
+
+                    case HttpType.Client:
+                        this.httpBase = new HttpResponse();
+                        break;
+                }
+
+                this.httpBase.ReadHeaders(buffer, 0, index);
+
+                if (this.httpBase.BodyLength > 0)
+                {
+                    this.bodyByteBlock = BytePool.GetByteBlock(this.httpBase.BodyLength);
+                    int surLength = offset+length - (index + 1);
+                    if (surLength ==this.httpBase.BodyLength)
+                    {
+                        this.bodyByteBlock.Write(buffer, index + 1, this.httpBase.BodyLength);
+                        this.PreviewHandle(this.httpBase);
+                    }
+                    else if (surLength - this.httpBase.BodyLength > 0)
+                    {
+                        int len = this.httpBase.BodyLength;
+                        this.bodyByteBlock.Write(buffer, index + 1, len);
+                        int indexBuffer = index + 1 + len;
+                        this.PreviewHandle(this.httpBase);
+                        this.Split(buffer, indexBuffer, surLength- len);
+                        return;
+                    }
+                    else
+                    {
+                        this.bodyByteBlock.Write(buffer, index + 1, surLength);
+                    }
+                }
+                else
+                {
+                    this.PreviewHandle(this.httpBase);
+                }
+            }
+            else if (length > this.MaxSize)
+            {
+                if (this.tempByteBlock != null)
+                {
+                    this.tempByteBlock.Dispose();
+                    this.tempByteBlock = null;
+                }
+                throw new RRQMOverlengthException("在已接收数据大于设定值的情况下未找到终止符号，已放弃接收");
+            }
+            else if (this.tempByteBlock == null)
+            {
+                this.tempByteBlock = new ByteBlock();
+                this.tempByteBlock.Write(buffer, offset, length);
+            }
         }
     }
 }
