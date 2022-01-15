@@ -29,7 +29,7 @@
 | 名称|地址 |描述|
 |---|---|---|
 |[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?label=RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| RRQMSocket是一个整合性的、超轻量级的网络通信框架。<br>包含了TCP、UDP、Ssl、Channel、Protocol、Token、<br>租户模式等一系列的通信模块。其扩展组件包含：WebSocket、<br>大文件传输、RPC、WebApi、XmlRpc、JsonRpc等内容|
-|[![NuGet version](https://img.shields.io/nuget/v/RRQMSocketFramework.svg?label=RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |**RRQMSocketFramework**是RRQMSocket系列的增强企业版，<br>两者在基础功能上没有区别，但是在扩展功能上有一定差异性，<br>例如RPC中的EventBus、文件传输中的限速功能等，<br>具体差异请看[RRQM商业运营](https://gitee.com/RRQM_OS/RRQM/wikis/%E5%95%86%E4%B8%9A%E8%BF%90%E8%90%A5)|
+|[![NuGet version](https://img.shields.io/nuget/v/RRQMSocketFramework.svg?label=RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |**RRQMSocketFramework**是RRQMSocket系列的增强企业版，<br>两者在基础功能上没有区别，但是在扩展功能上有一定差异性，<br>例如RPC中的EventBus、文件传输中的限速功能等，<br>具体差异请看[RRQM商业运营](https://gitee.com/RRQM_Home/RRQMBox/wikis/%E5%95%86%E4%B8%9A%E8%BF%90%E8%90%A5|
 
 ## 🎀依赖、扩展库
 | 名称|地址 |描述|
