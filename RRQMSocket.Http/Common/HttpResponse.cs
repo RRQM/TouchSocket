@@ -72,7 +72,7 @@ namespace RRQMSocket.Http
                 stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {StatusCode} {StatusMessage}");
             if (!string.IsNullOrEmpty(this.Content_Type))
                 stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
-            stringBuilder.AppendLine("Content-Length: " + this.Content_Length);
+            stringBuilder.AppendLine("Content-Length: " + this.BodyLength);
             foreach (var headerkey in this.Headers.Keys)
             {
                 stringBuilder.Append($"{headerkey}: ");
@@ -85,7 +85,7 @@ namespace RRQMSocket.Http
 
         private void BuildContent(ByteBlock byteBlock)
         {
-            if (this.Content_Length > 0)
+            if (this.BodyLength > 0)
             {
                 byteBlock.Write(this.Content);
             }
@@ -126,7 +126,7 @@ namespace RRQMSocket.Http
             }
             string contentLength = this.GetHeader(HttpHeaders.ContentLength);
             int.TryParse(contentLength, out int content_Length);
-            this.Content_Length = content_Length;
+            this.BodyLength = content_Length;
         }
     }
 }

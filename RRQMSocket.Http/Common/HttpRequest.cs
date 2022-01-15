@@ -73,7 +73,7 @@ namespace RRQMSocket.Http
 
             if (!string.IsNullOrEmpty(this.Content_Type))
                 stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
-            stringBuilder.AppendLine("Content-Length: " + this.Content_Length);
+            stringBuilder.AppendLine("Content-Length: " + this.BodyLength);
 
             foreach (var headerkey in this.Headers.Keys)
             {
@@ -87,9 +87,9 @@ namespace RRQMSocket.Http
 
         private void BuildContent(ByteBlock byteBlock)
         {
-            if (this.Content_Length > 0)
+            if (this.BodyLength > 0)
             {
-                if (this.Content_Length != this.Content.Length)
+                if (this.BodyLength != this.Content.Length)
                 {
                     throw new RRQMException("内容实际长度与设置长度不相等");
                 }
@@ -141,7 +141,7 @@ namespace RRQMSocket.Http
 
             string contentLength = this.GetHeader(HttpHeaders.ContentLength);
             int.TryParse(contentLength, out int content_Length);
-            this.Content_Length = content_Length;
+            this.BodyLength = content_Length;
 
             if (this.Method == "GET")
             {
