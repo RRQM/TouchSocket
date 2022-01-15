@@ -9,28 +9,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-
 namespace RRQMSocket
 {
     /// <summary>
-    /// 简单Token客户端
+    /// 请求解析对象接口。
+    ///<para>此处接口设计借鉴SuperSocket，只为大家更好理解</para>
     /// </summary>
-    public class SimpleTokenClient : TokenClient
+    public interface IRequestInfo
     {
-        /// <summary>
-        /// 接收到数据
-        /// </summary>
-        public event RRQMReceivedEventHandler<SimpleTokenClient> Received;
-
-        /// <summary>
-        /// 接收数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.Received?.Invoke(this, byteBlock, requestInfo);
-        }
     }
 }

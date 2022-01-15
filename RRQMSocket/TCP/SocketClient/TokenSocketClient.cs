@@ -57,47 +57,73 @@ namespace RRQMSocket
         /// 处理接收数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="requestInfo"></param>
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (isHandshaked)
             {
-                this.HandleTokenReceivedData(byteBlock, obj);
+                this.HandleTokenReceivedData(byteBlock, requestInfo);
             }
             else
             {
-                WaitVerify waitVerify = WaitVerify.GetVerifyInfo(byteBlock.ToArray());
-
-                VerifyOption verifyOption = new VerifyOption();
-                verifyOption.Token = waitVerify.Token;
-                this.OnVerifyToken(verifyOption);
-                if (verifyOption.Accept)
+                try
                 {
-                    waitVerify.ID = this.ID;
-                    waitVerify.Status = 1;
-                    var data = waitVerify.GetData();
-                    base.Send(data,0,data.Length);
-                    this.isHandshaked = true;
-                    this.online = true;
-                    this.OnConnected(new MesEventArgs("Token客户端成功连接"));
+                    WaitVerify waitVerify = WaitVerify.GetVerifyInfo(byteBlock.ToArray());
+                    VerifyOption verifyOption = new VerifyOption();
+                    verifyOption.Token = waitVerify.Token;
+                    this.OnVerifyToken(verifyOption);
+                    if (verifyOption.Accept)
+                    {
+                        waitVerify.ID = this.ID;
+                        waitVerify.Status = 1;
+                        var data = waitVerify.GetData();
+                        base.Send(data, 0, data.Length);
+                        this.isHandshaked = true;
+                        this.online = true;
+                        this.OnConnected(new MesEventArgs("Token客户端成功连接"));
+                    }
+                    else
+                    {
+                        waitVerify.Status = 2;
+                        waitVerify.Message = verifyOption.ErrorMessage;
+                        var data = waitVerify.GetData();
+                        base.Send(data, 0, data.Length);
+                        this.BreakOut(verifyOption.ErrorMessage);
+                    }
                 }
-                else
+                catch (System.Exception ex)
                 {
-                    waitVerify.Status = 2;
-                    waitVerify.Message = verifyOption.ErrorMessage;
-                    var data = waitVerify.GetData();
-                    base.Send(data, 0, data.Length);
-                    this.BreakOut(verifyOption.ErrorMessage);
+                    if (this.OnAbnormalVerify(byteBlock.ToArray()))
+                    {
+                        this.isHandshaked = true;
+                        this.online = true;
+                        this.OnConnected(new MesEventArgs("非常规Token客户端成功连接"));
+                    }
+                    else
+                    {
+                        this.BreakOut(ex.Message);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// 收到非正常连接。
+        /// 一般地，这是由其他类型客户端发起的连接。
+        /// </summary>
+        /// <param name="data">收到的数据</param>
+        /// <returns>指示是否接受此请求</returns>
+        protected virtual bool OnAbnormalVerify(byte[] data)
+        {
+            return false;
         }
 
         /// <summary>
         /// 处理Token数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, object obj);
+        /// <param name="requestInfo"></param>
+        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
 
         /// <summary>
         /// 当验证Token时

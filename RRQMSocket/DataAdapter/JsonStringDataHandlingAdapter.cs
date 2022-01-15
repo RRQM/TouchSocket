@@ -9,143 +9,149 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace RRQMSocket
 {
-    /// <summary>
-    /// Json字符串数据处理解析器（该解析器由网友"明月"提供）
-    /// </summary>
-    public class JsonStringDataHandlingAdapter : DataHandlingAdapter
-    {
-        private ByteBlock Temp;
+    ///// <summary>
+    ///// Json字符串数据处理解析器（该解析器由网友"明月"提供）
+    ///// </summary>
+    //public class JsonStringDataHandlingAdapter : DataHandlingAdapter
+    //{
+    //    private ByteBlock Temp;
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override bool CanSplicingSend => false;
+    //    /// <summary>
+    //    /// <inheritdoc/>
+    //    /// </summary>
+    //    public override bool CanSplicingSend => false;
 
-        /// <summary>
-        /// 预解析
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
-        {
-            byte[] buffer = byteBlock.Buffer;
-            int length = byteBlock.Len;
+    //    /// <summary>
+    //    /// 预解析
+    //    /// </summary>
+    //    /// <param name="byteBlock"></param>
+    //    protected override void PreviewReceived(ByteBlock byteBlock)
+    //    {
+    //        byte[] buffer = byteBlock.Buffer;
+    //        int length = byteBlock.Len;
 
-            //Console.WriteLine("----------------接收的新数据-------------------");
-            if (Temp != null)
-            {
-                Temp.Write(byteBlock.Buffer, 0, length);
-                buffer = Temp.Buffer;
-                length = (int)Temp.Length;
-            }
+    //        //Console.WriteLine("----------------接收的新数据-------------------");
+    //        if (Temp != null)
+    //        {
+    //            Temp.Write(byteBlock.Buffer, 0, length);
+    //            buffer = Temp.Buffer;
+    //            length = (int)Temp.Length;
+    //        }
 
-            string msg = Encoding.UTF8.GetString(buffer, 0, length);
-            if (msg.Contains("}{"))
-            {
-                //Console.WriteLine("----------------发生粘包-------------------");
-                string[] mes = Regex.Split(msg, "}{");
-                for (int i = 0; i < mes.Length; i++)
-                {
-                    string str = mes[i];
-                    if (i == 0)
-                    {
-                        str += "}";
-                    }
-                    else if (i == mes.Length - 1)
-                    {
-                        str = "{" + str;
-                        int start = StringCount(str, "{");
-                        int end = StringCount(str, "}");
-                        if (start == end)
-                        {
-                            if (Temp != null)
-                            {
-                                Temp = null;
-                            }
-                        }
-                        else
-                        {
-                            byte[] surPlus = Encoding.UTF8.GetBytes(str);
+    //        string msg = Encoding.UTF8.GetString(buffer, 0, length);
+    //        if (msg.Contains("}{"))
+    //        {
+    //            //Console.WriteLine("----------------发生粘包-------------------");
+    //            string[] mes = Regex.Split(msg, "}{");
+    //            for (int i = 0; i < mes.Length; i++)
+    //            {
+    //                string str = mes[i];
+    //                if (i == 0)
+    //                {
+    //                    str += "}";
+    //                }
+    //                else if (i == mes.Length - 1)
+    //                {
+    //                    str = "{" + str;
+    //                    int start = StringCount(str, "{");
+    //                    int end = StringCount(str, "}");
+    //                    if (start == end)
+    //                    {
+    //                        if (Temp != null)
+    //                        {
+    //                            Temp = null;
+    //                        }
+    //                    }
+    //                    else
+    //                    {
+    //                        byte[] surPlus = Encoding.UTF8.GetBytes(str);
 
-                            if (Temp != null)
-                            {
-                                Temp = null;
-                            }
-                            //Temp = BytePool.GetByteBlock(1024*1024*10);
-                            Temp = BytePool.GetByteBlock(length);
+    //                        if (Temp != null)
+    //                        {
+    //                            Temp = null;
+    //                        }
+    //                        //Temp = BytePool.GetByteBlock(1024*1024*10);
+    //                        Temp = BytePool.GetByteBlock(length);
 
-                            Temp.Write(surPlus);
-                            //Console.WriteLine("----------------数据不完整-------------------");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        str = "{" + str + "}";
-                    }
-                    //Console.WriteLine(str);
-                    PreviewHandle(str);
-                }
-            }
-            else if (msg[0] == '{' && msg[1] == '}')
-            {
-                Temp = null;
-                PreviewHandle(msg);
-            }
-            else
-            {
-                if (Temp == null)
-                {
-                    Temp = BytePool.GetByteBlock(length);
-                    Temp.Write(byteBlock.Buffer, 0, length);
-                }
+    //                        Temp.Write(surPlus);
+    //                        //Console.WriteLine("----------------数据不完整-------------------");
+    //                        break;
+    //                    }
+    //                }
+    //                else
+    //                {
+    //                    str = "{" + str + "}";
+    //                }
+    //                //Console.WriteLine(str);
+    //                PreviewHandle(str);
+    //            }
+    //        }
+    //        else if (msg[0] == '{' && msg[1] == '}')
+    //        {
+    //            Temp = null;
+    //            PreviewHandle(msg);
+    //        }
+    //        else
+    //        {
+    //            if (Temp == null)
+    //            {
+    //                Temp = BytePool.GetByteBlock(length);
+    //                Temp.Write(byteBlock.Buffer, 0, length);
+    //            }
 
-                Temp.Write(byteBlock.Buffer, 0, length);
-            }
-        }
+    //            Temp.Write(byteBlock.Buffer, 0, length);
+    //        }
+    //    }
 
-        /// <summary>
-        /// 预发送封装
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="isAsync"></param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
-        {
-            this.GoSend(buffer, offset, length, isAsync);
-        }
+    //    /// <summary>
+    //    /// 预发送封装
+    //    /// </summary>
+    //    /// <param name="buffer"></param>
+    //    /// <param name="offset"></param>
+    //    /// <param name="length"></param>
+    //    /// <param name="isAsync"></param>
+    //    protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
+    //    {
+    //        this.GoSend(buffer, offset, length, isAsync);
+    //    }
 
-        private int StringCount(string source, string match)
-        {
-            int count = 0;
-            if (source.Contains(match))
-            {
-                string temp = source.Replace(match, "");
-                count = (source.Length - temp.Length) / match.Length;
-            }
-            return count;
-        }
+    //    private int StringCount(string source, string match)
+    //    {
+    //        int count = 0;
+    //        if (source.Contains(match))
+    //        {
+    //            string temp = source.Replace(match, "");
+    //            count = (source.Length - temp.Length) / match.Length;
+    //        }
+    //        return count;
+    //    }
 
-        private void PreviewHandle(string msg)
-        {
-            GoReceived(null, msg);
-        }
+    //    private void PreviewHandle(string msg)
+    //    {
+    //        GoReceived(null, msg);
+    //    }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        /// <param name="isAsync"></param>
-        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
-        {
-            throw new System.NotImplementedException();
-        }
-    }
+    //    /// <summary>
+    //    /// <inheritdoc/>
+    //    /// </summary>
+    //    /// <param name="transferBytes"></param>
+    //    /// <param name="isAsync"></param>
+    //    protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+    //    {
+    //        throw new System.NotImplementedException();
+    //    }
+
+    //    protected override void Reset()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    protected override bool OnReceivingError(Exception ex)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 }

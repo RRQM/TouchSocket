@@ -18,33 +18,21 @@ using System.Collections.Generic;
 namespace RRQMSocket
 {
     /// <summary>
-    /// 固定包头数据处理器
+    /// 固定包头数据包处理适配器，支持Byte、UShort、Int三种类型作为包头。使用<see cref="RRQMBitConverter.DefaultEndianType"/>大小端设置。
     /// </summary>
-    public class FixedHeaderDataHandlingAdapter : DataHandlingAdapter
+    public class FixedHeaderPackageAdapter : DataHandlingAdapter
     {
-        private int maxSizeHeader = 1024 * 1024 * 10;
-
-        /// <summary>
-        /// 获取或设置包数据的最大值（默认为1024*1024*10）
-        /// </summary>
-        public int MaxSizeHeader
-        {
-            get { return maxSizeHeader; }
-            set { maxSizeHeader = value; }
-        }
-
-        private int minSizeHeader = 0;
-
-        /// <summary>
-        /// 获取或设置包数据的最小值（默认为0）
-        /// </summary>
-        public int MinSizeHeader
-        {
-            get { return minSizeHeader; }
-            set { minSizeHeader = value; }
-        }
-
+        private byte[] agreementTempBytes;//协议临时包
         private FixedHeaderType fixedHeaderType = FixedHeaderType.Int;
+        private int maxPackageSize = 1024 * 1024 * 10;
+        private int minPackageSize = 0;
+        private int surPlusLength = 0;//包剩余长度
+        private ByteBlock tempByteBlock;//临时包
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => true;
 
         /// <summary>
         /// 设置包头类型，默认为int
@@ -56,24 +44,33 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 获取或设置包数据的最大值（默认为1024*1024*10）
+        /// </summary>
+        public int MaxPackageSize
+        {
+            get { return maxPackageSize; }
+            set { maxPackageSize = value; }
+        }
+
+        /// <summary>
+        /// 获取或设置包数据的最小值（默认为0）
+        /// </summary>
+        public int MinPackageSize
+        {
+            get { return minPackageSize; }
+            set { minPackageSize = value; }
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanSplicingSend => true;
-
-        /// <summary>
-        /// 临时包
-        /// </summary>
-        private ByteBlock tempByteBlock;
-
-        /// <summary>
-        /// 包剩余长度
-        /// </summary>
-        private int surPlusLength = 0;
-
-        /// <summary>
-        /// 协议临时包
-        /// </summary>
-        private byte[] agreementTempBytes;
+        /// <param name="dataResult"></param>
+        /// <returns></returns>
+        protected override bool OnReceivingError(DataResult dataResult)
+        {
+            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
+            return true;
+        }
 
         /// <summary>
         /// 当接收到数据时处理数据
@@ -117,98 +114,6 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 缝合包
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="r"></param>
-        private void SeamPackage(byte[] buffer, int r)
-        {
-            ByteBlock byteBlock = BytePool.GetByteBlock(r + agreementTempBytes.Length);
-            byteBlock.Write(agreementTempBytes);
-            byteBlock.Write(buffer, 0, r);
-            r += agreementTempBytes.Length;
-            agreementTempBytes = null;
-            SplitPackage(byteBlock.Buffer, 0, r);
-            byteBlock.Dispose();
-        }
-
-        /// <summary>
-        /// 分解包
-        /// </summary>
-        /// <param name="dataBuffer"></param>
-        /// <param name="index"></param>
-        /// <param name="r"></param>
-        private void SplitPackage(byte[] dataBuffer, int index, int r)
-        {
-            while (index < r)
-            {
-                if (r - index <= (byte)this.fixedHeaderType)
-                {
-                    agreementTempBytes = new byte[r - index];
-                    Array.Copy(dataBuffer, index, agreementTempBytes, 0, agreementTempBytes.Length);
-                    return;
-                }
-                int length = 0;
-
-                switch (this.fixedHeaderType)
-                {
-                    case FixedHeaderType.Byte:
-                        length = dataBuffer[index];
-                        break;
-
-                    case FixedHeaderType.Ushort:
-                        length = RRQMBitConverter.Default.ToUInt16(dataBuffer, index);
-                        break;
-
-                    case FixedHeaderType.Int:
-                        length = RRQMBitConverter.Default.ToInt32(dataBuffer, index);
-                        break;
-                }
-
-                if (length < 0)
-                {
-                    throw new RRQMException("接收数据长度错误，已放弃接收");
-                }
-                else if (length < this.minSizeHeader)
-                {
-                    throw new RRQMException("接收数据长度小于设定值，已放弃接收");
-                }
-                else if (length > this.maxSizeHeader)
-                {
-                    throw new RRQMException("接收数据长度大于设定值，已放弃接收");
-                }
-
-                int recedSurPlusLength = r - index - (byte)this.fixedHeaderType;
-                if (recedSurPlusLength >= length)
-                {
-                    ByteBlock byteBlock = BytePool.GetByteBlock(length);
-                    byteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, length);
-                    PreviewHandle(byteBlock);
-                    surPlusLength = 0;
-                }
-                else//半包
-                {
-                    this.tempByteBlock = BytePool.GetByteBlock(length);
-                    surPlusLength = length - recedSurPlusLength;
-                    this.tempByteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, recedSurPlusLength);
-                }
-                index += (length + (byte)this.fixedHeaderType);
-            }
-        }
-
-        private void PreviewHandle(ByteBlock byteBlock)
-        {
-            try
-            {
-                this.GoReceived(byteBlock, null);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
         /// 当发送数据前处理数据
         /// </summary>
         /// <param name="buffer"></param>
@@ -217,12 +122,12 @@ namespace RRQMSocket
         /// <param name="isAsync"></param>
         protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
-            if (length < this.MinSizeHeader)
+            if (length < this.MinPackageSize)
             {
                 throw new RRQMException("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            if (length > this.MaxSizeHeader)
+            if (length > this.MaxPackageSize)
             {
                 throw new RRQMException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
@@ -288,12 +193,12 @@ namespace RRQMSocket
                 length += item.Length;
             }
 
-            if (length < this.minSizeHeader)
+            if (length < this.minPackageSize)
             {
                 throw new RRQMException("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            if (length > this.maxSizeHeader)
+            if (length > this.maxPackageSize)
             {
                 throw new RRQMException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
@@ -347,6 +252,108 @@ namespace RRQMSocket
             finally
             {
                 byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void Reset()
+        {
+            this.agreementTempBytes = null;
+            this.surPlusLength = default;
+            this.tempByteBlock = null;
+        }
+
+        private void PreviewHandle(ByteBlock byteBlock)
+        {
+            try
+            {
+                this.GoReceived(byteBlock, null);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 缝合包
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="r"></param>
+        private void SeamPackage(byte[] buffer, int r)
+        {
+            ByteBlock byteBlock = BytePool.GetByteBlock(r + agreementTempBytes.Length);
+            byteBlock.Write(agreementTempBytes);
+            byteBlock.Write(buffer, 0, r);
+            r += agreementTempBytes.Length;
+            agreementTempBytes = null;
+            SplitPackage(byteBlock.Buffer, 0, r);
+            byteBlock.Dispose();
+        }
+
+        /// <summary>
+        /// 分解包
+        /// </summary>
+        /// <param name="dataBuffer"></param>
+        /// <param name="index"></param>
+        /// <param name="r"></param>
+        private void SplitPackage(byte[] dataBuffer, int index, int r)
+        {
+            while (index < r)
+            {
+                if (r - index <= (byte)this.fixedHeaderType)
+                {
+                    agreementTempBytes = new byte[r - index];
+                    Array.Copy(dataBuffer, index, agreementTempBytes, 0, agreementTempBytes.Length);
+                    return;
+                }
+                int length = 0;
+
+                switch (this.fixedHeaderType)
+                {
+                    case FixedHeaderType.Byte:
+                        length = dataBuffer[index];
+                        break;
+
+                    case FixedHeaderType.Ushort:
+                        length = RRQMBitConverter.Default.ToUInt16(dataBuffer, index);
+                        break;
+
+                    case FixedHeaderType.Int:
+                        length = RRQMBitConverter.Default.ToInt32(dataBuffer, index);
+                        break;
+                }
+
+                if (length < 0)
+                {
+                    throw new RRQMException("接收数据长度错误，已放弃接收");
+                }
+                else if (length < this.minPackageSize)
+                {
+                    throw new RRQMException("接收数据长度小于设定值，已放弃接收");
+                }
+                else if (length > this.maxPackageSize)
+                {
+                    throw new RRQMException("接收数据长度大于设定值，已放弃接收");
+                }
+
+                int recedSurPlusLength = r - index - (byte)this.fixedHeaderType;
+                if (recedSurPlusLength >= length)
+                {
+                    ByteBlock byteBlock = BytePool.GetByteBlock(length);
+                    byteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, length);
+                    PreviewHandle(byteBlock);
+                    surPlusLength = 0;
+                }
+                else//半包
+                {
+                    this.tempByteBlock = BytePool.GetByteBlock(length);
+                    surPlusLength = length - recedSurPlusLength;
+                    this.tempByteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, recedSurPlusLength);
+                }
+                index += (length + (byte)this.fixedHeaderType);
             }
         }
     }

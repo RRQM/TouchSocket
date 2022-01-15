@@ -46,7 +46,7 @@ namespace RRQMSocket
         /// 挂起连接队列的最大长度，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty BacklogProperty =
-            DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServiceConfig), 30);
+            DependencyProperty.Register("Backlog", typeof(int), typeof(TcpServiceConfig), 100);
 
         /// <summary>
         /// 最大可连接数，默认为10000

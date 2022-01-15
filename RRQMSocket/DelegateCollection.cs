@@ -57,8 +57,8 @@ public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketCli
 /// </summary>
 /// <param name="client"></param>
 /// <param name="byteBlock"></param>
-/// <param name="obj"></param>
-public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, object obj) where TClient : IClient;
+/// <param name="requestInfo"></param>
+public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, IRequestInfo requestInfo) where TClient : IClient;
 
 /// <summary>
 /// 收到流操作

@@ -33,9 +33,6 @@ namespace RRQMSocket.Helper
                 case ChannelStatus.Overtime:
                     return ResultCode.Overtime;
 
-                case ChannelStatus.Error:
-                    return ResultCode.Error;
-
                 case ChannelStatus.Cancel:
                     return ResultCode.Canceled;
 

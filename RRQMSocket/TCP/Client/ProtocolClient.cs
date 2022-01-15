@@ -232,8 +232,8 @@ namespace RRQMSocket
         /// 密封方法
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="requestInfo"></param>
+        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             short procotol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
             switch (procotol)
@@ -287,6 +287,7 @@ namespace RRQMSocket
                 case -5:
                 case -6:
                 case -10:
+                case -11:
                     {
                         try
                         {
@@ -414,7 +415,7 @@ namespace RRQMSocket
         {
             if (e.DataHandlingAdapter == null)
             {
-                e.DataHandlingAdapter = new FixedHeaderDataHandlingAdapter();
+                e.DataHandlingAdapter = new FixedHeaderPackageAdapter();
             }
             base.OnConnecting(e);
         }

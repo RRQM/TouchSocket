@@ -96,7 +96,6 @@ namespace RRQMSocket
         public static readonly DependencyProperty ReceiveTypeProperty =
             DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(TcpClientConfig), ReceiveType.IOCP);
 
-
         /// <summary>
         /// 在Socket配置KeepAlive属性
         /// </summary>
@@ -111,8 +110,7 @@ namespace RRQMSocket
         /// 所需类型<see cref="bool"/>
         /// </summary>
         public static readonly DependencyProperty KeepAliveProperty =
-            DependencyProperty.Register("KeepAlive", typeof(bool), typeof(TcpClientConfig),false);
-
+            DependencyProperty.Register("KeepAlive", typeof(bool), typeof(TcpClientConfig), false);
 
         /// <summary>
         /// 设置Socket不使用Delay算法

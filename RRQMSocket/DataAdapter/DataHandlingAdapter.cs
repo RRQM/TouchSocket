@@ -20,12 +20,22 @@ namespace RRQMSocket
     /// </summary>
     public abstract class DataHandlingAdapter
     {
+        internal ITcpClientBase owner;
+
+        /// <summary>
+        /// 当接收数据处理完成后，回调该函数执行接收
+        /// </summary>
+        internal Action<ByteBlock, IRequestInfo> ReceivedCallBack;
+
+        /// <summary>
+        /// 当接收数据处理完成后，回调该函数执行发送
+        /// </summary>
+        internal Action<byte[], int, int, bool> SendCallBack;
+
         /// <summary>
         /// 拼接发送
         /// </summary>
         public abstract bool CanSplicingSend { get; }
-
-        internal ITcpClientBase owner;
 
         /// <summary>
         /// 适配器拥有者。
@@ -35,31 +45,62 @@ namespace RRQMSocket
             get { return owner; }
         }
 
-        /// <summary>
-        /// 当接收数据处理完成后，回调该函数执行接收
-        /// </summary>
-        internal Action<ByteBlock, object> ReceivedCallBack { get; set; }
+        internal void Received(ByteBlock byteBlock)
+        {
+            try
+            {
+                this.PreviewReceived(byteBlock);
+            }
+            catch (Exception ex)
+            {
+                this.OnReceivingError(new DataResult(ex.Message, DataResultCode.Exception));
+            }
+        }
 
-        /// <summary>
-        /// 当接收数据处理完成后，回调该函数执行发送
-        /// </summary>
-        internal Action<byte[], int, int, bool> SendCallBack { get; set; }
+        internal void Send(byte[] buffer, int offset, int length, bool isAsync)
+        {
+            this.PreviewSend(buffer, offset, length, isAsync);
+        }
 
-        /// <summary>
-        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock,object)"/>处理数据
-        /// </summary>
-        /// <param name="byteBlock">数据流</param>
-        protected abstract void PreviewReceived(ByteBlock byteBlock);
+        internal void Send(IList<TransferByte> transferBytes, bool isAsync)
+        {
+            this.PreviewSend(transferBytes, isAsync);
+        }
 
         /// <summary>
         /// 处理已经经过预先处理后的数据
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected void GoReceived(ByteBlock byteBlock, object obj)
+        /// <param name="byteBlock">以二进制形式传递</param>
+        /// <param name="requestInfo">以解析实例传递</param>
+        protected void GoReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.ReceivedCallBack.Invoke(byteBlock, obj);
+            this.ReceivedCallBack.Invoke(byteBlock, requestInfo);
         }
+
+        /// <summary>
+        /// 发送已经经过预先处理后的数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="isAsync">是否使用IOCP发送</param>
+        protected void GoSend(byte[] buffer, int offset, int length, bool isAsync)
+        {
+            this.SendCallBack.Invoke(buffer, offset, length, isAsync);
+        }
+
+        /// <summary>
+        /// 在接收解析时发生错误。
+        /// </summary>
+        /// <param name="dataResult">错误异常</param>
+        /// <returns>返回值指示，是否调用<see cref="Reset"/></returns>
+        protected abstract bool OnReceivingError(DataResult dataResult);
+
+        /// <summary>
+        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock, IRequestInfo)"/>处理数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        protected abstract void PreviewReceived(ByteBlock byteBlock);
 
         /// <summary>
         /// 当发送数据前预先处理数据
@@ -79,30 +120,8 @@ namespace RRQMSocket
         protected abstract void PreviewSend(IList<TransferByte> transferBytes, bool isAsync);
 
         /// <summary>
-        /// 发送已经经过预先处理后的数据
+        /// 重置解析器到初始状态，一般在<see cref="OnReceivingError(DataResult)"/>被触发时，由返回值指示是否调用。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected void GoSend(byte[] buffer, int offset, int length, bool isAsync)
-        {
-            this.SendCallBack.Invoke(buffer, offset, length, isAsync);
-        }
-
-        internal void Received(ByteBlock byteBlock)
-        {
-            this.PreviewReceived(byteBlock);
-        }
-
-        internal void Send(byte[] buffer, int offset, int length, bool isAsync)
-        {
-            this.PreviewSend(buffer, offset, length, isAsync);
-        }
-
-        internal void Send(IList<TransferByte> transferBytes, bool isAsync)
-        {
-            this.PreviewSend(transferBytes, isAsync);
-        }
+        protected abstract void Reset();
     }
 }

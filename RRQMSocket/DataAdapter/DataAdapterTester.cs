@@ -13,7 +13,9 @@ using RRQMCore.ByteManager;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -22,23 +24,23 @@ namespace RRQMSocket
     /// </summary>
     public class DataAdapterTester : IDisposable
     {
-        private readonly ConcurrentQueue<TransferByte> asyncBytes;
-
+        private readonly RRQMCore.Collections.Concurrent.IntelligentDataQueue<TransferByte> asyncBytes;
         private readonly Thread sendThread;
-
         private readonly EventWaitHandle waitHandle;
-
         private DataHandlingAdapter adapter;
-
-        private bool sending;
-
-        private bool dispose;
-
         private int bufferLength;
+        private int count;
+        private bool dispose;
+        private int expectedCount;
+        private Action<ByteBlock, IRequestInfo> receivedCallBack;
+        private EventWaitHandle runWaitHandle;
+        private bool sending;
+        private Stopwatch stopwatch;
+        private int timeout;
 
         private DataAdapterTester()
         {
-            asyncBytes = new ConcurrentQueue<TransferByte>();
+            asyncBytes = new RRQMCore.Collections.Concurrent.IntelligentDataQueue<TransferByte>(1024*1024*10);
             waitHandle = new AutoResetEvent(false);
             this.sendThread = new Thread(this.BeginSend);
             this.sendThread.IsBackground = true;
@@ -49,38 +51,75 @@ namespace RRQMSocket
         /// <summary>
         /// 获取测试器
         /// </summary>
-        /// <param name="adapter"></param>
-        /// <param name="receivedCallBack"></param>
-        /// <param name="bufferLength"></param>
+        /// <param name="adapter">待测试适配器</param>
+        /// <param name="receivedCallBack">收到数据回调</param>
+        /// <param name="bufferLength">缓存数据长度</param>
         /// <returns></returns>
-        public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, Action<ByteBlock, object> receivedCallBack, int bufferLength = 1024)
+        public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, int bufferLength = 1024, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
         {
             DataAdapterTester tester = new DataAdapterTester();
             tester.adapter = adapter;
             tester.bufferLength = bufferLength;
             adapter.SendCallBack = tester.SendCallback;
-            adapter.ReceivedCallBack = receivedCallBack;
+            adapter.ReceivedCallBack = tester.OnReceived;
+            tester.receivedCallBack = receivedCallBack;
             return tester;
         }
 
         /// <summary>
-        /// 模拟发送
+        /// 释放
+        /// </summary>
+        public void Dispose()
+        {
+            this.dispose = true;
+            this.waitHandle.Set();
+            this.waitHandle.Dispose();
+        }
+
+        /// <summary>
+        /// 模拟测试运行发送
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void SimSend(byte[] buffer, int offset, int length)
+        /// <param name="testCount">测试次数</param>
+        /// <param name="expectedCount">期待测试次数</param>
+        /// <param name="timeout">超时</param>
+        /// <returns></returns>
+        public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int timeout)
         {
-            adapter.Send(buffer, offset, length, false);
+            this.count = 0;
+            this.expectedCount = expectedCount;
+            this.timeout = timeout;
+            this.runWaitHandle = new AutoResetEvent(false);
+            this.stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Task.Run(() =>
+            {
+                for (int i = 0; i < testCount; i++)
+                {
+                    adapter.Send(buffer, offset, length, false);
+                }
+            });
+            if (runWaitHandle.WaitOne(this.timeout))
+            {
+                stopwatch.Stop();
+                return stopwatch.Elapsed;
+            }
+
+            throw new TimeoutException();
         }
 
         /// <summary>
         /// 模拟发送
         /// </summary>
         /// <param name="buffer"></param>
-        public void SimSend(byte[] buffer)
+        /// <param name="testCount">测试次数</param>
+        /// <param name="expectedCount">期待测试次数</param>
+        /// <param name="timeout">超时</param>
+        public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int timeout)
         {
-            this.SimSend(buffer, 0, buffer.Length);
+            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
         }
 
         private void BeginSend()
@@ -108,6 +147,27 @@ namespace RRQMSocket
                     this.sending = false;
                     this.waitHandle.WaitOne();
                 }
+            }
+        }
+
+        private void OnReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            count++;
+            this.receivedCallBack?.Invoke(byteBlock, requestInfo);
+            if (count == this.expectedCount)
+            {
+                this.runWaitHandle.Set();
+            }
+        }
+
+        private void SendCallback(byte[] buffer, int offset, int length, bool isAsync)
+        {
+            TransferByte asyncByte = new TransferByte(new byte[length], 0, length);
+            Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
+            this.asyncBytes.Enqueue(asyncByte);
+            if (!this.sending)
+            {
+                this.waitHandle.Set();
             }
         }
 
@@ -172,27 +232,6 @@ namespace RRQMSocket
             offset += len;
 
             return block;
-        }
-
-        private void SendCallback(byte[] buffer, int offset, int length, bool isAsync)
-        {
-            TransferByte asyncByte = new TransferByte(new byte[length], 0, length);
-            Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
-            this.asyncBytes.Enqueue(asyncByte);
-            if (!this.sending)
-            {
-                this.waitHandle.Set();
-            }
-        }
-
-        /// <summary>
-        /// 释放
-        /// </summary>
-        public void Dispose()
-        {
-            this.dispose = true;
-            this.waitHandle.Set();
-            this.waitHandle.Dispose();
         }
     }
 }

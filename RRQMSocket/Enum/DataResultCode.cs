@@ -9,34 +9,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-
 namespace RRQMSocket
 {
     /// <summary>
-    /// 简单Token服务器
+    /// 数据处理结果
     /// </summary>
-    public class SimpleTokenService : TokenService<SimpleTokenSocketClient>
+    public enum DataResultCode
     {
         /// <summary>
-        /// 处理数据
+        /// 成功
         /// </summary>
-        public event RRQMReceivedEventHandler<SimpleTokenSocketClient> Received;
+        Success,
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 有错误
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override void OnConnecting(SimpleTokenSocketClient socketClient, ClientOperationEventArgs e)
-        {
-            socketClient.Received += this.OnReceive;
-            base.OnConnecting(socketClient, e);
-        }
+        Error,
 
-        private void OnReceive(SimpleTokenSocketClient socketClient, ByteBlock byteBlock, object obj)
-        {
-            this.Received?.Invoke(socketClient, byteBlock, obj);
-        }
+        /// <summary>
+        /// 异常
+        /// </summary>
+        Exception,
+
+        /// <summary>
+        /// 本次数据不做任何处理
+        /// </summary>
+        Ignore
     }
 }
