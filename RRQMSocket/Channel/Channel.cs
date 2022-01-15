@@ -50,6 +50,7 @@ namespace RRQMSocket
         private string lastOperationMes;
         private bool moving;
         private ChannelStatus status;
+
         internal Channel(ProtocolClient client)
         {
             this.cacheCapacity = 1024 * 1024 * 20;
@@ -220,6 +221,51 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 继续。
+        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext(int)"/></para>
+        /// </summary>
+        /// <param name="operationMes"></param>
+        public void HoldOn(string operationMes = null)
+        {
+            if ((byte)this.status > 3)
+            {
+                return;
+            }
+
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.bufferLength);
+            try
+            {
+                byteBlock.Write(this.id);
+                byteBlock.Write(operationMes);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSend(-11, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSend(-11, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 异步调用继续
+        /// </summary>
+        /// <param name="operationMes"></param>
+        /// <returns></returns>
+        public Task HoldOnAsync(string operationMes = null)
+        {
+            return Task.Run(() =>
+            {
+                this.HoldOn(operationMes);
+            });
+        }
+
+        /// <summary>
         /// 异步完成操作
         /// </summary>
         /// <returns></returns>
@@ -308,12 +354,33 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 判断当前通道能否调用<see cref="MoveNext(int)"/>
+        /// </summary>
+        public bool CanMoveNext
+        {
+            get 
+            {
+                if ((byte)this.status>4)
+                {
+                    return false;
+                }
+                return true; 
+            }
+        }
+
+
+        /// <summary>
         /// 转向下个元素
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
         public bool MoveNext(int timeout = 60 * 1000)
         {
+            if (this.status== ChannelStatus.HoldOn)
+            {
+                this.lastOperationMes = null;
+                this.status = ChannelStatus.Moving;
+            }
             moving = true;
             if (this.status != ChannelStatus.Moving)
             {
@@ -345,6 +412,15 @@ namespace RRQMSocket
                     case -6:
                         {
                             this.RequestDispose();
+                            moving = false;
+                            return false;
+                        }
+                    case -11:
+                        {
+                            channelData.byteBlock.Pos = 6;
+                            this.lastOperationMes = channelData.byteBlock.ReadString();
+                            channelData.byteBlock.Dispose();
+                            this.status = ChannelStatus.HoldOn;
                             moving = false;
                             return false;
                         }
@@ -573,7 +649,7 @@ namespace RRQMSocket
                 }
             }
         }
-        
+
         private void Clear()
         {
             try

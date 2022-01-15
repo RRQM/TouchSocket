@@ -33,10 +33,12 @@ namespace RRQMSocket
         internal TcpServiceBase service;
         internal ServiceConfig serviceConfig;
         internal bool useSsl;
+
         /// <summary>
         /// 设置在线状态
         /// </summary>
         protected bool online;
+
         private ClearType clearType;
         private DataHandlingAdapter dataHandlingAdapter;
         private SocketAsyncEventArgs eventArgs;
@@ -278,6 +280,14 @@ namespace RRQMSocket
                         });
                         return available;
                     }
+                    else if (!this.mainSocket.Connected)
+                    {
+                        this.BreakOut("客户端主动断开连接");
+                    }
+                    else
+                    {
+                        this.mainSocket.Send(new byte[0]);
+                    }
                 }
             }
             catch (Exception ex)
@@ -367,41 +377,52 @@ namespace RRQMSocket
                 {
                     return;
                 }
-                if (this.mainSocket != null)
+                Task.Run(() =>
                 {
-                    this.mainSocket.Close();
-                }
-                if (this.eventArgs != null)
-                {
-                    this.eventArgs.Dispose();
-                }
-                if (this.workStream != null)
-                {
-                    this.workStream.Dispose();
-                }
-                if (this.service != null)
-                {
-                    this.service.SocketClients.TryRemove(this.id);
-                }
+                    if (this.eventArgs != null)
+                    {
+                        this.eventArgs.Dispose();
+                        this.eventArgs = null;
+                    }
+                    if (this.mainSocket != null)
+                    {
+                        this.mainSocket.Dispose();
+                        this.mainSocket = null;
+                    }
+                    if (this.workStream != null)
+                    {
+                        this.workStream.Dispose();
+                    }
 
-                if (this.Online)
-                {
-                    this.online = false;
-                    this.OnDisconnected(new MesEventArgs(msg));
-                }
-                this.OnBreakOut();
+                    if (this.service != null)
+                    {
+                        this.service.SocketClients.TryRemove(this.id);
+                    }
+
+                    if (this.Online)
+                    {
+                        this.online = false;
+                        this.OnDisconnected(new MesEventArgs(msg));
+                    }
+
+                    this.service = null;
+                    this.dataHandlingAdapter = null;
+                    this.serviceConfig = null;
+                    this.OnBreakOut();
+                });
             }
         }
 
         /// <summary>
-        /// 处理已接收到的数据
+        /// 处理已接收到的数据。
+        /// <para>根据不同的数据处理适配器，会传递不同的数据</para>
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+        /// <param name="byteBlock">以二进制流形式传递</param>
+        /// <param name="requestInfo">以解析的数据对象传递</param>
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
 
         /// <summary>
-        /// 当调用<see cref="BreakOut(string, bool)"/>
+        /// 当调用<see cref="BreakOut(string)"/>
         /// </summary>
         protected virtual void OnBreakOut()
         {

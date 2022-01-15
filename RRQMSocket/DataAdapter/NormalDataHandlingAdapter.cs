@@ -15,7 +15,7 @@ using System.Collections.Generic;
 namespace RRQMSocket
 {
     /// <summary>
-    /// 普通数据处理器
+    /// 普通TCP数据处理器，该适配器不对数据做任何处理。
     /// </summary>
     public class NormalDataHandlingAdapter : DataHandlingAdapter
     {
@@ -23,6 +23,16 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         public override bool CanSplicingSend => false;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="dataResult"></param>
+        /// <returns></returns>
+        protected override bool OnReceivingError(DataResult dataResult)
+        {
+            return false;
+        }
 
         /// <summary>
         /// 当接收到数据时处理数据
@@ -34,7 +44,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 当发送数据前处理数据
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer">数据</param>
         /// <param name="offset">偏移</param>
@@ -53,6 +63,13 @@ namespace RRQMSocket
         protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
         {
             throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void Reset()
+        {
         }
     }
 }

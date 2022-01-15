@@ -171,8 +171,8 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="requestInfo"></param>
+        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.targetSocket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
         }

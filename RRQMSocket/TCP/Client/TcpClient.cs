@@ -31,6 +31,7 @@ namespace RRQMSocket
         /// 设置客户端状态
         /// </summary>
         protected bool online;
+
         private AsyncSender asyncSender;
         private TcpClientConfig clientConfig;
         private DataHandlingAdapter dataHandlingAdapter;
@@ -151,21 +152,6 @@ namespace RRQMSocket
         public virtual void Close()
         {
             this.BreakOut($"{nameof(Close)}主动断开");
-            if (this.mainSocket != null)
-            {
-                this.mainSocket.Dispose();
-                this.mainSocket = null;
-            }
-            if (this.asyncSender != null)
-            {
-                this.asyncSender.Dispose();
-                this.asyncSender = null;
-            }
-            if (this.workStream != null)
-            {
-                this.workStream.Dispose();
-                this.workStream = null;
-            }
         }
 
         /// <summary>
@@ -174,21 +160,6 @@ namespace RRQMSocket
         public virtual ITcpClient Disconnect()
         {
             this.BreakOut($"{nameof(Disconnect)}主动断开");
-            if (this.mainSocket != null)
-            {
-                this.mainSocket.Dispose();
-                this.mainSocket = null;
-            }
-            if (this.asyncSender != null)
-            {
-                this.asyncSender.Dispose();
-                this.asyncSender = null;
-            }
-            if (this.workStream != null)
-            {
-                this.workStream.Dispose();
-                this.workStream = null;
-            }
             return this;
         }
 
@@ -199,18 +170,6 @@ namespace RRQMSocket
         {
             this.BreakOut($"{nameof(Dispose)}主动断开");
             base.Dispose();
-            if (this.mainSocket != null)
-            {
-                this.mainSocket.Dispose();
-            }
-            if (this.asyncSender != null)
-            {
-                this.asyncSender.Dispose();
-            }
-            if (this.workStream != null)
-            {
-                this.workStream.Dispose();
-            }
         }
 
         /// <summary>
@@ -228,16 +187,42 @@ namespace RRQMSocket
         /// <param name="msg"></param>
         protected void BreakOut(string msg)
         {
-            lock (this)
+            Task.Run(() =>
             {
-                this.receiving = false;
-                if (this.online)
+                lock (this)
                 {
-                    this.OnDisconnected(new MesEventArgs(msg));
+                    this.receiving = false;
+
+                    if (this.online)
+                    {
+                        this.OnDisconnected(new MesEventArgs(msg));
+                    }
+                    this.online = false;
+                    if (this.eventArgs != null)
+                    {
+                        this.eventArgs.Dispose();
+                        this.eventArgs = null;
+                    }
+                    if (this.mainSocket != null)
+                    {
+                        this.mainSocket.Dispose();
+                        this.mainSocket = null;
+                    }
+                    if (this.asyncSender != null)
+                    {
+                        this.asyncSender.Dispose();
+                        this.asyncSender = null;
+                    }
+                    if (this.workStream != null)
+                    {
+                        this.workStream.Dispose();
+                        this.workStream = null;
+                    }
+
+                    this.dataHandlingAdapter = null;
+                    this.OnBreakOut();
                 }
-                this.online = false;
-                this.OnBreakOut();
-            }
+            });
         }
 
         /// <summary>
@@ -478,11 +463,11 @@ namespace RRQMSocket
 
         /// <summary>
         /// 处理已接收到的数据。
-        /// 覆盖父类方法将不触发OnReceived事件。
+        /// <para>根据不同的数据处理适配器，会传递不同的数据</para>
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleReceivedData(ByteBlock byteBlock, object obj);
+        /// <param name="byteBlock">以二进制流形式传递</param>
+        /// <param name="requestInfo">以解析的数据对象传递</param>
+        protected abstract void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
 
         /// <summary>
         /// 加载配置

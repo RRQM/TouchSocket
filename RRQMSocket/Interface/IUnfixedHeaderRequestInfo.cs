@@ -10,27 +10,38 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 简单Token客户端
+    /// 用户自定义不固定包头请求
     /// </summary>
-    public class SimpleTokenClient : TokenClient
+    public interface IUnfixedHeaderRequestInfo : IRequestInfo
     {
         /// <summary>
-        /// 接收到数据
+        /// 数据体长度
         /// </summary>
-        public event RRQMReceivedEventHandler<SimpleTokenClient> Received;
+        int BodyLength { get; }
 
         /// <summary>
-        /// 接收数据
+        /// 当收到数据，由框架封送数据，您需要在此函数中，解析自己的数据包头。
+        /// <para>如果满足包头的解析，请返回True，并且递增整个包头的长度到<see cref="ByteBlock.Pos"/>，然后赋值<see cref="BodyLength"/></para>
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.Received?.Invoke(this, byteBlock, requestInfo);
-        }
+        /// <param name="length"></param>
+        /// <returns>是否满足解析包头</returns>
+        bool OnParsingHeader(ByteBlock byteBlock,int length);
+
+        /// <summary>
+        /// 当收到数据，由框架封送有效载荷数据。
+        /// </summary>
+        /// <param name="body">载荷数据</param>
+        /// <returns>是否成功有效</returns>
+        DataResult OnParsingBody(byte[] body);
     }
 }

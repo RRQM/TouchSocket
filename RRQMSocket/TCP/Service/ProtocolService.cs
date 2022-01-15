@@ -9,6 +9,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using RRQMCore.Exceptions;
 
 namespace RRQMSocket
@@ -50,6 +51,55 @@ namespace RRQMSocket
         {
             base.LoadConfig(serverConfig);
             this.canResetID = (bool)serverConfig.GetValue(ProtocolServiceConfig.CanResetIDProperty);
+        }
+    }
+
+    /// <summary>
+    /// 简单协议服务器
+    /// </summary>
+    public class ProtocolService : ProtocolService<SimpleProtocolSocketClient>
+    {
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        public event RRQMProtocolReceivedEventHandler<SimpleProtocolSocketClient> Received;
+
+        /// <summary>
+        /// 预处理流
+        /// </summary>
+        public event RRQMStreamOperationEventHandler<SimpleProtocolSocketClient> BeforeReceiveStream;
+
+        /// <summary>
+        /// 收到流数据
+        /// </summary>
+        public event RRQMStreamStatusEventHandler<SimpleProtocolSocketClient> ReceivedStream;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override void OnConnecting(SimpleProtocolSocketClient socketClient, ClientOperationEventArgs e)
+        {
+            socketClient.Received += this.OnReceive;
+            socketClient.BeforeReceiveStream += this.OnBeforeReceiveStream;
+            socketClient.ReceivedStream += this.OnReceivedStream;
+            base.OnConnecting(socketClient, e);
+        }
+
+        private void OnReceive(SimpleProtocolSocketClient socketClient, short procotol, ByteBlock byteBlock)
+        {
+            this.Received?.Invoke(socketClient, procotol, byteBlock);
+        }
+
+        private void OnBeforeReceiveStream(SimpleProtocolSocketClient client, StreamOperationEventArgs e)
+        {
+            this.BeforeReceiveStream?.Invoke(client, e);
+        }
+
+        private void OnReceivedStream(SimpleProtocolSocketClient client, StreamStatusEventArgs e)
+        {
+            this.ReceivedStream?.Invoke(client, e);
         }
     }
 }

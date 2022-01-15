@@ -27,10 +27,10 @@ namespace RRQMSocket
         /// 处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="requestInfo"></param>
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.Received.Invoke(this, byteBlock, obj);
+            this.Received.Invoke(this, byteBlock, requestInfo);
         }
     }
 }

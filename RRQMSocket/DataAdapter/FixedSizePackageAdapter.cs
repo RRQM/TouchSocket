@@ -16,18 +16,33 @@ using System.Collections.Generic;
 namespace RRQMSocket
 {
     /// <summary>
-    /// 固定长度数据处理器
+    /// 固定长度数据包处理适配器。
     /// </summary>
-    public class FixedSizeDataHandlingAdapter : DataHandlingAdapter
+    public class FixedSizePackageAdapter : DataHandlingAdapter
     {
+        /// <summary>
+        /// 包剩余长度
+        /// </summary>
+        private int surPlusLength = 0;
+
+        /// <summary>
+        /// 临时包
+        /// </summary>
+        private ByteBlock tempByteBlock;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="fixedSize">数据包的长度</param>
-        public FixedSizeDataHandlingAdapter(int fixedSize)
+        public FixedSizePackageAdapter(int fixedSize)
         {
             this.FixedSize = fixedSize;
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => true;
 
         /// <summary>
         /// 获取已设置的数据包的长度
@@ -37,17 +52,13 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanSplicingSend => true;
-
-        /// <summary>
-        /// 临时包
-        /// </summary>
-        private ByteBlock tempByteBlock;
-
-        /// <summary>
-        /// 包剩余长度
-        /// </summary>
-        private int surPlusLength = 0;
+        /// <param name="dataResult"></param>
+        /// <returns></returns>
+        protected override bool OnReceivingError(DataResult dataResult)
+        {
+            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
+            return true;
+        }
 
         /// <summary>
         /// 预处理
@@ -82,39 +93,6 @@ namespace RRQMSocket
                     this.tempByteBlock.Write(buffer, 0, r);
                     surPlusLength -= r;
                 }
-            }
-        }
-
-        private void SplitPackage(byte[] dataBuffer, int index, int r)
-        {
-            while (index < r)
-            {
-                if (r - index >= this.FixedSize)
-                {
-                    ByteBlock byteBlock = BytePool.GetByteBlock(this.FixedSize);
-                    byteBlock.Write(dataBuffer, index, this.FixedSize);
-                    PreviewHandle(byteBlock);
-                    surPlusLength = 0;
-                }
-                else//半包
-                {
-                    this.tempByteBlock = BytePool.GetByteBlock(this.FixedSize);
-                    surPlusLength = this.FixedSize - (r - index);
-                    this.tempByteBlock.Write(dataBuffer, index, r - index);
-                }
-                index += this.FixedSize;
-            }
-        }
-
-        private void PreviewHandle(ByteBlock byteBlock)
-        {
-            try
-            {
-                this.GoReceived(byteBlock, null);
-            }
-            finally
-            {
-                byteBlock.Dispose();
             }
         }
 
@@ -199,6 +177,48 @@ namespace RRQMSocket
             finally
             {
                 byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void Reset()
+        {
+            this.tempByteBlock = null;
+            this.surPlusLength = 0;
+        }
+
+        private void PreviewHandle(ByteBlock byteBlock)
+        {
+            try
+            {
+                this.GoReceived(byteBlock, null);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        private void SplitPackage(byte[] dataBuffer, int index, int r)
+        {
+            while (index < r)
+            {
+                if (r - index >= this.FixedSize)
+                {
+                    ByteBlock byteBlock = BytePool.GetByteBlock(this.FixedSize);
+                    byteBlock.Write(dataBuffer, index, this.FixedSize);
+                    PreviewHandle(byteBlock);
+                    surPlusLength = 0;
+                }
+                else//半包
+                {
+                    this.tempByteBlock = BytePool.GetByteBlock(this.FixedSize);
+                    surPlusLength = this.FixedSize - (r - index);
+                    this.tempByteBlock.Write(dataBuffer, index, r - index);
+                }
+                index += this.FixedSize;
             }
         }
     }

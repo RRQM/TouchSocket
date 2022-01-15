@@ -19,18 +19,6 @@ namespace RRQMSocket
     /// </summary>
     public abstract class BaseSocket : ISocket, IDisposable
     {
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~BaseSocket()
-        {
-            if (this.disposable)
-            {
-                return;
-            }
-            this.Dispose();
-        }
-
         private int bufferLength;
 
         /// <summary>
@@ -74,7 +62,6 @@ namespace RRQMSocket
         public virtual void Dispose()
         {
             this.disposable = true;
-            GC.SuppressFinalize(this);
         }
     }
 }

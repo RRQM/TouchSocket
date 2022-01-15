@@ -18,16 +18,26 @@ using System.Text;
 namespace RRQMSocket
 {
     /// <summary>
-    /// 终止字符处理器
+    /// 终止字符数据包处理适配器，支持以任意字符、字节数组结尾的数据包。
     /// </summary>
-    public class TerminatorDataHandlingAdapter : DataHandlingAdapter
+    public class TerminatorPackageAdapter : DataHandlingAdapter
     {
+        private int maxSize = 1024;
+
+        private int minSize = 0;
+
+        private bool reserveTerminatorCode;
+
+        private ByteBlock tempByteBlock;
+
+        private byte[] terminatorCode;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="maxSize"></param>
         /// <param name="terminator"></param>
-        public TerminatorDataHandlingAdapter(int maxSize, string terminator) : this(maxSize, 0, Encoding.UTF8.GetBytes(terminator))
+        public TerminatorPackageAdapter(int maxSize, string terminator) : this(maxSize, 0, Encoding.UTF8.GetBytes(terminator))
         {
         }
 
@@ -37,7 +47,7 @@ namespace RRQMSocket
         /// <param name="maxSize"></param>
         /// <param name="terminator"></param>
         /// <param name="encoding"></param>
-        public TerminatorDataHandlingAdapter(int maxSize, string terminator, Encoding encoding)
+        public TerminatorPackageAdapter(int maxSize, string terminator, Encoding encoding)
             : this(maxSize, 0, encoding.GetBytes(terminator))
         {
         }
@@ -48,16 +58,17 @@ namespace RRQMSocket
         /// <param name="maxSize"></param>
         /// <param name="minSize"></param>
         /// <param name="terminatorCode"></param>
-        public TerminatorDataHandlingAdapter(int maxSize, int minSize, byte[] terminatorCode)
+        public TerminatorPackageAdapter(int maxSize, int minSize, byte[] terminatorCode)
         {
             this.maxSize = maxSize;
             this.minSize = minSize;
             this.terminatorCode = terminatorCode;
         }
 
-        private byte[] terminatorCode;
-
-        private int maxSize = 1024;
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSplicingSend => true;
 
         /// <summary>
         /// 在未找到终止因子时，允许的最大长度，默认1024
@@ -68,8 +79,6 @@ namespace RRQMSocket
             set { maxSize = value; }
         }
 
-        private int minSize = 0;
-
         /// <summary>
         /// 即使找到了终止因子，也不会结束，默认0
         /// </summary>
@@ -78,8 +87,6 @@ namespace RRQMSocket
             get { return minSize; }
             set { minSize = value; }
         }
-
-        private bool reserveTerminatorCode;
 
         /// <summary>
         /// 保留终止因子
@@ -93,9 +100,13 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanSplicingSend => true;
-
-        private ByteBlock tempByteBlock;
+        /// <param name="dataResult"></param>
+        /// <returns></returns>
+        protected override bool OnReceivingError(DataResult dataResult)
+        {
+            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
+            return true;
+        }
 
         /// <summary>
         /// 预处理
@@ -164,18 +175,6 @@ namespace RRQMSocket
                     this.tempByteBlock = BytePool.GetByteBlock((r - startIndex) * 2);
                     this.tempByteBlock.Write(buffer, startIndex, r - startIndex);
                 }
-            }
-        }
-
-        private void PreviewHandle(ByteBlock byteBlock)
-        {
-            try
-            {
-                this.GoReceived(byteBlock, null);
-            }
-            finally
-            {
-                byteBlock.Dispose();
             }
         }
 
@@ -251,6 +250,26 @@ namespace RRQMSocket
                 {
                     this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
                 }
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void Reset()
+        {
+            this.tempByteBlock = null;
+        }
+
+        private void PreviewHandle(ByteBlock byteBlock)
+        {
+            try
+            {
+                this.GoReceived(byteBlock, null);
             }
             finally
             {

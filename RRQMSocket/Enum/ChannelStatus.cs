@@ -33,9 +33,9 @@ namespace RRQMSocket
         Overtime = 2,
 
         /// <summary>
-        /// 错误
+        /// 继续
         /// </summary>
-        Error = 3,
+        HoldOn = 3,
 
         /// <summary>
         /// 取消

@@ -9,28 +9,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace RRQMSocket
+namespace RRQMSocket.Helper
 {
     /// <summary>
-    /// 简单Token客户端
+    /// ChannelHelper
     /// </summary>
-    public class SimpleTokenClient : TokenClient
+    public static class ChannelHelper
     {
-        /// <summary>
-        /// 接收到数据
-        /// </summary>
-        public event RRQMReceivedEventHandler<SimpleTokenClient> Received;
-
-        /// <summary>
-        /// 接收数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.Received?.Invoke(this, byteBlock, requestInfo);
-        }
     }
 }

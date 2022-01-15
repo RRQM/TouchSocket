@@ -10,10 +10,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.ByteManager;
+
 namespace RRQMSocket
 {
     /// <summary>
-    /// 需要验证的TCP服务器
+    /// Token服务器
     /// </summary>
     public class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient, new()
     {
@@ -62,6 +64,33 @@ namespace RRQMSocket
             socketClient.verifyTimeout = this.verifyTimeout;
             socketClient.verifyToken = this.verifyToken;
             base.OnConnecting(socketClient, e);
+        }
+    }
+
+    /// <summary>
+    /// 简单Token服务器
+    /// </summary>
+    public class TokenService : TokenService<SimpleTokenSocketClient>
+    {
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        public event RRQMReceivedEventHandler<SimpleTokenSocketClient> Received;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override void OnConnecting(SimpleTokenSocketClient socketClient, ClientOperationEventArgs e)
+        {
+            socketClient.Received += this.OnReceive;
+            base.OnConnecting(socketClient, e);
+        }
+
+        private void OnReceive(SimpleTokenSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.Received?.Invoke(socketClient, byteBlock, requestInfo);
         }
     }
 }

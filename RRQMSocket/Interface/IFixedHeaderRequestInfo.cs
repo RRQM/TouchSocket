@@ -9,34 +9,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
-
 namespace RRQMSocket
 {
     /// <summary>
-    /// 若汝棋茗内置TCP验证服务器
+    /// 用户自定义固定包头请求
     /// </summary>
-    public class SimpleTcpService : TcpService<SimpleSocketClient>
+    public interface IFixedHeaderRequestInfo : IRequestInfo
     {
         /// <summary>
-        /// 处理数据
+        /// 数据体长度
         /// </summary>
-        public event RRQMReceivedEventHandler<SimpleSocketClient> Received;
+        int BodyLength { get;}
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 当收到数据，由框架封送固定协议头。
+        /// <para>您需要在此函数中，解析自己的固定包头，并且对<see cref="BodySize"/>赋值后续数据的长度</para>，然后返回True。
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override void OnConnecting(SimpleSocketClient socketClient, ClientOperationEventArgs e)
-        {
-            socketClient.Received += this.OnReceive;
-            base.OnConnecting(socketClient, e);
-        }
+        /// <param name="header"></param>
+        /// <returns></returns>
+        bool OnParsingHeader(byte[] header);
 
-        private void OnReceive(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
-        {
-            this.Received?.Invoke(socketClient, byteBlock, obj);
-        }
+        /// <summary>
+        /// 当收到数据，由框架封送有效载荷数据。
+        /// </summary>
+        /// <param name="body">载荷数据</param>
+        /// <returns>是否成功有效</returns>
+        DataResult OnParsingBody(byte[] body);
     }
 }

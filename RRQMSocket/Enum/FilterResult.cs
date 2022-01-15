@@ -9,28 +9,32 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 简单Token客户端
+    /// 过滤结果
     /// </summary>
-    public class SimpleTokenClient : TokenClient
+    public enum FilterResult
     {
         /// <summary>
-        /// 接收到数据
+        /// 本次数据不满足任何解析，然后先缓存数据起来。
         /// </summary>
-        public event RRQMReceivedEventHandler<SimpleTokenClient> Received;
+        Ignore,
 
         /// <summary>
-        /// 接收数据
+        /// 成功
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.Received?.Invoke(this, byteBlock, requestInfo);
-        }
+        Success,
+
+        /// <summary>
+        /// 本次接收满足解析部分数据，所以接着接收下次。
+        /// </summary>
+        GoOn
     }
 }

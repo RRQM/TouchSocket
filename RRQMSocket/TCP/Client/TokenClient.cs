@@ -72,12 +72,12 @@ namespace RRQMSocket
         /// 处理接收数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="requestInfo"></param>
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (isHandshaked)
             {
-                this.HandleTokenReceivedData(byteBlock, obj);
+                this.HandleTokenReceivedData(byteBlock, requestInfo);
             }
             else
             {
@@ -94,8 +94,8 @@ namespace RRQMSocket
         /// 处理Token数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, object obj);
+        /// <param name="requestInfo"></param>
+        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
 
         /// <summary>
         /// 连接到服务器
@@ -121,7 +121,7 @@ namespace RRQMSocket
                 waitData.SetCancellationToken(token);
 
                 byte[] data = waitVerify.GetData();
-                base.Send(data,0,data.Length);
+                base.Send(data, 0, data.Length);
                 try
                 {
                     switch (waitData.Wait(1000 * 10))

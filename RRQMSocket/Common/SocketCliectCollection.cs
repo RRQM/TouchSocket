@@ -54,6 +54,10 @@ namespace RRQMSocket
 
         internal bool TryRemove(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                return false;
+            }
             return this.tokenDic.TryRemove(id, out _);
         }
 

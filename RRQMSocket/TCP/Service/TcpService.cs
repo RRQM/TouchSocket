@@ -647,16 +647,23 @@ namespace RRQMSocket
 
         private void SelectClient()
         {
-            SpinWait spinWait = new SpinWait();
+            int sleep = 0;
             long dataSize = 0;
             while (true)
             {
                 if (dataSize > 0)
                 {
                     dataSize = 0;
-                    spinWait.Reset();
+                    sleep = 0;
                 }
-                spinWait.SpinOnce();
+                else
+                {
+                    if (sleep++ > 1000)
+                    {
+                        sleep = 0;
+                    }
+                }
+                Thread.Sleep(sleep);
                 string[] collection = this.SocketClients.GetIDs();
                 if (collection.Length == 0 && disposable)
                 {
@@ -675,68 +682,97 @@ namespace RRQMSocket
 
         private void ProcessAccept(SocketAsyncEventArgs e)
         {
-            try
+            if (!this.disposable)
             {
-                if (!this.disposable)
+                if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
                 {
-                    if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
+                    Socket newSocket = e.AcceptSocket;
+                    try
                     {
-                        Socket newSocket = e.AcceptSocket;
-                        try
+                        if (this.SocketClients.Count > this.maxCount)
                         {
-                            if (this.SocketClients.Count > this.maxCount)
+                            this.Logger.Debug(LogType.Warning, this, "连接客户端数量已达到设定最大值");
+                            newSocket.Close();
+                            newSocket.Dispose();
+                        }
+                        TClient client = this.GetRawClient();
+                        client.lastTick = DateTime.Now.Ticks;
+                        client.serviceConfig = this.serviceConfig;
+                        client.service = this;
+                        client.Logger = this.Logger;
+                        client.ClearType = this.clearType;
+                        client.receiveType = this.receiveType;
+                        client.BufferLength = this.BufferLength;
+                        client.useSsl = this.useSsl;
+                        client.LoadSocketAndReadIpPort(newSocket);
+                        ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
+                        clientArgs.ID = GetDefaultNewID();
+                        client.OnEvent(1, clientArgs);//Connecting
+                        if (clientArgs.IsPermitOperation)
+                        {
+                            client.id = clientArgs.ID;
+                            if (this.SocketClients.TryAdd(client))
                             {
-                                this.Logger.Debug(LogType.Warning, this, "连接客户端数量已达到设定最大值");
-                                newSocket.Close();
-                                newSocket.Dispose();
-                            }
-
-                            TClient client = this.GetRawClient();
-                            client.lastTick = DateTime.Now.Ticks;
-                            client.serviceConfig = this.serviceConfig;
-                            client.service = this;
-                            client.Logger = this.Logger;
-                            client.ClearType = this.clearType;
-                            client.receiveType = this.receiveType;
-                            client.BufferLength = this.BufferLength;
-                            client.useSsl = this.useSsl;
-                            client.LoadSocketAndReadIpPort(newSocket);
-                            ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
-                            clientArgs.ID = GetDefaultNewID();
-                            client.OnEvent(1, clientArgs);//Connecting
-                            if (clientArgs.IsPermitOperation)
-                            {
-                                client.id = clientArgs.ID;
-                                if (this.SocketClients.TryAdd(client))
-                                {
-                                    client.OnEvent(2, new MesEventArgs("新客户端连接"));
-                                }
-                                else
-                                {
-                                    throw new RRQMException($"ID={client.id}重复");
-                                }
+                                client.OnEvent(2, new MesEventArgs("新客户端连接"));
                             }
                             else
                             {
-                                newSocket.Dispose();
+                                throw new RRQMException($"ID={client.id}重复");
                             }
                         }
-                        catch (Exception ex)
+                        else
                         {
                             newSocket.Dispose();
-                            Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
                         }
                     }
-                    e.AcceptSocket = null;
+                    catch (Exception ex)
+                    {
+                        newSocket.Dispose();
+                        Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
+                    }
+                }
+                e.AcceptSocket = null;
+
+                try
+                {
                     if (!((Socket)e.UserToken).AcceptAsync(e))
                     {
                         ProcessAccept(e);
                     }
                 }
+                catch
+                {
+                    e.Dispose();
+                    return;
+                }
             }
-            catch
-            {
-            }
+        }
+    }
+
+    /// <summary>
+    /// TCP服务器
+    /// </summary>
+    public class TcpService : TcpService<SimpleSocketClient>
+    {
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        public event RRQMReceivedEventHandler<SimpleSocketClient> Received;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override void OnConnecting(SimpleSocketClient socketClient, ClientOperationEventArgs e)
+        {
+            socketClient.Received += this.OnReceive;
+            base.OnConnecting(socketClient, e);
+        }
+
+        private void OnReceive(SimpleSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.Received?.Invoke(socketClient, byteBlock, requestInfo);
         }
     }
 }

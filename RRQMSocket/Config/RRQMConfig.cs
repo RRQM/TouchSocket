@@ -36,7 +36,7 @@ namespace RRQMSocket
             DependencyProperty.Register("Logger", typeof(ILog), typeof(RRQMConfig), new Log());
 
         /// <summary>
-        /// 缓存池容量
+        /// 缓存池容量，默认1024*10
         /// </summary>
         public int BufferLength
         {
@@ -48,7 +48,6 @@ namespace RRQMSocket
         /// 缓存池容量，所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty BufferLengthProperty =
-            DependencyProperty.Register("BufferLength", typeof(int), typeof(RRQMConfig), 1024 * 64);
-
+            DependencyProperty.Register("BufferLength", typeof(int), typeof(RRQMConfig), 1024 * 10);
     }
 }
