@@ -58,7 +58,7 @@ namespace RRQMCore.Helper
         }
 
         /// <summary>
-        /// 索引第一个包含数组
+        /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
         /// </summary>
         /// <param name="srcByteArray"></param>
         /// <param name="offset"></param>
@@ -72,7 +72,7 @@ namespace RRQMCore.Helper
                 return -1;
             }
             int hitLength = 0;
-            for (int i = offset; i < length; i++)
+            for (int i = offset; i < length+ offset; i++)
             {
                 if (srcByteArray[i] == subByteArray[hitLength])
                 {

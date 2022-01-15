@@ -45,6 +45,22 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
+        /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
+        /// </summary>
+        public int CanReadLen
+        {
+            get { return this.Len-this.Pos; }
+        }
+
+        /// <summary>
+        /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
+        /// </summary>
+        public long CanReadLength
+        {
+            get { return this.length - this.position; }
+        }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="bytes"></param>
@@ -336,11 +352,22 @@ namespace RRQMCore.ByteManager
         /// <exception cref="ByteBlockDisposedException"></exception>
         public byte[] ToArray(int offset)
         {
+            return this.ToArray(offset, (int)(this.length - offset));
+        }
+
+        /// <summary>
+        /// 从指定位置转化到指定长度的有效内存
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public byte[] ToArray(int offset,int length)
+        {
             if (!this.@using)
             {
                 throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
-            byte[] buffer = new byte[this.length - offset];
+            byte[] buffer = new byte[length];
             Array.Copy(this._buffer, offset, buffer, 0, buffer.Length);
             return buffer;
         }
@@ -691,7 +718,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 从当前流位置读取一个<see cref="float"/>值
         /// </summary>
-        public double ReadFloat()
+        public float ReadFloat()
         {
             float value = RRQMBitConverter.Default.ToSingle(this._buffer, (int)this.position);
             this.position += 4;

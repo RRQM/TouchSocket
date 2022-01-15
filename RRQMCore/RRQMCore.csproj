@@ -5,14 +5,14 @@
 		<Authors>若汝棋茗</Authors>
 		<PackageIcon>RRQM.png</PackageIcon>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Version>6.4.1</Version>
+		<Version>6.5.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<SignAssembly>true</SignAssembly>
 		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
 
 更新内容：
-优化：IntelligentDataQueue。
-修复：资源文件。
+修复：ByteBlock.ReadFloat()返回值错误bug。
+增加：ByteBlock.ToArray(int position,int length)，可以直接导出实际真实内存。
 
 特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
 特此感谢其作者！！！

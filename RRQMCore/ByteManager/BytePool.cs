@@ -21,7 +21,7 @@ namespace RRQMCore.ByteManager
     /// </summary>
     public static class BytePool
     {
-        private static readonly ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
+        private static ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
 
         private static bool autoZero;
         private static long fullSize;
@@ -35,7 +35,7 @@ namespace RRQMCore.ByteManager
             keyCapacity = 100;
             autoZero = false;
             maxSize = 1024 * 1024 * 512;
-            SetBlockSize(1024 * 64, 1024 * 1024 * 5);
+            SetBlockSize(1024, 1024 * 1024 * 20);
             AddSizeKey(10240);
         }
 
@@ -204,7 +204,6 @@ namespace RRQMCore.ByteManager
         {
             BytePool.maxBlockSize = maxBlockSize;
             BytePool.minBlockSize = minBlockSize;
-
             bytesDictionary.Clear();
         }
 
