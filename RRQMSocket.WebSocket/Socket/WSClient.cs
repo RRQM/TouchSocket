@@ -166,12 +166,12 @@ namespace RRQMSocket.WebSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="requestInfo"></param>
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (isHandshaked)
             {
-                WSDataFrame dataFrame = (WSDataFrame)obj;
+                WSDataFrame dataFrame = (WSDataFrame)requestInfo;
                 switch (dataFrame.Opcode)
                 {
                     case WSDataType.Close:
@@ -196,13 +196,13 @@ namespace RRQMSocket.WebSocket
             }
             else
             {
-                HttpResponse httpResponse = (HttpResponse)obj;
+                HttpResponse httpResponse = (HttpResponse)requestInfo;
                 httpResponse.Flag = false;
                 this.waitData.Set(httpResponse);
-                SpinWait.SpinUntil(()=> 
+                SpinWait.SpinUntil(() =>
                 {
                     return (bool)httpResponse.Flag;
-                },1000);
+                }, 1000);
             }
         }
 

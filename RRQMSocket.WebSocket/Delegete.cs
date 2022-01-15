@@ -17,5 +17,5 @@ namespace RRQMSocket.WebSocket
     /// </summary>
     /// <param name="client"></param>
     /// <param name="dataFrame"></param>
-    public delegate void WSDataFrameEventHandler<TClient>(TClient client, WSDataFrame  dataFrame) where TClient : IClient;
+    public delegate void WSDataFrameEventHandler<TClient>(TClient client, WSDataFrame dataFrame) where TClient : IClient;
 }

@@ -103,12 +103,12 @@ namespace RRQMSocket.WebSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, object obj)
+        /// <param name="requestInfo"></param>
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
-                WSDataFrame dataFrame = (WSDataFrame)obj;
+                WSDataFrame dataFrame = (WSDataFrame)requestInfo;
                 switch (dataFrame.Opcode)
                 {
                     case WSDataType.Close:
@@ -135,7 +135,7 @@ namespace RRQMSocket.WebSocket
             {
                 try
                 {
-                    HttpRequest httpRequest = (HttpRequest)obj;
+                    HttpRequest httpRequest = (HttpRequest)requestInfo;
                     if ((httpRequest.GetHeader("Upgrade").ToLower().Trim() == "websocket") && (httpRequest.GetHeader("Connection").ToLower().Trim() == "upgrade") && (!string.IsNullOrEmpty(httpRequest.GetHeader("Sec-WebSocket-Key"))))
                     {
                         this.WebSocketVersion = httpRequest.GetHeader("Sec-WebSocket-Version");
