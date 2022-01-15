@@ -10,11 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket.Helper
 {
@@ -50,14 +46,14 @@ namespace RRQMSocket.WebSocket.Helper
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static WSDataFrame AppendBinary(this WSDataFrame dataFrame, byte[] buffer,int offset,int length)
+        public static WSDataFrame AppendBinary(this WSDataFrame dataFrame, byte[] buffer, int offset, int length)
         {
             dataFrame.Opcode = WSDataType.Binary;
             if (dataFrame.PayloadData == null)
             {
                 dataFrame.PayloadData = new ByteBlock();
             }
-            dataFrame.PayloadData.Write(buffer,offset,length);
+            dataFrame.PayloadData.Write(buffer, offset, length);
             return dataFrame;
         }
 
@@ -108,10 +104,10 @@ namespace RRQMSocket.WebSocket.Helper
         public static bool BuildResponse(this WSDataFrame dataFrame, ByteBlock byteBlock)
         {
             dataFrame.FIN = true;
-            
+
             return dataFrame.Build(byteBlock, false);
         }
-       
+
         /// <summary>
         /// 构建响应数据（无Make）
         /// </summary>
@@ -128,7 +124,7 @@ namespace RRQMSocket.WebSocket.Helper
                 return data;
             }
         }
-        
+
         /// <summary>
         /// 设置Mask。
         /// </summary>

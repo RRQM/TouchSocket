@@ -11,14 +11,8 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Dependency;
 using RRQMCore.Helper;
-using RRQMSocket.Http;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
@@ -27,12 +21,24 @@ namespace RRQMSocket.WebSocket
     /// </summary>
     public class WebSocketDataHandlingAdapter : DataHandlingAdapter
     {
-        private static int maxSize = 1024 * 1024;
+        private int maxSize = 1024 * 1024;
+
+        private WSDataFrame dataFrameTemp;
+
+        /// <summary>
+        /// 数据包剩余长度
+        /// </summary>
+        private int surPlusLength = 0;
+
+        /// <summary>
+        /// 临时包
+        /// </summary>
+        private ByteBlock tempByteBlock;
 
         /// <summary>
         /// 获取或设置数据最大值，默认1024*1024
         /// </summary>
-        public static int MaxSize
+        public int MaxSize
         {
             get { return maxSize; }
             set { maxSize = value; }
@@ -42,102 +48,6 @@ namespace RRQMSocket.WebSocket
         /// <inheritdoc/>
         /// </summary>
         public override bool CanSplicingSend => false;
-
-        /// <summary>
-        /// 临时包
-        /// </summary>
-        private ByteBlock tempByteBlock;
-
-        /// <summary>
-        /// 数据包剩余长度
-        /// </summary>
-        private int surPlusLength = 0;
-
-        WSDataFrame dataFrameTemp;
-        /// <summary>
-        /// 当接收到数据时处理数据
-        /// </summary>
-        /// <param name="byteBlock">数据流</param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
-        {
-            byte[] buffer = byteBlock.Buffer;
-            int r = byteBlock.Len;
-
-            if (this.tempByteBlock != null)
-            {
-                this.tempByteBlock.Write(buffer, 0, r);
-                buffer = this.tempByteBlock.ToArray();
-                r = this.tempByteBlock.Pos;
-                this.tempByteBlock.Dispose();
-                this.tempByteBlock = null;
-            }
-
-            if (this.dataFrameTemp == null)
-            {
-                SplitPackage(buffer, 0, r);
-            }
-            else
-            {
-                if (surPlusLength == r)
-                {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.dataFrameTemp);
-                    this.dataFrameTemp = null;
-                    surPlusLength = 0;
-                }
-                else if (surPlusLength < r)
-                {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.dataFrameTemp);
-                    this.dataFrameTemp = null;
-                    SplitPackage(buffer, surPlusLength, r);
-                }
-                else
-                {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, r);
-                    surPlusLength -= r;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 分解包
-        /// </summary>
-        /// <param name="dataBuffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        private void SplitPackage(byte[] dataBuffer, int offset, int length)
-        {
-            while (offset < length)
-            {
-                if (length - offset <= 4)
-                {
-                    if (this.tempByteBlock == null)
-                    {
-                        this.tempByteBlock = new ByteBlock();
-                        this.tempByteBlock.Write(dataBuffer, offset, length - offset);
-                    }
-                    return;
-                }
-
-                if (DecodingFromBytes(dataBuffer, ref offset, length - offset, out WSDataFrame dataFrame))
-                {
-                    if (dataFrame.PayloadLength == dataFrame.PayloadData.Len)
-                    {
-                        this.PreviewHandle(dataFrame);
-                    }
-                    else
-                    {
-                        this.surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Len;
-                        this.dataFrameTemp = dataFrame;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
 
         /// <summary>
         /// 解码
@@ -223,19 +133,60 @@ namespace RRQMSocket.WebSocket
             return true;
         }
 
-        private void PreviewHandle(WSDataFrame dataFrame)
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="dataResult"></param>
+        /// <returns></returns>
+        protected override bool OnReceivingError(DataResult dataResult)
         {
-            try
+            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
+            return true;
+        }
+
+        /// <summary>
+        /// 当接收到数据时处理数据
+        /// </summary>
+        /// <param name="byteBlock">数据流</param>
+        protected override void PreviewReceived(ByteBlock byteBlock)
+        {
+            byte[] buffer = byteBlock.Buffer;
+            int r = byteBlock.Len;
+
+            if (this.tempByteBlock != null)
             {
-                if (dataFrame.Mask)
-                {
-                    WSTools.DoMask(dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Len, dataFrame.MaskingKey);
-                }
-                this.GoReceived(null, dataFrame);
+                this.tempByteBlock.Write(buffer, 0, r);
+                buffer = this.tempByteBlock.ToArray();
+                r = this.tempByteBlock.Pos;
+                this.tempByteBlock.Dispose();
+                this.tempByteBlock = null;
             }
-            finally
+
+            if (this.dataFrameTemp == null)
             {
-                dataFrame.Dispose();
+                SplitPackage(buffer, 0, r);
+            }
+            else
+            {
+                if (surPlusLength == r)
+                {
+                    this.dataFrameTemp.PayloadData.Write(buffer, 0, surPlusLength);
+                    PreviewHandle(this.dataFrameTemp);
+                    this.dataFrameTemp = null;
+                    surPlusLength = 0;
+                }
+                else if (surPlusLength < r)
+                {
+                    this.dataFrameTemp.PayloadData.Write(buffer, 0, surPlusLength);
+                    PreviewHandle(this.dataFrameTemp);
+                    this.dataFrameTemp = null;
+                    SplitPackage(buffer, surPlusLength, r);
+                }
+                else
+                {
+                    this.dataFrameTemp.PayloadData.Write(buffer, 0, r);
+                    surPlusLength -= r;
+                }
             }
         }
 
@@ -259,6 +210,71 @@ namespace RRQMSocket.WebSocket
         protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
         {
             throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void Reset()
+        {
+            this.tempByteBlock = null;
+            this.dataFrameTemp = null;
+            this.surPlusLength = 0;
+        }
+
+        private void PreviewHandle(WSDataFrame dataFrame)
+        {
+            try
+            {
+                if (dataFrame.Mask)
+                {
+                    WSTools.DoMask(dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Len, dataFrame.MaskingKey);
+                }
+                this.GoReceived(null, dataFrame);
+            }
+            finally
+            {
+                dataFrame.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 分解包
+        /// </summary>
+        /// <param name="dataBuffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        private void SplitPackage(byte[] dataBuffer, int offset, int length)
+        {
+            while (offset < length)
+            {
+                if (length - offset <= 4)
+                {
+                    if (this.tempByteBlock == null)
+                    {
+                        this.tempByteBlock = new ByteBlock();
+                        this.tempByteBlock.Write(dataBuffer, offset, length - offset);
+                    }
+                    return;
+                }
+
+                if (DecodingFromBytes(dataBuffer, ref offset, length - offset, out WSDataFrame dataFrame))
+                {
+                    if (dataFrame.PayloadLength == dataFrame.PayloadData.Len)
+                    {
+                        this.PreviewHandle(dataFrame);
+                    }
+                    else
+                    {
+                        this.surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Len;
+                        this.dataFrameTemp = dataFrame;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
 }

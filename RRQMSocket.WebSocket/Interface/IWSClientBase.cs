@@ -10,18 +10,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
     /// <summary>
     /// WebSocket终端基类接口
     /// </summary>
-    public interface IWSClientBase:ITcpClientBase,ISendBase
+    public interface IWSClientBase : ITcpClientBase, ISendBase
     {
         /// <summary>
         /// WebSocket版本号。
@@ -85,7 +80,8 @@ namespace RRQMSocket.WebSocket
         /// <param name="byteBlock"></param>
         /// <param name="packageSize"></param>
         void SubpackageSend(ByteBlock byteBlock, int packageSize);
-        #endregion
+
+        #endregion 同步分包发送
 
         #region 异步分包发送
 
@@ -120,6 +116,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="byteBlock"></param>
         /// <param name="packageSize"></param>
         void SubpackageSendAsync(ByteBlock byteBlock, int packageSize);
-        #endregion
+
+        #endregion 异步分包发送
     }
 }

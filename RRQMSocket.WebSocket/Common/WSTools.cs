@@ -13,10 +13,7 @@ using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Helper;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
@@ -92,7 +89,7 @@ namespace RRQMSocket.WebSocket
             else if (length < 65536)
             {
                 payloadLength = 126;
-                extLen =RRQMBitConverter.BigEndian.GetBytes((ushort)length);
+                extLen = RRQMBitConverter.BigEndian.GetBytes((ushort)length);
             }
             else
             {

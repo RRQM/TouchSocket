@@ -9,39 +9,39 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
     /// <summary>
     /// WebSocket数据类型
     /// </summary>
-    public enum WSDataType:ushort
+    public enum WSDataType : ushort
     {
         /// <summary>
         /// 表示一个中间数据包，denotes a continuation frame
         /// </summary>
         Cont = 0,
+
         /// <summary>
         /// 表示一个text类型数据包
         /// </summary>
         Text = 1,
+
         /// <summary>
         /// 表示一个binary类型数据包
         /// </summary>
         Binary = 2,
+
         /// <summary>
         /// 表示一个断开连接类型数据包
         /// </summary>
         Close = 8,
+
         /// <summary>
         /// 表示一个ping类型数据包
         /// </summary>
         Ping = 9,
+
         /// <summary>
         /// 表示一个pong类型数据包
         /// </summary>

@@ -10,19 +10,14 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
     /// <summary>
     /// WebSocket数据帧
     /// </summary>
-    public class WSDataFrame : IDisposable
+    public class WSDataFrame : IDisposable, IRequestInfo
     {
         /// <summary>
         /// 是否为最后数据帧。
@@ -97,7 +92,7 @@ namespace RRQMSocket.WebSocket
                 this.PayloadLength = 0;
             }
 
-            if (this.PayloadData==null)
+            if (this.PayloadData == null)
             {
                 return WSTools.Build(byteBlock, this, new byte[0], 0, 0);
             }

@@ -9,11 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.WebSocket
 {
@@ -33,7 +28,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="dataFrame"></param>
         protected override void HandleWSDataFrame(WSDataFrame dataFrame)
         {
-            this.Received.Invoke(this,dataFrame);
+            this.Received.Invoke(this, dataFrame);
         }
     }
 }

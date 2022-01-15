@@ -9,96 +9,40 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Run;
-using RRQMSocket.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RRQMCore.Helper;
 
 namespace RRQMSocket.WebSocket
 {
     /// <summary>
     /// WebSocket服务器
     /// </summary>
-    public class WSService<TClient> : TcpService<TClient> where TClient:WSSocketClient,new () 
+    public class WSService<TClient> : TcpService<TClient> where TClient : WSSocketClient, new()
     {
-        
+    }
 
-      
+    /// <summary>
+    /// 简单WebSocket实现。
+    /// </summary>
+    public class WSService : WSService<SimpleWSSocketClient>
+    {
+        /// <summary>
+        /// 收到WebSocket数据
+        /// </summary>
+        public event WSDataFrameEventHandler<SimpleWSSocketClient> Received;
 
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="socketClient"></param>
-        //protected override void PreviewConnecting(TClient socketClient)
-        //{
-        //    Task.Run(() =>
-        //    {
-        //        WaitData<byte[]> waitData = new WaitData<byte[]>();
-        //        Task.Run(() =>
-        //        {
-        //            byte[] buffer = new byte[1024];
-        //            int r = socketClient.MainSocket.Receive(buffer);
-        //            if (r > 0)
-        //            {
-        //                byte[] data = new byte[r];
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override void OnConnecting(SimpleWSSocketClient socketClient, ClientOperationEventArgs e)
+        {
+            socketClient.Received += SocketClient_Received;
+            base.OnConnecting(socketClient, e);
+        }
 
-        //                Array.Copy(buffer, data, r);
-        //                waitData.Set(data);
-        //            }
-        //        });
-
-        //        switch (waitData.Wait(3000))
-        //        {
-        //            case WaitDataStatus.SetRunning:
-        //                {
-        //                    byte[] data = waitData.WaitResult;
-        //                    Http.HttpRequest httpRequest = new Http.HttpRequest();
-        //                    httpRequest.ReadHeaders(data, 0, data.Length);
-        //                    if (httpRequest.GetHeader("Upgrade").ToLower() != "websocket")
-        //                    {
-        //                        return;
-        //                    }
-        //                    if (httpRequest.GetHeader("Connection").ToLower() != "upgrade")
-        //                    {
-        //                        return;
-        //                    }
-
-        //                    if (string.IsNullOrEmpty(httpRequest.GetHeader("Sec-WebSocket-Key")))
-        //                    {
-        //                        return;
-        //                    }
-        //                    socketClient.WebSocketVersion=httpRequest.GetHeader("Sec-WebSocket-Version");
-        //                    ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
-        //                    clientArgs.ID = GetDefaultNewID();
-        //                    this.OnConnecting(socketClient, clientArgs);
-        //                    if (clientArgs.IsPermitOperation)
-        //                    {
-        //                        MakeClientReceive(socketClient, clientArgs.ID);
-        //                        socketClient.MainSocket.Send(GetResponse(httpRequest));
-
-        //                        this.OnConnected(socketClient, new MesEventArgs("新客户端连接"));
-        //                    }
-        //                    else
-        //                    {
-        //                        socketClient.MainSocket.Dispose();
-        //                    }
-        //                }
-        //                break;
-
-        //            case WaitDataStatus.Overtime:
-        //            case WaitDataStatus.Canceled:
-        //            case WaitDataStatus.Disposed:
-        //            default:
-        //                {
-        //                    socketClient.Dispose();
-        //                    break;
-        //                }
-        //        }
-        //    });
-        //}
+        private void SocketClient_Received(SimpleWSSocketClient client, WSDataFrame dataFrame)
+        {
+            this.Received?.Invoke(client, dataFrame);
+        }
     }
 }
