@@ -91,13 +91,13 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 
  **_更多配置请查看API文档的配置说明文档，一下仅以最简方式创建实例。_** 
 
-【TcpService】
+ **【TcpService】** 
 
 ```
 SimpleTcpService service = new SimpleTcpService();
-service.Connected += (client, e) =>{//有客户端连接};
-service.Disconnected += (client, e) =>{//有客户端断开连接};
-service.Connecting += (client, e) =>{//e.IsPermitOperation = false;//是否允许连接};
+service.Connecting += (client, e) =>{};//有客户端正在连接
+service.Connected += (client, e) =>{};//有客户端连接
+service.Disconnected += (client, e) =>{};//有客户端断开连接
 service.Received += (client, byteBlock, obj) =>
 {
     //从客户端收到信息
@@ -110,39 +110,30 @@ config.ListenIPHosts = new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7
 //载入配置
 service.Setup(config);
 //启动
-try
-{
-    service.Start();
-    Console.WriteLine("简单服务器启动成功");
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message);
-}
+ service.Start();
 ```
 
-【TcpClient】
-
+ **【TcpClient】** 
 ```
 SimpleTcpClient tcpClient = new SimpleTcpClient();
-tcpClient.Connected += (client, e) =>{//成功连接到服务器};
-tcpClient.Disconnected += (client, e) =>{//从服务器断开连接，当连接不成功时不会触发。};
+tcpClient.Connected += (client, e) =>{};//成功连接到服务器
+tcpClient.Disconnected += (client, e) =>{};//从服务器断开连接，当连接不成功时不会触发。
 //载入配置
 tcpClient.Setup("127.0.0.1:7789");
 tcpClient.Connect();
-tcpClient.Send(new byte[]{1,2,3});
+tcpClient.Send(Encoding.UTF8.GetBytes("RRQM"));
 ```
 
-【Ssl加密】
+ **【Ssl加密】** 
 
 在[RRQMBox](https://gitee.com/RRQM_Home/RRQMBox/tree/master/Ssl%E8%AF%81%E4%B9%A6%E7%9B%B8%E5%85%B3)中，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
 
 在服务器中只需设置配置SslOption属性和接收模式（接收模式在Ssl模式下只支持BIO和Select）。
 
+服务器配置
 ```
 config.SslOption = new ServiceSslOption() { Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), SslProtocols = SslProtocols.Tls12 };
 config.ReceiveType = ReceiveType.Select;
-
 ```
 
 客户端配置
@@ -157,6 +148,74 @@ config.SslOption = new ClientSslOption()
     CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
 };
 ```
+
+【WS服务器】
+
+```
+WSService wSService = new WSService();
+wSService.Received += WSService_Received;
+wSService.Connected += WSService_Connected;
+
+var config = new WSServiceConfig();
+config.ListenIPHosts = new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) };//同时监听两个地址
+config.ReceiveType = ReceiveType.IOCP;
+
+wSService.Setup(config).Start();
+Console.WriteLine("WS服务器已启动");
+```
+
+【WS客户端】
+
+```
+SimpleWSClient myWSClient = new SimpleWSClient();
+myWSClient.Received += MyWSClient_Received;
+WSClientConfig config = new WSClientConfig();
+config.RemoteIPHost = new IPHost("127.0.0.1:7789");
+myWSClient.Setup(config);
+myWSClient.Connect();
+Console.WriteLine("连接成功");
+while (true)
+{
+    myWSClient.Send(Console.ReadLine());
+}
+```
+
+【WS 接收数据（服务器、客户端均可用）】
+
+```
+private static void MyWSClient_Received(IWSClientBase client, WSDataFrame dataFrame)
+{
+    switch (dataFrame.Opcode)
+    {
+        case WSDataType.Cont:
+            Console.WriteLine($"收到中间数据，长度为：{dataFrame.PayloadLength}");
+            break;
+        case WSDataType.Text:
+            Console.WriteLine(dataFrame.GetMessage());
+            break;
+        case WSDataType.Binary:
+            if (dataFrame.FIN)
+            {
+                Console.WriteLine($"收到二进制数据，长度为：{dataFrame.PayloadLength}");
+            }
+            else
+            {
+                Console.WriteLine($"收到未结束的二进制数据，长度为：{dataFrame.PayloadLength}");
+            }
+            break;
+        case WSDataType.Close:
+            break;
+        case WSDataType.Ping:
+            break;
+        case WSDataType.Pong:
+            break;
+        default:
+            break;
+    }
+}
+
+```
+
 
 
 ## 🧲应用场景模拟
