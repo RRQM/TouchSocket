@@ -32,13 +32,15 @@ namespace RRQMSocket.Helper
                 throw new ArgumentNullException(nameof(tcpClient));
             }
 
+           
             tcpClient.Disconnected += (client, e) =>
             {
-                while (tryCount < 0 || tryCount-- > 0)
+                int tryT = tryCount;
+                while (tryCount < 0 || tryT-- > 0)
                 {
                     try
                     {
-                        client.Disconnect().Connect();
+                        client.Connect();
                         break;
                     }
                     catch (Exception ex)
