@@ -31,7 +31,6 @@ namespace RRQMSocket
         /// 设置客户端状态
         /// </summary>
         protected bool online;
-
         private AsyncSender asyncSender;
         private TcpClientConfig clientConfig;
         private DataHandlingAdapter dataHandlingAdapter;
@@ -191,13 +190,12 @@ namespace RRQMSocket
             {
                 lock (this)
                 {
+                    if (this.dataHandlingAdapter==null)
+                    {
+                        return;
+                    }
                     this.receiving = false;
 
-                    if (this.online)
-                    {
-                        this.OnDisconnected(new MesEventArgs(msg));
-                    }
-                    this.online = false;
                     if (this.eventArgs != null)
                     {
                         this.eventArgs.Dispose();
@@ -221,6 +219,12 @@ namespace RRQMSocket
 
                     this.dataHandlingAdapter = null;
                     this.OnBreakOut();
+
+                    if (this.online)
+                    {
+                        this.online = false;
+                        this.OnDisconnected(new MesEventArgs(msg));
+                    }
                 }
             });
         }
@@ -251,9 +255,9 @@ namespace RRQMSocket
         /// <summary>
         /// 异步连接服务器
         /// </summary>
-        public async Task<ITcpClient> ConnectAsync()
+        public Task<ITcpClient> ConnectAsync()
         {
-            return await Task.Run(() =>
+            return Task.Run(() =>
             {
                 return this.Connect();
             });
