@@ -94,7 +94,7 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
  **【TcpService】** 
 
 ```
-SimpleTcpService service = new SimpleTcpService();
+TcpService service = new TcpService();
 service.Connecting += (client, e) =>{};//有客户端正在连接
 service.Connected += (client, e) =>{};//有客户端连接
 service.Disconnected += (client, e) =>{};//有客户端断开连接
