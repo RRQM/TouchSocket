@@ -162,13 +162,13 @@ RRQMBitConverter.DefaultEndianType = EndianType.Little;
 
 在服务器中只需设置配置SslOption属性和接收模式（接收模式在Ssl模式下只支持BIO和Select）。
 
-服务器配置
+ **服务器配置** 
 ```
 config.SslOption = new ServiceSslOption() { Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), SslProtocols = SslProtocols.Tls12 };
 config.ReceiveType = ReceiveType.Select;
 ```
 
-客户端配置
+ **客户端配置** 
 
 ```
 config.ReceiveType = ReceiveType.BIO;
@@ -181,7 +181,7 @@ config.SslOption = new ClientSslOption()
 };
 ```
 
-【WS服务器】
+ **【WS服务器】** 
 
 ```
 WSService wSService = new WSService();
@@ -196,23 +196,49 @@ wSService.Setup(config).Start();
 Console.WriteLine("WS服务器已启动");
 ```
 
-【WS客户端】
+ **【WSs服务器】** 
 
+创建WSs服务器时，其他配置不变，只需要在`config`中加入以下代码即可。
+
+在[RRQMBox](https://gitee.com/RRQM_Home/RRQMBox/tree/master/Ssl%E8%AF%81%E4%B9%A6%E7%9B%B8%E5%85%B3)中，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
+```csharp
+//config.SslOption = new ServiceSslOption() { Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), SslProtocols = SslProtocols.Tls12 };//Ssl配置，当为null的时候，相当于创建了ws服务器，当赋值的时候，相当于wss服务器。
+config.ReceiveType = ReceiveType.Select;//在没有ssl配置时，请使用IOCP模式，速度会好些，使用ssl时，可以选择Select和BIO，区别请看API
 ```
-SimpleWSClient myWSClient = new SimpleWSClient();
-myWSClient.Received += MyWSClient_Received;
+
+ **【WS客户端】** 
+```csharp
+SimpleWSClient client = new SimpleWSClient();
 WSClientConfig config = new WSClientConfig();
 config.RemoteIPHost = new IPHost("127.0.0.1:7789");
-myWSClient.Setup(config);
-myWSClient.Connect();
+client .Setup(config);
+client .Connect();
 Console.WriteLine("连接成功");
 while (true)
 {
-    myWSClient.Send(Console.ReadLine());
+    client.Send(Console.ReadLine());
 }
 ```
+***注意：当使用域名连接时，IPHost中的字符串必须显式指定端口，例如百度地址：IPHost("ws://baidu.com:80")***
 
-【WS 接收数据（服务器、客户端均可用）】
+
+ **【WSs客户端】** 
+
+同样的，在客户端配置中，只需要加入以下代码即可。
+
+***注意：当使用域名连接时，TargetHost为域名，例如连接到IPHost("ws://baidu.com:80")时，TargetHost应当填写：baidu.com***
+```csharp
+config.SslOption = new ClientSslOption()
+{
+    ClientCertificates = new X509CertificateCollection() { new X509Certificate2("RRQMSocket.pfx", "RRQMSocket") },
+    SslProtocols = SslProtocols.Tls12,
+    TargetHost = "127.0.0.1",
+    CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
+};
+config.ReceiveType = ReceiveType.BIO;
+```
+
+ **【WS 接收数据（服务器、客户端均可用）】** 
 
 ```
 private static void MyWSClient_Received(IWSClientBase client, WSDataFrame dataFrame)
