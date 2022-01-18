@@ -124,6 +124,14 @@ tcpClient.Connect();
 tcpClient.Send(Encoding.UTF8.GetBytes("RRQM"));
 ```
 
+ **【TcpClient 断线重连】** 
+
+
+```
+tcpClient.UseReconnection(tryCount:5,printLog:true);
+```
+
+
  **【Ssl加密】** 
 
 在[RRQMBox](https://gitee.com/RRQM_Home/RRQMBox/tree/master/Ssl%E8%AF%81%E4%B9%A6%E7%9B%B8%E5%85%B3)中，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
