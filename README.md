@@ -131,6 +131,30 @@ tcpClient.Send(Encoding.UTF8.GetBytes("RRQM"));
 tcpClient.UseReconnection(tryCount:5,printLog:true);
 ```
 
+ **【FixedHeaderPackageAdapter包模式】** 
+
+该适配器主要解决TCP粘分包问题，数据格式采用简单而高效的“包头+数据体”的模式，其中包头支持：
+
+- Byte模式（1+n），一次性最大接收255字节的数据。
+- Ushort模式（2+n），一次最大接收65535字节。
+- Int模式（4+n），一次最大接收2G数据。
+
+以上数据头均采用RRQMBitConverter的默认端模式（小端模式），使用者可以根据需求切换默认端模式。
+
+```
+RRQMBitConverter.DefaultEndianType = EndianType.Little;
+```
+
+ **【CustomFixedHeaderDataHandlingAdapter】** 
+
+用户自定义固定包头适配器，主要帮助用户解决具有固定包头的数据帧信息。例如：下列数据格式，仅需要实现几个接口，就能完成解析，详细操作请参照API。
+
+|1|1|1|**********|
+
+ **【CustomUnfixedHeaderDataHandlingAdapter】** 
+
+用户自定义不固定包头适配器，主要帮助用户解决具有包头不固定的数据帧信息。例如：最典型的HTTP数据包，其数据头和数据体由“\r\n”隔开，而数据头又因为请求者的请求信息的不同，头部数据也不固定，而数据体的长度，也是由数据头的ContentLength的值显式指定的，所以可以考虑使用CustomUnfixedHeaderDataHandlingAdapter解析，也是仅通过简单的开发，就能实现。
+
 
  **【Ssl加密】** 
 
