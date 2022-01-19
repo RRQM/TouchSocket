@@ -26,7 +26,7 @@ namespace RRQMSocket
         /// <summary>
         /// 不处理
         /// </summary>
-        public static DataResult IgnoreResult;
+        public static DataResult CacheResult;
 
         /// <summary>
         /// 成功
@@ -41,7 +41,7 @@ namespace RRQMSocket
         {
             SuccessResult = new DataResult(null, DataResultCode.Success);
             ErrorResult = new DataResult(ResType.UnknownError.GetResString(), DataResultCode.Error);
-            IgnoreResult = new DataResult(null, DataResultCode.Ignore);
+            CacheResult = new DataResult(null, DataResultCode.Cache);
         }
 
         /// <summary>

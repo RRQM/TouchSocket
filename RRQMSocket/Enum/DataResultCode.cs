@@ -32,8 +32,8 @@ namespace RRQMSocket
         Exception,
 
         /// <summary>
-        /// 本次数据不做任何处理
+        /// 缓存本次数据，不做任何处理
         /// </summary>
-        Ignore
+        Cache
     }
 }

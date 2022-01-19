@@ -48,15 +48,15 @@ namespace RRQMSocket
                         case DataResultCode.Success:
                             byteBlock.Pos += request.BodyLength;
                             return FilterResult.Success;
-                        case DataResultCode.Ignore:
+                        case DataResultCode.Cache:
                             byteBlock.Pos += request.BodyLength;
-                            return FilterResult.Ignore;
+                            return FilterResult.Cache;
                         case DataResultCode.Error:
                         case DataResultCode.Exception:
                         default:
                             byteBlock.Pos = position;
                             this.OnReceivingError(dataResult);
-                            return FilterResult.Ignore;
+                            return FilterResult.Cache;
                     }
                 }
             }
@@ -82,16 +82,16 @@ namespace RRQMSocket
                                     request = requestInfo;
                                     return FilterResult.Success;
 
-                                case DataResultCode.Ignore:
+                                case DataResultCode.Cache:
                                     byteBlock.Pos += requestInfo.BodyLength;
-                                    return FilterResult.Ignore;
+                                    return FilterResult.Cache;
 
                                 case DataResultCode.Error:
                                 case DataResultCode.Exception:
                                 default:
                                     byteBlock.Pos = position;
                                     this.OnReceivingError(dataResult);
-                                    return FilterResult.Ignore;
+                                    return FilterResult.Cache;
                             }
                         }
                     }
@@ -103,7 +103,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    return FilterResult.Ignore;
+                    return FilterResult.Cache;
                 }
             }
         }
