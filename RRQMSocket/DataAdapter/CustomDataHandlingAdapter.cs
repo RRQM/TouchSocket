@@ -39,7 +39,7 @@ namespace RRQMSocket
 
         /// <summary>
         /// 筛选解析数据。
-        /// <para>当完全不满足解析条件时，请返回<see cref="FilterResult.Ignore"/>，同时不要对<see cref="ByteBlock"/>做任何属性修改。</para>
+        /// <para>当完全不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，同时不要对<see cref="ByteBlock"/>做任何属性修改。</para>
         /// <para>当满足部分解析条件时，请返回<see cref="FilterResult.GoOn"/>，同时请实例化TRequest，该实例在下次接收时会再次传递，届时<paramref name="beCached"/>将为true，最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
         /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>，同时请实例化TRequest，最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
         /// </summary>
@@ -124,7 +124,7 @@ namespace RRQMSocket
                             if (byteBlock.Len - byteBlock.Pos > 0)
                             {
                                 this.tempByteBlock = new ByteBlock();
-                                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.Len - byteBlock.Pos);
+                                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                                 if (this.tempByteBlock.Len > this.MaxSize)
                                 {
                                     if (this.OnReceivingError(new DataResult("缓存的数据长度大于设定值的情况下未收到解析信号", DataResultCode.Error)))
@@ -134,7 +134,7 @@ namespace RRQMSocket
                                 }
                             }
                             return;
-                        case FilterResult.Ignore:
+                        case FilterResult.Cache:
                             this.tempByteBlock = new ByteBlock();
                             this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.Len - byteBlock.Pos);
                             this.tempRequest = default;

@@ -35,17 +35,18 @@ namespace RRQMSocket
         {
             if (this.HeaderLength > length)
             {
-                return FilterResult.Ignore;
+                return FilterResult.Cache;
             }
 
             int position = byteBlock.Pos;//先记录初始流位置，防止不能解析时，可以重置流位置。
             TFixedHeaderRequestInfo requestInfo = this.GetInstance();
-            if (requestInfo.OnParsingHeader(byteBlock.ToArray(byteBlock.Pos, this.HeaderLength)))
+            var result = requestInfo.OnParsingHeader(byteBlock.ToArray(byteBlock.Pos, this.HeaderLength));
+            if (result== FilterResult.Success)
             {
                 if (requestInfo.BodyLength > length - this.HeaderLength)
                 {
                     byteBlock.Pos = position;
-                    return FilterResult.Ignore;
+                    return FilterResult.Cache;
                 }
 
                 byteBlock.Pos += this.HeaderLength;
@@ -57,21 +58,21 @@ namespace RRQMSocket
                         request = requestInfo;
                         return FilterResult.Success;
 
-                    case DataResultCode.Ignore:
+                    case DataResultCode.Cache:
                         byteBlock.Pos += requestInfo.BodyLength;
-                        return FilterResult.Ignore;
+                        return FilterResult.Cache;
 
                     case DataResultCode.Error:
                     case DataResultCode.Exception:
                     default:
                         byteBlock.Pos = position;
                         this.OnReceivingError(dataResult);
-                        return FilterResult.Ignore;
+                        return FilterResult.Cache;
                 }
             }
             else
             {
-                return FilterResult.Ignore;
+                return result;
             }
         }
 

@@ -25,7 +25,7 @@ namespace RRQMSocket
         /// <summary>
         /// 本次数据不满足任何解析，然后先缓存数据起来。
         /// </summary>
-        Ignore,
+        Cache,
 
         /// <summary>
         /// 成功
@@ -33,7 +33,7 @@ namespace RRQMSocket
         Success,
 
         /// <summary>
-        /// 本次接收满足解析部分数据，所以接着接收下次。
+        /// 本次接收满足解析部分数据，所以接着接收下次，或者本次数据无效，不要缓存，继续接收下次。
         /// </summary>
         GoOn
     }
