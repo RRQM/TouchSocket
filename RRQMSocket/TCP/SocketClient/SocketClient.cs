@@ -371,14 +371,15 @@ namespace RRQMSocket
         /// <param name="msg"></param>
         protected void BreakOut(string msg)
         {
-            lock (this)
+            Task.Run(() =>
             {
-                if (this.disposable)
+                lock (this)
                 {
-                    return;
-                }
-                Task.Run(() =>
-                {
+                    if (this.disposable)
+                    {
+                        return;
+                    }
+                    this.disposable = true;
                     if (this.eventArgs != null)
                     {
                         this.eventArgs.Dispose();
@@ -399,18 +400,16 @@ namespace RRQMSocket
                         this.service.SocketClients.TryRemove(this.id);
                     }
 
-                    if (this.Online)
+                    if (this.online)
                     {
                         this.online = false;
                         this.OnDisconnected(new MesEventArgs(msg));
                     }
-
-                    this.service = null;
                     this.dataHandlingAdapter = null;
                     this.serviceConfig = null;
                     this.OnBreakOut();
-                });
-            }
+                }
+            });
         }
 
         /// <summary>
