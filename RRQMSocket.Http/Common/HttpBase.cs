@@ -25,27 +25,35 @@ namespace RRQMSocket.Http
     public abstract class HttpBase : IUnfixedHeaderRequestInfo
     {
         /// <summary>
+        /// 服务器版本
+        /// </summary>
+        public static readonly string ServerVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        private static byte[] terminatorCode = Encoding.UTF8.GetBytes("\r\n\r\n");
+
+        private byte[] content;
+
+        private Encoding encoding = Encoding.UTF8;
+
+        private Dictionary<string, string> headers;
+
+        private string requestLine;
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public HttpBase()
         {
             this.headers = new Dictionary<string, string>();
         }
-
-        /// <summary>
-        /// 服务器版本
-        /// </summary>
-        public static readonly string ServerVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
-        private string requestLine;
-
         /// <summary>
         /// 字符数据
         /// </summary>
-        public string Body
-        { get { return this.content == null ? null : this.encoding.GetString(this.content); } }
-
-        private byte[] content;
+        public string Body{ get { return this.content == null ? null : this.encoding.GetString(this.content); } }
+        /// <summary>
+        /// 内容长度
+        /// </summary>
+        public int BodyLength { get; set; }
 
         /// <summary>
         /// 内容器
@@ -59,12 +67,6 @@ namespace RRQMSocket.Http
         /// 内容编码
         /// </summary>
         public string Content_Encoding { get; set; }
-
-        /// <summary>
-        /// 内容长度
-        /// </summary>
-        public int BodyLength { get; set; }
-
         /// <summary>
         /// 内容类型
         /// </summary>
@@ -74,9 +76,6 @@ namespace RRQMSocket.Http
         /// 内容语言
         /// </summary>
         public string ContentLanguage { get; set; }
-
-        private Encoding encoding = Encoding.UTF8;
-
         /// <summary>
         /// 编码方式
         /// </summary>
@@ -96,9 +95,6 @@ namespace RRQMSocket.Http
         /// </summary>
         public Dictionary<string, string> Headers
         { get { return this.headers; } }
-
-        private Dictionary<string, string> headers;
-
         /// <summary>
         /// 协议名称
         /// </summary>
@@ -134,6 +130,43 @@ namespace RRQMSocket.Http
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        public DataResult OnParsingBody(byte[] body)
+        {
+            if (body.Length == this.BodyLength)
+            {
+                this.SetContent(body);
+                return DataResult.SuccessResult;
+            }
+            return DataResult.ErrorResult;
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public FilterResult OnParsingHeader(ByteBlock byteBlock, int length)
+        {
+            int index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, length, terminatorCode);
+            if (index > 0)
+            {
+                int headerLength = index - byteBlock.Pos;
+                this.ReadHeaders(byteBlock.Buffer, byteBlock.Pos, headerLength);
+                byteBlock.Pos += headerLength;
+                return FilterResult.Success;
+            }
+            else
+            {
+                return  FilterResult.Cache;
+            }
+        }
+
+        /// <summary>
         /// 读取信息
         /// </summary>
         public abstract void ReadFromBase();
@@ -158,6 +191,30 @@ namespace RRQMSocket.Http
             string contentLength = this.GetHeader(HttpHeaders.ContentLength);
             int.TryParse(contentLength, out int content_Length);
             this.BodyLength = content_Length;
+        }
+
+        /// <summary>
+        /// 设置内容
+        /// </summary>
+        /// <param name="content"></param>
+        /// <returns></returns>
+        public void SetContent(byte[] content)
+        {
+            this.content = content;
+            this.BodyLength = content.Length;
+        }
+
+        /// <summary>
+        /// 设置内容
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public void SetContent(string content, Encoding encoding = null)
+        {
+            //初始化内容
+            encoding = encoding != null ? encoding : Encoding.UTF8;
+            SetContent(encoding.GetBytes(content));
         }
 
         /// <summary>
@@ -230,68 +287,6 @@ namespace RRQMSocket.Http
                         this.headers.Add(kv[0], kv[1]);
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// 设置内容
-        /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        public void SetContent(byte[] content)
-        {
-            this.content = content;
-            this.BodyLength = content.Length;
-        }
-
-        /// <summary>
-        /// 设置内容
-        /// </summary>
-        /// <param name="content"></param>
-        /// <param name="encoding"></param>
-        /// <returns></returns>
-        public void SetContent(string content, Encoding encoding = null)
-        {
-            //初始化内容
-            encoding = encoding != null ? encoding : Encoding.UTF8;
-            SetContent(encoding.GetBytes(content));
-        }
-        static byte[] terminatorCode = Encoding.UTF8.GetBytes("\r\n\r\n");
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="body"></param>
-        /// <returns></returns>
-        public DataResult OnParsingBody(byte[] body)
-        {
-            if (body.Length==this.BodyLength)
-            {
-                this.SetContent(body);
-                return DataResult.SuccessResult;
-            }
-            return DataResult.ErrorResult;
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public bool OnParsingHeader(ByteBlock byteBlock, int length)
-        {
-            int index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, length, terminatorCode);
-            if (index > 0)
-            {
-                int headerLength = index - byteBlock.Pos;
-                this.ReadHeaders(byteBlock.Buffer, byteBlock.Pos, headerLength);
-                byteBlock.Pos += headerLength;
-                return true;
-            }
-            else
-            {
-                return false;
             }
         }
     }
