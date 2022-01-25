@@ -10,6 +10,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.Run;
+
 namespace RRQMSocket.WebSocket
 {
     /// <summary>
@@ -17,6 +19,16 @@ namespace RRQMSocket.WebSocket
     /// </summary>
     public class WSService<TClient> : TcpService<TClient> where TClient : WSSocketClient, new()
     {
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
+        {
+            base.OnConnecting(socketClient, e);
+        }
+
     }
 
     /// <summary>
