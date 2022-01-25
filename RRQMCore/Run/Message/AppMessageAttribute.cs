@@ -13,20 +13,16 @@ using System;
 
 namespace RRQMCore.Run
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
     /// 注册为消息
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-    public sealed class RegistMethodAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
+    public sealed class AppMessageAttribute : Attribute
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RegistMethodAttribute()
+        public AppMessageAttribute()
         {
         }
 
@@ -34,7 +30,7 @@ namespace RRQMCore.Run
         /// 构造函数
         /// </summary>
         /// <param name="token"></param>
-        public RegistMethodAttribute(string token)
+        public AppMessageAttribute(string token)
         {
             this.Token = token;
         }
