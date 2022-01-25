@@ -11,51 +11,343 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Exceptions;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace RRQMCore.Run
 {
-    /*
-    若汝棋茗
-    */
-
     /// <summary>
     /// 消息通知类
     /// </summary>
-    public class AppMessenger
+    public class AppMessenger<TMessage>where TMessage:IMessage
     {
+        private bool allowMultiple = false;
+
+        private ConcurrentDictionary<string, List<TokenInstance>> tokenAndInstance = new ConcurrentDictionary<string, List<TokenInstance>>();
+
+        /// <summary>
+        /// 允许多广播注册
+        /// </summary>
+        public bool AllowMultiple
+        {
+            get { return allowMultiple; }
+            set { allowMultiple = value; }
+        }
+
+        /// <summary>
+        /// 判断能否触发该消息，意味着该消息是否已经注册。
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public bool CanSendMessage(string token)
+        {
+            return this.tokenAndInstance.ContainsKey(token);
+        }
+
+        /// <summary>
+        /// 清除所有消息
+        /// </summary>
+        public void Clear()
+        {
+            tokenAndInstance.Clear();
+        }
+
+        /// <summary>
+        /// 获取所有消息
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetAllMessage()
+        {
+            return this.tokenAndInstance.Keys.ToArray();
+        }
+
         /// <summary>
         /// 注册已加载程序集中直接或间接继承自IMassage接口的所有类，并创建新实例
         /// </summary>
         public void RegistAll()
         {
             var types = AppDomain.CurrentDomain.GetAssemblies()
-                            .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IMessage))))
+                            .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(TMessage))))
                             .ToArray();
             foreach (var v in types)
             {
-                IMessage message = (IMessage)Activator.CreateInstance(v);
-                MethodInfo[] methods = message.GetType().GetMethods();
-                foreach (var item in methods)
+                TMessage message = (TMessage)Activator.CreateInstance(v);
+                this.Register(message);
+            }
+        }
+
+        /// <summary>
+        /// 注册消息
+        /// </summary>
+        /// <param name="messageObject"></param>
+        /// <param name="action"></param>
+        public void Register(TMessage messageObject, Action action)
+        {
+            this.Register(messageObject, action.Method.Name, action);
+        }
+
+        /// <summary>
+        /// 注册消息
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Register<T>()where T: TMessage
+        {
+            this.Register((T)Activator.CreateInstance(typeof(T)));
+        }
+
+        /// <summary>
+        /// 注册消息
+        /// </summary>
+        /// <param name="messageObject"></param>
+        /// <param name="token"></param>
+        /// <param name="action"></param>
+        /// <exception cref="MessageRegisteredException"></exception>
+        public void Register(TMessage messageObject, string token, Action action)
+        {
+            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            {
+                TokenInstance tokenInstance = new TokenInstance();
+                tokenInstance.MessageObject = messageObject;
+                tokenInstance.MethodInfo = action.Method;
+                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                list.Add(tokenInstance);
+            }
+            else
+            {
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+            }
+        }
+
+        /// <summary>
+        /// 注册消息
+        /// </summary>
+        /// <param name="messageObject"></param>
+        public void Register(TMessage messageObject)
+        {
+            MethodInfo[] methods = messageObject.GetType().GetMethods();
+            foreach (var method in methods)
+            {
+                IEnumerable<Attribute> attributes = method.GetCustomAttributes();
+                foreach (var attribute in attributes)
                 {
-                    RegistMethodAttribute attribute = item.GetCustomAttribute<RegistMethodAttribute>();
-                    if (attribute != null)
+                    if (attribute is AppMessageAttribute att)
                     {
-                        if (attribute.Token == null)
+                        if (string.IsNullOrEmpty(att.Token))
                         {
-                            Default.Register(message, item.Name, item);
+                            this.Register(messageObject, method.Name, method);
                         }
                         else
                         {
-                            Default.Register(message, attribute.Token, item);
+                            this.Register(messageObject, att.Token, method);
                         }
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// 注册消息
+        /// </summary>
+        /// <param name="messageObject"></param>
+        /// <param name="token"></param>
+        /// <param name="methodInfo"></param>
+        /// <exception cref="MessageRegisteredException"></exception>
+        public void Register(TMessage messageObject, string token, MethodInfo methodInfo)
+        {
+            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            {
+                TokenInstance tokenInstance = new TokenInstance();
+                tokenInstance.MessageObject = messageObject;
+                tokenInstance.MethodInfo = methodInfo;
+                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                list.Add(tokenInstance);
+            }
+            else
+            {
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+            }
+        }
+
+        /// <summary>
+        /// 注册消息
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="messageObject"></param>
+        /// <param name="action"></param>
+        public void Register<T>(TMessage messageObject, Action<T> action)
+        {
+            this.Register(messageObject, action.Method.Name, action);
+        }
+
+        /// <summary>
+        /// 注册消息
+        /// </summary>
+        /// <typeparam name="T">参数类型</typeparam>
+        /// <param name="messageObject"></param>
+        /// <param name="token"></param>
+        /// <param name="action"></param>
+        /// <exception cref="MessageRegisteredException"></exception>
+        public void Register<T>(TMessage messageObject, string token, Action<T> action)
+        {
+            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            {
+                TokenInstance tokenInstance = new TokenInstance();
+                tokenInstance.MessageObject = messageObject;
+                tokenInstance.MethodInfo = action.Method;
+                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                list.Add(tokenInstance);
+            }
+            else
+            {
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+            }
+        }
+
+        /// <summary>
+        /// 注册
+        /// </summary>
+        /// <typeparam name="T">参数类型</typeparam>
+        /// <typeparam name="TReturn">返回值类型</typeparam>
+        /// <param name="messageObject"></param>
+        /// <param name="token"></param>
+        /// <param name="action"></param>
+        public void Register<T, TReturn>(TMessage messageObject, string token, Func<T, TReturn> action)
+        {
+            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            {
+                TokenInstance tokenInstance = new TokenInstance();
+                tokenInstance.MessageObject = messageObject;
+                tokenInstance.MethodInfo = action.Method;
+                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                list.Add(tokenInstance);
+            }
+            else
+            {
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+            }
+        }
+
+        /// <summary>
+        /// 注册
+        /// </summary>
+        /// <typeparam name="TReturn">返回值类型</typeparam>
+        /// <param name="messageObject"></param>
+        /// <param name="token"></param>
+        /// <param name="action"></param>
+        public void Register<TReturn>(TMessage messageObject, string token, Func<TReturn> action)
+        {
+            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            {
+                TokenInstance tokenInstance = new TokenInstance();
+                tokenInstance.MessageObject = messageObject;
+                tokenInstance.MethodInfo = action.Method;
+                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                list.Add(tokenInstance);
+            }
+            else
+            {
+                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+            }
+        }
+
+        /// <summary>
+        /// 发送消息
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="parameters"></param>
+        /// <exception cref="MessageNotFoundException"></exception>
+        public void Send(string token, params object[] parameters)
+        {
+            if (tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
+            {
+                foreach (var item in list)
+                {
+                    item.MethodInfo.Invoke(item.MessageObject, parameters);
+                }
+            }
+            else
+            {
+                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
+            }
+        }
+
+        /// <summary>
+        /// 发送消息，当多播时，只返回最后一个返回值
+        /// </summary>
+        /// <typeparam name="T">返回值类型</typeparam>
+        /// <param name="token"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        /// <exception cref="MessageNotFoundException"></exception>
+        public T Send<T>(string token, params object[] parameters)
+        {
+            if (tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var item = list[i];
+                    if (i == list.Count - 1)
+                    {
+                        return (T)item.MethodInfo.Invoke(item.MessageObject, parameters);
+                    }
+                    else
+                    {
+                        item.MethodInfo.Invoke(item.MessageObject, parameters);
+                    }
+                }
+                return default;
+            }
+            else
+            {
+                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
+            }
+        }
+
+        /// <summary>
+        /// 卸载消息
+        /// </summary>
+        /// <param name="messageObject"></param>
+        public void Unregister(TMessage messageObject)
+        {
+            List<string> key = new List<string>();
+
+            foreach (var item in tokenAndInstance.Keys)
+            {
+                foreach (var item2 in tokenAndInstance[item].ToArray())
+                {
+                    if ((IMessage)messageObject == item2.MessageObject)
+                    {
+                        tokenAndInstance[item].Remove(item2);
+                        if (tokenAndInstance[item].Count == 0)
+                        {
+                            key.Add(item);
+                        }
+                    }
+                }
+            }
+
+            foreach (var item in key)
+            {
+                tokenAndInstance.TryRemove(item, out _);
+            }
+        }
+
+        /// <summary>
+        /// 卸载消息
+        /// </summary>
+        public void Unregister(string token)
+        {
+            tokenAndInstance.TryRemove(token, out _);
+        }
+    }
+
+    /// <summary>
+    /// 消息通知类
+    /// </summary>
+    public class AppMessenger : AppMessenger<IMessage>
+    {
         private static AppMessenger instance;
 
         /// <summary>
@@ -71,212 +363,6 @@ namespace RRQMCore.Run
                 }
 
                 return instance;
-            }
-        }
-
-        private Dictionary<string, TokenInstance> tokenAndInstance = new Dictionary<string, TokenInstance>();
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="action"></param>
-        /// <exception cref="MessageRegisteredException"></exception>
-        public void Register(IMessage messageObject, string token, Action action)
-        {
-            TokenInstance tokenInstance = new TokenInstance();
-            tokenInstance.MessageObject = messageObject;
-            tokenInstance.MethodInfo = action.Method;
-            try
-            {
-                tokenAndInstance.Add(token, tokenInstance);
-            }
-            catch (Exception)
-            {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
-            }
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <param name="messageObject"></param>
-        public void Register(IMessage messageObject)
-        {
-            MethodInfo[] methods = messageObject.GetType().GetMethods();
-            foreach (var item in methods)
-            {
-                RegistMethodAttribute attribute = item.GetCustomAttribute<RegistMethodAttribute>();
-                if (attribute != null)
-                {
-                    if (attribute.Token == null)
-                    {
-                        Default.Register(messageObject, item.Name, item);
-                    }
-                    else
-                    {
-                        Default.Register(messageObject, attribute.Token, item);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="methodInfo"></param>
-        /// <exception cref="MessageRegisteredException"></exception>
-        public void Register(IMessage messageObject, string token, MethodInfo methodInfo)
-        {
-            TokenInstance tokenInstance = new TokenInstance();
-            tokenInstance.MessageObject = messageObject;
-            tokenInstance.MethodInfo = methodInfo;
-            try
-            {
-                tokenAndInstance.Add(token, tokenInstance);
-            }
-            catch (Exception)
-            {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
-            }
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T">参数类型</typeparam>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="action"></param>
-        /// <exception cref="MessageRegisteredException"></exception>
-        public void Register<T>(IMessage messageObject, string token, Action<T> action)
-        {
-            TokenInstance tokenInstance = new TokenInstance();
-            tokenInstance.MessageObject = messageObject;
-            tokenInstance.MethodInfo = action.Method;
-            try
-            {
-                tokenAndInstance.Add(token, tokenInstance);
-            }
-            catch (Exception)
-            {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
-            }
-        }
-
-        /// <summary>
-        /// 注册
-        /// </summary>
-        /// <typeparam name="T">参数类型</typeparam>
-        /// <typeparam name="TReturn">返回值类型</typeparam>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="action"></param>
-        public void Register<T, TReturn>(IMessage messageObject, string token, Func<T, TReturn> action)
-        {
-            TokenInstance tokenInstance = new TokenInstance();
-            tokenInstance.MessageObject = messageObject;
-            tokenInstance.MethodInfo = action.Method;
-            try
-            {
-                tokenAndInstance.Add(token, tokenInstance);
-            }
-            catch (Exception)
-            {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
-            }
-        }
-
-        /// <summary>
-        /// 注册
-        /// </summary>
-        /// <typeparam name="TReturn">返回值类型</typeparam>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="action"></param>
-        public void Register<TReturn>(IMessage messageObject, string token, Func<TReturn> action)
-        {
-            TokenInstance tokenInstance = new TokenInstance();
-            tokenInstance.MessageObject = messageObject;
-            tokenInstance.MethodInfo = action.Method;
-            try
-            {
-                tokenAndInstance.Add(token, tokenInstance);
-            }
-            catch (Exception)
-            {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
-            }
-        }
-
-        /// <summary>
-        /// 卸载消息
-        /// </summary>
-        /// <param name="messageObject"></param>
-        public void Unregister(IMessage messageObject)
-        {
-            List<string> key = new List<string>();
-
-            foreach (var item in tokenAndInstance.Keys)
-            {
-                if (messageObject == tokenAndInstance[item].MessageObject)
-                {
-                    key.Add(item);
-                }
-            }
-
-            foreach (var item in key)
-            {
-                tokenAndInstance.Remove(item);
-            }
-        }
-
-        /// <summary>
-        /// 清除所有消息
-        /// </summary>
-        public void Clear()
-        {
-            tokenAndInstance.Clear();
-        }
-
-        /// <summary>
-        /// 发送消息
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="parameters"></param>
-        /// <exception cref="MessageNotFoundException"></exception>
-        public void Send(string token, params object[] parameters)
-        {
-            try
-            {
-                tokenAndInstance[token].MethodInfo.Invoke(tokenAndInstance[token].MessageObject, parameters);
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
-            }
-        }
-
-        /// <summary>
-        /// 发送消息
-        /// </summary>
-        /// <typeparam name="T">返回值类型</typeparam>
-        /// <param name="token"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        /// <exception cref="MessageNotFoundException"></exception>
-        public T Send<T>(string token, params object[] parameters)
-        {
-            try
-            {
-                return (T)tokenAndInstance[token].MethodInfo.Invoke(tokenAndInstance[token].MessageObject, parameters);
-            }
-            catch (KeyNotFoundException)
-            {
-                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
             }
         }
     }

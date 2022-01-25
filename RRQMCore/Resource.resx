@@ -145,13 +145,16 @@
     <value>事件操作器异常。</value>
   </data>
   <data name="LoadStreamFail" xml:space="preserve">
-    <value>从‘{0}’路径加载流异常。</value>
+    <value>从‘{0}’路径加载流异常，信息：‘{1}’。</value>
   </data>
   <data name="MessageNotFound" xml:space="preserve">
     <value>Token消息为‘{0}’的未注册。</value>
   </data>
   <data name="NoResponse" xml:space="preserve">
     <value>长时间没有响应。</value>
+  </data>
+  <data name="NotFindClient" xml:space="preserve">
+    <value>没有找到ID为{0}的客户端。</value>
   </data>
   <data name="NotFindStream" xml:space="preserve">
     <value>没有找到路径‘{0}’对应的流文件。</value>
@@ -189,7 +192,7 @@
   <data name="TokenExist" xml:space="preserve">
     <value>Token消息为‘{0}’的已注册。</value>
   </data>
-  <data name="Unknown" xml:space="preserve">
-    <value>未知原因。</value>
+  <data name="UnknownError" xml:space="preserve">
+    <value>未知原因错误。</value>
   </data>
 </root>

@@ -73,6 +73,11 @@ namespace RRQMCore
         NotFindStream,
 
         /// <summary>
+        /// 没有找到客户端
+        /// </summary>
+        NotFindClient,
+
+        /// <summary>
         /// 流文件正在被应用
         /// </summary>
         StreamReferencing,

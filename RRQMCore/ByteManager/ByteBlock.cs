@@ -38,9 +38,9 @@ namespace RRQMCore.ByteManager
         /// <summary>
         ///  构造函数
         /// </summary>
-        /// <param name="capacity"></param>
+        /// <param name="byteSize"></param>
         /// <param name="equalSize"></param>
-        public ByteBlock(int capacity = 1024 * 10, bool equalSize = false) : this(BytePool.GetByteCore(capacity, equalSize))
+        public ByteBlock(int byteSize = 1024 * 10, bool equalSize = false) : this(BytePool.GetByteCore(byteSize, equalSize))
         {
         }
 

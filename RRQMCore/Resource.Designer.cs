@@ -142,7 +142,7 @@ namespace RRQMCore {
         }
         
         /// <summary>
-        ///   查找类似 从‘{0}’路径加载流异常。 的本地化字符串。
+        ///   查找类似 从‘{0}’路径加载流异常，信息：‘{1}’。 的本地化字符串。
         /// </summary>
         public static string LoadStreamFail {
             get {
@@ -165,6 +165,15 @@ namespace RRQMCore {
         public static string NoResponse {
             get {
                 return ResourceManager.GetString("NoResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 没有找到ID为{0}的客户端。 的本地化字符串。
+        /// </summary>
+        public static string NotFindClient {
+            get {
+                return ResourceManager.GetString("NotFindClient", resourceCulture);
             }
         }
         
@@ -277,11 +286,11 @@ namespace RRQMCore {
         }
         
         /// <summary>
-        ///   查找类似 未知原因。 的本地化字符串。
+        ///   查找类似 未知原因错误。 的本地化字符串。
         /// </summary>
-        public static string Unknown {
+        public static string UnknownError {
             get {
-                return ResourceManager.GetString("Unknown", resourceCulture);
+                return ResourceManager.GetString("UnknownError", resourceCulture);
             }
         }
     }
