@@ -56,12 +56,13 @@ namespace RRQMSocket.Http
         {
             int position = byteBlock.Pos;
             HttpBase requestInfo = this.GetInstance();
-            if (requestInfo.OnParsingHeader(byteBlock, length))
+           var result= requestInfo.OnParsingHeader(byteBlock, length);
+            if (result== FilterResult.Success)
             {
                 if (requestInfo.BodyLength > byteBlock.CanReadLen)
                 {
                     byteBlock.Pos = position;
-                    return FilterResult.Ignore;
+                    return FilterResult.Cache;
                 }
                 byteBlock.Pos++;
                 DataResult dataResult = requestInfo.OnParsingBody(byteBlock.ToArray(byteBlock.Pos, requestInfo.BodyLength));
@@ -73,20 +74,20 @@ namespace RRQMSocket.Http
                         request.ReadFromBase();
                         return FilterResult.Success;
 
-                    case DataResultCode.Ignore:
+                    case DataResultCode.Cache:
                         byteBlock.Pos += requestInfo.BodyLength;
-                        return FilterResult.Ignore;
+                        return FilterResult.Cache;
 
                     case DataResultCode.Error:
                     case DataResultCode.Exception:
                     default:
                         this.OnReceivingError(dataResult);
-                        return FilterResult.Ignore;
+                        return FilterResult.Cache;
                 }
             }
             else
             {
-                return FilterResult.Ignore;
+                return result;
             }
         }
 
