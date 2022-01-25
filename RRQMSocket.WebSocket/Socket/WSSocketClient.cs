@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Run;
 using RRQMSocket.Http;
 using RRQMSocket.WebSocket.Helper;
 using System;
