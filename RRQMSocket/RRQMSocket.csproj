@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>6.5.3</Version>
+		<Version>6.6.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -12,18 +12,7 @@
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。包含了TCP、UDP、Ssl、Channel、Protocol、Token、租户模式等一系列的通信模块。且支持除了IOCP以外的BIO和Select模型。更加的灵活、便捷。让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-修改：DataHandlingAdapter类，回调参数由ByteBlock+object改为ByteBlock+IRequestInfo。
-修改：FixedHeaderDataHandlingAdapter类，改名为FixedHeaderPackageAdapter。
-修改：FixedSizeDataHandlingAdapter类，改名为FixedSizePackageAdapter。
-修改：TerminatorDataHandlingAdapter类，改名为TerminatorPackageAdapter。
-修改：DataAdapterTester类，修改相关参数及启动方法，详情请看单元测试。
-修改：TCP系类，修改处理函数为HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)。
-修改：Simple服务器类，修改类名为对应服务器泛型类型。
-增加：DataAdapterTester类，增加性能时间评估，详情请看单元测试。
-增加：CustomDataHandlingAdapter类，该类能更大程度的简化用户处理数据的逻辑。
-增加：CustomFixedHeaderDataHandlingAdapter类，该类基本能解决所有固定包头类似协议的数据。
-增加：CustomUnfixedHeaderDataHandlingAdapter类，该类基本能解决所有非固定包头类似协议的数据（如HTTP）。
-增加：Channel类，增加HoldOn指令，调用该指令时，接收方会跳出接收，但是通道依然可用。
+增加：Channel类，可直接由Client向Client开通。
 
 API：https://gitee.com/RRQM_Home/RRQMBox/wikis
 DEMO：https://gitee.com/dotnetchina/RRQMSocket</Description>
@@ -88,7 +77,7 @@ DEMO：https://gitee.com/dotnetchina/RRQMSocket</Description>
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="6.5.0" />
+	  <PackageReference Include="RRQMCore" Version="6.6.0" />
 	</ItemGroup>
 
 </Project>

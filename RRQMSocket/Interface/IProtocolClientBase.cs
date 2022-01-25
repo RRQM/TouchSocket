@@ -34,6 +34,13 @@ namespace RRQMSocket
         Channel CreateChannel();
 
         /// <summary>
+        /// 判断使用该ID的Channel是否存在。
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool ChannelExisted(int id);
+
+        /// <summary>
         /// 创建通道
         /// </summary>
         /// <param name="id">指定ID</param>

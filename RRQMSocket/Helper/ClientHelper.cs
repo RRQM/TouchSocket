@@ -10,6 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.Helper
 {
@@ -35,22 +36,25 @@ namespace RRQMSocket.Helper
            
             tcpClient.Disconnected += (client, e) =>
             {
-                int tryT = tryCount;
-                while (tryCount < 0 || tryT-- > 0)
+                Task.Run(()=> 
                 {
-                    try
+                    int tryT = tryCount;
+                    while (tryCount < 0 || tryT-- > 0)
                     {
-                        client.Connect();
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (printLog)
+                        try
                         {
-                            tcpClient.Logger.Debug(RRQMCore.Log.LogType.Error, tcpClient, "断线重连失败。", ex);
+                            client.Connect();
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            if (printLog)
+                            {
+                                tcpClient.Logger.Debug(RRQMCore.Log.LogType.Error, tcpClient, "断线重连失败。", ex);
+                            }
                         }
                     }
-                }
+                });
             };
 
             return tcpClient;

@@ -38,7 +38,6 @@ namespace RRQMSocket
         /// 设置在线状态
         /// </summary>
         protected bool online;
-
         private ClearType clearType;
         private DataHandlingAdapter dataHandlingAdapter;
         private SocketAsyncEventArgs eventArgs;
@@ -503,6 +502,19 @@ namespace RRQMSocket
         protected virtual void ResetID(WaitSetID waitSetID)
         {
             this.Service.ResetID(waitSetID);
+        }
+
+        /// <summary>
+        /// 重新设置ID
+        /// </summary>
+        /// <param name="newID"></param>
+        public void ResetID(string newID)
+        {
+            if (this.id==newID)
+            {
+                return;
+            }
+            this.ResetID(new WaitSetID() { OldID=this.id,NewID=newID });
         }
 
         /// <summary>

@@ -87,15 +87,19 @@ namespace RRQMSocket
         {
             while (true)
             {
-                Channel channel = new Channel(this);
+                Channel channel = new Channel(this, null) { @using = true };
                 if (this.userChannels.TryAdd(channel.GetHashCode(), channel))
                 {
                     channel.id = channel.GetHashCode();
-                    channel.parent = this.userChannels;
                     this.SocketSend(-2, RRQMBitConverter.Default.GetBytes(channel.GetHashCode()));
                     return channel;
                 }
             }
+        }
+
+        internal void RemoveChannel(int id)
+        {
+            this.userChannels.TryRemove(id, out _);
         }
 
         /// <summary>
@@ -105,15 +109,143 @@ namespace RRQMSocket
         /// <returns></returns>
         public Channel CreateChannel(int id)
         {
-            Channel channel = new Channel(this);
+            Channel channel = new Channel(this, null) { @using = true };
             if (this.userChannels.TryAdd(id, channel))
             {
                 channel.id = id;
-                channel.parent = this.userChannels;
                 this.SocketSend(-2, RRQMBitConverter.Default.GetBytes(id));
                 return channel;
             }
             throw new RRQMException("指定ID已存在");
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="clientID"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Channel CreateChannel(string clientID, int id)
+        {
+            if (string.IsNullOrEmpty(clientID))
+            {
+                throw new ArgumentException($"“{nameof(clientID)}”不能为 null 或空。", nameof(clientID));
+            }
+
+            if (this.ChannelExisted(id))
+            {
+                throw new RRQMException("指定ID已存在");
+            }
+
+            ByteBlock byteBlock = new ByteBlock();
+            WaitCreateChannel waitCreateChannel = new WaitCreateChannel()
+            {
+                RandomID = false,
+                ChannelID = id,
+                ClientID = clientID,
+            };
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitCreateChannel);
+
+            try
+            {
+                byteBlock.WriteObject(waitCreateChannel);
+                this.SocketSend(-12, byteBlock);
+                switch (waitData.Wait(5 * 1000))
+                {
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitCreateChannel result = (WaitCreateChannel)waitData.WaitResult;
+                            if (result.Status == 1)
+                            {
+                                Channel channel = new Channel(this, result.ClientID) { @using = true };
+                                channel.id = result.ChannelID;
+                                if (this.userChannels.TryAdd(result.ChannelID, channel))
+                                {
+                                    return channel;
+                                }
+                                throw new RRQMException(ResType.UnknownError);
+                            }
+                            else
+                            {
+                                throw new RRQMException(result.Message);
+                            }
+                        }
+                    case WaitDataStatus.Overtime:
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                    default:
+                        {
+                            throw new RRQMException(ResType.UnknownError);
+                        }
+                }
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="clientID"></param>
+        /// <returns></returns>
+        public Channel CreateChannel(string clientID)
+        {
+            if (string.IsNullOrEmpty(clientID))
+            {
+                throw new ArgumentException($"“{nameof(clientID)}”不能为 null 或空。", nameof(clientID));
+            }
+
+            ByteBlock byteBlock = new ByteBlock();
+            WaitCreateChannel waitCreateChannel = new WaitCreateChannel()
+            {
+                RandomID = true,
+                ClientID = clientID,
+            };
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitCreateChannel);
+
+            try
+            {
+                byteBlock.WriteObject(waitCreateChannel);
+                this.SocketSend(-12, byteBlock);
+                switch (waitData.Wait(5 * 1000))
+                {
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitCreateChannel result = (WaitCreateChannel)waitData.WaitResult;
+                            if (result.Status == 1)
+                            {
+                                Channel channel = new Channel(this, result.ClientID) { @using = true };
+                                channel.id = result.ChannelID;
+                                if (this.userChannels.TryAdd(result.ChannelID, channel))
+                                {
+                                    return channel;
+                                }
+                                throw new RRQMException(ResType.UnknownError);
+                            }
+                            else
+                            {
+                                throw new RRQMException(result.Message);
+                            }
+                        }
+                    case WaitDataStatus.Overtime:
+                        {
+                            throw new RRQMTimeoutException("等待结果超时");
+                        }
+                    default:
+                        {
+                            throw new RRQMException(ResType.UnknownError);
+                        }
+                }
+            }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
         }
 
         /// <summary>
@@ -199,7 +331,17 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool TrySubscribeChannel(int id, out Channel channel)
         {
-            return this.userChannels.TryGetValue(id, out channel);
+            if (this.userChannels.TryGetValue(id, out channel))
+            {
+                if (channel.@using)
+                {
+                    channel = null;
+                    return false;
+                }
+                channel.@using = true;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -273,7 +415,7 @@ namespace RRQMSocket
                         try
                         {
                             int id = RRQMBitConverter.Default.ToInt32(byteBlock.Buffer, 2);
-                            this.RequestCreateChannel(id);
+                            this.RequestCreateChannel(id,null);
                         }
                         catch (Exception ex)
                         {
@@ -288,6 +430,12 @@ namespace RRQMSocket
                 case -6:
                 case -10:
                 case -11:
+                case -14:
+                case -15:
+                case -16:
+                case -17:
+                case -18:
+                case -19:
                     {
                         try
                         {
@@ -341,7 +489,35 @@ namespace RRQMSocket
                         }
                     }
                     break;
+                case -12://create channel to client return
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            this.WaitHandlePool.SetRun(byteBlock.ReadObject<WaitCreateChannel>());
+                        }
+                        catch (Exception ex)
+                        {
+                            this.logger.Debug(LogType.Error, this, $"在{procotol}中发生错误。", ex);
+                        }
+                        break;
+                    }
+                case -13:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            string clientID = byteBlock.ReadString();
+                            int id = byteBlock.ReadInt32();
+                            this.RequestCreateChannel(id, clientID);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "创建通道异常", ex);
+                        }
 
+                        break;
+                    }
                 default:
                     {
                         try
@@ -829,6 +1005,11 @@ namespace RRQMSocket
             this.SocketSend(procotol, dataBuffer, 0, dataBuffer.Length);
         }
 
+        internal void SocketSend(short procotol, ByteBlock byteBlock)
+        {
+            this.SocketSend(procotol, byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
         internal void SocketSend(short procotol)
         {
             this.SocketSend(procotol, new byte[0], 0, 0);
@@ -997,15 +1178,27 @@ namespace RRQMSocket
             }
         }
 
-        private void RequestCreateChannel(int id)
+        private void RequestCreateChannel(int id,string clientID)
         {
             if (!this.userChannels.ContainsKey(id))
             {
-                Channel channel = new Channel(this);
+                Channel channel = new Channel(this, clientID);
                 channel.id = id;
-                channel.parent = this.userChannels;
-                this.userChannels.TryAdd(id, channel);
+                if (!this.userChannels.TryAdd(id, channel))
+                {
+                    channel.Dispose();
+                }
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool ChannelExisted(int id)
+        {
+            return this.userChannels.ContainsKey(id);
         }
     }
 }

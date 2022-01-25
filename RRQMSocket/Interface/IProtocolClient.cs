@@ -17,5 +17,19 @@ namespace RRQMSocket
     /// </summary>
     public interface IProtocolClient : ITokenClient, IProtocolClientBase
     {
+        /// <summary>
+        /// 创建一个和其他客户端的通道
+        /// </summary>
+        /// <param name="clientID"></param>
+        /// <returns></returns>
+        public Channel CreateChannel(string clientID);
+
+        /// <summary>
+        /// 创建一个和其他客户端的通道
+        /// </summary>
+        /// <param name="clientID"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Channel CreateChannel(string clientID, int id);
     }
 }
