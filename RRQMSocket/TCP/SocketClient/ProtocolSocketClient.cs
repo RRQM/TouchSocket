@@ -346,6 +346,11 @@ namespace RRQMSocket
 
         #region Socket同步直发
 
+        internal void SocketSend(short procotol, ByteBlock byteBlock)
+        {
+            this.SocketSend(procotol, byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
         internal void SocketSend(short procotol, byte[] dataBuffer)
         {
             this.SocketSend(procotol, dataBuffer, 0, dataBuffer.Length);
@@ -506,6 +511,11 @@ namespace RRQMSocket
 
         #endregion Stream发送
 
+        internal void RemoveChannel(int id)
+        {
+            this.userChannels.TryRemove(id, out _);
+        }
+
         /// <summary>
         /// 添加协议订阅
         /// </summary>
@@ -546,11 +556,10 @@ namespace RRQMSocket
         {
             while (true)
             {
-                Channel channel = new Channel(this);
+                Channel channel = new Channel(this, null) { @using = true };
                 if (this.userChannels.TryAdd(channel.GetHashCode(), channel))
                 {
                     channel.id = channel.GetHashCode();
-                    channel.parent = this.userChannels;
                     this.SocketSend(-2, RRQMBitConverter.Default.GetBytes(channel.GetHashCode()));
                     return channel;
                 }
@@ -564,11 +573,10 @@ namespace RRQMSocket
         /// <returns></returns>
         public Channel CreateChannel(int id)
         {
-            Channel channel = new Channel(this);
+            Channel channel = new Channel(this, null) { @using = true };
             if (this.userChannels.TryAdd(id, channel))
             {
                 channel.id = id;
-                channel.parent = this.userChannels;
                 this.SocketSend(-2, RRQMBitConverter.Default.GetBytes(id));
                 return channel;
             }
@@ -599,7 +607,17 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool TrySubscribeChannel(int id, out Channel channel)
         {
-            return this.userChannels.TryGetValue(id, out channel);
+            if (this.userChannels.TryGetValue(id, out channel))
+            {
+                if (channel.@using)
+                {
+                    channel = null;
+                    return false;
+                }
+                channel.@using = true;
+                return true;
+            }
+            return false;
         }
 
         internal void ChangeID(WaitSetID waitSetID)
@@ -723,7 +741,6 @@ namespace RRQMSocket
                         }
                         break;
                     }
-
                 case -8://StreamToThis
                     {
                         try
@@ -737,7 +754,6 @@ namespace RRQMSocket
                         }
                     }
                     break;
-
                 case -9://StreamStatusToThis
                     {
                         try
@@ -749,6 +765,112 @@ namespace RRQMSocket
                         catch (Exception ex)
                         {
                             this.logger.Debug(LogType.Error, this, "在StreamStatusToThis中发生错误。", ex);
+                        }
+                        break;
+                    }
+                case -12://create channel to client
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitCreateChannel waitCreateChannel = byteBlock.ReadObject<WaitCreateChannel>();
+                            if (waitCreateChannel.ClientID==this.ID)
+                            {
+                                waitCreateChannel.Status = 2;
+                                waitCreateChannel.Message = "不允许向自身开启通道";
+                            }
+                            else if (this.service.SocketClients.TryGetSocketClient(waitCreateChannel.ClientID, out ISocketClient socketClient) && socketClient is ProtocolSocketClient client)
+                            {
+                                int id;
+                                if (waitCreateChannel.RandomID)
+                                {
+                                    do
+                                    {
+                                        id = new Random(DateTime.Now.Millisecond).Next(1, int.MaxValue);
+                                    } while (this.ChannelExisted(id) || client.ChannelExisted(id));
+                                }
+                                else
+                                {
+                                    id = waitCreateChannel.ChannelID;
+                                }
+                                if (this.ChannelExisted(id) || client.ChannelExisted(id))
+                                {
+                                    waitCreateChannel.Status = 2;
+                                    waitCreateChannel.Message = "ID已被占用";
+                                }
+                                else
+                                {
+                                    using (ByteBlock @byte = new ByteBlock())
+                                    {
+                                        client.SocketSend(-13, @byte.Write(this.id).Write(id));
+                                    }
+                                    waitCreateChannel.ChannelID = id;
+                                    waitCreateChannel.Status = 1;
+                                }
+                            }
+                            else
+                            {
+                                waitCreateChannel.Status = 2;
+                                waitCreateChannel.Message = "没有找到对应的客户端ID";
+                            }
+                            using (ByteBlock block = new ByteBlock())
+                            {
+                                this.SocketSend(-12, block.WriteObject(waitCreateChannel));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "创建通道异常", ex);
+                        }
+                        break;
+                    }
+
+                case -13: // create return
+                    {
+                        break;
+                    }
+                case -14:
+                case -15:
+                case -16:
+                case -17:
+                case -18:
+                case -19:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            string clientID = byteBlock.ReadString();
+                            int channelid = byteBlock.ReadInt32();
+
+                            using (ByteBlock block = new ByteBlock())
+                            {
+                                if (this.service.SocketClients.TryGetSocketClient(clientID, out ISocketClient socketClient) && socketClient is ProtocolSocketClient client)
+                                {
+
+                                    block.Write(channelid);
+                                    if (procotol == -14)
+                                    {
+                                        if (byteBlock.TryReadBytesPackageInfo(out int pos, out int len))
+                                        {
+                                            block.WriteBytesPackage(byteBlock.Buffer, pos, len);
+                                        }
+                                    }
+                                    else if (procotol!=-17)
+                                    {
+                                        block.Write(byteBlock.ReadString());
+                                    }
+                                    client.SocketSend(procotol, block);
+
+                                }
+                                else
+                                {
+                                    this.SocketSend(-16, block.Write("没有找到该ID对应的客户端"));
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, "通道异常", ex);
                         }
                         break;
                     }
@@ -920,6 +1042,16 @@ namespace RRQMSocket
             this.SocketSend(-8, byteBlock.Buffer, 0, byteBlock.Pos);
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool ChannelExisted(int id)
+        {
+            return this.userChannels.ContainsKey(id);
+        }
+
         private void ReceivedChannelData(int id, short type, ByteBlock byteBlock)
         {
             if (this.userChannels.TryGetValue(id, out Channel channel))
@@ -937,10 +1069,12 @@ namespace RRQMSocket
         {
             if (!this.userChannels.ContainsKey(id))
             {
-                Channel channel = new Channel(this);
+                Channel channel = new Channel(this, null);
                 channel.id = id;
-                channel.parent = this.userChannels;
-                this.userChannels.TryAdd(id, channel);
+                if (!this.userChannels.TryAdd(id, channel))
+                {
+                    channel.Dispose();
+                }
             }
         }
     }

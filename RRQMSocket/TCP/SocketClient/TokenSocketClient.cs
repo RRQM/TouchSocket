@@ -93,7 +93,7 @@ namespace RRQMSocket
                 }
                 catch (System.Exception ex)
                 {
-                    if (this.OnAbnormalVerify(byteBlock.ToArray()))
+                    if (this.OnAbnormalVerify(byteBlock,requestInfo))
                     {
                         this.isHandshaked = true;
                         this.online = true;
@@ -111,9 +111,10 @@ namespace RRQMSocket
         /// 收到非正常连接。
         /// 一般地，这是由其他类型客户端发起的连接。
         /// </summary>
-        /// <param name="data">收到的数据</param>
-        /// <returns>指示是否接受此请求</returns>
-        protected virtual bool OnAbnormalVerify(byte[] data)
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns>返回值指示，是否接受该请求</returns>
+        protected virtual bool OnAbnormalVerify(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             return false;
         }

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -159,7 +160,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
             this.OnConnecting((TClient)socketClient, e);
         }
@@ -687,49 +688,13 @@ namespace RRQMSocket
                 if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
                 {
                     Socket newSocket = e.AcceptSocket;
-                    try
+                    if (this.SocketClients.Count > this.maxCount)
                     {
-                        if (this.SocketClients.Count > this.maxCount)
-                        {
-                            this.Logger.Debug(LogType.Warning, this, "连接客户端数量已达到设定最大值");
-                            newSocket.Close();
-                            newSocket.Dispose();
-                        }
-                        TClient client = this.GetRawClient();
-                        client.lastTick = DateTime.Now.Ticks;
-                        client.serviceConfig = this.serviceConfig;
-                        client.service = this;
-                        client.Logger = this.Logger;
-                        client.ClearType = this.clearType;
-                        client.receiveType = this.receiveType;
-                        client.BufferLength = this.BufferLength;
-                        client.useSsl = this.useSsl;
-                        client.LoadSocketAndReadIpPort(newSocket);
-                        ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
-                        clientArgs.ID = GetDefaultNewID();
-                        client.OnEvent(1, clientArgs);//Connecting
-                        if (clientArgs.IsPermitOperation)
-                        {
-                            client.id = clientArgs.ID;
-                            if (this.SocketClients.TryAdd(client))
-                            {
-                                client.OnEvent(2, new MesEventArgs("新客户端连接"));
-                            }
-                            else
-                            {
-                                throw new RRQMException($"ID={client.id}重复");
-                            }
-                        }
-                        else
-                        {
-                            newSocket.Dispose();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
+                        this.Logger.Debug(LogType.Warning, this, "连接客户端数量已达到设定最大值");
+                        newSocket.Close();
                         newSocket.Dispose();
-                        Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
                     }
+                    OnTask(newSocket);
                 }
                 e.AcceptSocket = null;
 
@@ -746,6 +711,50 @@ namespace RRQMSocket
                     return;
                 }
             }
+        }
+
+        private void OnTask(Socket socket)
+        {
+            Task.Run(()=> 
+            {
+                try
+                {
+                    TClient client = this.GetRawClient();
+                    client.lastTick = DateTime.Now.Ticks;
+                    client.serviceConfig = this.serviceConfig;
+                    client.service = this;
+                    client.Logger = this.Logger;
+                    client.ClearType = this.clearType;
+                    client.receiveType = this.receiveType;
+                    client.BufferLength = this.BufferLength;
+                    client.useSsl = this.useSsl;
+                    client.LoadSocketAndReadIpPort(socket);
+                    ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
+                    clientArgs.ID = GetDefaultNewID();
+                    client.OnEvent(1, clientArgs);//Connecting
+                    if (clientArgs.IsPermitOperation)
+                    {
+                        client.id = clientArgs.ID;
+                        if (this.SocketClients.TryAdd(client))
+                        {
+                            client.OnEvent(2, new MesEventArgs("新客户端连接"));
+                        }
+                        else
+                        {
+                            throw new RRQMException($"ID={client.id}重复");
+                        }
+                    }
+                    else
+                    {
+                        socket.Dispose();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    socket.Dispose();
+                    Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
+                }
+            });
         }
     }
 

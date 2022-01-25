@@ -63,7 +63,8 @@ namespace RRQMSocket
             else
             {
                 TUnfixedHeaderRequestInfo requestInfo = this.GetInstance();
-                if (requestInfo.OnParsingHeader(byteBlock, length))
+                var result = requestInfo.OnParsingHeader(byteBlock, length);
+                if (result == FilterResult.Success)
                 {
                     if (requestInfo.BodyLength > 0)
                     {
@@ -103,7 +104,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    return FilterResult.Cache;
+                    return result;
                 }
             }
         }

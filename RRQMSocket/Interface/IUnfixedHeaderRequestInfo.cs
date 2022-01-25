@@ -35,7 +35,7 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         /// <param name="length"></param>
         /// <returns>是否满足解析包头</returns>
-        bool OnParsingHeader(ByteBlock byteBlock,int length);
+        FilterResult OnParsingHeader(ByteBlock byteBlock,int length);
 
         /// <summary>
         /// 当收到数据，由框架封送有效载荷数据。

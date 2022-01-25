@@ -25,53 +25,77 @@ namespace RRQMSocket
     /// </summary>
     public class Channel : IDisposable
     {
-        internal ByteBlock currentByteBlock;
+        private ByteBlock currentByteBlock;
 
         internal int id = 0;
-
-        internal ConcurrentDictionary<int, Channel> parent;
 
         private int cacheCapacity;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ProtocolClient client1;
+        private ProtocolClient client1;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ProtocolSocketClient client2;
+        private ProtocolSocketClient client2;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IntelligentDataQueue<ChannelData> dataQueue;
+        private IntelligentDataQueue<ChannelData> dataQueue;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly AutoResetEvent moveWaitHandle;
+        private AutoResetEvent moveWaitHandle;
 
         private int bufferLength;
         private bool canFree;
         private string lastOperationMes;
         private bool moving;
         private ChannelStatus status;
+        internal bool @using;
+        private string targetClientID;
+        private short dataOrder;
+        private short completeOrder;
+        private short cancelOrder;
+        private short disposeOrder;
+        private short holdOnOrder;
+        private short queueChangedOrder;
 
-        internal Channel(ProtocolClient client)
+        internal Channel(ProtocolClient client, string targetClientID)
         {
-            this.cacheCapacity = 1024 * 1024 * 20;
-            this.status = ChannelStatus.Moving;
             this.client1 = client;
-            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity)
-            {
-                OverflowWait = false,
-
-                OnQueueChanged = OnQueueChanged
-            };
-            this.moveWaitHandle = new AutoResetEvent(false);
-            this.canFree = true;
             this.bufferLength = client.BufferLength;
+            this.OnCreate(targetClientID);
         }
 
-        internal Channel(ProtocolSocketClient client)
+        internal Channel(ProtocolSocketClient client, string targetClientID)
         {
+            this.client2 = client;
+            this.bufferLength = client.BufferLength;
+            this.OnCreate(targetClientID);
+        }
+
+        private void OnCreate(string targetClientID)
+        {
+            if (targetClientID == null)
+            {
+                this.dataOrder = -3;
+                this.completeOrder = -4;
+                this.cancelOrder = -5;
+                this.disposeOrder = -6;
+                this.holdOnOrder = -11;
+                this.queueChangedOrder = -10;
+            }
+            else
+            {
+                this.dataOrder = -14;
+                this.completeOrder = -15;
+                this.cancelOrder = -16;
+                this.disposeOrder = -17;
+                this.holdOnOrder = -18;
+                this.queueChangedOrder = -19;
+
+                this.targetClientID = targetClientID;
+            }
+
             this.status = ChannelStatus.Moving;
             this.cacheCapacity = 1024 * 1024 * 20;
-            this.client2 = client;
             this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity)
             {
                 OverflowWait = false,
@@ -80,7 +104,6 @@ namespace RRQMSocket
             };
             this.moveWaitHandle = new AutoResetEvent(false);
             this.canFree = true;
-            this.bufferLength = client.BufferLength;
         }
 
         /// <summary>
@@ -89,6 +112,14 @@ namespace RRQMSocket
         ~Channel()
         {
             this.Dispose();
+        }
+
+        /// <summary>
+        /// 目的ID地址。
+        /// </summary>
+        public string TargetClientID
+        {
+            get { return this.targetClientID; }
         }
 
         /// <summary>
@@ -160,15 +191,19 @@ namespace RRQMSocket
             try
             {
                 this.RequestCancel();
+                if (this.targetClientID != null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
                 byteBlock.Write(this.id);
                 byteBlock.Write(operationMes);
                 if (this.client1 != null)
                 {
-                    this.client1.SocketSend(-5, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client1.SocketSend(this.cancelOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
                 else
                 {
-                    this.client2.SocketSend(-5, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client2.SocketSend(this.cancelOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
             finally
@@ -203,15 +238,19 @@ namespace RRQMSocket
             try
             {
                 this.RequestComplete();
+                if (this.targetClientID != null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
                 byteBlock.Write(this.id);
                 byteBlock.Write(operationMes);
                 if (this.client1 != null)
                 {
-                    this.client1.SocketSend(-4, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client1.SocketSend(this.completeOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
                 else
                 {
-                    this.client2.SocketSend(-4, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client2.SocketSend(this.completeOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
             finally
@@ -235,15 +274,19 @@ namespace RRQMSocket
             ByteBlock byteBlock = BytePool.GetByteBlock(this.bufferLength);
             try
             {
+                if (this.targetClientID != null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
                 byteBlock.Write(this.id);
                 byteBlock.Write(operationMes);
                 if (this.client1 != null)
                 {
-                    this.client1.SocketSend(-11, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client1.SocketSend(this.holdOnOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
                 else
                 {
-                    this.client2.SocketSend(-11, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client2.SocketSend(this.holdOnOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
             finally
@@ -291,19 +334,23 @@ namespace RRQMSocket
             try
             {
                 this.RequestDispose();
+                if (this.targetClientID != null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
                 byteBlock.Write(this.id);
                 if (this.client1 != null)
                 {
                     if (this.client1.Online)
                     {
-                        this.client1.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                        this.client1.SocketSend(this.disposeOrder, byteBlock.Buffer, 0, byteBlock.Len);
                     }
                 }
                 else
                 {
                     if (this.client2.Online)
                     {
-                        this.client2.SocketSend(-6, byteBlock.Buffer, 0, byteBlock.Len);
+                        this.client2.SocketSend(this.disposeOrder, byteBlock.Buffer, 0, byteBlock.Len);
                     }
                 }
             }
@@ -358,16 +405,15 @@ namespace RRQMSocket
         /// </summary>
         public bool CanMoveNext
         {
-            get 
+            get
             {
-                if ((byte)this.status>4)
+                if ((byte)this.status > 4)
                 {
                     return false;
                 }
-                return true; 
+                return true;
             }
         }
-
 
         /// <summary>
         /// 转向下个元素
@@ -376,7 +422,7 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool MoveNext(int timeout = 60 * 1000)
         {
-            if (this.status== ChannelStatus.HoldOn)
+            if (this.status == ChannelStatus.HoldOn)
             {
                 this.lastOperationMes = null;
                 this.status = ChannelStatus.Moving;
@@ -390,42 +436,41 @@ namespace RRQMSocket
 
             if (this.dataQueue.TryDequeue(out ChannelData channelData))
             {
-                switch (channelData.type)
+                if (channelData.type == dataOrder)
                 {
-                    case -3:
-                        {
-                            this.currentByteBlock = channelData.byteBlock;
-                            return true;
-                        }
-                    case -4:
-                        {
-                            this.RequestComplete();
-                            moving = false;
-                            return false;
-                        }
-                    case -5:
-                        {
-                            this.RequestCancel();
-                            moving = false;
-                            return false;
-                        }
-                    case -6:
-                        {
-                            this.RequestDispose();
-                            moving = false;
-                            return false;
-                        }
-                    case -11:
-                        {
-                            channelData.byteBlock.Pos = 6;
-                            this.lastOperationMes = channelData.byteBlock.ReadString();
-                            channelData.byteBlock.Dispose();
-                            this.status = ChannelStatus.HoldOn;
-                            moving = false;
-                            return false;
-                        }
-                    default:
-                        break;
+                    this.currentByteBlock = channelData.byteBlock;
+                    return true;
+                }
+                else if (channelData.type == completeOrder)
+                {
+                    this.RequestComplete();
+                    moving = false;
+                    return false;
+                }
+                else if (channelData.type == cancelOrder)
+                {
+                    this.RequestCancel();
+                    moving = false;
+                    return false;
+                }
+                else if (channelData.type == disposeOrder)
+                {
+                    this.RequestDispose();
+                    moving = false;
+                    return false;
+                }
+                else if (channelData.type == holdOnOrder)
+                {
+                    channelData.byteBlock.Pos = 6;
+                    this.lastOperationMes = channelData.byteBlock.ReadString();
+                    channelData.byteBlock.Dispose();
+                    this.status = ChannelStatus.HoldOn;
+                    moving = false;
+                    return false;
+                }
+                else
+                {
+                    return false;
                 }
             }
 
@@ -537,15 +582,19 @@ namespace RRQMSocket
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
             try
             {
+                if (this.targetClientID!=null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
                 byteBlock.Write(this.id);
                 byteBlock.WriteBytesPackage(data, offset, length);
                 if (this.client1 != null)
                 {
-                    this.client1.SocketSend(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client1.SocketSend(this.dataOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
                 else
                 {
-                    this.client2.SocketSend(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client2.SocketSend(this.dataOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
             catch (Exception)
@@ -583,15 +632,19 @@ namespace RRQMSocket
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
             try
             {
+                if (this.targetClientID != null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
                 byteBlock.Write(this.id);
                 byteBlock.WriteBytesPackage(data, offset, length);
                 if (this.client1 != null)
                 {
-                    this.client1.SocketSendAsync(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client1.SocketSendAsync(this.dataOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
                 else
                 {
-                    this.client2.SocketSendAsync(-3, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client2.SocketSendAsync(this.dataOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
             catch (Exception)
@@ -619,7 +672,7 @@ namespace RRQMSocket
             this.moveWaitHandle.Set();
             if (!moving)
             {
-                if (data.type == -4)
+                if (data.type == this.completeOrder)
                 {
                     data.byteBlock.Pos = 6;
                     this.lastOperationMes = data.byteBlock.ReadString();
@@ -627,21 +680,21 @@ namespace RRQMSocket
 
                     this.RequestComplete();
                 }
-                else if (data.type == -5)
+                else if (data.type == this.cancelOrder)
                 {
                     data.byteBlock.Pos = 6;
                     this.lastOperationMes = data.byteBlock.ReadString();
                     data.byteBlock.Dispose();
                     this.RequestCancel();
                 }
-                else if (data.type == -6)
+                else if (data.type ==this.disposeOrder)
                 {
                     data.byteBlock.Pos = 6;
                     this.lastOperationMes = data.byteBlock.ReadString();
                     data.byteBlock.Dispose();
                     this.RequestDispose();
                 }
-                else if (data.type == -10)
+                else if (data.type == this.queueChangedOrder)
                 {
                     data.byteBlock.Pos = 6;
                     this.canFree = data.byteBlock.ReadBoolean();
@@ -654,17 +707,31 @@ namespace RRQMSocket
         {
             try
             {
-                this.moveWaitHandle.Set();
-                this.moveWaitHandle.Dispose();
-                this.parent.TryRemove(this.id, out _);
-
-                this.dataQueue.Clear((data) =>
+                lock (this)
                 {
-                    if (data.byteBlock != null)
+                    this.moveWaitHandle.Set();
+                    this.moveWaitHandle.Dispose();
+                    if (this.client1 != null)
                     {
-                        data.byteBlock.SetHolding(false);
+                        this.client1.RemoveChannel(this.id);
                     }
-                });
+                    else if (client2 != null)
+                    {
+                        this.client2.RemoveChannel(this.id);
+                    }
+                    else
+                    {
+                        return;
+                    }
+
+                    this.dataQueue.Clear((data) =>
+                    {
+                        if (data.byteBlock != null)
+                        {
+                            data.byteBlock.SetHolding(false);
+                        }
+                    });
+                }
             }
             catch
             {
@@ -681,15 +748,19 @@ namespace RRQMSocket
             ByteBlock byteBlock = BytePool.GetByteBlock(this.bufferLength);
             try
             {
+                if (this.targetClientID != null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
                 byteBlock.Write(this.id);
                 byteBlock.Write(free);
                 if (this.client1 != null)
                 {
-                    this.client1.SocketSend(-10, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client1.SocketSend(this.queueChangedOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
                 else
                 {
-                    this.client2.SocketSend(-10, byteBlock.Buffer, 0, byteBlock.Len);
+                    this.client2.SocketSend(this.queueChangedOrder, byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
             catch
