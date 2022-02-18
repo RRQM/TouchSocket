@@ -23,11 +23,8 @@ namespace RRQMSocket
         /// </summary>
         public string VerifyToken
         {
-            get { return (string)GetValue(VerifyTokenProperty); }
-            set
-            {
-                SetValue(VerifyTokenProperty, value);
-            }
+            get => (string)this.GetValue(VerifyTokenProperty);
+            set => this.SetValue(VerifyTokenProperty, value);
         }
 
         /// <summary>
@@ -41,11 +38,8 @@ namespace RRQMSocket
         /// </summary>
         public int VerifyTimeout
         {
-            get { return (int)GetValue(VerifyTimeoutProperty); }
-            set
-            {
-                SetValue(VerifyTimeoutProperty, value);
-            }
+            get => (int)this.GetValue(VerifyTimeoutProperty);
+            set => this.SetValue(VerifyTimeoutProperty, value);
         }
 
         /// <summary>

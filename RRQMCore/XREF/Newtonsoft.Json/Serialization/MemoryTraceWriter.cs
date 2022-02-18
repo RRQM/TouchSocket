@@ -40,9 +40,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// </summary>
         public MemoryTraceWriter()
         {
-            LevelFilter = TraceLevel.Verbose;
-            _traceMessages = new Queue<string>();
-            _lock = new object();
+            this.LevelFilter = TraceLevel.Verbose;
+            this._traceMessages = new Queue<string>();
+            this._lock = new object();
         }
 
         /// <summary>
@@ -62,14 +62,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             string s = sb.ToString();
 
-            lock (_lock)
+            lock (this._lock)
             {
-                if (_traceMessages.Count >= 1000)
+                if (this._traceMessages.Count >= 1000)
                 {
-                    _traceMessages.Dequeue();
+                    this._traceMessages.Dequeue();
                 }
 
-                _traceMessages.Enqueue(s);
+                this._traceMessages.Enqueue(s);
             }
         }
 
@@ -79,7 +79,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>An enumeration of the most recent trace messages.</returns>
         public IEnumerable<string> GetTraceMessages()
         {
-            return _traceMessages;
+            return this._traceMessages;
         }
 
         /// <summary>
@@ -90,10 +90,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// </returns>
         public override string ToString()
         {
-            lock (_lock)
+            lock (this._lock)
             {
                 StringBuilder sb = new StringBuilder();
-                foreach (string traceMessage in _traceMessages)
+                foreach (string traceMessage in this._traceMessages)
                 {
                     if (sb.Length > 0)
                     {

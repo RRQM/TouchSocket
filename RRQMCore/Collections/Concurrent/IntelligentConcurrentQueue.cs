@@ -36,18 +36,12 @@ namespace RRQMCore.Collections.Concurrent
         /// <summary>
         /// 允许的最大长度
         /// </summary>
-        public int MaxCount
-        {
-            get { return maxCount; }
-        }
+        public int MaxCount => this.maxCount;
 
         /// <summary>
         /// 长度
         /// </summary>
-        public new int Count
-        {
-            get { return this.count; }
-        }
+        public new int Count => this.count;
 
         /// <summary>
         /// 入队
@@ -56,7 +50,7 @@ namespace RRQMCore.Collections.Concurrent
         public new void Enqueue(T item)
         {
             SpinWait.SpinUntil(this.Check);
-            Interlocked.Increment(ref count);
+            Interlocked.Increment(ref this.count);
             base.Enqueue(item);
         }
 
@@ -69,7 +63,7 @@ namespace RRQMCore.Collections.Concurrent
         {
             if (base.TryDequeue(out result))
             {
-                Interlocked.Decrement(ref count);
+                Interlocked.Decrement(ref this.count);
                 return true;
             }
             return false;

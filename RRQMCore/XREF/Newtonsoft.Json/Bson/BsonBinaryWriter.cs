@@ -57,13 +57,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         public BsonBinaryWriter(BinaryWriter writer)
         {
-            DateTimeKindHandling = DateTimeKind.Utc;
-            _writer = writer;
+            this.DateTimeKindHandling = DateTimeKind.Utc;
+            this._writer = writer;
         }
 
         public void Flush()
         {
-            _writer.Flush();
+            this._writer.Flush();
         }
 
         public void Close()
@@ -71,14 +71,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 #if HAVE_STREAM_READER_WRITER_CLOSE
             _writer.Close();
 #else
-            _writer.Dispose();
+            this._writer.Dispose();
 #endif
         }
 
         public void WriteToken(BsonToken t)
         {
-            CalculateSize(t);
-            WriteTokenInternal(t);
+            this.CalculateSize(t);
+            this.WriteTokenInternal(t);
         }
 
         private void WriteTokenInternal(BsonToken t)
@@ -88,63 +88,63 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                 case BsonType.Object:
                     {
                         BsonObject value = (BsonObject)t;
-                        _writer.Write(value.CalculatedSize);
+                        this._writer.Write(value.CalculatedSize);
                         foreach (BsonProperty property in value)
                         {
-                            _writer.Write((sbyte)property.Value.Type);
-                            WriteString((string)property.Name.Value, property.Name.ByteCount, null);
-                            WriteTokenInternal(property.Value);
+                            this._writer.Write((sbyte)property.Value.Type);
+                            this.WriteString((string)property.Name.Value, property.Name.ByteCount, null);
+                            this.WriteTokenInternal(property.Value);
                         }
-                        _writer.Write((byte)0);
+                        this._writer.Write((byte)0);
                     }
                     break;
 
                 case BsonType.Array:
                     {
                         BsonArray value = (BsonArray)t;
-                        _writer.Write(value.CalculatedSize);
+                        this._writer.Write(value.CalculatedSize);
                         ulong index = 0;
                         foreach (BsonToken c in value)
                         {
-                            _writer.Write((sbyte)c.Type);
-                            WriteString(index.ToString(CultureInfo.InvariantCulture), MathUtils.IntLength(index), null);
-                            WriteTokenInternal(c);
+                            this._writer.Write((sbyte)c.Type);
+                            this.WriteString(index.ToString(CultureInfo.InvariantCulture), MathUtils.IntLength(index), null);
+                            this.WriteTokenInternal(c);
                             index++;
                         }
-                        _writer.Write((byte)0);
+                        this._writer.Write((byte)0);
                     }
                     break;
 
                 case BsonType.Integer:
                     {
                         BsonValue value = (BsonValue)t;
-                        _writer.Write(Convert.ToInt32(value.Value, CultureInfo.InvariantCulture));
+                        this._writer.Write(Convert.ToInt32(value.Value, CultureInfo.InvariantCulture));
                     }
                     break;
 
                 case BsonType.Long:
                     {
                         BsonValue value = (BsonValue)t;
-                        _writer.Write(Convert.ToInt64(value.Value, CultureInfo.InvariantCulture));
+                        this._writer.Write(Convert.ToInt64(value.Value, CultureInfo.InvariantCulture));
                     }
                     break;
 
                 case BsonType.Number:
                     {
                         BsonValue value = (BsonValue)t;
-                        _writer.Write(Convert.ToDouble(value.Value, CultureInfo.InvariantCulture));
+                        this._writer.Write(Convert.ToDouble(value.Value, CultureInfo.InvariantCulture));
                     }
                     break;
 
                 case BsonType.String:
                     {
                         BsonString value = (BsonString)t;
-                        WriteString((string)value.Value, value.ByteCount, value.CalculatedSize - 4);
+                        this.WriteString((string)value.Value, value.ByteCount, value.CalculatedSize - 4);
                     }
                     break;
 
                 case BsonType.Boolean:
-                    _writer.Write(t == BsonBoolean.True);
+                    this._writer.Write(t == BsonBoolean.True);
                     break;
 
                 case BsonType.Null:
@@ -160,11 +160,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                         if (value.Value is DateTime)
                         {
                             DateTime dateTime = (DateTime)value.Value;
-                            if (DateTimeKindHandling == DateTimeKind.Utc)
+                            if (this.DateTimeKindHandling == DateTimeKind.Utc)
                             {
                                 dateTime = dateTime.ToUniversalTime();
                             }
-                            else if (DateTimeKindHandling == DateTimeKind.Local)
+                            else if (this.DateTimeKindHandling == DateTimeKind.Local)
                             {
                                 dateTime = dateTime.ToLocalTime();
                             }
@@ -179,7 +179,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     }
 #endif
 
-                        _writer.Write(ticks);
+                        this._writer.Write(ticks);
                     }
                     break;
 
@@ -188,9 +188,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                         BsonBinary value = (BsonBinary)t;
 
                         byte[] data = (byte[])value.Value;
-                        _writer.Write(data.Length);
-                        _writer.Write((byte)value.BinaryType);
-                        _writer.Write(data);
+                        this._writer.Write(data.Length);
+                        this._writer.Write((byte)value.BinaryType);
+                        this._writer.Write(data);
                     }
                     break;
 
@@ -199,7 +199,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                         BsonValue value = (BsonValue)t;
 
                         byte[] data = (byte[])value.Value;
-                        _writer.Write(data);
+                        this._writer.Write(data);
                     }
                     break;
 
@@ -207,8 +207,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     {
                         BsonRegex value = (BsonRegex)t;
 
-                        WriteString((string)value.Pattern.Value, value.Pattern.ByteCount, null);
-                        WriteString((string)value.Options.Value, value.Options.ByteCount, null);
+                        this.WriteString((string)value.Pattern.Value, value.Pattern.ByteCount, null);
+                        this.WriteString((string)value.Options.Value, value.Options.ByteCount, null);
                     }
                     break;
 
@@ -221,12 +221,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             if (calculatedlengthPrefix != null)
             {
-                _writer.Write(calculatedlengthPrefix.GetValueOrDefault());
+                this._writer.Write(calculatedlengthPrefix.GetValueOrDefault());
             }
 
-            WriteUtf8Bytes(s, byteCount);
+            this.WriteUtf8Bytes(s, byteCount);
 
-            _writer.Write((byte)0);
+            this._writer.Write((byte)0);
         }
 
         public void WriteUtf8Bytes(string s, int byteCount)
@@ -235,18 +235,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             {
                 if (byteCount <= 256)
                 {
-                    if (_largeByteBuffer == null)
+                    if (this._largeByteBuffer == null)
                     {
-                        _largeByteBuffer = new byte[256];
+                        this._largeByteBuffer = new byte[256];
                     }
 
-                    Encoding.GetBytes(s, 0, s.Length, _largeByteBuffer, 0);
-                    _writer.Write(_largeByteBuffer, 0, byteCount);
+                    Encoding.GetBytes(s, 0, s.Length, this._largeByteBuffer, 0);
+                    this._writer.Write(this._largeByteBuffer, 0, byteCount);
                 }
                 else
                 {
                     byte[] bytes = Encoding.GetBytes(s);
-                    _writer.Write(bytes);
+                    this._writer.Write(bytes);
                 }
             }
         }
@@ -277,8 +277,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                         foreach (BsonProperty p in value)
                         {
                             int size = 1;
-                            size += CalculateSize(p.Name);
-                            size += CalculateSize(p.Value);
+                            size += this.CalculateSize(p.Name);
+                            size += this.CalculateSize(p.Value);
 
                             bases += size;
                         }
@@ -295,8 +295,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                         foreach (BsonToken c in value)
                         {
                             size += 1;
-                            size += CalculateSize(MathUtils.IntLength(index));
-                            size += CalculateSize(c);
+                            size += this.CalculateSize(MathUtils.IntLength(index));
+                            size += this.CalculateSize(c);
                             index++;
                         }
                         size += 1;
@@ -318,7 +318,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                         BsonString value = (BsonString)t;
                         string s = (string)value.Value;
                         value.ByteCount = (s != null) ? Encoding.GetByteCount(s) : 0;
-                        value.CalculatedSize = CalculateSizeWithLength(value.ByteCount, value.IncludeLength);
+                        value.CalculatedSize = this.CalculateSizeWithLength(value.ByteCount, value.IncludeLength);
 
                         return value.CalculatedSize;
                     }
@@ -348,8 +348,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     {
                         BsonRegex value = (BsonRegex)t;
                         int size = 0;
-                        size += CalculateSize(value.Pattern);
-                        size += CalculateSize(value.Options);
+                        size += this.CalculateSize(value.Pattern);
+                        size += this.CalculateSize(value.Options);
                         value.CalculatedSize = size;
 
                         return value.CalculatedSize;

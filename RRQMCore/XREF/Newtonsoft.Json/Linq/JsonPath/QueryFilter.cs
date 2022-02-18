@@ -23,7 +23,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             {
                 foreach (JToken v in t)
                 {
-                    if (Expression.IsMatch(root, v))
+                    if (this.Expression.IsMatch(root, v))
                     {
                         yield return v;
                     }

@@ -49,8 +49,8 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         public string WebSocketVersion
         {
-            get { return webSocketVersion; }
-            set { webSocketVersion = value; }
+            get => this.webSocketVersion;
+            set => this.webSocketVersion = value;
         }
 
         /// <summary>
@@ -87,10 +87,10 @@ namespace RRQMSocket.WebSocket
                 this.ConnectService();
                 this.BeginReceive();
 
-                waitData.SetCancellationToken(token);
+                this.waitData.SetCancellationToken(token);
                 string base64Key;
                 var data = this.GetRequestHeader(out base64Key);
-                if (UseSsl)
+                if (this.UseSsl)
                 {
                     this.GetStream().Write(data, 0, data.Length);
                 }
@@ -99,11 +99,11 @@ namespace RRQMSocket.WebSocket
                     this.MainSocket.Send(data);
                 }
 
-                switch (waitData.Wait(1000 * 10))
+                switch (this.waitData.Wait(1000 * 10))
                 {
                     case WaitDataStatus.SetRunning:
                         {
-                            Http.HttpResponse httpResponse = waitData.WaitResult;
+                            Http.HttpResponse httpResponse = this.waitData.WaitResult;
                             if (httpResponse.GetHeader("Sec-WebSocket-Accept") != WSTools.CalculateBase64Key(base64Key, Encoding.UTF8))
                             {
                                 this.MainSocket.Dispose();
@@ -167,9 +167,9 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (isHandshaked)
+            if (this.isHandshaked)
             {
                 WSDataFrame dataFrame = (WSDataFrame)requestInfo;
                 switch (dataFrame.Opcode)

@@ -63,22 +63,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         public JsonSchemaWriter(JsonWriter writer, JsonSchemaResolver resolver)
         {
             ValidationUtils.ArgumentNotNull(writer, nameof(writer));
-            _writer = writer;
-            _resolver = resolver;
+            this._writer = writer;
+            this._resolver = resolver;
         }
 
         private void ReferenceOrWriteSchema(JsonSchema schema)
         {
-            if (schema.Id != null && _resolver.GetSchema(schema.Id) != null)
+            if (schema.Id != null && this._resolver.GetSchema(schema.Id) != null)
             {
-                _writer.WriteStartObject();
-                _writer.WritePropertyName(JsonTypeReflector.RefPropertyName);
-                _writer.WriteValue(schema.Id);
-                _writer.WriteEndObject();
+                this._writer.WriteStartObject();
+                this._writer.WritePropertyName(JsonTypeReflector.RefPropertyName);
+                this._writer.WriteValue(schema.Id);
+                this._writer.WriteEndObject();
             }
             else
             {
-                WriteSchema(schema);
+                this.WriteSchema(schema);
             }
         }
 
@@ -86,100 +86,100 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         {
             ValidationUtils.ArgumentNotNull(schema, nameof(schema));
 
-            if (!_resolver.LoadedSchemas.Contains(schema))
+            if (!this._resolver.LoadedSchemas.Contains(schema))
             {
-                _resolver.LoadedSchemas.Add(schema);
+                this._resolver.LoadedSchemas.Add(schema);
             }
 
-            _writer.WriteStartObject();
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.IdPropertyName, schema.Id);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.TitlePropertyName, schema.Title);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.DescriptionPropertyName, schema.Description);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.RequiredPropertyName, schema.Required);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.ReadOnlyPropertyName, schema.ReadOnly);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.HiddenPropertyName, schema.Hidden);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.TransientPropertyName, schema.Transient);
+            this._writer.WriteStartObject();
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.IdPropertyName, schema.Id);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.TitlePropertyName, schema.Title);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.DescriptionPropertyName, schema.Description);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.RequiredPropertyName, schema.Required);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.ReadOnlyPropertyName, schema.ReadOnly);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.HiddenPropertyName, schema.Hidden);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.TransientPropertyName, schema.Transient);
             if (schema.Type != null)
             {
-                WriteType(JsonSchemaConstants.TypePropertyName, _writer, schema.Type.GetValueOrDefault());
+                this.WriteType(JsonSchemaConstants.TypePropertyName, this._writer, schema.Type.GetValueOrDefault());
             }
             if (!schema.AllowAdditionalProperties)
             {
-                _writer.WritePropertyName(JsonSchemaConstants.AdditionalPropertiesPropertyName);
-                _writer.WriteValue(schema.AllowAdditionalProperties);
+                this._writer.WritePropertyName(JsonSchemaConstants.AdditionalPropertiesPropertyName);
+                this._writer.WriteValue(schema.AllowAdditionalProperties);
             }
             else
             {
                 if (schema.AdditionalProperties != null)
                 {
-                    _writer.WritePropertyName(JsonSchemaConstants.AdditionalPropertiesPropertyName);
-                    ReferenceOrWriteSchema(schema.AdditionalProperties);
+                    this._writer.WritePropertyName(JsonSchemaConstants.AdditionalPropertiesPropertyName);
+                    this.ReferenceOrWriteSchema(schema.AdditionalProperties);
                 }
             }
             if (!schema.AllowAdditionalItems)
             {
-                _writer.WritePropertyName(JsonSchemaConstants.AdditionalItemsPropertyName);
-                _writer.WriteValue(schema.AllowAdditionalItems);
+                this._writer.WritePropertyName(JsonSchemaConstants.AdditionalItemsPropertyName);
+                this._writer.WriteValue(schema.AllowAdditionalItems);
             }
             else
             {
                 if (schema.AdditionalItems != null)
                 {
-                    _writer.WritePropertyName(JsonSchemaConstants.AdditionalItemsPropertyName);
-                    ReferenceOrWriteSchema(schema.AdditionalItems);
+                    this._writer.WritePropertyName(JsonSchemaConstants.AdditionalItemsPropertyName);
+                    this.ReferenceOrWriteSchema(schema.AdditionalItems);
                 }
             }
-            WriteSchemaDictionaryIfNotNull(_writer, JsonSchemaConstants.PropertiesPropertyName, schema.Properties);
-            WriteSchemaDictionaryIfNotNull(_writer, JsonSchemaConstants.PatternPropertiesPropertyName, schema.PatternProperties);
-            WriteItems(schema);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.MinimumPropertyName, schema.Minimum);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.MaximumPropertyName, schema.Maximum);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.ExclusiveMinimumPropertyName, schema.ExclusiveMinimum);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.ExclusiveMaximumPropertyName, schema.ExclusiveMaximum);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.MinimumLengthPropertyName, schema.MinimumLength);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.MaximumLengthPropertyName, schema.MaximumLength);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.MinimumItemsPropertyName, schema.MinimumItems);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.MaximumItemsPropertyName, schema.MaximumItems);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.DivisibleByPropertyName, schema.DivisibleBy);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.FormatPropertyName, schema.Format);
-            WritePropertyIfNotNull(_writer, JsonSchemaConstants.PatternPropertyName, schema.Pattern);
+            this.WriteSchemaDictionaryIfNotNull(this._writer, JsonSchemaConstants.PropertiesPropertyName, schema.Properties);
+            this.WriteSchemaDictionaryIfNotNull(this._writer, JsonSchemaConstants.PatternPropertiesPropertyName, schema.PatternProperties);
+            this.WriteItems(schema);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.MinimumPropertyName, schema.Minimum);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.MaximumPropertyName, schema.Maximum);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.ExclusiveMinimumPropertyName, schema.ExclusiveMinimum);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.ExclusiveMaximumPropertyName, schema.ExclusiveMaximum);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.MinimumLengthPropertyName, schema.MinimumLength);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.MaximumLengthPropertyName, schema.MaximumLength);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.MinimumItemsPropertyName, schema.MinimumItems);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.MaximumItemsPropertyName, schema.MaximumItems);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.DivisibleByPropertyName, schema.DivisibleBy);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.FormatPropertyName, schema.Format);
+            this.WritePropertyIfNotNull(this._writer, JsonSchemaConstants.PatternPropertyName, schema.Pattern);
             if (schema.Enum != null)
             {
-                _writer.WritePropertyName(JsonSchemaConstants.EnumPropertyName);
-                _writer.WriteStartArray();
+                this._writer.WritePropertyName(JsonSchemaConstants.EnumPropertyName);
+                this._writer.WriteStartArray();
                 foreach (JToken token in schema.Enum)
                 {
-                    token.WriteTo(_writer);
+                    token.WriteTo(this._writer);
                 }
-                _writer.WriteEndArray();
+                this._writer.WriteEndArray();
             }
             if (schema.Default != null)
             {
-                _writer.WritePropertyName(JsonSchemaConstants.DefaultPropertyName);
-                schema.Default.WriteTo(_writer);
+                this._writer.WritePropertyName(JsonSchemaConstants.DefaultPropertyName);
+                schema.Default.WriteTo(this._writer);
             }
             if (schema.Disallow != null)
             {
-                WriteType(JsonSchemaConstants.DisallowPropertyName, _writer, schema.Disallow.GetValueOrDefault());
+                this.WriteType(JsonSchemaConstants.DisallowPropertyName, this._writer, schema.Disallow.GetValueOrDefault());
             }
             if (schema.Extends != null && schema.Extends.Count > 0)
             {
-                _writer.WritePropertyName(JsonSchemaConstants.ExtendsPropertyName);
+                this._writer.WritePropertyName(JsonSchemaConstants.ExtendsPropertyName);
                 if (schema.Extends.Count == 1)
                 {
-                    ReferenceOrWriteSchema(schema.Extends[0]);
+                    this.ReferenceOrWriteSchema(schema.Extends[0]);
                 }
                 else
                 {
-                    _writer.WriteStartArray();
+                    this._writer.WriteStartArray();
                     foreach (JsonSchema jsonSchema in schema.Extends)
                     {
-                        ReferenceOrWriteSchema(jsonSchema);
+                        this.ReferenceOrWriteSchema(jsonSchema);
                     }
-                    _writer.WriteEndArray();
+                    this._writer.WriteEndArray();
                 }
             }
-            _writer.WriteEndObject();
+            this._writer.WriteEndObject();
         }
 
         private void WriteSchemaDictionaryIfNotNull(JsonWriter writer, string propertyName, IDictionary<string, JsonSchema> properties)
@@ -191,7 +191,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                 foreach (KeyValuePair<string, JsonSchema> property in properties)
                 {
                     writer.WritePropertyName(property.Key);
-                    ReferenceOrWriteSchema(property.Value);
+                    this.ReferenceOrWriteSchema(property.Value);
                 }
                 writer.WriteEndObject();
             }
@@ -204,31 +204,31 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                 return;
             }
 
-            _writer.WritePropertyName(JsonSchemaConstants.ItemsPropertyName);
+            this._writer.WritePropertyName(JsonSchemaConstants.ItemsPropertyName);
 
             if (!schema.PositionalItemsValidation)
             {
                 if (schema.Items != null && schema.Items.Count > 0)
                 {
-                    ReferenceOrWriteSchema(schema.Items[0]);
+                    this.ReferenceOrWriteSchema(schema.Items[0]);
                 }
                 else
                 {
-                    _writer.WriteStartObject();
-                    _writer.WriteEndObject();
+                    this._writer.WriteStartObject();
+                    this._writer.WriteEndObject();
                 }
                 return;
             }
 
-            _writer.WriteStartArray();
+            this._writer.WriteStartArray();
             if (schema.Items != null)
             {
                 foreach (JsonSchema itemSchema in schema.Items)
                 {
-                    ReferenceOrWriteSchema(itemSchema);
+                    this.ReferenceOrWriteSchema(itemSchema);
                 }
             }
-            _writer.WriteEndArray();
+            this._writer.WriteEndArray();
         }
 
         private void WriteType(string propertyName, JsonWriter writer, JsonSchemaType type)

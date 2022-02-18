@@ -64,9 +64,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             public ImmutableCollectionTypeInfo(string contractTypeName, string createdTypeName, string builderTypeName)
             {
-                ContractTypeName = contractTypeName;
-                CreatedTypeName = createdTypeName;
-                BuilderTypeName = builderTypeName;
+                this.ContractTypeName = contractTypeName;
+                this.CreatedTypeName = createdTypeName;
+                this.BuilderTypeName = builderTypeName;
             }
 
             public string ContractTypeName { get; set; }

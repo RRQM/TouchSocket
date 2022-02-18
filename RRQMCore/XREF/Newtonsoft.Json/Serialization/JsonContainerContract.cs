@@ -59,23 +59,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         // will be null for containers that don't have an item type (e.g. IList) or for complex objects
         internal JsonContract ItemContract
         {
-            get => _itemContract;
+            get => this._itemContract;
             set
             {
-                _itemContract = value;
-                if (_itemContract != null)
+                this._itemContract = value;
+                if (this._itemContract != null)
                 {
-                    _finalItemContract = (_itemContract.UnderlyingType.IsSealed()) ? _itemContract : null;
+                    this._finalItemContract = (this._itemContract.UnderlyingType.IsSealed()) ? this._itemContract : null;
                 }
                 else
                 {
-                    _finalItemContract = null;
+                    this._finalItemContract = null;
                 }
             }
         }
 
         // the final (i.e. can't be inherited from like a sealed class or valuetype) item contract
-        internal JsonContract FinalItemContract => _finalItemContract;
+        internal JsonContract FinalItemContract => this._finalItemContract;
 
         /// <summary>
         /// Gets or sets the default collection items <see cref="JsonConverter" />.
@@ -114,14 +114,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             {
                 if (jsonContainerAttribute.ItemConverterType != null)
                 {
-                    ItemConverter = JsonTypeReflector.CreateJsonConverterInstance(
+                    this.ItemConverter = JsonTypeReflector.CreateJsonConverterInstance(
                         jsonContainerAttribute.ItemConverterType,
                         jsonContainerAttribute.ItemConverterParameters);
                 }
 
-                ItemIsReference = jsonContainerAttribute._itemIsReference;
-                ItemReferenceLoopHandling = jsonContainerAttribute._itemReferenceLoopHandling;
-                ItemTypeNameHandling = jsonContainerAttribute._itemTypeNameHandling;
+                this.ItemIsReference = jsonContainerAttribute._itemIsReference;
+                this.ItemReferenceLoopHandling = jsonContainerAttribute._itemReferenceLoopHandling;
+                this.ItemTypeNameHandling = jsonContainerAttribute._itemTypeNameHandling;
             }
         }
     }

@@ -21,7 +21,7 @@ namespace RRQMCore.Run
     /// <summary>
     /// 消息通知类
     /// </summary>
-    public class AppMessenger<TMessage>where TMessage:IMessage
+    public class AppMessenger<TMessage> where TMessage : IMessage
     {
         private bool allowMultiple = false;
 
@@ -32,8 +32,8 @@ namespace RRQMCore.Run
         /// </summary>
         public bool AllowMultiple
         {
-            get { return allowMultiple; }
-            set { allowMultiple = value; }
+            get => this.allowMultiple;
+            set => this.allowMultiple = value;
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace RRQMCore.Run
         /// </summary>
         public void Clear()
         {
-            tokenAndInstance.Clear();
+            this.tokenAndInstance.Clear();
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace RRQMCore.Run
         /// 注册消息
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void Register<T>()where T: TMessage
+        public void Register<T>() where T : TMessage
         {
             this.Register((T)Activator.CreateInstance(typeof(T)));
         }
@@ -106,12 +106,12 @@ namespace RRQMCore.Run
         /// <exception cref="MessageRegisteredException"></exception>
         public void Register(TMessage messageObject, string token, Action action)
         {
-            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
                 tokenInstance.MethodInfo = action.Method;
-                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
             else
@@ -156,12 +156,12 @@ namespace RRQMCore.Run
         /// <exception cref="MessageRegisteredException"></exception>
         public void Register(TMessage messageObject, string token, MethodInfo methodInfo)
         {
-            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
                 tokenInstance.MethodInfo = methodInfo;
-                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
             else
@@ -191,12 +191,12 @@ namespace RRQMCore.Run
         /// <exception cref="MessageRegisteredException"></exception>
         public void Register<T>(TMessage messageObject, string token, Action<T> action)
         {
-            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
                 tokenInstance.MethodInfo = action.Method;
-                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
             else
@@ -215,12 +215,12 @@ namespace RRQMCore.Run
         /// <param name="action"></param>
         public void Register<T, TReturn>(TMessage messageObject, string token, Func<T, TReturn> action)
         {
-            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
                 tokenInstance.MethodInfo = action.Method;
-                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
             else
@@ -238,12 +238,12 @@ namespace RRQMCore.Run
         /// <param name="action"></param>
         public void Register<TReturn>(TMessage messageObject, string token, Func<TReturn> action)
         {
-            if (this.allowMultiple || !tokenAndInstance.ContainsKey(token))
+            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
                 tokenInstance.MethodInfo = action.Method;
-                var list = tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
+                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
             else
@@ -260,7 +260,7 @@ namespace RRQMCore.Run
         /// <exception cref="MessageNotFoundException"></exception>
         public void Send(string token, params object[] parameters)
         {
-            if (tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
+            if (this.tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
             {
                 foreach (var item in list)
                 {
@@ -283,7 +283,7 @@ namespace RRQMCore.Run
         /// <exception cref="MessageNotFoundException"></exception>
         public T Send<T>(string token, params object[] parameters)
         {
-            if (tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
+            if (this.tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
             {
                 for (int i = 0; i < list.Count; i++)
                 {
@@ -313,14 +313,14 @@ namespace RRQMCore.Run
         {
             List<string> key = new List<string>();
 
-            foreach (var item in tokenAndInstance.Keys)
+            foreach (var item in this.tokenAndInstance.Keys)
             {
-                foreach (var item2 in tokenAndInstance[item].ToArray())
+                foreach (var item2 in this.tokenAndInstance[item].ToArray())
                 {
                     if ((IMessage)messageObject == item2.MessageObject)
                     {
-                        tokenAndInstance[item].Remove(item2);
-                        if (tokenAndInstance[item].Count == 0)
+                        this.tokenAndInstance[item].Remove(item2);
+                        if (this.tokenAndInstance[item].Count == 0)
                         {
                             key.Add(item);
                         }
@@ -330,7 +330,7 @@ namespace RRQMCore.Run
 
             foreach (var item in key)
             {
-                tokenAndInstance.TryRemove(item, out _);
+                this.tokenAndInstance.TryRemove(item, out _);
             }
         }
 
@@ -339,7 +339,7 @@ namespace RRQMCore.Run
         /// </summary>
         public void Unregister(string token)
         {
-            tokenAndInstance.TryRemove(token, out _);
+            this.tokenAndInstance.TryRemove(token, out _);
         }
     }
 

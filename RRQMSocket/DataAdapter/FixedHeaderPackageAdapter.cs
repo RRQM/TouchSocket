@@ -39,8 +39,8 @@ namespace RRQMSocket
         /// </summary>
         public FixedHeaderType FixedHeaderType
         {
-            get { return fixedHeaderType; }
-            set { fixedHeaderType = value; }
+            get => this.fixedHeaderType;
+            set => this.fixedHeaderType = value;
         }
 
         /// <summary>
@@ -48,8 +48,8 @@ namespace RRQMSocket
         /// </summary>
         public int MaxPackageSize
         {
-            get { return maxPackageSize; }
-            set { maxPackageSize = value; }
+            get => this.maxPackageSize;
+            set => this.maxPackageSize = value;
         }
 
         /// <summary>
@@ -57,8 +57,8 @@ namespace RRQMSocket
         /// </summary>
         public int MinPackageSize
         {
-            get { return minPackageSize; }
-            set { minPackageSize = value; }
+            get => this.minPackageSize;
+            set => this.minPackageSize = value;
         }
 
         /// <summary>
@@ -81,34 +81,34 @@ namespace RRQMSocket
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
 
-            if (agreementTempBytes != null)
+            if (this.agreementTempBytes != null)
             {
-                SeamPackage(buffer, r);
+                this.SeamPackage(buffer, r);
             }
             else if (this.tempByteBlock == null)
             {
-                SplitPackage(buffer, 0, r);
+                this.SplitPackage(buffer, 0, r);
             }
             else
             {
-                if (surPlusLength == r)
+                if (this.surPlusLength == r)
                 {
-                    this.tempByteBlock.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.tempByteBlock);
+                    this.tempByteBlock.Write(buffer, 0, this.surPlusLength);
+                    this.PreviewHandle(this.tempByteBlock);
                     this.tempByteBlock = null;
-                    surPlusLength = 0;
+                    this.surPlusLength = 0;
                 }
-                else if (surPlusLength < r)
+                else if (this.surPlusLength < r)
                 {
-                    this.tempByteBlock.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.tempByteBlock);
+                    this.tempByteBlock.Write(buffer, 0, this.surPlusLength);
+                    this.PreviewHandle(this.tempByteBlock);
                     this.tempByteBlock = null;
-                    SplitPackage(buffer, surPlusLength, r);
+                    this.SplitPackage(buffer, this.surPlusLength, r);
                 }
                 else
                 {
                     this.tempByteBlock.Write(buffer, 0, r);
-                    surPlusLength -= r;
+                    this.surPlusLength -= r;
                 }
             }
         }
@@ -284,12 +284,12 @@ namespace RRQMSocket
         /// <param name="r"></param>
         private void SeamPackage(byte[] buffer, int r)
         {
-            ByteBlock byteBlock = BytePool.GetByteBlock(r + agreementTempBytes.Length);
-            byteBlock.Write(agreementTempBytes);
+            ByteBlock byteBlock = BytePool.GetByteBlock(r + this.agreementTempBytes.Length);
+            byteBlock.Write(this.agreementTempBytes);
             byteBlock.Write(buffer, 0, r);
-            r += agreementTempBytes.Length;
-            agreementTempBytes = null;
-            SplitPackage(byteBlock.Buffer, 0, r);
+            r += this.agreementTempBytes.Length;
+            this.agreementTempBytes = null;
+            this.SplitPackage(byteBlock.Buffer, 0, r);
             byteBlock.Dispose();
         }
 
@@ -305,8 +305,8 @@ namespace RRQMSocket
             {
                 if (r - index <= (byte)this.fixedHeaderType)
                 {
-                    agreementTempBytes = new byte[r - index];
-                    Array.Copy(dataBuffer, index, agreementTempBytes, 0, agreementTempBytes.Length);
+                    this.agreementTempBytes = new byte[r - index];
+                    Array.Copy(dataBuffer, index, this.agreementTempBytes, 0, this.agreementTempBytes.Length);
                     return;
                 }
                 int length = 0;
@@ -344,13 +344,13 @@ namespace RRQMSocket
                 {
                     ByteBlock byteBlock = BytePool.GetByteBlock(length);
                     byteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, length);
-                    PreviewHandle(byteBlock);
-                    surPlusLength = 0;
+                    this.PreviewHandle(byteBlock);
+                    this.surPlusLength = 0;
                 }
                 else//半包
                 {
                     this.tempByteBlock = BytePool.GetByteBlock(length);
-                    surPlusLength = length - recedSurPlusLength;
+                    this.surPlusLength = length - recedSurPlusLength;
                     this.tempByteBlock.Write(dataBuffer, index + (byte)this.fixedHeaderType, recedSurPlusLength);
                 }
                 index += (length + (byte)this.fixedHeaderType);

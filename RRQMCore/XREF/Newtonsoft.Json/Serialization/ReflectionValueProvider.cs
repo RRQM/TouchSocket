@@ -58,7 +58,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public ReflectionValueProvider(MemberInfo memberInfo)
         {
             ValidationUtils.ArgumentNotNull(memberInfo, nameof(memberInfo));
-            _memberInfo = memberInfo;
+            this._memberInfo = memberInfo;
         }
 
         /// <summary>
@@ -70,11 +70,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             try
             {
-                ReflectionUtils.SetMemberValue(_memberInfo, target, value);
+                ReflectionUtils.SetMemberValue(this._memberInfo, target, value);
             }
             catch (Exception ex)
             {
-                throw new JsonSerializationException("Error setting value to '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, _memberInfo.Name, target.GetType()), ex);
+                throw new JsonSerializationException("Error setting value to '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, this._memberInfo.Name, target.GetType()), ex);
             }
         }
 
@@ -88,16 +88,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             try
             {
                 // https://github.com/dotnet/corefx/issues/26053
-                if (_memberInfo is PropertyInfo propertyInfo && propertyInfo.PropertyType.IsByRef)
+                if (this._memberInfo is PropertyInfo propertyInfo && propertyInfo.PropertyType.IsByRef)
                 {
                     throw new InvalidOperationException("Could not create getter for {0}. ByRef return values are not supported.".FormatWith(CultureInfo.InvariantCulture, propertyInfo));
                 }
 
-                return ReflectionUtils.GetMemberValue(_memberInfo, target);
+                return ReflectionUtils.GetMemberValue(this._memberInfo, target);
             }
             catch (Exception ex)
             {
-                throw new JsonSerializationException("Error getting value from '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, _memberInfo.Name, target.GetType()), ex);
+                throw new JsonSerializationException("Error getting value from '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, this._memberInfo.Name, target.GetType()), ex);
             }
         }
     }

@@ -202,10 +202,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 #endif
 
 #pragma warning disable 618
-            DefaultMembersSearchFlags = BindingFlags.Instance | BindingFlags.Public;
+            this.DefaultMembersSearchFlags = BindingFlags.Instance | BindingFlags.Public;
 #pragma warning restore 618
 
-            _contractCache = new ThreadSafeStore<Type, JsonContract>(CreateContract);
+            this._contractCache = new ThreadSafeStore<Type, JsonContract>(this.CreateContract);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             ValidationUtils.ArgumentNotNull(type, nameof(type));
 
-            return _contractCache.Get(type);
+            return this._contractCache.Get(type);
         }
 
         /// <summary>
@@ -248,14 +248,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 #endif
 
 #pragma warning disable 618
-                List<MemberInfo> defaultMembers = ReflectionUtils.GetFieldsAndProperties(objectType, DefaultMembersSearchFlags)
+                List<MemberInfo> defaultMembers = ReflectionUtils.GetFieldsAndProperties(objectType, this.DefaultMembersSearchFlags)
                     .Where(m => !ReflectionUtils.IsIndexedProperty(m)).ToList();
 #pragma warning restore 618
 
                 foreach (MemberInfo member in allMembers)
                 {
                     // exclude members that are compiler generated if set
-                    if (SerializeCompilerGeneratedMembers || !member.IsDefined(typeof(CompilerGeneratedAttribute), true))
+                    if (this.SerializeCompilerGeneratedMembers || !member.IsDefined(typeof(CompilerGeneratedAttribute), true))
                     {
                         if (defaultMembers.Contains(member))
                         {
@@ -343,7 +343,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             }
 
             JsonObjectContract contract = new JsonObjectContract(objectType);
-            InitializeContract(contract);
+            this.InitializeContract(contract);
 
             bool ignoreSerializableAttribute;
 #if HAVE_BINARY_SERIALIZATION
@@ -353,7 +353,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 #endif
 
             contract.MemberSerialization = JsonTypeReflector.GetObjectMemberSerialization(contract.NonNullableUnderlyingType, ignoreSerializableAttribute);
-            contract.Properties.AddRange(CreateProperties(contract.NonNullableUnderlyingType, contract.MemberSerialization));
+            contract.Properties.AddRange(this.CreateProperties(contract.NonNullableUnderlyingType, contract.MemberSerialization));
 
             Func<string, string> extensionDataNameResolver = null;
 
@@ -372,20 +372,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             if (extensionDataNameResolver == null)
             {
-                extensionDataNameResolver = ResolveExtensionDataName;
+                extensionDataNameResolver = this.ResolveExtensionDataName;
             }
 
             contract.ExtensionDataNameResolver = extensionDataNameResolver;
 
             if (contract.IsInstantiable)
             {
-                ConstructorInfo overrideConstructor = GetAttributeConstructor(contract.NonNullableUnderlyingType);
+                ConstructorInfo overrideConstructor = this.GetAttributeConstructor(contract.NonNullableUnderlyingType);
 
                 // check if a JsonConstructorAttribute has been defined and use that
                 if (overrideConstructor != null)
                 {
                     contract.OverrideCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(overrideConstructor);
-                    contract.CreatorParameters.AddRange(CreateConstructorParameters(overrideConstructor, contract.Properties));
+                    contract.CreatorParameters.AddRange(this.CreateConstructorParameters(overrideConstructor, contract.Properties));
                 }
                 else if (contract.MemberSerialization == MemberSerialization.Fields)
                 {
@@ -400,27 +400,27 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 }
                 else if (contract.DefaultCreator == null || contract.DefaultCreatorNonPublic)
                 {
-                    ConstructorInfo constructor = GetParameterizedConstructor(contract.NonNullableUnderlyingType);
+                    ConstructorInfo constructor = this.GetParameterizedConstructor(contract.NonNullableUnderlyingType);
                     if (constructor != null)
                     {
                         contract.ParameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(constructor);
-                        contract.CreatorParameters.AddRange(CreateConstructorParameters(constructor, contract.Properties));
+                        contract.CreatorParameters.AddRange(this.CreateConstructorParameters(constructor, contract.Properties));
                     }
                 }
                 else if (contract.NonNullableUnderlyingType.IsValueType())
                 {
                     // value types always have default constructor
                     // check whether there is a constructor that matches with non-writable properties on value type
-                    ConstructorInfo constructor = GetImmutableConstructor(contract.NonNullableUnderlyingType, contract.Properties);
+                    ConstructorInfo constructor = this.GetImmutableConstructor(contract.NonNullableUnderlyingType, contract.Properties);
                     if (constructor != null)
                     {
                         contract.OverrideCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(constructor);
-                        contract.CreatorParameters.AddRange(CreateConstructorParameters(constructor, contract.Properties));
+                        contract.CreatorParameters.AddRange(this.CreateConstructorParameters(constructor, contract.Properties));
                     }
                 }
             }
 
-            MemberInfo extensionDataMember = GetExtensionDataMemberForType(contract.NonNullableUnderlyingType);
+            MemberInfo extensionDataMember = this.GetExtensionDataMemberForType(contract.NonNullableUnderlyingType);
             if (extensionDataMember != null)
             {
                 SetExtensionDataDelegates(contract, extensionDataMember);
@@ -431,7 +431,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private MemberInfo GetExtensionDataMemberForType(Type type)
         {
-            IEnumerable<MemberInfo> members = GetClassHierarchyForType(type).SelectMany(baseType =>
+            IEnumerable<MemberInfo> members = this.GetClassHierarchyForType(type).SelectMany(baseType =>
             {
                 IList<MemberInfo> m = new List<MemberInfo>();
                 m.AddRange(baseType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
@@ -575,12 +575,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             public EnumerableDictionaryWrapper(IEnumerable<KeyValuePair<TEnumeratorKey, TEnumeratorValue>> e)
             {
                 ValidationUtils.ArgumentNotNull(e, nameof(e));
-                _e = e;
+                this._e = e;
             }
 
             public IEnumerator<KeyValuePair<object, object>> GetEnumerator()
             {
-                foreach (KeyValuePair<TEnumeratorKey, TEnumeratorValue> item in _e)
+                foreach (KeyValuePair<TEnumeratorKey, TEnumeratorValue> item in this._e)
                 {
                     yield return new KeyValuePair<object, object>(item.Key, item.Value);
                 }
@@ -588,7 +588,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return GetEnumerator();
+                return this.GetEnumerator();
             }
         }
 
@@ -630,7 +630,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                     {
                         foreach (ParameterInfo parameterInfo in parameters)
                         {
-                            JsonProperty memberProperty = MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
+                            JsonProperty memberProperty = this.MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
                             if (memberProperty == null || memberProperty.Writable)
                             {
                                 return null;
@@ -682,13 +682,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             foreach (ParameterInfo parameterInfo in constructorParameters)
             {
-                JsonProperty matchingMemberProperty = MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
+                JsonProperty matchingMemberProperty = this.MatchProperty(memberProperties, parameterInfo.Name, parameterInfo.ParameterType);
 
                 // ensure that property will have a name from matching property or from parameterinfo
                 // parameterinfo could have no name if generated by a proxy (I'm looking at you Castle)
                 if (matchingMemberProperty != null || parameterInfo.Name != null)
                 {
-                    JsonProperty property = CreatePropertyFromConstructorParameter(matchingMemberProperty, parameterInfo);
+                    JsonProperty property = this.CreatePropertyFromConstructorParameter(matchingMemberProperty, parameterInfo);
 
                     if (property != null)
                     {
@@ -731,7 +731,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             property.PropertyType = parameterInfo.ParameterType;
             property.AttributeProvider = new ReflectionAttributeProvider(parameterInfo);
 
-            SetPropertySettingsFromAttributes(property, parameterInfo, parameterInfo.Name, parameterInfo.Member.DeclaringType, MemberSerialization.OptOut, out _);
+            this.SetPropertySettingsFromAttributes(property, parameterInfo, parameterInfo.Name, parameterInfo.Member.DeclaringType, MemberSerialization.OptOut, out _);
 
             property.Readable = false;
             property.Writable = true;
@@ -797,7 +797,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             }
 #endif
 
-            contract.Converter = ResolveContractConverter(contract.NonNullableUnderlyingType);
+            contract.Converter = this.ResolveContractConverter(contract.NonNullableUnderlyingType);
 
             // then see whether object is compatible with any of the built in converters
             contract.InternalConverter = JsonSerializer.GetMatchingConverter(BuiltInConverters, contract.NonNullableUnderlyingType);
@@ -805,18 +805,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             if (contract.IsInstantiable
                 && (ReflectionUtils.HasDefaultConstructor(contract.CreatedType, true) || contract.CreatedType.IsValueType()))
             {
-                contract.DefaultCreator = GetDefaultCreator(contract.CreatedType);
+                contract.DefaultCreator = this.GetDefaultCreator(contract.CreatedType);
 
                 contract.DefaultCreatorNonPublic = (!contract.CreatedType.IsValueType() &&
                                                     ReflectionUtils.GetDefaultConstructor(contract.CreatedType) == null);
             }
 
-            ResolveCallbackMethods(contract, contract.NonNullableUnderlyingType);
+            this.ResolveCallbackMethods(contract, contract.NonNullableUnderlyingType);
         }
 
         private void ResolveCallbackMethods(JsonContract contract, Type t)
         {
-            GetCallbackMethodsForType(
+            this.GetCallbackMethodsForType(
                 t,
                 out List<SerializationCallback> onSerializing,
                 out List<SerializationCallback> onSerialized,
@@ -858,7 +858,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             onDeserialized = null;
             onError = null;
 
-            foreach (Type baseType in GetClassHierarchyForType(type))
+            foreach (Type baseType in this.GetClassHierarchyForType(type))
             {
                 // while we allow more than one OnSerialized total, only one can be defined per class
                 MethodInfo currentOnSerializing = null;
@@ -995,7 +995,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         protected virtual JsonDictionaryContract CreateDictionaryContract(Type objectType)
         {
             JsonDictionaryContract contract = new JsonDictionaryContract(objectType);
-            InitializeContract(contract);
+            this.InitializeContract(contract);
 
             JsonContainerAttribute containerAttribute = JsonTypeReflector.GetAttribute<JsonContainerAttribute>(objectType);
             if (containerAttribute?.NamingStrategyType != null)
@@ -1005,10 +1005,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             }
             else
             {
-                contract.DictionaryKeyResolver = ResolveDictionaryKey;
+                contract.DictionaryKeyResolver = this.ResolveDictionaryKey;
             }
 
-            ConstructorInfo overrideConstructor = GetAttributeConstructor(contract.NonNullableUnderlyingType);
+            ConstructorInfo overrideConstructor = this.GetAttributeConstructor(contract.NonNullableUnderlyingType);
 
             if (overrideConstructor != null)
             {
@@ -1044,9 +1044,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         protected virtual JsonArrayContract CreateArrayContract(Type objectType)
         {
             JsonArrayContract contract = new JsonArrayContract(objectType);
-            InitializeContract(contract);
+            this.InitializeContract(contract);
 
-            ConstructorInfo overrideConstructor = GetAttributeConstructor(contract.NonNullableUnderlyingType);
+            ConstructorInfo overrideConstructor = this.GetAttributeConstructor(contract.NonNullableUnderlyingType);
 
             if (overrideConstructor != null)
             {
@@ -1082,7 +1082,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         protected virtual JsonPrimitiveContract CreatePrimitiveContract(Type objectType)
         {
             JsonPrimitiveContract contract = new JsonPrimitiveContract(objectType);
-            InitializeContract(contract);
+            this.InitializeContract(contract);
 
             return contract;
         }
@@ -1095,7 +1095,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         protected virtual JsonLinqContract CreateLinqContract(Type objectType)
         {
             JsonLinqContract contract = new JsonLinqContract(objectType);
-            InitializeContract(contract);
+            this.InitializeContract(contract);
 
             return contract;
         }
@@ -1159,7 +1159,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         protected virtual JsonStringContract CreateStringContract(Type objectType)
         {
             JsonStringContract contract = new JsonStringContract(objectType);
-            InitializeContract(contract);
+            this.InitializeContract(contract);
 
             return contract;
         }
@@ -1173,7 +1173,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             if (IsJsonPrimitiveType(objectType))
             {
-                return CreatePrimitiveContract(objectType);
+                return this.CreatePrimitiveContract(objectType);
             }
 
             Type t = ReflectionUtils.EnsureNotNullableType(objectType);
@@ -1181,17 +1181,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             if (containerAttribute is JsonObjectAttribute)
             {
-                return CreateObjectContract(objectType);
+                return this.CreateObjectContract(objectType);
             }
 
             if (containerAttribute is JsonArrayAttribute)
             {
-                return CreateArrayContract(objectType);
+                return this.CreateArrayContract(objectType);
             }
 
             if (containerAttribute is JsonDictionaryAttribute)
             {
-                return CreateDictionaryContract(objectType);
+                return this.CreateDictionaryContract(objectType);
             }
 
 #if HAVE_DATA_CONTRACTS
@@ -1205,22 +1205,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             if (t == typeof(JToken) || t.IsSubclassOf(typeof(JToken)))
             {
-                return CreateLinqContract(objectType);
+                return this.CreateLinqContract(objectType);
             }
 
             if (CollectionUtils.IsDictionaryType(t))
             {
-                return CreateDictionaryContract(objectType);
+                return this.CreateDictionaryContract(objectType);
             }
 
             if (typeof(IEnumerable).IsAssignableFrom(t))
             {
-                return CreateArrayContract(t);
+                return this.CreateArrayContract(t);
             }
 
             if (CanConvertToString(t))
             {
-                return CreateStringContract(objectType);
+                return this.CreateStringContract(objectType);
             }
 
 #if HAVE_BINARY_SERIALIZATION
@@ -1245,7 +1245,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             }
 #endif
 
-            return CreateObjectContract(objectType);
+            return this.CreateObjectContract(objectType);
         }
 
         internal static bool IsJsonPrimitiveType(Type t)
@@ -1350,19 +1350,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>Properties for the given <see cref="JsonContract"/>.</returns>
         protected virtual IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {
-            List<MemberInfo> members = GetSerializableMembers(type);
+            List<MemberInfo> members = this.GetSerializableMembers(type);
             if (members == null)
             {
                 throw new JsonSerializationException("Null collection of serializable members returned.");
             }
 
-            PropertyNameTable nameTable = GetNameTable();
+            PropertyNameTable nameTable = this.GetNameTable();
 
             JsonPropertyCollection properties = new JsonPropertyCollection(type);
 
             foreach (MemberInfo member in members)
             {
-                JsonProperty property = CreateProperty(member, memberSerialization);
+                JsonProperty property = this.CreateProperty(member, memberSerialization);
 
                 if (property != null)
                 {
@@ -1382,7 +1382,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         internal virtual PropertyNameTable GetNameTable()
         {
-            return _nameTable;
+            return this._nameTable;
         }
 
         /// <summary>
@@ -1396,7 +1396,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             IValueProvider valueProvider;
 
 #if !(PORTABLE40 || PORTABLE || DOTNET || NETSTANDARD2_0)
-            if (DynamicCodeGeneration)
+            if (this.DynamicCodeGeneration)
             {
                 valueProvider = new ReflectionValueProvider(member);
             }
@@ -1424,10 +1424,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             JsonProperty property = new JsonProperty();
             property.PropertyType = ReflectionUtils.GetMemberUnderlyingType(member);
             property.DeclaringType = member.DeclaringType;
-            property.ValueProvider = CreateMemberValueProvider(member);
+            property.ValueProvider = this.CreateMemberValueProvider(member);
             property.AttributeProvider = new ReflectionAttributeProvider(member);
 
-            SetPropertySettingsFromAttributes(property, member, member.Name, member.DeclaringType, memberSerialization, out bool allowNonPublicAccess);
+            this.SetPropertySettingsFromAttributes(property, member, member.Name, member.DeclaringType, memberSerialization, out bool allowNonPublicAccess);
 
             if (memberSerialization != MemberSerialization.Fields)
             {
@@ -1441,14 +1441,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 property.Writable = true;
             }
 
-            if (!IgnoreShouldSerializeMembers)
+            if (!this.IgnoreShouldSerializeMembers)
             {
-                property.ShouldSerialize = CreateShouldSerializeTest(member);
+                property.ShouldSerialize = this.CreateShouldSerializeTest(member);
             }
 
-            if (!IgnoreIsSpecifiedMembers)
+            if (!this.IgnoreIsSpecifiedMembers)
             {
-                SetIsSpecifiedActions(property, member, allowNonPublicAccess);
+                this.SetIsSpecifiedActions(property, member, allowNonPublicAccess);
             }
 
             return property;
@@ -1508,7 +1508,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             }
             else
             {
-                namingStrategy = NamingStrategy;
+                namingStrategy = this.NamingStrategy;
             }
 
             if (namingStrategy != null)
@@ -1517,7 +1517,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             }
             else
             {
-                property.PropertyName = ResolvePropertyName(mappedName);
+                property.PropertyName = this.ResolvePropertyName(mappedName);
             }
 
             property.UnderlyingName = name;
@@ -1608,7 +1608,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             allowNonPublicAccess = false;
 #pragma warning disable 618
-            if ((DefaultMembersSearchFlags & BindingFlags.NonPublic) == BindingFlags.NonPublic)
+            if ((this.DefaultMembersSearchFlags & BindingFlags.NonPublic) == BindingFlags.NonPublic)
             {
                 allowNonPublicAccess = true;
             }
@@ -1668,9 +1668,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>Resolved name of the property.</returns>
         protected virtual string ResolvePropertyName(string propertyName)
         {
-            if (NamingStrategy != null)
+            if (this.NamingStrategy != null)
             {
-                return NamingStrategy.GetPropertyName(propertyName, false);
+                return this.NamingStrategy.GetPropertyName(propertyName, false);
             }
 
             return propertyName;
@@ -1683,9 +1683,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>Resolved name of the extension data.</returns>
         protected virtual string ResolveExtensionDataName(string extensionDataName)
         {
-            if (NamingStrategy != null)
+            if (this.NamingStrategy != null)
             {
-                return NamingStrategy.GetExtensionDataName(extensionDataName);
+                return this.NamingStrategy.GetExtensionDataName(extensionDataName);
             }
 
             return extensionDataName;
@@ -1698,12 +1698,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>Resolved key of the dictionary.</returns>
         protected virtual string ResolveDictionaryKey(string dictionaryKey)
         {
-            if (NamingStrategy != null)
+            if (this.NamingStrategy != null)
             {
-                return NamingStrategy.GetDictionaryKey(dictionaryKey);
+                return this.NamingStrategy.GetDictionaryKey(dictionaryKey);
             }
 
-            return ResolvePropertyName(dictionaryKey);
+            return this.ResolvePropertyName(dictionaryKey);
         }
 
         /// <summary>
@@ -1715,7 +1715,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             // this is a new method rather than changing the visibility of ResolvePropertyName to avoid
             // a breaking change for anyone who has overidden the method
-            return ResolvePropertyName(propertyName);
+            return this.ResolvePropertyName(propertyName);
         }
     }
 }

@@ -66,7 +66,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public ExpressionValueProvider(MemberInfo memberInfo)
         {
             ValidationUtils.ArgumentNotNull(memberInfo, nameof(memberInfo));
-            _memberInfo = memberInfo;
+            this._memberInfo = memberInfo;
         }
 
         /// <summary>
@@ -78,9 +78,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             try
             {
-                if (_setter == null)
+                if (this._setter == null)
                 {
-                    _setter = ExpressionReflectionDelegateFactory.Instance.CreateSet<object>(_memberInfo);
+                    this._setter = ExpressionReflectionDelegateFactory.Instance.CreateSet<object>(this._memberInfo);
                 }
 
 #if DEBUG
@@ -88,22 +88,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 // add this check for unit tests
                 if (value == null)
                 {
-                    if (!ReflectionUtils.IsNullable(ReflectionUtils.GetMemberUnderlyingType(_memberInfo)))
+                    if (!ReflectionUtils.IsNullable(ReflectionUtils.GetMemberUnderlyingType(this._memberInfo)))
                     {
-                        throw new JsonSerializationException("Incompatible value. Cannot set {0} to null.".FormatWith(CultureInfo.InvariantCulture, _memberInfo));
+                        throw new JsonSerializationException("Incompatible value. Cannot set {0} to null.".FormatWith(CultureInfo.InvariantCulture, this._memberInfo));
                     }
                 }
-                else if (!ReflectionUtils.GetMemberUnderlyingType(_memberInfo).IsAssignableFrom(value.GetType()))
+                else if (!ReflectionUtils.GetMemberUnderlyingType(this._memberInfo).IsAssignableFrom(value.GetType()))
                 {
-                    throw new JsonSerializationException("Incompatible value. Cannot set {0} to type {1}.".FormatWith(CultureInfo.InvariantCulture, _memberInfo, value.GetType()));
+                    throw new JsonSerializationException("Incompatible value. Cannot set {0} to type {1}.".FormatWith(CultureInfo.InvariantCulture, this._memberInfo, value.GetType()));
                 }
 #endif
 
-                _setter(target, value);
+                this._setter(target, value);
             }
             catch (Exception ex)
             {
-                throw new JsonSerializationException("Error setting value to '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, _memberInfo.Name, target.GetType()), ex);
+                throw new JsonSerializationException("Error setting value to '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, this._memberInfo.Name, target.GetType()), ex);
             }
         }
 
@@ -116,16 +116,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             try
             {
-                if (_getter == null)
+                if (this._getter == null)
                 {
-                    _getter = ExpressionReflectionDelegateFactory.Instance.CreateGet<object>(_memberInfo);
+                    this._getter = ExpressionReflectionDelegateFactory.Instance.CreateGet<object>(this._memberInfo);
                 }
 
-                return _getter(target);
+                return this._getter(target);
             }
             catch (Exception ex)
             {
-                throw new JsonSerializationException("Error getting value from '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, _memberInfo.Name, target.GetType()), ex);
+                throw new JsonSerializationException("Error getting value from '{0}' on '{1}'.".FormatWith(CultureInfo.InvariantCulture, this._memberInfo.Name, target.GetType()), ex);
             }
         }
     }

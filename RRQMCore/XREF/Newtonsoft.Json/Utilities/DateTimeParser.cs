@@ -104,10 +104,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public bool Parse(char[] text, int startIndex, int length)
         {
-            _text = text;
-            _end = startIndex + length;
+            this._text = text;
+            this._end = startIndex + length;
 
-            if (ParseDate(startIndex) && ParseChar(Lzyyyy_MM_dd + startIndex, 'T') && ParseTimeAndZoneAndWhitespace(Lzyyyy_MM_ddT + startIndex))
+            if (this.ParseDate(startIndex) && this.ParseChar(Lzyyyy_MM_dd + startIndex, 'T') && this.ParseTimeAndZoneAndWhitespace(Lzyyyy_MM_ddT + startIndex))
             {
                 return true;
             }
@@ -117,53 +117,53 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         private bool ParseDate(int start)
         {
-            return (Parse4Digit(start, out Year)
-                    && 1 <= Year
-                    && ParseChar(start + Lzyyyy, '-')
-                    && Parse2Digit(start + Lzyyyy_, out Month)
-                    && 1 <= Month
-                    && Month <= 12
-                    && ParseChar(start + Lzyyyy_MM, '-')
-                    && Parse2Digit(start + Lzyyyy_MM_, out Day)
-                    && 1 <= Day
-                    && Day <= DateTime.DaysInMonth(Year, Month));
+            return (this.Parse4Digit(start, out this.Year)
+                    && 1 <= this.Year
+                    && this.ParseChar(start + Lzyyyy, '-')
+                    && this.Parse2Digit(start + Lzyyyy_, out this.Month)
+                    && 1 <= this.Month
+                    && this.Month <= 12
+                    && this.ParseChar(start + Lzyyyy_MM, '-')
+                    && this.Parse2Digit(start + Lzyyyy_MM_, out this.Day)
+                    && 1 <= this.Day
+                    && this.Day <= DateTime.DaysInMonth(this.Year, this.Month));
         }
 
         private bool ParseTimeAndZoneAndWhitespace(int start)
         {
-            return (ParseTime(ref start) && ParseZone(start));
+            return (this.ParseTime(ref start) && this.ParseZone(start));
         }
 
         private bool ParseTime(ref int start)
         {
-            if (!(Parse2Digit(start, out Hour)
-                  && Hour <= 24
-                  && ParseChar(start + LzHH, ':')
-                  && Parse2Digit(start + LzHH_, out Minute)
-                  && Minute < 60
-                  && ParseChar(start + LzHH_mm, ':')
-                  && Parse2Digit(start + LzHH_mm_, out Second)
-                  && Second < 60
-                  && (Hour != 24 || (Minute == 0 && Second == 0)))) // hour can be 24 if minute/second is zero)
+            if (!(this.Parse2Digit(start, out this.Hour)
+                  && this.Hour <= 24
+                  && this.ParseChar(start + LzHH, ':')
+                  && this.Parse2Digit(start + LzHH_, out this.Minute)
+                  && this.Minute < 60
+                  && this.ParseChar(start + LzHH_mm, ':')
+                  && this.Parse2Digit(start + LzHH_mm_, out this.Second)
+                  && this.Second < 60
+                  && (this.Hour != 24 || (this.Minute == 0 && this.Second == 0)))) // hour can be 24 if minute/second is zero)
             {
                 return false;
             }
 
             start += LzHH_mm_ss;
-            if (ParseChar(start, '.'))
+            if (this.ParseChar(start, '.'))
             {
-                Fraction = 0;
+                this.Fraction = 0;
                 int numberOfDigits = 0;
 
-                while (++start < _end && numberOfDigits < MaxFractionDigits)
+                while (++start < this._end && numberOfDigits < MaxFractionDigits)
                 {
-                    int digit = _text[start] - '0';
+                    int digit = this._text[start] - '0';
                     if (digit < 0 || digit > 9)
                     {
                         break;
                     }
 
-                    Fraction = (Fraction * 10) + digit;
+                    this.Fraction = (this.Fraction * 10) + digit;
 
                     numberOfDigits++;
                 }
@@ -175,10 +175,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                         return false;
                     }
 
-                    Fraction *= Power10[MaxFractionDigits - numberOfDigits];
+                    this.Fraction *= Power10[MaxFractionDigits - numberOfDigits];
                 }
 
-                if (Hour == 24 && Fraction != 0)
+                if (this.Hour == 24 && this.Fraction != 0)
                 {
                     return false;
                 }
@@ -188,52 +188,52 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         private bool ParseZone(int start)
         {
-            if (start < _end)
+            if (start < this._end)
             {
-                char ch = _text[start];
+                char ch = this._text[start];
                 if (ch == 'Z' || ch == 'z')
                 {
-                    Zone = ParserTimeZone.Utc;
+                    this.Zone = ParserTimeZone.Utc;
                     start++;
                 }
                 else
                 {
-                    if (start + 2 < _end
-                        && Parse2Digit(start + Lz_, out ZoneHour)
-                        && ZoneHour <= 99)
+                    if (start + 2 < this._end
+                        && this.Parse2Digit(start + Lz_, out this.ZoneHour)
+                        && this.ZoneHour <= 99)
                     {
                         switch (ch)
                         {
                             case '-':
-                                Zone = ParserTimeZone.LocalWestOfUtc;
+                                this.Zone = ParserTimeZone.LocalWestOfUtc;
                                 start += Lz_zz;
                                 break;
 
                             case '+':
-                                Zone = ParserTimeZone.LocalEastOfUtc;
+                                this.Zone = ParserTimeZone.LocalEastOfUtc;
                                 start += Lz_zz;
                                 break;
                         }
                     }
 
-                    if (start < _end)
+                    if (start < this._end)
                     {
-                        if (ParseChar(start, ':'))
+                        if (this.ParseChar(start, ':'))
                         {
                             start += 1;
 
-                            if (start + 1 < _end
-                                && Parse2Digit(start, out ZoneMinute)
-                                && ZoneMinute <= 99)
+                            if (start + 1 < this._end
+                                && this.Parse2Digit(start, out this.ZoneMinute)
+                                && this.ZoneMinute <= 99)
                             {
                                 start += 2;
                             }
                         }
                         else
                         {
-                            if (start + 1 < _end
-                                && Parse2Digit(start, out ZoneMinute)
-                                && ZoneMinute <= 99)
+                            if (start + 1 < this._end
+                                && this.Parse2Digit(start, out this.ZoneMinute)
+                                && this.ZoneMinute <= 99)
                             {
                                 start += 2;
                             }
@@ -242,17 +242,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                 }
             }
 
-            return (start == _end);
+            return (start == this._end);
         }
 
         private bool Parse4Digit(int start, out int num)
         {
-            if (start + 3 < _end)
+            if (start + 3 < this._end)
             {
-                int digit1 = _text[start] - '0';
-                int digit2 = _text[start + 1] - '0';
-                int digit3 = _text[start + 2] - '0';
-                int digit4 = _text[start + 3] - '0';
+                int digit1 = this._text[start] - '0';
+                int digit2 = this._text[start + 1] - '0';
+                int digit3 = this._text[start + 2] - '0';
+                int digit4 = this._text[start + 3] - '0';
                 if (0 <= digit1 && digit1 < 10
                     && 0 <= digit2 && digit2 < 10
                     && 0 <= digit3 && digit3 < 10
@@ -268,10 +268,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         private bool Parse2Digit(int start, out int num)
         {
-            if (start + 1 < _end)
+            if (start + 1 < this._end)
             {
-                int digit1 = _text[start] - '0';
-                int digit2 = _text[start + 1] - '0';
+                int digit1 = this._text[start] - '0';
+                int digit2 = this._text[start + 1] - '0';
                 if (0 <= digit1 && digit1 < 10
                     && 0 <= digit2 && digit2 < 10)
                 {
@@ -285,7 +285,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         private bool ParseChar(int start, char ch)
         {
-            return (start < _end && _text[start] == ch);
+            return (start < this._end && this._text[start] == ch);
         }
     }
 }

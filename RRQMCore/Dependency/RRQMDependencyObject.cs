@@ -36,7 +36,7 @@ namespace RRQMCore.Dependency
         /// <returns></returns>
         public object GetValue(DependencyProperty dependencyProperty)
         {
-            if (dp.TryGetValue(dependencyProperty, out object value))
+            if (this.dp.TryGetValue(dependencyProperty, out object value))
             {
                 return value;
             }
@@ -65,7 +65,7 @@ namespace RRQMCore.Dependency
         public RRQMDependencyObject SetValue(DependencyProperty dependencyProperty, object value)
         {
             dependencyProperty.DataValidation(value);
-            dp.AddOrUpdate(dependencyProperty, value, (DependencyProperty dp, object v) =>
+            this.dp.AddOrUpdate(dependencyProperty, value, (DependencyProperty dp, object v) =>
             {
                 return value;
             });

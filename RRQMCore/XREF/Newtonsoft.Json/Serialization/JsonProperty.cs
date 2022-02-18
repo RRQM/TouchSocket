@@ -68,11 +68,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value>The name of the property.</value>
         public string PropertyName
         {
-            get => _propertyName;
+            get => this._propertyName;
             set
             {
-                _propertyName = value;
-                _skipPropertyNameEscape = !JavaScriptUtils.ShouldEscapeJavaScriptString(_propertyName, JavaScriptUtils.HtmlCharEscapeFlags);
+                this._propertyName = value;
+                this._skipPropertyNameEscape = !JavaScriptUtils.ShouldEscapeJavaScriptString(this._propertyName, JavaScriptUtils.HtmlCharEscapeFlags);
             }
         }
 
@@ -112,13 +112,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value>The type of the property.</value>
         public Type PropertyType
         {
-            get => _propertyType;
+            get => this._propertyType;
             set
             {
-                if (_propertyType != value)
+                if (this._propertyType != value)
                 {
-                    _propertyType = value;
-                    _hasGeneratedDefaultValue = false;
+                    this._propertyType = value;
+                    this._hasGeneratedDefaultValue = false;
                 }
             }
         }
@@ -137,8 +137,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         [Obsolete("MemberConverter is obsolete. Use Converter instead.")]
         public JsonConverter MemberConverter
         {
-            get => Converter;
-            set => Converter = value;
+            get => this.Converter;
+            set => this.Converter = value;
         }
 
         /// <summary>
@@ -173,34 +173,34 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (!_hasExplicitDefaultValue)
+                if (!this._hasExplicitDefaultValue)
                 {
                     return null;
                 }
 
-                return _defaultValue;
+                return this._defaultValue;
             }
             set
             {
-                _hasExplicitDefaultValue = true;
-                _defaultValue = value;
+                this._hasExplicitDefaultValue = true;
+                this._defaultValue = value;
             }
         }
 
         internal object GetResolvedDefaultValue()
         {
-            if (_propertyType == null)
+            if (this._propertyType == null)
             {
                 return null;
             }
 
-            if (!_hasExplicitDefaultValue && !_hasGeneratedDefaultValue)
+            if (!this._hasExplicitDefaultValue && !this._hasGeneratedDefaultValue)
             {
-                _defaultValue = ReflectionUtils.GetDefaultValue(PropertyType);
-                _hasGeneratedDefaultValue = true;
+                this._defaultValue = ReflectionUtils.GetDefaultValue(this.PropertyType);
+                this._hasGeneratedDefaultValue = true;
             }
 
-            return _defaultValue;
+            return this._defaultValue;
         }
 
         /// <summary>
@@ -209,8 +209,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value>A value indicating whether this <see cref="JsonProperty"/> is required.</value>
         public Required Required
         {
-            get => _required ?? Required.Default;
-            set => _required = value;
+            get => this._required ?? Required.Default;
+            set => this._required = value;
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// </returns>
         public override string ToString()
         {
-            return PropertyName;
+            return this.PropertyName;
         }
 
         /// <summary>
@@ -312,13 +312,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         internal void WritePropertyName(JsonWriter writer)
         {
-            if (_skipPropertyNameEscape)
+            if (this._skipPropertyNameEscape)
             {
-                writer.WritePropertyName(PropertyName, false);
+                writer.WritePropertyName(this.PropertyName, false);
             }
             else
             {
-                writer.WritePropertyName(PropertyName);
+                writer.WritePropertyName(this.PropertyName);
             }
         }
     }

@@ -73,7 +73,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
         /// </summary>
         public StringEnumConverter()
         {
-            AllowIntegerValues = true;
+            this.AllowIntegerValues = true;
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
         public StringEnumConverter(bool camelCaseText)
             : this()
         {
-            CamelCaseText = camelCaseText;
+            this.CamelCaseText = camelCaseText;
         }
 
         /// <summary>
@@ -102,9 +102,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
 
             Enum e = (Enum)value;
 
-            if (!EnumUtils.TryToString(e.GetType(), value, CamelCaseText, out string enumName))
+            if (!EnumUtils.TryToString(e.GetType(), value, this.CamelCaseText, out string enumName))
             {
-                if (!AllowIntegerValues)
+                if (!this.AllowIntegerValues)
                 {
                     throw JsonSerializationException.Create(null, writer.ContainerPath, "Integer value {0} is not allowed.".FormatWith(CultureInfo.InvariantCulture, e.ToString("D")), null);
                 }
@@ -152,12 +152,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
                         return null;
                     }
 
-                    return EnumUtils.ParseEnum(t, enumText, !AllowIntegerValues);
+                    return EnumUtils.ParseEnum(t, enumText, !this.AllowIntegerValues);
                 }
 
                 if (reader.TokenType == JsonToken.Integer)
                 {
-                    if (!AllowIntegerValues)
+                    if (!this.AllowIntegerValues)
                     {
                         throw JsonSerializationException.Create(reader, "Integer value {0} is not allowed.".FormatWith(CultureInfo.InvariantCulture, reader.Value));
                     }

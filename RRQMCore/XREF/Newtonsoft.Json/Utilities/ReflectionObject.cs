@@ -68,25 +68,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         private ReflectionObject(ObjectConstructor<object> creator)
         {
-            Members = new Dictionary<string, ReflectionMember>();
-            Creator = creator;
+            this.Members = new Dictionary<string, ReflectionMember>();
+            this.Creator = creator;
         }
 
         public object GetValue(object target, string member)
         {
-            Serialization.Func<object, object> getter = Members[member].Getter;
+            Serialization.Func<object, object> getter = this.Members[member].Getter;
             return getter(target);
         }
 
         public void SetValue(object target, string member, object value)
         {
-            Serialization.Action<object, object> setter = Members[member].Setter;
+            Serialization.Action<object, object> setter = this.Members[member].Setter;
             setter(target, value);
         }
 
         public Type GetType(string member)
         {
-            return Members[member].MemberType;
+            return this.Members[member].MemberType;
         }
 
         public static ReflectionObject Create(Type t, params string[] memberNames)

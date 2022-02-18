@@ -59,12 +59,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                     throw new InvalidOperationException("Could not create getter for {0}. ByRef return values are not supported.".FormatWith(CultureInfo.InvariantCulture, propertyInfo));
                 }
 
-                return CreateGet<T>(propertyInfo);
+                return this.CreateGet<T>(propertyInfo);
             }
 
             if (memberInfo is FieldInfo fieldInfo)
             {
-                return CreateGet<T>(fieldInfo);
+                return this.CreateGet<T>(fieldInfo);
             }
 
             throw new Exception("Could not create getter for {0}.".FormatWith(CultureInfo.InvariantCulture, memberInfo));
@@ -74,12 +74,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             if (memberInfo is PropertyInfo propertyInfo)
             {
-                return CreateSet<T>(propertyInfo);
+                return this.CreateSet<T>(propertyInfo);
             }
 
             if (memberInfo is FieldInfo fieldInfo)
             {
-                return CreateSet<T>(fieldInfo);
+                return this.CreateSet<T>(fieldInfo);
             }
 
             throw new Exception("Could not create setter for {0}.".FormatWith(CultureInfo.InvariantCulture, memberInfo));

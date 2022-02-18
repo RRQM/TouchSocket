@@ -80,12 +80,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_creatorParameters == null)
+                if (this._creatorParameters == null)
                 {
-                    _creatorParameters = new JsonPropertyCollection(UnderlyingType);
+                    this._creatorParameters = new JsonPropertyCollection(this.UnderlyingType);
                 }
 
-                return _creatorParameters;
+                return this._creatorParameters;
             }
         }
 
@@ -96,14 +96,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value>The function used to create the object.</value>
         public ObjectConstructor<object> OverrideCreator
         {
-            get => _overrideCreator;
-            set => _overrideCreator = value;
+            get => this._overrideCreator;
+            set => this._overrideCreator = value;
         }
 
         internal ObjectConstructor<object> ParameterizedCreator
         {
-            get => _parameterizedCreator;
-            set => _parameterizedCreator = value;
+            get => this._parameterizedCreator;
+            set => this._parameterizedCreator = value;
         }
 
         /// <summary>
@@ -121,11 +121,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// </summary>
         public Type ExtensionDataValueType
         {
-            get => _extensionDataValueType;
+            get => this._extensionDataValueType;
             set
             {
-                _extensionDataValueType = value;
-                ExtensionDataIsJToken = (value != null && typeof(JToken).IsAssignableFrom(value));
+                this._extensionDataValueType = value;
+                this.ExtensionDataIsJToken = (value != null && typeof(JToken).IsAssignableFrom(value));
             }
         }
 
@@ -146,28 +146,28 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_hasRequiredOrDefaultValueProperties == null)
+                if (this._hasRequiredOrDefaultValueProperties == null)
                 {
-                    _hasRequiredOrDefaultValueProperties = false;
+                    this._hasRequiredOrDefaultValueProperties = false;
 
-                    if (ItemRequired.GetValueOrDefault(Required.Default) != Required.Default)
+                    if (this.ItemRequired.GetValueOrDefault(Required.Default) != Required.Default)
                     {
-                        _hasRequiredOrDefaultValueProperties = true;
+                        this._hasRequiredOrDefaultValueProperties = true;
                     }
                     else
                     {
-                        foreach (JsonProperty property in Properties)
+                        foreach (JsonProperty property in this.Properties)
                         {
                             if (property.Required != Required.Default || (property.DefaultValueHandling & DefaultValueHandling.Populate) == DefaultValueHandling.Populate)
                             {
-                                _hasRequiredOrDefaultValueProperties = true;
+                                this._hasRequiredOrDefaultValueProperties = true;
                                 break;
                             }
                         }
                     }
                 }
 
-                return _hasRequiredOrDefaultValueProperties.GetValueOrDefault();
+                return this._hasRequiredOrDefaultValueProperties.GetValueOrDefault();
             }
         }
 
@@ -178,9 +178,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public JsonObjectContract(Type underlyingType)
             : base(underlyingType)
         {
-            ContractType = JsonContractType.Object;
+            this.ContractType = JsonContractType.Object;
 
-            Properties = new JsonPropertyCollection(UnderlyingType);
+            this.Properties = new JsonPropertyCollection(this.UnderlyingType);
         }
 
 #if HAVE_BINARY_FORMATTER

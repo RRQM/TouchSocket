@@ -65,18 +65,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public object ResolveReference(object context, string reference)
         {
-            GetMappings(context).TryGetByFirst(reference, out object value);
+            this.GetMappings(context).TryGetByFirst(reference, out object value);
             return value;
         }
 
         public string GetReference(object context, object value)
         {
-            BidirectionalDictionary<string, object> mappings = GetMappings(context);
+            BidirectionalDictionary<string, object> mappings = this.GetMappings(context);
 
             if (!mappings.TryGetBySecond(value, out string reference))
             {
-                _referenceCount++;
-                reference = _referenceCount.ToString(CultureInfo.InvariantCulture);
+                this._referenceCount++;
+                reference = this._referenceCount.ToString(CultureInfo.InvariantCulture);
                 mappings.Set(reference, value);
             }
 
@@ -85,12 +85,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public void AddReference(object context, string reference, object value)
         {
-            GetMappings(context).Set(reference, value);
+            this.GetMappings(context).Set(reference, value);
         }
 
         public bool IsReferenced(object context, object value)
         {
-            return GetMappings(context).TryGetBySecond(value, out _);
+            return this.GetMappings(context).TryGetBySecond(value, out _);
         }
     }
 }

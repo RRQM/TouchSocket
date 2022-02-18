@@ -46,13 +46,13 @@ namespace RRQMSocket
 
                 if (RRQMSocketTools.IsIPv4(hostName) && RRQMSocketTools.IsIPv4(hostName))
                 {
-                    Analysis(hostName, port);
+                    this.Analysis(hostName, port);
                 }
                 else
                 {
                     if (HostNameToIP(hostName, out IPAddress[] addresses))
                     {
-                        Analysis(addresses[0].ToString(), port);
+                        this.Analysis(addresses[0].ToString(), port);
                     }
                 }
             }
@@ -60,7 +60,7 @@ namespace RRQMSocket
             {
                 int r = host.LastIndexOf(":");
                 string ip = host.Substring(0, r);
-                Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
+                this.Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
             }
         }
 
@@ -113,10 +113,7 @@ namespace RRQMSocket
         /// <summary>
         /// 协议名
         /// </summary>
-        public string Scheme
-        {
-            get { return scheme; }
-        }
+        public string Scheme => this.scheme;
 
         /// <summary>
         /// 从IPAddress和端口号
@@ -161,7 +158,7 @@ namespace RRQMSocket
         /// <returns></returns>
         public override string ToString()
         {
-            return EndPoint == null ? null : EndPoint.ToString();
+            return this.EndPoint == null ? null : this.EndPoint.ToString();
         }
     }
 }

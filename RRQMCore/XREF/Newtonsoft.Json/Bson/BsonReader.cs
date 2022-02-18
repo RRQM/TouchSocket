@@ -94,7 +94,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
             public ContainerContext(BsonType type)
             {
-                Type = type;
+                this.Type = type;
             }
         }
 
@@ -107,8 +107,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         [Obsolete("JsonNet35BinaryCompatibility will be removed in a future version of Json.NET.")]
         public bool JsonNet35BinaryCompatibility
         {
-            get => _jsonNet35BinaryCompatibility;
-            set => _jsonNet35BinaryCompatibility = value;
+            get => this._jsonNet35BinaryCompatibility;
+            set => this._jsonNet35BinaryCompatibility = value;
         }
 
         /// <summary>
@@ -119,8 +119,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         /// </value>
         public bool ReadRootValueAsArray
         {
-            get => _readRootValueAsArray;
-            set => _readRootValueAsArray = value;
+            get => this._readRootValueAsArray;
+            set => this._readRootValueAsArray = value;
         }
 
         /// <summary>
@@ -129,8 +129,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         /// <value>The <see cref="DateTimeKind" /> used when reading <see cref="DateTime"/> values from BSON.</value>
         public DateTimeKind DateTimeKindHandling
         {
-            get => _dateTimeKindHandling;
-            set => _dateTimeKindHandling = value;
+            get => this._dateTimeKindHandling;
+            set => this._dateTimeKindHandling = value;
         }
 
         /// <summary>
@@ -160,10 +160,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public BsonReader(Stream stream, bool readRootValueAsArray, DateTimeKind dateTimeKindHandling)
         {
             ValidationUtils.ArgumentNotNull(stream, nameof(stream));
-            _reader = new BinaryReader(stream);
-            _stack = new List<ContainerContext>();
-            _readRootValueAsArray = readRootValueAsArray;
-            _dateTimeKindHandling = dateTimeKindHandling;
+            this._reader = new BinaryReader(stream);
+            this._stack = new List<ContainerContext>();
+            this._readRootValueAsArray = readRootValueAsArray;
+            this._dateTimeKindHandling = dateTimeKindHandling;
         }
 
         /// <summary>
@@ -175,16 +175,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public BsonReader(BinaryReader reader, bool readRootValueAsArray, DateTimeKind dateTimeKindHandling)
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
-            _reader = reader;
-            _stack = new List<ContainerContext>();
-            _readRootValueAsArray = readRootValueAsArray;
-            _dateTimeKindHandling = dateTimeKindHandling;
+            this._reader = reader;
+            this._stack = new List<ContainerContext>();
+            this._readRootValueAsArray = readRootValueAsArray;
+            this._dateTimeKindHandling = dateTimeKindHandling;
         }
 
         private string ReadElement()
         {
-            _currentElementType = ReadType();
-            string elementName = ReadString();
+            this._currentElementType = this.ReadType();
+            string elementName = this.ReadString();
             return elementName;
         }
 
@@ -200,16 +200,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             {
                 bool success;
 
-                switch (_bsonReaderState)
+                switch (this._bsonReaderState)
                 {
                     case BsonReaderState.Normal:
-                        success = ReadNormal();
+                        success = this.ReadNormal();
                         break;
 
                     case BsonReaderState.ReferenceStart:
                     case BsonReaderState.ReferenceRef:
                     case BsonReaderState.ReferenceId:
-                        success = ReadReference();
+                        success = this.ReadReference();
                         break;
 
                     case BsonReaderState.CodeWScopeStart:
@@ -217,16 +217,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     case BsonReaderState.CodeWScopeScope:
                     case BsonReaderState.CodeWScopeScopeObject:
                     case BsonReaderState.CodeWScopeScopeEnd:
-                        success = ReadCodeWScope();
+                        success = this.ReadCodeWScope();
                         break;
 
                     default:
-                        throw JsonReaderException.Create(this, "Unexpected state: {0}".FormatWith(CultureInfo.InvariantCulture, _bsonReaderState));
+                        throw JsonReaderException.Create(this, "Unexpected state: {0}".FormatWith(CultureInfo.InvariantCulture, this._bsonReaderState));
                 }
 
                 if (!success)
                 {
-                    SetToken(JsonToken.None);
+                    this.SetToken(JsonToken.None);
                     return false;
                 }
 
@@ -234,7 +234,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             }
             catch (EndOfStreamException)
             {
-                SetToken(JsonToken.None);
+                this.SetToken(JsonToken.None);
                 return false;
             }
         }
@@ -247,62 +247,62 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             base.Close();
 
-            if (CloseInput)
+            if (this.CloseInput)
             {
 #if HAVE_STREAM_READER_WRITER_CLOSE
                 _reader?.Close();
 #else
-                _reader?.Dispose();
+                this._reader?.Dispose();
 #endif
             }
         }
 
         private bool ReadCodeWScope()
         {
-            switch (_bsonReaderState)
+            switch (this._bsonReaderState)
             {
                 case BsonReaderState.CodeWScopeStart:
-                    SetToken(JsonToken.PropertyName, "$code");
-                    _bsonReaderState = BsonReaderState.CodeWScopeCode;
+                    this.SetToken(JsonToken.PropertyName, "$code");
+                    this._bsonReaderState = BsonReaderState.CodeWScopeCode;
                     return true;
 
                 case BsonReaderState.CodeWScopeCode:
                     // total CodeWScope size - not used
-                    ReadInt32();
+                    this.ReadInt32();
 
-                    SetToken(JsonToken.String, ReadLengthString());
-                    _bsonReaderState = BsonReaderState.CodeWScopeScope;
+                    this.SetToken(JsonToken.String, this.ReadLengthString());
+                    this._bsonReaderState = BsonReaderState.CodeWScopeScope;
                     return true;
 
                 case BsonReaderState.CodeWScopeScope:
-                    if (CurrentState == State.PostValue)
+                    if (this.CurrentState == State.PostValue)
                     {
-                        SetToken(JsonToken.PropertyName, "$scope");
+                        this.SetToken(JsonToken.PropertyName, "$scope");
                         return true;
                     }
                     else
                     {
-                        SetToken(JsonToken.StartObject);
-                        _bsonReaderState = BsonReaderState.CodeWScopeScopeObject;
+                        this.SetToken(JsonToken.StartObject);
+                        this._bsonReaderState = BsonReaderState.CodeWScopeScopeObject;
 
                         ContainerContext newContext = new ContainerContext(BsonType.Object);
-                        PushContext(newContext);
-                        newContext.Length = ReadInt32();
+                        this.PushContext(newContext);
+                        newContext.Length = this.ReadInt32();
 
                         return true;
                     }
                 case BsonReaderState.CodeWScopeScopeObject:
-                    bool result = ReadNormal();
-                    if (result && TokenType == JsonToken.EndObject)
+                    bool result = this.ReadNormal();
+                    if (result && this.TokenType == JsonToken.EndObject)
                     {
-                        _bsonReaderState = BsonReaderState.CodeWScopeScopeEnd;
+                        this._bsonReaderState = BsonReaderState.CodeWScopeScopeEnd;
                     }
 
                     return result;
 
                 case BsonReaderState.CodeWScopeScopeEnd:
-                    SetToken(JsonToken.EndObject);
-                    _bsonReaderState = BsonReaderState.Normal;
+                    this.SetToken(JsonToken.EndObject);
+                    this._bsonReaderState = BsonReaderState.Normal;
                     return true;
 
                 default:
@@ -312,68 +312,68 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         private bool ReadReference()
         {
-            switch (CurrentState)
+            switch (this.CurrentState)
             {
                 case State.ObjectStart:
                     {
-                        SetToken(JsonToken.PropertyName, JsonTypeReflector.RefPropertyName);
-                        _bsonReaderState = BsonReaderState.ReferenceRef;
+                        this.SetToken(JsonToken.PropertyName, JsonTypeReflector.RefPropertyName);
+                        this._bsonReaderState = BsonReaderState.ReferenceRef;
                         return true;
                     }
                 case State.Property:
                     {
-                        if (_bsonReaderState == BsonReaderState.ReferenceRef)
+                        if (this._bsonReaderState == BsonReaderState.ReferenceRef)
                         {
-                            SetToken(JsonToken.String, ReadLengthString());
+                            this.SetToken(JsonToken.String, this.ReadLengthString());
                             return true;
                         }
-                        else if (_bsonReaderState == BsonReaderState.ReferenceId)
+                        else if (this._bsonReaderState == BsonReaderState.ReferenceId)
                         {
-                            SetToken(JsonToken.Bytes, ReadBytes(12));
+                            this.SetToken(JsonToken.Bytes, this.ReadBytes(12));
                             return true;
                         }
                         else
                         {
-                            throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + _bsonReaderState);
+                            throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + this._bsonReaderState);
                         }
                     }
                 case State.PostValue:
                     {
-                        if (_bsonReaderState == BsonReaderState.ReferenceRef)
+                        if (this._bsonReaderState == BsonReaderState.ReferenceRef)
                         {
-                            SetToken(JsonToken.PropertyName, JsonTypeReflector.IdPropertyName);
-                            _bsonReaderState = BsonReaderState.ReferenceId;
+                            this.SetToken(JsonToken.PropertyName, JsonTypeReflector.IdPropertyName);
+                            this._bsonReaderState = BsonReaderState.ReferenceId;
                             return true;
                         }
-                        else if (_bsonReaderState == BsonReaderState.ReferenceId)
+                        else if (this._bsonReaderState == BsonReaderState.ReferenceId)
                         {
-                            SetToken(JsonToken.EndObject);
-                            _bsonReaderState = BsonReaderState.Normal;
+                            this.SetToken(JsonToken.EndObject);
+                            this._bsonReaderState = BsonReaderState.Normal;
                             return true;
                         }
                         else
                         {
-                            throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + _bsonReaderState);
+                            throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + this._bsonReaderState);
                         }
                     }
                 default:
-                    throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + CurrentState);
+                    throw JsonReaderException.Create(this, "Unexpected state when reading BSON reference: " + this.CurrentState);
             }
         }
 
         private bool ReadNormal()
         {
-            switch (CurrentState)
+            switch (this.CurrentState)
             {
                 case State.Start:
                     {
-                        JsonToken token = (!_readRootValueAsArray) ? JsonToken.StartObject : JsonToken.StartArray;
-                        BsonType type = (!_readRootValueAsArray) ? BsonType.Object : BsonType.Array;
+                        JsonToken token = (!this._readRootValueAsArray) ? JsonToken.StartObject : JsonToken.StartArray;
+                        BsonType type = (!this._readRootValueAsArray) ? BsonType.Object : BsonType.Array;
 
-                        SetToken(token);
+                        this.SetToken(token);
                         ContainerContext newContext = new ContainerContext(type);
-                        PushContext(newContext);
-                        newContext.Length = ReadInt32();
+                        this.PushContext(newContext);
+                        newContext.Length = this.ReadInt32();
                         return true;
                     }
                 case State.Complete:
@@ -382,13 +382,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
                 case State.Property:
                     {
-                        ReadType(_currentElementType);
+                        this.ReadType(this._currentElementType);
                         return true;
                     }
                 case State.ObjectStart:
                 case State.ArrayStart:
                 case State.PostValue:
-                    ContainerContext context = _currentContext;
+                    ContainerContext context = this._currentContext;
                     if (context == null)
                     {
                         return false;
@@ -400,31 +400,31 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     {
                         if (context.Type == BsonType.Array)
                         {
-                            ReadElement();
-                            ReadType(_currentElementType);
+                            this.ReadElement();
+                            this.ReadType(this._currentElementType);
                             return true;
                         }
                         else
                         {
-                            SetToken(JsonToken.PropertyName, ReadElement());
+                            this.SetToken(JsonToken.PropertyName, this.ReadElement());
                             return true;
                         }
                     }
                     else if (context.Position == lengthMinusEnd)
                     {
-                        if (ReadByte() != 0)
+                        if (this.ReadByte() != 0)
                         {
                             throw JsonReaderException.Create(this, "Unexpected end of object byte value.");
                         }
 
-                        PopContext();
-                        if (_currentContext != null)
+                        this.PopContext();
+                        if (this._currentContext != null)
                         {
-                            MovePosition(context.Length);
+                            this.MovePosition(context.Length);
                         }
 
                         JsonToken endToken = (context.Type == BsonType.Object) ? JsonToken.EndObject : JsonToken.EndArray;
-                        SetToken(endToken);
+                        this.SetToken(endToken);
                         return true;
                     }
                     else
@@ -452,27 +452,27 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         private void PopContext()
         {
-            _stack.RemoveAt(_stack.Count - 1);
-            if (_stack.Count == 0)
+            this._stack.RemoveAt(this._stack.Count - 1);
+            if (this._stack.Count == 0)
             {
-                _currentContext = null;
+                this._currentContext = null;
             }
             else
             {
-                _currentContext = _stack[_stack.Count - 1];
+                this._currentContext = this._stack[this._stack.Count - 1];
             }
         }
 
         private void PushContext(ContainerContext newContext)
         {
-            _stack.Add(newContext);
-            _currentContext = newContext;
+            this._stack.Add(newContext);
+            this._currentContext = newContext;
         }
 
         private byte ReadByte()
         {
-            MovePosition(1);
-            return _reader.ReadByte();
+            this.MovePosition(1);
+            return this._reader.ReadByte();
         }
 
         private void ReadType(BsonType type)
@@ -480,72 +480,72 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             switch (type)
             {
                 case BsonType.Number:
-                    double d = ReadDouble();
+                    double d = this.ReadDouble();
 
-                    if (_floatParseHandling == FloatParseHandling.Decimal)
+                    if (this._floatParseHandling == FloatParseHandling.Decimal)
                     {
-                        SetToken(JsonToken.Float, Convert.ToDecimal(d, CultureInfo.InvariantCulture));
+                        this.SetToken(JsonToken.Float, Convert.ToDecimal(d, CultureInfo.InvariantCulture));
                     }
                     else
                     {
-                        SetToken(JsonToken.Float, d);
+                        this.SetToken(JsonToken.Float, d);
                     }
                     break;
 
                 case BsonType.String:
                 case BsonType.Symbol:
-                    SetToken(JsonToken.String, ReadLengthString());
+                    this.SetToken(JsonToken.String, this.ReadLengthString());
                     break;
 
                 case BsonType.Object:
                     {
-                        SetToken(JsonToken.StartObject);
+                        this.SetToken(JsonToken.StartObject);
 
                         ContainerContext newContext = new ContainerContext(BsonType.Object);
-                        PushContext(newContext);
-                        newContext.Length = ReadInt32();
+                        this.PushContext(newContext);
+                        newContext.Length = this.ReadInt32();
                         break;
                     }
                 case BsonType.Array:
                     {
-                        SetToken(JsonToken.StartArray);
+                        this.SetToken(JsonToken.StartArray);
 
                         ContainerContext newContext = new ContainerContext(BsonType.Array);
-                        PushContext(newContext);
-                        newContext.Length = ReadInt32();
+                        this.PushContext(newContext);
+                        newContext.Length = this.ReadInt32();
                         break;
                     }
                 case BsonType.Binary:
                     BsonBinaryType binaryType;
-                    byte[] data = ReadBinary(out binaryType);
+                    byte[] data = this.ReadBinary(out binaryType);
 
                     object value = (binaryType != BsonBinaryType.Uuid)
                         ? data
                         : (object)new Guid(data);
 
-                    SetToken(JsonToken.Bytes, value);
+                    this.SetToken(JsonToken.Bytes, value);
                     break;
 
                 case BsonType.Undefined:
-                    SetToken(JsonToken.Undefined);
+                    this.SetToken(JsonToken.Undefined);
                     break;
 
                 case BsonType.Oid:
-                    byte[] oid = ReadBytes(12);
-                    SetToken(JsonToken.Bytes, oid);
+                    byte[] oid = this.ReadBytes(12);
+                    this.SetToken(JsonToken.Bytes, oid);
                     break;
 
                 case BsonType.Boolean:
-                    bool b = Convert.ToBoolean(ReadByte());
-                    SetToken(JsonToken.Boolean, b);
+                    bool b = Convert.ToBoolean(this.ReadByte());
+                    this.SetToken(JsonToken.Boolean, b);
                     break;
 
                 case BsonType.Date:
-                    long ticks = ReadInt64();
+                    long ticks = this.ReadInt64();
                     DateTime utcDateTime = DateTimeUtils.ConvertJavaScriptTicksToDateTime(ticks);
 
                     DateTime dateTime;
-                    switch (DateTimeKindHandling)
+                    switch (this.DateTimeKindHandling)
                     {
                         case DateTimeKind.Unspecified:
                             dateTime = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Unspecified);
@@ -560,42 +560,42 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                             break;
                     }
 
-                    SetToken(JsonToken.Date, dateTime);
+                    this.SetToken(JsonToken.Date, dateTime);
                     break;
 
                 case BsonType.Null:
-                    SetToken(JsonToken.Null);
+                    this.SetToken(JsonToken.Null);
                     break;
 
                 case BsonType.Regex:
-                    string expression = ReadString();
-                    string modifiers = ReadString();
+                    string expression = this.ReadString();
+                    string modifiers = this.ReadString();
 
                     string regex = @"/" + expression + @"/" + modifiers;
-                    SetToken(JsonToken.String, regex);
+                    this.SetToken(JsonToken.String, regex);
                     break;
 
                 case BsonType.Reference:
-                    SetToken(JsonToken.StartObject);
-                    _bsonReaderState = BsonReaderState.ReferenceStart;
+                    this.SetToken(JsonToken.StartObject);
+                    this._bsonReaderState = BsonReaderState.ReferenceStart;
                     break;
 
                 case BsonType.Code:
-                    SetToken(JsonToken.String, ReadLengthString());
+                    this.SetToken(JsonToken.String, this.ReadLengthString());
                     break;
 
                 case BsonType.CodeWScope:
-                    SetToken(JsonToken.StartObject);
-                    _bsonReaderState = BsonReaderState.CodeWScopeStart;
+                    this.SetToken(JsonToken.StartObject);
+                    this._bsonReaderState = BsonReaderState.CodeWScopeStart;
                     break;
 
                 case BsonType.Integer:
-                    SetToken(JsonToken.Integer, (long)ReadInt32());
+                    this.SetToken(JsonToken.Integer, (long)this.ReadInt32());
                     break;
 
                 case BsonType.TimeStamp:
                 case BsonType.Long:
-                    SetToken(JsonToken.Integer, ReadInt64());
+                    this.SetToken(JsonToken.Integer, this.ReadInt64());
                     break;
 
                 default:
@@ -605,24 +605,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         private byte[] ReadBinary(out BsonBinaryType binaryType)
         {
-            int dataLength = ReadInt32();
+            int dataLength = this.ReadInt32();
 
-            binaryType = (BsonBinaryType)ReadByte();
+            binaryType = (BsonBinaryType)this.ReadByte();
 
 #pragma warning disable 612,618
             // the old binary type has the data length repeated in the data for some reason
-            if (binaryType == BsonBinaryType.BinaryOld && !_jsonNet35BinaryCompatibility)
+            if (binaryType == BsonBinaryType.BinaryOld && !this._jsonNet35BinaryCompatibility)
             {
-                dataLength = ReadInt32();
+                dataLength = this.ReadInt32();
             }
 #pragma warning restore 612,618
 
-            return ReadBytes(dataLength);
+            return this.ReadBytes(dataLength);
         }
 
         private string ReadString()
         {
-            EnsureBuffers();
+            this.EnsureBuffers();
 
             StringBuilder builder = null;
 
@@ -633,9 +633,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             {
                 int count = offset;
                 byte b;
-                while (count < MaxCharBytesSize && (b = _reader.ReadByte()) > 0)
+                while (count < MaxCharBytesSize && (b = this._reader.ReadByte()) > 0)
                 {
-                    _byteBuffer[count++] = b;
+                    this._byteBuffer[count++] = b;
                 }
                 int byteCount = count - offset;
                 totalBytesRead += byteCount;
@@ -644,37 +644,37 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                 {
                     // pref optimization to avoid reading into a string builder
                     // if string is smaller than the buffer then return it directly
-                    int length = Encoding.UTF8.GetChars(_byteBuffer, 0, byteCount, _charBuffer, 0);
+                    int length = Encoding.UTF8.GetChars(this._byteBuffer, 0, byteCount, this._charBuffer, 0);
 
-                    MovePosition(totalBytesRead + 1);
-                    return new string(_charBuffer, 0, length);
+                    this.MovePosition(totalBytesRead + 1);
+                    return new string(this._charBuffer, 0, length);
                 }
                 else
                 {
                     // calculate the index of the end of the last full character in the buffer
-                    int lastFullCharStop = GetLastFullCharStop(count - 1);
+                    int lastFullCharStop = this.GetLastFullCharStop(count - 1);
 
-                    int charCount = Encoding.UTF8.GetChars(_byteBuffer, 0, lastFullCharStop + 1, _charBuffer, 0);
+                    int charCount = Encoding.UTF8.GetChars(this._byteBuffer, 0, lastFullCharStop + 1, this._charBuffer, 0);
 
                     if (builder == null)
                     {
                         builder = new StringBuilder(MaxCharBytesSize * 2);
                     }
 
-                    builder.Append(_charBuffer, 0, charCount);
+                    builder.Append(this._charBuffer, 0, charCount);
 
                     if (lastFullCharStop < byteCount - 1)
                     {
                         offset = byteCount - lastFullCharStop - 1;
                         // copy left over multi byte characters to beginning of buffer for next iteration
-                        Array.Copy(_byteBuffer, lastFullCharStop + 1, _byteBuffer, 0, offset);
+                        Array.Copy(this._byteBuffer, lastFullCharStop + 1, this._byteBuffer, 0, offset);
                     }
                     else
                     {
                         // reached end of string
                         if (count < MaxCharBytesSize)
                         {
-                            MovePosition(totalBytesRead + 1);
+                            this.MovePosition(totalBytesRead + 1);
                             return builder.ToString();
                         }
 
@@ -686,12 +686,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         private string ReadLengthString()
         {
-            int length = ReadInt32();
+            int length = this.ReadInt32();
 
-            MovePosition(length);
+            this.MovePosition(length);
 
-            string s = GetString(length - 1);
-            _reader.ReadByte();
+            string s = this.GetString(length - 1);
+            this._reader.ReadByte();
 
             return s;
         }
@@ -703,7 +703,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                 return string.Empty;
             }
 
-            EnsureBuffers();
+            this.EnsureBuffers();
 
             StringBuilder builder = null;
 
@@ -717,7 +717,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     ? MaxCharBytesSize - offset
                     : length - totalBytesRead;
 
-                int byteCount = _reader.Read(_byteBuffer, offset, count);
+                int byteCount = this._reader.Read(this._byteBuffer, offset, count);
 
                 if (byteCount == 0)
                 {
@@ -734,26 +734,26 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                 {
                     // pref optimization to avoid reading into a string builder
                     // first iteration and all bytes read then return string directly
-                    int charCount = Encoding.UTF8.GetChars(_byteBuffer, 0, byteCount, _charBuffer, 0);
-                    return new string(_charBuffer, 0, charCount);
+                    int charCount = Encoding.UTF8.GetChars(this._byteBuffer, 0, byteCount, this._charBuffer, 0);
+                    return new string(this._charBuffer, 0, charCount);
                 }
                 else
                 {
-                    int lastFullCharStop = GetLastFullCharStop(byteCount - 1);
+                    int lastFullCharStop = this.GetLastFullCharStop(byteCount - 1);
 
                     if (builder == null)
                     {
                         builder = new StringBuilder(length);
                     }
 
-                    int charCount = Encoding.UTF8.GetChars(_byteBuffer, 0, lastFullCharStop + 1, _charBuffer, 0);
-                    builder.Append(_charBuffer, 0, charCount);
+                    int charCount = Encoding.UTF8.GetChars(this._byteBuffer, 0, lastFullCharStop + 1, this._charBuffer, 0);
+                    builder.Append(this._charBuffer, 0, charCount);
 
                     if (lastFullCharStop < byteCount - 1)
                     {
                         offset = byteCount - lastFullCharStop - 1;
                         // copy left over multi byte characters to beginning of buffer for next iteration
-                        Array.Copy(_byteBuffer, lastFullCharStop + 1, _byteBuffer, 0, offset);
+                        Array.Copy(this._byteBuffer, lastFullCharStop + 1, this._byteBuffer, 0, offset);
                     }
                     else
                     {
@@ -771,7 +771,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             int bis = 0;
             while (lookbackPos >= 0)
             {
-                bis = BytesInSequence(_byteBuffer[lookbackPos]);
+                bis = this.BytesInSequence(this._byteBuffer[lookbackPos]);
                 if (bis == 0)
                 {
                     lookbackPos--;
@@ -821,50 +821,50 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         private void EnsureBuffers()
         {
-            if (_byteBuffer == null)
+            if (this._byteBuffer == null)
             {
-                _byteBuffer = new byte[MaxCharBytesSize];
+                this._byteBuffer = new byte[MaxCharBytesSize];
             }
-            if (_charBuffer == null)
+            if (this._charBuffer == null)
             {
                 int charBufferSize = Encoding.UTF8.GetMaxCharCount(MaxCharBytesSize);
-                _charBuffer = new char[charBufferSize];
+                this._charBuffer = new char[charBufferSize];
             }
         }
 
         private double ReadDouble()
         {
-            MovePosition(8);
-            return _reader.ReadDouble();
+            this.MovePosition(8);
+            return this._reader.ReadDouble();
         }
 
         private int ReadInt32()
         {
-            MovePosition(4);
-            return _reader.ReadInt32();
+            this.MovePosition(4);
+            return this._reader.ReadInt32();
         }
 
         private long ReadInt64()
         {
-            MovePosition(8);
-            return _reader.ReadInt64();
+            this.MovePosition(8);
+            return this._reader.ReadInt64();
         }
 
         private BsonType ReadType()
         {
-            MovePosition(1);
-            return (BsonType)_reader.ReadSByte();
+            this.MovePosition(1);
+            return (BsonType)this._reader.ReadSByte();
         }
 
         private void MovePosition(int count)
         {
-            _currentContext.Position += count;
+            this._currentContext.Position += count;
         }
 
         private byte[] ReadBytes(int count)
         {
-            MovePosition(count);
-            return _reader.ReadBytes(count);
+            this.MovePosition(count);
+            return this._reader.ReadBytes(count);
         }
     }
 }

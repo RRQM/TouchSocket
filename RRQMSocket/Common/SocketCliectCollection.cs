@@ -24,8 +24,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count
-        { get { return this.tokenDic.Count; } }
+        public int Count => this.tokenDic.Count;
 
         private ConcurrentDictionary<string, ISocketClient> tokenDic = new ConcurrentDictionary<string, ISocketClient>();
 
@@ -97,7 +96,7 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool SocketClientExist(string id)
         {
-            if (tokenDic.ContainsKey(id))
+            if (this.tokenDic.ContainsKey(id))
             {
                 return true;
             }

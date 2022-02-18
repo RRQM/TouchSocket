@@ -39,16 +39,13 @@ namespace RRQMSocket
         /// </summary>
         public bool IsPermitOperation
         {
-            get { return isPermitOperation; }
-            set { isPermitOperation = value; }
+            get => this.isPermitOperation;
+            set => this.isPermitOperation = value;
         }
 
         /// <summary>
         /// 流操作
         /// </summary>
-        public StreamOperator StreamOperator
-        {
-            get { return streamOperator; }
-        }
+        public StreamOperator StreamOperator => this.streamOperator;
     }
 }

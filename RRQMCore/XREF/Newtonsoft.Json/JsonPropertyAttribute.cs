@@ -107,8 +107,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The null value handling.</value>
         public NullValueHandling NullValueHandling
         {
-            get => _nullValueHandling ?? default(NullValueHandling);
-            set => _nullValueHandling = value;
+            get => this._nullValueHandling ?? default(NullValueHandling);
+            set => this._nullValueHandling = value;
         }
 
         /// <summary>
@@ -117,8 +117,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The default value handling.</value>
         public DefaultValueHandling DefaultValueHandling
         {
-            get => _defaultValueHandling ?? default(DefaultValueHandling);
-            set => _defaultValueHandling = value;
+            get => this._defaultValueHandling ?? default(DefaultValueHandling);
+            set => this._defaultValueHandling = value;
         }
 
         /// <summary>
@@ -127,8 +127,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The reference loop handling.</value>
         public ReferenceLoopHandling ReferenceLoopHandling
         {
-            get => _referenceLoopHandling ?? default(ReferenceLoopHandling);
-            set => _referenceLoopHandling = value;
+            get => this._referenceLoopHandling ?? default(ReferenceLoopHandling);
+            set => this._referenceLoopHandling = value;
         }
 
         /// <summary>
@@ -137,8 +137,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The object creation handling.</value>
         public ObjectCreationHandling ObjectCreationHandling
         {
-            get => _objectCreationHandling ?? default(ObjectCreationHandling);
-            set => _objectCreationHandling = value;
+            get => this._objectCreationHandling ?? default(ObjectCreationHandling);
+            set => this._objectCreationHandling = value;
         }
 
         /// <summary>
@@ -147,8 +147,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The type name handling.</value>
         public TypeNameHandling TypeNameHandling
         {
-            get => _typeNameHandling ?? default(TypeNameHandling);
-            set => _typeNameHandling = value;
+            get => this._typeNameHandling ?? default(TypeNameHandling);
+            set => this._typeNameHandling = value;
         }
 
         /// <summary>
@@ -157,8 +157,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>Whether this property's value is serialized as a reference.</value>
         public bool IsReference
         {
-            get => _isReference ?? default(bool);
-            set => _isReference = value;
+            get => this._isReference ?? default(bool);
+            set => this._isReference = value;
         }
 
         /// <summary>
@@ -167,8 +167,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The numeric order of serialization.</value>
         public int Order
         {
-            get => _order ?? default(int);
-            set => _order = value;
+            get => this._order ?? default(int);
+            set => this._order = value;
         }
 
         /// <summary>
@@ -179,8 +179,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </value>
         public Required Required
         {
-            get => _required ?? Required.Default;
-            set => _required = value;
+            get => this._required ?? Required.Default;
+            set => this._required = value;
         }
 
         /// <summary>
@@ -195,8 +195,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The collection's items reference loop handling.</value>
         public ReferenceLoopHandling ItemReferenceLoopHandling
         {
-            get => _itemReferenceLoopHandling ?? default(ReferenceLoopHandling);
-            set => _itemReferenceLoopHandling = value;
+            get => this._itemReferenceLoopHandling ?? default(ReferenceLoopHandling);
+            set => this._itemReferenceLoopHandling = value;
         }
 
         /// <summary>
@@ -205,8 +205,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The collection's items type name handling.</value>
         public TypeNameHandling ItemTypeNameHandling
         {
-            get => _itemTypeNameHandling ?? default(TypeNameHandling);
-            set => _itemTypeNameHandling = value;
+            get => this._itemTypeNameHandling ?? default(TypeNameHandling);
+            set => this._itemTypeNameHandling = value;
         }
 
         /// <summary>
@@ -215,8 +215,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>Whether this property's collection items are serialized as a reference.</value>
         public bool ItemIsReference
         {
-            get => _itemIsReference ?? default(bool);
-            set => _itemIsReference = value;
+            get => this._itemIsReference ?? default(bool);
+            set => this._itemIsReference = value;
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="propertyName">Name of the property.</param>
         public JsonPropertyAttribute(string propertyName)
         {
-            PropertyName = propertyName;
+            this.PropertyName = propertyName;
         }
     }
 }

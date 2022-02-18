@@ -55,7 +55,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <summary>
         /// Gets the <see cref="JToken"/> at the reader's current position.
         /// </summary>
-        public JToken CurrentToken => _current;
+        public JToken CurrentToken => this._current;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JTokenReader"/> class.
@@ -65,14 +65,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(token, nameof(token));
 
-            _root = token;
+            this._root = token;
         }
 
         // this is used by json.net schema
         internal JTokenReader(JToken token, string initialPath)
             : this(token)
         {
-            _initialPath = initialPath;
+            this._initialPath = initialPath;
         }
 
         /// <summary>
@@ -83,33 +83,33 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override bool Read()
         {
-            if (CurrentState != State.Start)
+            if (this.CurrentState != State.Start)
             {
-                if (_current == null)
+                if (this._current == null)
                 {
                     return false;
                 }
 
-                if (_current is JContainer container && _parent != container)
+                if (this._current is JContainer container && this._parent != container)
                 {
-                    return ReadInto(container);
+                    return this.ReadInto(container);
                 }
                 else
                 {
-                    return ReadOver(_current);
+                    return this.ReadOver(this._current);
                 }
             }
 
-            _current = _root;
-            SetToken(_current);
+            this._current = this._root;
+            this.SetToken(this._current);
             return true;
         }
 
         private bool ReadOver(JToken t)
         {
-            if (t == _root)
+            if (t == this._root)
             {
-                return ReadToEnd();
+                return this.ReadToEnd();
             }
 
             JToken next = t.Next;
@@ -117,23 +117,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 if (t.Parent == null)
                 {
-                    return ReadToEnd();
+                    return this.ReadToEnd();
                 }
 
-                return SetEnd(t.Parent);
+                return this.SetEnd(t.Parent);
             }
             else
             {
-                _current = next;
-                SetToken(_current);
+                this._current = next;
+                this.SetToken(this._current);
                 return true;
             }
         }
 
         private bool ReadToEnd()
         {
-            _current = null;
-            SetToken(JsonToken.None);
+            this._current = null;
+            this.SetToken(JsonToken.None);
             return false;
         }
 
@@ -163,30 +163,30 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             JToken firstChild = c.First;
             if (firstChild == null)
             {
-                return SetEnd(c);
+                return this.SetEnd(c);
             }
             else
             {
-                SetToken(firstChild);
-                _current = firstChild;
-                _parent = c;
+                this.SetToken(firstChild);
+                this._current = firstChild;
+                this._parent = c;
                 return true;
             }
         }
 
         private bool SetEnd(JContainer c)
         {
-            JsonToken? endToken = GetEndToken(c);
+            JsonToken? endToken = this.GetEndToken(c);
             if (endToken != null)
             {
-                SetToken(endToken.GetValueOrDefault());
-                _current = c;
-                _parent = c;
+                this.SetToken(endToken.GetValueOrDefault());
+                this._current = c;
+                this._parent = c;
                 return true;
             }
             else
             {
-                return ReadOver(c);
+                return this.ReadOver(c);
             }
         }
 
@@ -195,73 +195,73 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             switch (token.Type)
             {
                 case JTokenType.Object:
-                    SetToken(JsonToken.StartObject);
+                    this.SetToken(JsonToken.StartObject);
                     break;
 
                 case JTokenType.Array:
-                    SetToken(JsonToken.StartArray);
+                    this.SetToken(JsonToken.StartArray);
                     break;
 
                 case JTokenType.Constructor:
-                    SetToken(JsonToken.StartConstructor, ((JConstructor)token).Name);
+                    this.SetToken(JsonToken.StartConstructor, ((JConstructor)token).Name);
                     break;
 
                 case JTokenType.Property:
-                    SetToken(JsonToken.PropertyName, ((JProperty)token).Name);
+                    this.SetToken(JsonToken.PropertyName, ((JProperty)token).Name);
                     break;
 
                 case JTokenType.Comment:
-                    SetToken(JsonToken.Comment, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Comment, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Integer:
-                    SetToken(JsonToken.Integer, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Integer, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Float:
-                    SetToken(JsonToken.Float, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Float, ((JValue)token).Value);
                     break;
 
                 case JTokenType.String:
-                    SetToken(JsonToken.String, ((JValue)token).Value);
+                    this.SetToken(JsonToken.String, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Boolean:
-                    SetToken(JsonToken.Boolean, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Boolean, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Null:
-                    SetToken(JsonToken.Null, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Null, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Undefined:
-                    SetToken(JsonToken.Undefined, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Undefined, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Date:
-                    SetToken(JsonToken.Date, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Date, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Raw:
-                    SetToken(JsonToken.Raw, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Raw, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Bytes:
-                    SetToken(JsonToken.Bytes, ((JValue)token).Value);
+                    this.SetToken(JsonToken.Bytes, ((JValue)token).Value);
                     break;
 
                 case JTokenType.Guid:
-                    SetToken(JsonToken.String, SafeToString(((JValue)token).Value));
+                    this.SetToken(JsonToken.String, this.SafeToString(((JValue)token).Value));
                     break;
 
                 case JTokenType.Uri:
                     object v = ((JValue)token).Value;
                     Uri uri = v as Uri;
-                    SetToken(JsonToken.String, uri != null ? uri.OriginalString : SafeToString(v));
+                    this.SetToken(JsonToken.String, uri != null ? uri.OriginalString : this.SafeToString(v));
                     break;
 
                 case JTokenType.TimeSpan:
-                    SetToken(JsonToken.String, SafeToString(((JValue)token).Value));
+                    this.SetToken(JsonToken.String, this.SafeToString(((JValue)token).Value));
                     break;
 
                 default:
@@ -276,12 +276,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         bool IJsonLineInfo.HasLineInfo()
         {
-            if (CurrentState == State.Start)
+            if (this.CurrentState == State.Start)
             {
                 return false;
             }
 
-            IJsonLineInfo info = _current;
+            IJsonLineInfo info = this._current;
             return (info != null && info.HasLineInfo());
         }
 
@@ -289,12 +289,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                if (CurrentState == State.Start)
+                if (this.CurrentState == State.Start)
                 {
                     return 0;
                 }
 
-                IJsonLineInfo info = _current;
+                IJsonLineInfo info = this._current;
                 if (info != null)
                 {
                     return info.LineNumber;
@@ -308,12 +308,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                if (CurrentState == State.Start)
+                if (this.CurrentState == State.Start)
                 {
                     return 0;
                 }
 
-                IJsonLineInfo info = _current;
+                IJsonLineInfo info = this._current;
                 if (info != null)
                 {
                     return info.LinePosition;
@@ -332,25 +332,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 string path = base.Path;
 
-                if (_initialPath == null)
+                if (this._initialPath == null)
                 {
-                    _initialPath = _root.Path;
+                    this._initialPath = this._root.Path;
                 }
 
-                if (!string.IsNullOrEmpty(_initialPath))
+                if (!string.IsNullOrEmpty(this._initialPath))
                 {
                     if (string.IsNullOrEmpty(path))
                     {
-                        return _initialPath;
+                        return this._initialPath;
                     }
 
                     if (path.StartsWith('['))
                     {
-                        path = _initialPath + path;
+                        path = this._initialPath + path;
                     }
                     else
                     {
-                        path = _initialPath + "." + path;
+                        path = this._initialPath + "." + path;
                     }
                 }
 

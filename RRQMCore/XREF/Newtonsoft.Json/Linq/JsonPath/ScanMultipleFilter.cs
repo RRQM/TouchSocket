@@ -35,7 +35,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
                     if (value is JProperty property)
                     {
-                        foreach (string name in Names)
+                        foreach (string name in this.Names)
                         {
                             if (property.Name == name)
                             {

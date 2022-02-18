@@ -35,7 +35,7 @@ namespace RRQMCore.Serialization
         public void Serialize(ByteBlock stream, object graph)
         {
             stream.Position = 1;
-            SerializeObject(stream, graph);
+            this.SerializeObject(stream, graph);
             stream.Buffer[0] = 1;
             stream.SetLength(stream.Position);
         }
@@ -137,11 +137,11 @@ namespace RRQMCore.Serialization
 
                     if (typeof(IEnumerable).IsAssignableFrom(type))
                     {
-                        len += SerializeIEnumerable(stream, (IEnumerable)graph);
+                        len += this.SerializeIEnumerable(stream, (IEnumerable)graph);
                     }
                     else
                     {
-                        len += SerializeClass(stream, graph, type);
+                        len += this.SerializeClass(stream, graph, type);
                     }
                 }
 
@@ -193,7 +193,7 @@ namespace RRQMCore.Serialization
                     stream.Write(lenBytes);
                     stream.Write(propertyBytes, 0, propertyBytes.Length);
                     len += propertyBytes.Length + 1;
-                    len += SerializeObject(stream, property.GetValue(obj, null));
+                    len += this.SerializeObject(stream, property.GetValue(obj, null));
                 }
             }
             return len;
@@ -212,7 +212,7 @@ namespace RRQMCore.Serialization
                 foreach (object item in param)
                 {
                     paramLen++;
-                    len += SerializeObject(stream, item);
+                    len += this.SerializeObject(stream, item);
                 }
                 long newPosition = stream.Position;
                 stream.Position = oldPosition;
@@ -240,7 +240,7 @@ namespace RRQMCore.Serialization
                 throw new Exceptions.RRQMException("数据流解析错误");
             }
             offset += 1;
-            return Deserialize(type, data, ref offset);
+            return this.Deserialize(type, data, ref offset);
         }
 
         private dynamic Deserialize(Type type, byte[] datas, ref int offset)
@@ -339,7 +339,7 @@ namespace RRQMCore.Serialization
                 }
                 else if (type.IsClass || type.IsStruct())
                 {
-                    obj = DeserializeClass(type, datas, offset, len);
+                    obj = this.DeserializeClass(type, datas, offset, len);
                 }
                 else
                 {
@@ -378,7 +378,7 @@ namespace RRQMCore.Serialization
                                 offset += pLen;
                                 continue;
                             }
-                            object obj = Deserialize(propertyInfo.PropertyType, datas, ref offset);
+                            object obj = this.Deserialize(propertyInfo.PropertyType, datas, ref offset);
                             propertyInfo.SetValue(instance, obj);
                         }
                         break;
@@ -392,7 +392,7 @@ namespace RRQMCore.Serialization
                             offset += 4;
                             for (uint i = 0; i < paramLen; i++)
                             {
-                                object obj = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
+                                object obj = this.Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
                                 instanceObject.AddMethod.Invoke(instance, new object[] { obj });
                             }
                         }
@@ -412,7 +412,7 @@ namespace RRQMCore.Serialization
                             offset += 4;
                             for (uint i = 0; i < paramLen; i++)
                             {
-                                object obj = Deserialize(instanceObject.ArrayType, datas, ref offset);
+                                object obj = this.Deserialize(instanceObject.ArrayType, datas, ref offset);
                                 array.SetValue(obj, i);
                             }
                             instance = array;
@@ -434,10 +434,10 @@ namespace RRQMCore.Serialization
                             {
                                 offset += 4;
                                 offset += datas[offset] + 1;
-                                object key = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
+                                object key = this.Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
 
                                 offset += datas[offset] + 1;
-                                object value = Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
+                                object value = this.Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
                                 if (key != null)
                                 {
                                     instanceObject.AddMethod.Invoke(instance, new object[] { key, value });

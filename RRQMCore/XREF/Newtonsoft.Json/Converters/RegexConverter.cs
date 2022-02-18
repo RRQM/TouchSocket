@@ -73,12 +73,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
 #pragma warning disable 618
             if (writer is BsonWriter bsonWriter)
             {
-                WriteBson(bsonWriter, regex);
+                this.WriteBson(bsonWriter, regex);
             }
 #pragma warning restore 618
             else
             {
-                WriteJson(writer, regex, serializer);
+                this.WriteJson(writer, regex, serializer);
             }
         }
 
@@ -100,24 +100,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
 
             string options = null;
 
-            if (HasFlag(regex.Options, RegexOptions.IgnoreCase))
+            if (this.HasFlag(regex.Options, RegexOptions.IgnoreCase))
             {
                 options += "i";
             }
 
-            if (HasFlag(regex.Options, RegexOptions.Multiline))
+            if (this.HasFlag(regex.Options, RegexOptions.Multiline))
             {
                 options += "m";
             }
 
-            if (HasFlag(regex.Options, RegexOptions.Singleline))
+            if (this.HasFlag(regex.Options, RegexOptions.Singleline))
             {
                 options += "s";
             }
 
             options += "u";
 
-            if (HasFlag(regex.Options, RegexOptions.ExplicitCapture))
+            if (this.HasFlag(regex.Options, RegexOptions.ExplicitCapture))
             {
                 options += "x";
             }
@@ -152,10 +152,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
             switch (reader.TokenType)
             {
                 case JsonToken.StartObject:
-                    return ReadRegexObject(reader, serializer);
+                    return this.ReadRegexObject(reader, serializer);
 
                 case JsonToken.String:
-                    return ReadRegexString(reader);
+                    return this.ReadRegexString(reader);
 
                 case JsonToken.Null:
                     return null;
@@ -242,7 +242,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
         /// </returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType.Name == nameof(Regex) && IsRegex(objectType);
+            return objectType.Name == nameof(Regex) && this.IsRegex(objectType);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

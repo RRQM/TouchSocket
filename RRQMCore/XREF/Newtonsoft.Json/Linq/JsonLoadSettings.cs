@@ -26,8 +26,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         public JsonLoadSettings()
         {
-            _lineInfoHandling = LineInfoHandling.Load;
-            _commentHandling = CommentHandling.Ignore;
+            this._lineInfoHandling = LineInfoHandling.Load;
+            this._commentHandling = CommentHandling.Ignore;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The JSON comment handling.</value>
         public CommentHandling CommentHandling
         {
-            get => _commentHandling;
+            get => this._commentHandling;
             set
             {
                 if (value < CommentHandling.Ignore || value > CommentHandling.Load)
@@ -44,7 +44,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _commentHandling = value;
+                this._commentHandling = value;
             }
         }
 
@@ -54,7 +54,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The JSON line info handling.</value>
         public LineInfoHandling LineInfoHandling
         {
-            get => _lineInfoHandling;
+            get => this._lineInfoHandling;
             set
             {
                 if (value < LineInfoHandling.Ignore || value > LineInfoHandling.Load)
@@ -62,7 +62,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _lineInfoHandling = value;
+                this._lineInfoHandling = value;
             }
         }
     }

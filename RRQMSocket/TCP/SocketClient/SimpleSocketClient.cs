@@ -28,7 +28,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.Received.Invoke(this, byteBlock, requestInfo);
         }

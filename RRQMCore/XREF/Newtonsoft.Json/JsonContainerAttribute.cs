@@ -91,11 +91,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The <see cref="Type"/> of the <see cref="NamingStrategy"/>.</value>
         public Type NamingStrategyType
         {
-            get => _namingStrategyType;
+            get => this._namingStrategyType;
             set
             {
-                _namingStrategyType = value;
-                NamingStrategyInstance = null;
+                this._namingStrategyType = value;
+                this.NamingStrategyInstance = null;
             }
         }
 
@@ -112,11 +112,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </example>
         public object[] NamingStrategyParameters
         {
-            get => _namingStrategyParameters;
+            get => this._namingStrategyParameters;
             set
             {
-                _namingStrategyParameters = value;
-                NamingStrategyInstance = null;
+                this._namingStrategyParameters = value;
+                this.NamingStrategyInstance = null;
             }
         }
 
@@ -140,8 +140,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </value>
         public bool IsReference
         {
-            get => _isReference ?? default(bool);
-            set => _isReference = value;
+            get => this._isReference ?? default(bool);
+            set => this._isReference = value;
         }
 
         /// <summary>
@@ -152,8 +152,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </value>
         public bool ItemIsReference
         {
-            get => _itemIsReference ?? default(bool);
-            set => _itemIsReference = value;
+            get => this._itemIsReference ?? default(bool);
+            set => this._itemIsReference = value;
         }
 
         /// <summary>
@@ -162,8 +162,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The reference loop handling.</value>
         public ReferenceLoopHandling ItemReferenceLoopHandling
         {
-            get => _itemReferenceLoopHandling ?? default(ReferenceLoopHandling);
-            set => _itemReferenceLoopHandling = value;
+            get => this._itemReferenceLoopHandling ?? default(ReferenceLoopHandling);
+            set => this._itemReferenceLoopHandling = value;
         }
 
         /// <summary>
@@ -172,8 +172,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The type name handling.</value>
         public TypeNameHandling ItemTypeNameHandling
         {
-            get => _itemTypeNameHandling ?? default(TypeNameHandling);
-            set => _itemTypeNameHandling = value;
+            get => this._itemTypeNameHandling ?? default(TypeNameHandling);
+            set => this._itemTypeNameHandling = value;
         }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="id">The container Id.</param>
         protected JsonContainerAttribute(string id)
         {
-            Id = id;
+            this.Id = id;
         }
     }
 }

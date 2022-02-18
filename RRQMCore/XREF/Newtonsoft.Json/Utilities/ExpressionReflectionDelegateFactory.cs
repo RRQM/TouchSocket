@@ -61,7 +61,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
             ParameterExpression argsParameterExpression = Expression.Parameter(typeof(object[]), "args");
 
-            Expression callExpression = BuildMethodCall(method, type, null, argsParameterExpression);
+            Expression callExpression = this.BuildMethodCall(method, type, null, argsParameterExpression);
 
             LambdaExpression lambdaExpression = Expression.Lambda(typeof(ObjectConstructor<object>), callExpression, argsParameterExpression);
 
@@ -78,7 +78,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             ParameterExpression targetParameterExpression = Expression.Parameter(type, "target");
             ParameterExpression argsParameterExpression = Expression.Parameter(typeof(object[]), "args");
 
-            Expression callExpression = BuildMethodCall(method, type, targetParameterExpression, argsParameterExpression);
+            Expression callExpression = this.BuildMethodCall(method, type, targetParameterExpression, argsParameterExpression);
 
             LambdaExpression lambdaExpression = Expression.Lambda(typeof(MethodCall<T, object>), callExpression, targetParameterExpression, argsParameterExpression);
 
@@ -124,7 +124,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
                     Expression paramAccessorExpression = Expression.ArrayIndex(argsParameterExpression, indexExpression);
 
-                    Expression argExpression = EnsureCastExpression(paramAccessorExpression, parameterType, !isByRef);
+                    Expression argExpression = this.EnsureCastExpression(paramAccessorExpression, parameterType, !isByRef);
 
                     if (isByRef)
                     {
@@ -149,7 +149,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             }
             else
             {
-                Expression readParameter = EnsureCastExpression(targetParameterExpression, method.DeclaringType);
+                Expression readParameter = this.EnsureCastExpression(targetParameterExpression, method.DeclaringType);
 
                 callExpression = Expression.Call(readParameter, (MethodInfo)method, argsExpression);
             }
@@ -159,7 +159,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             {
                 if (m.ReturnType != typeof(void))
                 {
-                    callExpression = EnsureCastExpression(callExpression, type);
+                    callExpression = this.EnsureCastExpression(callExpression, type);
                 }
                 else
                 {
@@ -168,7 +168,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             }
             else
             {
-                callExpression = EnsureCastExpression(callExpression, type);
+                callExpression = this.EnsureCastExpression(callExpression, type);
             }
 
             if (refParameterMap.Count > 0)
@@ -209,7 +209,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
                 Expression expression = Expression.New(type);
 
-                expression = EnsureCastExpression(expression, resultType);
+                expression = this.EnsureCastExpression(expression, resultType);
 
                 LambdaExpression lambdaExpression = Expression.Lambda(typeof(Serialization.Func<T>), expression);
 
@@ -242,12 +242,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             }
             else
             {
-                Expression readParameter = EnsureCastExpression(parameterExpression, propertyInfo.DeclaringType);
+                Expression readParameter = this.EnsureCastExpression(parameterExpression, propertyInfo.DeclaringType);
 
                 resultExpression = Expression.MakeMemberAccess(readParameter, propertyInfo);
             }
 
-            resultExpression = EnsureCastExpression(resultExpression, resultType);
+            resultExpression = this.EnsureCastExpression(resultExpression, resultType);
 
             LambdaExpression lambdaExpression = Expression.Lambda(typeof(Serialization.Func<T, object>), resultExpression, parameterExpression);
 
@@ -268,12 +268,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             }
             else
             {
-                Expression sourceExpression = EnsureCastExpression(sourceParameter, fieldInfo.DeclaringType);
+                Expression sourceExpression = this.EnsureCastExpression(sourceParameter, fieldInfo.DeclaringType);
 
                 fieldExpression = Expression.Field(sourceExpression, fieldInfo);
             }
 
-            fieldExpression = EnsureCastExpression(fieldExpression, typeof(object));
+            fieldExpression = this.EnsureCastExpression(fieldExpression, typeof(object));
 
             Serialization.Func<T, object> compiled = Expression.Lambda<Serialization.Func<T, object>>(fieldExpression, sourceParameter).Compile();
             return compiled;
@@ -300,12 +300,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             }
             else
             {
-                Expression sourceExpression = EnsureCastExpression(sourceParameterExpression, fieldInfo.DeclaringType);
+                Expression sourceExpression = this.EnsureCastExpression(sourceParameterExpression, fieldInfo.DeclaringType);
 
                 fieldExpression = Expression.Field(sourceExpression, fieldInfo);
             }
 
-            Expression valueExpression = EnsureCastExpression(valueParameterExpression, fieldExpression.Type);
+            Expression valueExpression = this.EnsureCastExpression(valueParameterExpression, fieldExpression.Type);
 
             BinaryExpression assignExpression = Expression.Assign(fieldExpression, valueExpression);
 
@@ -332,7 +332,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             ParameterExpression instanceParameter = Expression.Parameter(instanceType, "instance");
 
             ParameterExpression valueParameter = Expression.Parameter(valueType, "value");
-            Expression readValueParameter = EnsureCastExpression(valueParameter, propertyInfo.PropertyType);
+            Expression readValueParameter = this.EnsureCastExpression(valueParameter, propertyInfo.PropertyType);
 
             MethodInfo setMethod = propertyInfo.GetSetMethod(true);
 
@@ -343,7 +343,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             }
             else
             {
-                Expression readInstanceParameter = EnsureCastExpression(instanceParameter, propertyInfo.DeclaringType);
+                Expression readInstanceParameter = this.EnsureCastExpression(instanceParameter, propertyInfo.DeclaringType);
 
                 setExpression = Expression.Call(readInstanceParameter, setMethod, readValueParameter);
             }

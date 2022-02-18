@@ -29,53 +29,41 @@ namespace RRQMCore.Dependency
         /// <summary>
         /// 属性名
         /// </summary>
-        public string Name
-        {
-            get { return name; }
-        }
+        public string Name => this.name;
 
         private Type owner;
 
         /// <summary>
         /// 所属类型
         /// </summary>
-        public Type Owner
-        {
-            get { return owner; }
-        }
+        public Type Owner => this.owner;
 
         private Type valueType;
 
         /// <summary>
         /// 值类型
         /// </summary>
-        public Type ValueType
-        {
-            get { return valueType; }
-        }
+        public Type ValueType => this.valueType;
 
         private object value;
 
         /// <summary>
         /// 默认值
         /// </summary>
-        public object DefauleValue
-        {
-            get { return value; }
-        }
+        public object DefauleValue => this.value;
 
         internal void DataValidation(object value)
         {
             if (value == null)
             {
-                if (typeof(ValueType).IsAssignableFrom(valueType))
+                if (typeof(ValueType).IsAssignableFrom(this.valueType))
                 {
                     throw new RRQMException($"属性“{this.name}”赋值类型不允许出现Null");
                 }
             }
-            else if (!valueType.IsAssignableFrom(value.GetType()))
+            else if (!this.valueType.IsAssignableFrom(value.GetType()))
             {
-                throw new RRQMException($"属性“{this.name}”赋值类型与注册类型不一致，应当注入“{valueType}”类型");
+                throw new RRQMException($"属性“{this.name}”赋值类型与注册类型不一致，应当注入“{this.valueType}”类型");
             }
         }
 

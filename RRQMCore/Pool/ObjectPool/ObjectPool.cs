@@ -47,8 +47,8 @@ namespace RRQMCore.Pool
         /// </summary>
         public bool AutoCreate
         {
-            get { return autoCreate; }
-            set { autoCreate = value; }
+            get => this.autoCreate;
+            set => this.autoCreate = value;
         }
 
         /// <summary>
@@ -59,8 +59,7 @@ namespace RRQMCore.Pool
         /// <summary>
         /// 可使用（创建）数量
         /// </summary>
-        public int FreeSize
-        { get { return this.freeSize; } }
+        public int FreeSize => this.freeSize;
 
         private int freeSize;
 

@@ -53,7 +53,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// Gets the <see cref="Type"/> of the <see cref="JsonConverter"/>.
         /// </summary>
         /// <value>The <see cref="Type"/> of the <see cref="JsonConverter"/>.</value>
-        public Type ConverterType => _converterType;
+        public Type ConverterType => this._converterType;
 
         /// <summary>
         /// The parameter list to use when constructing the <see cref="JsonConverter"/> described by <see cref="ConverterType"/>.
@@ -72,7 +72,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 throw new ArgumentNullException(nameof(converterType));
             }
 
-            _converterType = converterType;
+            this._converterType = converterType;
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         public JsonConverterAttribute(Type converterType, params object[] converterParameters)
             : this(converterType)
         {
-            ConverterParameters = converterParameters;
+            this.ConverterParameters = converterParameters;
         }
     }
 }

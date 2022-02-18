@@ -74,7 +74,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(enumerable, nameof(enumerable));
 
-            _enumerable = enumerable;
+            this._enumerable = enumerable;
         }
 
         /// <summary>
@@ -85,12 +85,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public IEnumerator<T> GetEnumerator()
         {
-            return (_enumerable ?? Empty).GetEnumerator();
+            return (this._enumerable ?? Empty).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
 
         /// <summary>
@@ -101,12 +101,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                if (_enumerable == null)
+                if (this._enumerable == null)
                 {
                     return JEnumerable<JToken>.Empty;
                 }
 
-                return new JEnumerable<JToken>(_enumerable.Values<T, JToken>(key));
+                return new JEnumerable<JToken>(this._enumerable.Values<T, JToken>(key));
             }
         }
 
@@ -119,7 +119,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public bool Equals(JEnumerable<T> other)
         {
-            return Equals(_enumerable, other._enumerable);
+            return Equals(this._enumerable, other._enumerable);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             if (obj is JEnumerable<T> enumerable)
             {
-                return Equals(enumerable);
+                return this.Equals(enumerable);
             }
 
             return false;
@@ -147,12 +147,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override int GetHashCode()
         {
-            if (_enumerable == null)
+            if (this._enumerable == null)
             {
                 return 0;
             }
 
-            return _enumerable.GetHashCode();
+            return this._enumerable.GetHashCode();
         }
     }
 }

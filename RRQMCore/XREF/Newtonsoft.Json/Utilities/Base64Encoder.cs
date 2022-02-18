@@ -61,7 +61,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         public Base64Encoder(TextWriter writer)
         {
             ValidationUtils.ArgumentNotNull(writer, nameof(writer));
-            _writer = writer;
+            this._writer = writer;
         }
 
         private void ValidateEncode(byte[] buffer, int index, int count)
@@ -89,20 +89,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public void Encode(byte[] buffer, int index, int count)
         {
-            ValidateEncode(buffer, index, count);
+            this.ValidateEncode(buffer, index, count);
 
-            if (_leftOverBytesCount > 0)
+            if (this._leftOverBytesCount > 0)
             {
-                if (FulfillFromLeftover(buffer, index, ref count))
+                if (this.FulfillFromLeftover(buffer, index, ref count))
                 {
                     return;
                 }
 
-                int num2 = Convert.ToBase64CharArray(_leftOverBytes, 0, 3, _charsLine, 0);
-                WriteChars(_charsLine, 0, num2);
+                int num2 = Convert.ToBase64CharArray(this._leftOverBytes, 0, 3, this._charsLine, 0);
+                this.WriteChars(this._charsLine, 0, num2);
             }
 
-            StoreLeftOverBytes(buffer, index, ref count);
+            this.StoreLeftOverBytes(buffer, index, ref count);
 
             int num4 = index + count;
             int length = LineSizeInBytes;
@@ -112,8 +112,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                 {
                     length = num4 - index;
                 }
-                int num6 = Convert.ToBase64CharArray(buffer, index, length, _charsLine, 0);
-                WriteChars(_charsLine, 0, num6);
+                int num6 = Convert.ToBase64CharArray(buffer, index, length, this._charsLine, 0);
+                this.WriteChars(this._charsLine, 0, num6);
                 index += length;
             }
         }
@@ -124,32 +124,32 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             if (leftOverBytesCount > 0)
             {
                 count -= leftOverBytesCount;
-                if (_leftOverBytes == null)
+                if (this._leftOverBytes == null)
                 {
-                    _leftOverBytes = new byte[3];
+                    this._leftOverBytes = new byte[3];
                 }
 
                 for (int i = 0; i < leftOverBytesCount; i++)
                 {
-                    _leftOverBytes[i] = buffer[index + count + i];
+                    this._leftOverBytes[i] = buffer[index + count + i];
                 }
             }
 
-            _leftOverBytesCount = leftOverBytesCount;
+            this._leftOverBytesCount = leftOverBytesCount;
         }
 
         private bool FulfillFromLeftover(byte[] buffer, int index, ref int count)
         {
-            int leftOverBytesCount = _leftOverBytesCount;
+            int leftOverBytesCount = this._leftOverBytesCount;
             while (leftOverBytesCount < 3 && count > 0)
             {
-                _leftOverBytes[leftOverBytesCount++] = buffer[index++];
+                this._leftOverBytes[leftOverBytesCount++] = buffer[index++];
                 count--;
             }
 
             if (count == 0 && leftOverBytesCount < 3)
             {
-                _leftOverBytesCount = leftOverBytesCount;
+                this._leftOverBytesCount = leftOverBytesCount;
                 return true;
             }
 
@@ -158,17 +158,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public void Flush()
         {
-            if (_leftOverBytesCount > 0)
+            if (this._leftOverBytesCount > 0)
             {
-                int count = Convert.ToBase64CharArray(_leftOverBytes, 0, _leftOverBytesCount, _charsLine, 0);
-                WriteChars(_charsLine, 0, count);
-                _leftOverBytesCount = 0;
+                int count = Convert.ToBase64CharArray(this._leftOverBytes, 0, this._leftOverBytesCount, this._charsLine, 0);
+                this.WriteChars(this._charsLine, 0, count);
+                this._leftOverBytesCount = 0;
             }
         }
 
         private void WriteChars(char[] chars, int index, int count)
         {
-            _writer.Write(chars, index, count);
+            this._writer.Write(chars, index, count);
         }
 
 #if HAVE_ASYNC

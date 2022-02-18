@@ -30,7 +30,7 @@ namespace RRQMSocket
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            OnReceived(byteBlock, requestInfo);
+            this.OnReceived(byteBlock, requestInfo);
         }
 
         /// <summary>

@@ -50,51 +50,36 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public virtual bool CanSetDataHandlingAdapter { get => true; }
+        public virtual bool CanSetDataHandlingAdapter => true;
 
         /// <summary>
         /// 选择清理类型
         /// </summary>
         public ClearType ClearType
         {
-            get { return clearType; }
-            set { clearType = value; }
+            get => this.clearType;
+            set => this.clearType = value;
         }
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter
-        {
-            get
-            {
-                return dataHandlingAdapter;
-            }
-        }
+        public DataHandlingAdapter DataHandlingAdapter => this.dataHandlingAdapter;
 
         /// <summary>
         /// 用于索引的ID
         /// </summary>
-        public string ID
-        {
-            get { return id; }
-        }
+        public string ID => this.id;
 
         /// <summary>
         /// IP地址
         /// </summary>
-        public string IP
-        {
-            get { return ip; }
-        }
+        public string IP => this.ip;
 
         /// <summary>
         /// 主通信器
         /// </summary>
-        public Socket MainSocket
-        {
-            get { return mainSocket; }
-        }
+        public Socket MainSocket => this.mainSocket;
 
         /// <summary>
         /// IP及端口
@@ -104,23 +89,17 @@ namespace RRQMSocket
         /// <summary>
         /// 判断该实例是否还在线
         /// </summary>
-        public bool Online => online;
+        public bool Online => this.online;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public int Port
-        {
-            get { return port; }
-        }
+        public int Port => this.port;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public ReceiveType ReceiveType
-        {
-            get { return receiveType; }
-        }
+        public ReceiveType ReceiveType => this.receiveType;
 
         /// <summary>
         /// 端口号
@@ -128,26 +107,17 @@ namespace RRQMSocket
         /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
-        public TcpServiceBase Service
-        {
-            get { return service; }
-        }
+        public TcpServiceBase Service => this.service;
 
         /// <summary>
         /// 服务配置
         /// </summary>
-        public ServiceConfig ServiceConfig
-        {
-            get { return serviceConfig; }
-        }
+        public ServiceConfig ServiceConfig => this.serviceConfig;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool UseSsl
-        {
-            get { return useSsl; }
-        }
+        public bool UseSsl => this.useSsl;
 
         /// <summary>
         /// <inheritdoc/>
@@ -178,9 +148,9 @@ namespace RRQMSocket
         {
             if (this.workStream == null)
             {
-                workStream = new NetworkStream(this.mainSocket, true);
+                this.workStream = new NetworkStream(this.mainSocket, true);
             }
-            return workStream;
+            return this.workStream;
         }
 
         /// <summary>
@@ -275,7 +245,7 @@ namespace RRQMSocket
                     {
                         Task.Run(() =>
                         {
-                            SelectReceiveData();
+                            this.SelectReceiveData();
                         });
                         return available;
                     }
@@ -305,12 +275,12 @@ namespace RRQMSocket
             {
                 try
                 {
-                    if (receiving)
+                    if (this.receiving)
                     {
                         return;
                     }
 
-                    if (useSsl)
+                    if (this.useSsl)
                     {
                         ServiceSslOption sslOption = this.serviceConfig.GetValue<ServiceSslOption>(TcpServiceConfig.SslOptionProperty);
                         SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.mainSocket, false), false);
@@ -321,21 +291,21 @@ namespace RRQMSocket
                     {
                         case ReceiveType.IOCP:
                             {
-                                eventArgs = new SocketAsyncEventArgs();
-                                eventArgs.Completed += this.EventArgs_Completed;
+                                this.eventArgs = new SocketAsyncEventArgs();
+                                this.eventArgs.Completed += this.EventArgs_Completed;
                                 ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                                eventArgs.UserToken = byteBlock;
-                                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                                if (!MainSocket.ReceiveAsync(eventArgs))
+                                this.eventArgs.UserToken = byteBlock;
+                                this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                                if (!this.MainSocket.ReceiveAsync(this.eventArgs))
                                 {
-                                    ProcessReceived(eventArgs);
+                                    this.ProcessReceived(this.eventArgs);
                                 }
                                 break;
                             }
                         case ReceiveType.BIO:
                             {
                                 Thread thread;
-                                if (useSsl)
+                                if (this.useSsl)
                                 {
                                     thread = new Thread(this.BIOSslStreamReceive);
                                 }
@@ -457,7 +427,7 @@ namespace RRQMSocket
             }
             else
             {
-                BreakOut("拒绝连接");
+                this.BreakOut("拒绝连接");
             }
         }
 
@@ -510,11 +480,11 @@ namespace RRQMSocket
         /// <param name="newID"></param>
         public void ResetID(string newID)
         {
-            if (this.id==newID)
+            if (this.id == newID)
             {
                 return;
             }
-            this.ResetID(new WaitSetID() { OldID=this.id,NewID=newID });
+            this.ResetID(new WaitSetID() { OldID = this.id, NewID = newID });
         }
 
         /// <summary>
@@ -603,7 +573,7 @@ namespace RRQMSocket
         {
             try
             {
-                ProcessReceived(e);
+                this.ProcessReceived(e);
             }
             catch (Exception ex)
             {
@@ -632,7 +602,7 @@ namespace RRQMSocket
                     }
                     if (this.dataHandlingAdapter == null)
                     {
-                        logger.Debug(LogType.Error, this, "数据处理适配器为空");
+                        this.logger.Debug(LogType.Error, this, "数据处理适配器为空");
                         return;
                     }
                     this.dataHandlingAdapter.Received(byteBlock);
@@ -640,7 +610,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
+                this.Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
             }
             finally
             {
@@ -663,9 +633,9 @@ namespace RRQMSocket
                         e.UserToken = newByteBlock;
                         e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 
-                        if (!MainSocket.ReceiveAsync(e))
+                        if (!this.MainSocket.ReceiveAsync(e))
                         {
-                            ProcessReceived(e);
+                            this.ProcessReceived(e);
                         }
                     }
                     catch (Exception ex)
@@ -879,7 +849,7 @@ namespace RRQMSocket
                 {
                     while (length > 0)
                     {
-                        int r = MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                        int r = this.MainSocket.Send(buffer, offset, length, SocketFlags.None);
                         if (r == 0 && length > 0)
                         {
                             throw new RRQMException("发送数据不完全");

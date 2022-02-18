@@ -64,7 +64,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// </summary>
         public DefaultSerializationBinder()
         {
-            _typeCache = new ThreadSafeStore<TypeNameKey, Type>(GetTypeFromTypeNameKey);
+            this._typeCache = new ThreadSafeStore<TypeNameKey, Type>(this.GetTypeFromTypeNameKey);
         }
 
         private Type GetTypeFromTypeNameKey(TypeNameKey typeNameKey)
@@ -119,7 +119,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                     {
                         try
                         {
-                            type = GetGenericTypeFromTypeName(typeName, assembly);
+                            type = this.GetGenericTypeFromTypeName(typeName, assembly);
                         }
                         catch (Exception ex)
                         {
@@ -175,7 +175,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                                     string typeArgAssemblyQualifiedName = typeName.Substring(typeArgStartIndex, i - typeArgStartIndex);
 
                                     TypeNameKey typeNameKey = ReflectionUtils.SplitFullyQualifiedTypeName(typeArgAssemblyQualifiedName);
-                                    genericTypeArguments.Add(GetTypeByName(typeNameKey));
+                                    genericTypeArguments.Add(this.GetTypeByName(typeNameKey));
                                 }
                                 break;
                         }
@@ -190,7 +190,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private Type GetTypeByName(TypeNameKey typeNameKey)
         {
-            return _typeCache.Get(typeNameKey);
+            return this._typeCache.Get(typeNameKey);
         }
 
         /// <summary>
@@ -203,7 +203,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// </returns>
         public override Type BindToType(string assemblyName, string typeName)
         {
-            return GetTypeByName(new TypeNameKey(assemblyName, typeName));
+            return this.GetTypeByName(new TypeNameKey(assemblyName, typeName));
         }
 
         /// <summary>

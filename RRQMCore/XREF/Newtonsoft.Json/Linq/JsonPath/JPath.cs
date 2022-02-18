@@ -57,49 +57,49 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
         public JPath(string expression)
         {
             ValidationUtils.ArgumentNotNull(expression, nameof(expression));
-            _expression = expression;
-            Filters = new List<PathFilter>();
+            this._expression = expression;
+            this.Filters = new List<PathFilter>();
 
-            ParseMain();
+            this.ParseMain();
         }
 
         private void ParseMain()
         {
-            int currentPartStartIndex = _currentIndex;
+            int currentPartStartIndex = this._currentIndex;
 
-            EatWhitespace();
+            this.EatWhitespace();
 
-            if (_expression.Length == _currentIndex)
+            if (this._expression.Length == this._currentIndex)
             {
                 return;
             }
 
-            if (_expression[_currentIndex] == '$')
+            if (this._expression[this._currentIndex] == '$')
             {
-                if (_expression.Length == 1)
+                if (this._expression.Length == 1)
                 {
                     return;
                 }
 
                 // only increment position for "$." or "$["
                 // otherwise assume property that starts with $
-                char c = _expression[_currentIndex + 1];
+                char c = this._expression[this._currentIndex + 1];
                 if (c == '.' || c == '[')
                 {
-                    _currentIndex++;
-                    currentPartStartIndex = _currentIndex;
+                    this._currentIndex++;
+                    currentPartStartIndex = this._currentIndex;
                 }
             }
 
-            if (!ParsePath(Filters, currentPartStartIndex, false))
+            if (!this.ParsePath(this.Filters, currentPartStartIndex, false))
             {
-                int lastCharacterIndex = _currentIndex;
+                int lastCharacterIndex = this._currentIndex;
 
-                EatWhitespace();
+                this.EatWhitespace();
 
-                if (_currentIndex < _expression.Length)
+                if (this._currentIndex < this._expression.Length)
                 {
-                    throw new JsonException("Unexpected character while parsing path: " + _expression[lastCharacterIndex]);
+                    throw new JsonException("Unexpected character while parsing path: " + this._expression[lastCharacterIndex]);
                 }
             }
         }
@@ -111,17 +111,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             bool followingDot = false;
 
             bool ended = false;
-            while (_currentIndex < _expression.Length && !ended)
+            while (this._currentIndex < this._expression.Length && !ended)
             {
-                char currentChar = _expression[_currentIndex];
+                char currentChar = this._expression[this._currentIndex];
 
                 switch (currentChar)
                 {
                     case '[':
                     case '(':
-                        if (_currentIndex > currentPartStartIndex)
+                        if (this._currentIndex > currentPartStartIndex)
                         {
-                            string member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex);
+                            string member = this._expression.Substring(currentPartStartIndex, this._currentIndex - currentPartStartIndex);
                             if (member == "*")
                             {
                                 member = null;
@@ -131,9 +131,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                             scan = false;
                         }
 
-                        filters.Add(ParseIndexer(currentChar, scan));
-                        _currentIndex++;
-                        currentPartStartIndex = _currentIndex;
+                        filters.Add(this.ParseIndexer(currentChar, scan));
+                        this._currentIndex++;
+                        currentPartStartIndex = this._currentIndex;
                         followingIndexer = true;
                         followingDot = false;
                         break;
@@ -144,16 +144,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         break;
 
                     case ' ':
-                        if (_currentIndex < _expression.Length)
+                        if (this._currentIndex < this._expression.Length)
                         {
                             ended = true;
                         }
                         break;
 
                     case '.':
-                        if (_currentIndex > currentPartStartIndex)
+                        if (this._currentIndex > currentPartStartIndex)
                         {
-                            string member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex);
+                            string member = this._expression.Substring(currentPartStartIndex, this._currentIndex - currentPartStartIndex);
                             if (member == "*")
                             {
                                 member = null;
@@ -162,13 +162,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                             filters.Add(CreatePathFilter(member, scan));
                             scan = false;
                         }
-                        if (_currentIndex + 1 < _expression.Length && _expression[_currentIndex + 1] == '.')
+                        if (this._currentIndex + 1 < this._expression.Length && this._expression[this._currentIndex + 1] == '.')
                         {
                             scan = true;
-                            _currentIndex++;
+                            this._currentIndex++;
                         }
-                        _currentIndex++;
-                        currentPartStartIndex = _currentIndex;
+                        this._currentIndex++;
+                        currentPartStartIndex = this._currentIndex;
                         followingIndexer = false;
                         followingDot = true;
                         break;
@@ -185,17 +185,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                                 throw new JsonException("Unexpected character following indexer: " + currentChar);
                             }
 
-                            _currentIndex++;
+                            this._currentIndex++;
                         }
                         break;
                 }
             }
 
-            bool atPathEnd = (_currentIndex == _expression.Length);
+            bool atPathEnd = (this._currentIndex == this._expression.Length);
 
-            if (_currentIndex > currentPartStartIndex)
+            if (this._currentIndex > currentPartStartIndex)
             {
-                string member = _expression.Substring(currentPartStartIndex, _currentIndex - currentPartStartIndex).TrimEnd();
+                string member = this._expression.Substring(currentPartStartIndex, this._currentIndex - currentPartStartIndex).TrimEnd();
                 if (member == "*")
                 {
                     member = null;
@@ -222,31 +222,31 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private PathFilter ParseIndexer(char indexerOpenChar, bool scan)
         {
-            _currentIndex++;
+            this._currentIndex++;
 
             char indexerCloseChar = (indexerOpenChar == '[') ? ']' : ')';
 
-            EnsureLength("Path ended with open indexer.");
+            this.EnsureLength("Path ended with open indexer.");
 
-            EatWhitespace();
+            this.EatWhitespace();
 
-            if (_expression[_currentIndex] == '\'')
+            if (this._expression[this._currentIndex] == '\'')
             {
-                return ParseQuotedField(indexerCloseChar, scan);
+                return this.ParseQuotedField(indexerCloseChar, scan);
             }
-            else if (_expression[_currentIndex] == '?')
+            else if (this._expression[this._currentIndex] == '?')
             {
-                return ParseQuery(indexerCloseChar, scan);
+                return this.ParseQuery(indexerCloseChar, scan);
             }
             else
             {
-                return ParseArrayIndexer(indexerCloseChar);
+                return this.ParseArrayIndexer(indexerCloseChar);
             }
         }
 
         private PathFilter ParseArrayIndexer(char indexerCloseChar)
         {
-            int start = _currentIndex;
+            int start = this._currentIndex;
             int? end = null;
             List<int> indexes = null;
             int colonCount = 0;
@@ -254,20 +254,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             int? endIndex = null;
             int? step = null;
 
-            while (_currentIndex < _expression.Length)
+            while (this._currentIndex < this._expression.Length)
             {
-                char currentCharacter = _expression[_currentIndex];
+                char currentCharacter = this._expression[this._currentIndex];
 
                 if (currentCharacter == ' ')
                 {
-                    end = _currentIndex;
-                    EatWhitespace();
+                    end = this._currentIndex;
+                    this.EatWhitespace();
                     continue;
                 }
 
                 if (currentCharacter == indexerCloseChar)
                 {
-                    int length = (end ?? _currentIndex) - start;
+                    int length = (end ?? this._currentIndex) - start;
 
                     if (indexes != null)
                     {
@@ -276,7 +276,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                             throw new JsonException("Array index expected.");
                         }
 
-                        string indexer = _expression.Substring(start, length);
+                        string indexer = this._expression.Substring(start, length);
                         int index = Convert.ToInt32(indexer, CultureInfo.InvariantCulture);
 
                         indexes.Add(index);
@@ -286,7 +286,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                     {
                         if (length > 0)
                         {
-                            string indexer = _expression.Substring(start, length);
+                            string indexer = this._expression.Substring(start, length);
                             int index = Convert.ToInt32(indexer, CultureInfo.InvariantCulture);
 
                             if (colonCount == 1)
@@ -308,7 +308,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                             throw new JsonException("Array index expected.");
                         }
 
-                        string indexer = _expression.Substring(start, length);
+                        string indexer = this._expression.Substring(start, length);
                         int index = Convert.ToInt32(indexer, CultureInfo.InvariantCulture);
 
                         return new ArrayIndexFilter { Index = index };
@@ -316,7 +316,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 }
                 else if (currentCharacter == ',')
                 {
-                    int length = (end ?? _currentIndex) - start;
+                    int length = (end ?? this._currentIndex) - start;
 
                     if (length == 0)
                     {
@@ -328,23 +328,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         indexes = new List<int>();
                     }
 
-                    string indexer = _expression.Substring(start, length);
+                    string indexer = this._expression.Substring(start, length);
                     indexes.Add(Convert.ToInt32(indexer, CultureInfo.InvariantCulture));
 
-                    _currentIndex++;
+                    this._currentIndex++;
 
-                    EatWhitespace();
+                    this.EatWhitespace();
 
-                    start = _currentIndex;
+                    start = this._currentIndex;
                     end = null;
                 }
                 else if (currentCharacter == '*')
                 {
-                    _currentIndex++;
-                    EnsureLength("Path ended with open indexer.");
-                    EatWhitespace();
+                    this._currentIndex++;
+                    this.EnsureLength("Path ended with open indexer.");
+                    this.EatWhitespace();
 
-                    if (_expression[_currentIndex] != indexerCloseChar)
+                    if (this._expression[this._currentIndex] != indexerCloseChar)
                     {
                         throw new JsonException("Unexpected character while parsing path indexer: " + currentCharacter);
                     }
@@ -353,11 +353,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 }
                 else if (currentCharacter == ':')
                 {
-                    int length = (end ?? _currentIndex) - start;
+                    int length = (end ?? this._currentIndex) - start;
 
                     if (length > 0)
                     {
-                        string indexer = _expression.Substring(start, length);
+                        string indexer = this._expression.Substring(start, length);
                         int index = Convert.ToInt32(indexer, CultureInfo.InvariantCulture);
 
                         if (colonCount == 0)
@@ -376,11 +376,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
                     colonCount++;
 
-                    _currentIndex++;
+                    this._currentIndex++;
 
-                    EatWhitespace();
+                    this.EatWhitespace();
 
-                    start = _currentIndex;
+                    start = this._currentIndex;
                     end = null;
                 }
                 else if (!char.IsDigit(currentCharacter) && currentCharacter != '-')
@@ -394,7 +394,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         throw new JsonException("Unexpected character while parsing path indexer: " + currentCharacter);
                     }
 
-                    _currentIndex++;
+                    this._currentIndex++;
                 }
             }
 
@@ -403,38 +403,38 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private void EatWhitespace()
         {
-            while (_currentIndex < _expression.Length)
+            while (this._currentIndex < this._expression.Length)
             {
-                if (_expression[_currentIndex] != ' ')
+                if (this._expression[this._currentIndex] != ' ')
                 {
                     break;
                 }
 
-                _currentIndex++;
+                this._currentIndex++;
             }
         }
 
         private PathFilter ParseQuery(char indexerCloseChar, bool scan)
         {
-            _currentIndex++;
-            EnsureLength("Path ended with open indexer.");
+            this._currentIndex++;
+            this.EnsureLength("Path ended with open indexer.");
 
-            if (_expression[_currentIndex] != '(')
+            if (this._expression[this._currentIndex] != '(')
             {
-                throw new JsonException("Unexpected character while parsing path indexer: " + _expression[_currentIndex]);
+                throw new JsonException("Unexpected character while parsing path indexer: " + this._expression[this._currentIndex]);
             }
 
-            _currentIndex++;
+            this._currentIndex++;
 
-            QueryExpression expression = ParseExpression();
+            QueryExpression expression = this.ParseExpression();
 
-            _currentIndex++;
-            EnsureLength("Path ended with open indexer.");
-            EatWhitespace();
+            this._currentIndex++;
+            this.EnsureLength("Path ended with open indexer.");
+            this.EatWhitespace();
 
-            if (_expression[_currentIndex] != indexerCloseChar)
+            if (this._expression[this._currentIndex] != indexerCloseChar)
             {
-                throw new JsonException("Unexpected character while parsing path indexer: " + _expression[_currentIndex]);
+                throw new JsonException("Unexpected character while parsing path indexer: " + this._expression[this._currentIndex]);
             }
 
             if (!scan)
@@ -455,12 +455,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private bool TryParseExpression(out List<PathFilter> expressionPath)
         {
-            if (_expression[_currentIndex] == '$')
+            if (this._expression[this._currentIndex] == '$')
             {
                 expressionPath = new List<PathFilter>();
                 expressionPath.Add(RootFilter.Instance);
             }
-            else if (_expression[_currentIndex] == '@')
+            else if (this._expression[this._currentIndex] == '@')
             {
                 expressionPath = new List<PathFilter>();
             }
@@ -470,9 +470,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 return false;
             }
 
-            _currentIndex++;
+            this._currentIndex++;
 
-            if (ParsePath(expressionPath, _currentIndex, true))
+            if (this.ParsePath(expressionPath, this._currentIndex, true))
             {
                 throw new JsonException("Path ended with open query.");
             }
@@ -482,30 +482,30 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private JsonException CreateUnexpectedCharacterException()
         {
-            return new JsonException("Unexpected character while parsing path query: " + _expression[_currentIndex]);
+            return new JsonException("Unexpected character while parsing path query: " + this._expression[this._currentIndex]);
         }
 
         private object ParseSide()
         {
-            EatWhitespace();
+            this.EatWhitespace();
 
-            if (TryParseExpression(out var expressionPath))
+            if (this.TryParseExpression(out var expressionPath))
             {
-                EatWhitespace();
-                EnsureLength("Path ended with open query.");
+                this.EatWhitespace();
+                this.EnsureLength("Path ended with open query.");
 
                 return expressionPath;
             }
 
-            if (TryParseValue(out var value))
+            if (this.TryParseValue(out var value))
             {
-                EatWhitespace();
-                EnsureLength("Path ended with open query.");
+                this.EatWhitespace();
+                this.EnsureLength("Path ended with open query.");
 
                 return new JValue(value);
             }
 
-            throw CreateUnexpectedCharacterException();
+            throw this.CreateUnexpectedCharacterException();
         }
 
         private QueryExpression ParseExpression()
@@ -513,23 +513,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             QueryExpression rootExpression = null;
             CompositeExpression parentExpression = null;
 
-            while (_currentIndex < _expression.Length)
+            while (this._currentIndex < this._expression.Length)
             {
-                object left = ParseSide();
+                object left = this.ParseSide();
                 object right = null;
 
                 QueryOperator op;
-                if (_expression[_currentIndex] == ')'
-                    || _expression[_currentIndex] == '|'
-                    || _expression[_currentIndex] == '&')
+                if (this._expression[this._currentIndex] == ')'
+                    || this._expression[this._currentIndex] == '|'
+                    || this._expression[this._currentIndex] == '&')
                 {
                     op = QueryOperator.Exists;
                 }
                 else
                 {
-                    op = ParseOperator();
+                    op = this.ParseOperator();
 
-                    right = ParseSide();
+                    right = this.ParseSide();
                 }
 
                 BooleanQueryExpression booleanExpression = new BooleanQueryExpression
@@ -539,7 +539,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                     Right = right
                 };
 
-                if (_expression[_currentIndex] == ')')
+                if (this._expression[this._currentIndex] == ')')
                 {
                     if (parentExpression != null)
                     {
@@ -549,11 +549,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
                     return booleanExpression;
                 }
-                if (_expression[_currentIndex] == '&')
+                if (this._expression[this._currentIndex] == '&')
                 {
-                    if (!Match("&&"))
+                    if (!this.Match("&&"))
                     {
-                        throw CreateUnexpectedCharacterException();
+                        throw this.CreateUnexpectedCharacterException();
                     }
 
                     if (parentExpression == null || parentExpression.Operator != QueryOperator.And)
@@ -572,11 +572,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
                     parentExpression.Expressions.Add(booleanExpression);
                 }
-                if (_expression[_currentIndex] == '|')
+                if (this._expression[this._currentIndex] == '|')
                 {
-                    if (!Match("||"))
+                    if (!this.Match("||"))
                     {
-                        throw CreateUnexpectedCharacterException();
+                        throw this.CreateUnexpectedCharacterException();
                     }
 
                     if (parentExpression == null || parentExpression.Operator != QueryOperator.Or)
@@ -602,10 +602,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private bool TryParseValue(out object value)
         {
-            char currentChar = _expression[_currentIndex];
+            char currentChar = this._expression[this._currentIndex];
             if (currentChar == '\'')
             {
-                value = ReadQuotedString();
+                value = this.ReadQuotedString();
                 return true;
             }
             else if (char.IsDigit(currentChar) || currentChar == '-')
@@ -613,10 +613,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 StringBuilder sb = new StringBuilder();
                 sb.Append(currentChar);
 
-                _currentIndex++;
-                while (_currentIndex < _expression.Length)
+                this._currentIndex++;
+                while (this._currentIndex < this._expression.Length)
                 {
-                    currentChar = _expression[_currentIndex];
+                    currentChar = this._expression[this._currentIndex];
                     if (currentChar == ' ' || currentChar == ')')
                     {
                         string numberText = sb.ToString();
@@ -637,13 +637,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                     else
                     {
                         sb.Append(currentChar);
-                        _currentIndex++;
+                        this._currentIndex++;
                     }
                 }
             }
             else if (currentChar == 't')
             {
-                if (Match("true"))
+                if (this.Match("true"))
                 {
                     value = true;
                     return true;
@@ -651,7 +651,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             }
             else if (currentChar == 'f')
             {
-                if (Match("false"))
+                if (this.Match("false"))
                 {
                     value = false;
                     return true;
@@ -659,7 +659,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             }
             else if (currentChar == 'n')
             {
-                if (Match("null"))
+                if (this.Match("null"))
                 {
                     value = null;
                     return true;
@@ -667,7 +667,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             }
             else if (currentChar == '/')
             {
-                value = ReadRegexString();
+                value = this.ReadRegexString();
                 return true;
             }
 
@@ -679,14 +679,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
         {
             StringBuilder sb = new StringBuilder();
 
-            _currentIndex++;
-            while (_currentIndex < _expression.Length)
+            this._currentIndex++;
+            while (this._currentIndex < this._expression.Length)
             {
-                char currentChar = _expression[_currentIndex];
-                if (currentChar == '\\' && _currentIndex + 1 < _expression.Length)
+                char currentChar = this._expression[this._currentIndex];
+                if (currentChar == '\\' && this._currentIndex + 1 < this._expression.Length)
                 {
-                    _currentIndex++;
-                    currentChar = _expression[_currentIndex];
+                    this._currentIndex++;
+                    currentChar = this._expression[this._currentIndex];
 
                     char resolvedChar;
                     switch (currentChar)
@@ -724,16 +724,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
                     sb.Append(resolvedChar);
 
-                    _currentIndex++;
+                    this._currentIndex++;
                 }
                 else if (currentChar == '\'')
                 {
-                    _currentIndex++;
+                    this._currentIndex++;
                     return sb.ToString();
                 }
                 else
                 {
-                    _currentIndex++;
+                    this._currentIndex++;
                     sb.Append(currentChar);
                 }
             }
@@ -743,29 +743,29 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private string ReadRegexString()
         {
-            int startIndex = _currentIndex;
+            int startIndex = this._currentIndex;
 
-            _currentIndex++;
-            while (_currentIndex < _expression.Length)
+            this._currentIndex++;
+            while (this._currentIndex < this._expression.Length)
             {
-                char currentChar = _expression[_currentIndex];
+                char currentChar = this._expression[this._currentIndex];
 
                 // handle escaped / character
-                if (currentChar == '\\' && _currentIndex + 1 < _expression.Length)
+                if (currentChar == '\\' && this._currentIndex + 1 < this._expression.Length)
                 {
-                    _currentIndex += 2;
+                    this._currentIndex += 2;
                 }
                 else if (currentChar == '/')
                 {
-                    _currentIndex++;
+                    this._currentIndex++;
 
-                    while (_currentIndex < _expression.Length)
+                    while (this._currentIndex < this._expression.Length)
                     {
-                        currentChar = _expression[_currentIndex];
+                        currentChar = this._expression[this._currentIndex];
 
                         if (char.IsLetter(currentChar))
                         {
-                            _currentIndex++;
+                            this._currentIndex++;
                         }
                         else
                         {
@@ -773,11 +773,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         }
                     }
 
-                    return _expression.Substring(startIndex, _currentIndex - startIndex);
+                    return this._expression.Substring(startIndex, this._currentIndex - startIndex);
                 }
                 else
                 {
-                    _currentIndex++;
+                    this._currentIndex++;
                 }
             }
 
@@ -786,10 +786,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private bool Match(string s)
         {
-            int currentPosition = _currentIndex;
+            int currentPosition = this._currentIndex;
             foreach (char c in s)
             {
-                if (currentPosition < _expression.Length && _expression[currentPosition] == c)
+                if (currentPosition < this._expression.Length && this._expression[currentPosition] == c)
                 {
                     currentPosition++;
                 }
@@ -799,44 +799,44 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 }
             }
 
-            _currentIndex = currentPosition;
+            this._currentIndex = currentPosition;
             return true;
         }
 
         private QueryOperator ParseOperator()
         {
-            if (_currentIndex + 1 >= _expression.Length)
+            if (this._currentIndex + 1 >= this._expression.Length)
             {
                 throw new JsonException("Path ended with open query.");
             }
 
-            if (Match("=="))
+            if (this.Match("=="))
             {
                 return QueryOperator.Equals;
             }
 
-            if (Match("=~"))
+            if (this.Match("=~"))
             {
                 return QueryOperator.RegexEquals;
             }
 
-            if (Match("!=") || Match("<>"))
+            if (this.Match("!=") || this.Match("<>"))
             {
                 return QueryOperator.NotEquals;
             }
-            if (Match("<="))
+            if (this.Match("<="))
             {
                 return QueryOperator.LessThanOrEquals;
             }
-            if (Match("<"))
+            if (this.Match("<"))
             {
                 return QueryOperator.LessThan;
             }
-            if (Match(">="))
+            if (this.Match(">="))
             {
                 return QueryOperator.GreaterThanOrEquals;
             }
-            if (Match(">"))
+            if (this.Match(">"))
             {
                 return QueryOperator.GreaterThan;
             }
@@ -848,14 +848,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
         {
             List<string> fields = null;
 
-            while (_currentIndex < _expression.Length)
+            while (this._currentIndex < this._expression.Length)
             {
-                string field = ReadQuotedString();
+                string field = this.ReadQuotedString();
 
-                EatWhitespace();
-                EnsureLength("Path ended with open indexer.");
+                this.EatWhitespace();
+                this.EnsureLength("Path ended with open indexer.");
 
-                if (_expression[_currentIndex] == indexerCloseChar)
+                if (this._expression[this._currentIndex] == indexerCloseChar)
                 {
                     if (fields != null)
                     {
@@ -869,10 +869,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         return CreatePathFilter(field, scan);
                     }
                 }
-                else if (_expression[_currentIndex] == ',')
+                else if (this._expression[this._currentIndex] == ',')
                 {
-                    _currentIndex++;
-                    EatWhitespace();
+                    this._currentIndex++;
+                    this.EatWhitespace();
 
                     if (fields == null)
                     {
@@ -883,7 +883,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 }
                 else
                 {
-                    throw new JsonException("Unexpected character while parsing path indexer: " + _expression[_currentIndex]);
+                    throw new JsonException("Unexpected character while parsing path indexer: " + this._expression[this._currentIndex]);
                 }
             }
 
@@ -892,7 +892,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private void EnsureLength(string message)
         {
-            if (_currentIndex >= _expression.Length)
+            if (this._currentIndex >= this._expression.Length)
             {
                 throw new JsonException(message);
             }
@@ -900,7 +900,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         internal IEnumerable<JToken> Evaluate(JToken root, JToken t, bool errorWhenNoMatch)
         {
-            return Evaluate(Filters, root, t, errorWhenNoMatch);
+            return Evaluate(this.Filters, root, t, errorWhenNoMatch);
         }
 
         internal static IEnumerable<JToken> Evaluate(List<PathFilter> filters, JToken root, JToken t, bool errorWhenNoMatch)

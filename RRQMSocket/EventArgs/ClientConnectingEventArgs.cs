@@ -38,9 +38,6 @@ namespace RRQMSocket
         /// <summary>
         /// 新初始化的通信器
         /// </summary>
-        public Socket Socket
-        {
-            get { return socket; }
-        }
+        public Socket Socket => this.socket;
     }
 }

@@ -72,14 +72,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(dictionary, nameof(dictionary));
 
-            _dictionary = dictionary;
+            this._dictionary = dictionary;
         }
 
         public DictionaryWrapper(IDictionary<TKey, TValue> dictionary)
         {
             ValidationUtils.ArgumentNotNull(dictionary, nameof(dictionary));
 
-            _genericDictionary = dictionary;
+            this._genericDictionary = dictionary;
         }
 
 #if HAVE_READ_ONLY_COLLECTIONS
@@ -93,13 +93,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public void Add(TKey key, TValue value)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                _dictionary.Add(key, value);
+                this._dictionary.Add(key, value);
             }
-            else if (_genericDictionary != null)
+            else if (this._genericDictionary != null)
             {
-                _genericDictionary.Add(key, value);
+                this._genericDictionary.Add(key, value);
             }
             else
             {
@@ -109,9 +109,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public bool ContainsKey(TKey key)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                return _dictionary.Contains(key);
+                return this._dictionary.Contains(key);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -121,7 +121,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return _genericDictionary.ContainsKey(key);
+                return this._genericDictionary.ContainsKey(key);
             }
         }
 
@@ -129,9 +129,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary.Keys.Cast<TKey>().ToList();
+                    return this._dictionary.Keys.Cast<TKey>().ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -141,18 +141,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _genericDictionary.Keys;
+                    return this._genericDictionary.Keys;
                 }
             }
         }
 
         public bool Remove(TKey key)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                if (_dictionary.Contains(key))
+                if (this._dictionary.Contains(key))
                 {
-                    _dictionary.Remove(key);
+                    this._dictionary.Remove(key);
                     return true;
                 }
                 else
@@ -168,22 +168,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return _genericDictionary.Remove(key);
+                return this._genericDictionary.Remove(key);
             }
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                if (!_dictionary.Contains(key))
+                if (!this._dictionary.Contains(key))
                 {
                     value = default(TValue);
                     return false;
                 }
                 else
                 {
-                    value = (TValue)_dictionary[key];
+                    value = (TValue)this._dictionary[key];
                     return true;
                 }
             }
@@ -195,7 +195,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return _genericDictionary.TryGetValue(key, out value);
+                return this._genericDictionary.TryGetValue(key, out value);
             }
         }
 
@@ -203,9 +203,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary.Values.Cast<TValue>().ToList();
+                    return this._dictionary.Values.Cast<TValue>().ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -215,7 +215,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _genericDictionary.Values;
+                    return this._genericDictionary.Values;
                 }
             }
         }
@@ -224,9 +224,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return (TValue)_dictionary[key];
+                    return (TValue)this._dictionary[key];
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -236,14 +236,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _genericDictionary[key];
+                    return this._genericDictionary[key];
                 }
             }
             set
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    _dictionary[key] = value;
+                    this._dictionary[key] = value;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -253,16 +253,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    _genericDictionary[key] = value;
+                    this._genericDictionary[key] = value;
                 }
             }
         }
 
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                ((IList)_dictionary).Add(item);
+                ((IList)this._dictionary).Add(item);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -272,15 +272,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                _genericDictionary?.Add(item);
+                this._genericDictionary?.Add(item);
             }
         }
 
         public void Clear()
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                _dictionary.Clear();
+                this._dictionary.Clear();
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -290,15 +290,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                _genericDictionary.Clear();
+                this._genericDictionary.Clear();
             }
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                return ((IList)_dictionary).Contains(item);
+                return ((IList)this._dictionary).Contains(item);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -308,16 +308,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return _genericDictionary.Contains(item);
+                return this._genericDictionary.Contains(item);
             }
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
                 // Manual use of IDictionaryEnumerator instead of foreach to avoid DictionaryEntry box allocations.
-                IDictionaryEnumerator e = _dictionary.GetEnumerator();
+                IDictionaryEnumerator e = this._dictionary.GetEnumerator();
                 try
                 {
                     while (e.MoveNext())
@@ -339,7 +339,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                _genericDictionary.CopyTo(array, arrayIndex);
+                this._genericDictionary.CopyTo(array, arrayIndex);
             }
         }
 
@@ -347,9 +347,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary.Count;
+                    return this._dictionary.Count;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -359,7 +359,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _genericDictionary.Count;
+                    return this._genericDictionary.Count;
                 }
             }
         }
@@ -368,9 +368,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary.IsReadOnly;
+                    return this._dictionary.IsReadOnly;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -380,22 +380,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _genericDictionary.IsReadOnly;
+                    return this._genericDictionary.IsReadOnly;
                 }
             }
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                if (_dictionary.Contains(item.Key))
+                if (this._dictionary.Contains(item.Key))
                 {
-                    object value = _dictionary[item.Key];
+                    object value = this._dictionary[item.Key];
 
                     if (Equals(value, item.Value))
                     {
-                        _dictionary.Remove(item.Key);
+                        this._dictionary.Remove(item.Key);
                         return true;
                     }
                     else
@@ -416,15 +416,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return _genericDictionary.Remove(item);
+                return this._genericDictionary.Remove(item);
             }
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                return _dictionary.Cast<DictionaryEntry>().Select(de => new KeyValuePair<TKey, TValue>((TKey)de.Key, (TValue)de.Value)).GetEnumerator();
+                return this._dictionary.Cast<DictionaryEntry>().Select(de => new KeyValuePair<TKey, TValue>((TKey)de.Key, (TValue)de.Value)).GetEnumerator();
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -434,20 +434,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return _genericDictionary.GetEnumerator();
+                return this._genericDictionary.GetEnumerator();
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
 
         void IDictionary.Add(object key, object value)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                _dictionary.Add(key, value);
+                this._dictionary.Add(key, value);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -457,7 +457,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                _genericDictionary.Add((TKey)key, (TValue)value);
+                this._genericDictionary.Add((TKey)key, (TValue)value);
             }
         }
 
@@ -465,9 +465,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary[key];
+                    return this._dictionary[key];
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -477,14 +477,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _genericDictionary[(TKey)key];
+                    return this._genericDictionary[(TKey)key];
                 }
             }
             set
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    _dictionary[key] = value;
+                    this._dictionary[key] = value;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -494,7 +494,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    _genericDictionary[(TKey)key] = (TValue)value;
+                    this._genericDictionary[(TKey)key] = (TValue)value;
                 }
             }
         }
@@ -506,33 +506,33 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             public DictionaryEnumerator(IEnumerator<KeyValuePair<TEnumeratorKey, TEnumeratorValue>> e)
             {
                 ValidationUtils.ArgumentNotNull(e, nameof(e));
-                _e = e;
+                this._e = e;
             }
 
-            public DictionaryEntry Entry => (DictionaryEntry)Current;
+            public DictionaryEntry Entry => (DictionaryEntry)this.Current;
 
-            public object Key => Entry.Key;
+            public object Key => this.Entry.Key;
 
-            public object Value => Entry.Value;
+            public object Value => this.Entry.Value;
 
-            public object Current => new DictionaryEntry(_e.Current.Key, _e.Current.Value);
+            public object Current => new DictionaryEntry(this._e.Current.Key, this._e.Current.Value);
 
             public bool MoveNext()
             {
-                return _e.MoveNext();
+                return this._e.MoveNext();
             }
 
             public void Reset()
             {
-                _e.Reset();
+                this._e.Reset();
             }
         }
 
         IDictionaryEnumerator IDictionary.GetEnumerator()
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                return _dictionary.GetEnumerator();
+                return this._dictionary.GetEnumerator();
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -542,15 +542,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return new DictionaryEnumerator<TKey, TValue>(_genericDictionary.GetEnumerator());
+                return new DictionaryEnumerator<TKey, TValue>(this._genericDictionary.GetEnumerator());
             }
         }
 
         bool IDictionary.Contains(object key)
         {
-            if (_genericDictionary != null)
+            if (this._genericDictionary != null)
             {
-                return _genericDictionary.ContainsKey((TKey)key);
+                return this._genericDictionary.ContainsKey((TKey)key);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -560,7 +560,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                return _dictionary.Contains(key);
+                return this._dictionary.Contains(key);
             }
         }
 
@@ -568,7 +568,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_genericDictionary != null)
+                if (this._genericDictionary != null)
                 {
                     return false;
                 }
@@ -580,7 +580,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _dictionary.IsFixedSize;
+                    return this._dictionary.IsFixedSize;
                 }
             }
         }
@@ -589,9 +589,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_genericDictionary != null)
+                if (this._genericDictionary != null)
                 {
-                    return _genericDictionary.Keys.ToList();
+                    return this._genericDictionary.Keys.ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -601,16 +601,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _dictionary.Keys;
+                    return this._dictionary.Keys;
                 }
             }
         }
 
         public void Remove(object key)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                _dictionary.Remove(key);
+                this._dictionary.Remove(key);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -620,7 +620,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                _genericDictionary.Remove((TKey)key);
+                this._genericDictionary.Remove((TKey)key);
             }
         }
 
@@ -628,9 +628,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_genericDictionary != null)
+                if (this._genericDictionary != null)
                 {
-                    return _genericDictionary.Values.ToList();
+                    return this._genericDictionary.Values.ToList();
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -640,16 +640,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _dictionary.Values;
+                    return this._dictionary.Values;
                 }
             }
         }
 
         void ICollection.CopyTo(Array array, int index)
         {
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                _dictionary.CopyTo(array, index);
+                this._dictionary.CopyTo(array, index);
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (_readOnlyDictionary != null)
@@ -659,7 +659,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
             else
             {
-                _genericDictionary.CopyTo((KeyValuePair<TKey, TValue>[])array, index);
+                this._genericDictionary.CopyTo((KeyValuePair<TKey, TValue>[])array, index);
             }
         }
 
@@ -667,9 +667,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary.IsSynchronized;
+                    return this._dictionary.IsSynchronized;
                 }
                 else
                 {
@@ -682,12 +682,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_syncRoot == null)
+                if (this._syncRoot == null)
                 {
-                    Interlocked.CompareExchange(ref _syncRoot, new object(), null);
+                    Interlocked.CompareExchange(ref this._syncRoot, new object(), null);
                 }
 
-                return _syncRoot;
+                return this._syncRoot;
             }
         }
 
@@ -695,9 +695,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary;
+                    return this._dictionary;
                 }
 #if HAVE_READ_ONLY_COLLECTIONS
                 else if (_readOnlyDictionary != null)
@@ -707,7 +707,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #endif
                 else
                 {
-                    return _genericDictionary;
+                    return this._genericDictionary;
                 }
             }
         }

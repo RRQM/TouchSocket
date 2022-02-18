@@ -41,7 +41,7 @@ namespace RRQMSocket
             int position = byteBlock.Pos;//先记录初始流位置，防止不能解析时，可以重置流位置。
             TFixedHeaderRequestInfo requestInfo = this.GetInstance();
             var result = requestInfo.OnParsingHeader(byteBlock.ToArray(byteBlock.Pos, this.HeaderLength));
-            if (result== FilterResult.Success)
+            if (result == FilterResult.Success)
             {
                 if (requestInfo.BodyLength > length - this.HeaderLength)
                 {

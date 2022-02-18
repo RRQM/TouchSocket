@@ -58,8 +58,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// </param>
         public CamelCaseNamingStrategy(bool processDictionaryKeys, bool overrideSpecifiedNames)
         {
-            ProcessDictionaryKeys = processDictionaryKeys;
-            OverrideSpecifiedNames = overrideSpecifiedNames;
+            this.ProcessDictionaryKeys = processDictionaryKeys;
+            this.OverrideSpecifiedNames = overrideSpecifiedNames;
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public CamelCaseNamingStrategy(bool processDictionaryKeys, bool overrideSpecifiedNames, bool processExtensionDataNames)
             : this(processDictionaryKeys, overrideSpecifiedNames)
         {
-            ProcessExtensionDataNames = processExtensionDataNames;
+            this.ProcessExtensionDataNames = processExtensionDataNames;
         }
 
         /// <summary>

@@ -61,8 +61,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The member serialization.</value>
         public MemberSerialization MemberSerialization
         {
-            get => _memberSerialization;
-            set => _memberSerialization = value;
+            get => this._memberSerialization;
+            set => this._memberSerialization = value;
         }
 
         /// <summary>
@@ -71,8 +71,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>How the object's properties with null values are handled during serialization and deserialization.</value>
         public NullValueHandling ItemNullValueHandling
         {
-            get => _itemNullValueHandling ?? default(NullValueHandling);
-            set => _itemNullValueHandling = value;
+            get => this._itemNullValueHandling ?? default(NullValueHandling);
+            set => this._itemNullValueHandling = value;
         }
 
         /// <summary>
@@ -83,8 +83,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </value>
         public Required ItemRequired
         {
-            get => _itemRequired ?? default(Required);
-            set => _itemRequired = value;
+            get => this._itemRequired ?? default(Required);
+            set => this._itemRequired = value;
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="memberSerialization">The member serialization.</param>
         public JsonObjectAttribute(MemberSerialization memberSerialization)
         {
-            MemberSerialization = memberSerialization;
+            this.MemberSerialization = memberSerialization;
         }
 
         /// <summary>

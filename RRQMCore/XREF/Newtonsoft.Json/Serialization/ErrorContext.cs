@@ -48,10 +48,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
     {
         internal ErrorContext(object originalObject, object member, string path, Exception error)
         {
-            OriginalObject = originalObject;
-            Member = member;
-            Error = error;
-            Path = path;
+            this.OriginalObject = originalObject;
+            this.Member = member;
+            this.Error = error;
+            this.Path = path;
         }
 
         internal bool Traced { get; set; }

@@ -102,8 +102,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 throw new ArgumentNullException(nameof(reader));
             }
 
-            _reader = reader;
-            _lineNumber = 1;
+            this._reader = reader;
+            this._lineNumber = 1;
 
 #if HAVE_ASYNC
             _safeAsync = GetType() == typeof(JsonTextReader);
@@ -114,11 +114,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         internal char[] CharBuffer
         {
-            get => _chars;
-            set => _chars = value;
+            get => this._chars;
+            set => this._chars = value;
         }
 
-        internal int CharPos => _charPos;
+        internal int CharPos => this._charPos;
 #endif
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public IArrayPool<char> ArrayPool
         {
-            get => _arrayPool;
+            get => this._arrayPool;
             set
             {
                 if (value == null)
@@ -134,73 +134,73 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentNullException(nameof(value));
                 }
 
-                _arrayPool = value;
+                this._arrayPool = value;
             }
         }
 
         private void EnsureBufferNotEmpty()
         {
-            if (_stringBuffer.IsEmpty)
+            if (this._stringBuffer.IsEmpty)
             {
-                _stringBuffer = new StringBuffer(_arrayPool, 1024);
+                this._stringBuffer = new StringBuffer(this._arrayPool, 1024);
             }
         }
 
         private void SetNewLine(bool hasNextChar)
         {
-            if (hasNextChar && _chars[_charPos] == StringUtils.LineFeed)
+            if (hasNextChar && this._chars[this._charPos] == StringUtils.LineFeed)
             {
-                _charPos++;
+                this._charPos++;
             }
 
-            OnNewLine(_charPos);
+            this.OnNewLine(this._charPos);
         }
 
         private void OnNewLine(int pos)
         {
-            _lineNumber++;
-            _lineStartPos = pos;
+            this._lineNumber++;
+            this._lineStartPos = pos;
         }
 
         private void ParseString(char quote, ReadType readType)
         {
-            _charPos++;
+            this._charPos++;
 
-            ShiftBufferIfNeeded();
-            ReadStringIntoBuffer(quote);
-            ParseReadString(quote, readType);
+            this.ShiftBufferIfNeeded();
+            this.ReadStringIntoBuffer(quote);
+            this.ParseReadString(quote, readType);
         }
 
         private void ParseReadString(char quote, ReadType readType)
         {
-            SetPostValueState(true);
+            this.SetPostValueState(true);
 
             switch (readType)
             {
                 case ReadType.ReadAsBytes:
                     Guid g;
                     byte[] data;
-                    if (_stringReference.Length == 0)
+                    if (this._stringReference.Length == 0)
                     {
                         data = CollectionUtils.ArrayEmpty<byte>();
                     }
-                    else if (_stringReference.Length == 36 && ConvertUtils.TryConvertGuid(_stringReference.ToString(), out g))
+                    else if (this._stringReference.Length == 36 && ConvertUtils.TryConvertGuid(this._stringReference.ToString(), out g))
                     {
                         data = g.ToByteArray();
                     }
                     else
                     {
-                        data = Convert.FromBase64CharArray(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length);
+                        data = Convert.FromBase64CharArray(this._stringReference.Chars, this._stringReference.StartIndex, this._stringReference.Length);
                     }
 
-                    SetToken(JsonToken.Bytes, data, false);
+                    this.SetToken(JsonToken.Bytes, data, false);
                     break;
 
                 case ReadType.ReadAsString:
-                    string text = _stringReference.ToString();
+                    string text = this._stringReference.ToString();
 
-                    SetToken(JsonToken.String, text, false);
-                    _quoteChar = quote;
+                    this.SetToken(JsonToken.String, text, false);
+                    this._quoteChar = quote;
                     break;
 
                 case ReadType.ReadAsInt32:
@@ -210,7 +210,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     break;
 
                 default:
-                    if (_dateParseHandling != DateParseHandling.None)
+                    if (this._dateParseHandling != DateParseHandling.None)
                     {
                         DateParseHandling dateParseHandling;
                         if (readType == ReadType.ReadAsDateTime)
@@ -225,14 +225,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 #endif
                         else
                         {
-                            dateParseHandling = _dateParseHandling;
+                            dateParseHandling = this._dateParseHandling;
                         }
 
                         if (dateParseHandling == DateParseHandling.DateTime)
                         {
-                            if (DateTimeUtils.TryParseDateTime(_stringReference, DateTimeZoneHandling, DateFormatString, Culture, out DateTime dt))
+                            if (DateTimeUtils.TryParseDateTime(this._stringReference, this.DateTimeZoneHandling, this.DateFormatString, this.Culture, out DateTime dt))
                             {
-                                SetToken(JsonToken.Date, dt, false);
+                                this.SetToken(JsonToken.Date, dt, false);
                                 return;
                             }
                         }
@@ -248,8 +248,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 #endif
                     }
 
-                    SetToken(JsonToken.String, _stringReference.ToString(), false);
-                    _quoteChar = quote;
+                    this.SetToken(JsonToken.String, this._stringReference.ToString(), false);
+                    this._quoteChar = quote;
                     break;
             }
         }
@@ -266,113 +266,113 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             // once in the last 10% of the buffer, or buffer is already very large then
             // shift the remaining content to the start to avoid unnecessarily increasing
             // the buffer size when reading numbers/strings
-            int length = _chars.Length;
-            if (length - _charPos <= length * 0.1 || length >= LargeBufferLength)
+            int length = this._chars.Length;
+            if (length - this._charPos <= length * 0.1 || length >= this.LargeBufferLength)
             {
-                int count = _charsUsed - _charPos;
+                int count = this._charsUsed - this._charPos;
                 if (count > 0)
                 {
-                    BlockCopyChars(_chars, _charPos, _chars, 0, count);
+                    BlockCopyChars(this._chars, this._charPos, this._chars, 0, count);
                 }
 
-                _lineStartPos -= _charPos;
-                _charPos = 0;
-                _charsUsed = count;
-                _chars[_charsUsed] = '\0';
+                this._lineStartPos -= this._charPos;
+                this._charPos = 0;
+                this._charsUsed = count;
+                this._chars[this._charsUsed] = '\0';
             }
         }
 
         private int ReadData(bool append)
         {
-            return ReadData(append, 0);
+            return this.ReadData(append, 0);
         }
 
         private void PrepareBufferForReadData(bool append, int charsRequired)
         {
             // char buffer is full
-            if (_charsUsed + charsRequired >= _chars.Length - 1)
+            if (this._charsUsed + charsRequired >= this._chars.Length - 1)
             {
                 if (append)
                 {
-                    int doubledArrayLength = _chars.Length * 2;
+                    int doubledArrayLength = this._chars.Length * 2;
 
                     // copy to new array either double the size of the current or big enough to fit required content
                     int newArrayLength = Math.Max(
                         doubledArrayLength < 0 ? int.MaxValue : doubledArrayLength, // handle overflow
-                        _charsUsed + charsRequired + 1);
+                        this._charsUsed + charsRequired + 1);
 
                     // increase the size of the buffer
-                    char[] dst = BufferUtils.RentBuffer(_arrayPool, newArrayLength);
+                    char[] dst = BufferUtils.RentBuffer(this._arrayPool, newArrayLength);
 
-                    BlockCopyChars(_chars, 0, dst, 0, _chars.Length);
+                    BlockCopyChars(this._chars, 0, dst, 0, this._chars.Length);
 
-                    BufferUtils.ReturnBuffer(_arrayPool, _chars);
+                    BufferUtils.ReturnBuffer(this._arrayPool, this._chars);
 
-                    _chars = dst;
+                    this._chars = dst;
                 }
                 else
                 {
-                    int remainingCharCount = _charsUsed - _charPos;
+                    int remainingCharCount = this._charsUsed - this._charPos;
 
-                    if (remainingCharCount + charsRequired + 1 >= _chars.Length)
+                    if (remainingCharCount + charsRequired + 1 >= this._chars.Length)
                     {
                         // the remaining count plus the required is bigger than the current buffer size
-                        char[] dst = BufferUtils.RentBuffer(_arrayPool, remainingCharCount + charsRequired + 1);
+                        char[] dst = BufferUtils.RentBuffer(this._arrayPool, remainingCharCount + charsRequired + 1);
 
                         if (remainingCharCount > 0)
                         {
-                            BlockCopyChars(_chars, _charPos, dst, 0, remainingCharCount);
+                            BlockCopyChars(this._chars, this._charPos, dst, 0, remainingCharCount);
                         }
 
-                        BufferUtils.ReturnBuffer(_arrayPool, _chars);
+                        BufferUtils.ReturnBuffer(this._arrayPool, this._chars);
 
-                        _chars = dst;
+                        this._chars = dst;
                     }
                     else
                     {
                         // copy any remaining data to the beginning of the buffer if needed and reset positions
                         if (remainingCharCount > 0)
                         {
-                            BlockCopyChars(_chars, _charPos, _chars, 0, remainingCharCount);
+                            BlockCopyChars(this._chars, this._charPos, this._chars, 0, remainingCharCount);
                         }
                     }
 
-                    _lineStartPos -= _charPos;
-                    _charPos = 0;
-                    _charsUsed = remainingCharCount;
+                    this._lineStartPos -= this._charPos;
+                    this._charPos = 0;
+                    this._charsUsed = remainingCharCount;
                 }
             }
         }
 
         private int ReadData(bool append, int charsRequired)
         {
-            if (_isEndOfFile)
+            if (this._isEndOfFile)
             {
                 return 0;
             }
 
-            PrepareBufferForReadData(append, charsRequired);
+            this.PrepareBufferForReadData(append, charsRequired);
 
-            int attemptCharReadCount = _chars.Length - _charsUsed - 1;
+            int attemptCharReadCount = this._chars.Length - this._charsUsed - 1;
 
-            int charsRead = _reader.Read(_chars, _charsUsed, attemptCharReadCount);
+            int charsRead = this._reader.Read(this._chars, this._charsUsed, attemptCharReadCount);
 
-            _charsUsed += charsRead;
+            this._charsUsed += charsRead;
 
             if (charsRead == 0)
             {
-                _isEndOfFile = true;
+                this._isEndOfFile = true;
             }
 
-            _chars[_charsUsed] = '\0';
+            this._chars[this._charsUsed] = '\0';
             return charsRead;
         }
 
         private bool EnsureChars(int relativePosition, bool append)
         {
-            if (_charPos + relativePosition >= _charsUsed)
+            if (this._charPos + relativePosition >= this._charsUsed)
             {
-                return ReadChars(relativePosition, append);
+                return this.ReadChars(relativePosition, append);
             }
 
             return true;
@@ -380,12 +380,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private bool ReadChars(int relativePosition, bool append)
         {
-            if (_isEndOfFile)
+            if (this._isEndOfFile)
             {
                 return false;
             }
 
-            int charsRequired = _charPos + relativePosition - _charsUsed + 1;
+            int charsRequired = this._charPos + relativePosition - this._charsUsed + 1;
 
             int totalCharsRead = 0;
 
@@ -393,7 +393,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             // repeat read until the required text is returned or the reader is out of content
             do
             {
-                int charsRead = ReadData(append, charsRequired - totalCharsRead);
+                int charsRead = this.ReadData(append, charsRequired - totalCharsRead);
 
                 // no more content
                 if (charsRead == 0)
@@ -419,11 +419,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </returns>
         public override bool Read()
         {
-            EnsureBuffer();
+            this.EnsureBuffer();
 
             while (true)
             {
-                switch (_currentState)
+                switch (this._currentState)
                 {
                     case State.Start:
                     case State.Property:
@@ -431,43 +431,43 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     case State.ArrayStart:
                     case State.Constructor:
                     case State.ConstructorStart:
-                        return ParseValue();
+                        return this.ParseValue();
 
                     case State.Object:
                     case State.ObjectStart:
-                        return ParseObject();
+                        return this.ParseObject();
 
                     case State.PostValue:
                         // returns true if it hits
                         // end of object or array
-                        if (ParsePostValue(false))
+                        if (this.ParsePostValue(false))
                         {
                             return true;
                         }
                         break;
 
                     case State.Finished:
-                        if (EnsureChars(0, false))
+                        if (this.EnsureChars(0, false))
                         {
-                            EatWhitespace();
-                            if (_isEndOfFile)
+                            this.EatWhitespace();
+                            if (this._isEndOfFile)
                             {
-                                SetToken(JsonToken.None);
+                                this.SetToken(JsonToken.None);
                                 return false;
                             }
-                            if (_chars[_charPos] == '/')
+                            if (this._chars[this._charPos] == '/')
                             {
-                                ParseComment(true);
+                                this.ParseComment(true);
                                 return true;
                             }
 
-                            throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                            throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, this._chars[this._charPos]));
                         }
-                        SetToken(JsonToken.None);
+                        this.SetToken(JsonToken.None);
                         return false;
 
                     default:
-                        throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, CurrentState));
+                        throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, this.CurrentState));
                 }
             }
         }
@@ -478,7 +478,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Int32"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override int? ReadAsInt32()
         {
-            return (int?)ReadNumberValue(ReadType.ReadAsInt32);
+            return (int?)this.ReadNumberValue(ReadType.ReadAsInt32);
         }
 
         /// <summary>
@@ -487,7 +487,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="DateTime"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override DateTime? ReadAsDateTime()
         {
-            return (DateTime?)ReadStringValue(ReadType.ReadAsDateTime);
+            return (DateTime?)this.ReadStringValue(ReadType.ReadAsDateTime);
         }
 
         /// <summary>
@@ -496,7 +496,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="String"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override string ReadAsString()
         {
-            return (string)ReadStringValue(ReadType.ReadAsString);
+            return (string)this.ReadStringValue(ReadType.ReadAsString);
         }
 
         /// <summary>
@@ -505,13 +505,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Byte"/>[] or <c>null</c> if the next JSON token is null. This method will return <c>null</c> at the end of an array.</returns>
         public override byte[] ReadAsBytes()
         {
-            EnsureBuffer();
+            this.EnsureBuffer();
             bool isWrapped = false;
 
-            switch (_currentState)
+            switch (this._currentState)
             {
                 case State.PostValue:
-                    if (ParsePostValue(true))
+                    if (this.ParsePostValue(true))
                     {
                         return null;
                     }
@@ -524,85 +524,85 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = this._chars[this._charPos];
 
                         switch (currentChar)
                         {
                             case '\0':
-                                if (ReadNullChar())
+                                if (this.ReadNullChar())
                                 {
-                                    SetToken(JsonToken.None, null, false);
+                                    this.SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
                                 break;
 
                             case '"':
                             case '\'':
-                                ParseString(currentChar, ReadType.ReadAsBytes);
-                                byte[] data = (byte[])Value;
+                                this.ParseString(currentChar, ReadType.ReadAsBytes);
+                                byte[] data = (byte[])this.Value;
                                 if (isWrapped)
                                 {
-                                    ReaderReadAndAssert();
-                                    if (TokenType != JsonToken.EndObject)
+                                    this.ReaderReadAndAssert();
+                                    if (this.TokenType != JsonToken.EndObject)
                                     {
-                                        throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
+                                        throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, this.TokenType));
                                     }
-                                    SetToken(JsonToken.Bytes, data, false);
+                                    this.SetToken(JsonToken.Bytes, data, false);
                                 }
                                 return data;
 
                             case '{':
-                                _charPos++;
-                                SetToken(JsonToken.StartObject);
-                                ReadIntoWrappedTypeObject();
+                                this._charPos++;
+                                this.SetToken(JsonToken.StartObject);
+                                this.ReadIntoWrappedTypeObject();
                                 isWrapped = true;
                                 break;
 
                             case '[':
-                                _charPos++;
-                                SetToken(JsonToken.StartArray);
-                                return ReadArrayIntoByteArray();
+                                this._charPos++;
+                                this.SetToken(JsonToken.StartArray);
+                                return this.ReadArrayIntoByteArray();
 
                             case 'n':
-                                HandleNull();
+                                this.HandleNull();
                                 return null;
 
                             case '/':
-                                ParseComment(false);
+                                this.ParseComment(false);
                                 break;
 
                             case ',':
-                                ProcessValueComma();
+                                this.ProcessValueComma();
                                 break;
 
                             case ']':
-                                _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
+                                this._charPos++;
+                                if (this._currentState == State.Array || this._currentState == State.ArrayStart || this._currentState == State.PostValue)
                                 {
-                                    SetToken(JsonToken.EndArray);
+                                    this.SetToken(JsonToken.EndArray);
                                     return null;
                                 }
-                                throw CreateUnexpectedCharacterException(currentChar);
+                                throw this.CreateUnexpectedCharacterException(currentChar);
                             case StringUtils.CarriageReturn:
-                                ProcessCarriageReturn(false);
+                                this.ProcessCarriageReturn(false);
                                 break;
 
                             case StringUtils.LineFeed:
-                                ProcessLineFeed();
+                                this.ProcessLineFeed();
                                 break;
 
                             case ' ':
                             case StringUtils.Tab:
                                 // eat
-                                _charPos++;
+                                this._charPos++;
                                 break;
 
                             default:
-                                _charPos++;
+                                this._charPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {
-                                    throw CreateUnexpectedCharacterException(currentChar);
+                                    throw this.CreateUnexpectedCharacterException(currentChar);
                                 }
 
                                 // eat
@@ -610,22 +610,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         }
                     }
                 case State.Finished:
-                    ReadFinished();
+                    this.ReadFinished();
                     return null;
 
                 default:
-                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, CurrentState));
+                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, this.CurrentState));
             }
         }
 
         private object ReadStringValue(ReadType readType)
         {
-            EnsureBuffer();
+            this.EnsureBuffer();
 
-            switch (_currentState)
+            switch (this._currentState)
             {
                 case State.PostValue:
-                    if (ParsePostValue(true))
+                    if (this.ParsePostValue(true))
                     {
                         return null;
                     }
@@ -638,32 +638,32 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = this._chars[this._charPos];
 
                         switch (currentChar)
                         {
                             case '\0':
-                                if (ReadNullChar())
+                                if (this.ReadNullChar())
                                 {
-                                    SetToken(JsonToken.None, null, false);
+                                    this.SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
                                 break;
 
                             case '"':
                             case '\'':
-                                ParseString(currentChar, readType);
-                                return FinishReadQuotedStringValue(readType);
+                                this.ParseString(currentChar, readType);
+                                return this.FinishReadQuotedStringValue(readType);
 
                             case '-':
-                                if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I')
+                                if (this.EnsureChars(1, true) && this._chars[this._charPos + 1] == 'I')
                                 {
-                                    return ParseNumberNegativeInfinity(readType);
+                                    return this.ParseNumberNegativeInfinity(readType);
                                 }
                                 else
                                 {
-                                    ParseNumber(readType);
-                                    return Value;
+                                    this.ParseNumber(readType);
+                                    return this.Value;
                                 }
                             case '.':
                             case '0':
@@ -678,73 +678,73 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                             case '9':
                                 if (readType != ReadType.ReadAsString)
                                 {
-                                    _charPos++;
-                                    throw CreateUnexpectedCharacterException(currentChar);
+                                    this._charPos++;
+                                    throw this.CreateUnexpectedCharacterException(currentChar);
                                 }
-                                ParseNumber(ReadType.ReadAsString);
-                                return Value;
+                                this.ParseNumber(ReadType.ReadAsString);
+                                return this.Value;
 
                             case 't':
                             case 'f':
                                 if (readType != ReadType.ReadAsString)
                                 {
-                                    _charPos++;
-                                    throw CreateUnexpectedCharacterException(currentChar);
+                                    this._charPos++;
+                                    throw this.CreateUnexpectedCharacterException(currentChar);
                                 }
                                 string expected = currentChar == 't' ? JsonConvert.True : JsonConvert.False;
-                                if (!MatchValueWithTrailingSeparator(expected))
+                                if (!this.MatchValueWithTrailingSeparator(expected))
                                 {
-                                    throw CreateUnexpectedCharacterException(_chars[_charPos]);
+                                    throw this.CreateUnexpectedCharacterException(this._chars[this._charPos]);
                                 }
-                                SetToken(JsonToken.String, expected);
+                                this.SetToken(JsonToken.String, expected);
                                 return expected;
 
                             case 'I':
-                                return ParseNumberPositiveInfinity(readType);
+                                return this.ParseNumberPositiveInfinity(readType);
 
                             case 'N':
-                                return ParseNumberNaN(readType);
+                                return this.ParseNumberNaN(readType);
 
                             case 'n':
-                                HandleNull();
+                                this.HandleNull();
                                 return null;
 
                             case '/':
-                                ParseComment(false);
+                                this.ParseComment(false);
                                 break;
 
                             case ',':
-                                ProcessValueComma();
+                                this.ProcessValueComma();
                                 break;
 
                             case ']':
-                                _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
+                                this._charPos++;
+                                if (this._currentState == State.Array || this._currentState == State.ArrayStart || this._currentState == State.PostValue)
                                 {
-                                    SetToken(JsonToken.EndArray);
+                                    this.SetToken(JsonToken.EndArray);
                                     return null;
                                 }
-                                throw CreateUnexpectedCharacterException(currentChar);
+                                throw this.CreateUnexpectedCharacterException(currentChar);
                             case StringUtils.CarriageReturn:
-                                ProcessCarriageReturn(false);
+                                this.ProcessCarriageReturn(false);
                                 break;
 
                             case StringUtils.LineFeed:
-                                ProcessLineFeed();
+                                this.ProcessLineFeed();
                                 break;
 
                             case ' ':
                             case StringUtils.Tab:
                                 // eat
-                                _charPos++;
+                                this._charPos++;
                                 break;
 
                             default:
-                                _charPos++;
+                                this._charPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {
-                                    throw CreateUnexpectedCharacterException(currentChar);
+                                    throw this.CreateUnexpectedCharacterException(currentChar);
                                 }
 
                                 // eat
@@ -752,11 +752,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         }
                     }
                 case State.Finished:
-                    ReadFinished();
+                    this.ReadFinished();
                     return null;
 
                 default:
-                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, CurrentState));
+                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, this.CurrentState));
             }
         }
 
@@ -766,15 +766,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 case ReadType.ReadAsBytes:
                 case ReadType.ReadAsString:
-                    return Value;
+                    return this.Value;
 
                 case ReadType.ReadAsDateTime:
-                    if (Value is DateTime time)
+                    if (this.Value is DateTime time)
                     {
                         return time;
                     }
 
-                    return ReadDateTimeString((string)Value);
+                    return this.ReadDateTimeString((string)this.Value);
 #if HAVE_DATE_TIME_OFFSET
                 case ReadType.ReadAsDateTimeOffset:
                     if (Value is DateTimeOffset offset)
@@ -800,12 +800,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Boolean"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override bool? ReadAsBoolean()
         {
-            EnsureBuffer();
+            this.EnsureBuffer();
 
-            switch (_currentState)
+            switch (this._currentState)
             {
                 case State.PostValue:
-                    if (ParsePostValue(true))
+                    if (this.ParsePostValue(true))
                     {
                         return null;
                     }
@@ -818,25 +818,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = this._chars[this._charPos];
 
                         switch (currentChar)
                         {
                             case '\0':
-                                if (ReadNullChar())
+                                if (this.ReadNullChar())
                                 {
-                                    SetToken(JsonToken.None, null, false);
+                                    this.SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
                                 break;
 
                             case '"':
                             case '\'':
-                                ParseString(currentChar, ReadType.Read);
-                                return ReadBooleanString(_stringReference.ToString());
+                                this.ParseString(currentChar, ReadType.Read);
+                                return this.ReadBooleanString(this._stringReference.ToString());
 
                             case 'n':
-                                HandleNull();
+                                this.HandleNull();
                                 return null;
 
                             case '-':
@@ -851,7 +851,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                             case '7':
                             case '8':
                             case '9':
-                                ParseNumber(ReadType.Read);
+                                this.ParseNumber(ReadType.Read);
                                 bool b;
 #if HAVE_BIG_INTEGER
                                 if (Value is BigInteger integer)
@@ -861,9 +861,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                 else
 #endif
                                 {
-                                    b = Convert.ToBoolean(Value, CultureInfo.InvariantCulture);
+                                    b = Convert.ToBoolean(this.Value, CultureInfo.InvariantCulture);
                                 }
-                                SetToken(JsonToken.Boolean, b, false);
+                                this.SetToken(JsonToken.Boolean, b, false);
                                 return b;
 
                             case 't':
@@ -871,49 +871,49 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                 bool isTrue = currentChar == 't';
                                 string expected = isTrue ? JsonConvert.True : JsonConvert.False;
 
-                                if (!MatchValueWithTrailingSeparator(expected))
+                                if (!this.MatchValueWithTrailingSeparator(expected))
                                 {
-                                    throw CreateUnexpectedCharacterException(_chars[_charPos]);
+                                    throw this.CreateUnexpectedCharacterException(this._chars[this._charPos]);
                                 }
-                                SetToken(JsonToken.Boolean, isTrue);
+                                this.SetToken(JsonToken.Boolean, isTrue);
                                 return isTrue;
 
                             case '/':
-                                ParseComment(false);
+                                this.ParseComment(false);
                                 break;
 
                             case ',':
-                                ProcessValueComma();
+                                this.ProcessValueComma();
                                 break;
 
                             case ']':
-                                _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
+                                this._charPos++;
+                                if (this._currentState == State.Array || this._currentState == State.ArrayStart || this._currentState == State.PostValue)
                                 {
-                                    SetToken(JsonToken.EndArray);
+                                    this.SetToken(JsonToken.EndArray);
                                     return null;
                                 }
-                                throw CreateUnexpectedCharacterException(currentChar);
+                                throw this.CreateUnexpectedCharacterException(currentChar);
                             case StringUtils.CarriageReturn:
-                                ProcessCarriageReturn(false);
+                                this.ProcessCarriageReturn(false);
                                 break;
 
                             case StringUtils.LineFeed:
-                                ProcessLineFeed();
+                                this.ProcessLineFeed();
                                 break;
 
                             case ' ':
                             case StringUtils.Tab:
                                 // eat
-                                _charPos++;
+                                this._charPos++;
                                 break;
 
                             default:
-                                _charPos++;
+                                this._charPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {
-                                    throw CreateUnexpectedCharacterException(currentChar);
+                                    throw this.CreateUnexpectedCharacterException(currentChar);
                                 }
 
                                 // eat
@@ -921,39 +921,39 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         }
                     }
                 case State.Finished:
-                    ReadFinished();
+                    this.ReadFinished();
                     return null;
 
                 default:
-                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, CurrentState));
+                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, this.CurrentState));
             }
         }
 
         private void ProcessValueComma()
         {
-            _charPos++;
+            this._charPos++;
 
-            if (_currentState != State.PostValue)
+            if (this._currentState != State.PostValue)
             {
-                SetToken(JsonToken.Undefined);
-                JsonReaderException ex = CreateUnexpectedCharacterException(',');
+                this.SetToken(JsonToken.Undefined);
+                JsonReaderException ex = this.CreateUnexpectedCharacterException(',');
                 // so the comma will be parsed again
-                _charPos--;
+                this._charPos--;
 
                 throw ex;
             }
 
-            SetStateBasedOnCurrent();
+            this.SetStateBasedOnCurrent();
         }
 
         private object ReadNumberValue(ReadType readType)
         {
-            EnsureBuffer();
+            this.EnsureBuffer();
 
-            switch (_currentState)
+            switch (this._currentState)
             {
                 case State.PostValue:
-                    if (ParsePostValue(true))
+                    if (this.ParsePostValue(true))
                     {
                         return null;
                     }
@@ -966,42 +966,42 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = this._chars[this._charPos];
 
                         switch (currentChar)
                         {
                             case '\0':
-                                if (ReadNullChar())
+                                if (this.ReadNullChar())
                                 {
-                                    SetToken(JsonToken.None, null, false);
+                                    this.SetToken(JsonToken.None, null, false);
                                     return null;
                                 }
                                 break;
 
                             case '"':
                             case '\'':
-                                ParseString(currentChar, readType);
-                                return FinishReadQuotedNumber(readType);
+                                this.ParseString(currentChar, readType);
+                                return this.FinishReadQuotedNumber(readType);
 
                             case 'n':
-                                HandleNull();
+                                this.HandleNull();
                                 return null;
 
                             case 'N':
-                                return ParseNumberNaN(readType);
+                                return this.ParseNumberNaN(readType);
 
                             case 'I':
-                                return ParseNumberPositiveInfinity(readType);
+                                return this.ParseNumberPositiveInfinity(readType);
 
                             case '-':
-                                if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I')
+                                if (this.EnsureChars(1, true) && this._chars[this._charPos + 1] == 'I')
                                 {
-                                    return ParseNumberNegativeInfinity(readType);
+                                    return this.ParseNumberNegativeInfinity(readType);
                                 }
                                 else
                                 {
-                                    ParseNumber(readType);
-                                    return Value;
+                                    this.ParseNumber(readType);
+                                    return this.Value;
                                 }
                             case '.':
                             case '0':
@@ -1014,45 +1014,45 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                             case '7':
                             case '8':
                             case '9':
-                                ParseNumber(readType);
-                                return Value;
+                                this.ParseNumber(readType);
+                                return this.Value;
 
                             case '/':
-                                ParseComment(false);
+                                this.ParseComment(false);
                                 break;
 
                             case ',':
-                                ProcessValueComma();
+                                this.ProcessValueComma();
                                 break;
 
                             case ']':
-                                _charPos++;
-                                if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
+                                this._charPos++;
+                                if (this._currentState == State.Array || this._currentState == State.ArrayStart || this._currentState == State.PostValue)
                                 {
-                                    SetToken(JsonToken.EndArray);
+                                    this.SetToken(JsonToken.EndArray);
                                     return null;
                                 }
-                                throw CreateUnexpectedCharacterException(currentChar);
+                                throw this.CreateUnexpectedCharacterException(currentChar);
                             case StringUtils.CarriageReturn:
-                                ProcessCarriageReturn(false);
+                                this.ProcessCarriageReturn(false);
                                 break;
 
                             case StringUtils.LineFeed:
-                                ProcessLineFeed();
+                                this.ProcessLineFeed();
                                 break;
 
                             case ' ':
                             case StringUtils.Tab:
                                 // eat
-                                _charPos++;
+                                this._charPos++;
                                 break;
 
                             default:
-                                _charPos++;
+                                this._charPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {
-                                    throw CreateUnexpectedCharacterException(currentChar);
+                                    throw this.CreateUnexpectedCharacterException(currentChar);
                                 }
 
                                 // eat
@@ -1060,11 +1060,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         }
                     }
                 case State.Finished:
-                    ReadFinished();
+                    this.ReadFinished();
                     return null;
 
                 default:
-                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, CurrentState));
+                    throw JsonReaderException.Create(this, "Unexpected state: {0}.".FormatWith(CultureInfo.InvariantCulture, this.CurrentState));
             }
         }
 
@@ -1073,13 +1073,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             switch (readType)
             {
                 case ReadType.ReadAsInt32:
-                    return ReadInt32String(_stringReference.ToString());
+                    return this.ReadInt32String(this._stringReference.ToString());
 
                 case ReadType.ReadAsDecimal:
-                    return ReadDecimalString(_stringReference.ToString());
+                    return this.ReadDecimalString(this._stringReference.ToString());
 
                 case ReadType.ReadAsDouble:
-                    return ReadDoubleString(_stringReference.ToString());
+                    return this.ReadDoubleString(this._stringReference.ToString());
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(readType));
@@ -1103,7 +1103,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Decimal"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override decimal? ReadAsDecimal()
         {
-            return (decimal?)ReadNumberValue(ReadType.ReadAsDecimal);
+            return (decimal?)this.ReadNumberValue(ReadType.ReadAsDecimal);
         }
 
         /// <summary>
@@ -1112,64 +1112,64 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Double"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override double? ReadAsDouble()
         {
-            return (double?)ReadNumberValue(ReadType.ReadAsDouble);
+            return (double?)this.ReadNumberValue(ReadType.ReadAsDouble);
         }
 
         private void HandleNull()
         {
-            if (EnsureChars(1, true))
+            if (this.EnsureChars(1, true))
             {
-                char next = _chars[_charPos + 1];
+                char next = this._chars[this._charPos + 1];
 
                 if (next == 'u')
                 {
-                    ParseNull();
+                    this.ParseNull();
                     return;
                 }
 
-                _charPos += 2;
-                throw CreateUnexpectedCharacterException(_chars[_charPos - 1]);
+                this._charPos += 2;
+                throw this.CreateUnexpectedCharacterException(this._chars[this._charPos - 1]);
             }
 
-            _charPos = _charsUsed;
-            throw CreateUnexpectedEndException();
+            this._charPos = this._charsUsed;
+            throw this.CreateUnexpectedEndException();
         }
 
         private void ReadFinished()
         {
-            if (EnsureChars(0, false))
+            if (this.EnsureChars(0, false))
             {
-                EatWhitespace();
-                if (_isEndOfFile)
+                this.EatWhitespace();
+                if (this._isEndOfFile)
                 {
                     return;
                 }
-                if (_chars[_charPos] == '/')
+                if (this._chars[this._charPos] == '/')
                 {
-                    ParseComment(false);
+                    this.ParseComment(false);
                 }
                 else
                 {
-                    throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                    throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, this._chars[this._charPos]));
                 }
             }
 
-            SetToken(JsonToken.None);
+            this.SetToken(JsonToken.None);
         }
 
         private bool ReadNullChar()
         {
-            if (_charsUsed == _charPos)
+            if (this._charsUsed == this._charPos)
             {
-                if (ReadData(false) == 0)
+                if (this.ReadData(false) == 0)
                 {
-                    _isEndOfFile = true;
+                    this._isEndOfFile = true;
                     return true;
                 }
             }
             else
             {
-                _charPos++;
+                this._charPos++;
             }
 
             return false;
@@ -1177,40 +1177,40 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void EnsureBuffer()
         {
-            if (_chars == null)
+            if (this._chars == null)
             {
-                _chars = BufferUtils.RentBuffer(_arrayPool, 1024);
-                _chars[0] = '\0';
+                this._chars = BufferUtils.RentBuffer(this._arrayPool, 1024);
+                this._chars[0] = '\0';
             }
         }
 
         private void ReadStringIntoBuffer(char quote)
         {
-            int charPos = _charPos;
-            int initialPosition = _charPos;
-            int lastWritePosition = _charPos;
-            _stringBuffer.Position = 0;
+            int charPos = this._charPos;
+            int initialPosition = this._charPos;
+            int lastWritePosition = this._charPos;
+            this._stringBuffer.Position = 0;
 
             while (true)
             {
-                switch (_chars[charPos++])
+                switch (this._chars[charPos++])
                 {
                     case '\0':
-                        if (_charsUsed == charPos - 1)
+                        if (this._charsUsed == charPos - 1)
                         {
                             charPos--;
 
-                            if (ReadData(true) == 0)
+                            if (this.ReadData(true) == 0)
                             {
-                                _charPos = charPos;
+                                this._charPos = charPos;
                                 throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
                             }
                         }
                         break;
 
                     case '\\':
-                        _charPos = charPos;
-                        if (!EnsureChars(0, true))
+                        this._charPos = charPos;
+                        if (!this.EnsureChars(0, true))
                         {
                             throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
                         }
@@ -1218,7 +1218,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         // start of escape sequence
                         int escapeStartPos = charPos - 1;
 
-                        char currentChar = _chars[charPos];
+                        char currentChar = this._chars[charPos];
                         charPos++;
 
                         char writeChar;
@@ -1256,8 +1256,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                 break;
 
                             case 'u':
-                                _charPos = charPos;
-                                writeChar = ParseUnicode();
+                                this._charPos = charPos;
+                                writeChar = this.ParseUnicode();
 
                                 if (StringUtils.IsLowSurrogate(writeChar))
                                 {
@@ -1274,12 +1274,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                         anotherHighSurrogate = false;
 
                                         // potential start of a surrogate pair
-                                        if (EnsureChars(2, true) && _chars[_charPos] == '\\' && _chars[_charPos + 1] == 'u')
+                                        if (this.EnsureChars(2, true) && this._chars[this._charPos] == '\\' && this._chars[this._charPos + 1] == 'u')
                                         {
                                             char highSurrogate = writeChar;
 
-                                            _charPos += 2;
-                                            writeChar = ParseUnicode();
+                                            this._charPos += 2;
+                                            writeChar = this.ParseUnicode();
 
                                             if (StringUtils.IsLowSurrogate(writeChar))
                                             {
@@ -1297,10 +1297,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                                 highSurrogate = UnicodeReplacementChar;
                                             }
 
-                                            EnsureBufferNotEmpty();
+                                            this.EnsureBufferNotEmpty();
 
-                                            WriteCharToBuffer(highSurrogate, lastWritePosition, escapeStartPos);
-                                            lastWritePosition = _charPos;
+                                            this.WriteCharToBuffer(highSurrogate, lastWritePosition, escapeStartPos);
+                                            lastWritePosition = this._charPos;
                                         }
                                         else
                                         {
@@ -1311,37 +1311,37 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                     } while (anotherHighSurrogate);
                                 }
 
-                                charPos = _charPos;
+                                charPos = this._charPos;
                                 break;
 
                             default:
-                                _charPos = charPos;
+                                this._charPos = charPos;
                                 throw JsonReaderException.Create(this, "Bad JSON escape sequence: {0}.".FormatWith(CultureInfo.InvariantCulture, @"\" + currentChar));
                         }
 
-                        EnsureBufferNotEmpty();
-                        WriteCharToBuffer(writeChar, lastWritePosition, escapeStartPos);
+                        this.EnsureBufferNotEmpty();
+                        this.WriteCharToBuffer(writeChar, lastWritePosition, escapeStartPos);
 
                         lastWritePosition = charPos;
                         break;
 
                     case StringUtils.CarriageReturn:
-                        _charPos = charPos - 1;
-                        ProcessCarriageReturn(true);
-                        charPos = _charPos;
+                        this._charPos = charPos - 1;
+                        this.ProcessCarriageReturn(true);
+                        charPos = this._charPos;
                         break;
 
                     case StringUtils.LineFeed:
-                        _charPos = charPos - 1;
-                        ProcessLineFeed();
-                        charPos = _charPos;
+                        this._charPos = charPos - 1;
+                        this.ProcessLineFeed();
+                        charPos = this._charPos;
                         break;
 
                     case '"':
                     case '\'':
-                        if (_chars[charPos - 1] == quote)
+                        if (this._chars[charPos - 1] == quote)
                         {
-                            FinishReadStringIntoBuffer(charPos - 1, initialPosition, lastWritePosition);
+                            this.FinishReadStringIntoBuffer(charPos - 1, initialPosition, lastWritePosition);
                             return;
                         }
                         break;
@@ -1353,46 +1353,46 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (initialPosition == lastWritePosition)
             {
-                _stringReference = new StringReference(_chars, initialPosition, charPos - initialPosition);
+                this._stringReference = new StringReference(this._chars, initialPosition, charPos - initialPosition);
             }
             else
             {
-                EnsureBufferNotEmpty();
+                this.EnsureBufferNotEmpty();
 
                 if (charPos > lastWritePosition)
                 {
-                    _stringBuffer.Append(_arrayPool, _chars, lastWritePosition, charPos - lastWritePosition);
+                    this._stringBuffer.Append(this._arrayPool, this._chars, lastWritePosition, charPos - lastWritePosition);
                 }
 
-                _stringReference = new StringReference(_stringBuffer.InternalBuffer, 0, _stringBuffer.Position);
+                this._stringReference = new StringReference(this._stringBuffer.InternalBuffer, 0, this._stringBuffer.Position);
             }
 
-            _charPos = charPos + 1;
+            this._charPos = charPos + 1;
         }
 
         private void WriteCharToBuffer(char writeChar, int lastWritePosition, int writeToPosition)
         {
             if (writeToPosition > lastWritePosition)
             {
-                _stringBuffer.Append(_arrayPool, _chars, lastWritePosition, writeToPosition - lastWritePosition);
+                this._stringBuffer.Append(this._arrayPool, this._chars, lastWritePosition, writeToPosition - lastWritePosition);
             }
 
-            _stringBuffer.Append(_arrayPool, writeChar);
+            this._stringBuffer.Append(this._arrayPool, writeChar);
         }
 
         private char ConvertUnicode(bool enoughChars)
         {
             if (enoughChars)
             {
-                if (ConvertUtils.TryHexTextToInt(_chars, _charPos, _charPos + 4, out int value))
+                if (ConvertUtils.TryHexTextToInt(this._chars, this._charPos, this._charPos + 4, out int value))
                 {
                     char hexChar = Convert.ToChar(value);
-                    _charPos += 4;
+                    this._charPos += 4;
                     return hexChar;
                 }
                 else
                 {
-                    throw JsonReaderException.Create(this, @"Invalid Unicode escape sequence: \u{0}.".FormatWith(CultureInfo.InvariantCulture, new string(_chars, _charPos, 4)));
+                    throw JsonReaderException.Create(this, @"Invalid Unicode escape sequence: \u{0}.".FormatWith(CultureInfo.InvariantCulture, new string(this._chars, this._charPos, 4)));
                 }
             }
             else
@@ -1403,23 +1403,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private char ParseUnicode()
         {
-            return ConvertUnicode(EnsureChars(4, true));
+            return this.ConvertUnicode(this.EnsureChars(4, true));
         }
 
         private void ReadNumberIntoBuffer()
         {
-            int charPos = _charPos;
+            int charPos = this._charPos;
 
             while (true)
             {
-                char currentChar = _chars[charPos];
+                char currentChar = this._chars[charPos];
                 if (currentChar == '\0')
                 {
-                    _charPos = charPos;
+                    this._charPos = charPos;
 
-                    if (_charsUsed == charPos)
+                    if (this._charsUsed == charPos)
                     {
-                        if (ReadData(true) == 0)
+                        if (this.ReadData(true) == 0)
                         {
                             return;
                         }
@@ -1429,7 +1429,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
                     }
                 }
-                else if (ReadNumberCharIntoBuffer(currentChar, charPos))
+                else if (this.ReadNumberCharIntoBuffer(currentChar, charPos))
                 {
                     return;
                 }
@@ -1474,7 +1474,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     return false;
 
                 default:
-                    _charPos = charPos;
+                    this._charPos = charPos;
 
                     if (char.IsWhiteSpace(currentChar) || currentChar == ',' || currentChar == '}' || currentChar == ']' || currentChar == ')' || currentChar == '/')
                     {
@@ -1487,50 +1487,50 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void ClearRecentString()
         {
-            _stringBuffer.Position = 0;
-            _stringReference = new StringReference();
+            this._stringBuffer.Position = 0;
+            this._stringReference = new StringReference();
         }
 
         private bool ParsePostValue(bool ignoreComments)
         {
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = this._chars[this._charPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (this._charsUsed == this._charPos)
                         {
-                            if (ReadData(false) == 0)
+                            if (this.ReadData(false) == 0)
                             {
-                                _currentState = State.Finished;
+                                this._currentState = State.Finished;
                                 return false;
                             }
                         }
                         else
                         {
-                            _charPos++;
+                            this._charPos++;
                         }
                         break;
 
                     case '}':
-                        _charPos++;
-                        SetToken(JsonToken.EndObject);
+                        this._charPos++;
+                        this.SetToken(JsonToken.EndObject);
                         return true;
 
                     case ']':
-                        _charPos++;
-                        SetToken(JsonToken.EndArray);
+                        this._charPos++;
+                        this.SetToken(JsonToken.EndArray);
                         return true;
 
                     case ')':
-                        _charPos++;
-                        SetToken(JsonToken.EndConstructor);
+                        this._charPos++;
+                        this.SetToken(JsonToken.EndConstructor);
                         return true;
 
                     case '/':
-                        ParseComment(!ignoreComments);
+                        this.ParseComment(!ignoreComments);
                         if (!ignoreComments)
                         {
                             return true;
@@ -1538,38 +1538,38 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         break;
 
                     case ',':
-                        _charPos++;
+                        this._charPos++;
 
                         // finished parsing
-                        SetStateBasedOnCurrent();
+                        this.SetStateBasedOnCurrent();
                         return false;
 
                     case ' ':
                     case StringUtils.Tab:
                         // eat
-                        _charPos++;
+                        this._charPos++;
                         break;
 
                     case StringUtils.CarriageReturn:
-                        ProcessCarriageReturn(false);
+                        this.ProcessCarriageReturn(false);
                         break;
 
                     case StringUtils.LineFeed:
-                        ProcessLineFeed();
+                        this.ProcessLineFeed();
                         break;
 
                     default:
                         if (char.IsWhiteSpace(currentChar))
                         {
                             // eat
-                            _charPos++;
+                            this._charPos++;
                         }
                         else
                         {
                             // handle multiple content without comma delimiter
-                            if (SupportMultipleContent && Depth == 0)
+                            if (this.SupportMultipleContent && this.Depth == 0)
                             {
-                                SetStateBasedOnCurrent();
+                                this.SetStateBasedOnCurrent();
                                 return false;
                             }
 
@@ -1584,56 +1584,56 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = this._chars[this._charPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (this._charsUsed == this._charPos)
                         {
-                            if (ReadData(false) == 0)
+                            if (this.ReadData(false) == 0)
                             {
                                 return false;
                             }
                         }
                         else
                         {
-                            _charPos++;
+                            this._charPos++;
                         }
                         break;
 
                     case '}':
-                        SetToken(JsonToken.EndObject);
-                        _charPos++;
+                        this.SetToken(JsonToken.EndObject);
+                        this._charPos++;
                         return true;
 
                     case '/':
-                        ParseComment(true);
+                        this.ParseComment(true);
                         return true;
 
                     case StringUtils.CarriageReturn:
-                        ProcessCarriageReturn(false);
+                        this.ProcessCarriageReturn(false);
                         break;
 
                     case StringUtils.LineFeed:
-                        ProcessLineFeed();
+                        this.ProcessLineFeed();
                         break;
 
                     case ' ':
                     case StringUtils.Tab:
                         // eat
-                        _charPos++;
+                        this._charPos++;
                         break;
 
                     default:
                         if (char.IsWhiteSpace(currentChar))
                         {
                             // eat
-                            _charPos++;
+                            this._charPos++;
                         }
                         else
                         {
-                            return ParseProperty();
+                            return this.ParseProperty();
                         }
                         break;
                 }
@@ -1642,56 +1642,56 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private bool ParseProperty()
         {
-            char firstChar = _chars[_charPos];
+            char firstChar = this._chars[this._charPos];
             char quoteChar;
 
             if (firstChar == '"' || firstChar == '\'')
             {
-                _charPos++;
+                this._charPos++;
                 quoteChar = firstChar;
-                ShiftBufferIfNeeded();
-                ReadStringIntoBuffer(quoteChar);
+                this.ShiftBufferIfNeeded();
+                this.ReadStringIntoBuffer(quoteChar);
             }
-            else if (ValidIdentifierChar(firstChar))
+            else if (this.ValidIdentifierChar(firstChar))
             {
                 quoteChar = '\0';
-                ShiftBufferIfNeeded();
-                ParseUnquotedProperty();
+                this.ShiftBufferIfNeeded();
+                this.ParseUnquotedProperty();
             }
             else
             {
-                throw JsonReaderException.Create(this, "Invalid property identifier character: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                throw JsonReaderException.Create(this, "Invalid property identifier character: {0}.".FormatWith(CultureInfo.InvariantCulture, this._chars[this._charPos]));
             }
 
             string propertyName;
 
-            if (NameTable != null)
+            if (this.NameTable != null)
             {
-                propertyName = NameTable.Get(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length);
+                propertyName = this.NameTable.Get(this._stringReference.Chars, this._stringReference.StartIndex, this._stringReference.Length);
 
                 // no match in name table
                 if (propertyName == null)
                 {
-                    propertyName = _stringReference.ToString();
+                    propertyName = this._stringReference.ToString();
                 }
             }
             else
             {
-                propertyName = _stringReference.ToString();
+                propertyName = this._stringReference.ToString();
             }
 
-            EatWhitespace();
+            this.EatWhitespace();
 
-            if (_chars[_charPos] != ':')
+            if (this._chars[this._charPos] != ':')
             {
-                throw JsonReaderException.Create(this, "Invalid character after parsing property name. Expected ':' but got: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                throw JsonReaderException.Create(this, "Invalid character after parsing property name. Expected ':' but got: {0}.".FormatWith(CultureInfo.InvariantCulture, this._chars[this._charPos]));
             }
 
-            _charPos++;
+            this._charPos++;
 
-            SetToken(JsonToken.PropertyName, propertyName);
-            _quoteChar = quoteChar;
-            ClearRecentString();
+            this.SetToken(JsonToken.PropertyName, propertyName);
+            this._quoteChar = quoteChar;
+            this.ClearRecentString();
 
             return true;
         }
@@ -1703,17 +1703,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void ParseUnquotedProperty()
         {
-            int initialPosition = _charPos;
+            int initialPosition = this._charPos;
 
             // parse unquoted property name until whitespace or colon
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = this._chars[this._charPos];
                 if (currentChar == '\0')
                 {
-                    if (_charsUsed == _charPos)
+                    if (this._charsUsed == this._charPos)
                     {
-                        if (ReadData(true) == 0)
+                        if (this.ReadData(true) == 0)
                         {
                             throw JsonReaderException.Create(this, "Unexpected end while parsing unquoted property name.");
                         }
@@ -1721,11 +1721,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         continue;
                     }
 
-                    _stringReference = new StringReference(_chars, initialPosition, _charPos - initialPosition);
+                    this._stringReference = new StringReference(this._chars, initialPosition, this._charPos - initialPosition);
                     return;
                 }
 
-                if (ReadUnquotedPropertyReportIfDone(currentChar, initialPosition))
+                if (this.ReadUnquotedPropertyReportIfDone(currentChar, initialPosition))
                 {
                     return;
                 }
@@ -1734,15 +1734,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private bool ReadUnquotedPropertyReportIfDone(char currentChar, int initialPosition)
         {
-            if (ValidIdentifierChar(currentChar))
+            if (this.ValidIdentifierChar(currentChar))
             {
-                _charPos++;
+                this._charPos++;
                 return false;
             }
 
             if (char.IsWhiteSpace(currentChar) || currentChar == ':')
             {
-                _stringReference = new StringReference(_chars, initialPosition, _charPos - initialPosition);
+                this._stringReference = new StringReference(this._chars, initialPosition, this._charPos - initialPosition);
                 return true;
             }
 
@@ -1753,194 +1753,194 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = this._chars[this._charPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (this._charsUsed == this._charPos)
                         {
-                            if (ReadData(false) == 0)
+                            if (this.ReadData(false) == 0)
                             {
                                 return false;
                             }
                         }
                         else
                         {
-                            _charPos++;
+                            this._charPos++;
                         }
                         break;
 
                     case '"':
                     case '\'':
-                        ParseString(currentChar, ReadType.Read);
+                        this.ParseString(currentChar, ReadType.Read);
                         return true;
 
                     case 't':
-                        ParseTrue();
+                        this.ParseTrue();
                         return true;
 
                     case 'f':
-                        ParseFalse();
+                        this.ParseFalse();
                         return true;
 
                     case 'n':
-                        if (EnsureChars(1, true))
+                        if (this.EnsureChars(1, true))
                         {
-                            char next = _chars[_charPos + 1];
+                            char next = this._chars[this._charPos + 1];
 
                             if (next == 'u')
                             {
-                                ParseNull();
+                                this.ParseNull();
                             }
                             else if (next == 'e')
                             {
-                                ParseConstructor();
+                                this.ParseConstructor();
                             }
                             else
                             {
-                                throw CreateUnexpectedCharacterException(_chars[_charPos]);
+                                throw this.CreateUnexpectedCharacterException(this._chars[this._charPos]);
                             }
                         }
                         else
                         {
-                            _charPos++;
-                            throw CreateUnexpectedEndException();
+                            this._charPos++;
+                            throw this.CreateUnexpectedEndException();
                         }
                         return true;
 
                     case 'N':
-                        ParseNumberNaN(ReadType.Read);
+                        this.ParseNumberNaN(ReadType.Read);
                         return true;
 
                     case 'I':
-                        ParseNumberPositiveInfinity(ReadType.Read);
+                        this.ParseNumberPositiveInfinity(ReadType.Read);
                         return true;
 
                     case '-':
-                        if (EnsureChars(1, true) && _chars[_charPos + 1] == 'I')
+                        if (this.EnsureChars(1, true) && this._chars[this._charPos + 1] == 'I')
                         {
-                            ParseNumberNegativeInfinity(ReadType.Read);
+                            this.ParseNumberNegativeInfinity(ReadType.Read);
                         }
                         else
                         {
-                            ParseNumber(ReadType.Read);
+                            this.ParseNumber(ReadType.Read);
                         }
                         return true;
 
                     case '/':
-                        ParseComment(true);
+                        this.ParseComment(true);
                         return true;
 
                     case 'u':
-                        ParseUndefined();
+                        this.ParseUndefined();
                         return true;
 
                     case '{':
-                        _charPos++;
-                        SetToken(JsonToken.StartObject);
+                        this._charPos++;
+                        this.SetToken(JsonToken.StartObject);
                         return true;
 
                     case '[':
-                        _charPos++;
-                        SetToken(JsonToken.StartArray);
+                        this._charPos++;
+                        this.SetToken(JsonToken.StartArray);
                         return true;
 
                     case ']':
-                        _charPos++;
-                        SetToken(JsonToken.EndArray);
+                        this._charPos++;
+                        this.SetToken(JsonToken.EndArray);
                         return true;
 
                     case ',':
                         // don't increment position, the next call to read will handle comma
                         // this is done to handle multiple empty comma values
-                        SetToken(JsonToken.Undefined);
+                        this.SetToken(JsonToken.Undefined);
                         return true;
 
                     case ')':
-                        _charPos++;
-                        SetToken(JsonToken.EndConstructor);
+                        this._charPos++;
+                        this.SetToken(JsonToken.EndConstructor);
                         return true;
 
                     case StringUtils.CarriageReturn:
-                        ProcessCarriageReturn(false);
+                        this.ProcessCarriageReturn(false);
                         break;
 
                     case StringUtils.LineFeed:
-                        ProcessLineFeed();
+                        this.ProcessLineFeed();
                         break;
 
                     case ' ':
                     case StringUtils.Tab:
                         // eat
-                        _charPos++;
+                        this._charPos++;
                         break;
 
                     default:
                         if (char.IsWhiteSpace(currentChar))
                         {
                             // eat
-                            _charPos++;
+                            this._charPos++;
                             break;
                         }
                         if (char.IsNumber(currentChar) || currentChar == '-' || currentChar == '.')
                         {
-                            ParseNumber(ReadType.Read);
+                            this.ParseNumber(ReadType.Read);
                             return true;
                         }
 
-                        throw CreateUnexpectedCharacterException(currentChar);
+                        throw this.CreateUnexpectedCharacterException(currentChar);
                 }
             }
         }
 
         private void ProcessLineFeed()
         {
-            _charPos++;
-            OnNewLine(_charPos);
+            this._charPos++;
+            this.OnNewLine(this._charPos);
         }
 
         private void ProcessCarriageReturn(bool append)
         {
-            _charPos++;
+            this._charPos++;
 
-            SetNewLine(EnsureChars(1, append));
+            this.SetNewLine(this.EnsureChars(1, append));
         }
 
         private void EatWhitespace()
         {
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = this._chars[this._charPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (this._charsUsed == this._charPos)
                         {
-                            if (ReadData(false) == 0)
+                            if (this.ReadData(false) == 0)
                             {
                                 return;
                             }
                         }
                         else
                         {
-                            _charPos++;
+                            this._charPos++;
                         }
                         break;
 
                     case StringUtils.CarriageReturn:
-                        ProcessCarriageReturn(false);
+                        this.ProcessCarriageReturn(false);
                         break;
 
                     case StringUtils.LineFeed:
-                        ProcessLineFeed();
+                        this.ProcessLineFeed();
                         break;
 
                     default:
                         if (currentChar == ' ' || char.IsWhiteSpace(currentChar))
                         {
-                            _charPos++;
+                            this._charPos++;
                         }
                         else
                         {
@@ -1953,57 +1953,57 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void ParseConstructor()
         {
-            if (MatchValueWithTrailingSeparator("new"))
+            if (this.MatchValueWithTrailingSeparator("new"))
             {
-                EatWhitespace();
+                this.EatWhitespace();
 
-                int initialPosition = _charPos;
+                int initialPosition = this._charPos;
                 int endPosition;
 
                 while (true)
                 {
-                    char currentChar = _chars[_charPos];
+                    char currentChar = this._chars[this._charPos];
                     if (currentChar == '\0')
                     {
-                        if (_charsUsed == _charPos)
+                        if (this._charsUsed == this._charPos)
                         {
-                            if (ReadData(true) == 0)
+                            if (this.ReadData(true) == 0)
                             {
                                 throw JsonReaderException.Create(this, "Unexpected end while parsing constructor.");
                             }
                         }
                         else
                         {
-                            endPosition = _charPos;
-                            _charPos++;
+                            endPosition = this._charPos;
+                            this._charPos++;
                             break;
                         }
                     }
                     else if (char.IsLetterOrDigit(currentChar))
                     {
-                        _charPos++;
+                        this._charPos++;
                     }
                     else if (currentChar == StringUtils.CarriageReturn)
                     {
-                        endPosition = _charPos;
-                        ProcessCarriageReturn(true);
+                        endPosition = this._charPos;
+                        this.ProcessCarriageReturn(true);
                         break;
                     }
                     else if (currentChar == StringUtils.LineFeed)
                     {
-                        endPosition = _charPos;
-                        ProcessLineFeed();
+                        endPosition = this._charPos;
+                        this.ProcessLineFeed();
                         break;
                     }
                     else if (char.IsWhiteSpace(currentChar))
                     {
-                        endPosition = _charPos;
-                        _charPos++;
+                        endPosition = this._charPos;
+                        this._charPos++;
                         break;
                     }
                     else if (currentChar == '(')
                     {
-                        endPosition = _charPos;
+                        endPosition = this._charPos;
                         break;
                     }
                     else
@@ -2012,21 +2012,21 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
                 }
 
-                _stringReference = new StringReference(_chars, initialPosition, endPosition - initialPosition);
-                string constructorName = _stringReference.ToString();
+                this._stringReference = new StringReference(this._chars, initialPosition, endPosition - initialPosition);
+                string constructorName = this._stringReference.ToString();
 
-                EatWhitespace();
+                this.EatWhitespace();
 
-                if (_chars[_charPos] != '(')
+                if (this._chars[this._charPos] != '(')
                 {
-                    throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                    throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, this._chars[this._charPos]));
                 }
 
-                _charPos++;
+                this._charPos++;
 
-                ClearRecentString();
+                this.ClearRecentString();
 
-                SetToken(JsonToken.StartConstructor, constructorName);
+                this.SetToken(JsonToken.StartConstructor, constructorName);
             }
             else
             {
@@ -2036,32 +2036,32 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void ParseNumber(ReadType readType)
         {
-            ShiftBufferIfNeeded();
+            this.ShiftBufferIfNeeded();
 
-            char firstChar = _chars[_charPos];
-            int initialPosition = _charPos;
+            char firstChar = this._chars[this._charPos];
+            int initialPosition = this._charPos;
 
-            ReadNumberIntoBuffer();
+            this.ReadNumberIntoBuffer();
 
-            ParseReadNumber(readType, firstChar, initialPosition);
+            this.ParseReadNumber(readType, firstChar, initialPosition);
         }
 
         private void ParseReadNumber(ReadType readType, char firstChar, int initialPosition)
         {
             // set state to PostValue now so that if there is an error parsing the number then the reader can continue
-            SetPostValueState(true);
+            this.SetPostValueState(true);
 
-            _stringReference = new StringReference(_chars, initialPosition, _charPos - initialPosition);
+            this._stringReference = new StringReference(this._chars, initialPosition, this._charPos - initialPosition);
 
             object numberValue;
             JsonToken numberType;
 
-            bool singleDigit = (char.IsDigit(firstChar) && _stringReference.Length == 1);
-            bool nonBase10 = (firstChar == '0' && _stringReference.Length > 1 && _stringReference.Chars[_stringReference.StartIndex + 1] != '.' && _stringReference.Chars[_stringReference.StartIndex + 1] != 'e' && _stringReference.Chars[_stringReference.StartIndex + 1] != 'E');
+            bool singleDigit = (char.IsDigit(firstChar) && this._stringReference.Length == 1);
+            bool nonBase10 = (firstChar == '0' && this._stringReference.Length > 1 && this._stringReference.Chars[this._stringReference.StartIndex + 1] != '.' && this._stringReference.Chars[this._stringReference.StartIndex + 1] != 'e' && this._stringReference.Chars[this._stringReference.StartIndex + 1] != 'E');
 
             if (readType == ReadType.ReadAsString)
             {
-                string number = _stringReference.ToString();
+                string number = this._stringReference.ToString();
 
                 // validate that the string is a valid number
                 if (nonBase10)
@@ -2079,14 +2079,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
                     catch (Exception ex)
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, number), ex);
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                     }
                 }
                 else
                 {
                     if (!double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
                     }
                 }
 
@@ -2102,7 +2102,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 }
                 else if (nonBase10)
                 {
-                    string number = _stringReference.ToString();
+                    string number = this._stringReference.ToString();
 
                     try
                     {
@@ -2112,23 +2112,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
                     catch (Exception ex)
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid integer.".FormatWith(CultureInfo.InvariantCulture, number), ex);
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid integer.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                     }
                 }
                 else
                 {
-                    ParseResult parseResult = ConvertUtils.Int32TryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out int value);
+                    ParseResult parseResult = ConvertUtils.Int32TryParse(this._stringReference.Chars, this._stringReference.StartIndex, this._stringReference.Length, out int value);
                     if (parseResult == ParseResult.Success)
                     {
                         numberValue = value;
                     }
                     else if (parseResult == ParseResult.Overflow)
                     {
-                        throw ThrowReaderError("JSON integer {0} is too large or small for an Int32.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                        throw this.ThrowReaderError("JSON integer {0} is too large or small for an Int32.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
                     }
                     else
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid integer.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid integer.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
                     }
                 }
 
@@ -2143,7 +2143,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 }
                 else if (nonBase10)
                 {
-                    string number = _stringReference.ToString();
+                    string number = this._stringReference.ToString();
 
                     try
                     {
@@ -2154,19 +2154,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
                     catch (Exception ex)
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, number), ex);
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                     }
                 }
                 else
                 {
-                    ParseResult parseResult = ConvertUtils.DecimalTryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out decimal value);
+                    ParseResult parseResult = ConvertUtils.DecimalTryParse(this._stringReference.Chars, this._stringReference.StartIndex, this._stringReference.Length, out decimal value);
                     if (parseResult == ParseResult.Success)
                     {
                         numberValue = value;
                     }
                     else
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
                     }
                 }
 
@@ -2181,7 +2181,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 }
                 else if (nonBase10)
                 {
-                    string number = _stringReference.ToString();
+                    string number = this._stringReference.ToString();
 
                     try
                     {
@@ -2192,12 +2192,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
                     catch (Exception ex)
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid double.".FormatWith(CultureInfo.InvariantCulture, number), ex);
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid double.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                     }
                 }
                 else
                 {
-                    string number = _stringReference.ToString();
+                    string number = this._stringReference.ToString();
 
                     if (double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
                     {
@@ -2205,7 +2205,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
                     else
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid double.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid double.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
                     }
                 }
 
@@ -2221,7 +2221,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 }
                 else if (nonBase10)
                 {
-                    string number = _stringReference.ToString();
+                    string number = this._stringReference.ToString();
 
                     try
                     {
@@ -2229,14 +2229,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
                     catch (Exception ex)
                     {
-                        throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, number), ex);
+                        throw this.ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, number), ex);
                     }
 
                     numberType = JsonToken.Integer;
                 }
                 else
                 {
-                    ParseResult parseResult = ConvertUtils.Int64TryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out long value);
+                    ParseResult parseResult = ConvertUtils.Int64TryParse(this._stringReference.Chars, this._stringReference.StartIndex, this._stringReference.Length, out long value);
                     if (parseResult == ParseResult.Success)
                     {
                         numberValue = value;
@@ -2255,26 +2255,26 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         numberValue = BigIntegerParse(number, CultureInfo.InvariantCulture);
                         numberType = JsonToken.Integer;
 #else
-                        throw ThrowReaderError("JSON integer {0} is too large or small for an Int64.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                        throw this.ThrowReaderError("JSON integer {0} is too large or small for an Int64.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
 #endif
                     }
                     else
                     {
-                        if (_floatParseHandling == FloatParseHandling.Decimal)
+                        if (this._floatParseHandling == FloatParseHandling.Decimal)
                         {
-                            parseResult = ConvertUtils.DecimalTryParse(_stringReference.Chars, _stringReference.StartIndex, _stringReference.Length, out decimal d);
+                            parseResult = ConvertUtils.DecimalTryParse(this._stringReference.Chars, this._stringReference.StartIndex, this._stringReference.Length, out decimal d);
                             if (parseResult == ParseResult.Success)
                             {
                                 numberValue = d;
                             }
                             else
                             {
-                                throw ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                                throw this.ThrowReaderError("Input string '{0}' is not a valid decimal.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
                             }
                         }
                         else
                         {
-                            string number = _stringReference.ToString();
+                            string number = this._stringReference.ToString();
 
                             if (double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out double d))
                             {
@@ -2282,7 +2282,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                             }
                             else
                             {
-                                throw ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, _stringReference.ToString()));
+                                throw this.ThrowReaderError("Input string '{0}' is not a valid number.".FormatWith(CultureInfo.InvariantCulture, this._stringReference.ToString()));
                             }
                         }
 
@@ -2291,15 +2291,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 }
             }
 
-            ClearRecentString();
+            this.ClearRecentString();
 
             // index has already been updated
-            SetToken(numberType, numberValue, false);
+            this.SetToken(numberType, numberValue, false);
         }
 
         private JsonReaderException ThrowReaderError(string message, Exception ex = null)
         {
-            SetToken(JsonToken.Undefined, null, false);
+            this.SetToken(JsonToken.Undefined, null, false);
             return JsonReaderException.Create(this, message, ex);
         }
 
@@ -2318,68 +2318,68 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         private void ParseComment(bool setToken)
         {
             // should have already parsed / character before reaching this method
-            _charPos++;
+            this._charPos++;
 
-            if (!EnsureChars(1, false))
+            if (!this.EnsureChars(1, false))
             {
                 throw JsonReaderException.Create(this, "Unexpected end while parsing comment.");
             }
 
             bool singlelineComment;
 
-            if (_chars[_charPos] == '*')
+            if (this._chars[this._charPos] == '*')
             {
                 singlelineComment = false;
             }
-            else if (_chars[_charPos] == '/')
+            else if (this._chars[this._charPos] == '/')
             {
                 singlelineComment = true;
             }
             else
             {
-                throw JsonReaderException.Create(this, "Error parsing comment. Expected: *, got {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                throw JsonReaderException.Create(this, "Error parsing comment. Expected: *, got {0}.".FormatWith(CultureInfo.InvariantCulture, this._chars[this._charPos]));
             }
 
-            _charPos++;
+            this._charPos++;
 
-            int initialPosition = _charPos;
+            int initialPosition = this._charPos;
 
             while (true)
             {
-                switch (_chars[_charPos])
+                switch (this._chars[this._charPos])
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (this._charsUsed == this._charPos)
                         {
-                            if (ReadData(true) == 0)
+                            if (this.ReadData(true) == 0)
                             {
                                 if (!singlelineComment)
                                 {
                                     throw JsonReaderException.Create(this, "Unexpected end while parsing comment.");
                                 }
 
-                                EndComment(setToken, initialPosition, _charPos);
+                                this.EndComment(setToken, initialPosition, this._charPos);
                                 return;
                             }
                         }
                         else
                         {
-                            _charPos++;
+                            this._charPos++;
                         }
                         break;
 
                     case '*':
-                        _charPos++;
+                        this._charPos++;
 
                         if (!singlelineComment)
                         {
-                            if (EnsureChars(0, true))
+                            if (this.EnsureChars(0, true))
                             {
-                                if (_chars[_charPos] == '/')
+                                if (this._chars[this._charPos] == '/')
                                 {
-                                    EndComment(setToken, initialPosition, _charPos - 1);
+                                    this.EndComment(setToken, initialPosition, this._charPos - 1);
 
-                                    _charPos++;
+                                    this._charPos++;
                                     return;
                                 }
                             }
@@ -2389,23 +2389,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     case StringUtils.CarriageReturn:
                         if (singlelineComment)
                         {
-                            EndComment(setToken, initialPosition, _charPos);
+                            this.EndComment(setToken, initialPosition, this._charPos);
                             return;
                         }
-                        ProcessCarriageReturn(true);
+                        this.ProcessCarriageReturn(true);
                         break;
 
                     case StringUtils.LineFeed:
                         if (singlelineComment)
                         {
-                            EndComment(setToken, initialPosition, _charPos);
+                            this.EndComment(setToken, initialPosition, this._charPos);
                             return;
                         }
-                        ProcessLineFeed();
+                        this.ProcessLineFeed();
                         break;
 
                     default:
-                        _charPos++;
+                        this._charPos++;
                         break;
                 }
             }
@@ -2415,33 +2415,33 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (setToken)
             {
-                SetToken(JsonToken.Comment, new string(_chars, initialPosition, endPosition - initialPosition));
+                this.SetToken(JsonToken.Comment, new string(this._chars, initialPosition, endPosition - initialPosition));
             }
         }
 
         private bool MatchValue(string value)
         {
-            return MatchValue(EnsureChars(value.Length - 1, true), value);
+            return this.MatchValue(this.EnsureChars(value.Length - 1, true), value);
         }
 
         private bool MatchValue(bool enoughChars, string value)
         {
             if (!enoughChars)
             {
-                _charPos = _charsUsed;
-                throw CreateUnexpectedEndException();
+                this._charPos = this._charsUsed;
+                throw this.CreateUnexpectedEndException();
             }
 
             for (int i = 0; i < value.Length; i++)
             {
-                if (_chars[_charPos + i] != value[i])
+                if (this._chars[this._charPos + i] != value[i])
                 {
-                    _charPos += i;
+                    this._charPos += i;
                     return false;
                 }
             }
 
-            _charPos += value.Length;
+            this._charPos += value.Length;
 
             return true;
         }
@@ -2449,19 +2449,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         private bool MatchValueWithTrailingSeparator(string value)
         {
             // will match value and then move to the next character, checking that it is a separator character
-            bool match = MatchValue(value);
+            bool match = this.MatchValue(value);
 
             if (!match)
             {
                 return false;
             }
 
-            if (!EnsureChars(0, false))
+            if (!this.EnsureChars(0, false))
             {
                 return true;
             }
 
-            return IsSeparator(_chars[_charPos]) || _chars[_charPos] == '\0';
+            return this.IsSeparator(this._chars[this._charPos]) || this._chars[this._charPos] == '\0';
         }
 
         private bool IsSeparator(char c)
@@ -2475,17 +2475,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
                 case '/':
                     // check next character to see if start of a comment
-                    if (!EnsureChars(1, false))
+                    if (!this.EnsureChars(1, false))
                     {
                         return false;
                     }
 
-                    char nextChart = _chars[_charPos + 1];
+                    char nextChart = this._chars[this._charPos + 1];
 
                     return (nextChart == '*' || nextChart == '/');
 
                 case ')':
-                    if (CurrentState == State.Constructor || CurrentState == State.ConstructorStart)
+                    if (this.CurrentState == State.Constructor || this.CurrentState == State.ConstructorStart)
                     {
                         return true;
                     }
@@ -2513,9 +2513,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             // check characters equal 'true'
             // and that it is followed by either a separator character
             // or the text ends
-            if (MatchValueWithTrailingSeparator(JsonConvert.True))
+            if (this.MatchValueWithTrailingSeparator(JsonConvert.True))
             {
-                SetToken(JsonToken.Boolean, true);
+                this.SetToken(JsonToken.Boolean, true);
             }
             else
             {
@@ -2525,9 +2525,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void ParseNull()
         {
-            if (MatchValueWithTrailingSeparator(JsonConvert.Null))
+            if (this.MatchValueWithTrailingSeparator(JsonConvert.Null))
             {
-                SetToken(JsonToken.Null);
+                this.SetToken(JsonToken.Null);
             }
             else
             {
@@ -2537,9 +2537,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void ParseUndefined()
         {
-            if (MatchValueWithTrailingSeparator(JsonConvert.Undefined))
+            if (this.MatchValueWithTrailingSeparator(JsonConvert.Undefined))
             {
-                SetToken(JsonToken.Undefined);
+                this.SetToken(JsonToken.Undefined);
             }
             else
             {
@@ -2549,9 +2549,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void ParseFalse()
         {
-            if (MatchValueWithTrailingSeparator(JsonConvert.False))
+            if (this.MatchValueWithTrailingSeparator(JsonConvert.False))
             {
-                SetToken(JsonToken.Boolean, false);
+                this.SetToken(JsonToken.Boolean, false);
             }
             else
             {
@@ -2561,7 +2561,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private object ParseNumberNegativeInfinity(ReadType readType)
         {
-            return ParseNumberNegativeInfinity(readType, MatchValueWithTrailingSeparator(JsonConvert.NegativeInfinity));
+            return this.ParseNumberNegativeInfinity(readType, this.MatchValueWithTrailingSeparator(JsonConvert.NegativeInfinity));
         }
 
         private object ParseNumberNegativeInfinity(ReadType readType, bool matched)
@@ -2572,15 +2572,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 {
                     case ReadType.Read:
                     case ReadType.ReadAsDouble:
-                        if (_floatParseHandling == FloatParseHandling.Double)
+                        if (this._floatParseHandling == FloatParseHandling.Double)
                         {
-                            SetToken(JsonToken.Float, double.NegativeInfinity);
+                            this.SetToken(JsonToken.Float, double.NegativeInfinity);
                             return double.NegativeInfinity;
                         }
                         break;
 
                     case ReadType.ReadAsString:
-                        SetToken(JsonToken.String, JsonConvert.NegativeInfinity);
+                        this.SetToken(JsonToken.String, JsonConvert.NegativeInfinity);
                         return JsonConvert.NegativeInfinity;
                 }
 
@@ -2592,7 +2592,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private object ParseNumberPositiveInfinity(ReadType readType)
         {
-            return ParseNumberPositiveInfinity(readType, MatchValueWithTrailingSeparator(JsonConvert.PositiveInfinity));
+            return this.ParseNumberPositiveInfinity(readType, this.MatchValueWithTrailingSeparator(JsonConvert.PositiveInfinity));
         }
 
         private object ParseNumberPositiveInfinity(ReadType readType, bool matched)
@@ -2603,15 +2603,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 {
                     case ReadType.Read:
                     case ReadType.ReadAsDouble:
-                        if (_floatParseHandling == FloatParseHandling.Double)
+                        if (this._floatParseHandling == FloatParseHandling.Double)
                         {
-                            SetToken(JsonToken.Float, double.PositiveInfinity);
+                            this.SetToken(JsonToken.Float, double.PositiveInfinity);
                             return double.PositiveInfinity;
                         }
                         break;
 
                     case ReadType.ReadAsString:
-                        SetToken(JsonToken.String, JsonConvert.PositiveInfinity);
+                        this.SetToken(JsonToken.String, JsonConvert.PositiveInfinity);
                         return JsonConvert.PositiveInfinity;
                 }
 
@@ -2623,7 +2623,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private object ParseNumberNaN(ReadType readType)
         {
-            return ParseNumberNaN(readType, MatchValueWithTrailingSeparator(JsonConvert.NaN));
+            return this.ParseNumberNaN(readType, this.MatchValueWithTrailingSeparator(JsonConvert.NaN));
         }
 
         private object ParseNumberNaN(ReadType readType, bool matched)
@@ -2634,15 +2634,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 {
                     case ReadType.Read:
                     case ReadType.ReadAsDouble:
-                        if (_floatParseHandling == FloatParseHandling.Double)
+                        if (this._floatParseHandling == FloatParseHandling.Double)
                         {
-                            SetToken(JsonToken.Float, double.NaN);
+                            this.SetToken(JsonToken.Float, double.NaN);
                             return double.NaN;
                         }
                         break;
 
                     case ReadType.ReadAsString:
-                        SetToken(JsonToken.String, JsonConvert.NaN);
+                        this.SetToken(JsonToken.String, JsonConvert.NaN);
                         return JsonConvert.NaN;
                 }
 
@@ -2660,22 +2660,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             base.Close();
 
-            if (_chars != null)
+            if (this._chars != null)
             {
-                BufferUtils.ReturnBuffer(_arrayPool, _chars);
-                _chars = null;
+                BufferUtils.ReturnBuffer(this._arrayPool, this._chars);
+                this._chars = null;
             }
 
-            if (CloseInput)
+            if (this.CloseInput)
             {
 #if HAVE_STREAM_READER_WRITER_CLOSE
                 _reader?.Close();
 #else
-                _reader?.Dispose();
+                this._reader?.Dispose();
 #endif
             }
 
-            _stringBuffer.Clear(_arrayPool);
+            this._stringBuffer.Clear(this._arrayPool);
         }
 
         /// <summary>
@@ -2699,12 +2699,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                if (CurrentState == State.Start && LinePosition == 0 && TokenType != JsonToken.Comment)
+                if (this.CurrentState == State.Start && this.LinePosition == 0 && this.TokenType != JsonToken.Comment)
                 {
                     return 0;
                 }
 
-                return _lineNumber;
+                return this._lineNumber;
             }
         }
 
@@ -2714,6 +2714,6 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>
         /// The current line position or 0 if no line information is available (for example, <see cref="JsonTextReader.HasLineInfo"/> returns <c>false</c>).
         /// </value>
-        public int LinePosition => _charPos - _lineStartPos;
+        public int LinePosition => this._charPos - this._lineStartPos;
     }
 }

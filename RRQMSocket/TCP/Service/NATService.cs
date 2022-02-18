@@ -32,7 +32,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnConnecting(NATSocketClient socketClient, ClientOperationEventArgs e)
+        protected sealed override void OnConnecting(NATSocketClient socketClient, ClientOperationEventArgs e)
         {
             IPHost iPHost = this.ServiceConfig.GetValue<IPHost>(NATServiceConfig.TargetIPHostProperty);
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);

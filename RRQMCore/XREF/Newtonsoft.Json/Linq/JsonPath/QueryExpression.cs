@@ -55,15 +55,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         public CompositeExpression()
         {
-            Expressions = new List<QueryExpression>();
+            this.Expressions = new List<QueryExpression>();
         }
 
         public override bool IsMatch(JToken root, JToken t)
         {
-            switch (Operator)
+            switch (this.Operator)
             {
                 case QueryOperator.And:
-                    foreach (QueryExpression e in Expressions)
+                    foreach (QueryExpression e in this.Expressions)
                     {
                         if (!e.IsMatch(root, t))
                         {
@@ -73,7 +73,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                     return true;
 
                 case QueryOperator.Or:
-                    foreach (QueryExpression e in Expressions)
+                    foreach (QueryExpression e in this.Expressions)
                     {
                         if (e.IsMatch(root, t))
                         {
@@ -110,16 +110,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         public override bool IsMatch(JToken root, JToken t)
         {
-            if (Operator == QueryOperator.Exists)
+            if (this.Operator == QueryOperator.Exists)
             {
-                return GetResult(root, t, Left).Any();
+                return this.GetResult(root, t, this.Left).Any();
             }
 
-            using (IEnumerator<JToken> leftResults = GetResult(root, t, Left).GetEnumerator())
+            using (IEnumerator<JToken> leftResults = this.GetResult(root, t, this.Left).GetEnumerator())
             {
                 if (leftResults.MoveNext())
                 {
-                    IEnumerable<JToken> rightResultsEn = GetResult(root, t, Right);
+                    IEnumerable<JToken> rightResultsEn = this.GetResult(root, t, this.Right);
                     ICollection<JToken> rightResults = rightResultsEn as ICollection<JToken> ?? rightResultsEn.ToList();
 
                     do
@@ -127,7 +127,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         JToken leftResult = leftResults.Current;
                         foreach (JToken rightResult in rightResults)
                         {
-                            if (MatchTokens(leftResult, rightResult))
+                            if (this.MatchTokens(leftResult, rightResult))
                             {
                                 return true;
                             }
@@ -143,7 +143,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
         {
             if (leftResult is JValue leftValue && rightResult is JValue rightValue)
             {
-                switch (Operator)
+                switch (this.Operator)
                 {
                     case QueryOperator.RegexEquals:
                         if (RegexEquals(leftValue, rightValue))
@@ -153,14 +153,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         break;
 
                     case QueryOperator.Equals:
-                        if (EqualsWithStringCoercion(leftValue, rightValue))
+                        if (this.EqualsWithStringCoercion(leftValue, rightValue))
                         {
                             return true;
                         }
                         break;
 
                     case QueryOperator.NotEquals:
-                        if (!EqualsWithStringCoercion(leftValue, rightValue))
+                        if (!this.EqualsWithStringCoercion(leftValue, rightValue))
                         {
                             return true;
                         }
@@ -200,7 +200,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             }
             else
             {
-                switch (Operator)
+                switch (this.Operator)
                 {
                     case QueryOperator.Exists:
                     // you can only specify primitive types in a comparison

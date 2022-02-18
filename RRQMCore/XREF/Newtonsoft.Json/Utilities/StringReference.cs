@@ -47,24 +47,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         private readonly int _startIndex;
         private readonly int _length;
 
-        public char this[int i] => _chars[i];
+        public char this[int i] => this._chars[i];
 
-        public char[] Chars => _chars;
+        public char[] Chars => this._chars;
 
-        public int StartIndex => _startIndex;
+        public int StartIndex => this._startIndex;
 
-        public int Length => _length;
+        public int Length => this._length;
 
         public StringReference(char[] chars, int startIndex, int length)
         {
-            _chars = chars;
-            _startIndex = startIndex;
-            _length = length;
+            this._chars = chars;
+            this._startIndex = startIndex;
+            this._length = length;
         }
 
         public override string ToString()
         {
-            return new string(_chars, _startIndex, _length);
+            return new string(this._chars, this._startIndex, this._length);
         }
     }
 

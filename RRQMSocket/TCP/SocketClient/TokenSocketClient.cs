@@ -35,32 +35,26 @@ namespace RRQMSocket
         /// <summary>
         /// 验证超时时间,默认为3000ms
         /// </summary>
-        public int VerifyTimeout
-        {
-            get { return verifyTimeout; }
-        }
+        public int VerifyTimeout => this.verifyTimeout;
 
         /// <summary>
         /// 连接令箭
         /// </summary>
-        public string VerifyToken
-        {
-            get { return verifyToken; }
-        }
+        public string VerifyToken => this.verifyToken;
 
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
 
         /// <summary>
         /// 处理接收数据
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (isHandshaked)
+            if (this.isHandshaked)
             {
                 this.HandleTokenReceivedData(byteBlock, requestInfo);
             }
@@ -93,7 +87,7 @@ namespace RRQMSocket
                 }
                 catch (System.Exception ex)
                 {
-                    if (this.OnAbnormalVerify(byteBlock,requestInfo))
+                    if (this.OnAbnormalVerify(byteBlock, requestInfo))
                     {
                         this.isHandshaked = true;
                         this.online = true;
@@ -151,7 +145,7 @@ namespace RRQMSocket
             this.BeginReceive();
             RRQMCore.Run.EasyAction.DelayRun(this.verifyTimeout, () =>
              {
-                 if (!isHandshaked)
+                 if (!this.isHandshaked)
                  {
                      this.BreakOut("验证超时");
                  }

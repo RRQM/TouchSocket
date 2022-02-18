@@ -67,42 +67,42 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         public BidirectionalDictionary(IEqualityComparer<TFirst> firstEqualityComparer, IEqualityComparer<TSecond> secondEqualityComparer,
             string duplicateFirstErrorMessage, string duplicateSecondErrorMessage)
         {
-            _firstToSecond = new Dictionary<TFirst, TSecond>(firstEqualityComparer);
-            _secondToFirst = new Dictionary<TSecond, TFirst>(secondEqualityComparer);
-            _duplicateFirstErrorMessage = duplicateFirstErrorMessage;
-            _duplicateSecondErrorMessage = duplicateSecondErrorMessage;
+            this._firstToSecond = new Dictionary<TFirst, TSecond>(firstEqualityComparer);
+            this._secondToFirst = new Dictionary<TSecond, TFirst>(secondEqualityComparer);
+            this._duplicateFirstErrorMessage = duplicateFirstErrorMessage;
+            this._duplicateSecondErrorMessage = duplicateSecondErrorMessage;
         }
 
         public void Set(TFirst first, TSecond second)
         {
-            if (_firstToSecond.TryGetValue(first, out TSecond existingSecond))
+            if (this._firstToSecond.TryGetValue(first, out TSecond existingSecond))
             {
                 if (!existingSecond.Equals(second))
                 {
-                    throw new ArgumentException(_duplicateFirstErrorMessage.FormatWith(CultureInfo.InvariantCulture, first));
+                    throw new ArgumentException(this._duplicateFirstErrorMessage.FormatWith(CultureInfo.InvariantCulture, first));
                 }
             }
 
-            if (_secondToFirst.TryGetValue(second, out TFirst existingFirst))
+            if (this._secondToFirst.TryGetValue(second, out TFirst existingFirst))
             {
                 if (!existingFirst.Equals(first))
                 {
-                    throw new ArgumentException(_duplicateSecondErrorMessage.FormatWith(CultureInfo.InvariantCulture, second));
+                    throw new ArgumentException(this._duplicateSecondErrorMessage.FormatWith(CultureInfo.InvariantCulture, second));
                 }
             }
 
-            _firstToSecond.Add(first, second);
-            _secondToFirst.Add(second, first);
+            this._firstToSecond.Add(first, second);
+            this._secondToFirst.Add(second, first);
         }
 
         public bool TryGetByFirst(TFirst first, out TSecond second)
         {
-            return _firstToSecond.TryGetValue(first, out second);
+            return this._firstToSecond.TryGetValue(first, out second);
         }
 
         public bool TryGetBySecond(TSecond second, out TFirst first)
         {
-            return _secondToFirst.TryGetValue(second, out first);
+            return this._secondToFirst.TryGetValue(second, out first);
         }
     }
 }

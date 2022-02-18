@@ -104,46 +104,31 @@ namespace RRQMCore.Run
         /// <summary>
         /// 已执行次数
         /// </summary>
-        public int ExecutedCount
-        {
-            get { return executedCount; }
-        }
+        public int ExecutedCount => this.executedCount;
 
         /// <summary>
         /// 执行间隔
         /// </summary>
-        public TimeSpan Interval
-        {
-            get { return interval; }
-        }
+        public TimeSpan Interval => this.interval;
 
         /// <summary>
         /// 循环次数
         /// </summary>
-        public int LoopCount
-        {
-            get { return loopCount; }
-        }
+        public int LoopCount => this.loopCount;
 
         private Action<LoopAction> action;
 
         /// <summary>
         /// 执行委托
         /// </summary>
-        public Action<LoopAction> ExecuteAction
-        {
-            get { return action; }
-        }
+        public Action<LoopAction> ExecuteAction => this.action;
 
         private RunStatus runStatus;
 
         /// <summary>
         /// 是否在运行
         /// </summary>
-        public RunStatus RunStatus
-        {
-            get { return runStatus; }
-        }
+        public RunStatus RunStatus => this.runStatus;
 
         /// <summary>
         /// 运行
@@ -153,9 +138,9 @@ namespace RRQMCore.Run
             if (this.runStatus == RunStatus.None)
             {
                 this.runStatus = RunStatus.Running;
-                if (loopCount >= 0)
+                if (this.loopCount >= 0)
                 {
-                    for (int i = 0; i < loopCount; i++)
+                    for (int i = 0; i < this.loopCount; i++)
                     {
                         if (this.runStatus == RunStatus.Disposed)
                         {

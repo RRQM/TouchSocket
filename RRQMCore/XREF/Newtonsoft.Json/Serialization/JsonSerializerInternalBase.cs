@@ -71,8 +71,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             ValidationUtils.ArgumentNotNull(serializer, nameof(serializer));
 
-            Serializer = serializer;
-            TraceWriter = serializer.TraceWriter;
+            this.Serializer = serializer;
+            this.TraceWriter = serializer.TraceWriter;
         }
 
         internal BidirectionalDictionary<string, object> DefaultReferenceMappings
@@ -81,16 +81,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             {
                 // override equality comparer for object key dictionary
                 // object will be modified as it deserializes and might have mutable hashcode
-                if (_mappings == null)
+                if (this._mappings == null)
                 {
-                    _mappings = new BidirectionalDictionary<string, object>(
+                    this._mappings = new BidirectionalDictionary<string, object>(
                         EqualityComparer<string>.Default,
                         new ReferenceEqualsEqualityComparer(),
                         "A different value already has the Id '{0}'.",
                         "A different Id has already been assigned for value '{0}'. This error may be caused by an object being reused multiple times during deserialization and can be fixed with the setting ObjectCreationHandling.Replace.");
                 }
 
-                return _mappings;
+                return this._mappings;
             }
         }
 
@@ -99,47 +99,47 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             NullValueHandling resolvedNullValueHandling =
                 property.NullValueHandling
                 ?? containerContract?.ItemNullValueHandling
-                ?? Serializer._nullValueHandling;
+                ?? this.Serializer._nullValueHandling;
 
             return resolvedNullValueHandling;
         }
 
         private ErrorContext GetErrorContext(object currentObject, object member, string path, Exception error)
         {
-            if (_currentErrorContext == null)
+            if (this._currentErrorContext == null)
             {
-                _currentErrorContext = new ErrorContext(currentObject, member, path, error);
+                this._currentErrorContext = new ErrorContext(currentObject, member, path, error);
             }
 
-            if (_currentErrorContext.Error != error)
+            if (this._currentErrorContext.Error != error)
             {
                 throw new InvalidOperationException("Current error context error is different to requested error.");
             }
 
-            return _currentErrorContext;
+            return this._currentErrorContext;
         }
 
         protected void ClearErrorContext()
         {
-            if (_currentErrorContext == null)
+            if (this._currentErrorContext == null)
             {
                 throw new InvalidOperationException("Could not clear error context. Error context is already null.");
             }
 
-            _currentErrorContext = null;
+            this._currentErrorContext = null;
         }
 
         protected bool IsErrorHandled(object currentObject, JsonContract contract, object keyValue, IJsonLineInfo lineInfo, string path, Exception ex)
         {
-            ErrorContext errorContext = GetErrorContext(currentObject, keyValue, path, ex);
+            ErrorContext errorContext = this.GetErrorContext(currentObject, keyValue, path, ex);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Error && !errorContext.Traced)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Error && !errorContext.Traced)
             {
                 // only write error once
                 errorContext.Traced = true;
 
                 // kind of a hack but meh. might clean this up later
-                string message = (GetType() == typeof(JsonSerializerInternalWriter)) ? "Error serializing" : "Error deserializing";
+                string message = (this.GetType() == typeof(JsonSerializerInternalWriter)) ? "Error serializing" : "Error deserializing";
                 if (contract != null)
                 {
                     message += " " + contract.UnderlyingType;
@@ -152,18 +152,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                     message = JsonPosition.FormatMessage(lineInfo, path, message);
                 }
 
-                TraceWriter.Trace(TraceLevel.Error, message, ex);
+                this.TraceWriter.Trace(TraceLevel.Error, message, ex);
             }
 
             // attribute method is non-static so don't invoke if no object
             if (contract != null && currentObject != null)
             {
-                contract.InvokeOnError(currentObject, Serializer.Context, errorContext);
+                contract.InvokeOnError(currentObject, this.Serializer.Context, errorContext);
             }
 
             if (!errorContext.Handled)
             {
-                Serializer.OnError(new ErrorEventArgs(currentObject, errorContext));
+                this.Serializer.OnError(new ErrorEventArgs(currentObject, errorContext));
             }
 
             return errorContext.Handled;

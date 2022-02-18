@@ -55,7 +55,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         public void Add(string name, BsonToken token)
         {
-            _children.Add(new BsonProperty { Name = new BsonString(name, false), Value = token });
+            this._children.Add(new BsonProperty { Name = new BsonString(name, false), Value = token });
             token.Parent = this;
         }
 
@@ -63,12 +63,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         public IEnumerator<BsonProperty> GetEnumerator()
         {
-            return _children.GetEnumerator();
+            return this._children.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
     }
 
@@ -78,7 +78,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         public void Add(BsonToken token)
         {
-            _children.Add(token);
+            this._children.Add(token);
             token.Parent = this;
         }
 
@@ -86,12 +86,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         public IEnumerator<BsonToken> GetEnumerator()
         {
-            return _children.GetEnumerator();
+            return this._children.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
     }
 
@@ -102,7 +102,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         private BsonEmpty(BsonType type)
         {
-            Type = type;
+            this.Type = type;
         }
 
         public override BsonType Type { get; }
@@ -115,13 +115,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         public BsonValue(object value, BsonType type)
         {
-            _value = value;
-            _type = type;
+            this._value = value;
+            this._type = type;
         }
 
-        public object Value => _value;
+        public object Value => this._value;
 
-        public override BsonType Type => _type;
+        public override BsonType Type => this._type;
     }
 
     internal class BsonBoolean : BsonValue
@@ -143,7 +143,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public BsonString(object value, bool includeLength)
             : base(value, BsonType.String)
         {
-            IncludeLength = includeLength;
+            this.IncludeLength = includeLength;
         }
     }
 
@@ -154,7 +154,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public BsonBinary(byte[] value, BsonBinaryType binaryType)
             : base(value, BsonType.Binary)
         {
-            BinaryType = binaryType;
+            this.BinaryType = binaryType;
         }
     }
 
@@ -165,8 +165,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
         public BsonRegex(string pattern, string options)
         {
-            Pattern = new BsonString(pattern, false);
-            Options = new BsonString(options, false);
+            this.Pattern = new BsonString(pattern, false);
+            this.Options = new BsonString(options, false);
         }
 
         public override BsonType Type => BsonType.Regex;

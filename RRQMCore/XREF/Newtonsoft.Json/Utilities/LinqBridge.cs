@@ -1799,7 +1799,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
         {
             internal Grouping(K key)
             {
-                Key = key;
+                this.Key = key;
             }
 
             public K Key { get; private set; }
@@ -2791,25 +2791,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
 
         internal Lookup(IEqualityComparer<TKey> comparer)
         {
-            _map = new Dictionary<TKey, IGrouping<TKey, TElement>>(comparer);
+            this._map = new Dictionary<TKey, IGrouping<TKey, TElement>>(comparer);
         }
 
         internal void Add(IGrouping<TKey, TElement> item)
         {
-            _map.Add(item.Key, item);
+            this._map.Add(item.Key, item);
         }
 
         internal IEnumerable<TElement> Find(TKey key)
         {
             IGrouping<TKey, TElement> grouping;
-            return _map.TryGetValue(key, out grouping) ? grouping : null;
+            return this._map.TryGetValue(key, out grouping) ? grouping : null;
         }
 
         /// <summary>
         /// Gets the number of key/value collection pairs in the <see cref="Lookup{TKey,TElement}" />.
         /// </summary>
 
-        public int Count => _map.Count;
+        public int Count => this._map.Count;
 
         /// <summary>
         /// Gets the collection of values indexed by the specified key.
@@ -2820,7 +2820,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             get
             {
                 IGrouping<TKey, TElement> result;
-                return _map.TryGetValue(key, out result) ? result : Enumerable.Empty<TElement>();
+                return this._map.TryGetValue(key, out result) ? result : Enumerable.Empty<TElement>();
             }
         }
 
@@ -2830,7 +2830,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
 
         public bool Contains(TKey key)
         {
-            return _map.ContainsKey(key);
+            return this._map.ContainsKey(key);
         }
 
         /// <summary>
@@ -2844,7 +2844,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             if (resultSelector == null)
                 throw new System.ArgumentNullException("resultSelector");
 
-            foreach (var pair in _map)
+            foreach (var pair in this._map)
                 yield return resultSelector(pair.Key, pair.Value);
         }
 
@@ -2854,12 +2854,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
 
         public IEnumerator<IGrouping<TKey, TElement>> GetEnumerator()
         {
-            return _map.Values.GetEnumerator();
+            return this._map.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
     }
 
@@ -2880,7 +2880,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             if (source == null) throw new System.ArgumentNullException("source");
             if (keySelector == null) throw new System.ArgumentNullException("keySelector");
 
-            _source = source;
+            this._source = source;
 
             comparer = comparer ?? Comparer<K>.Default;
 
@@ -2890,13 +2890,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             comparisons.Add((x, y)
                             => (descending ? -1 : 1) * comparer.Compare(keySelector(x), keySelector(y)));
 
-            _comparisons = comparisons;
+            this._comparisons = comparisons;
         }
 
         public IOrderedEnumerable<T> CreateOrderedEnumerable<KK>(
           Func<T, KK> keySelector, IComparer<KK> comparer, bool descending)
         {
-            return new OrderedEnumerable<T, KK>(_source, _comparisons, keySelector, comparer, descending);
+            return new OrderedEnumerable<T, KK>(this._source, this._comparisons, keySelector, comparer, descending);
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -2911,7 +2911,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             // thus making the sort stable.
             //
 
-            var list = _source.Select(new Func<T, int, Tuple<T, int>>(TagPosition)).ToList();
+            var list = this._source.Select(new Func<T, int, Tuple<T, int>>(TagPosition)).ToList();
 
             list.Sort((x, y) =>
               {
@@ -2919,7 +2919,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
                   // Compare keys from left to right.
                   //
 
-                  var comparisons = _comparisons;
+                  var comparisons = this._comparisons;
                   for (var i = 0; i < comparisons.Count; i++)
                   {
                       var result = comparisons[i](x.First, y.First);
@@ -2962,7 +2962,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
     }
 
@@ -2975,8 +2975,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
         public Tuple(TFirst first, TSecond second)
           : this()
         {
-            First = first;
-            Second = second;
+            this.First = first;
+            this.Second = second;
         }
 
         public override bool Equals(object obj)
@@ -2988,20 +2988,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
 
         public bool Equals(Tuple<TFirst, TSecond> other)
         {
-            return EqualityComparer<TFirst>.Default.Equals(other.First, First)
-                   && EqualityComparer<TSecond>.Default.Equals(other.Second, Second);
+            return EqualityComparer<TFirst>.Default.Equals(other.First, this.First)
+                   && EqualityComparer<TSecond>.Default.Equals(other.Second, this.Second);
         }
 
         public override int GetHashCode()
         {
             var num = 0x7a2f0b42;
-            num = (-1521134295 * num) + EqualityComparer<TFirst>.Default.GetHashCode(First);
-            return (-1521134295 * num) + EqualityComparer<TSecond>.Default.GetHashCode(Second);
+            num = (-1521134295 * num) + EqualityComparer<TFirst>.Default.GetHashCode(this.First);
+            return (-1521134295 * num) + EqualityComparer<TSecond>.Default.GetHashCode(this.Second);
         }
 
         public override string ToString()
         {
-            return string.Format(CultureInfo.InvariantCulture, @"{{ First = {0}, Second = {1} }}", First, Second);
+            return string.Format(CultureInfo.InvariantCulture, @"{{ First = {0}, Second = {1} }}", this.First, this.Second);
         }
     }
 }

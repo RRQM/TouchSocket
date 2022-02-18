@@ -10,10 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMCore
 {
@@ -44,10 +40,7 @@ namespace RRQMCore
         /// <summary>
         /// 以默认小端，可通过<see cref="RRQMBitConverter.DefaultEndianType"/>重新指定默认端。
         /// </summary>
-        public static RRQMBitConverter Default
-        {
-            get { return @default; }
-        }
+        public static RRQMBitConverter Default => @default;
 
         private static EndianType @defaultEndianType;
         /// <summary>
@@ -55,9 +48,9 @@ namespace RRQMCore
         /// </summary>
         public static EndianType DefaultEndianType
         {
-            get { return @defaultEndianType; }
-            set 
-            { 
+            get => @defaultEndianType;
+            set
+            {
                 @defaultEndianType = value;
                 switch (value)
                 {
@@ -87,10 +80,34 @@ namespace RRQMCore
         /// <summary>
         /// 指定大小端。
         /// </summary>
-        public EndianType EndianType
-        {
-            get { return endianType; }
-        }
+
+        /* 项目“RRQMCore (net5)”的未合并的更改
+        在此之前:
+                public EndianType EndianType
+                {
+                    get { return endianType; }
+        在此之后:
+                public EndianType EndianType => this.endianType; }
+        */
+
+        /* 项目“RRQMCore (netcoreapp3.1)”的未合并的更改
+        在此之前:
+                public EndianType EndianType
+                {
+                    get { return endianType; }
+        在此之后:
+                public EndianType EndianType => this.endianType; }
+        */
+
+        /* 项目“RRQMCore (netstandard2.0)”的未合并的更改
+        在此之前:
+                public EndianType EndianType
+                {
+                    get { return endianType; }
+        在此之后:
+                public EndianType EndianType => this.endianType; }
+        */
+        public EndianType EndianType => this.endianType;
 
         /// <summary>
         /// 判断当前系统是否为设置的大小端
@@ -98,7 +115,7 @@ namespace RRQMCore
         /// <returns></returns>
         public bool IsSameOfSet()
         {
-            return !(BitConverter.IsLittleEndian ^ (endianType == EndianType.Little));
+            return !(BitConverter.IsLittleEndian ^ (this.endianType == EndianType.Little));
         }
 
         #region ushort
@@ -110,7 +127,7 @@ namespace RRQMCore
         public byte[] GetBytes(ushort value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -127,7 +144,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[2];
             Array.Copy(buffer, offset, bytes, 0, 2);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -144,7 +161,7 @@ namespace RRQMCore
         public byte[] GetBytes(ulong value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -162,7 +179,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[8];
             Array.Copy(buffer, offset, bytes, 0, 8);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -202,7 +219,7 @@ namespace RRQMCore
         public byte[] GetBytes(char value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -220,7 +237,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[2];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -237,7 +254,7 @@ namespace RRQMCore
         public byte[] GetBytes(short value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -255,7 +272,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[2];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -272,7 +289,7 @@ namespace RRQMCore
         public byte[] GetBytes(int value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -290,7 +307,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[4];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -306,7 +323,7 @@ namespace RRQMCore
         public byte[] GetBytes(long value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -324,7 +341,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[8];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -340,7 +357,7 @@ namespace RRQMCore
         public byte[] GetBytes(uint value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -358,7 +375,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[4];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -375,7 +392,7 @@ namespace RRQMCore
         public byte[] GetBytes(float value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -393,7 +410,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[4];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -410,7 +427,7 @@ namespace RRQMCore
         public byte[] GetBytes(double value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -428,7 +445,7 @@ namespace RRQMCore
         {
             byte[] bytes = new byte[8];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (!this.IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }

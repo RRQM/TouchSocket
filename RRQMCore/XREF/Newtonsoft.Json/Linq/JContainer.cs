@@ -127,7 +127,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             int i = 0;
             foreach (JToken child in other)
             {
-                AddInternal(i, child, false);
+                this.AddInternal(i, child, false);
                 i++;
             }
         }
@@ -209,7 +209,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>
         /// 	<c>true</c> if this token has child values; otherwise, <c>false</c>.
         /// </value>
-        public override bool HasValues => ChildrenTokens.Count > 0;
+        public override bool HasValues => this.ChildrenTokens.Count > 0;
 
         internal bool ContentsEqual(JContainer container)
         {
@@ -218,7 +218,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return true;
             }
 
-            IList<JToken> t1 = ChildrenTokens;
+            IList<JToken> t1 = this.ChildrenTokens;
             IList<JToken> t2 = container.ChildrenTokens;
 
             if (t1.Count != t2.Count)
@@ -247,7 +247,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                IList<JToken> children = ChildrenTokens;
+                IList<JToken> children = this.ChildrenTokens;
                 return (children.Count > 0) ? children[0] : null;
             }
         }
@@ -262,7 +262,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                IList<JToken> children = ChildrenTokens;
+                IList<JToken> children = this.ChildrenTokens;
                 int count = children.Count;
                 return (count > 0) ? children[count - 1] : null;
             }
@@ -276,7 +276,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override JEnumerable<JToken> Children()
         {
-            return new JEnumerable<JToken>(ChildrenTokens);
+            return new JEnumerable<JToken>(this.ChildrenTokens);
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override IEnumerable<T> Values<T>()
         {
-            return ChildrenTokens.Convert<JToken, T>();
+            return this.ChildrenTokens.Convert<JToken, T>();
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="JToken"/> containing the descendant tokens of the <see cref="JToken"/>.</returns>
         public IEnumerable<JToken> Descendants()
         {
-            return GetDescendants(false);
+            return this.GetDescendants(false);
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="JToken"/> containing this token, and all the descendant tokens of the <see cref="JToken"/>.</returns>
         public IEnumerable<JToken> DescendantsAndSelf()
         {
-            return GetDescendants(true);
+            return this.GetDescendants(true);
         }
 
         internal IEnumerable<JToken> GetDescendants(bool self)
@@ -316,7 +316,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 yield return this;
             }
 
-            foreach (JToken o in ChildrenTokens)
+            foreach (JToken o in this.ChildrenTokens)
             {
                 yield return o;
                 if (o is JContainer c)
@@ -350,7 +350,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             // the item already has a parent
             // the item is being added to itself
             // the item is being added to the root parent of itself
-            if (item.Parent != null || item == this || (item.HasValues && Root == item))
+            if (item.Parent != null || item == this || (item.HasValues && this.Root == item))
             {
                 item = item.CloneToken();
             }
@@ -362,22 +362,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal virtual void InsertItem(int index, JToken item, bool skipParentCheck)
         {
-            IList<JToken> children = ChildrenTokens;
+            IList<JToken> children = this.ChildrenTokens;
 
             if (index > children.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), "Index must be within the bounds of the List.");
             }
 
-            CheckReentrancy();
+            this.CheckReentrancy();
 
-            item = EnsureParentToken(item, skipParentCheck);
+            item = this.EnsureParentToken(item, skipParentCheck);
 
             JToken previous = (index == 0) ? null : children[index - 1];
             // haven't inserted new token yet so next token is still at the inserting index
             JToken next = (index == children.Count) ? null : children[index];
 
-            ValidateToken(item, null);
+            this.ValidateToken(item, null);
 
             item.Parent = this;
 
@@ -411,7 +411,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal virtual void RemoveItemAt(int index)
         {
-            IList<JToken> children = ChildrenTokens;
+            IList<JToken> children = this.ChildrenTokens;
 
             if (index < 0)
             {
@@ -422,7 +422,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is equal to or greater than Count.");
             }
 
-            CheckReentrancy();
+            this.CheckReentrancy();
 
             JToken item = children[index];
             JToken previous = (index == 0) ? null : children[index - 1];
@@ -459,10 +459,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal virtual bool RemoveItem(JToken item)
         {
-            int index = IndexOfItem(item);
+            int index = this.IndexOfItem(item);
             if (index >= 0)
             {
-                RemoveItemAt(index);
+                this.RemoveItemAt(index);
                 return true;
             }
 
@@ -471,12 +471,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal virtual JToken GetItem(int index)
         {
-            return ChildrenTokens[index];
+            return this.ChildrenTokens[index];
         }
 
         internal virtual void SetItem(int index, JToken item)
         {
-            IList<JToken> children = ChildrenTokens;
+            IList<JToken> children = this.ChildrenTokens;
 
             if (index < 0)
             {
@@ -494,11 +494,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return;
             }
 
-            CheckReentrancy();
+            this.CheckReentrancy();
 
-            item = EnsureParentToken(item, false);
+            item = this.EnsureParentToken(item, false);
 
-            ValidateToken(item, existing);
+            this.ValidateToken(item, existing);
 
             JToken previous = (index == 0) ? null : children[index - 1];
             JToken next = (index == children.Count - 1) ? null : children[index + 1];
@@ -539,9 +539,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal virtual void ClearItems()
         {
-            CheckReentrancy();
+            this.CheckReentrancy();
 
-            IList<JToken> children = ChildrenTokens;
+            IList<JToken> children = this.ChildrenTokens;
 
             foreach (JToken item in children)
             {
@@ -573,13 +573,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return;
             }
 
-            int index = IndexOfItem(existing);
-            SetItem(index, replacement);
+            int index = this.IndexOfItem(existing);
+            this.SetItem(index, replacement);
         }
 
         internal virtual bool ContainsItem(JToken item)
         {
-            return (IndexOfItem(item) != -1);
+            return (this.IndexOfItem(item) != -1);
         }
 
         internal virtual void CopyItemsTo(Array array, int arrayIndex)
@@ -596,13 +596,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 throw new ArgumentException("arrayIndex is equal to or greater than the length of array.");
             }
-            if (Count > array.Length - arrayIndex)
+            if (this.Count > array.Length - arrayIndex)
             {
                 throw new ArgumentException("The number of elements in the source JObject is greater than the available space from arrayIndex to the end of the destination array.");
             }
 
             int index = 0;
-            foreach (JToken token in ChildrenTokens)
+            foreach (JToken token in this.ChildrenTokens)
             {
                 array.SetValue(token, arrayIndex + index);
                 index++;
@@ -631,7 +631,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             if (o.Type == JTokenType.Property)
             {
-                throw new ArgumentException("Can not add {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, o.GetType(), GetType()));
+                throw new ArgumentException("Can not add {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, o.GetType(), this.GetType()));
             }
         }
 
@@ -641,12 +641,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">The content to be added.</param>
         public virtual void Add(object content)
         {
-            AddInternal(ChildrenTokens.Count, content, false);
+            this.AddInternal(this.ChildrenTokens.Count, content, false);
         }
 
         internal void AddAndSkipParentCheck(JToken token)
         {
-            AddInternal(ChildrenTokens.Count, token, true);
+            this.AddInternal(this.ChildrenTokens.Count, token, true);
         }
 
         /// <summary>
@@ -655,19 +655,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">The content to be added.</param>
         public void AddFirst(object content)
         {
-            AddInternal(0, content, false);
+            this.AddInternal(0, content, false);
         }
 
         internal void AddInternal(int index, object content, bool skipParentCheck)
         {
-            if (IsMultiContent(content))
+            if (this.IsMultiContent(content))
             {
                 IEnumerable enumerable = (IEnumerable)content;
 
                 int multiIndex = index;
                 foreach (object c in enumerable)
                 {
-                    AddInternal(multiIndex, c, skipParentCheck);
+                    this.AddInternal(multiIndex, c, skipParentCheck);
                     multiIndex++;
                 }
             }
@@ -675,7 +675,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 JToken item = CreateFromContent(content);
 
-                InsertItem(index, item, skipParentCheck);
+                this.InsertItem(index, item, skipParentCheck);
             }
         }
 
@@ -704,8 +704,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">The content.</param>
         public void ReplaceAll(object content)
         {
-            ClearItems();
-            Add(content);
+            this.ClearItems();
+            this.Add(content);
         }
 
         /// <summary>
@@ -713,7 +713,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         public void RemoveAll()
         {
-            ClearItems();
+            this.ClearItems();
         }
 
         internal abstract void MergeItem(object content, JsonMergeSettings settings);
@@ -724,7 +724,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">The content to be merged.</param>
         public void Merge(object content)
         {
-            MergeItem(content, new JsonMergeSettings());
+            this.MergeItem(content, new JsonMergeSettings());
         }
 
         /// <summary>
@@ -734,7 +734,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="settings">The <see cref="JsonMergeSettings"/> used to merge the content.</param>
         public void Merge(object content, JsonMergeSettings settings)
         {
-            MergeItem(content, settings);
+            this.MergeItem(content, settings);
         }
 
         internal void ReadTokenFrom(JsonReader reader, JsonLoadSettings options)
@@ -743,16 +743,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             if (!reader.Read())
             {
-                throw JsonReaderException.Create(reader, "Error reading {0} from JsonReader.".FormatWith(CultureInfo.InvariantCulture, GetType().Name));
+                throw JsonReaderException.Create(reader, "Error reading {0} from JsonReader.".FormatWith(CultureInfo.InvariantCulture, this.GetType().Name));
             }
 
-            ReadContentFrom(reader, options);
+            this.ReadContentFrom(reader, options);
 
             int endDepth = reader.Depth;
 
             if (endDepth > startDepth)
             {
-                throw JsonReaderException.Create(reader, "Unexpected end of content while loading {0}.".FormatWith(CultureInfo.InvariantCulture, GetType().Name));
+                throw JsonReaderException.Create(reader, "Unexpected end of content while loading {0}.".FormatWith(CultureInfo.InvariantCulture, this.GetType().Name));
             }
         }
 
@@ -888,7 +888,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         internal int ContentsHashCode()
         {
             int hashCode = 0;
-            foreach (JToken item in ChildrenTokens)
+            foreach (JToken item in this.ChildrenTokens)
             {
                 hashCode ^= item.GetDeepHashCode();
             }
@@ -912,23 +912,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         int IList<JToken>.IndexOf(JToken item)
         {
-            return IndexOfItem(item);
+            return this.IndexOfItem(item);
         }
 
         void IList<JToken>.Insert(int index, JToken item)
         {
-            InsertItem(index, item, false);
+            this.InsertItem(index, item, false);
         }
 
         void IList<JToken>.RemoveAt(int index)
         {
-            RemoveItemAt(index);
+            this.RemoveItemAt(index);
         }
 
         JToken IList<JToken>.this[int index]
         {
-            get => GetItem(index);
-            set => SetItem(index, value);
+            get => this.GetItem(index);
+            set => this.SetItem(index, value);
         }
 
         #endregion IList<JToken> Members
@@ -937,29 +937,29 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         void ICollection<JToken>.Add(JToken item)
         {
-            Add(item);
+            this.Add(item);
         }
 
         void ICollection<JToken>.Clear()
         {
-            ClearItems();
+            this.ClearItems();
         }
 
         bool ICollection<JToken>.Contains(JToken item)
         {
-            return ContainsItem(item);
+            return this.ContainsItem(item);
         }
 
         void ICollection<JToken>.CopyTo(JToken[] array, int arrayIndex)
         {
-            CopyItemsTo(array, arrayIndex);
+            this.CopyItemsTo(array, arrayIndex);
         }
 
         bool ICollection<JToken>.IsReadOnly => false;
 
         bool ICollection<JToken>.Remove(JToken item)
         {
-            return RemoveItem(item);
+            return this.RemoveItem(item);
         }
 
         #endregion ICollection<JToken> Members
@@ -983,28 +983,28 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         int IList.Add(object value)
         {
-            Add(EnsureValue(value));
-            return Count - 1;
+            this.Add(this.EnsureValue(value));
+            return this.Count - 1;
         }
 
         void IList.Clear()
         {
-            ClearItems();
+            this.ClearItems();
         }
 
         bool IList.Contains(object value)
         {
-            return ContainsItem(EnsureValue(value));
+            return this.ContainsItem(this.EnsureValue(value));
         }
 
         int IList.IndexOf(object value)
         {
-            return IndexOfItem(EnsureValue(value));
+            return this.IndexOfItem(this.EnsureValue(value));
         }
 
         void IList.Insert(int index, object value)
         {
-            InsertItem(index, EnsureValue(value), false);
+            this.InsertItem(index, this.EnsureValue(value), false);
         }
 
         bool IList.IsFixedSize => false;
@@ -1013,18 +1013,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         void IList.Remove(object value)
         {
-            RemoveItem(EnsureValue(value));
+            this.RemoveItem(this.EnsureValue(value));
         }
 
         void IList.RemoveAt(int index)
         {
-            RemoveItemAt(index);
+            this.RemoveItemAt(index);
         }
 
         object IList.this[int index]
         {
-            get => GetItem(index);
-            set => SetItem(index, EnsureValue(value));
+            get => this.GetItem(index);
+            set => this.SetItem(index, this.EnsureValue(value));
         }
 
         #endregion IList Members
@@ -1033,14 +1033,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         void ICollection.CopyTo(Array array, int index)
         {
-            CopyItemsTo(array, index);
+            this.CopyItemsTo(array, index);
         }
 
         /// <summary>
         /// Gets the count of child JSON tokens.
         /// </summary>
         /// <value>The count of child JSON tokens.</value>
-        public int Count => ChildrenTokens.Count;
+        public int Count => this.ChildrenTokens.Count;
 
         bool ICollection.IsSynchronized => false;
 
@@ -1048,12 +1048,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                if (_syncRoot == null)
+                if (this._syncRoot == null)
                 {
-                    Interlocked.CompareExchange(ref _syncRoot, new object(), null);
+                    Interlocked.CompareExchange(ref this._syncRoot, new object(), null);
                 }
 
-                return _syncRoot;
+                return this._syncRoot;
             }
         }
 

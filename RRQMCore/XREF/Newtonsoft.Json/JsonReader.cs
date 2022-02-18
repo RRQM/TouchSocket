@@ -146,7 +146,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// Gets the current reader state.
         /// </summary>
         /// <value>The current reader state.</value>
-        protected State CurrentState => _currentState;
+        protected State CurrentState => this._currentState;
 
         /// <summary>
         /// Gets or sets a value indicating whether the source should be closed when this reader is closed.
@@ -171,8 +171,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual char QuoteChar
         {
-            get => _quoteChar;
-            protected internal set => _quoteChar = value;
+            get => this._quoteChar;
+            protected internal set => this._quoteChar = value;
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public DateTimeZoneHandling DateTimeZoneHandling
         {
-            get => _dateTimeZoneHandling;
+            get => this._dateTimeZoneHandling;
             set
             {
                 if (value < DateTimeZoneHandling.Local || value > DateTimeZoneHandling.RoundtripKind)
@@ -188,7 +188,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _dateTimeZoneHandling = value;
+                this._dateTimeZoneHandling = value;
             }
         }
 
@@ -197,7 +197,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public DateParseHandling DateParseHandling
         {
-            get => _dateParseHandling;
+            get => this._dateParseHandling;
             set
             {
                 if (value < DateParseHandling.None ||
@@ -211,7 +211,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _dateParseHandling = value;
+                this._dateParseHandling = value;
             }
         }
 
@@ -220,7 +220,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public FloatParseHandling FloatParseHandling
         {
-            get => _floatParseHandling;
+            get => this._floatParseHandling;
             set
             {
                 if (value < FloatParseHandling.Double || value > FloatParseHandling.Decimal)
@@ -228,7 +228,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _floatParseHandling = value;
+                this._floatParseHandling = value;
             }
         }
 
@@ -237,8 +237,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public string DateFormatString
         {
-            get => _dateFormatString;
-            set => _dateFormatString = value;
+            get => this._dateFormatString;
+            set => this._dateFormatString = value;
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public int? MaxDepth
         {
-            get => _maxDepth;
+            get => this._maxDepth;
             set
             {
                 if (value <= 0)
@@ -254,24 +254,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentException("Value must be positive.", nameof(value));
                 }
 
-                _maxDepth = value;
+                this._maxDepth = value;
             }
         }
 
         /// <summary>
         /// Gets the type of the current JSON token.
         /// </summary>
-        public virtual JsonToken TokenType => _tokenType;
+        public virtual JsonToken TokenType => this._tokenType;
 
         /// <summary>
         /// Gets the text value of the current JSON token.
         /// </summary>
-        public virtual object Value => _value;
+        public virtual object Value => this._value;
 
         /// <summary>
         /// Gets the .NET type for the current JSON token.
         /// </summary>
-        public virtual Type ValueType => _value?.GetType();
+        public virtual Type ValueType => this._value?.GetType();
 
         /// <summary>
         /// Gets the depth of the current token in the JSON document.
@@ -281,8 +281,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                int depth = _stack?.Count ?? 0;
-                if (JsonTokenUtils.IsStartToken(TokenType) || _currentPosition.Type == JsonContainerType.None)
+                int depth = this._stack?.Count ?? 0;
+                if (JsonTokenUtils.IsStartToken(this.TokenType) || this._currentPosition.Type == JsonContainerType.None)
                 {
                     return depth;
                 }
@@ -300,18 +300,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                if (_currentPosition.Type == JsonContainerType.None)
+                if (this._currentPosition.Type == JsonContainerType.None)
                 {
                     return string.Empty;
                 }
 
-                bool insideContainer = (_currentState != State.ArrayStart
-                                        && _currentState != State.ConstructorStart
-                                        && _currentState != State.ObjectStart);
+                bool insideContainer = (this._currentState != State.ArrayStart
+                                        && this._currentState != State.ConstructorStart
+                                        && this._currentState != State.ObjectStart);
 
-                JsonPosition? current = insideContainer ? (JsonPosition?)_currentPosition : null;
+                JsonPosition? current = insideContainer ? (JsonPosition?)this._currentPosition : null;
 
-                return JsonPosition.BuildPath(_stack, current);
+                return JsonPosition.BuildPath(this._stack, current);
             }
         }
 
@@ -320,18 +320,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public CultureInfo Culture
         {
-            get => _culture ?? CultureInfo.InvariantCulture;
-            set => _culture = value;
+            get => this._culture ?? CultureInfo.InvariantCulture;
+            set => this._culture = value;
         }
 
         internal JsonPosition GetPosition(int depth)
         {
-            if (_stack != null && depth < _stack.Count)
+            if (this._stack != null && depth < this._stack.Count)
             {
-                return _stack[depth];
+                return this._stack[depth];
             }
 
-            return _currentPosition;
+            return this._currentPosition;
         }
 
         /// <summary>
@@ -339,37 +339,37 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         protected JsonReader()
         {
-            _currentState = State.Start;
-            _dateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind;
-            _dateParseHandling = DateParseHandling.DateTime;
-            _floatParseHandling = FloatParseHandling.Double;
+            this._currentState = State.Start;
+            this._dateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind;
+            this._dateParseHandling = DateParseHandling.DateTime;
+            this._floatParseHandling = FloatParseHandling.Double;
 
-            CloseInput = true;
+            this.CloseInput = true;
         }
 
         private void Push(JsonContainerType value)
         {
-            UpdateScopeWithFinishedValue();
+            this.UpdateScopeWithFinishedValue();
 
-            if (_currentPosition.Type == JsonContainerType.None)
+            if (this._currentPosition.Type == JsonContainerType.None)
             {
-                _currentPosition = new JsonPosition(value);
+                this._currentPosition = new JsonPosition(value);
             }
             else
             {
-                if (_stack == null)
+                if (this._stack == null)
                 {
-                    _stack = new List<JsonPosition>();
+                    this._stack = new List<JsonPosition>();
                 }
 
-                _stack.Add(_currentPosition);
-                _currentPosition = new JsonPosition(value);
+                this._stack.Add(this._currentPosition);
+                this._currentPosition = new JsonPosition(value);
 
                 // this is a little hacky because Depth increases when first property/value is written but only testing here is faster/simpler
-                if (_maxDepth != null && Depth + 1 > _maxDepth && !_hasExceededMaxDepth)
+                if (this._maxDepth != null && this.Depth + 1 > this._maxDepth && !this._hasExceededMaxDepth)
                 {
-                    _hasExceededMaxDepth = true;
-                    throw JsonReaderException.Create(this, "The reader's MaxDepth of {0} has been exceeded.".FormatWith(CultureInfo.InvariantCulture, _maxDepth));
+                    this._hasExceededMaxDepth = true;
+                    throw JsonReaderException.Create(this, "The reader's MaxDepth of {0} has been exceeded.".FormatWith(CultureInfo.InvariantCulture, this._maxDepth));
                 }
             }
         }
@@ -377,21 +377,21 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         private JsonContainerType Pop()
         {
             JsonPosition oldPosition;
-            if (_stack != null && _stack.Count > 0)
+            if (this._stack != null && this._stack.Count > 0)
             {
-                oldPosition = _currentPosition;
-                _currentPosition = _stack[_stack.Count - 1];
-                _stack.RemoveAt(_stack.Count - 1);
+                oldPosition = this._currentPosition;
+                this._currentPosition = this._stack[this._stack.Count - 1];
+                this._stack.RemoveAt(this._stack.Count - 1);
             }
             else
             {
-                oldPosition = _currentPosition;
-                _currentPosition = new JsonPosition();
+                oldPosition = this._currentPosition;
+                this._currentPosition = new JsonPosition();
             }
 
-            if (_maxDepth != null && Depth <= _maxDepth)
+            if (this._maxDepth != null && this.Depth <= this._maxDepth)
             {
-                _hasExceededMaxDepth = false;
+                this._hasExceededMaxDepth = false;
             }
 
             return oldPosition.Type;
@@ -399,7 +399,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private JsonContainerType Peek()
         {
-            return _currentPosition.Type;
+            return this._currentPosition.Type;
         }
 
         /// <summary>
@@ -414,7 +414,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Int32"/>. This method will return <c>null</c> at the end of an array.</returns>
         public virtual int? ReadAsInt32()
         {
-            JsonToken t = GetContentToken();
+            JsonToken t = this.GetContentToken();
 
             switch (t)
             {
@@ -425,7 +425,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
                 case JsonToken.Integer:
                 case JsonToken.Float:
-                    object v = Value;
+                    object v = this.Value;
                     if (v is int i)
                     {
                         return i;
@@ -450,12 +450,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         }
                     }
 
-                    SetToken(JsonToken.Integer, i, false);
+                    this.SetToken(JsonToken.Integer, i, false);
                     return i;
 
                 case JsonToken.String:
-                    string s = (string)Value;
-                    return ReadInt32String(s);
+                    string s = (string)this.Value;
+                    return this.ReadInt32String(s);
             }
 
             throw JsonReaderException.Create(this, "Error reading integer. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, t));
@@ -465,18 +465,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (string.IsNullOrEmpty(s))
             {
-                SetToken(JsonToken.Null, null, false);
+                this.SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (int.TryParse(s, NumberStyles.Integer, Culture, out int i))
+            if (int.TryParse(s, NumberStyles.Integer, this.Culture, out int i))
             {
-                SetToken(JsonToken.Integer, i, false);
+                this.SetToken(JsonToken.Integer, i, false);
                 return i;
             }
             else
             {
-                SetToken(JsonToken.String, s, false);
+                this.SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to integer: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
         }
@@ -487,7 +487,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="String"/>. This method will return <c>null</c> at the end of an array.</returns>
         public virtual string ReadAsString()
         {
-            JsonToken t = GetContentToken();
+            JsonToken t = this.GetContentToken();
 
             switch (t)
             {
@@ -497,18 +497,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     return null;
 
                 case JsonToken.String:
-                    return (string)Value;
+                    return (string)this.Value;
             }
 
             if (JsonTokenUtils.IsPrimitiveToken(t))
             {
-                object v = Value;
+                object v = this.Value;
                 if (v != null)
                 {
                     string s;
                     if (v is IFormattable formattable)
                     {
-                        s = formattable.ToString(null, Culture);
+                        s = formattable.ToString(null, this.Culture);
                     }
                     else
                     {
@@ -516,7 +516,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         s = uri != null ? uri.OriginalString : v.ToString();
                     }
 
-                    SetToken(JsonToken.String, s, false);
+                    this.SetToken(JsonToken.String, s, false);
                     return s;
                 }
             }
@@ -530,30 +530,30 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Byte"/>[] or <c>null</c> if the next JSON token is null. This method will return <c>null</c> at the end of an array.</returns>
         public virtual byte[] ReadAsBytes()
         {
-            JsonToken t = GetContentToken();
+            JsonToken t = this.GetContentToken();
 
             switch (t)
             {
                 case JsonToken.StartObject:
                     {
-                        ReadIntoWrappedTypeObject();
+                        this.ReadIntoWrappedTypeObject();
 
-                        byte[] data = ReadAsBytes();
-                        ReaderReadAndAssert();
+                        byte[] data = this.ReadAsBytes();
+                        this.ReaderReadAndAssert();
 
-                        if (TokenType != JsonToken.EndObject)
+                        if (this.TokenType != JsonToken.EndObject)
                         {
-                            throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
+                            throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, this.TokenType));
                         }
 
-                        SetToken(JsonToken.Bytes, data, false);
+                        this.SetToken(JsonToken.Bytes, data, false);
                         return data;
                     }
                 case JsonToken.String:
                     {
                         // attempt to convert possible base 64 or GUID string to bytes
                         // GUID has to have format 00000000-0000-0000-0000-000000000000
-                        string s = (string)Value;
+                        string s = (string)this.Value;
 
                         byte[] data;
 
@@ -570,7 +570,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                             data = Convert.FromBase64String(s);
                         }
 
-                        SetToken(JsonToken.Bytes, data, false);
+                        this.SetToken(JsonToken.Bytes, data, false);
                         return data;
                     }
                 case JsonToken.None:
@@ -579,17 +579,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     return null;
 
                 case JsonToken.Bytes:
-                    if (Value is Guid g2)
+                    if (this.Value is Guid g2)
                     {
                         byte[] data = g2.ToByteArray();
-                        SetToken(JsonToken.Bytes, data, false);
+                        this.SetToken(JsonToken.Bytes, data, false);
                         return data;
                     }
 
-                    return (byte[])Value;
+                    return (byte[])this.Value;
 
                 case JsonToken.StartArray:
-                    return ReadArrayIntoByteArray();
+                    return this.ReadArrayIntoByteArray();
             }
 
             throw JsonReaderException.Create(this, "Error reading bytes. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, t));
@@ -601,15 +601,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
             while (true)
             {
-                if (!Read())
+                if (!this.Read())
                 {
-                    SetToken(JsonToken.None);
+                    this.SetToken(JsonToken.None);
                 }
 
-                if (ReadArrayElementIntoByteArrayReportDone(buffer))
+                if (this.ReadArrayElementIntoByteArrayReportDone(buffer))
                 {
                     byte[] d = buffer.ToArray();
-                    SetToken(JsonToken.Bytes, d, false);
+                    this.SetToken(JsonToken.Bytes, d, false);
                     return d;
                 }
             }
@@ -617,12 +617,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private bool ReadArrayElementIntoByteArrayReportDone(List<byte> buffer)
         {
-            switch (TokenType)
+            switch (this.TokenType)
             {
                 case JsonToken.None:
                     throw JsonReaderException.Create(this, "Unexpected end when reading bytes.");
                 case JsonToken.Integer:
-                    buffer.Add(Convert.ToByte(Value, CultureInfo.InvariantCulture));
+                    buffer.Add(Convert.ToByte(this.Value, CultureInfo.InvariantCulture));
                     return false;
 
                 case JsonToken.EndArray:
@@ -632,7 +632,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     return false;
 
                 default:
-                    throw JsonReaderException.Create(this, "Unexpected token when reading bytes: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
+                    throw JsonReaderException.Create(this, "Unexpected token when reading bytes: {0}.".FormatWith(CultureInfo.InvariantCulture, this.TokenType));
             }
         }
 
@@ -642,7 +642,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Double"/>. This method will return <c>null</c> at the end of an array.</returns>
         public virtual double? ReadAsDouble()
         {
-            JsonToken t = GetContentToken();
+            JsonToken t = this.GetContentToken();
 
             switch (t)
             {
@@ -653,7 +653,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
                 case JsonToken.Integer:
                 case JsonToken.Float:
-                    object v = Value;
+                    object v = this.Value;
                     if (v is double d)
                     {
                         return d;
@@ -670,12 +670,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         d = Convert.ToDouble(v, CultureInfo.InvariantCulture);
                     }
 
-                    SetToken(JsonToken.Float, d, false);
+                    this.SetToken(JsonToken.Float, d, false);
 
                     return (double)d;
 
                 case JsonToken.String:
-                    return ReadDoubleString((string)Value);
+                    return this.ReadDoubleString((string)this.Value);
             }
 
             throw JsonReaderException.Create(this, "Error reading double. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, t));
@@ -685,18 +685,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (string.IsNullOrEmpty(s))
             {
-                SetToken(JsonToken.Null, null, false);
+                this.SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, Culture, out double d))
+            if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, this.Culture, out double d))
             {
-                SetToken(JsonToken.Float, d, false);
+                this.SetToken(JsonToken.Float, d, false);
                 return d;
             }
             else
             {
-                SetToken(JsonToken.String, s, false);
+                this.SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to double: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
         }
@@ -707,7 +707,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Boolean"/>. This method will return <c>null</c> at the end of an array.</returns>
         public virtual bool? ReadAsBoolean()
         {
-            JsonToken t = GetContentToken();
+            JsonToken t = this.GetContentToken();
 
             switch (t)
             {
@@ -727,17 +727,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     else
 #endif
                     {
-                        b = Convert.ToBoolean(Value, CultureInfo.InvariantCulture);
+                        b = Convert.ToBoolean(this.Value, CultureInfo.InvariantCulture);
                     }
 
-                    SetToken(JsonToken.Boolean, b, false);
+                    this.SetToken(JsonToken.Boolean, b, false);
                     return b;
 
                 case JsonToken.String:
-                    return ReadBooleanString((string)Value);
+                    return this.ReadBooleanString((string)this.Value);
 
                 case JsonToken.Boolean:
-                    return (bool)Value;
+                    return (bool)this.Value;
             }
 
             throw JsonReaderException.Create(this, "Error reading boolean. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, t));
@@ -747,18 +747,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (string.IsNullOrEmpty(s))
             {
-                SetToken(JsonToken.Null, null, false);
+                this.SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
             if (bool.TryParse(s, out bool b))
             {
-                SetToken(JsonToken.Boolean, b, false);
+                this.SetToken(JsonToken.Boolean, b, false);
                 return b;
             }
             else
             {
-                SetToken(JsonToken.String, s, false);
+                this.SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to boolean: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
         }
@@ -769,7 +769,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Decimal"/>. This method will return <c>null</c> at the end of an array.</returns>
         public virtual decimal? ReadAsDecimal()
         {
-            JsonToken t = GetContentToken();
+            JsonToken t = this.GetContentToken();
 
             switch (t)
             {
@@ -780,7 +780,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
                 case JsonToken.Integer:
                 case JsonToken.Float:
-                    object v = Value;
+                    object v = this.Value;
 
                     if (v is decimal d)
                     {
@@ -806,11 +806,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         }
                     }
 
-                    SetToken(JsonToken.Float, d, false);
+                    this.SetToken(JsonToken.Float, d, false);
                     return d;
 
                 case JsonToken.String:
-                    return ReadDecimalString((string)Value);
+                    return this.ReadDecimalString((string)this.Value);
             }
 
             throw JsonReaderException.Create(this, "Error reading decimal. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, t));
@@ -820,18 +820,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (string.IsNullOrEmpty(s))
             {
-                SetToken(JsonToken.Null, null, false);
+                this.SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (decimal.TryParse(s, NumberStyles.Number, Culture, out decimal d))
+            if (decimal.TryParse(s, NumberStyles.Number, this.Culture, out decimal d))
             {
-                SetToken(JsonToken.Float, d, false);
+                this.SetToken(JsonToken.Float, d, false);
                 return d;
             }
             else
             {
-                SetToken(JsonToken.String, s, false);
+                this.SetToken(JsonToken.String, s, false);
                 throw JsonReaderException.Create(this, "Could not convert string to decimal: {0}.".FormatWith(CultureInfo.InvariantCulture, s));
             }
         }
@@ -842,7 +842,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="DateTime"/>. This method will return <c>null</c> at the end of an array.</returns>
         public virtual DateTime? ReadAsDateTime()
         {
-            switch (GetContentToken())
+            switch (this.GetContentToken())
             {
                 case JsonToken.None:
                 case JsonToken.Null:
@@ -857,35 +857,35 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     }
 #endif
 
-                    return (DateTime)Value;
+                    return (DateTime)this.Value;
 
                 case JsonToken.String:
-                    string s = (string)Value;
-                    return ReadDateTimeString(s);
+                    string s = (string)this.Value;
+                    return this.ReadDateTimeString(s);
             }
 
-            throw JsonReaderException.Create(this, "Error reading date. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, TokenType));
+            throw JsonReaderException.Create(this, "Error reading date. Unexpected token: {0}.".FormatWith(CultureInfo.InvariantCulture, this.TokenType));
         }
 
         internal DateTime? ReadDateTimeString(string s)
         {
             if (string.IsNullOrEmpty(s))
             {
-                SetToken(JsonToken.Null, null, false);
+                this.SetToken(JsonToken.Null, null, false);
                 return null;
             }
 
-            if (DateTimeUtils.TryParseDateTime(s, DateTimeZoneHandling, _dateFormatString, Culture, out DateTime dt))
+            if (DateTimeUtils.TryParseDateTime(s, this.DateTimeZoneHandling, this._dateFormatString, this.Culture, out DateTime dt))
             {
-                dt = DateTimeUtils.EnsureDateTime(dt, DateTimeZoneHandling);
-                SetToken(JsonToken.Date, dt, false);
+                dt = DateTimeUtils.EnsureDateTime(dt, this.DateTimeZoneHandling);
+                this.SetToken(JsonToken.Date, dt, false);
                 return dt;
             }
 
-            if (DateTime.TryParse(s, Culture, DateTimeStyles.RoundtripKind, out dt))
+            if (DateTime.TryParse(s, this.Culture, DateTimeStyles.RoundtripKind, out dt))
             {
-                dt = DateTimeUtils.EnsureDateTime(dt, DateTimeZoneHandling);
-                SetToken(JsonToken.Date, dt, false);
+                dt = DateTimeUtils.EnsureDateTime(dt, this.DateTimeZoneHandling);
+                this.SetToken(JsonToken.Date, dt, false);
                 return dt;
             }
 
@@ -952,9 +952,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         internal void ReaderReadAndAssert()
         {
-            if (!Read())
+            if (!this.Read())
             {
-                throw CreateUnexpectedEndException();
+                throw this.CreateUnexpectedEndException();
             }
         }
 
@@ -965,14 +965,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         internal void ReadIntoWrappedTypeObject()
         {
-            ReaderReadAndAssert();
-            if (Value != null && Value.ToString() == JsonTypeReflector.TypePropertyName)
+            this.ReaderReadAndAssert();
+            if (this.Value != null && this.Value.ToString() == JsonTypeReflector.TypePropertyName)
             {
-                ReaderReadAndAssert();
-                if (Value != null && Value.ToString().StartsWith("System.Byte[]", StringComparison.Ordinal))
+                this.ReaderReadAndAssert();
+                if (this.Value != null && this.Value.ToString().StartsWith("System.Byte[]", StringComparison.Ordinal))
                 {
-                    ReaderReadAndAssert();
-                    if (Value.ToString() == JsonTypeReflector.ValuePropertyName)
+                    this.ReaderReadAndAssert();
+                    if (this.Value.ToString() == JsonTypeReflector.ValuePropertyName)
                     {
                         return;
                     }
@@ -987,16 +987,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public void Skip()
         {
-            if (TokenType == JsonToken.PropertyName)
+            if (this.TokenType == JsonToken.PropertyName)
             {
-                Read();
+                this.Read();
             }
 
-            if (JsonTokenUtils.IsStartToken(TokenType))
+            if (JsonTokenUtils.IsStartToken(this.TokenType))
             {
-                int depth = Depth;
+                int depth = this.Depth;
 
-                while (Read() && (depth < Depth))
+                while (this.Read() && (depth < this.Depth))
                 {
                 }
             }
@@ -1008,7 +1008,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="newToken">The new token.</param>
         protected void SetToken(JsonToken newToken)
         {
-            SetToken(newToken, null, true);
+            this.SetToken(newToken, null, true);
         }
 
         /// <summary>
@@ -1018,7 +1018,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The value.</param>
         protected void SetToken(JsonToken newToken, object value)
         {
-            SetToken(newToken, value, true);
+            this.SetToken(newToken, value, true);
         }
 
         /// <summary>
@@ -1029,42 +1029,42 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="updateIndex">A flag indicating whether the position index inside an array should be updated.</param>
         protected void SetToken(JsonToken newToken, object value, bool updateIndex)
         {
-            _tokenType = newToken;
-            _value = value;
+            this._tokenType = newToken;
+            this._value = value;
 
             switch (newToken)
             {
                 case JsonToken.StartObject:
-                    _currentState = State.ObjectStart;
-                    Push(JsonContainerType.Object);
+                    this._currentState = State.ObjectStart;
+                    this.Push(JsonContainerType.Object);
                     break;
 
                 case JsonToken.StartArray:
-                    _currentState = State.ArrayStart;
-                    Push(JsonContainerType.Array);
+                    this._currentState = State.ArrayStart;
+                    this.Push(JsonContainerType.Array);
                     break;
 
                 case JsonToken.StartConstructor:
-                    _currentState = State.ConstructorStart;
-                    Push(JsonContainerType.Constructor);
+                    this._currentState = State.ConstructorStart;
+                    this.Push(JsonContainerType.Constructor);
                     break;
 
                 case JsonToken.EndObject:
-                    ValidateEnd(JsonToken.EndObject);
+                    this.ValidateEnd(JsonToken.EndObject);
                     break;
 
                 case JsonToken.EndArray:
-                    ValidateEnd(JsonToken.EndArray);
+                    this.ValidateEnd(JsonToken.EndArray);
                     break;
 
                 case JsonToken.EndConstructor:
-                    ValidateEnd(JsonToken.EndConstructor);
+                    this.ValidateEnd(JsonToken.EndConstructor);
                     break;
 
                 case JsonToken.PropertyName:
-                    _currentState = State.Property;
+                    this._currentState = State.Property;
 
-                    _currentPosition.PropertyName = (string)value;
+                    this._currentPosition.PropertyName = (string)value;
                     break;
 
                 case JsonToken.Undefined:
@@ -1076,52 +1076,52 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 case JsonToken.String:
                 case JsonToken.Raw:
                 case JsonToken.Bytes:
-                    SetPostValueState(updateIndex);
+                    this.SetPostValueState(updateIndex);
                     break;
             }
         }
 
         internal void SetPostValueState(bool updateIndex)
         {
-            if (Peek() != JsonContainerType.None || SupportMultipleContent)
+            if (this.Peek() != JsonContainerType.None || this.SupportMultipleContent)
             {
-                _currentState = State.PostValue;
+                this._currentState = State.PostValue;
             }
             else
             {
-                SetFinished();
+                this.SetFinished();
             }
 
             if (updateIndex)
             {
-                UpdateScopeWithFinishedValue();
+                this.UpdateScopeWithFinishedValue();
             }
         }
 
         private void UpdateScopeWithFinishedValue()
         {
-            if (_currentPosition.HasIndex)
+            if (this._currentPosition.HasIndex)
             {
-                _currentPosition.Position++;
+                this._currentPosition.Position++;
             }
         }
 
         private void ValidateEnd(JsonToken endToken)
         {
-            JsonContainerType currentObject = Pop();
+            JsonContainerType currentObject = this.Pop();
 
-            if (GetTypeForCloseToken(endToken) != currentObject)
+            if (this.GetTypeForCloseToken(endToken) != currentObject)
             {
                 throw JsonReaderException.Create(this, "JsonToken {0} is not valid for closing JsonType {1}.".FormatWith(CultureInfo.InvariantCulture, endToken, currentObject));
             }
 
-            if (Peek() != JsonContainerType.None || SupportMultipleContent)
+            if (this.Peek() != JsonContainerType.None || this.SupportMultipleContent)
             {
-                _currentState = State.PostValue;
+                this._currentState = State.PostValue;
             }
             else
             {
-                SetFinished();
+                this.SetFinished();
             }
         }
 
@@ -1130,24 +1130,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         protected void SetStateBasedOnCurrent()
         {
-            JsonContainerType currentObject = Peek();
+            JsonContainerType currentObject = this.Peek();
 
             switch (currentObject)
             {
                 case JsonContainerType.Object:
-                    _currentState = State.Object;
+                    this._currentState = State.Object;
                     break;
 
                 case JsonContainerType.Array:
-                    _currentState = State.Array;
+                    this._currentState = State.Array;
                     break;
 
                 case JsonContainerType.Constructor:
-                    _currentState = State.Constructor;
+                    this._currentState = State.Constructor;
                     break;
 
                 case JsonContainerType.None:
-                    SetFinished();
+                    this.SetFinished();
                     break;
 
                 default:
@@ -1157,7 +1157,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void SetFinished()
         {
-            _currentState = SupportMultipleContent ? State.Start : State.Finished;
+            this._currentState = this.SupportMultipleContent ? State.Start : State.Finished;
         }
 
         private JsonContainerType GetTypeForCloseToken(JsonToken token)
@@ -1180,7 +1180,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         void IDisposable.Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -1190,9 +1190,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (_currentState != State.Closed && disposing)
+            if (this._currentState != State.Closed && disposing)
             {
-                Close();
+                this.Close();
             }
         }
 
@@ -1202,14 +1202,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual void Close()
         {
-            _currentState = State.Closed;
-            _tokenType = JsonToken.None;
-            _value = null;
+            this._currentState = State.Closed;
+            this._tokenType = JsonToken.None;
+            this._value = null;
         }
 
         internal void ReadAndAssert()
         {
-            if (!Read())
+            if (!this.Read())
             {
                 throw JsonSerializationException.Create(this, "Unexpected end when reading JSON.");
             }
@@ -1217,7 +1217,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         internal void ReadForTypeAndAssert(JsonContract contract, bool hasConverter)
         {
-            if (!ReadForType(contract, hasConverter))
+            if (!this.ReadForType(contract, hasConverter))
             {
                 throw JsonSerializationException.Create(this, "Unexpected end when reading JSON.");
             }
@@ -1229,7 +1229,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             // the value might be a string which will then get converted which will error if read as date for example
             if (hasConverter)
             {
-                return Read();
+                return this.Read();
             }
 
             ReadType t = contract?.InternalReadType ?? ReadType.Read;
@@ -1237,42 +1237,42 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             switch (t)
             {
                 case ReadType.Read:
-                    return ReadAndMoveToContent();
+                    return this.ReadAndMoveToContent();
 
                 case ReadType.ReadAsInt32:
-                    ReadAsInt32();
+                    this.ReadAsInt32();
                     break;
 
                 case ReadType.ReadAsInt64:
-                    bool result = ReadAndMoveToContent();
-                    if (TokenType == JsonToken.Undefined)
+                    bool result = this.ReadAndMoveToContent();
+                    if (this.TokenType == JsonToken.Undefined)
                     {
                         throw JsonReaderException.Create(this, "An undefined token is not a valid {0}.".FormatWith(CultureInfo.InvariantCulture, contract?.UnderlyingType ?? typeof(long)));
                     }
                     return result;
 
                 case ReadType.ReadAsDecimal:
-                    ReadAsDecimal();
+                    this.ReadAsDecimal();
                     break;
 
                 case ReadType.ReadAsDouble:
-                    ReadAsDouble();
+                    this.ReadAsDouble();
                     break;
 
                 case ReadType.ReadAsBytes:
-                    ReadAsBytes();
+                    this.ReadAsBytes();
                     break;
 
                 case ReadType.ReadAsBoolean:
-                    ReadAsBoolean();
+                    this.ReadAsBoolean();
                     break;
 
                 case ReadType.ReadAsString:
-                    ReadAsString();
+                    this.ReadAsString();
                     break;
 
                 case ReadType.ReadAsDateTime:
-                    ReadAsDateTime();
+                    this.ReadAsDateTime();
                     break;
 #if HAVE_DATE_TIME_OFFSET
                 case ReadType.ReadAsDateTimeOffset:
@@ -1283,25 +1283,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException();
             }
 
-            return (TokenType != JsonToken.None);
+            return (this.TokenType != JsonToken.None);
         }
 
         internal bool ReadAndMoveToContent()
         {
-            return Read() && MoveToContent();
+            return this.Read() && this.MoveToContent();
         }
 
         internal bool MoveToContent()
         {
-            JsonToken t = TokenType;
+            JsonToken t = this.TokenType;
             while (t == JsonToken.None || t == JsonToken.Comment)
             {
-                if (!Read())
+                if (!this.Read())
                 {
                     return false;
                 }
 
-                t = TokenType;
+                t = this.TokenType;
             }
 
             return true;
@@ -1312,14 +1312,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             JsonToken t;
             do
             {
-                if (!Read())
+                if (!this.Read())
                 {
-                    SetToken(JsonToken.None);
+                    this.SetToken(JsonToken.None);
                     return JsonToken.None;
                 }
                 else
                 {
-                    t = TokenType;
+                    t = this.TokenType;
                 }
             } while (t == JsonToken.Comment);
 

@@ -57,7 +57,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public PropertyNameTable()
         {
-            _entries = new Entry[_mask + 1];
+            this._entries = new Entry[this._mask + 1];
         }
 
         public string Get(char[] key, int start, int length)
@@ -77,7 +77,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             hashCode -= hashCode >> 17;
             hashCode -= hashCode >> 11;
             hashCode -= hashCode >> 5;
-            for (Entry entry = _entries[hashCode & _mask]; entry != null; entry = entry.Next)
+            for (Entry entry = this._entries[hashCode & this._mask]; entry != null; entry = entry.Next)
             {
                 if (entry.HashCode == hashCode && TextEquals(entry.Value, key, start, length))
                 {
@@ -109,7 +109,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             hashCode -= hashCode >> 17;
             hashCode -= hashCode >> 11;
             hashCode -= hashCode >> 5;
-            for (Entry entry = _entries[hashCode & _mask]; entry != null; entry = entry.Next)
+            for (Entry entry = this._entries[hashCode & this._mask]; entry != null; entry = entry.Next)
             {
                 if (entry.HashCode == hashCode && entry.Value.Equals(key))
                 {
@@ -117,25 +117,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                 }
             }
 
-            return AddEntry(key, hashCode);
+            return this.AddEntry(key, hashCode);
         }
 
         private string AddEntry(string str, int hashCode)
         {
-            int index = hashCode & _mask;
-            Entry entry = new Entry(str, hashCode, _entries[index]);
-            _entries[index] = entry;
-            if (_count++ == _mask)
+            int index = hashCode & this._mask;
+            Entry entry = new Entry(str, hashCode, this._entries[index]);
+            this._entries[index] = entry;
+            if (this._count++ == this._mask)
             {
-                Grow();
+                this.Grow();
             }
             return entry.Value;
         }
 
         private void Grow()
         {
-            Entry[] entries = _entries;
-            int newMask = (_mask * 2) + 1;
+            Entry[] entries = this._entries;
+            int newMask = (this._mask * 2) + 1;
             Entry[] newEntries = new Entry[newMask + 1];
 
             for (int i = 0; i < entries.Length; i++)
@@ -149,8 +149,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                     newEntries[index] = entry;
                 }
             }
-            _entries = newEntries;
-            _mask = newMask;
+            this._entries = newEntries;
+            this._mask = newMask;
         }
 
         private static bool TextEquals(string str1, char[] str2, int str2Start, int str2Length)
@@ -178,9 +178,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
             internal Entry(string value, int hashCode, Entry next)
             {
-                Value = value;
-                HashCode = hashCode;
-                Next = next;
+                this.Value = value;
+                this.HashCode = hashCode;
+                this.Next = next;
             }
         }
     }

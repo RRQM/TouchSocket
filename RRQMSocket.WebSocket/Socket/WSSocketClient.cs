@@ -10,7 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Run;
 using RRQMSocket.Http;
 using RRQMSocket.WebSocket.Helper;
 using System;
@@ -39,15 +38,15 @@ namespace RRQMSocket.WebSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override sealed bool CanSetDataHandlingAdapter => false;
+        public sealed override bool CanSetDataHandlingAdapter => false;
 
         /// <summary>
         /// WebSocket版本号
         /// </summary>
         public string WebSocketVersion
         {
-            get { return webSocketVersion; }
-            set { webSocketVersion = value; }
+            get => this.webSocketVersion;
+            set => this.webSocketVersion = value;
         }
 
         /// <summary>
@@ -105,7 +104,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
@@ -197,7 +196,7 @@ namespace RRQMSocket.WebSocket
             this.BeginReceive();
             RRQMCore.Run.EasyAction.DelayRun(10 * 1000, () =>
               {
-                  if (!isHandshaked)
+                  if (!this.isHandshaked)
                   {
                       this.BreakOut("WebSocket验证超时");
                   }

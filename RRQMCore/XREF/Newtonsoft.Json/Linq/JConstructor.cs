@@ -56,11 +56,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// Gets the container's children tokens.
         /// </summary>
         /// <value>The container's children tokens.</value>
-        protected override IList<JToken> ChildrenTokens => _values;
+        protected override IList<JToken> ChildrenTokens => this._values;
 
         internal override int IndexOfItem(JToken item)
         {
-            return _values.IndexOfReference(item);
+            return this._values.IndexOfReference(item);
         }
 
         internal override void MergeItem(object content, JsonMergeSettings settings)
@@ -72,7 +72,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             if (c.Name != null)
             {
-                Name = c.Name;
+                this.Name = c.Name;
             }
             MergeEnumerableContent(this, c, settings);
         }
@@ -83,8 +83,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The constructor name.</value>
         public string Name
         {
-            get => _name;
-            set => _name = value;
+            get => this._name;
+            set => this._name = value;
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public JConstructor(JConstructor other)
             : base(other)
         {
-            _name = other.Name;
+            this._name = other.Name;
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public JConstructor(string name, object content)
             : this(name)
         {
-            Add(content);
+            this.Add(content);
         }
 
         /// <summary>
@@ -147,12 +147,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentException("Constructor name cannot be empty.", nameof(name));
             }
 
-            _name = name;
+            this._name = name;
         }
 
         internal override bool DeepEquals(JToken node)
         {
-            return (node is JConstructor c && _name == c.Name && ContentsEqual(c));
+            return (node is JConstructor c && this._name == c.Name && this.ContentsEqual(c));
         }
 
         internal override JToken CloneToken()
@@ -167,12 +167,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="converters">A collection of <see cref="JsonConverter"/> which will be used when writing the token.</param>
         public override void WriteTo(JsonWriter writer, params JsonConverter[] converters)
         {
-            writer.WriteStartConstructor(_name);
+            writer.WriteStartConstructor(this._name);
 
-            int count = _values.Count;
+            int count = this._values.Count;
             for (int i = 0; i < count; i++)
             {
-                _values[i].WriteTo(writer, converters);
+                this._values[i].WriteTo(writer, converters);
             }
 
             writer.WriteEndConstructor();
@@ -193,7 +193,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentException("Accessed JConstructor values with invalid key value: {0}. Argument position index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
-                return GetItem((int)key);
+                return this.GetItem((int)key);
             }
             set
             {
@@ -204,13 +204,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentException("Set JConstructor values with invalid key value: {0}. Argument position index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
-                SetItem((int)key, value);
+                this.SetItem((int)key, value);
             }
         }
 
         internal override int GetDeepHashCode()
         {
-            return _name.GetHashCode() ^ ContentsHashCode();
+            return this._name.GetHashCode() ^ this.ContentsHashCode();
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="reader">A <see cref="JsonReader"/> that will be read for the content of the <see cref="JConstructor"/>.</param>
         /// <returns>A <see cref="JConstructor"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public new static JConstructor Load(JsonReader reader)
+        public static new JConstructor Load(JsonReader reader)
         {
             return Load(reader, null);
         }
@@ -230,7 +230,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="settings">The <see cref="JsonLoadSettings"/> used to load the JSON.
         /// If this is <c>null</c>, default load settings will be used.</param>
         /// <returns>A <see cref="JConstructor"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public new static JConstructor Load(JsonReader reader, JsonLoadSettings settings)
+        public static new JConstructor Load(JsonReader reader, JsonLoadSettings settings)
         {
             if (reader.TokenType == JsonToken.None)
             {

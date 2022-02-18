@@ -71,11 +71,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
             if (list is ICollection<T> collection)
             {
-                _genericCollection = collection;
+                this._genericCollection = collection;
             }
             else
             {
-                _list = list;
+                this._list = list;
             }
         }
 
@@ -83,54 +83,54 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(list, nameof(list));
 
-            _genericCollection = list;
+            this._genericCollection = list;
         }
 
         public virtual void Add(T item)
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
-                _genericCollection.Add(item);
+                this._genericCollection.Add(item);
             }
             else
             {
-                _list.Add(item);
+                this._list.Add(item);
             }
         }
 
         public virtual void Clear()
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
-                _genericCollection.Clear();
+                this._genericCollection.Clear();
             }
             else
             {
-                _list.Clear();
+                this._list.Clear();
             }
         }
 
         public virtual bool Contains(T item)
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
-                return _genericCollection.Contains(item);
+                return this._genericCollection.Contains(item);
             }
             else
             {
-                return _list.Contains(item);
+                return this._list.Contains(item);
             }
         }
 
         public virtual void CopyTo(T[] array, int arrayIndex)
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
-                _genericCollection.CopyTo(array, arrayIndex);
+                this._genericCollection.CopyTo(array, arrayIndex);
             }
             else
             {
-                _list.CopyTo(array, arrayIndex);
+                this._list.CopyTo(array, arrayIndex);
             }
         }
 
@@ -138,13 +138,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_genericCollection != null)
+                if (this._genericCollection != null)
                 {
-                    return _genericCollection.Count;
+                    return this._genericCollection.Count;
                 }
                 else
                 {
-                    return _list.Count;
+                    return this._list.Count;
                 }
             }
         }
@@ -153,30 +153,30 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_genericCollection != null)
+                if (this._genericCollection != null)
                 {
-                    return _genericCollection.IsReadOnly;
+                    return this._genericCollection.IsReadOnly;
                 }
                 else
                 {
-                    return _list.IsReadOnly;
+                    return this._list.IsReadOnly;
                 }
             }
         }
 
         public virtual bool Remove(T item)
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
-                return _genericCollection.Remove(item);
+                return this._genericCollection.Remove(item);
             }
             else
             {
-                bool contains = _list.Contains(item);
+                bool contains = this._list.Contains(item);
 
                 if (contains)
                 {
-                    _list.Remove(item);
+                    this._list.Remove(item);
                 }
 
                 return contains;
@@ -185,27 +185,27 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public virtual IEnumerator<T> GetEnumerator()
         {
-            return (_genericCollection ?? _list.Cast<T>()).GetEnumerator();
+            return (this._genericCollection ?? this._list.Cast<T>()).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable)_genericCollection ?? _list).GetEnumerator();
+            return ((IEnumerable)this._genericCollection ?? this._list).GetEnumerator();
         }
 
         int IList.Add(object value)
         {
             VerifyValueType(value);
-            Add((T)value);
+            this.Add((T)value);
 
-            return (Count - 1);
+            return (this.Count - 1);
         }
 
         bool IList.Contains(object value)
         {
             if (IsCompatibleObject(value))
             {
-                return Contains((T)value);
+                return this.Contains((T)value);
             }
 
             return false;
@@ -213,14 +213,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         int IList.IndexOf(object value)
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support IndexOf.");
             }
 
             if (IsCompatibleObject(value))
             {
-                return _list.IndexOf((T)value);
+                return this._list.IndexOf((T)value);
             }
 
             return -1;
@@ -228,37 +228,37 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         void IList.RemoveAt(int index)
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support RemoveAt.");
             }
 
-            _list.RemoveAt(index);
+            this._list.RemoveAt(index);
         }
 
         void IList.Insert(int index, object value)
         {
-            if (_genericCollection != null)
+            if (this._genericCollection != null)
             {
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support Insert.");
             }
 
             VerifyValueType(value);
-            _list.Insert(index, (T)value);
+            this._list.Insert(index, (T)value);
         }
 
         bool IList.IsFixedSize
         {
             get
             {
-                if (_genericCollection != null)
+                if (this._genericCollection != null)
                 {
                     // ICollection<T> only has IsReadOnly
-                    return _genericCollection.IsReadOnly;
+                    return this._genericCollection.IsReadOnly;
                 }
                 else
                 {
-                    return _list.IsFixedSize;
+                    return this._list.IsFixedSize;
                 }
             }
         }
@@ -267,7 +267,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             if (IsCompatibleObject(value))
             {
-                Remove((T)value);
+                this.Remove((T)value);
             }
         }
 
@@ -275,28 +275,28 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_genericCollection != null)
+                if (this._genericCollection != null)
                 {
                     throw new InvalidOperationException("Wrapped ICollection<T> does not support indexer.");
                 }
 
-                return _list[index];
+                return this._list[index];
             }
             set
             {
-                if (_genericCollection != null)
+                if (this._genericCollection != null)
                 {
                     throw new InvalidOperationException("Wrapped ICollection<T> does not support indexer.");
                 }
 
                 VerifyValueType(value);
-                _list[index] = (T)value;
+                this._list[index] = (T)value;
             }
         }
 
         void ICollection.CopyTo(Array array, int arrayIndex)
         {
-            CopyTo((T[])array, arrayIndex);
+            this.CopyTo((T[])array, arrayIndex);
         }
 
         bool ICollection.IsSynchronized => false;
@@ -305,12 +305,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             get
             {
-                if (_syncRoot == null)
+                if (this._syncRoot == null)
                 {
-                    Interlocked.CompareExchange(ref _syncRoot, new object(), null);
+                    Interlocked.CompareExchange(ref this._syncRoot, new object(), null);
                 }
 
-                return _syncRoot;
+                return this._syncRoot;
             }
         }
 
@@ -332,6 +332,6 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
             return true;
         }
 
-        public object UnderlyingCollection => (object)_genericCollection ?? _list;
+        public object UnderlyingCollection => (object)this._genericCollection ?? this._list;
     }
 }

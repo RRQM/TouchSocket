@@ -34,7 +34,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             {
                 if (t is JObject o)
                 {
-                    foreach (string name in Names)
+                    foreach (string name in this.Names)
                     {
                         JToken v = o[name];
 
@@ -53,7 +53,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 {
                     if (errorWhenNoMatch)
                     {
-                        throw new JsonException("Properties {0} not valid on {1}.".FormatWith(CultureInfo.InvariantCulture, string.Join(", ", Names.Select(n => "'" + n + "'")
+                        throw new JsonException("Properties {0} not valid on {1}.".FormatWith(CultureInfo.InvariantCulture, string.Join(", ", this.Names.Select(n => "'" + n + "'")
 #if !HAVE_STRING_JOIN_WITH_ENUMERABLE
                             .ToArray()
 #endif

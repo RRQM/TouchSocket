@@ -27,7 +27,7 @@ namespace RRQMSocket
         /// <param name="waitSetID"></param>
         public override void ResetID(WaitSetID waitSetID)
         {
-            if (!canResetID)
+            if (!this.canResetID)
             {
                 throw new RRQMException("服务器不允许修改ID");
             }

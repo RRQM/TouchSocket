@@ -9,7 +9,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.Dependency;
 using RRQMCore.Log;
 
@@ -25,8 +24,8 @@ namespace RRQMSocket
         /// </summary>
         public ILog Logger
         {
-            get { return (ILog)GetValue(LoggerProperty); }
-            set { SetValue(LoggerProperty, value); }
+            get => (ILog)this.GetValue(LoggerProperty);
+            set => this.SetValue(LoggerProperty, value);
         }
 
         /// <summary>
@@ -40,8 +39,29 @@ namespace RRQMSocket
         /// </summary>
         public int BufferLength
         {
-            get { return (int)GetValue(BufferLengthProperty); }
-            set { SetValue(BufferLengthProperty, value); }
+
+            /* 项目“RRQMSocket (net5)”的未合并的更改
+            在此之前:
+                        get { return (int)GetValue(BufferLengthProperty); }
+            在此之后:
+                        get => (int)GetValue(BufferLengthProperty); }
+            */
+
+            /* 项目“RRQMSocket (netcoreapp3.1)”的未合并的更改
+            在此之前:
+                        get { return (int)GetValue(BufferLengthProperty); }
+            在此之后:
+                        get => (int)GetValue(BufferLengthProperty); }
+            */
+
+            /* 项目“RRQMSocket (netstandard2.0)”的未合并的更改
+            在此之前:
+                        get { return (int)GetValue(BufferLengthProperty); }
+            在此之后:
+                        get => (int)GetValue(BufferLengthProperty); }
+            */
+            get => (int)this.GetValue(BufferLengthProperty);
+            set => this.SetValue(BufferLengthProperty, value);
         }
 
         /// <summary>

@@ -91,12 +91,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_parameterizedCreator == null)
+                if (this._parameterizedCreator == null)
                 {
-                    _parameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(_parameterizedConstructor);
+                    this._parameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(this._parameterizedConstructor);
                 }
 
-                return _parameterizedCreator;
+                return this._parameterizedCreator;
             }
         }
 
@@ -106,8 +106,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value>The function used to create the object.</value>
         public ObjectConstructor<object> OverrideCreator
         {
-            get => _overrideCreator;
-            set => _overrideCreator = value;
+            get => this._overrideCreator;
+            set => this._overrideCreator = value;
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value><c>true</c> if the creator has a parameter with the dictionary values; otherwise, <c>false</c>.</value>
         public bool HasParameterizedCreator { get; set; }
 
-        internal bool HasParameterizedCreatorInternal => (HasParameterizedCreator || _parameterizedCreator != null || _parameterizedConstructor != null);
+        internal bool HasParameterizedCreatorInternal => (this.HasParameterizedCreator || this._parameterizedCreator != null || this._parameterizedConstructor != null);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonDictionaryContract"/> class.
@@ -125,19 +125,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public JsonDictionaryContract(Type underlyingType)
             : base(underlyingType)
         {
-            ContractType = JsonContractType.Dictionary;
+            this.ContractType = JsonContractType.Dictionary;
 
             Type keyType;
             Type valueType;
 
-            if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(IDictionary<,>), out _genericCollectionDefinitionType))
+            if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(IDictionary<,>), out this._genericCollectionDefinitionType))
             {
-                keyType = _genericCollectionDefinitionType.GetGenericArguments()[0];
-                valueType = _genericCollectionDefinitionType.GetGenericArguments()[1];
+                keyType = this._genericCollectionDefinitionType.GetGenericArguments()[0];
+                valueType = this._genericCollectionDefinitionType.GetGenericArguments()[1];
 
-                if (ReflectionUtils.IsGenericDefinition(UnderlyingType, typeof(IDictionary<,>)))
+                if (ReflectionUtils.IsGenericDefinition(this.UnderlyingType, typeof(IDictionary<,>)))
                 {
-                    CreatedType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
+                    this.CreatedType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
                 }
                 else if (underlyingType.IsGenericType())
                 {
@@ -147,7 +147,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                     Type typeDefinition = underlyingType.GetGenericTypeDefinition();
                     if (typeDefinition.FullName == JsonTypeReflector.ConcurrentDictionaryTypeName)
                     {
-                        ShouldCreateWrapper = true;
+                        this.ShouldCreateWrapper = true;
                     }
                 }
 
@@ -171,18 +171,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 #endif
             else
             {
-                ReflectionUtils.GetDictionaryKeyValueTypes(UnderlyingType, out keyType, out valueType);
+                ReflectionUtils.GetDictionaryKeyValueTypes(this.UnderlyingType, out keyType, out valueType);
 
-                if (UnderlyingType == typeof(IDictionary))
+                if (this.UnderlyingType == typeof(IDictionary))
                 {
-                    CreatedType = typeof(Dictionary<object, object>);
+                    this.CreatedType = typeof(Dictionary<object, object>);
                 }
             }
 
             if (keyType != null && valueType != null)
             {
-                _parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(
-                    CreatedType,
+                this._parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(
+                    this.CreatedType,
                     typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType),
                     typeof(IDictionary<,>).MakeGenericType(keyType, valueType));
 
@@ -195,13 +195,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 #endif
             }
 
-            if (!typeof(IDictionary).IsAssignableFrom(CreatedType))
+            if (!typeof(IDictionary).IsAssignableFrom(this.CreatedType))
             {
-                ShouldCreateWrapper = true;
+                this.ShouldCreateWrapper = true;
             }
 
-            DictionaryKeyType = keyType;
-            DictionaryValueType = valueType;
+            this.DictionaryKeyType = keyType;
+            this.DictionaryValueType = valueType;
 
 #if (NET20 || NET35)
             if (DictionaryValueType != null && ReflectionUtils.IsNullableType(DictionaryValueType))
@@ -217,40 +217,40 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             if (ImmutableCollectionsUtils.TryBuildImmutableForDictionaryContract(
                 underlyingType,
-                DictionaryKeyType,
-                DictionaryValueType,
+                this.DictionaryKeyType,
+                this.DictionaryValueType,
                 out Type immutableCreatedType,
                 out ObjectConstructor<object> immutableParameterizedCreator))
             {
-                CreatedType = immutableCreatedType;
-                _parameterizedCreator = immutableParameterizedCreator;
-                IsReadOnlyOrFixedSize = true;
+                this.CreatedType = immutableCreatedType;
+                this._parameterizedCreator = immutableParameterizedCreator;
+                this.IsReadOnlyOrFixedSize = true;
             }
         }
 
         internal IWrappedDictionary CreateWrapper(object dictionary)
         {
-            if (_genericWrapperCreator == null)
+            if (this._genericWrapperCreator == null)
             {
-                _genericWrapperType = typeof(DictionaryWrapper<,>).MakeGenericType(DictionaryKeyType, DictionaryValueType);
+                this._genericWrapperType = typeof(DictionaryWrapper<,>).MakeGenericType(this.DictionaryKeyType, this.DictionaryValueType);
 
-                ConstructorInfo genericWrapperConstructor = _genericWrapperType.GetConstructor(new[] { _genericCollectionDefinitionType });
-                _genericWrapperCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(genericWrapperConstructor);
+                ConstructorInfo genericWrapperConstructor = this._genericWrapperType.GetConstructor(new[] { this._genericCollectionDefinitionType });
+                this._genericWrapperCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(genericWrapperConstructor);
             }
 
-            return (IWrappedDictionary)_genericWrapperCreator(dictionary);
+            return (IWrappedDictionary)this._genericWrapperCreator(dictionary);
         }
 
         internal IDictionary CreateTemporaryDictionary()
         {
-            if (_genericTemporaryDictionaryCreator == null)
+            if (this._genericTemporaryDictionaryCreator == null)
             {
-                Type temporaryDictionaryType = typeof(Dictionary<,>).MakeGenericType(DictionaryKeyType ?? typeof(object), DictionaryValueType ?? typeof(object));
+                Type temporaryDictionaryType = typeof(Dictionary<,>).MakeGenericType(this.DictionaryKeyType ?? typeof(object), this.DictionaryValueType ?? typeof(object));
 
-                _genericTemporaryDictionaryCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateDefaultConstructor<object>(temporaryDictionaryType);
+                this._genericTemporaryDictionaryCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateDefaultConstructor<object>(temporaryDictionaryType);
             }
 
-            return (IDictionary)_genericTemporaryDictionaryCreator();
+            return (IDictionary)this._genericTemporaryDictionaryCreator();
         }
     }
 }

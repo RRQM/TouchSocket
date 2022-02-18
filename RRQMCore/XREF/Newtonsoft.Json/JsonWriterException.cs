@@ -108,7 +108,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         public JsonWriterException(string message, string path, Exception innerException)
             : base(message, innerException)
         {
-            Path = path;
+            this.Path = path;
         }
 
         internal static JsonWriterException Create(JsonWriter writer, string message, Exception ex)

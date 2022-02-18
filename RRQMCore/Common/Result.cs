@@ -54,7 +54,7 @@ namespace RRQMCore
         /// <returns></returns>
         public override string ToString()
         {
-            return $"类型：{ResultCode}，信息：{Message}";
+            return $"类型：{this.ResultCode}，信息：{this.Message}";
         }
     }
 }

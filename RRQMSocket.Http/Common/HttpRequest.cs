@@ -103,8 +103,8 @@ namespace RRQMSocket.Http
         /// <param name="byteBlock"></param>
         public override void Build(ByteBlock byteBlock)
         {
-            BuildHeader(byteBlock);
-            BuildContent(byteBlock);
+            this.BuildHeader(byteBlock);
+            this.BuildContent(byteBlock);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace RRQMSocket.Http
         /// <returns></returns>
         public string GetHeader(string fieldName)
         {
-            return GetHeaderByKey(fieldName);
+            return this.GetHeaderByKey(fieldName);
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace RRQMSocket.Http
             if (this.Method == "GET")
             {
                 var isUrlencoded = this.URL.Contains('?');
-                if (isUrlencoded) this.Query = GetRequestParameters(URL.Split('?')[1]);
+                if (isUrlencoded) this.Query = this.GetRequestParameters(this.URL.Split('?')[1]);
             }
             if (this.ProtocolVersion == "1.1")
             {
@@ -166,10 +166,10 @@ namespace RRQMSocket.Http
 
             if (this.Method == "POST")
             {
-                this.Content_Type = GetHeader(HttpHeaders.ContentType);
+                this.Content_Type = this.GetHeader(HttpHeaders.ContentType);
                 if (this.Content_Type == @"application/x-www-form-urlencoded")
                 {
-                    this.Params = GetRequestParameters(this.Body);
+                    this.Params = this.GetRequestParameters(this.Body);
                 }
             }
         }
@@ -181,7 +181,7 @@ namespace RRQMSocket.Http
         /// <param name="value"></param>
         public void SetHeader(HttpHeaders header, string value)
         {
-            SetHeaderByKey(header, value);
+            this.SetHeaderByKey(header, value);
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace RRQMSocket.Http
         /// <param name="value"></param>
         public void SetHeader(string fieldName, string value)
         {
-            SetHeaderByKey(fieldName, value);
+            this.SetHeaderByKey(fieldName, value);
         }
 
         private Dictionary<string, string> GetRequestParameters(string row)

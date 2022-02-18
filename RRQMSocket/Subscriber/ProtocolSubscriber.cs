@@ -48,7 +48,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Send(byte[] buffer, int offset, int length)
         {
-            client.Send(this.Protocol, buffer, offset, length);
+            this.client.Send(this.Protocol, buffer, offset, length);
         }
 
         /// <summary>

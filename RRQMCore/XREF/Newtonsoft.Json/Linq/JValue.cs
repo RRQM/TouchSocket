@@ -66,8 +66,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal JValue(object value, JTokenType type)
         {
-            _value = value;
-            _valueType = type;
+            this._value = value;
+            this._valueType = type;
         }
 
         /// <summary>
@@ -722,7 +722,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// Gets the node type for this <see cref="JToken"/>.
         /// </summary>
         /// <value>The type.</value>
-        public override JTokenType Type => _valueType;
+        public override JTokenType Type => this._valueType;
 
         /// <summary>
         /// Gets or sets the underlying token value.
@@ -730,18 +730,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The underlying token value.</value>
         public object Value
         {
-            get => _value;
+            get => this._value;
             set
             {
-                Type currentType = _value?.GetType();
+                Type currentType = this._value?.GetType();
                 Type newType = value?.GetType();
 
                 if (currentType != newType)
                 {
-                    _valueType = GetValueType(_valueType, value);
+                    this._valueType = GetValueType(this._valueType, value);
                 }
 
-                _value = value;
+                this._value = value;
             }
         }
 
@@ -752,24 +752,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="converters">A collection of <see cref="JsonConverter"/>s which will be used when writing the token.</param>
         public override void WriteTo(JsonWriter writer, params JsonConverter[] converters)
         {
-            if (converters != null && converters.Length > 0 && _value != null)
+            if (converters != null && converters.Length > 0 && this._value != null)
             {
-                JsonConverter matchingConverter = JsonSerializer.GetMatchingConverter(converters, _value.GetType());
+                JsonConverter matchingConverter = JsonSerializer.GetMatchingConverter(converters, this._value.GetType());
                 if (matchingConverter != null && matchingConverter.CanWrite)
                 {
-                    matchingConverter.WriteJson(writer, _value, JsonSerializer.CreateDefault());
+                    matchingConverter.WriteJson(writer, this._value, JsonSerializer.CreateDefault());
                     return;
                 }
             }
 
-            switch (_valueType)
+            switch (this._valueType)
             {
                 case JTokenType.Comment:
-                    writer.WriteComment(_value?.ToString());
+                    writer.WriteComment(this._value?.ToString());
                     return;
 
                 case JTokenType.Raw:
-                    writer.WriteRawValue(_value?.ToString());
+                    writer.WriteRawValue(this._value?.ToString());
                     return;
 
                 case JTokenType.Null:
@@ -781,15 +781,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     return;
 
                 case JTokenType.Integer:
-                    if (_value is int i)
+                    if (this._value is int i)
                     {
                         writer.WriteValue(i);
                     }
-                    else if (_value is long l)
+                    else if (this._value is long l)
                     {
                         writer.WriteValue(l);
                     }
-                    else if (_value is ulong ul)
+                    else if (this._value is ulong ul)
                     {
                         writer.WriteValue(ul);
                     }
@@ -801,35 +801,35 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 #endif
                     else
                     {
-                        writer.WriteValue(Convert.ToInt64(_value, CultureInfo.InvariantCulture));
+                        writer.WriteValue(Convert.ToInt64(this._value, CultureInfo.InvariantCulture));
                     }
                     return;
 
                 case JTokenType.Float:
-                    if (_value is decimal dec)
+                    if (this._value is decimal dec)
                     {
                         writer.WriteValue(dec);
                     }
-                    else if (_value is double d)
+                    else if (this._value is double d)
                     {
                         writer.WriteValue(d);
                     }
-                    else if (_value is float f)
+                    else if (this._value is float f)
                     {
                         writer.WriteValue(f);
                     }
                     else
                     {
-                        writer.WriteValue(Convert.ToDouble(_value, CultureInfo.InvariantCulture));
+                        writer.WriteValue(Convert.ToDouble(this._value, CultureInfo.InvariantCulture));
                     }
                     return;
 
                 case JTokenType.String:
-                    writer.WriteValue(_value?.ToString());
+                    writer.WriteValue(this._value?.ToString());
                     return;
 
                 case JTokenType.Boolean:
-                    writer.WriteValue(Convert.ToBoolean(_value, CultureInfo.InvariantCulture));
+                    writer.WriteValue(Convert.ToBoolean(this._value, CultureInfo.InvariantCulture));
                     return;
 
                 case JTokenType.Date:
@@ -841,36 +841,36 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     else
 #endif
                     {
-                        writer.WriteValue(Convert.ToDateTime(_value, CultureInfo.InvariantCulture));
+                        writer.WriteValue(Convert.ToDateTime(this._value, CultureInfo.InvariantCulture));
                     }
                     return;
 
                 case JTokenType.Bytes:
-                    writer.WriteValue((byte[])_value);
+                    writer.WriteValue((byte[])this._value);
                     return;
 
                 case JTokenType.Guid:
-                    writer.WriteValue((_value != null) ? (Guid?)_value : null);
+                    writer.WriteValue((this._value != null) ? (Guid?)this._value : null);
                     return;
 
                 case JTokenType.TimeSpan:
-                    writer.WriteValue((_value != null) ? (TimeSpan?)_value : null);
+                    writer.WriteValue((this._value != null) ? (TimeSpan?)this._value : null);
                     return;
 
                 case JTokenType.Uri:
-                    writer.WriteValue((Uri)_value);
+                    writer.WriteValue((Uri)this._value);
                     return;
             }
 
-            throw MiscellaneousUtils.CreateArgumentOutOfRangeException(nameof(Type), _valueType, "Unexpected token type.");
+            throw MiscellaneousUtils.CreateArgumentOutOfRangeException(nameof(this.Type), this._valueType, "Unexpected token type.");
         }
 
         internal override int GetDeepHashCode()
         {
-            int valueHashCode = (_value != null) ? _value.GetHashCode() : 0;
+            int valueHashCode = (this._value != null) ? this._value.GetHashCode() : 0;
 
             // GetHashCode on an enum boxes so cast to int
-            return ((int)_valueType).GetHashCode() ^ valueHashCode;
+            return ((int)this._valueType).GetHashCode() ^ valueHashCode;
         }
 
         private static bool ValuesEquals(JValue v1, JValue v2)
@@ -904,7 +904,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override bool Equals(object obj)
         {
-            return Equals(obj as JValue);
+            return this.Equals(obj as JValue);
         }
 
         /// <summary>
@@ -915,12 +915,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override int GetHashCode()
         {
-            if (_value == null)
+            if (this._value == null)
             {
                 return 0;
             }
 
-            return _value.GetHashCode();
+            return this._value.GetHashCode();
         }
 
         /// <summary>
@@ -931,12 +931,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override string ToString()
         {
-            if (_value == null)
+            if (this._value == null)
             {
                 return string.Empty;
             }
 
-            return _value.ToString();
+            return this._value.ToString();
         }
 
         /// <summary>
@@ -948,7 +948,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public string ToString(string format)
         {
-            return ToString(format, CultureInfo.CurrentCulture);
+            return this.ToString(format, CultureInfo.CurrentCulture);
         }
 
         /// <summary>
@@ -960,7 +960,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public string ToString(IFormatProvider formatProvider)
         {
-            return ToString(null, formatProvider);
+            return this.ToString(null, formatProvider);
         }
 
         /// <summary>
@@ -973,18 +973,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            if (_value == null)
+            if (this._value == null)
             {
                 return string.Empty;
             }
 
-            if (_value is IFormattable formattable)
+            if (this._value is IFormattable formattable)
             {
                 return formattable.ToString(format, formatProvider);
             }
             else
             {
-                return _value.ToString();
+                return this._value.ToString();
             }
         }
 
@@ -1088,17 +1088,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             if (value != null)
             {
                 otherValue = value.Value;
-                comparisonType = (_valueType == JTokenType.String && _valueType != value._valueType)
+                comparisonType = (this._valueType == JTokenType.String && this._valueType != value._valueType)
                     ? value._valueType
-                    : _valueType;
+                    : this._valueType;
             }
             else
             {
                 otherValue = obj;
-                comparisonType = _valueType;
+                comparisonType = this._valueType;
             }
 
-            return Compare(comparisonType, _value, otherValue);
+            return Compare(comparisonType, this._value, otherValue);
         }
 
         /// <summary>
@@ -1126,11 +1126,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return 1;
             }
 
-            JTokenType comparisonType = (_valueType == JTokenType.String && _valueType != obj._valueType)
+            JTokenType comparisonType = (this._valueType == JTokenType.String && this._valueType != obj._valueType)
                 ? obj._valueType
-                : _valueType;
+                : this._valueType;
 
-            return Compare(comparisonType, _value, obj._value);
+            return Compare(comparisonType, this._value, obj._value);
         }
 
 #if HAVE_ICONVERTIBLE

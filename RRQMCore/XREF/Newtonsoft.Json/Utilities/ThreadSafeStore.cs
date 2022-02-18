@@ -61,11 +61,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
         {
             ValidationUtils.ArgumentNotNull(creator, nameof(creator));
 
-            _creator = creator;
+            this._creator = creator;
 #if HAVE_CONCURRENT_DICTIONARY
             _concurrentStore = new ConcurrentDictionary<TKey, TValue>();
 #else
-            _store = new Dictionary<TKey, TValue>();
+            this._store = new Dictionary<TKey, TValue>();
 #endif
         }
 
@@ -74,9 +74,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 #if HAVE_CONCURRENT_DICTIONARY
             return _concurrentStore.GetOrAdd(key, _creator);
 #else
-            if (!_store.TryGetValue(key, out TValue value))
+            if (!this._store.TryGetValue(key, out TValue value))
             {
-                return AddValue(key);
+                return this.AddValue(key);
             }
 
             return value;
@@ -87,30 +87,30 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         private TValue AddValue(TKey key)
         {
-            TValue value = _creator(key);
+            TValue value = this._creator(key);
 
-            lock (_lock)
+            lock (this._lock)
             {
-                if (_store == null)
+                if (this._store == null)
                 {
-                    _store = new Dictionary<TKey, TValue>();
-                    _store[key] = value;
+                    this._store = new Dictionary<TKey, TValue>();
+                    this._store[key] = value;
                 }
                 else
                 {
                     // double check locking
-                    if (_store.TryGetValue(key, out TValue checkValue))
+                    if (this._store.TryGetValue(key, out TValue checkValue))
                     {
                         return checkValue;
                     }
 
-                    Dictionary<TKey, TValue> newStore = new Dictionary<TKey, TValue>(_store);
+                    Dictionary<TKey, TValue> newStore = new Dictionary<TKey, TValue>(this._store);
                     newStore[key] = value;
 
 #if HAVE_MEMORY_BARRIER
                     Thread.MemoryBarrier();
 #endif
-                    _store = newStore;
+                    this._store = newStore;
                 }
 
                 return value;

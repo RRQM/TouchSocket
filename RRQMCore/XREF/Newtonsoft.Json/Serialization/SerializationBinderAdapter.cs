@@ -52,14 +52,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public SerializationBinderAdapter(SerializationBinder serializationBinder)
         {
-            SerializationBinder = serializationBinder;
+            this.SerializationBinder = serializationBinder;
         }
 
 #pragma warning restore 618
 
         public Type BindToType(string assemblyName, string typeName)
         {
-            return SerializationBinder.BindToType(assemblyName, typeName);
+            return this.SerializationBinder.BindToType(assemblyName, typeName);
         }
 
         public void BindToName(Type serializedType, out string assemblyName, out string typeName)

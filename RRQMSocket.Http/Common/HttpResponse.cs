@@ -38,7 +38,7 @@ namespace RRQMSocket.Http
         /// <returns></returns>
         public string GetHeader(string fieldName)
         {
-            return GetHeaderByKey(fieldName);
+            return this.GetHeaderByKey(fieldName);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace RRQMSocket.Http
         /// <param name="value"></param>
         public void SetHeader(HttpHeaders header, string value)
         {
-            SetHeaderByKey(header, value);
+            this.SetHeaderByKey(header, value);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace RRQMSocket.Http
         /// <param name="value"></param>
         public void SetHeader(string fieldName, string value)
         {
-            SetHeaderByKey(fieldName, value);
+            this.SetHeaderByKey(fieldName, value);
         }
 
         /// <summary>
@@ -68,8 +68,8 @@ namespace RRQMSocket.Http
         private void BuildHeader(ByteBlock byteBlock)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            if (!string.IsNullOrEmpty(StatusCode))
-                stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {StatusCode} {StatusMessage}");
+            if (!string.IsNullOrEmpty(this.StatusCode))
+                stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}");
             if (!string.IsNullOrEmpty(this.Content_Type))
                 stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
             stringBuilder.AppendLine("Content-Length: " + this.BodyLength);
@@ -97,8 +97,8 @@ namespace RRQMSocket.Http
         /// <param name="byteBlock"></param>
         public override void Build(ByteBlock byteBlock)
         {
-            BuildHeader(byteBlock);
-            BuildContent(byteBlock);
+            this.BuildHeader(byteBlock);
+            this.BuildContent(byteBlock);
         }
 
         /// <summary>

@@ -10,8 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using RRQMCore.Run;
-
 namespace RRQMSocket.WebSocket
 {
     /// <summary>
@@ -48,7 +46,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="e"></param>
         protected override void OnConnecting(SimpleWSSocketClient socketClient, ClientOperationEventArgs e)
         {
-            socketClient.Received += SocketClient_Received;
+            socketClient.Received += this.SocketClient_Received;
             base.OnConnecting(socketClient, e);
         }
 

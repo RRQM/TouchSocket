@@ -58,7 +58,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public ReflectionAttributeProvider(object attributeProvider)
         {
             ValidationUtils.ArgumentNotNull(attributeProvider, nameof(attributeProvider));
-            _attributeProvider = attributeProvider;
+            this._attributeProvider = attributeProvider;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>A collection of <see cref="Attribute"/>s, or an empty collection.</returns>
         public IList<Attribute> GetAttributes(bool inherit)
         {
-            return ReflectionUtils.GetAttributes(_attributeProvider, null, inherit);
+            return ReflectionUtils.GetAttributes(this._attributeProvider, null, inherit);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>A collection of <see cref="Attribute"/>s, or an empty collection.</returns>
         public IList<Attribute> GetAttributes(Type attributeType, bool inherit)
         {
-            return ReflectionUtils.GetAttributes(_attributeProvider, attributeType, inherit);
+            return ReflectionUtils.GetAttributes(this._attributeProvider, attributeType, inherit);
         }
     }
 }

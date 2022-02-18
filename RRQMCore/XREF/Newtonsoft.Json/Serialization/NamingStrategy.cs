@@ -71,12 +71,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>The serialized property name.</returns>
         public virtual string GetPropertyName(string name, bool hasSpecifiedName)
         {
-            if (hasSpecifiedName && !OverrideSpecifiedNames)
+            if (hasSpecifiedName && !this.OverrideSpecifiedNames)
             {
                 return name;
             }
 
-            return ResolvePropertyName(name);
+            return this.ResolvePropertyName(name);
         }
 
         /// <summary>
@@ -86,12 +86,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>The serialized extension data name.</returns>
         public virtual string GetExtensionDataName(string name)
         {
-            if (!ProcessExtensionDataNames)
+            if (!this.ProcessExtensionDataNames)
             {
                 return name;
             }
 
-            return ResolvePropertyName(name);
+            return this.ResolvePropertyName(name);
         }
 
         /// <summary>
@@ -101,12 +101,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>The serialized dictionary key.</returns>
         public virtual string GetDictionaryKey(string key)
         {
-            if (!ProcessDictionaryKeys)
+            if (!this.ProcessDictionaryKeys)
             {
                 return key;
             }
 
-            return ResolvePropertyName(key);
+            return this.ResolvePropertyName(key);
         }
 
         /// <summary>

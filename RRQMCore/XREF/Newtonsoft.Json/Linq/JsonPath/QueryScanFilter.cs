@@ -25,7 +25,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 {
                     foreach (JToken d in c.DescendantsAndSelf())
                     {
-                        if (Expression.IsMatch(root, d))
+                        if (this.Expression.IsMatch(root, d))
                         {
                             yield return d;
                         }
@@ -33,7 +33,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 }
                 else
                 {
-                    if (Expression.IsMatch(root, t))
+                    if (this.Expression.IsMatch(root, t))
                     {
                         yield return t;
                     }

@@ -27,7 +27,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The method used when merging JSON arrays.</value>
         public MergeArrayHandling MergeArrayHandling
         {
-            get => _mergeArrayHandling;
+            get => this._mergeArrayHandling;
             set
             {
                 if (value < MergeArrayHandling.Concat || value > MergeArrayHandling.Merge)
@@ -35,7 +35,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _mergeArrayHandling = value;
+                this._mergeArrayHandling = value;
             }
         }
 
@@ -45,7 +45,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>How null value properties are merged.</value>
         public MergeNullValueHandling MergeNullValueHandling
         {
-            get => _mergeNullValueHandling;
+            get => this._mergeNullValueHandling;
             set
             {
                 if (value < MergeNullValueHandling.Ignore || value > MergeNullValueHandling.Merge)
@@ -53,7 +53,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _mergeNullValueHandling = value;
+                this._mergeNullValueHandling = value;
             }
         }
     }

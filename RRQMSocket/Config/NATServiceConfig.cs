@@ -23,8 +23,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost TargetIPHost
         {
-            get { return (IPHost)GetValue(TargetIPHostProperty); }
-            set { SetValue(TargetIPHostProperty, value); }
+            get => (IPHost)this.GetValue(TargetIPHostProperty);
+            set => this.SetValue(TargetIPHostProperty, value);
         }
 
         /// <summary>
