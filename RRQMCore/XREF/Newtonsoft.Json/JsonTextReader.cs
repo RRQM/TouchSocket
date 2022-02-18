@@ -73,12 +73,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         private const char UnicodeReplacementChar = '\uFFFD';
         private const int MaximumJavascriptIntegerCharacterLength = 380;
 
-#if DEBUG
-        internal int LargeBufferLength { get; set; } = int.MaxValue / 2;
-#else
         private const int LargeBufferLength = int.MaxValue / 2;
-#endif
-
         private readonly TextReader _reader;
         private char[] _chars;
         private int _charsUsed;
@@ -267,7 +262,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             // shift the remaining content to the start to avoid unnecessarily increasing
             // the buffer size when reading numbers/strings
             int length = this._chars.Length;
-            if (length - this._charPos <= length * 0.1 || length >= this.LargeBufferLength)
+            if (length - this._charPos <= length * 0.1 || length >= LargeBufferLength)
             {
                 int count = this._charsUsed - this._charPos;
                 if (count > 0)
