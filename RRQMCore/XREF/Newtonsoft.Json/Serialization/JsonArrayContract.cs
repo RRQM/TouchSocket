@@ -88,12 +88,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_parameterizedCreator == null)
+                if (this._parameterizedCreator == null)
                 {
-                    _parameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(_parameterizedConstructor);
+                    this._parameterizedCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(this._parameterizedConstructor);
                 }
 
-                return _parameterizedCreator;
+                return this._parameterizedCreator;
             }
         }
 
@@ -103,12 +103,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value>The function used to create the object.</value>
         public ObjectConstructor<object> OverrideCreator
         {
-            get => _overrideCreator;
+            get => this._overrideCreator;
             set
             {
-                _overrideCreator = value;
+                this._overrideCreator = value;
                 // hacky
-                CanDeserialize = true;
+                this.CanDeserialize = true;
             }
         }
 
@@ -118,7 +118,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value><c>true</c> if the creator has a parameter with the collection values; otherwise, <c>false</c>.</value>
         public bool HasParameterizedCreator { get; set; }
 
-        internal bool HasParameterizedCreatorInternal => (HasParameterizedCreator || _parameterizedCreator != null || _parameterizedConstructor != null);
+        internal bool HasParameterizedCreatorInternal => (this.HasParameterizedCreator || this._parameterizedCreator != null || this._parameterizedConstructor != null);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonArrayContract"/> class.
@@ -127,53 +127,53 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public JsonArrayContract(Type underlyingType)
             : base(underlyingType)
         {
-            ContractType = JsonContractType.Array;
-            IsArray = CreatedType.IsArray;
+            this.ContractType = JsonContractType.Array;
+            this.IsArray = this.CreatedType.IsArray;
 
             bool canDeserialize;
 
             Type tempCollectionType;
-            if (IsArray)
+            if (this.IsArray)
             {
-                CollectionItemType = ReflectionUtils.GetCollectionItemType(UnderlyingType);
-                IsReadOnlyOrFixedSize = true;
-                _genericCollectionDefinitionType = typeof(List<>).MakeGenericType(CollectionItemType);
+                this.CollectionItemType = ReflectionUtils.GetCollectionItemType(this.UnderlyingType);
+                this.IsReadOnlyOrFixedSize = true;
+                this._genericCollectionDefinitionType = typeof(List<>).MakeGenericType(this.CollectionItemType);
 
                 canDeserialize = true;
-                IsMultidimensionalArray = (IsArray && UnderlyingType.GetArrayRank() > 1);
+                this.IsMultidimensionalArray = (this.IsArray && this.UnderlyingType.GetArrayRank() > 1);
             }
             else if (typeof(IList).IsAssignableFrom(underlyingType))
             {
-                if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(ICollection<>), out _genericCollectionDefinitionType))
+                if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(ICollection<>), out this._genericCollectionDefinitionType))
                 {
-                    CollectionItemType = _genericCollectionDefinitionType.GetGenericArguments()[0];
+                    this.CollectionItemType = this._genericCollectionDefinitionType.GetGenericArguments()[0];
                 }
                 else
                 {
-                    CollectionItemType = ReflectionUtils.GetCollectionItemType(underlyingType);
+                    this.CollectionItemType = ReflectionUtils.GetCollectionItemType(underlyingType);
                 }
 
                 if (underlyingType == typeof(IList))
                 {
-                    CreatedType = typeof(List<object>);
+                    this.CreatedType = typeof(List<object>);
                 }
 
-                if (CollectionItemType != null)
+                if (this.CollectionItemType != null)
                 {
-                    _parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(underlyingType, CollectionItemType);
+                    this._parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(underlyingType, this.CollectionItemType);
                 }
 
-                IsReadOnlyOrFixedSize = ReflectionUtils.InheritsGenericDefinition(underlyingType, typeof(ReadOnlyCollection<>));
+                this.IsReadOnlyOrFixedSize = ReflectionUtils.InheritsGenericDefinition(underlyingType, typeof(ReadOnlyCollection<>));
                 canDeserialize = true;
             }
-            else if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(ICollection<>), out _genericCollectionDefinitionType))
+            else if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(ICollection<>), out this._genericCollectionDefinitionType))
             {
-                CollectionItemType = _genericCollectionDefinitionType.GetGenericArguments()[0];
+                this.CollectionItemType = this._genericCollectionDefinitionType.GetGenericArguments()[0];
 
                 if (ReflectionUtils.IsGenericDefinition(underlyingType, typeof(ICollection<>))
                     || ReflectionUtils.IsGenericDefinition(underlyingType, typeof(IList<>)))
                 {
-                    CreatedType = typeof(List<>).MakeGenericType(CollectionItemType);
+                    this.CreatedType = typeof(List<>).MakeGenericType(this.CollectionItemType);
                 }
 
 #if HAVE_ISET
@@ -183,9 +183,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 }
 #endif
 
-                _parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(underlyingType, CollectionItemType);
+                this._parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(underlyingType, this.CollectionItemType);
                 canDeserialize = true;
-                ShouldCreateWrapper = true;
+                this.ShouldCreateWrapper = true;
             }
 #if HAVE_READ_ONLY_COLLECTIONS
             else if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(IReadOnlyCollection<>), out tempCollectionType))
@@ -211,14 +211,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 #endif
             else if (ReflectionUtils.ImplementsGenericDefinition(underlyingType, typeof(IEnumerable<>), out tempCollectionType))
             {
-                CollectionItemType = tempCollectionType.GetGenericArguments()[0];
+                this.CollectionItemType = tempCollectionType.GetGenericArguments()[0];
 
-                if (ReflectionUtils.IsGenericDefinition(UnderlyingType, typeof(IEnumerable<>)))
+                if (ReflectionUtils.IsGenericDefinition(this.UnderlyingType, typeof(IEnumerable<>)))
                 {
-                    CreatedType = typeof(List<>).MakeGenericType(CollectionItemType);
+                    this.CreatedType = typeof(List<>).MakeGenericType(this.CollectionItemType);
                 }
 
-                _parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(underlyingType, CollectionItemType);
+                this._parameterizedConstructor = CollectionUtils.ResolveEnumerableCollectionConstructor(underlyingType, this.CollectionItemType);
 
 #if HAVE_FSHARP_TYPES
                 StoreFSharpListCreatorIfNecessary(underlyingType);
@@ -226,29 +226,29 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
                 if (underlyingType.IsGenericType() && underlyingType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    _genericCollectionDefinitionType = tempCollectionType;
+                    this._genericCollectionDefinitionType = tempCollectionType;
 
-                    IsReadOnlyOrFixedSize = false;
-                    ShouldCreateWrapper = false;
+                    this.IsReadOnlyOrFixedSize = false;
+                    this.ShouldCreateWrapper = false;
                     canDeserialize = true;
                 }
                 else
                 {
-                    _genericCollectionDefinitionType = typeof(List<>).MakeGenericType(CollectionItemType);
+                    this._genericCollectionDefinitionType = typeof(List<>).MakeGenericType(this.CollectionItemType);
 
-                    IsReadOnlyOrFixedSize = true;
-                    ShouldCreateWrapper = true;
-                    canDeserialize = HasParameterizedCreatorInternal;
+                    this.IsReadOnlyOrFixedSize = true;
+                    this.ShouldCreateWrapper = true;
+                    canDeserialize = this.HasParameterizedCreatorInternal;
                 }
             }
             else
             {
                 // types that implement IEnumerable and nothing else
                 canDeserialize = false;
-                ShouldCreateWrapper = true;
+                this.ShouldCreateWrapper = true;
             }
 
-            CanDeserialize = canDeserialize;
+            this.CanDeserialize = canDeserialize;
 
 #if (NET20 || NET35)
             if (CollectionItemType != null && ReflectionUtils.IsNullableType(CollectionItemType))
@@ -265,56 +265,56 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             if (ImmutableCollectionsUtils.TryBuildImmutableForArrayContract(
                 underlyingType,
-                CollectionItemType,
+                this.CollectionItemType,
                 out Type immutableCreatedType,
                 out ObjectConstructor<object> immutableParameterizedCreator))
             {
-                CreatedType = immutableCreatedType;
-                _parameterizedCreator = immutableParameterizedCreator;
-                IsReadOnlyOrFixedSize = true;
-                CanDeserialize = true;
+                this.CreatedType = immutableCreatedType;
+                this._parameterizedCreator = immutableParameterizedCreator;
+                this.IsReadOnlyOrFixedSize = true;
+                this.CanDeserialize = true;
             }
         }
 
         internal IWrappedCollection CreateWrapper(object list)
         {
-            if (_genericWrapperCreator == null)
+            if (this._genericWrapperCreator == null)
             {
-                _genericWrapperType = typeof(CollectionWrapper<>).MakeGenericType(CollectionItemType);
+                this._genericWrapperType = typeof(CollectionWrapper<>).MakeGenericType(this.CollectionItemType);
 
                 Type constructorArgument;
 
-                if (ReflectionUtils.InheritsGenericDefinition(_genericCollectionDefinitionType, typeof(List<>))
-                    || _genericCollectionDefinitionType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                if (ReflectionUtils.InheritsGenericDefinition(this._genericCollectionDefinitionType, typeof(List<>))
+                    || this._genericCollectionDefinitionType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    constructorArgument = typeof(ICollection<>).MakeGenericType(CollectionItemType);
+                    constructorArgument = typeof(ICollection<>).MakeGenericType(this.CollectionItemType);
                 }
                 else
                 {
-                    constructorArgument = _genericCollectionDefinitionType;
+                    constructorArgument = this._genericCollectionDefinitionType;
                 }
 
-                ConstructorInfo genericWrapperConstructor = _genericWrapperType.GetConstructor(new[] { constructorArgument });
-                _genericWrapperCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(genericWrapperConstructor);
+                ConstructorInfo genericWrapperConstructor = this._genericWrapperType.GetConstructor(new[] { constructorArgument });
+                this._genericWrapperCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateParameterizedConstructor(genericWrapperConstructor);
             }
 
-            return (IWrappedCollection)_genericWrapperCreator(list);
+            return (IWrappedCollection)this._genericWrapperCreator(list);
         }
 
         internal IList CreateTemporaryCollection()
         {
-            if (_genericTemporaryCollectionCreator == null)
+            if (this._genericTemporaryCollectionCreator == null)
             {
                 // multidimensional array will also have array instances in it
-                Type collectionItemType = (IsMultidimensionalArray || CollectionItemType == null)
+                Type collectionItemType = (this.IsMultidimensionalArray || this.CollectionItemType == null)
                     ? typeof(object)
-                    : CollectionItemType;
+                    : this.CollectionItemType;
 
                 Type temporaryListType = typeof(List<>).MakeGenericType(collectionItemType);
-                _genericTemporaryCollectionCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateDefaultConstructor<object>(temporaryListType);
+                this._genericTemporaryCollectionCreator = JsonTypeReflector.ReflectionDelegateFactory.CreateDefaultConstructor<object>(temporaryListType);
             }
 
-            return (IList)_genericTemporaryCollectionCreator();
+            return (IList)this._genericTemporaryCollectionCreator();
         }
 
 #if HAVE_FSHARP_TYPES

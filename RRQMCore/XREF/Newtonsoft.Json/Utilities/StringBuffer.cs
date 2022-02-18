@@ -51,11 +51,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public int Position
         {
-            get => _position;
-            set => _position = value;
+            get => this._position;
+            set => this._position = value;
         }
 
-        public bool IsEmpty => _buffer == null;
+        public bool IsEmpty => this._buffer == null;
 
         public StringBuffer(IArrayPool<char> bufferPool, int initalSize) : this(BufferUtils.RentBuffer(bufferPool, initalSize))
         {
@@ -63,68 +63,68 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         private StringBuffer(char[] buffer)
         {
-            _buffer = buffer;
-            _position = 0;
+            this._buffer = buffer;
+            this._position = 0;
         }
 
         public void Append(IArrayPool<char> bufferPool, char value)
         {
             // test if the buffer array is large enough to take the value
-            if (_position == _buffer.Length)
+            if (this._position == this._buffer.Length)
             {
-                EnsureSize(bufferPool, 1);
+                this.EnsureSize(bufferPool, 1);
             }
 
             // set value and increment poisition
-            _buffer[_position++] = value;
+            this._buffer[this._position++] = value;
         }
 
         public void Append(IArrayPool<char> bufferPool, char[] buffer, int startIndex, int count)
         {
-            if (_position + count >= _buffer.Length)
+            if (this._position + count >= this._buffer.Length)
             {
-                EnsureSize(bufferPool, count);
+                this.EnsureSize(bufferPool, count);
             }
 
-            Array.Copy(buffer, startIndex, _buffer, _position, count);
+            Array.Copy(buffer, startIndex, this._buffer, this._position, count);
 
-            _position += count;
+            this._position += count;
         }
 
         public void Clear(IArrayPool<char> bufferPool)
         {
-            if (_buffer != null)
+            if (this._buffer != null)
             {
-                BufferUtils.ReturnBuffer(bufferPool, _buffer);
-                _buffer = null;
+                BufferUtils.ReturnBuffer(bufferPool, this._buffer);
+                this._buffer = null;
             }
-            _position = 0;
+            this._position = 0;
         }
 
         private void EnsureSize(IArrayPool<char> bufferPool, int appendLength)
         {
-            char[] newBuffer = BufferUtils.RentBuffer(bufferPool, (_position + appendLength) * 2);
+            char[] newBuffer = BufferUtils.RentBuffer(bufferPool, (this._position + appendLength) * 2);
 
-            if (_buffer != null)
+            if (this._buffer != null)
             {
-                Array.Copy(_buffer, newBuffer, _position);
-                BufferUtils.ReturnBuffer(bufferPool, _buffer);
+                Array.Copy(this._buffer, newBuffer, this._position);
+                BufferUtils.ReturnBuffer(bufferPool, this._buffer);
             }
 
-            _buffer = newBuffer;
+            this._buffer = newBuffer;
         }
 
         public override string ToString()
         {
-            return ToString(0, _position);
+            return this.ToString(0, this._position);
         }
 
         public string ToString(int start, int length)
         {
             // TODO: validation
-            return new string(_buffer, start, length);
+            return new string(this._buffer, start, length);
         }
 
-        public char[] InternalBuffer => _buffer;
+        public char[] InternalBuffer => this._buffer;
     }
 }

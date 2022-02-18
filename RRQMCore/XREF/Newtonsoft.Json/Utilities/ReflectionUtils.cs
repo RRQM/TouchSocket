@@ -1165,13 +1165,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
         public TypeNameKey(string assemblyName, string typeName)
         {
-            AssemblyName = assemblyName;
-            TypeName = typeName;
+            this.AssemblyName = assemblyName;
+            this.TypeName = typeName;
         }
 
         public override int GetHashCode()
         {
-            return (AssemblyName?.GetHashCode() ?? 0) ^ (TypeName?.GetHashCode() ?? 0);
+            return (this.AssemblyName?.GetHashCode() ?? 0) ^ (this.TypeName?.GetHashCode() ?? 0);
         }
 
         public override bool Equals(object obj)
@@ -1181,12 +1181,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                 return false;
             }
 
-            return Equals((TypeNameKey)obj);
+            return this.Equals((TypeNameKey)obj);
         }
 
         public bool Equals(TypeNameKey other)
         {
-            return (AssemblyName == other.AssemblyName && TypeName == other.TypeName);
+            return (this.AssemblyName == other.AssemblyName && this.TypeName == other.TypeName);
         }
     }
 }

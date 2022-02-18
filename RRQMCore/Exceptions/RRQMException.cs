@@ -22,14 +22,14 @@ namespace RRQMCore.Exceptions
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMException():base()
-        { 
-        
+        public RRQMException() : base()
+        {
+
         }
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMException(ResType resType,params object[] fms) : base(resType.GetResString(fms)) { }
+        public RRQMException(ResType resType, params object[] fms) : base(resType.GetResString(fms)) { }
 
         /// <summary>
         /// 构造函数

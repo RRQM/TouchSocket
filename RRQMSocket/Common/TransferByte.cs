@@ -61,6 +61,6 @@ namespace RRQMSocket
         /// <summary>
         /// 尺寸
         /// </summary>
-        public int Size => length;
+        public int Size => this.length;
     }
 }

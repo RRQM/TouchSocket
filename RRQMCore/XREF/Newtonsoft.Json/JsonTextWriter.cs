@@ -69,12 +69,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                if (_base64Encoder == null)
+                if (this._base64Encoder == null)
                 {
-                    _base64Encoder = new Base64Encoder(_writer);
+                    this._base64Encoder = new Base64Encoder(this._writer);
                 }
 
-                return _base64Encoder;
+                return this._base64Encoder;
             }
         }
 
@@ -83,7 +83,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public IArrayPool<char> ArrayPool
         {
-            get => _arrayPool;
+            get => this._arrayPool;
             set
             {
                 if (value == null)
@@ -91,7 +91,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentNullException(nameof(value));
                 }
 
-                _arrayPool = value;
+                this._arrayPool = value;
             }
         }
 
@@ -100,7 +100,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public int Indentation
         {
-            get => _indentation;
+            get => this._indentation;
             set
             {
                 if (value < 0)
@@ -108,7 +108,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentException("Indentation value must be greater than 0.");
                 }
 
-                _indentation = value;
+                this._indentation = value;
             }
         }
 
@@ -117,7 +117,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public char QuoteChar
         {
-            get => _quoteChar;
+            get => this._quoteChar;
             set
             {
                 if (value != '"' && value != '\'')
@@ -125,8 +125,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentException(@"Invalid JavaScript string quote character. Valid quote characters are ' and "".");
                 }
 
-                _quoteChar = value;
-                UpdateCharEscapeFlags();
+                this._quoteChar = value;
+                this.UpdateCharEscapeFlags();
             }
         }
 
@@ -135,13 +135,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public char IndentChar
         {
-            get => _indentChar;
+            get => this._indentChar;
             set
             {
-                if (value != _indentChar)
+                if (value != this._indentChar)
                 {
-                    _indentChar = value;
-                    _indentChars = null;
+                    this._indentChar = value;
+                    this._indentChars = null;
                 }
             }
         }
@@ -151,8 +151,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public bool QuoteName
         {
-            get => _quoteName;
-            set => _quoteName = value;
+            get => this._quoteName;
+            set => this._quoteName = value;
         }
 
         /// <summary>
@@ -166,13 +166,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 throw new ArgumentNullException(nameof(textWriter));
             }
 
-            _writer = textWriter;
-            _quoteChar = '"';
-            _quoteName = true;
-            _indentChar = ' ';
-            _indentation = 2;
+            this._writer = textWriter;
+            this._quoteChar = '"';
+            this._quoteName = true;
+            this._indentChar = ' ';
+            this._indentation = 2;
 
-            UpdateCharEscapeFlags();
+            this.UpdateCharEscapeFlags();
 
 #if HAVE_ASYNC
             _safeAsync = GetType() == typeof(JsonTextWriter);
@@ -184,7 +184,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public override void Flush()
         {
-            _writer.Flush();
+            this._writer.Flush();
         }
 
         /// <summary>
@@ -196,23 +196,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             base.Close();
 
-            CloseBufferAndWriter();
+            this.CloseBufferAndWriter();
         }
 
         private void CloseBufferAndWriter()
         {
-            if (_writeBuffer != null)
+            if (this._writeBuffer != null)
             {
-                BufferUtils.ReturnBuffer(_arrayPool, _writeBuffer);
-                _writeBuffer = null;
+                BufferUtils.ReturnBuffer(this._arrayPool, this._writeBuffer);
+                this._writeBuffer = null;
             }
 
-            if (CloseOutput)
+            if (this.CloseOutput)
             {
 #if HAVE_STREAM_READER_WRITER_CLOSE
                 _writer?.Close();
 #else
-                _writer?.Dispose();
+                this._writer?.Dispose();
 #endif
             }
         }
@@ -222,9 +222,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public override void WriteStartObject()
         {
-            InternalWriteStart(JsonToken.StartObject, JsonContainerType.Object);
+            this.InternalWriteStart(JsonToken.StartObject, JsonContainerType.Object);
 
-            _writer.Write('{');
+            this._writer.Write('{');
         }
 
         /// <summary>
@@ -232,9 +232,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public override void WriteStartArray()
         {
-            InternalWriteStart(JsonToken.StartArray, JsonContainerType.Array);
+            this.InternalWriteStart(JsonToken.StartArray, JsonContainerType.Array);
 
-            _writer.Write('[');
+            this._writer.Write('[');
         }
 
         /// <summary>
@@ -243,11 +243,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="name">The name of the constructor.</param>
         public override void WriteStartConstructor(string name)
         {
-            InternalWriteStart(JsonToken.StartConstructor, JsonContainerType.Constructor);
+            this.InternalWriteStart(JsonToken.StartConstructor, JsonContainerType.Constructor);
 
-            _writer.Write("new ");
-            _writer.Write(name);
-            _writer.Write('(');
+            this._writer.Write("new ");
+            this._writer.Write(name);
+            this._writer.Write('(');
         }
 
         /// <summary>
@@ -259,15 +259,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             switch (token)
             {
                 case JsonToken.EndObject:
-                    _writer.Write('}');
+                    this._writer.Write('}');
                     break;
 
                 case JsonToken.EndArray:
-                    _writer.Write(']');
+                    this._writer.Write(']');
                     break;
 
                 case JsonToken.EndConstructor:
-                    _writer.Write(')');
+                    this._writer.Write(')');
                     break;
 
                 default:
@@ -281,11 +281,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="name">The name of the property.</param>
         public override void WritePropertyName(string name)
         {
-            InternalWritePropertyName(name);
+            this.InternalWritePropertyName(name);
 
-            WriteEscapedString(name, _quoteName);
+            this.WriteEscapedString(name, this._quoteName);
 
-            _writer.Write(':');
+            this._writer.Write(':');
         }
 
         /// <summary>
@@ -295,38 +295,38 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="escape">A flag to indicate whether the text should be escaped when it is written as a JSON property name.</param>
         public override void WritePropertyName(string name, bool escape)
         {
-            InternalWritePropertyName(name);
+            this.InternalWritePropertyName(name);
 
             if (escape)
             {
-                WriteEscapedString(name, _quoteName);
+                this.WriteEscapedString(name, this._quoteName);
             }
             else
             {
-                if (_quoteName)
+                if (this._quoteName)
                 {
-                    _writer.Write(_quoteChar);
+                    this._writer.Write(this._quoteChar);
                 }
 
-                _writer.Write(name);
+                this._writer.Write(name);
 
-                if (_quoteName)
+                if (this._quoteName)
                 {
-                    _writer.Write(_quoteChar);
+                    this._writer.Write(this._quoteChar);
                 }
             }
 
-            _writer.Write(':');
+            this._writer.Write(':');
         }
 
         internal override void OnStringEscapeHandlingChanged()
         {
-            UpdateCharEscapeFlags();
+            this.UpdateCharEscapeFlags();
         }
 
         private void UpdateCharEscapeFlags()
         {
-            _charEscapeFlags = JavaScriptUtils.GetCharEscapeFlags(StringEscapeHandling, _quoteChar);
+            this._charEscapeFlags = JavaScriptUtils.GetCharEscapeFlags(this.StringEscapeHandling, this._quoteChar);
         }
 
         /// <summary>
@@ -335,29 +335,29 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         protected override void WriteIndent()
         {
             // levels of indentation multiplied by the indent count
-            int currentIndentCount = Top * _indentation;
+            int currentIndentCount = this.Top * this._indentation;
 
-            int newLineLen = SetIndentChars();
+            int newLineLen = this.SetIndentChars();
 
-            _writer.Write(_indentChars, 0, newLineLen + Math.Min(currentIndentCount, IndentCharBufferSize));
+            this._writer.Write(this._indentChars, 0, newLineLen + Math.Min(currentIndentCount, IndentCharBufferSize));
 
             while ((currentIndentCount -= IndentCharBufferSize) > 0)
             {
-                _writer.Write(_indentChars, newLineLen, Math.Min(currentIndentCount, IndentCharBufferSize));
+                this._writer.Write(this._indentChars, newLineLen, Math.Min(currentIndentCount, IndentCharBufferSize));
             }
         }
 
         private int SetIndentChars()
         {
             // Set _indentChars to be a newline followed by IndentCharBufferSize indent characters.
-            string writerNewLine = _writer.NewLine;
+            string writerNewLine = this._writer.NewLine;
             int newLineLen = writerNewLine.Length;
-            bool match = _indentChars != null && _indentChars.Length == IndentCharBufferSize + newLineLen;
+            bool match = this._indentChars != null && this._indentChars.Length == IndentCharBufferSize + newLineLen;
             if (match)
             {
                 for (int i = 0; i != newLineLen; ++i)
                 {
-                    if (writerNewLine[i] != _indentChars[i])
+                    if (writerNewLine[i] != this._indentChars[i])
                     {
                         match = false;
                         break;
@@ -369,7 +369,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 // If we're here, either _indentChars hasn't been set yet, or _writer.NewLine
                 // has been changed, or _indentChar has been changed.
-                _indentChars = (writerNewLine + new string(_indentChar, IndentCharBufferSize)).ToCharArray();
+                this._indentChars = (writerNewLine + new string(this._indentChar, IndentCharBufferSize)).ToCharArray();
             }
 
             return newLineLen;
@@ -380,7 +380,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         protected override void WriteValueDelimiter()
         {
-            _writer.Write(',');
+            this._writer.Write(',');
         }
 
         /// <summary>
@@ -388,12 +388,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         protected override void WriteIndentSpace()
         {
-            _writer.Write(' ');
+            this._writer.Write(' ');
         }
 
         private void WriteValueInternal(string value, JsonToken token)
         {
-            _writer.Write(value);
+            this._writer.Write(value);
         }
 
         #region WriteValue methods
@@ -423,8 +423,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public override void WriteNull()
         {
-            InternalWriteValue(JsonToken.Null);
-            WriteValueInternal(JsonConvert.Null, JsonToken.Null);
+            this.InternalWriteValue(JsonToken.Null);
+            this.WriteValueInternal(JsonConvert.Null, JsonToken.Null);
         }
 
         /// <summary>
@@ -432,8 +432,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public override void WriteUndefined()
         {
-            InternalWriteValue(JsonToken.Undefined);
-            WriteValueInternal(JsonConvert.Undefined, JsonToken.Undefined);
+            this.InternalWriteValue(JsonToken.Undefined);
+            this.WriteValueInternal(JsonConvert.Undefined, JsonToken.Undefined);
         }
 
         /// <summary>
@@ -442,9 +442,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="json">The raw JSON to write.</param>
         public override void WriteRaw(string json)
         {
-            InternalWriteRaw();
+            this.InternalWriteRaw();
 
-            _writer.Write(json);
+            this._writer.Write(json);
         }
 
         /// <summary>
@@ -453,22 +453,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="String"/> value to write.</param>
         public override void WriteValue(string value)
         {
-            InternalWriteValue(JsonToken.String);
+            this.InternalWriteValue(JsonToken.String);
 
             if (value == null)
             {
-                WriteValueInternal(JsonConvert.Null, JsonToken.Null);
+                this.WriteValueInternal(JsonConvert.Null, JsonToken.Null);
             }
             else
             {
-                WriteEscapedString(value, true);
+                this.WriteEscapedString(value, true);
             }
         }
 
         private void WriteEscapedString(string value, bool quote)
         {
-            EnsureWriteBuffer();
-            JavaScriptUtils.WriteEscapedJavaScriptString(_writer, value, _quoteChar, quote, _charEscapeFlags, StringEscapeHandling, _arrayPool, ref _writeBuffer);
+            this.EnsureWriteBuffer();
+            JavaScriptUtils.WriteEscapedJavaScriptString(this._writer, value, this._quoteChar, quote, this._charEscapeFlags, this.StringEscapeHandling, this._arrayPool, ref this._writeBuffer);
         }
 
         /// <summary>
@@ -477,8 +477,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Int32"/> value to write.</param>
         public override void WriteValue(int value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value);
         }
 
         /// <summary>
@@ -488,8 +488,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         public override void WriteValue(uint value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value);
         }
 
         /// <summary>
@@ -498,8 +498,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Int64"/> value to write.</param>
         public override void WriteValue(long value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value);
         }
 
         /// <summary>
@@ -509,8 +509,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         public override void WriteValue(ulong value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value, false);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value, false);
         }
 
         /// <summary>
@@ -519,8 +519,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Single"/> value to write.</param>
         public override void WriteValue(float value)
         {
-            InternalWriteValue(JsonToken.Float);
-            WriteValueInternal(JsonConvert.ToString(value, FloatFormatHandling, QuoteChar, false), JsonToken.Float);
+            this.InternalWriteValue(JsonToken.Float);
+            this.WriteValueInternal(JsonConvert.ToString(value, this.FloatFormatHandling, this.QuoteChar, false), JsonToken.Float);
         }
 
         /// <summary>
@@ -531,12 +531,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (value == null)
             {
-                WriteNull();
+                this.WriteNull();
             }
             else
             {
-                InternalWriteValue(JsonToken.Float);
-                WriteValueInternal(JsonConvert.ToString(value.GetValueOrDefault(), FloatFormatHandling, QuoteChar, true), JsonToken.Float);
+                this.InternalWriteValue(JsonToken.Float);
+                this.WriteValueInternal(JsonConvert.ToString(value.GetValueOrDefault(), this.FloatFormatHandling, this.QuoteChar, true), JsonToken.Float);
             }
         }
 
@@ -546,8 +546,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Double"/> value to write.</param>
         public override void WriteValue(double value)
         {
-            InternalWriteValue(JsonToken.Float);
-            WriteValueInternal(JsonConvert.ToString(value, FloatFormatHandling, QuoteChar, false), JsonToken.Float);
+            this.InternalWriteValue(JsonToken.Float);
+            this.WriteValueInternal(JsonConvert.ToString(value, this.FloatFormatHandling, this.QuoteChar, false), JsonToken.Float);
         }
 
         /// <summary>
@@ -558,12 +558,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (value == null)
             {
-                WriteNull();
+                this.WriteNull();
             }
             else
             {
-                InternalWriteValue(JsonToken.Float);
-                WriteValueInternal(JsonConvert.ToString(value.GetValueOrDefault(), FloatFormatHandling, QuoteChar, true), JsonToken.Float);
+                this.InternalWriteValue(JsonToken.Float);
+                this.WriteValueInternal(JsonConvert.ToString(value.GetValueOrDefault(), this.FloatFormatHandling, this.QuoteChar, true), JsonToken.Float);
             }
         }
 
@@ -573,8 +573,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Boolean"/> value to write.</param>
         public override void WriteValue(bool value)
         {
-            InternalWriteValue(JsonToken.Boolean);
-            WriteValueInternal(JsonConvert.ToString(value), JsonToken.Boolean);
+            this.InternalWriteValue(JsonToken.Boolean);
+            this.WriteValueInternal(JsonConvert.ToString(value), JsonToken.Boolean);
         }
 
         /// <summary>
@@ -583,8 +583,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Int16"/> value to write.</param>
         public override void WriteValue(short value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value);
         }
 
         /// <summary>
@@ -594,8 +594,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         public override void WriteValue(ushort value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value);
         }
 
         /// <summary>
@@ -604,8 +604,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Char"/> value to write.</param>
         public override void WriteValue(char value)
         {
-            InternalWriteValue(JsonToken.String);
-            WriteValueInternal(JsonConvert.ToString(value), JsonToken.String);
+            this.InternalWriteValue(JsonToken.String);
+            this.WriteValueInternal(JsonConvert.ToString(value), JsonToken.String);
         }
 
         /// <summary>
@@ -614,8 +614,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Byte"/> value to write.</param>
         public override void WriteValue(byte value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value);
         }
 
         /// <summary>
@@ -625,8 +625,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         public override void WriteValue(sbyte value)
         {
-            InternalWriteValue(JsonToken.Integer);
-            WriteIntegerValue(value);
+            this.InternalWriteValue(JsonToken.Integer);
+            this.WriteIntegerValue(value);
         }
 
         /// <summary>
@@ -635,8 +635,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Decimal"/> value to write.</param>
         public override void WriteValue(decimal value)
         {
-            InternalWriteValue(JsonToken.Float);
-            WriteValueInternal(JsonConvert.ToString(value), JsonToken.Float);
+            this.InternalWriteValue(JsonToken.Float);
+            this.WriteValueInternal(JsonConvert.ToString(value), JsonToken.Float);
         }
 
         /// <summary>
@@ -645,31 +645,31 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="DateTime"/> value to write.</param>
         public override void WriteValue(DateTime value)
         {
-            InternalWriteValue(JsonToken.Date);
-            value = DateTimeUtils.EnsureDateTime(value, DateTimeZoneHandling);
+            this.InternalWriteValue(JsonToken.Date);
+            value = DateTimeUtils.EnsureDateTime(value, this.DateTimeZoneHandling);
 
-            if (string.IsNullOrEmpty(DateFormatString))
+            if (string.IsNullOrEmpty(this.DateFormatString))
             {
-                int length = WriteValueToBuffer(value);
+                int length = this.WriteValueToBuffer(value);
 
-                _writer.Write(_writeBuffer, 0, length);
+                this._writer.Write(this._writeBuffer, 0, length);
             }
             else
             {
-                _writer.Write(_quoteChar);
-                _writer.Write(value.ToString(DateFormatString, Culture));
-                _writer.Write(_quoteChar);
+                this._writer.Write(this._quoteChar);
+                this._writer.Write(value.ToString(this.DateFormatString, this.Culture));
+                this._writer.Write(this._quoteChar);
             }
         }
 
         private int WriteValueToBuffer(DateTime value)
         {
-            EnsureWriteBuffer();
+            this.EnsureWriteBuffer();
 
             int pos = 0;
-            _writeBuffer[pos++] = _quoteChar;
-            pos = DateTimeUtils.WriteDateTimeString(_writeBuffer, pos, value, null, value.Kind, DateFormatHandling);
-            _writeBuffer[pos++] = _quoteChar;
+            this._writeBuffer[pos++] = this._quoteChar;
+            pos = DateTimeUtils.WriteDateTimeString(this._writeBuffer, pos, value, null, value.Kind, this.DateFormatHandling);
+            this._writeBuffer[pos++] = this._quoteChar;
             return pos;
         }
 
@@ -681,15 +681,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (value == null)
             {
-                WriteNull();
+                this.WriteNull();
             }
             else
             {
-                InternalWriteValue(JsonToken.Bytes);
-                _writer.Write(_quoteChar);
-                Base64Encoder.Encode(value, 0, value.Length);
-                Base64Encoder.Flush();
-                _writer.Write(_quoteChar);
+                this.InternalWriteValue(JsonToken.Bytes);
+                this._writer.Write(this._quoteChar);
+                this.Base64Encoder.Encode(value, 0, value.Length);
+                this.Base64Encoder.Flush();
+                this._writer.Write(this._quoteChar);
             }
         }
 
@@ -734,7 +734,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Guid"/> value to write.</param>
         public override void WriteValue(Guid value)
         {
-            InternalWriteValue(JsonToken.String);
+            this.InternalWriteValue(JsonToken.String);
 
             string text = null;
 
@@ -744,9 +744,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             text = value.ToString("D");
 #endif
 
-            _writer.Write(_quoteChar);
-            _writer.Write(text);
-            _writer.Write(_quoteChar);
+            this._writer.Write(this._quoteChar);
+            this._writer.Write(text);
+            this._writer.Write(this._quoteChar);
         }
 
         /// <summary>
@@ -755,7 +755,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="TimeSpan"/> value to write.</param>
         public override void WriteValue(TimeSpan value)
         {
-            InternalWriteValue(JsonToken.String);
+            this.InternalWriteValue(JsonToken.String);
 
             string text;
 #if !HAVE_TIME_SPAN_TO_STRING_WITH_CULTURE
@@ -764,9 +764,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             text = value.ToString(null, CultureInfo.InvariantCulture);
 #endif
 
-            _writer.Write(_quoteChar);
-            _writer.Write(text);
-            _writer.Write(_quoteChar);
+            this._writer.Write(this._quoteChar);
+            this._writer.Write(text);
+            this._writer.Write(this._quoteChar);
         }
 
         /// <summary>
@@ -777,12 +777,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (value == null)
             {
-                WriteNull();
+                this.WriteNull();
             }
             else
             {
-                InternalWriteValue(JsonToken.String);
-                WriteEscapedString(value.OriginalString, true);
+                this.InternalWriteValue(JsonToken.String);
+                this.WriteEscapedString(value.OriginalString, true);
             }
         }
 
@@ -794,11 +794,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="text">Text to place inside the comment.</param>
         public override void WriteComment(string text)
         {
-            InternalWriteComment();
+            this.InternalWriteComment();
 
-            _writer.Write("/*");
-            _writer.Write(text);
-            _writer.Write("*/");
+            this._writer.Write("/*");
+            this._writer.Write(text);
+            this._writer.Write("*/");
         }
 
         /// <summary>
@@ -807,17 +807,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="ws">The string of white space characters.</param>
         public override void WriteWhitespace(string ws)
         {
-            InternalWriteWhitespace(ws);
+            this.InternalWriteWhitespace(ws);
 
-            _writer.Write(ws);
+            this._writer.Write(ws);
         }
 
         private void EnsureWriteBuffer()
         {
-            if (_writeBuffer == null)
+            if (this._writeBuffer == null)
             {
                 // maximum buffer sized used when writing iso date
-                _writeBuffer = BufferUtils.RentBuffer(_arrayPool, 35);
+                this._writeBuffer = BufferUtils.RentBuffer(this._arrayPool, 35);
             }
         }
 
@@ -825,12 +825,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (value >= 0 && value <= 9)
             {
-                _writer.Write((char)('0' + value));
+                this._writer.Write((char)('0' + value));
             }
             else
             {
                 bool negative = value < 0;
-                WriteIntegerValue(negative ? (ulong)-value : (ulong)value, negative);
+                this.WriteIntegerValue(negative ? (ulong)-value : (ulong)value, negative);
             }
         }
 
@@ -838,12 +838,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (!negative & value <= 9)
             {
-                _writer.Write((char)('0' + value));
+                this._writer.Write((char)('0' + value));
             }
             else
             {
-                int length = WriteNumberToBuffer(value, negative);
-                _writer.Write(_writeBuffer, 0, length);
+                int length = this.WriteNumberToBuffer(value, negative);
+                this._writer.Write(this._writeBuffer, 0, length);
             }
         }
 
@@ -852,17 +852,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             if (value <= uint.MaxValue)
             {
                 // avoid the 64 bit division if possible
-                return WriteNumberToBuffer((uint)value, negative);
+                return this.WriteNumberToBuffer((uint)value, negative);
             }
 
-            EnsureWriteBuffer();
+            this.EnsureWriteBuffer();
 
             int totalLength = MathUtils.IntLength(value);
 
             if (negative)
             {
                 totalLength++;
-                _writeBuffer[0] = '-';
+                this._writeBuffer[0] = '-';
             }
 
             int index = totalLength;
@@ -871,7 +871,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 ulong quotient = value / 10;
                 ulong digit = value - (quotient * 10);
-                _writeBuffer[--index] = (char)('0' + digit);
+                this._writeBuffer[--index] = (char)('0' + digit);
                 value = quotient;
             } while (value != 0);
 
@@ -882,12 +882,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (value >= 0 && value <= 9)
             {
-                _writer.Write((char)('0' + value));
+                this._writer.Write((char)('0' + value));
             }
             else
             {
                 bool negative = value < 0;
-                WriteIntegerValue(negative ? (uint)-value : (uint)value, negative);
+                this.WriteIntegerValue(negative ? (uint)-value : (uint)value, negative);
             }
         }
 
@@ -895,25 +895,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             if (!negative & value <= 9)
             {
-                _writer.Write((char)('0' + value));
+                this._writer.Write((char)('0' + value));
             }
             else
             {
-                int length = WriteNumberToBuffer(value, negative);
-                _writer.Write(_writeBuffer, 0, length);
+                int length = this.WriteNumberToBuffer(value, negative);
+                this._writer.Write(this._writeBuffer, 0, length);
             }
         }
 
         private int WriteNumberToBuffer(uint value, bool negative)
         {
-            EnsureWriteBuffer();
+            this.EnsureWriteBuffer();
 
             int totalLength = MathUtils.IntLength(value);
 
             if (negative)
             {
                 totalLength++;
-                _writeBuffer[0] = '-';
+                this._writeBuffer[0] = '-';
             }
 
             int index = totalLength;
@@ -922,7 +922,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 uint quotient = value / 10;
                 uint digit = value - (quotient * 10);
-                _writeBuffer[--index] = (char)('0' + digit);
+                this._writeBuffer[--index] = (char)('0' + digit);
                 value = quotient;
             } while (value != 0);
 

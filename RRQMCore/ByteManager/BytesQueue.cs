@@ -31,8 +31,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 占用空间
         /// </summary>
-        public long FullSize
-        { get { return this.size * this.bytesQueue.Count; } }
+        public long FullSize => this.size * this.bytesQueue.Count;
 
         private ConcurrentQueue<byte[]> bytesQueue = new ConcurrentQueue<byte[]>();
 
@@ -44,7 +43,7 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public bool TryGet(out byte[] bytes)
         {
-            referenced++;
+            this.referenced++;
             return this.bytesQueue.TryDequeue(out bytes);
         }
 

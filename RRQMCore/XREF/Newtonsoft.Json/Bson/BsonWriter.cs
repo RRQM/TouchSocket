@@ -68,8 +68,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         /// <value>The <see cref="DateTimeKind" /> used when writing <see cref="DateTime"/> values to BSON.</value>
         public DateTimeKind DateTimeKindHandling
         {
-            get => _writer.DateTimeKindHandling;
-            set => _writer.DateTimeKindHandling = value;
+            get => this._writer.DateTimeKindHandling;
+            set => this._writer.DateTimeKindHandling = value;
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public BsonWriter(Stream stream)
         {
             ValidationUtils.ArgumentNotNull(stream, nameof(stream));
-            _writer = new BsonBinaryWriter(new BinaryWriter(stream));
+            this._writer = new BsonBinaryWriter(new BinaryWriter(stream));
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public BsonWriter(BinaryWriter writer)
         {
             ValidationUtils.ArgumentNotNull(writer, nameof(writer));
-            _writer = new BsonBinaryWriter(writer);
+            this._writer = new BsonBinaryWriter(writer);
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         /// </summary>
         public override void Flush()
         {
-            _writer.Flush();
+            this._writer.Flush();
         }
 
         /// <summary>
@@ -107,11 +107,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         protected override void WriteEnd(JsonToken token)
         {
             base.WriteEnd(token);
-            RemoveParent();
+            this.RemoveParent();
 
-            if (Top == 0)
+            if (this.Top == 0)
             {
-                _writer.WriteToken(_root);
+                this._writer.WriteToken(this._root);
             }
         }
 
@@ -158,7 +158,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             base.WriteStartArray();
 
-            AddParent(new BsonArray());
+            this.AddParent(new BsonArray());
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             base.WriteStartObject();
 
-            AddParent(new BsonObject());
+            this.AddParent(new BsonObject());
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             base.WritePropertyName(name);
 
-            _propertyName = name;
+            this._propertyName = name;
         }
 
         /// <summary>
@@ -191,41 +191,41 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             base.Close();
 
-            if (CloseOutput)
+            if (this.CloseOutput)
             {
-                _writer?.Close();
+                this._writer?.Close();
             }
         }
 
         private void AddParent(BsonToken container)
         {
-            AddToken(container);
-            _parent = container;
+            this.AddToken(container);
+            this._parent = container;
         }
 
         private void RemoveParent()
         {
-            _parent = _parent.Parent;
+            this._parent = this._parent.Parent;
         }
 
         private void AddValue(object value, BsonType type)
         {
-            AddToken(new BsonValue(value, type));
+            this.AddToken(new BsonValue(value, type));
         }
 
         internal void AddToken(BsonToken token)
         {
-            if (_parent != null)
+            if (this._parent != null)
             {
-                BsonObject bo = _parent as BsonObject;
+                BsonObject bo = this._parent as BsonObject;
                 if (bo != null)
                 {
-                    bo.Add(_propertyName, token);
-                    _propertyName = null;
+                    bo.Add(this._propertyName, token);
+                    this._propertyName = null;
                 }
                 else
                 {
-                    ((BsonArray)_parent).Add(token);
+                    ((BsonArray)this._parent).Add(token);
                 }
             }
             else
@@ -235,8 +235,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     throw JsonWriterException.Create(this, "Error writing {0} value. BSON must start with an Object or Array.".FormatWith(CultureInfo.InvariantCulture, token.Type), null);
                 }
 
-                _parent = token;
-                _root = token;
+                this._parent = token;
+                this._root = token;
             }
         }
 
@@ -268,7 +268,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteNull()
         {
             base.WriteNull();
-            AddToken(BsonEmpty.Null);
+            this.AddToken(BsonEmpty.Null);
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteUndefined()
         {
             base.WriteUndefined();
-            AddToken(BsonEmpty.Undefined);
+            this.AddToken(BsonEmpty.Undefined);
         }
 
         /// <summary>
@@ -287,7 +287,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(string value)
         {
             base.WriteValue(value);
-            AddToken(value == null ? BsonEmpty.Null : new BsonString(value, true));
+            this.AddToken(value == null ? BsonEmpty.Null : new BsonString(value, true));
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(int value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Integer);
+            this.AddValue(value, BsonType.Integer);
         }
 
         /// <summary>
@@ -313,7 +313,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             }
 
             base.WriteValue(value);
-            AddValue(value, BsonType.Integer);
+            this.AddValue(value, BsonType.Integer);
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(long value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Long);
+            this.AddValue(value, BsonType.Long);
         }
 
         /// <summary>
@@ -339,7 +339,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             }
 
             base.WriteValue(value);
-            AddValue(value, BsonType.Long);
+            this.AddValue(value, BsonType.Long);
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(float value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Number);
+            this.AddValue(value, BsonType.Number);
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(double value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Number);
+            this.AddValue(value, BsonType.Number);
         }
 
         /// <summary>
@@ -369,7 +369,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(bool value)
         {
             base.WriteValue(value);
-            AddToken(value ? BsonBoolean.True : BsonBoolean.False);
+            this.AddToken(value ? BsonBoolean.True : BsonBoolean.False);
         }
 
         /// <summary>
@@ -379,7 +379,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(short value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Integer);
+            this.AddValue(value, BsonType.Integer);
         }
 
         /// <summary>
@@ -390,7 +390,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(ushort value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Integer);
+            this.AddValue(value, BsonType.Integer);
         }
 
         /// <summary>
@@ -406,7 +406,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 #else
             s = value.ToString();
 #endif
-            AddToken(new BsonString(s, true));
+            this.AddToken(new BsonString(s, true));
         }
 
         /// <summary>
@@ -416,7 +416,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(byte value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Integer);
+            this.AddValue(value, BsonType.Integer);
         }
 
         /// <summary>
@@ -427,7 +427,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(sbyte value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Integer);
+            this.AddValue(value, BsonType.Integer);
         }
 
         /// <summary>
@@ -437,7 +437,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(decimal value)
         {
             base.WriteValue(value);
-            AddValue(value, BsonType.Number);
+            this.AddValue(value, BsonType.Number);
         }
 
         /// <summary>
@@ -447,8 +447,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(DateTime value)
         {
             base.WriteValue(value);
-            value = DateTimeUtils.EnsureDateTime(value, DateTimeZoneHandling);
-            AddValue(value, BsonType.Date);
+            value = DateTimeUtils.EnsureDateTime(value, this.DateTimeZoneHandling);
+            this.AddValue(value, BsonType.Date);
         }
 
 #if HAVE_DATE_TIME_OFFSET
@@ -471,12 +471,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             if (value == null)
             {
-                WriteNull();
+                this.WriteNull();
                 return;
             }
 
             base.WriteValue(value);
-            AddToken(new BsonBinary(value, BsonBinaryType.Binary));
+            this.AddToken(new BsonBinary(value, BsonBinaryType.Binary));
         }
 
         /// <summary>
@@ -486,7 +486,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(Guid value)
         {
             base.WriteValue(value);
-            AddToken(new BsonBinary(value.ToByteArray(), BsonBinaryType.Uuid));
+            this.AddToken(new BsonBinary(value.ToByteArray(), BsonBinaryType.Uuid));
         }
 
         /// <summary>
@@ -496,7 +496,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         public override void WriteValue(TimeSpan value)
         {
             base.WriteValue(value);
-            AddToken(new BsonString(value.ToString(), true));
+            this.AddToken(new BsonString(value.ToString(), true));
         }
 
         /// <summary>
@@ -507,12 +507,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
         {
             if (value == null)
             {
-                WriteNull();
+                this.WriteNull();
                 return;
             }
 
             base.WriteValue(value);
-            AddToken(new BsonString(value.ToString(), true));
+            this.AddToken(new BsonString(value.ToString(), true));
         }
 
         #endregion WriteValue methods
@@ -531,8 +531,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             }
 
             // hack to update the writer state
-            SetWriteState(JsonToken.Undefined, null);
-            AddValue(value, BsonType.Oid);
+            this.SetWriteState(JsonToken.Undefined, null);
+            this.AddValue(value, BsonType.Oid);
         }
 
         /// <summary>
@@ -545,8 +545,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
             ValidationUtils.ArgumentNotNull(pattern, nameof(pattern));
 
             // hack to update the writer state
-            SetWriteState(JsonToken.Undefined, null);
-            AddToken(new BsonRegex(pattern, options));
+            this.SetWriteState(JsonToken.Undefined, null);
+            this.AddToken(new BsonRegex(pattern, options));
         }
     }
 }

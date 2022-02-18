@@ -119,9 +119,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         internal JsonSchemaException(string message, Exception innerException, string path, int lineNumber, int linePosition)
             : base(message, innerException)
         {
-            Path = path;
-            LineNumber = lineNumber;
-            LinePosition = linePosition;
+            this.Path = path;
+            this.LineNumber = lineNumber;
+            this.LinePosition = linePosition;
         }
     }
 }

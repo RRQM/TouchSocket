@@ -53,7 +53,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public JsonStringContract(Type underlyingType)
             : base(underlyingType)
         {
-            ContractType = JsonContractType.String;
+            this.ContractType = JsonContractType.String;
         }
     }
 }

@@ -46,14 +46,14 @@ namespace RRQMSocket
             {
                 case ReceiveType.IOCP:
                     {
-                        eventArgs = new SocketAsyncEventArgs();
-                        eventArgs.Completed += this.EventArgs_Completed;
+                        this.eventArgs = new SocketAsyncEventArgs();
+                        this.eventArgs.Completed += this.EventArgs_Completed;
                         ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                        eventArgs.UserToken = byteBlock;
-                        eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                        if (!this.targetSocket.ReceiveAsync(eventArgs))
+                        this.eventArgs.UserToken = byteBlock;
+                        this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                        if (!this.targetSocket.ReceiveAsync(this.eventArgs))
                         {
-                            ProcessReceived(eventArgs);
+                            this.ProcessReceived(this.eventArgs);
                         }
                         break;
                     }
@@ -105,7 +105,7 @@ namespace RRQMSocket
         {
             try
             {
-                ProcessReceived(e);
+                this.ProcessReceived(e);
             }
             catch (Exception ex)
             {
@@ -127,9 +127,9 @@ namespace RRQMSocket
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 
-                    if (!targetSocket.ReceiveAsync(e))
+                    if (!this.targetSocket.ReceiveAsync(e))
                     {
-                        ProcessReceived(e);
+                        this.ProcessReceived(e);
                     }
                 }
                 catch (Exception ex)
@@ -159,7 +159,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
+                this.Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
             }
             finally
             {

@@ -103,8 +103,8 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="request"></param>
         protected virtual void OnReceivedSuccess(TRequest request)
-        { 
-        
+        {
+
         }
         private void Single(ByteBlock byteBlock, bool dis)
         {
@@ -112,13 +112,13 @@ namespace RRQMSocket
             {
                 while (byteBlock.Pos < byteBlock.Len)
                 {
-                    FilterResult filterResult = this.Filter(byteBlock, byteBlock.Len - byteBlock.Pos, (IRequestInfo)this.tempRequest == default ? false : true, ref tempRequest);
+                    FilterResult filterResult = this.Filter(byteBlock, byteBlock.Len - byteBlock.Pos, (IRequestInfo)this.tempRequest == default ? false : true, ref this.tempRequest);
                     switch (filterResult)
                     {
                         case FilterResult.Success:
-                            this.GoReceived(null, tempRequest);
+                            this.GoReceived(null, this.tempRequest);
                             this.tempRequest = default;
-                            this.OnReceivedSuccess(tempRequest);
+                            this.OnReceivedSuccess(this.tempRequest);
                             break;
                         case FilterResult.GoOn:
                             if (byteBlock.Len - byteBlock.Pos > 0)

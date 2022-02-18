@@ -56,28 +56,28 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         private void AddKey(string key, JToken item)
         {
-            EnsureDictionary();
-            _dictionary[key] = item;
+            this.EnsureDictionary();
+            this._dictionary[key] = item;
         }
 
         protected void ChangeItemKey(JToken item, string newKey)
         {
-            if (!ContainsItem(item))
+            if (!this.ContainsItem(item))
             {
                 throw new ArgumentException("The specified item does not exist in this KeyedCollection.");
             }
 
-            string keyForItem = GetKeyForItem(item);
+            string keyForItem = this.GetKeyForItem(item);
             if (!Comparer.Equals(keyForItem, newKey))
             {
                 if (newKey != null)
                 {
-                    AddKey(newKey, item);
+                    this.AddKey(newKey, item);
                 }
 
                 if (keyForItem != null)
                 {
-                    RemoveKey(keyForItem);
+                    this.RemoveKey(keyForItem);
                 }
             }
         }
@@ -86,7 +86,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             base.ClearItems();
 
-            _dictionary?.Clear();
+            this._dictionary?.Clear();
         }
 
         public bool Contains(string key)
@@ -96,9 +96,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                return _dictionary.ContainsKey(key);
+                return this._dictionary.ContainsKey(key);
             }
 
             return false;
@@ -106,20 +106,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         private bool ContainsItem(JToken item)
         {
-            if (_dictionary == null)
+            if (this._dictionary == null)
             {
                 return false;
             }
 
-            string key = GetKeyForItem(item);
-            return _dictionary.TryGetValue(key, out _);
+            string key = this.GetKeyForItem(item);
+            return this._dictionary.TryGetValue(key, out _);
         }
 
         private void EnsureDictionary()
         {
-            if (_dictionary == null)
+            if (this._dictionary == null)
             {
-                _dictionary = new Dictionary<string, JToken>(Comparer);
+                this._dictionary = new Dictionary<string, JToken>(Comparer);
             }
         }
 
@@ -130,7 +130,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         protected override void InsertItem(int index, JToken item)
         {
-            AddKey(GetKeyForItem(item), item);
+            this.AddKey(this.GetKeyForItem(item), item);
             base.InsertItem(index, item);
         }
 
@@ -141,9 +141,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (_dictionary != null)
+            if (this._dictionary != null)
             {
-                return _dictionary.ContainsKey(key) && Remove(_dictionary[key]);
+                return this._dictionary.ContainsKey(key) && this.Remove(this._dictionary[key]);
             }
 
             return false;
@@ -151,35 +151,35 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         protected override void RemoveItem(int index)
         {
-            string keyForItem = GetKeyForItem(Items[index]);
-            RemoveKey(keyForItem);
+            string keyForItem = this.GetKeyForItem(this.Items[index]);
+            this.RemoveKey(keyForItem);
             base.RemoveItem(index);
         }
 
         private void RemoveKey(string key)
         {
-            _dictionary?.Remove(key);
+            this._dictionary?.Remove(key);
         }
 
         protected override void SetItem(int index, JToken item)
         {
-            string keyForItem = GetKeyForItem(item);
-            string keyAtIndex = GetKeyForItem(Items[index]);
+            string keyForItem = this.GetKeyForItem(item);
+            string keyAtIndex = this.GetKeyForItem(this.Items[index]);
 
             if (Comparer.Equals(keyAtIndex, keyForItem))
             {
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    _dictionary[keyForItem] = item;
+                    this._dictionary[keyForItem] = item;
                 }
             }
             else
             {
-                AddKey(keyForItem, item);
+                this.AddKey(keyForItem, item);
 
                 if (keyAtIndex != null)
                 {
-                    RemoveKey(keyAtIndex);
+                    this.RemoveKey(keyAtIndex);
                 }
             }
             base.SetItem(index, item);
@@ -194,9 +194,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentNullException(nameof(key));
                 }
 
-                if (_dictionary != null)
+                if (this._dictionary != null)
                 {
-                    return _dictionary[key];
+                    return this._dictionary[key];
                 }
 
                 throw new KeyNotFoundException();
@@ -205,21 +205,21 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         public bool TryGetValue(string key, out JToken value)
         {
-            if (_dictionary == null)
+            if (this._dictionary == null)
             {
                 value = null;
                 return false;
             }
 
-            return _dictionary.TryGetValue(key, out value);
+            return this._dictionary.TryGetValue(key, out value);
         }
 
         public ICollection<string> Keys
         {
             get
             {
-                EnsureDictionary();
-                return _dictionary.Keys;
+                this.EnsureDictionary();
+                return this._dictionary.Keys;
             }
         }
 
@@ -227,14 +227,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                EnsureDictionary();
-                return _dictionary.Values;
+                this.EnsureDictionary();
+                return this._dictionary.Values;
             }
         }
 
         public int IndexOfReference(JToken t)
         {
-            return ((List<JToken>)Items).IndexOfReference(t);
+            return ((List<JToken>)this.Items).IndexOfReference(t);
         }
 
         public bool Compare(JPropertyKeyedCollection other)
@@ -246,7 +246,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             // dictionaries in JavaScript aren't ordered
             // ignore order when comparing properties
-            Dictionary<string, JToken> d1 = _dictionary;
+            Dictionary<string, JToken> d1 = this._dictionary;
             Dictionary<string, JToken> d2 = other._dictionary;
 
             if (d1 == null && d2 == null)

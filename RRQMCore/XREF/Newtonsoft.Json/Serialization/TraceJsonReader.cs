@@ -51,74 +51,74 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public TraceJsonReader(JsonReader innerReader)
         {
-            _innerReader = innerReader;
+            this._innerReader = innerReader;
 
-            _sw = new StringWriter(CultureInfo.InvariantCulture);
+            this._sw = new StringWriter(CultureInfo.InvariantCulture);
             // prefix the message in the stringwriter to avoid concat with a potentially large JSON string
-            _sw.Write("Deserialized JSON: " + Environment.NewLine);
+            this._sw.Write("Deserialized JSON: " + Environment.NewLine);
 
-            _textWriter = new JsonTextWriter(_sw);
-            _textWriter.Formatting = Formatting.Indented;
+            this._textWriter = new JsonTextWriter(this._sw);
+            this._textWriter.Formatting = Formatting.Indented;
         }
 
         public string GetDeserializedJsonMessage()
         {
-            return _sw.ToString();
+            return this._sw.ToString();
         }
 
         public override bool Read()
         {
-            bool value = _innerReader.Read();
-            WriteCurrentToken();
+            bool value = this._innerReader.Read();
+            this.WriteCurrentToken();
             return value;
         }
 
         public override int? ReadAsInt32()
         {
-            int? value = _innerReader.ReadAsInt32();
-            WriteCurrentToken();
+            int? value = this._innerReader.ReadAsInt32();
+            this.WriteCurrentToken();
             return value;
         }
 
         public override string ReadAsString()
         {
-            string value = _innerReader.ReadAsString();
-            WriteCurrentToken();
+            string value = this._innerReader.ReadAsString();
+            this.WriteCurrentToken();
             return value;
         }
 
         public override byte[] ReadAsBytes()
         {
-            byte[] value = _innerReader.ReadAsBytes();
-            WriteCurrentToken();
+            byte[] value = this._innerReader.ReadAsBytes();
+            this.WriteCurrentToken();
             return value;
         }
 
         public override decimal? ReadAsDecimal()
         {
-            decimal? value = _innerReader.ReadAsDecimal();
-            WriteCurrentToken();
+            decimal? value = this._innerReader.ReadAsDecimal();
+            this.WriteCurrentToken();
             return value;
         }
 
         public override double? ReadAsDouble()
         {
-            double? value = _innerReader.ReadAsDouble();
-            WriteCurrentToken();
+            double? value = this._innerReader.ReadAsDouble();
+            this.WriteCurrentToken();
             return value;
         }
 
         public override bool? ReadAsBoolean()
         {
-            bool? value = _innerReader.ReadAsBoolean();
-            WriteCurrentToken();
+            bool? value = this._innerReader.ReadAsBoolean();
+            this.WriteCurrentToken();
             return value;
         }
 
         public override DateTime? ReadAsDateTime()
         {
-            DateTime? value = _innerReader.ReadAsDateTime();
-            WriteCurrentToken();
+            DateTime? value = this._innerReader.ReadAsDateTime();
+            this.WriteCurrentToken();
             return value;
         }
 
@@ -133,49 +133,37 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public void WriteCurrentToken()
         {
-            _textWriter.WriteToken(_innerReader, false, false, true);
+            this._textWriter.WriteToken(this._innerReader, false, false, true);
         }
 
-        public override int Depth => _innerReader.Depth;
+        public override int Depth => this._innerReader.Depth;
 
-        public override string Path => _innerReader.Path;
+        public override string Path => this._innerReader.Path;
 
         public override char QuoteChar
         {
-            get => _innerReader.QuoteChar;
-            protected internal set => _innerReader.QuoteChar = value;
+            get => this._innerReader.QuoteChar;
+            protected internal set => this._innerReader.QuoteChar = value;
         }
 
-        public override JsonToken TokenType => _innerReader.TokenType;
+        public override JsonToken TokenType => this._innerReader.TokenType;
 
-        public override object Value => _innerReader.Value;
+        public override object Value => this._innerReader.Value;
 
-        public override Type ValueType => _innerReader.ValueType;
+        public override Type ValueType => this._innerReader.ValueType;
 
         public override void Close()
         {
-            _innerReader.Close();
+            this._innerReader.Close();
         }
 
         bool IJsonLineInfo.HasLineInfo()
         {
-            return _innerReader is IJsonLineInfo lineInfo && lineInfo.HasLineInfo();
+            return this._innerReader is IJsonLineInfo lineInfo && lineInfo.HasLineInfo();
         }
 
-        int IJsonLineInfo.LineNumber
-        {
-            get
-            {
-                return (_innerReader is IJsonLineInfo lineInfo) ? lineInfo.LineNumber : 0;
-            }
-        }
+        int IJsonLineInfo.LineNumber => (this._innerReader is IJsonLineInfo lineInfo) ? lineInfo.LineNumber : 0;
 
-        int IJsonLineInfo.LinePosition
-        {
-            get
-            {
-                return (_innerReader is IJsonLineInfo lineInfo) ? lineInfo.LinePosition : 0;
-            }
-        }
+        int IJsonLineInfo.LinePosition => (this._innerReader is IJsonLineInfo lineInfo) ? lineInfo.LinePosition : 0;
     }
 }

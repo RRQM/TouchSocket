@@ -49,7 +49,7 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 字符数据
         /// </summary>
-        public string Body{ get { return this.content == null ? null : this.encoding.GetString(this.content); } }
+        public string Body => this.content == null ? null : this.encoding.GetString(this.content);
         /// <summary>
         /// 内容长度
         /// </summary>
@@ -58,10 +58,7 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 内容器
         /// </summary>
-        public byte[] Content
-        {
-            get { return content; }
-        }
+        public byte[] Content => this.content;
 
         /// <summary>
         /// 内容编码
@@ -81,8 +78,8 @@ namespace RRQMSocket.Http
         /// </summary>
         public Encoding Encoding
         {
-            get { return encoding; }
-            set { encoding = value; }
+            get => this.encoding;
+            set => this.encoding = value;
         }
 
         /// <summary>
@@ -93,8 +90,7 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 请求头集合
         /// </summary>
-        public Dictionary<string, string> Headers
-        { get { return this.headers; } }
+        public Dictionary<string, string> Headers => this.headers;
         /// <summary>
         /// 协议名称
         /// </summary>
@@ -108,10 +104,7 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 请求行
         /// </summary>
-        public string RequestLine
-        {
-            get { return requestLine; }
-        }
+        public string RequestLine => this.requestLine;
 
         /// <summary>
         /// 构建数据
@@ -126,7 +119,7 @@ namespace RRQMSocket.Http
         /// <returns></returns>
         public string GetHeader(HttpHeaders header)
         {
-            return GetHeaderByKey(header);
+            return this.GetHeaderByKey(header);
         }
 
         /// <summary>
@@ -162,7 +155,7 @@ namespace RRQMSocket.Http
             }
             else
             {
-                return  FilterResult.Cache;
+                return FilterResult.Cache;
             }
         }
 
@@ -186,7 +179,7 @@ namespace RRQMSocket.Http
             this.requestLine = rows[0];
 
             //Request Headers
-            GetRequestHeaders(rows);
+            this.GetRequestHeaders(rows);
 
             string contentLength = this.GetHeader(HttpHeaders.ContentLength);
             int.TryParse(contentLength, out int content_Length);
@@ -214,7 +207,7 @@ namespace RRQMSocket.Http
         {
             //初始化内容
             encoding = encoding != null ? encoding : Encoding.UTF8;
-            SetContent(encoding.GetBytes(content));
+            this.SetContent(encoding.GetBytes(content));
         }
 
         /// <summary>
@@ -226,9 +219,9 @@ namespace RRQMSocket.Http
         {
             var fieldName = header.GetDescription();
             if (fieldName == null) return null;
-            var hasKey = Headers.ContainsKey(fieldName);
+            var hasKey = this.Headers.ContainsKey(fieldName);
             if (!hasKey) return null;
-            return Headers[fieldName];
+            return this.Headers[fieldName];
         }
 
         /// <summary>
@@ -239,9 +232,9 @@ namespace RRQMSocket.Http
         protected string GetHeaderByKey(string fieldName)
         {
             if (string.IsNullOrEmpty(fieldName)) return null;
-            var hasKey = Headers.ContainsKey(fieldName);
+            var hasKey = this.Headers.ContainsKey(fieldName);
             if (!hasKey) return null;
-            return Headers[fieldName];
+            return this.Headers[fieldName];
         }
 
         /// <summary>
@@ -251,9 +244,9 @@ namespace RRQMSocket.Http
         {
             var fieldName = header.GetDescription();
             if (fieldName == null) return;
-            var hasKey = Headers.ContainsKey(fieldName);
-            if (!hasKey) Headers.Add(fieldName, value);
-            Headers[fieldName] = value;
+            var hasKey = this.Headers.ContainsKey(fieldName);
+            if (!hasKey) this.Headers.Add(fieldName, value);
+            this.Headers[fieldName] = value;
         }
 
         /// <summary>
@@ -264,9 +257,9 @@ namespace RRQMSocket.Http
         protected void SetHeaderByKey(string fieldName, string value)
         {
             if (string.IsNullOrEmpty(fieldName)) return;
-            var hasKey = Headers.ContainsKey(fieldName);
-            if (!hasKey) Headers.Add(fieldName, value);
-            Headers[fieldName] = value;
+            var hasKey = this.Headers.ContainsKey(fieldName);
+            if (!hasKey) this.Headers.Add(fieldName, value);
+            this.Headers[fieldName] = value;
         }
 
         private void GetRequestHeaders(IEnumerable<string> rows)

@@ -62,18 +62,12 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool UseSsl
-        {
-            get { return useSsl; }
-        }
+        public override bool UseSsl => this.useSsl;
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
-        public int ClearInterval
-        {
-            get { return clearInterval; }
-        }
+        public int ClearInterval => this.clearInterval;
 
         /// <summary>
         /// 清理选择类型
@@ -83,48 +77,32 @@ namespace RRQMSocket
         /// <summary>
         /// 最大可连接数
         /// </summary>
-        public int MaxCount
-        {
-            get { return maxCount; }
-        }
+        public int MaxCount => this.maxCount;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override NetworkMonitor[] Monitors
-        {
-            get { return monitors; }
-        }
+        public override NetworkMonitor[] Monitors => this.monitors;
 
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public override string ServerName
-        {
-            get { return name; }
-        }
+        public override string ServerName => this.name;
 
         /// <summary>
         /// 服务器状态
         /// </summary>
-        public override ServerState ServerState
-        {
-            get { return serverState; }
-        }
+        public override ServerState ServerState => this.serverState;
 
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        public override ServiceConfig ServiceConfig
-        { get { return serviceConfig; } }
+        public override ServiceConfig ServiceConfig => this.serviceConfig;
 
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
-        public override SocketClientCollection SocketClients
-        {
-            get { return socketClients; }
-        }
+        public override SocketClientCollection SocketClients => this.socketClients;
 
         #endregion 属性
 
@@ -150,7 +128,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnected(ISocketClient socketClient, MesEventArgs e)
+        protected sealed override void OnClientConnected(ISocketClient socketClient, MesEventArgs e)
         {
             this.OnConnected((TClient)socketClient, e);
         }
@@ -160,7 +138,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected sealed override void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
             this.OnConnecting((TClient)socketClient, e);
         }
@@ -170,7 +148,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientDisconnected(ISocketClient socketClient, MesEventArgs e)
+        protected sealed override void OnClientDisconnected(ISocketClient socketClient, MesEventArgs e)
         {
             this.OnDisconnected((TClient)socketClient, e);
         }
@@ -524,7 +502,7 @@ namespace RRQMSocket
             {
                 this.useSsl = true;
             }
-            if (useSsl && this.receiveType == ReceiveType.IOCP)
+            if (this.useSsl && this.receiveType == ReceiveType.IOCP)
             {
                 throw new RRQMException($"Ssl模式下只能使用{ReceiveType.BIO}或{ReceiveType.Select}模式");
             }
@@ -544,20 +522,20 @@ namespace RRQMSocket
         {
             if (e.LastOperation == SocketAsyncOperation.Accept)
             {
-                ProcessAccept(e);
+                this.ProcessAccept(e);
             }
         }
 
         private void BeginClearAndHandle()
         {
-            Thread thread1 = new Thread(CheckClient);
+            Thread thread1 = new Thread(this.CheckClient);
             thread1.IsBackground = true;
             thread1.Name = "CheckClient";
             thread1.Start();
 
             if (this.receiveType == ReceiveType.Select)
             {
-                Thread thread2 = new Thread(SelectClient);
+                Thread thread2 = new Thread(this.SelectClient);
                 thread2.IsBackground = true;
                 thread2.Name = "SelectClient";
                 thread2.Start();
@@ -575,7 +553,7 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    PreviewBind(socket);
+                    this.PreviewBind(socket);
                     socket.Bind(iPHost.EndPoint);
                     socket.Listen(this.backlog);
 
@@ -603,7 +581,7 @@ namespace RRQMSocket
                 e.Completed += this.Args_Completed;
                 if (!networkMonitor.Socket.AcceptAsync(e))
                 {
-                    ProcessAccept(e);
+                    this.ProcessAccept(e);
                 }
             }
         }
@@ -615,7 +593,7 @@ namespace RRQMSocket
                 Thread.Sleep(1000);
                 long tick = DateTime.Now.Ticks / 10000000;
                 string[] collection = this.SocketClients.GetIDs();
-                if (collection.Length == 0 && disposable)
+                if (collection.Length == 0 && this.disposable)
                 {
                     return;
                 }
@@ -641,7 +619,7 @@ namespace RRQMSocket
                 }
                 catch (Exception ex)
                 {
-                    Logger.Debug(LogType.Error, this, $"在新建客户端时发生错误，信息：{ex.Message}");
+                    this.Logger.Debug(LogType.Error, this, $"在新建客户端时发生错误，信息：{ex.Message}");
                 }
             }
         }
@@ -666,7 +644,7 @@ namespace RRQMSocket
                 }
                 Thread.Sleep(sleep);
                 string[] collection = this.SocketClients.GetIDs();
-                if (collection.Length == 0 && disposable)
+                if (collection.Length == 0 && this.disposable)
                 {
                     return;
                 }
@@ -694,7 +672,7 @@ namespace RRQMSocket
                         newSocket.Close();
                         newSocket.Dispose();
                     }
-                    OnTask(newSocket);
+                    this.OnTask(newSocket);
                 }
                 e.AcceptSocket = null;
 
@@ -702,7 +680,7 @@ namespace RRQMSocket
                 {
                     if (!((Socket)e.UserToken).AcceptAsync(e))
                     {
-                        ProcessAccept(e);
+                        this.ProcessAccept(e);
                     }
                 }
                 catch
@@ -715,7 +693,7 @@ namespace RRQMSocket
 
         private void OnTask(Socket socket)
         {
-            Task.Run(()=> 
+            Task.Run(() =>
             {
                 try
                 {
@@ -752,7 +730,7 @@ namespace RRQMSocket
                 catch (Exception ex)
                 {
                     socket.Dispose();
-                    Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
+                    this.Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
                 }
             });
         }

@@ -21,7 +21,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
         {
             foreach (JToken c in current)
             {
-                if (Name == null)
+                if (this.Name == null)
                 {
                     yield return c;
                 }
@@ -40,14 +40,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
                     if (value is JProperty property)
                     {
-                        if (property.Name == Name)
+                        if (property.Name == this.Name)
                         {
                             yield return property.Value;
                         }
                     }
                     else
                     {
-                        if (Name == null)
+                        if (this.Name == null)
                         {
                             yield return value;
                         }

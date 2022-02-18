@@ -272,13 +272,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
 
             public TypeConvertKey(Type initialType, Type targetType)
             {
-                InitialType = initialType;
-                TargetType = targetType;
+                this.InitialType = initialType;
+                this.TargetType = targetType;
             }
 
             public override int GetHashCode()
             {
-                return InitialType.GetHashCode() ^ TargetType.GetHashCode();
+                return this.InitialType.GetHashCode() ^ this.TargetType.GetHashCode();
             }
 
             public override bool Equals(object obj)
@@ -288,12 +288,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
                     return false;
                 }
 
-                return Equals((TypeConvertKey)obj);
+                return this.Equals((TypeConvertKey)obj);
             }
 
             public bool Equals(TypeConvertKey other)
             {
-                return (InitialType == other.InitialType && TargetType == other.TargetType);
+                return (this.InitialType == other.InitialType && this.TargetType == other.TargetType);
             }
         }
 

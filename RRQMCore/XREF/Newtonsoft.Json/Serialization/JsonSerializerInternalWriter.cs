@@ -79,34 +79,34 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 throw new ArgumentNullException(nameof(jsonWriter));
             }
 
-            _rootType = objectType;
-            _rootLevel = _serializeStack.Count + 1;
+            this._rootType = objectType;
+            this._rootLevel = this._serializeStack.Count + 1;
 
-            JsonContract contract = GetContractSafe(value);
+            JsonContract contract = this.GetContractSafe(value);
 
             try
             {
-                if (ShouldWriteReference(value, null, contract, null, null))
+                if (this.ShouldWriteReference(value, null, contract, null, null))
                 {
-                    WriteReference(jsonWriter, value);
+                    this.WriteReference(jsonWriter, value);
                 }
                 else
                 {
-                    SerializeValue(jsonWriter, value, contract, null, null, null);
+                    this.SerializeValue(jsonWriter, value, contract, null, null, null);
                 }
             }
             catch (Exception ex)
             {
-                if (IsErrorHandled(null, contract, null, null, jsonWriter.Path, ex))
+                if (this.IsErrorHandled(null, contract, null, null, jsonWriter.Path, ex))
                 {
-                    HandleError(jsonWriter, 0);
+                    this.HandleError(jsonWriter, 0);
                 }
                 else
                 {
                     // clear context in case serializer is being used inside a converter
                     // if the converter wraps the error then not clearing the context will cause this error:
                     // "Current error context error is different to requested error."
-                    ClearErrorContext();
+                    this.ClearErrorContext();
                     throw;
                 }
             }
@@ -114,18 +114,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             {
                 // clear root contract to ensure that if level was > 1 then it won't
                 // accidentally be used for non root values
-                _rootType = null;
+                this._rootType = null;
             }
         }
 
         private JsonSerializerProxy GetInternalSerializer()
         {
-            if (InternalSerializer == null)
+            if (this.InternalSerializer == null)
             {
-                InternalSerializer = new JsonSerializerProxy(this);
+                this.InternalSerializer = new JsonSerializerProxy(this);
             }
 
-            return InternalSerializer;
+            return this.InternalSerializer;
         }
 
         private JsonContract GetContractSafe(object value)
@@ -135,7 +135,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 return null;
             }
 
-            return Serializer._contractResolver.ResolveContract(value.GetType());
+            return this.Serializer._contractResolver.ResolveContract(value.GetType());
         }
 
         private void SerializePrimitive(JsonWriter writer, object value, JsonPrimitiveContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerProperty)
@@ -143,11 +143,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             if (contract.TypeCode == PrimitiveTypeCode.Bytes)
             {
                 // if type name handling is enabled then wrap the base64 byte string in an object with the type name
-                bool includeTypeDetails = ShouldWriteType(TypeNameHandling.Objects, contract, member, containerContract, containerProperty);
+                bool includeTypeDetails = this.ShouldWriteType(TypeNameHandling.Objects, contract, member, containerContract, containerProperty);
                 if (includeTypeDetails)
                 {
                     writer.WriteStartObject();
-                    WriteTypeProperty(writer, contract.CreatedType);
+                    this.WriteTypeProperty(writer, contract.CreatedType);
                     writer.WritePropertyName(JsonTypeReflector.ValuePropertyName, false);
 
                     JsonWriter.WriteValue(writer, contract.TypeCode, value);
@@ -173,44 +173,44 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 containerProperty?.ItemConverter ??
                 containerContract?.ItemConverter ??
                 valueContract.Converter ??
-                Serializer.GetMatchingConverter(valueContract.UnderlyingType) ??
+                this.Serializer.GetMatchingConverter(valueContract.UnderlyingType) ??
                 valueContract.InternalConverter;
 
             if (converter != null && converter.CanWrite)
             {
-                SerializeConvertable(writer, converter, value, valueContract, containerContract, containerProperty);
+                this.SerializeConvertable(writer, converter, value, valueContract, containerContract, containerProperty);
                 return;
             }
 
             switch (valueContract.ContractType)
             {
                 case JsonContractType.Object:
-                    SerializeObject(writer, value, (JsonObjectContract)valueContract, member, containerContract, containerProperty);
+                    this.SerializeObject(writer, value, (JsonObjectContract)valueContract, member, containerContract, containerProperty);
                     break;
 
                 case JsonContractType.Array:
                     JsonArrayContract arrayContract = (JsonArrayContract)valueContract;
                     if (!arrayContract.IsMultidimensionalArray)
                     {
-                        SerializeList(writer, (IEnumerable)value, arrayContract, member, containerContract, containerProperty);
+                        this.SerializeList(writer, (IEnumerable)value, arrayContract, member, containerContract, containerProperty);
                     }
                     else
                     {
-                        SerializeMultidimensionalArray(writer, (Array)value, arrayContract, member, containerContract, containerProperty);
+                        this.SerializeMultidimensionalArray(writer, (Array)value, arrayContract, member, containerContract, containerProperty);
                     }
                     break;
 
                 case JsonContractType.Primitive:
-                    SerializePrimitive(writer, value, (JsonPrimitiveContract)valueContract, member, containerContract, containerProperty);
+                    this.SerializePrimitive(writer, value, (JsonPrimitiveContract)valueContract, member, containerContract, containerProperty);
                     break;
 
                 case JsonContractType.String:
-                    SerializeString(writer, value, (JsonStringContract)valueContract);
+                    this.SerializeString(writer, value, (JsonStringContract)valueContract);
                     break;
 
                 case JsonContractType.Dictionary:
                     JsonDictionaryContract dictionaryContract = (JsonDictionaryContract)valueContract;
-                    SerializeDictionary(writer, (value is IDictionary) ? (IDictionary)value : dictionaryContract.CreateWrapper(value), dictionaryContract, member, containerContract, containerProperty);
+                    this.SerializeDictionary(writer, (value is IDictionary) ? (IDictionary)value : dictionaryContract.CreateWrapper(value), dictionaryContract, member, containerContract, containerProperty);
                     break;
 #if HAVE_DYNAMIC
                 case JsonContractType.Dynamic:
@@ -223,7 +223,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                     break;
 #endif
                 case JsonContractType.Linq:
-                    ((JToken)value).WriteTo(writer, Serializer.Converters.ToArray());
+                    ((JToken)value).WriteTo(writer, this.Serializer.Converters.ToArray());
                     break;
             }
         }
@@ -267,17 +267,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 return false;
             }
 
-            bool? isReference = ResolveIsReference(valueContract, property, collectionContract, containerProperty);
+            bool? isReference = this.ResolveIsReference(valueContract, property, collectionContract, containerProperty);
 
             if (isReference == null)
             {
                 if (valueContract.ContractType == JsonContractType.Array)
                 {
-                    isReference = HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Arrays);
+                    isReference = this.HasFlag(this.Serializer._preserveReferencesHandling, PreserveReferencesHandling.Arrays);
                 }
                 else
                 {
-                    isReference = HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Objects);
+                    isReference = this.HasFlag(this.Serializer._preserveReferencesHandling, PreserveReferencesHandling.Objects);
                 }
             }
 
@@ -286,17 +286,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 return false;
             }
 
-            return Serializer.GetReferenceResolver().IsReferenced(this, value);
+            return this.Serializer.GetReferenceResolver().IsReferenced(this, value);
         }
 
         private bool ShouldWriteProperty(object memberValue, JsonObjectContract containerContract, JsonProperty property)
         {
-            if (memberValue == null && ResolvedNullValueHandling(containerContract, property) == NullValueHandling.Ignore)
+            if (memberValue == null && this.ResolvedNullValueHandling(containerContract, property) == NullValueHandling.Ignore)
             {
                 return false;
             }
 
-            if (HasFlag(property.DefaultValueHandling.GetValueOrDefault(Serializer._defaultValueHandling), DefaultValueHandling.Ignore)
+            if (this.HasFlag(property.DefaultValueHandling.GetValueOrDefault(this.Serializer._defaultValueHandling), DefaultValueHandling.Ignore)
                 && MiscellaneousUtils.ValueEquals(memberValue, property.GetResolvedDefaultValue()))
             {
                 return false;
@@ -329,9 +329,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 referenceLoopHandling = containerContract.ItemReferenceLoopHandling;
             }
 
-            bool exists = (Serializer._equalityComparer != null)
-                ? _serializeStack.Contains(value, Serializer._equalityComparer)
-                : _serializeStack.Contains(value);
+            bool exists = (this.Serializer._equalityComparer != null)
+                ? this._serializeStack.Contains(value, this.Serializer._equalityComparer)
+                : this._serializeStack.Contains(value);
 
             if (exists)
             {
@@ -342,22 +342,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 }
                 message += " with type '{0}'.".FormatWith(CultureInfo.InvariantCulture, value.GetType());
 
-                switch (referenceLoopHandling.GetValueOrDefault(Serializer._referenceLoopHandling))
+                switch (referenceLoopHandling.GetValueOrDefault(this.Serializer._referenceLoopHandling))
                 {
                     case ReferenceLoopHandling.Error:
                         throw JsonSerializationException.Create(null, writer.ContainerPath, message, null);
                     case ReferenceLoopHandling.Ignore:
-                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+                        if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
                         {
-                            TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, message + ". Skipping serializing self referenced value."), null);
+                            this.TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, message + ". Skipping serializing self referenced value."), null);
                         }
 
                         return false;
 
                     case ReferenceLoopHandling.Serialize:
-                        if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+                        if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
                         {
-                            TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, message + ". Serializing self referenced value."), null);
+                            this.TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, message + ". Serializing self referenced value."), null);
                         }
 
                         return true;
@@ -369,11 +369,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private void WriteReference(JsonWriter writer, object value)
         {
-            string reference = GetReference(writer, value);
+            string reference = this.GetReference(writer, value);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Info)
             {
-                TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Writing object reference to Id '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, reference, value.GetType())), null);
+                this.TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Writing object reference to Id '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, reference, value.GetType())), null);
             }
 
             writer.WriteStartObject();
@@ -386,7 +386,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             try
             {
-                string reference = Serializer.GetReferenceResolver().GetReference(this, value);
+                string reference = this.Serializer.GetReferenceResolver().GetReference(this, value);
 
                 return reference;
             }
@@ -427,41 +427,41 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private void SerializeString(JsonWriter writer, object value, JsonStringContract contract)
         {
-            OnSerializing(writer, contract, value);
+            this.OnSerializing(writer, contract, value);
 
             TryConvertToString(value, contract.UnderlyingType, out string s);
             writer.WriteValue(s);
 
-            OnSerialized(writer, contract, value);
+            this.OnSerialized(writer, contract, value);
         }
 
         private void OnSerializing(JsonWriter writer, JsonContract contract, object value)
         {
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Info)
             {
-                TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Started serializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
+                this.TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Started serializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
             }
 
-            contract.InvokeOnSerializing(value, Serializer._context);
+            contract.InvokeOnSerializing(value, this.Serializer._context);
         }
 
         private void OnSerialized(JsonWriter writer, JsonContract contract, object value)
         {
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Info)
             {
-                TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Finished serializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
+                this.TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Finished serializing {0}".FormatWith(CultureInfo.InvariantCulture, contract.UnderlyingType)), null);
             }
 
-            contract.InvokeOnSerialized(value, Serializer._context);
+            contract.InvokeOnSerialized(value, this.Serializer._context);
         }
 
         private void SerializeObject(JsonWriter writer, object value, JsonObjectContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
-            OnSerializing(writer, contract, value);
+            this.OnSerializing(writer, contract, value);
 
-            _serializeStack.Add(value);
+            this._serializeStack.Add(value);
 
-            WriteObjectStart(writer, value, contract, member, collectionContract, containerProperty);
+            this.WriteObjectStart(writer, value, contract, member, collectionContract, containerProperty);
 
             int initialDepth = writer.Top;
 
@@ -470,19 +470,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 JsonProperty property = contract.Properties[index];
                 try
                 {
-                    if (!CalculatePropertyValues(writer, value, contract, member, property, out JsonContract memberContract, out object memberValue))
+                    if (!this.CalculatePropertyValues(writer, value, contract, member, property, out JsonContract memberContract, out object memberValue))
                     {
                         continue;
                     }
 
                     property.WritePropertyName(writer);
-                    SerializeValue(writer, memberValue, memberContract, property, contract, member);
+                    this.SerializeValue(writer, memberValue, memberContract, property, contract, member);
                 }
                 catch (Exception ex)
                 {
-                    if (IsErrorHandled(value, contract, property.PropertyName, null, writer.ContainerPath, ex))
+                    if (this.IsErrorHandled(value, contract, property.PropertyName, null, writer.ContainerPath, ex))
                     {
-                        HandleError(writer, initialDepth);
+                        this.HandleError(writer, initialDepth);
                     }
                     else
                     {
@@ -496,64 +496,64 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             {
                 foreach (KeyValuePair<object, object> e in extensionData)
                 {
-                    JsonContract keyContract = GetContractSafe(e.Key);
-                    JsonContract valueContract = GetContractSafe(e.Value);
+                    JsonContract keyContract = this.GetContractSafe(e.Key);
+                    JsonContract valueContract = this.GetContractSafe(e.Value);
 
                     bool escape;
-                    string propertyName = GetPropertyName(writer, e.Key, keyContract, out escape);
+                    string propertyName = this.GetPropertyName(writer, e.Key, keyContract, out escape);
 
                     propertyName = (contract.ExtensionDataNameResolver != null)
                         ? contract.ExtensionDataNameResolver(propertyName)
                         : propertyName;
 
-                    if (ShouldWriteReference(e.Value, null, valueContract, contract, member))
+                    if (this.ShouldWriteReference(e.Value, null, valueContract, contract, member))
                     {
                         writer.WritePropertyName(propertyName);
-                        WriteReference(writer, e.Value);
+                        this.WriteReference(writer, e.Value);
                     }
                     else
                     {
-                        if (!CheckForCircularReference(writer, e.Value, null, valueContract, contract, member))
+                        if (!this.CheckForCircularReference(writer, e.Value, null, valueContract, contract, member))
                         {
                             continue;
                         }
 
                         writer.WritePropertyName(propertyName);
 
-                        SerializeValue(writer, e.Value, valueContract, null, contract, member);
+                        this.SerializeValue(writer, e.Value, valueContract, null, contract, member);
                     }
                 }
             }
 
             writer.WriteEndObject();
 
-            _serializeStack.RemoveAt(_serializeStack.Count - 1);
+            this._serializeStack.RemoveAt(this._serializeStack.Count - 1);
 
-            OnSerialized(writer, contract, value);
+            this.OnSerialized(writer, contract, value);
         }
 
         private bool CalculatePropertyValues(JsonWriter writer, object value, JsonContainerContract contract, JsonProperty member, JsonProperty property, out JsonContract memberContract, out object memberValue)
         {
-            if (!property.Ignored && property.Readable && ShouldSerialize(writer, property, value) && IsSpecified(writer, property, value))
+            if (!property.Ignored && property.Readable && this.ShouldSerialize(writer, property, value) && this.IsSpecified(writer, property, value))
             {
                 if (property.PropertyContract == null)
                 {
-                    property.PropertyContract = Serializer._contractResolver.ResolveContract(property.PropertyType);
+                    property.PropertyContract = this.Serializer._contractResolver.ResolveContract(property.PropertyType);
                 }
 
                 memberValue = property.ValueProvider.GetValue(value);
-                memberContract = (property.PropertyContract.IsSealed) ? property.PropertyContract : GetContractSafe(memberValue);
+                memberContract = (property.PropertyContract.IsSealed) ? property.PropertyContract : this.GetContractSafe(memberValue);
 
-                if (ShouldWriteProperty(memberValue, contract as JsonObjectContract, property))
+                if (this.ShouldWriteProperty(memberValue, contract as JsonObjectContract, property))
                 {
-                    if (ShouldWriteReference(memberValue, property, memberContract, contract, member))
+                    if (this.ShouldWriteReference(memberValue, property, memberContract, contract, member))
                     {
                         property.WritePropertyName(writer);
-                        WriteReference(writer, memberValue);
+                        this.WriteReference(writer, memberValue);
                         return false;
                     }
 
-                    if (!CheckForCircularReference(writer, memberValue, property, memberContract, contract, member))
+                    if (!this.CheckForCircularReference(writer, memberValue, property, memberContract, contract, member))
                     {
                         return false;
                     }
@@ -585,15 +585,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             writer.WriteStartObject();
 
-            bool isReference = ResolveIsReference(contract, member, collectionContract, containerProperty) ?? HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Objects);
+            bool isReference = this.ResolveIsReference(contract, member, collectionContract, containerProperty) ?? this.HasFlag(this.Serializer._preserveReferencesHandling, PreserveReferencesHandling.Objects);
             // don't make readonly fields that aren't creator parameters the referenced value because they can't be deserialized to
-            if (isReference && (member == null || member.Writable || HasCreatorParameter(collectionContract, member)))
+            if (isReference && (member == null || member.Writable || this.HasCreatorParameter(collectionContract, member)))
             {
-                WriteReferenceIdProperty(writer, contract.UnderlyingType, value);
+                this.WriteReferenceIdProperty(writer, contract.UnderlyingType, value);
             }
-            if (ShouldWriteType(TypeNameHandling.Objects, contract, member, collectionContract, containerProperty))
+            if (this.ShouldWriteType(TypeNameHandling.Objects, contract, member, collectionContract, containerProperty))
             {
-                WriteTypeProperty(writer, contract.UnderlyingType);
+                this.WriteTypeProperty(writer, contract.UnderlyingType);
             }
         }
 
@@ -609,11 +609,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private void WriteReferenceIdProperty(JsonWriter writer, Type type, object value)
         {
-            string reference = GetReference(writer, value);
+            string reference = this.GetReference(writer, value);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
             {
-                TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "Writing object reference Id '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, reference, type)), null);
+                this.TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "Writing object reference Id '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, reference, type)), null);
             }
 
             writer.WritePropertyName(JsonTypeReflector.IdPropertyName, false);
@@ -622,11 +622,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private void WriteTypeProperty(JsonWriter writer, Type type)
         {
-            string typeName = ReflectionUtils.GetTypeName(type, Serializer._typeNameAssemblyFormatHandling, Serializer._serializationBinder);
+            string typeName = ReflectionUtils.GetTypeName(type, this.Serializer._typeNameAssemblyFormatHandling, this.Serializer._serializationBinder);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
             {
-                TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "Writing type name '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, typeName, type)), null);
+                this.TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "Writing type name '{0}' for {1}.".FormatWith(CultureInfo.InvariantCulture, typeName, type)), null);
             }
 
             writer.WritePropertyName(JsonTypeReflector.TypePropertyName, false);
@@ -650,32 +650,32 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private void SerializeConvertable(JsonWriter writer, JsonConverter converter, object value, JsonContract contract, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
-            if (ShouldWriteReference(value, null, contract, collectionContract, containerProperty))
+            if (this.ShouldWriteReference(value, null, contract, collectionContract, containerProperty))
             {
-                WriteReference(writer, value);
+                this.WriteReference(writer, value);
             }
             else
             {
-                if (!CheckForCircularReference(writer, value, null, contract, collectionContract, containerProperty))
+                if (!this.CheckForCircularReference(writer, value, null, contract, collectionContract, containerProperty))
                 {
                     return;
                 }
 
-                _serializeStack.Add(value);
+                this._serializeStack.Add(value);
 
-                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+                if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Info)
                 {
-                    TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Started serializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, value.GetType(), converter.GetType())), null);
+                    this.TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Started serializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, value.GetType(), converter.GetType())), null);
                 }
 
-                converter.WriteJson(writer, value, GetInternalSerializer());
+                converter.WriteJson(writer, value, this.GetInternalSerializer());
 
-                if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Info)
+                if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Info)
                 {
-                    TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Finished serializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, value.GetType(), converter.GetType())), null);
+                    this.TraceWriter.Trace(TraceLevel.Info, JsonPosition.FormatMessage(null, writer.Path, "Finished serializing {0} with converter {1}.".FormatWith(CultureInfo.InvariantCulture, value.GetType(), converter.GetType())), null);
                 }
 
-                _serializeStack.RemoveAt(_serializeStack.Count - 1);
+                this._serializeStack.RemoveAt(this._serializeStack.Count - 1);
             }
         }
 
@@ -683,11 +683,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             object underlyingList = values is IWrappedCollection wrappedCollection ? wrappedCollection.UnderlyingCollection : values;
 
-            OnSerializing(writer, contract, underlyingList);
+            this.OnSerializing(writer, contract, underlyingList);
 
-            _serializeStack.Add(underlyingList);
+            this._serializeStack.Add(underlyingList);
 
-            bool hasWrittenMetadataObject = WriteStartArray(writer, underlyingList, contract, member, collectionContract, containerProperty);
+            bool hasWrittenMetadataObject = this.WriteStartArray(writer, underlyingList, contract, member, collectionContract, containerProperty);
 
             writer.WriteStartArray();
 
@@ -699,25 +699,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             {
                 try
                 {
-                    JsonContract valueContract = contract.FinalItemContract ?? GetContractSafe(value);
+                    JsonContract valueContract = contract.FinalItemContract ?? this.GetContractSafe(value);
 
-                    if (ShouldWriteReference(value, null, valueContract, contract, member))
+                    if (this.ShouldWriteReference(value, null, valueContract, contract, member))
                     {
-                        WriteReference(writer, value);
+                        this.WriteReference(writer, value);
                     }
                     else
                     {
-                        if (CheckForCircularReference(writer, value, null, valueContract, contract, member))
+                        if (this.CheckForCircularReference(writer, value, null, valueContract, contract, member))
                         {
-                            SerializeValue(writer, value, valueContract, null, contract, member);
+                            this.SerializeValue(writer, value, valueContract, null, contract, member);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    if (IsErrorHandled(underlyingList, contract, index, null, writer.ContainerPath, ex))
+                    if (this.IsErrorHandled(underlyingList, contract, index, null, writer.ContainerPath, ex))
                     {
-                        HandleError(writer, initialDepth);
+                        this.HandleError(writer, initialDepth);
                     }
                     else
                     {
@@ -737,29 +737,29 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 writer.WriteEndObject();
             }
 
-            _serializeStack.RemoveAt(_serializeStack.Count - 1);
+            this._serializeStack.RemoveAt(this._serializeStack.Count - 1);
 
-            OnSerialized(writer, contract, underlyingList);
+            this.OnSerialized(writer, contract, underlyingList);
         }
 
         private void SerializeMultidimensionalArray(JsonWriter writer, Array values, JsonArrayContract contract, JsonProperty member, JsonContainerContract collectionContract, JsonProperty containerProperty)
         {
-            OnSerializing(writer, contract, values);
+            this.OnSerializing(writer, contract, values);
 
-            _serializeStack.Add(values);
+            this._serializeStack.Add(values);
 
-            bool hasWrittenMetadataObject = WriteStartArray(writer, values, contract, member, collectionContract, containerProperty);
+            bool hasWrittenMetadataObject = this.WriteStartArray(writer, values, contract, member, collectionContract, containerProperty);
 
-            SerializeMultidimensionalArray(writer, values, contract, member, writer.Top, CollectionUtils.ArrayEmpty<int>());
+            this.SerializeMultidimensionalArray(writer, values, contract, member, writer.Top, CollectionUtils.ArrayEmpty<int>());
 
             if (hasWrittenMetadataObject)
             {
                 writer.WriteEndObject();
             }
 
-            _serializeStack.RemoveAt(_serializeStack.Count - 1);
+            this._serializeStack.RemoveAt(this._serializeStack.Count - 1);
 
-            OnSerialized(writer, contract, values);
+            this.OnSerialized(writer, contract, values);
         }
 
         private void SerializeMultidimensionalArray(JsonWriter writer, Array values, JsonArrayContract contract, JsonProperty member, int initialDepth, int[] indices)
@@ -784,25 +784,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
                     try
                     {
-                        JsonContract valueContract = contract.FinalItemContract ?? GetContractSafe(value);
+                        JsonContract valueContract = contract.FinalItemContract ?? this.GetContractSafe(value);
 
-                        if (ShouldWriteReference(value, null, valueContract, contract, member))
+                        if (this.ShouldWriteReference(value, null, valueContract, contract, member))
                         {
-                            WriteReference(writer, value);
+                            this.WriteReference(writer, value);
                         }
                         else
                         {
-                            if (CheckForCircularReference(writer, value, null, valueContract, contract, member))
+                            if (this.CheckForCircularReference(writer, value, null, valueContract, contract, member))
                             {
-                                SerializeValue(writer, value, valueContract, null, contract, member);
+                                this.SerializeValue(writer, value, valueContract, null, contract, member);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        if (IsErrorHandled(values, contract, i, null, writer.ContainerPath, ex))
+                        if (this.IsErrorHandled(values, contract, i, null, writer.ContainerPath, ex))
                         {
-                            HandleError(writer, initialDepth + 1);
+                            this.HandleError(writer, initialDepth + 1);
                         }
                         else
                         {
@@ -812,7 +812,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 }
                 else
                 {
-                    SerializeMultidimensionalArray(writer, values, contract, member, initialDepth + 1, newIndices);
+                    this.SerializeMultidimensionalArray(writer, values, contract, member, initialDepth + 1, newIndices);
                 }
             }
 
@@ -821,11 +821,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private bool WriteStartArray(JsonWriter writer, object values, JsonArrayContract contract, JsonProperty member, JsonContainerContract containerContract, JsonProperty containerProperty)
         {
-            bool isReference = ResolveIsReference(contract, member, containerContract, containerProperty) ?? HasFlag(Serializer._preserveReferencesHandling, PreserveReferencesHandling.Arrays);
+            bool isReference = this.ResolveIsReference(contract, member, containerContract, containerProperty) ?? this.HasFlag(this.Serializer._preserveReferencesHandling, PreserveReferencesHandling.Arrays);
             // don't make readonly fields that aren't creator parameters the referenced value because they can't be deserialized to
-            isReference = (isReference && (member == null || member.Writable || HasCreatorParameter(containerContract, member)));
+            isReference = (isReference && (member == null || member.Writable || this.HasCreatorParameter(containerContract, member)));
 
-            bool includeTypeDetails = ShouldWriteType(TypeNameHandling.Arrays, contract, member, containerContract, containerProperty);
+            bool includeTypeDetails = this.ShouldWriteType(TypeNameHandling.Arrays, contract, member, containerContract, containerProperty);
             bool writeMetadataObject = isReference || includeTypeDetails;
 
             if (writeMetadataObject)
@@ -834,18 +834,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
                 if (isReference)
                 {
-                    WriteReferenceIdProperty(writer, contract.UnderlyingType, values);
+                    this.WriteReferenceIdProperty(writer, contract.UnderlyingType, values);
                 }
                 if (includeTypeDetails)
                 {
-                    WriteTypeProperty(writer, values.GetType());
+                    this.WriteTypeProperty(writer, values.GetType());
                 }
                 writer.WritePropertyName(JsonTypeReflector.ArrayValuesPropertyName, false);
             }
 
             if (contract.ItemContract == null)
             {
-                contract.ItemContract = Serializer._contractResolver.ResolveContract(contract.CollectionItemType ?? typeof(object));
+                contract.ItemContract = this.Serializer._contractResolver.ResolveContract(contract.CollectionItemType ?? typeof(object));
             }
 
             return writeMetadataObject;
@@ -984,12 +984,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private bool ShouldWriteDynamicProperty(object memberValue)
         {
-            if (Serializer._nullValueHandling == NullValueHandling.Ignore && memberValue == null)
+            if (this.Serializer._nullValueHandling == NullValueHandling.Ignore && memberValue == null)
             {
                 return false;
             }
 
-            if (HasFlag(Serializer._defaultValueHandling, DefaultValueHandling.Ignore) &&
+            if (this.HasFlag(this.Serializer._defaultValueHandling, DefaultValueHandling.Ignore) &&
                 (memberValue == null || MiscellaneousUtils.ValueEquals(memberValue, ReflectionUtils.GetDefaultValue(memberValue.GetType()))))
             {
                 return false;
@@ -1004,15 +1004,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 member?.TypeNameHandling
                 ?? containerProperty?.ItemTypeNameHandling
                 ?? containerContract?.ItemTypeNameHandling
-                ?? Serializer._typeNameHandling;
+                ?? this.Serializer._typeNameHandling;
 
-            if (HasFlag(resolvedTypeNameHandling, typeNameHandlingFlag))
+            if (this.HasFlag(resolvedTypeNameHandling, typeNameHandlingFlag))
             {
                 return true;
             }
 
             // instance type and the property's type's contract default type are different (no need to put the type in JSON because the type will be created by default)
-            if (HasFlag(resolvedTypeNameHandling, TypeNameHandling.Auto))
+            if (this.HasFlag(resolvedTypeNameHandling, TypeNameHandling.Auto))
             {
                 if (member != null)
                 {
@@ -1028,9 +1028,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                         return true;
                     }
                 }
-                else if (_rootType != null && _serializeStack.Count == _rootLevel)
+                else if (this._rootType != null && this._serializeStack.Count == this._rootLevel)
                 {
-                    JsonContract rootContract = Serializer._contractResolver.ResolveContract(_rootType);
+                    JsonContract rootContract = this.Serializer._contractResolver.ResolveContract(this._rootType);
 
                     if (contract.NonNullableUnderlyingType != rootContract.CreatedType)
                     {
@@ -1046,19 +1046,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             object underlyingDictionary = values is IWrappedDictionary wrappedDictionary ? wrappedDictionary.UnderlyingDictionary : values;
 
-            OnSerializing(writer, contract, underlyingDictionary);
-            _serializeStack.Add(underlyingDictionary);
+            this.OnSerializing(writer, contract, underlyingDictionary);
+            this._serializeStack.Add(underlyingDictionary);
 
-            WriteObjectStart(writer, underlyingDictionary, contract, member, collectionContract, containerProperty);
+            this.WriteObjectStart(writer, underlyingDictionary, contract, member, collectionContract, containerProperty);
 
             if (contract.ItemContract == null)
             {
-                contract.ItemContract = Serializer._contractResolver.ResolveContract(contract.DictionaryValueType ?? typeof(object));
+                contract.ItemContract = this.Serializer._contractResolver.ResolveContract(contract.DictionaryValueType ?? typeof(object));
             }
 
             if (contract.KeyContract == null)
             {
-                contract.KeyContract = Serializer._contractResolver.ResolveContract(contract.DictionaryKeyType ?? typeof(object));
+                contract.KeyContract = this.Serializer._contractResolver.ResolveContract(contract.DictionaryKeyType ?? typeof(object));
             }
 
             int initialDepth = writer.Top;
@@ -1071,7 +1071,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 {
                     DictionaryEntry entry = e.Entry;
 
-                    string propertyName = GetPropertyName(writer, entry.Key, contract.KeyContract, out bool escape);
+                    string propertyName = this.GetPropertyName(writer, entry.Key, contract.KeyContract, out bool escape);
 
                     propertyName = (contract.DictionaryKeyResolver != null)
                         ? contract.DictionaryKeyResolver(propertyName)
@@ -1080,30 +1080,30 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                     try
                     {
                         object value = entry.Value;
-                        JsonContract valueContract = contract.FinalItemContract ?? GetContractSafe(value);
+                        JsonContract valueContract = contract.FinalItemContract ?? this.GetContractSafe(value);
 
-                        if (ShouldWriteReference(value, null, valueContract, contract, member))
+                        if (this.ShouldWriteReference(value, null, valueContract, contract, member))
                         {
                             writer.WritePropertyName(propertyName, escape);
-                            WriteReference(writer, value);
+                            this.WriteReference(writer, value);
                         }
                         else
                         {
-                            if (!CheckForCircularReference(writer, value, null, valueContract, contract, member))
+                            if (!this.CheckForCircularReference(writer, value, null, valueContract, contract, member))
                             {
                                 continue;
                             }
 
                             writer.WritePropertyName(propertyName, escape);
 
-                            SerializeValue(writer, value, valueContract, null, contract, member);
+                            this.SerializeValue(writer, value, valueContract, null, contract, member);
                         }
                     }
                     catch (Exception ex)
                     {
-                        if (IsErrorHandled(underlyingDictionary, contract, propertyName, null, writer.ContainerPath, ex))
+                        if (this.IsErrorHandled(underlyingDictionary, contract, propertyName, null, writer.ContainerPath, ex))
                         {
-                            HandleError(writer, initialDepth);
+                            this.HandleError(writer, initialDepth);
                         }
                         else
                         {
@@ -1119,9 +1119,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             writer.WriteEndObject();
 
-            _serializeStack.RemoveAt(_serializeStack.Count - 1);
+            this._serializeStack.RemoveAt(this._serializeStack.Count - 1);
 
-            OnSerialized(writer, contract, underlyingDictionary);
+            this.OnSerialized(writer, contract, underlyingDictionary);
         }
 
         private string GetPropertyName(JsonWriter writer, object name, JsonContract contract, out bool escape)
@@ -1194,7 +1194,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         private void HandleError(JsonWriter writer, int initialDepth)
         {
-            ClearErrorContext();
+            this.ClearErrorContext();
 
             if (writer.WriteState == WriteState.Property)
             {
@@ -1216,9 +1216,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             bool shouldSerialize = property.ShouldSerialize(target);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
             {
-                TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "ShouldSerialize result for property '{0}' on {1}: {2}".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType, shouldSerialize)), null);
+                this.TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "ShouldSerialize result for property '{0}' on {1}: {2}".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType, shouldSerialize)), null);
             }
 
             return shouldSerialize;
@@ -1233,9 +1233,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
             bool isSpecified = property.GetIsSpecified(target);
 
-            if (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            if (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
             {
-                TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "IsSpecified result for property '{0}' on {1}: {2}".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType, isSpecified)), null);
+                this.TraceWriter.Trace(TraceLevel.Verbose, JsonPosition.FormatMessage(null, writer.Path, "IsSpecified result for property '{0}' on {1}: {2}".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, property.DeclaringType, isSpecified)), null);
             }
 
             return isSpecified;

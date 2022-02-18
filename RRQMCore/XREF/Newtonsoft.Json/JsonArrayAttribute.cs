@@ -55,8 +55,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value><c>true</c> if null items are allowed in the collection; otherwise, <c>false</c>.</value>
         public bool AllowNullItems
         {
-            get => _allowNullItems;
-            set => _allowNullItems = value;
+            get => this._allowNullItems;
+            set => this._allowNullItems = value;
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="allowNullItems">A flag indicating whether the array can contain null items.</param>
         public JsonArrayAttribute(bool allowNullItems)
         {
-            _allowNullItems = allowNullItems;
+            this._allowNullItems = allowNullItems;
         }
 
         /// <summary>

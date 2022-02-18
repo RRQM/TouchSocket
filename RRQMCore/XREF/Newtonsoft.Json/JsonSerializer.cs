@@ -98,7 +98,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual IReferenceResolver ReferenceResolver
         {
-            get => GetReferenceResolver();
+            get => this.GetReferenceResolver();
             set
             {
                 if (value == null)
@@ -106,7 +106,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentNullException(nameof(value), "Reference resolver cannot be null.");
                 }
 
-                _referenceResolver = value;
+                this._referenceResolver = value;
             }
         }
 
@@ -118,17 +118,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                if (_serializationBinder == null)
+                if (this._serializationBinder == null)
                 {
                     return null;
                 }
 
-                if (_serializationBinder is SerializationBinder legacySerializationBinder)
+                if (this._serializationBinder is SerializationBinder legacySerializationBinder)
                 {
                     return legacySerializationBinder;
                 }
 
-                if (_serializationBinder is SerializationBinderAdapter adapter)
+                if (this._serializationBinder is SerializationBinderAdapter adapter)
                 {
                     return adapter.SerializationBinder;
                 }
@@ -142,7 +142,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentNullException(nameof(value), "Serialization binder cannot be null.");
                 }
 
-                _serializationBinder = value as ISerializationBinder ?? new SerializationBinderAdapter(value);
+                this._serializationBinder = value as ISerializationBinder ?? new SerializationBinderAdapter(value);
             }
         }
 
@@ -151,7 +151,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual ISerializationBinder SerializationBinder
         {
-            get => _serializationBinder;
+            get => this._serializationBinder;
             set
             {
                 if (value == null)
@@ -159,7 +159,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentNullException(nameof(value), "Serialization binder cannot be null.");
                 }
 
-                _serializationBinder = value;
+                this._serializationBinder = value;
             }
         }
 
@@ -169,8 +169,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The trace writer.</value>
         public virtual ITraceWriter TraceWriter
         {
-            get => _traceWriter;
-            set => _traceWriter = value;
+            get => this._traceWriter;
+            set => this._traceWriter = value;
         }
 
         /// <summary>
@@ -179,8 +179,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The equality comparer.</value>
         public virtual IEqualityComparer EqualityComparer
         {
-            get => _equalityComparer;
-            set => _equalityComparer = value;
+            get => this._equalityComparer;
+            set => this._equalityComparer = value;
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </remarks>
         public virtual TypeNameHandling TypeNameHandling
         {
-            get => _typeNameHandling;
+            get => this._typeNameHandling;
             set
             {
                 if (value < TypeNameHandling.None || value > TypeNameHandling.Auto)
@@ -202,7 +202,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _typeNameHandling = value;
+                this._typeNameHandling = value;
             }
         }
 
@@ -214,7 +214,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         [Obsolete("TypeNameAssemblyFormat is obsolete. Use TypeNameAssemblyFormatHandling instead.")]
         public virtual FormatterAssemblyStyle TypeNameAssemblyFormat
         {
-            get => (FormatterAssemblyStyle)_typeNameAssemblyFormatHandling;
+            get => (FormatterAssemblyStyle)this._typeNameAssemblyFormatHandling;
             set
             {
                 if (value < FormatterAssemblyStyle.Simple || value > FormatterAssemblyStyle.Full)
@@ -222,7 +222,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _typeNameAssemblyFormatHandling = (TypeNameAssemblyFormatHandling)value;
+                this._typeNameAssemblyFormatHandling = (TypeNameAssemblyFormatHandling)value;
             }
         }
 
@@ -233,7 +233,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The type name assembly format.</value>
         public virtual TypeNameAssemblyFormatHandling TypeNameAssemblyFormatHandling
         {
-            get => _typeNameAssemblyFormatHandling;
+            get => this._typeNameAssemblyFormatHandling;
             set
             {
                 if (value < TypeNameAssemblyFormatHandling.Simple || value > TypeNameAssemblyFormatHandling.Full)
@@ -241,7 +241,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _typeNameAssemblyFormatHandling = value;
+                this._typeNameAssemblyFormatHandling = value;
             }
         }
 
@@ -251,7 +251,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual PreserveReferencesHandling PreserveReferencesHandling
         {
-            get => _preserveReferencesHandling;
+            get => this._preserveReferencesHandling;
             set
             {
                 if (value < PreserveReferencesHandling.None || value > PreserveReferencesHandling.All)
@@ -259,7 +259,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _preserveReferencesHandling = value;
+                this._preserveReferencesHandling = value;
             }
         }
 
@@ -269,7 +269,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual ReferenceLoopHandling ReferenceLoopHandling
         {
-            get => _referenceLoopHandling;
+            get => this._referenceLoopHandling;
             set
             {
                 if (value < ReferenceLoopHandling.Error || value > ReferenceLoopHandling.Serialize)
@@ -277,7 +277,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _referenceLoopHandling = value;
+                this._referenceLoopHandling = value;
             }
         }
 
@@ -287,7 +287,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual MissingMemberHandling MissingMemberHandling
         {
-            get => _missingMemberHandling;
+            get => this._missingMemberHandling;
             set
             {
                 if (value < MissingMemberHandling.Ignore || value > MissingMemberHandling.Error)
@@ -295,7 +295,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _missingMemberHandling = value;
+                this._missingMemberHandling = value;
             }
         }
 
@@ -305,7 +305,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual NullValueHandling NullValueHandling
         {
-            get => _nullValueHandling;
+            get => this._nullValueHandling;
             set
             {
                 if (value < NullValueHandling.Include || value > NullValueHandling.Ignore)
@@ -313,7 +313,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _nullValueHandling = value;
+                this._nullValueHandling = value;
             }
         }
 
@@ -323,7 +323,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual DefaultValueHandling DefaultValueHandling
         {
-            get => _defaultValueHandling;
+            get => this._defaultValueHandling;
             set
             {
                 if (value < DefaultValueHandling.Include || value > DefaultValueHandling.IgnoreAndPopulate)
@@ -331,7 +331,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _defaultValueHandling = value;
+                this._defaultValueHandling = value;
             }
         }
 
@@ -342,7 +342,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The object creation handling.</value>
         public virtual ObjectCreationHandling ObjectCreationHandling
         {
-            get => _objectCreationHandling;
+            get => this._objectCreationHandling;
             set
             {
                 if (value < ObjectCreationHandling.Auto || value > ObjectCreationHandling.Replace)
@@ -350,7 +350,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _objectCreationHandling = value;
+                this._objectCreationHandling = value;
             }
         }
 
@@ -361,7 +361,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The constructor handling.</value>
         public virtual ConstructorHandling ConstructorHandling
         {
-            get => _constructorHandling;
+            get => this._constructorHandling;
             set
             {
                 if (value < ConstructorHandling.Default || value > ConstructorHandling.AllowNonPublicDefaultConstructor)
@@ -369,7 +369,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _constructorHandling = value;
+                this._constructorHandling = value;
             }
         }
 
@@ -380,7 +380,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The metadata properties handling.</value>
         public virtual MetadataPropertyHandling MetadataPropertyHandling
         {
-            get => _metadataPropertyHandling;
+            get => this._metadataPropertyHandling;
             set
             {
                 if (value < MetadataPropertyHandling.Default || value > MetadataPropertyHandling.Ignore)
@@ -388,7 +388,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
 
-                _metadataPropertyHandling = value;
+                this._metadataPropertyHandling = value;
             }
         }
 
@@ -400,12 +400,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                if (_converters == null)
+                if (this._converters == null)
                 {
-                    _converters = new JsonConverterCollection();
+                    this._converters = new JsonConverterCollection();
                 }
 
-                return _converters;
+                return this._converters;
             }
         }
 
@@ -415,8 +415,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual IContractResolver ContractResolver
         {
-            get => _contractResolver;
-            set => _contractResolver = value ?? DefaultContractResolver.Instance;
+            get => this._contractResolver;
+            set => this._contractResolver = value ?? DefaultContractResolver.Instance;
         }
 
         /// <summary>
@@ -425,8 +425,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The context.</value>
         public virtual StreamingContext Context
         {
-            get => _context;
-            set => _context = value;
+            get => this._context;
+            set => this._context = value;
         }
 
         /// <summary>
@@ -435,8 +435,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual Formatting Formatting
         {
-            get => _formatting ?? JsonSerializerSettings.DefaultFormatting;
-            set => _formatting = value;
+            get => this._formatting ?? JsonSerializerSettings.DefaultFormatting;
+            set => this._formatting = value;
         }
 
         /// <summary>
@@ -445,8 +445,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual DateFormatHandling DateFormatHandling
         {
-            get => _dateFormatHandling ?? JsonSerializerSettings.DefaultDateFormatHandling;
-            set => _dateFormatHandling = value;
+            get => this._dateFormatHandling ?? JsonSerializerSettings.DefaultDateFormatHandling;
+            set => this._dateFormatHandling = value;
         }
 
         /// <summary>
@@ -455,8 +455,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual DateTimeZoneHandling DateTimeZoneHandling
         {
-            get => _dateTimeZoneHandling ?? JsonSerializerSettings.DefaultDateTimeZoneHandling;
-            set => _dateTimeZoneHandling = value;
+            get => this._dateTimeZoneHandling ?? JsonSerializerSettings.DefaultDateTimeZoneHandling;
+            set => this._dateTimeZoneHandling = value;
         }
 
         /// <summary>
@@ -465,8 +465,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual DateParseHandling DateParseHandling
         {
-            get => _dateParseHandling ?? JsonSerializerSettings.DefaultDateParseHandling;
-            set => _dateParseHandling = value;
+            get => this._dateParseHandling ?? JsonSerializerSettings.DefaultDateParseHandling;
+            set => this._dateParseHandling = value;
         }
 
         /// <summary>
@@ -475,8 +475,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual FloatParseHandling FloatParseHandling
         {
-            get => _floatParseHandling ?? JsonSerializerSettings.DefaultFloatParseHandling;
-            set => _floatParseHandling = value;
+            get => this._floatParseHandling ?? JsonSerializerSettings.DefaultFloatParseHandling;
+            set => this._floatParseHandling = value;
         }
 
         /// <summary>
@@ -487,8 +487,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual FloatFormatHandling FloatFormatHandling
         {
-            get => _floatFormatHandling ?? JsonSerializerSettings.DefaultFloatFormatHandling;
-            set => _floatFormatHandling = value;
+            get => this._floatFormatHandling ?? JsonSerializerSettings.DefaultFloatFormatHandling;
+            set => this._floatFormatHandling = value;
         }
 
         /// <summary>
@@ -497,8 +497,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual StringEscapeHandling StringEscapeHandling
         {
-            get => _stringEscapeHandling ?? JsonSerializerSettings.DefaultStringEscapeHandling;
-            set => _stringEscapeHandling = value;
+            get => this._stringEscapeHandling ?? JsonSerializerSettings.DefaultStringEscapeHandling;
+            set => this._stringEscapeHandling = value;
         }
 
         /// <summary>
@@ -508,11 +508,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual string DateFormatString
         {
-            get => _dateFormatString ?? JsonSerializerSettings.DefaultDateFormatString;
+            get => this._dateFormatString ?? JsonSerializerSettings.DefaultDateFormatString;
             set
             {
-                _dateFormatString = value;
-                _dateFormatStringSet = true;
+                this._dateFormatString = value;
+                this._dateFormatStringSet = true;
             }
         }
 
@@ -522,8 +522,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual CultureInfo Culture
         {
-            get => _culture ?? JsonSerializerSettings.DefaultCulture;
-            set => _culture = value;
+            get => this._culture ?? JsonSerializerSettings.DefaultCulture;
+            set => this._culture = value;
         }
 
         /// <summary>
@@ -533,7 +533,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public virtual int? MaxDepth
         {
-            get => _maxDepth;
+            get => this._maxDepth;
             set
             {
                 if (value <= 0)
@@ -541,8 +541,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentException("Value must be positive.", nameof(value));
                 }
 
-                _maxDepth = value;
-                _maxDepthSet = true;
+                this._maxDepth = value;
+                this._maxDepthSet = true;
             }
         }
 
@@ -555,13 +555,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </value>
         public virtual bool CheckAdditionalContent
         {
-            get => _checkAdditionalContent ?? JsonSerializerSettings.DefaultCheckAdditionalContent;
-            set => _checkAdditionalContent = value;
+            get => this._checkAdditionalContent ?? JsonSerializerSettings.DefaultCheckAdditionalContent;
+            set => this._checkAdditionalContent = value;
         }
 
         internal bool IsCheckAdditionalContentSet()
         {
-            return (_checkAdditionalContent != null);
+            return (this._checkAdditionalContent != null);
         }
 
         /// <summary>
@@ -569,20 +569,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public JsonSerializer()
         {
-            _referenceLoopHandling = JsonSerializerSettings.DefaultReferenceLoopHandling;
-            _missingMemberHandling = JsonSerializerSettings.DefaultMissingMemberHandling;
-            _nullValueHandling = JsonSerializerSettings.DefaultNullValueHandling;
-            _defaultValueHandling = JsonSerializerSettings.DefaultDefaultValueHandling;
-            _objectCreationHandling = JsonSerializerSettings.DefaultObjectCreationHandling;
-            _preserveReferencesHandling = JsonSerializerSettings.DefaultPreserveReferencesHandling;
-            _constructorHandling = JsonSerializerSettings.DefaultConstructorHandling;
-            _typeNameHandling = JsonSerializerSettings.DefaultTypeNameHandling;
-            _metadataPropertyHandling = JsonSerializerSettings.DefaultMetadataPropertyHandling;
-            _context = JsonSerializerSettings.DefaultContext;
-            _serializationBinder = DefaultSerializationBinder.Instance;
+            this._referenceLoopHandling = JsonSerializerSettings.DefaultReferenceLoopHandling;
+            this._missingMemberHandling = JsonSerializerSettings.DefaultMissingMemberHandling;
+            this._nullValueHandling = JsonSerializerSettings.DefaultNullValueHandling;
+            this._defaultValueHandling = JsonSerializerSettings.DefaultDefaultValueHandling;
+            this._objectCreationHandling = JsonSerializerSettings.DefaultObjectCreationHandling;
+            this._preserveReferencesHandling = JsonSerializerSettings.DefaultPreserveReferencesHandling;
+            this._constructorHandling = JsonSerializerSettings.DefaultConstructorHandling;
+            this._typeNameHandling = JsonSerializerSettings.DefaultTypeNameHandling;
+            this._metadataPropertyHandling = JsonSerializerSettings.DefaultMetadataPropertyHandling;
+            this._context = JsonSerializerSettings.DefaultContext;
+            this._serializationBinder = DefaultSerializationBinder.Instance;
 
-            _culture = JsonSerializerSettings.DefaultCulture;
-            _contractResolver = DefaultContractResolver.Instance;
+            this._culture = JsonSerializerSettings.DefaultCulture;
+            this._contractResolver = DefaultContractResolver.Instance;
         }
 
         /// <summary>
@@ -804,7 +804,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="target">The target object to populate values onto.</param>
         public void Populate(TextReader reader, object target)
         {
-            Populate(new JsonTextReader(reader), target);
+            this.Populate(new JsonTextReader(reader), target);
         }
 
         /// <summary>
@@ -814,7 +814,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="target">The target object to populate values onto.</param>
         public void Populate(JsonReader reader, object target)
         {
-            PopulateInternal(reader, target);
+            this.PopulateInternal(reader, target);
         }
 
         internal virtual void PopulateInternal(JsonReader reader, object target)
@@ -829,10 +829,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             FloatParseHandling? previousFloatParseHandling;
             int? previousMaxDepth;
             string previousDateFormatString;
-            SetupReader(reader, out previousCulture, out previousDateTimeZoneHandling, out previousDateParseHandling, out previousFloatParseHandling, out previousMaxDepth, out previousDateFormatString);
+            this.SetupReader(reader, out previousCulture, out previousDateTimeZoneHandling, out previousDateParseHandling, out previousFloatParseHandling, out previousMaxDepth, out previousDateFormatString);
 
-            TraceJsonReader traceJsonReader = (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-                ? CreateTraceJsonReader(reader)
+            TraceJsonReader traceJsonReader = (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
+                ? this.CreateTraceJsonReader(reader)
                 : null;
 
             JsonSerializerInternalReader serializerReader = new JsonSerializerInternalReader(this);
@@ -840,10 +840,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
             if (traceJsonReader != null)
             {
-                TraceWriter.Trace(TraceLevel.Verbose, traceJsonReader.GetDeserializedJsonMessage(), null);
+                this.TraceWriter.Trace(TraceLevel.Verbose, traceJsonReader.GetDeserializedJsonMessage(), null);
             }
 
-            ResetReader(reader, previousCulture, previousDateTimeZoneHandling, previousDateParseHandling, previousFloatParseHandling, previousMaxDepth, previousDateFormatString);
+            this.ResetReader(reader, previousCulture, previousDateTimeZoneHandling, previousDateParseHandling, previousFloatParseHandling, previousMaxDepth, previousDateFormatString);
         }
 
         /// <summary>
@@ -853,7 +853,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>The <see cref="Object"/> being deserialized.</returns>
         public object Deserialize(JsonReader reader)
         {
-            return Deserialize(reader, null);
+            return this.Deserialize(reader, null);
         }
 
         /// <summary>
@@ -865,7 +865,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>The instance of <paramref name="objectType"/> being deserialized.</returns>
         public object Deserialize(TextReader reader, Type objectType)
         {
-            return Deserialize(new JsonTextReader(reader), objectType);
+            return this.Deserialize(new JsonTextReader(reader), objectType);
         }
 
         /// <summary>
@@ -877,7 +877,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>The instance of <typeparamref name="T"/> being deserialized.</returns>
         public T Deserialize<T>(JsonReader reader)
         {
-            return (T)Deserialize(reader, typeof(T));
+            return (T)this.Deserialize(reader, typeof(T));
         }
 
         /// <summary>
@@ -889,7 +889,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>The instance of <paramref name="objectType"/> being deserialized.</returns>
         public object Deserialize(JsonReader reader, Type objectType)
         {
-            return DeserializeInternal(reader, objectType);
+            return this.DeserializeInternal(reader, objectType);
         }
 
         internal virtual object DeserializeInternal(JsonReader reader, Type objectType)
@@ -903,81 +903,81 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             FloatParseHandling? previousFloatParseHandling;
             int? previousMaxDepth;
             string previousDateFormatString;
-            SetupReader(reader, out previousCulture, out previousDateTimeZoneHandling, out previousDateParseHandling, out previousFloatParseHandling, out previousMaxDepth, out previousDateFormatString);
+            this.SetupReader(reader, out previousCulture, out previousDateTimeZoneHandling, out previousDateParseHandling, out previousFloatParseHandling, out previousMaxDepth, out previousDateFormatString);
 
-            TraceJsonReader traceJsonReader = (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
-                ? CreateTraceJsonReader(reader)
+            TraceJsonReader traceJsonReader = (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
+                ? this.CreateTraceJsonReader(reader)
                 : null;
 
             JsonSerializerInternalReader serializerReader = new JsonSerializerInternalReader(this);
-            object value = serializerReader.Deserialize(traceJsonReader ?? reader, objectType, CheckAdditionalContent);
+            object value = serializerReader.Deserialize(traceJsonReader ?? reader, objectType, this.CheckAdditionalContent);
 
             if (traceJsonReader != null)
             {
-                TraceWriter.Trace(TraceLevel.Verbose, traceJsonReader.GetDeserializedJsonMessage(), null);
+                this.TraceWriter.Trace(TraceLevel.Verbose, traceJsonReader.GetDeserializedJsonMessage(), null);
             }
 
-            ResetReader(reader, previousCulture, previousDateTimeZoneHandling, previousDateParseHandling, previousFloatParseHandling, previousMaxDepth, previousDateFormatString);
+            this.ResetReader(reader, previousCulture, previousDateTimeZoneHandling, previousDateParseHandling, previousFloatParseHandling, previousMaxDepth, previousDateFormatString);
 
             return value;
         }
 
         private void SetupReader(JsonReader reader, out CultureInfo previousCulture, out DateTimeZoneHandling? previousDateTimeZoneHandling, out DateParseHandling? previousDateParseHandling, out FloatParseHandling? previousFloatParseHandling, out int? previousMaxDepth, out string previousDateFormatString)
         {
-            if (_culture != null && !_culture.Equals(reader.Culture))
+            if (this._culture != null && !this._culture.Equals(reader.Culture))
             {
                 previousCulture = reader.Culture;
-                reader.Culture = _culture;
+                reader.Culture = this._culture;
             }
             else
             {
                 previousCulture = null;
             }
 
-            if (_dateTimeZoneHandling != null && reader.DateTimeZoneHandling != _dateTimeZoneHandling)
+            if (this._dateTimeZoneHandling != null && reader.DateTimeZoneHandling != this._dateTimeZoneHandling)
             {
                 previousDateTimeZoneHandling = reader.DateTimeZoneHandling;
-                reader.DateTimeZoneHandling = _dateTimeZoneHandling.GetValueOrDefault();
+                reader.DateTimeZoneHandling = this._dateTimeZoneHandling.GetValueOrDefault();
             }
             else
             {
                 previousDateTimeZoneHandling = null;
             }
 
-            if (_dateParseHandling != null && reader.DateParseHandling != _dateParseHandling)
+            if (this._dateParseHandling != null && reader.DateParseHandling != this._dateParseHandling)
             {
                 previousDateParseHandling = reader.DateParseHandling;
-                reader.DateParseHandling = _dateParseHandling.GetValueOrDefault();
+                reader.DateParseHandling = this._dateParseHandling.GetValueOrDefault();
             }
             else
             {
                 previousDateParseHandling = null;
             }
 
-            if (_floatParseHandling != null && reader.FloatParseHandling != _floatParseHandling)
+            if (this._floatParseHandling != null && reader.FloatParseHandling != this._floatParseHandling)
             {
                 previousFloatParseHandling = reader.FloatParseHandling;
-                reader.FloatParseHandling = _floatParseHandling.GetValueOrDefault();
+                reader.FloatParseHandling = this._floatParseHandling.GetValueOrDefault();
             }
             else
             {
                 previousFloatParseHandling = null;
             }
 
-            if (_maxDepthSet && reader.MaxDepth != _maxDepth)
+            if (this._maxDepthSet && reader.MaxDepth != this._maxDepth)
             {
                 previousMaxDepth = reader.MaxDepth;
-                reader.MaxDepth = _maxDepth;
+                reader.MaxDepth = this._maxDepth;
             }
             else
             {
                 previousMaxDepth = null;
             }
 
-            if (_dateFormatStringSet && reader.DateFormatString != _dateFormatString)
+            if (this._dateFormatStringSet && reader.DateFormatString != this._dateFormatString)
             {
                 previousDateFormatString = reader.DateFormatString;
-                reader.DateFormatString = _dateFormatString;
+                reader.DateFormatString = this._dateFormatString;
             }
             else
             {
@@ -986,7 +986,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
             if (reader is JsonTextReader textReader)
             {
-                if (_contractResolver is DefaultContractResolver resolver)
+                if (this._contractResolver is DefaultContractResolver resolver)
                 {
                     textReader.NameTable = resolver.GetNameTable();
                 }
@@ -1012,11 +1012,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 reader.FloatParseHandling = previousFloatParseHandling.GetValueOrDefault();
             }
-            if (_maxDepthSet)
+            if (this._maxDepthSet)
             {
                 reader.MaxDepth = previousMaxDepth;
             }
-            if (_dateFormatStringSet)
+            if (this._dateFormatStringSet)
             {
                 reader.DateFormatString = previousDateFormatString;
             }
@@ -1035,7 +1035,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Object"/> to serialize.</param>
         public void Serialize(TextWriter textWriter, object value)
         {
-            Serialize(new JsonTextWriter(textWriter), value);
+            this.Serialize(new JsonTextWriter(textWriter), value);
         }
 
         /// <summary>
@@ -1051,7 +1051,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </param>
         public void Serialize(JsonWriter jsonWriter, object value, Type objectType)
         {
-            SerializeInternal(jsonWriter, value, objectType);
+            this.SerializeInternal(jsonWriter, value, objectType);
         }
 
         /// <summary>
@@ -1067,7 +1067,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </param>
         public void Serialize(TextWriter textWriter, object value, Type objectType)
         {
-            Serialize(new JsonTextWriter(textWriter), value, objectType);
+            this.Serialize(new JsonTextWriter(textWriter), value, objectType);
         }
 
         /// <summary>
@@ -1078,7 +1078,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="value">The <see cref="Object"/> to serialize.</param>
         public void Serialize(JsonWriter jsonWriter, object value)
         {
-            SerializeInternal(jsonWriter, value, null);
+            this.SerializeInternal(jsonWriter, value, null);
         }
 
         private TraceJsonReader CreateTraceJsonReader(JsonReader reader)
@@ -1098,55 +1098,55 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
             // set serialization options onto writer
             Formatting? previousFormatting = null;
-            if (_formatting != null && jsonWriter.Formatting != _formatting)
+            if (this._formatting != null && jsonWriter.Formatting != this._formatting)
             {
                 previousFormatting = jsonWriter.Formatting;
-                jsonWriter.Formatting = _formatting.GetValueOrDefault();
+                jsonWriter.Formatting = this._formatting.GetValueOrDefault();
             }
 
             DateFormatHandling? previousDateFormatHandling = null;
-            if (_dateFormatHandling != null && jsonWriter.DateFormatHandling != _dateFormatHandling)
+            if (this._dateFormatHandling != null && jsonWriter.DateFormatHandling != this._dateFormatHandling)
             {
                 previousDateFormatHandling = jsonWriter.DateFormatHandling;
-                jsonWriter.DateFormatHandling = _dateFormatHandling.GetValueOrDefault();
+                jsonWriter.DateFormatHandling = this._dateFormatHandling.GetValueOrDefault();
             }
 
             DateTimeZoneHandling? previousDateTimeZoneHandling = null;
-            if (_dateTimeZoneHandling != null && jsonWriter.DateTimeZoneHandling != _dateTimeZoneHandling)
+            if (this._dateTimeZoneHandling != null && jsonWriter.DateTimeZoneHandling != this._dateTimeZoneHandling)
             {
                 previousDateTimeZoneHandling = jsonWriter.DateTimeZoneHandling;
-                jsonWriter.DateTimeZoneHandling = _dateTimeZoneHandling.GetValueOrDefault();
+                jsonWriter.DateTimeZoneHandling = this._dateTimeZoneHandling.GetValueOrDefault();
             }
 
             FloatFormatHandling? previousFloatFormatHandling = null;
-            if (_floatFormatHandling != null && jsonWriter.FloatFormatHandling != _floatFormatHandling)
+            if (this._floatFormatHandling != null && jsonWriter.FloatFormatHandling != this._floatFormatHandling)
             {
                 previousFloatFormatHandling = jsonWriter.FloatFormatHandling;
-                jsonWriter.FloatFormatHandling = _floatFormatHandling.GetValueOrDefault();
+                jsonWriter.FloatFormatHandling = this._floatFormatHandling.GetValueOrDefault();
             }
 
             StringEscapeHandling? previousStringEscapeHandling = null;
-            if (_stringEscapeHandling != null && jsonWriter.StringEscapeHandling != _stringEscapeHandling)
+            if (this._stringEscapeHandling != null && jsonWriter.StringEscapeHandling != this._stringEscapeHandling)
             {
                 previousStringEscapeHandling = jsonWriter.StringEscapeHandling;
-                jsonWriter.StringEscapeHandling = _stringEscapeHandling.GetValueOrDefault();
+                jsonWriter.StringEscapeHandling = this._stringEscapeHandling.GetValueOrDefault();
             }
 
             CultureInfo previousCulture = null;
-            if (_culture != null && !_culture.Equals(jsonWriter.Culture))
+            if (this._culture != null && !this._culture.Equals(jsonWriter.Culture))
             {
                 previousCulture = jsonWriter.Culture;
-                jsonWriter.Culture = _culture;
+                jsonWriter.Culture = this._culture;
             }
 
             string previousDateFormatString = null;
-            if (_dateFormatStringSet && jsonWriter.DateFormatString != _dateFormatString)
+            if (this._dateFormatStringSet && jsonWriter.DateFormatString != this._dateFormatString)
             {
                 previousDateFormatString = jsonWriter.DateFormatString;
-                jsonWriter.DateFormatString = _dateFormatString;
+                jsonWriter.DateFormatString = this._dateFormatString;
             }
 
-            TraceJsonWriter traceJsonWriter = (TraceWriter != null && TraceWriter.LevelFilter >= TraceLevel.Verbose)
+            TraceJsonWriter traceJsonWriter = (this.TraceWriter != null && this.TraceWriter.LevelFilter >= TraceLevel.Verbose)
                 ? new TraceJsonWriter(jsonWriter)
                 : null;
 
@@ -1155,7 +1155,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
             if (traceJsonWriter != null)
             {
-                TraceWriter.Trace(TraceLevel.Verbose, traceJsonWriter.GetSerializedJsonMessage(), null);
+                this.TraceWriter.Trace(TraceLevel.Verbose, traceJsonWriter.GetSerializedJsonMessage(), null);
             }
 
             // reset writer back to previous options
@@ -1179,7 +1179,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 jsonWriter.StringEscapeHandling = previousStringEscapeHandling.GetValueOrDefault();
             }
-            if (_dateFormatStringSet)
+            if (this._dateFormatStringSet)
             {
                 jsonWriter.DateFormatString = previousDateFormatString;
             }
@@ -1191,17 +1191,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         internal IReferenceResolver GetReferenceResolver()
         {
-            if (_referenceResolver == null)
+            if (this._referenceResolver == null)
             {
-                _referenceResolver = new DefaultReferenceResolver();
+                this._referenceResolver = new DefaultReferenceResolver();
             }
 
-            return _referenceResolver;
+            return this._referenceResolver;
         }
 
         internal JsonConverter GetMatchingConverter(Type type)
         {
-            return GetMatchingConverter(_converters, type);
+            return GetMatchingConverter(this._converters, type);
         }
 
         internal static JsonConverter GetMatchingConverter(IList<JsonConverter> converters, Type objectType)

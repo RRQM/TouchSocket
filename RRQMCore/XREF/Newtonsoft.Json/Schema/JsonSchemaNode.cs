@@ -65,24 +65,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
         public JsonSchemaNode(JsonSchema schema)
         {
-            Schemas = new ReadOnlyCollection<JsonSchema>(new[] { schema });
-            Properties = new Dictionary<string, JsonSchemaNode>();
-            PatternProperties = new Dictionary<string, JsonSchemaNode>();
-            Items = new List<JsonSchemaNode>();
+            this.Schemas = new ReadOnlyCollection<JsonSchema>(new[] { schema });
+            this.Properties = new Dictionary<string, JsonSchemaNode>();
+            this.PatternProperties = new Dictionary<string, JsonSchemaNode>();
+            this.Items = new List<JsonSchemaNode>();
 
-            Id = GetId(Schemas);
+            this.Id = GetId(this.Schemas);
         }
 
         private JsonSchemaNode(JsonSchemaNode source, JsonSchema schema)
         {
-            Schemas = new ReadOnlyCollection<JsonSchema>(source.Schemas.Union(new[] { schema }).ToList());
-            Properties = new Dictionary<string, JsonSchemaNode>(source.Properties);
-            PatternProperties = new Dictionary<string, JsonSchemaNode>(source.PatternProperties);
-            Items = new List<JsonSchemaNode>(source.Items);
-            AdditionalProperties = source.AdditionalProperties;
-            AdditionalItems = source.AdditionalItems;
+            this.Schemas = new ReadOnlyCollection<JsonSchema>(source.Schemas.Union(new[] { schema }).ToList());
+            this.Properties = new Dictionary<string, JsonSchemaNode>(source.Properties);
+            this.PatternProperties = new Dictionary<string, JsonSchemaNode>(source.PatternProperties);
+            this.Items = new List<JsonSchemaNode>(source.Items);
+            this.AdditionalProperties = source.AdditionalProperties;
+            this.AdditionalItems = source.AdditionalItems;
 
-            Id = GetId(Schemas);
+            this.Id = GetId(this.Schemas);
         }
 
         public JsonSchemaNode Combine(JsonSchema schema)

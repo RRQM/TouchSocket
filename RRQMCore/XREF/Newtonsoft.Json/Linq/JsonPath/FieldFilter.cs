@@ -25,9 +25,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
             {
                 if (t is JObject o)
                 {
-                    if (Name != null)
+                    if (this.Name != null)
                     {
-                        JToken v = o[Name];
+                        JToken v = o[this.Name];
 
                         if (v != null)
                         {
@@ -35,7 +35,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         }
                         else if (errorWhenNoMatch)
                         {
-                            throw new JsonException("Property '{0}' does not exist on JObject.".FormatWith(CultureInfo.InvariantCulture, Name));
+                            throw new JsonException("Property '{0}' does not exist on JObject.".FormatWith(CultureInfo.InvariantCulture, this.Name));
                         }
                     }
                     else
@@ -50,7 +50,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 {
                     if (errorWhenNoMatch)
                     {
-                        throw new JsonException("Property '{0}' not valid on {1}.".FormatWith(CultureInfo.InvariantCulture, Name ?? "*", t.GetType().Name));
+                        throw new JsonException("Property '{0}' not valid on {1}.".FormatWith(CultureInfo.InvariantCulture, this.Name ?? "*", t.GetType().Name));
                     }
                 }
             }

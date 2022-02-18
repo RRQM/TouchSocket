@@ -20,7 +20,7 @@ namespace RRQMCore.Serialization
         internal Type Type;
         internal object GetInstance()
         {
-            return Activator.CreateInstance(Type);
+            return Activator.CreateInstance(this.Type);
         }
         internal Type[] ArgTypes;
         internal Type ArrayType;

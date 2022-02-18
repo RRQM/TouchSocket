@@ -107,8 +107,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>Reference loop handling.</value>
         public ReferenceLoopHandling ReferenceLoopHandling
         {
-            get => _referenceLoopHandling ?? DefaultReferenceLoopHandling;
-            set => _referenceLoopHandling = value;
+            get => this._referenceLoopHandling ?? DefaultReferenceLoopHandling;
+            set => this._referenceLoopHandling = value;
         }
 
         /// <summary>
@@ -118,8 +118,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>Missing member handling.</value>
         public MissingMemberHandling MissingMemberHandling
         {
-            get => _missingMemberHandling ?? DefaultMissingMemberHandling;
-            set => _missingMemberHandling = value;
+            get => this._missingMemberHandling ?? DefaultMissingMemberHandling;
+            set => this._missingMemberHandling = value;
         }
 
         /// <summary>
@@ -129,8 +129,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The object creation handling.</value>
         public ObjectCreationHandling ObjectCreationHandling
         {
-            get => _objectCreationHandling ?? DefaultObjectCreationHandling;
-            set => _objectCreationHandling = value;
+            get => this._objectCreationHandling ?? DefaultObjectCreationHandling;
+            set => this._objectCreationHandling = value;
         }
 
         /// <summary>
@@ -140,8 +140,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>Null value handling.</value>
         public NullValueHandling NullValueHandling
         {
-            get => _nullValueHandling ?? DefaultNullValueHandling;
-            set => _nullValueHandling = value;
+            get => this._nullValueHandling ?? DefaultNullValueHandling;
+            set => this._nullValueHandling = value;
         }
 
         /// <summary>
@@ -151,8 +151,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The default value handling.</value>
         public DefaultValueHandling DefaultValueHandling
         {
-            get => _defaultValueHandling ?? DefaultDefaultValueHandling;
-            set => _defaultValueHandling = value;
+            get => this._defaultValueHandling ?? DefaultDefaultValueHandling;
+            set => this._defaultValueHandling = value;
         }
 
         /// <summary>
@@ -168,8 +168,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The preserve references handling.</value>
         public PreserveReferencesHandling PreserveReferencesHandling
         {
-            get => _preserveReferencesHandling ?? DefaultPreserveReferencesHandling;
-            set => _preserveReferencesHandling = value;
+            get => this._preserveReferencesHandling ?? DefaultPreserveReferencesHandling;
+            set => this._preserveReferencesHandling = value;
         }
 
         /// <summary>
@@ -184,8 +184,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The type name handling.</value>
         public TypeNameHandling TypeNameHandling
         {
-            get => _typeNameHandling ?? DefaultTypeNameHandling;
-            set => _typeNameHandling = value;
+            get => this._typeNameHandling ?? DefaultTypeNameHandling;
+            set => this._typeNameHandling = value;
         }
 
         /// <summary>
@@ -195,8 +195,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The metadata properties handling.</value>
         public MetadataPropertyHandling MetadataPropertyHandling
         {
-            get => _metadataPropertyHandling ?? DefaultMetadataPropertyHandling;
-            set => _metadataPropertyHandling = value;
+            get => this._metadataPropertyHandling ?? DefaultMetadataPropertyHandling;
+            set => this._metadataPropertyHandling = value;
         }
 
         /// <summary>
@@ -207,8 +207,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         [Obsolete("TypeNameAssemblyFormat is obsolete. Use TypeNameAssemblyFormatHandling instead.")]
         public FormatterAssemblyStyle TypeNameAssemblyFormat
         {
-            get => (FormatterAssemblyStyle)TypeNameAssemblyFormatHandling;
-            set => TypeNameAssemblyFormatHandling = (TypeNameAssemblyFormatHandling)value;
+            get => (FormatterAssemblyStyle)this.TypeNameAssemblyFormatHandling;
+            set => this.TypeNameAssemblyFormatHandling = (TypeNameAssemblyFormatHandling)value;
         }
 
         /// <summary>
@@ -218,8 +218,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The type name assembly format.</value>
         public TypeNameAssemblyFormatHandling TypeNameAssemblyFormatHandling
         {
-            get => _typeNameAssemblyFormatHandling ?? DefaultTypeNameAssemblyFormatHandling;
-            set => _typeNameAssemblyFormatHandling = value;
+            get => this._typeNameAssemblyFormatHandling ?? DefaultTypeNameAssemblyFormatHandling;
+            set => this._typeNameAssemblyFormatHandling = value;
         }
 
         /// <summary>
@@ -229,8 +229,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The constructor handling.</value>
         public ConstructorHandling ConstructorHandling
         {
-            get => _constructorHandling ?? DefaultConstructorHandling;
-            set => _constructorHandling = value;
+            get => this._constructorHandling ?? DefaultConstructorHandling;
+            set => this._constructorHandling = value;
         }
 
         /// <summary>
@@ -253,13 +253,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         [Obsolete("ReferenceResolver property is obsolete. Use the ReferenceResolverProvider property to set the IReferenceResolver: settings.ReferenceResolverProvider = () => resolver")]
         public IReferenceResolver ReferenceResolver
         {
-            get => ReferenceResolverProvider?.Invoke();
-            set
-            {
-                ReferenceResolverProvider = (value != null)
+            get => this.ReferenceResolverProvider?.Invoke();
+            set => this.ReferenceResolverProvider = (value != null)
                     ? () => value
                     : (Serialization.Func<IReferenceResolver>)null;
-            }
         }
 
         /// <summary>
@@ -283,19 +280,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                if (SerializationBinder == null)
+                if (this.SerializationBinder == null)
                 {
                     return null;
                 }
 
-                if (SerializationBinder is SerializationBinderAdapter adapter)
+                if (this.SerializationBinder is SerializationBinderAdapter adapter)
                 {
                     return adapter.SerializationBinder;
                 }
 
                 throw new InvalidOperationException("Cannot get SerializationBinder because an ISerializationBinder was previously set.");
             }
-            set => SerializationBinder = value == null ? null : new SerializationBinderAdapter(value);
+            set => this.SerializationBinder = value == null ? null : new SerializationBinderAdapter(value);
         }
 
         /// <summary>
@@ -316,8 +313,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The context.</value>
         public StreamingContext Context
         {
-            get => _context ?? DefaultContext;
-            set => _context = value;
+            get => this._context ?? DefaultContext;
+            set => this._context = value;
         }
 
         /// <summary>
@@ -327,11 +324,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public string DateFormatString
         {
-            get => _dateFormatString ?? DefaultDateFormatString;
+            get => this._dateFormatString ?? DefaultDateFormatString;
             set
             {
-                _dateFormatString = value;
-                _dateFormatStringSet = true;
+                this._dateFormatString = value;
+                this._dateFormatStringSet = true;
             }
         }
 
@@ -342,7 +339,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public int? MaxDepth
         {
-            get => _maxDepth;
+            get => this._maxDepth;
             set
             {
                 if (value <= 0)
@@ -350,8 +347,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     throw new ArgumentException("Value must be positive.", nameof(value));
                 }
 
-                _maxDepth = value;
-                _maxDepthSet = true;
+                this._maxDepth = value;
+                this._maxDepthSet = true;
             }
         }
 
@@ -361,8 +358,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public Formatting Formatting
         {
-            get => _formatting ?? DefaultFormatting;
-            set => _formatting = value;
+            get => this._formatting ?? DefaultFormatting;
+            set => this._formatting = value;
         }
 
         /// <summary>
@@ -371,8 +368,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public DateFormatHandling DateFormatHandling
         {
-            get => _dateFormatHandling ?? DefaultDateFormatHandling;
-            set => _dateFormatHandling = value;
+            get => this._dateFormatHandling ?? DefaultDateFormatHandling;
+            set => this._dateFormatHandling = value;
         }
 
         /// <summary>
@@ -381,8 +378,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public DateTimeZoneHandling DateTimeZoneHandling
         {
-            get => _dateTimeZoneHandling ?? DefaultDateTimeZoneHandling;
-            set => _dateTimeZoneHandling = value;
+            get => this._dateTimeZoneHandling ?? DefaultDateTimeZoneHandling;
+            set => this._dateTimeZoneHandling = value;
         }
 
         /// <summary>
@@ -391,8 +388,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public DateParseHandling DateParseHandling
         {
-            get => _dateParseHandling ?? DefaultDateParseHandling;
-            set => _dateParseHandling = value;
+            get => this._dateParseHandling ?? DefaultDateParseHandling;
+            set => this._dateParseHandling = value;
         }
 
         /// <summary>
@@ -403,8 +400,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public FloatFormatHandling FloatFormatHandling
         {
-            get => _floatFormatHandling ?? DefaultFloatFormatHandling;
-            set => _floatFormatHandling = value;
+            get => this._floatFormatHandling ?? DefaultFloatFormatHandling;
+            set => this._floatFormatHandling = value;
         }
 
         /// <summary>
@@ -413,8 +410,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public FloatParseHandling FloatParseHandling
         {
-            get => _floatParseHandling ?? DefaultFloatParseHandling;
-            set => _floatParseHandling = value;
+            get => this._floatParseHandling ?? DefaultFloatParseHandling;
+            set => this._floatParseHandling = value;
         }
 
         /// <summary>
@@ -423,8 +420,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public StringEscapeHandling StringEscapeHandling
         {
-            get => _stringEscapeHandling ?? DefaultStringEscapeHandling;
-            set => _stringEscapeHandling = value;
+            get => this._stringEscapeHandling ?? DefaultStringEscapeHandling;
+            set => this._stringEscapeHandling = value;
         }
 
         /// <summary>
@@ -433,8 +430,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public CultureInfo Culture
         {
-            get => _culture ?? DefaultCulture;
-            set => _culture = value;
+            get => this._culture ?? DefaultCulture;
+            set => this._culture = value;
         }
 
         /// <summary>
@@ -446,8 +443,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </value>
         public bool CheckAdditionalContent
         {
-            get => _checkAdditionalContent ?? DefaultCheckAdditionalContent;
-            set => _checkAdditionalContent = value;
+            get => this._checkAdditionalContent ?? DefaultCheckAdditionalContent;
+            set => this._checkAdditionalContent = value;
         }
 
         static JsonSerializerSettings()
@@ -461,7 +458,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public JsonSerializerSettings()
         {
-            Converters = new List<JsonConverter>();
+            this.Converters = new List<JsonConverter>();
         }
     }
 }

@@ -70,28 +70,28 @@ namespace RRQMSocket
             int r = byteBlock.Len;
             if (this.tempByteBlock == null)
             {
-                SplitPackage(buffer, 0, r);
+                this.SplitPackage(buffer, 0, r);
             }
             else
             {
-                if (surPlusLength == r)
+                if (this.surPlusLength == r)
                 {
-                    this.tempByteBlock.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.tempByteBlock);
+                    this.tempByteBlock.Write(buffer, 0, this.surPlusLength);
+                    this.PreviewHandle(this.tempByteBlock);
                     this.tempByteBlock = null;
-                    surPlusLength = 0;
+                    this.surPlusLength = 0;
                 }
-                else if (surPlusLength < r)
+                else if (this.surPlusLength < r)
                 {
-                    this.tempByteBlock.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.tempByteBlock);
+                    this.tempByteBlock.Write(buffer, 0, this.surPlusLength);
+                    this.PreviewHandle(this.tempByteBlock);
                     this.tempByteBlock = null;
-                    SplitPackage(buffer, surPlusLength, r);
+                    this.SplitPackage(buffer, this.surPlusLength, r);
                 }
                 else
                 {
                     this.tempByteBlock.Write(buffer, 0, r);
-                    surPlusLength -= r;
+                    this.surPlusLength -= r;
                 }
             }
         }
@@ -209,13 +209,13 @@ namespace RRQMSocket
                 {
                     ByteBlock byteBlock = BytePool.GetByteBlock(this.FixedSize);
                     byteBlock.Write(dataBuffer, index, this.FixedSize);
-                    PreviewHandle(byteBlock);
-                    surPlusLength = 0;
+                    this.PreviewHandle(byteBlock);
+                    this.surPlusLength = 0;
                 }
                 else//半包
                 {
                     this.tempByteBlock = BytePool.GetByteBlock(this.FixedSize);
-                    surPlusLength = this.FixedSize - (r - index);
+                    this.surPlusLength = this.FixedSize - (r - index);
                     this.tempByteBlock.Write(dataBuffer, index, r - index);
                 }
                 index += this.FixedSize;

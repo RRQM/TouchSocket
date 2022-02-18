@@ -24,7 +24,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
-            if (Step == 0)
+            if (this.Step == 0)
             {
                 throw new JsonException("Step cannot be zero.");
             }
@@ -34,18 +34,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                 if (t is JArray a)
                 {
                     // set defaults for null arguments
-                    int stepCount = Step ?? 1;
-                    int startIndex = Start ?? ((stepCount > 0) ? 0 : a.Count - 1);
-                    int stopIndex = End ?? ((stepCount > 0) ? a.Count : -1);
+                    int stepCount = this.Step ?? 1;
+                    int startIndex = this.Start ?? ((stepCount > 0) ? 0 : a.Count - 1);
+                    int stopIndex = this.End ?? ((stepCount > 0) ? a.Count : -1);
 
                     // start from the end of the list if start is negative
-                    if (Start < 0)
+                    if (this.Start < 0)
                     {
                         startIndex = a.Count + startIndex;
                     }
 
                     // end from the start of the list if stop is negative
-                    if (End < 0)
+                    if (this.End < 0)
                     {
                         stopIndex = a.Count + stopIndex;
                     }
@@ -58,9 +58,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
                     bool positiveStep = (stepCount > 0);
 
-                    if (IsValid(startIndex, stopIndex, positiveStep))
+                    if (this.IsValid(startIndex, stopIndex, positiveStep))
                     {
-                        for (int i = startIndex; IsValid(i, stopIndex, positiveStep); i += stepCount)
+                        for (int i = startIndex; this.IsValid(i, stopIndex, positiveStep); i += stepCount)
                         {
                             yield return a[i];
                         }
@@ -70,8 +70,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                         if (errorWhenNoMatch)
                         {
                             throw new JsonException("Array slice of {0} to {1} returned no results.".FormatWith(CultureInfo.InvariantCulture,
-                                Start != null ? Start.GetValueOrDefault().ToString(CultureInfo.InvariantCulture) : "*",
-                                End != null ? End.GetValueOrDefault().ToString(CultureInfo.InvariantCulture) : "*"));
+                                this.Start != null ? this.Start.GetValueOrDefault().ToString(CultureInfo.InvariantCulture) : "*",
+                                this.End != null ? this.End.GetValueOrDefault().ToString(CultureInfo.InvariantCulture) : "*"));
                         }
                     }
                 }

@@ -60,21 +60,21 @@ namespace RRQMCore
         {
             lock (this)
             {
-                long timestamp = timeGen();
+                long timestamp = this.timeGen();
                 if (this.lastTimestamp == timestamp)
                 { //同一微妙中生成ID
                     SnowflakeIDGenerator.sequence = (SnowflakeIDGenerator.sequence + 1) & SnowflakeIDGenerator.sequenceMask; //用&运算计算该微秒内产生的计数是否已经到达上限
                     if (SnowflakeIDGenerator.sequence == 0)
                     {
                         //一微妙内产生的ID计数已达上限，等待下一微妙
-                        timestamp = tillNextMillis(this.lastTimestamp);
+                        timestamp = this.tillNextMillis(this.lastTimestamp);
                     }
                 }
                 else
                 { //不同微秒生成ID
                     SnowflakeIDGenerator.sequence = 0; //计数清0
                 }
-                if (timestamp < lastTimestamp)
+                if (timestamp < this.lastTimestamp)
                 { //如果当前时间戳比上一次生成ID时时间戳还小，抛出异常，因为不能保证现在生成的ID之前没有生成过
                     throw new Exception(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds",
                         this.lastTimestamp - timestamp));
@@ -92,10 +92,10 @@ namespace RRQMCore
         /// <returns></returns>
         private long tillNextMillis(long lastTimestamp)
         {
-            long timestamp = timeGen();
+            long timestamp = this.timeGen();
             while (timestamp <= lastTimestamp)
             {
-                timestamp = timeGen();
+                timestamp = this.timeGen();
             }
             return timestamp;
         }

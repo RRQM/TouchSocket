@@ -60,7 +60,7 @@ namespace RRQMCore.Run
         /// </summary>
         public void Dispose()
         {
-            foreach (var item in waitDic.Values)
+            foreach (var item in this.waitDic.Values)
             {
                 item.Dispose();
             }
@@ -78,21 +78,21 @@ namespace RRQMCore.Run
         /// </summary>
         public WaitData<T> GetWaitData(T result)
         {
-            if (signCount == int.MaxValue)
+            if (this.signCount == int.MaxValue)
             {
-                signCount = 0;
+                this.signCount = 0;
             }
             WaitData<T> waitData;
             if (this.waitQueue.TryDequeue(out waitData))
             {
-                result.Sign = Interlocked.Increment(ref signCount);
+                result.Sign = Interlocked.Increment(ref this.signCount);
                 waitData.SetResult(result);
                 this.waitDic.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitData<T>();
-            result.Sign = Interlocked.Increment(ref signCount);
+            result.Sign = Interlocked.Increment(ref this.signCount);
             waitData.SetResult(result);
             this.waitDic.TryAdd(result.Sign, waitData);
             return waitData;

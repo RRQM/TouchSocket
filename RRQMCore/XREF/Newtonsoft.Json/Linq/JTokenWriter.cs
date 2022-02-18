@@ -63,7 +63,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <summary>
         /// Gets the <see cref="JToken"/> at the writer's current position.
         /// </summary>
-        public JToken CurrentToken => _current;
+        public JToken CurrentToken => this._current;
 
         /// <summary>
         /// Gets the token being written.
@@ -73,12 +73,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                if (_token != null)
+                if (this._token != null)
                 {
-                    return _token;
+                    return this._token;
                 }
 
-                return _value;
+                return this._value;
             }
         }
 
@@ -90,8 +90,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(container, nameof(container));
 
-            _token = container;
-            _parent = container;
+            this._token = container;
+            this._parent = container;
         }
 
         /// <summary>
@@ -127,32 +127,32 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             base.WriteStartObject();
 
-            AddParent(new JObject());
+            this.AddParent(new JObject());
         }
 
         private void AddParent(JContainer container)
         {
-            if (_parent == null)
+            if (this._parent == null)
             {
-                _token = container;
+                this._token = container;
             }
             else
             {
-                _parent.AddAndSkipParentCheck(container);
+                this._parent.AddAndSkipParentCheck(container);
             }
 
-            _parent = container;
-            _current = container;
+            this._parent = container;
+            this._current = container;
         }
 
         private void RemoveParent()
         {
-            _current = _parent;
-            _parent = _parent.Parent;
+            this._current = this._parent;
+            this._parent = this._parent.Parent;
 
-            if (_parent != null && _parent.Type == JTokenType.Property)
+            if (this._parent != null && this._parent.Type == JTokenType.Property)
             {
-                _parent = _parent.Parent;
+                this._parent = this._parent.Parent;
             }
         }
 
@@ -163,7 +163,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             base.WriteStartArray();
 
-            AddParent(new JArray());
+            this.AddParent(new JArray());
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             base.WriteStartConstructor(name);
 
-            AddParent(new JConstructor(name));
+            this.AddParent(new JConstructor(name));
         }
 
         /// <summary>
@@ -183,7 +183,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="token">The token.</param>
         protected override void WriteEnd(JsonToken token)
         {
-            RemoveParent();
+            this.RemoveParent();
         }
 
         /// <summary>
@@ -194,9 +194,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             // avoid duplicate property name exception
             // last property name wins
-            (_parent as JObject)?.Remove(name);
+            (this._parent as JObject)?.Remove(name);
 
-            AddParent(new JProperty(name));
+            this.AddParent(new JProperty(name));
 
             // don't set state until after in case of an error
             // incorrect state will cause issues if writer is disposed when closing open properties
@@ -205,25 +205,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         private void AddValue(object value, JsonToken token)
         {
-            AddValue(new JValue(value), token);
+            this.AddValue(new JValue(value), token);
         }
 
         internal void AddValue(JValue value, JsonToken token)
         {
-            if (_parent != null)
+            if (this._parent != null)
             {
-                _parent.Add(value);
-                _current = _parent.Last;
+                this._parent.Add(value);
+                this._current = this._parent.Last;
 
-                if (_parent.Type == JTokenType.Property)
+                if (this._parent.Type == JTokenType.Property)
                 {
-                    _parent = _parent.Parent;
+                    this._parent = this._parent.Parent;
                 }
             }
             else
             {
-                _value = value ?? JValue.CreateNull();
-                _current = _value;
+                this._value = value ?? JValue.CreateNull();
+                this._current = this._value;
             }
         }
 
@@ -255,7 +255,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteNull()
         {
             base.WriteNull();
-            AddValue(null, JsonToken.Null);
+            this.AddValue(null, JsonToken.Null);
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteUndefined()
         {
             base.WriteUndefined();
-            AddValue(null, JsonToken.Undefined);
+            this.AddValue(null, JsonToken.Undefined);
         }
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteRaw(string json)
         {
             base.WriteRaw(json);
-            AddValue(new JRaw(json), JsonToken.Raw);
+            this.AddValue(new JRaw(json), JsonToken.Raw);
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteComment(string text)
         {
             base.WriteComment(text);
-            AddValue(JValue.CreateComment(text), JsonToken.Comment);
+            this.AddValue(JValue.CreateComment(text), JsonToken.Comment);
         }
 
         /// <summary>
@@ -294,7 +294,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(string value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.String);
+            this.AddValue(value, JsonToken.String);
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(int value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -315,7 +315,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(uint value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(long value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(ulong value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -346,7 +346,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(float value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Float);
+            this.AddValue(value, JsonToken.Float);
         }
 
         /// <summary>
@@ -356,7 +356,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(double value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Float);
+            this.AddValue(value, JsonToken.Float);
         }
 
         /// <summary>
@@ -366,7 +366,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(bool value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Boolean);
+            this.AddValue(value, JsonToken.Boolean);
         }
 
         /// <summary>
@@ -376,7 +376,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(short value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -387,7 +387,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(ushort value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 #else
             s = value.ToString();
 #endif
-            AddValue(s, JsonToken.String);
+            this.AddValue(s, JsonToken.String);
         }
 
         /// <summary>
@@ -413,7 +413,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(byte value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -424,7 +424,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(sbyte value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Integer);
+            this.AddValue(value, JsonToken.Integer);
         }
 
         /// <summary>
@@ -434,7 +434,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(decimal value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Float);
+            this.AddValue(value, JsonToken.Float);
         }
 
         /// <summary>
@@ -444,8 +444,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(DateTime value)
         {
             base.WriteValue(value);
-            value = DateTimeUtils.EnsureDateTime(value, DateTimeZoneHandling);
-            AddValue(value, JsonToken.Date);
+            value = DateTimeUtils.EnsureDateTime(value, this.DateTimeZoneHandling);
+            this.AddValue(value, JsonToken.Date);
         }
 
 #if HAVE_DATE_TIME_OFFSET
@@ -467,7 +467,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(byte[] value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.Bytes);
+            this.AddValue(value, JsonToken.Bytes);
         }
 
         /// <summary>
@@ -477,7 +477,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(TimeSpan value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.String);
+            this.AddValue(value, JsonToken.String);
         }
 
         /// <summary>
@@ -487,7 +487,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(Guid value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.String);
+            this.AddValue(value, JsonToken.String);
         }
 
         /// <summary>
@@ -497,7 +497,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override void WriteValue(Uri value)
         {
             base.WriteValue(value);
-            AddValue(value, JsonToken.String);
+            this.AddValue(value, JsonToken.String);
         }
 
         #endregion WriteValue methods
@@ -517,26 +517,26 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
                 JToken value = tokenReader.CurrentToken.CloneToken();
 
-                if (_parent != null)
+                if (this._parent != null)
                 {
-                    _parent.Add(value);
-                    _current = _parent.Last;
+                    this._parent.Add(value);
+                    this._current = this._parent.Last;
 
                     // if the writer was in a property then move out of it and up to its parent object
-                    if (_parent.Type == JTokenType.Property)
+                    if (this._parent.Type == JTokenType.Property)
                     {
-                        _parent = _parent.Parent;
-                        InternalWriteValue(JsonToken.Null);
+                        this._parent = this._parent.Parent;
+                        this.InternalWriteValue(JsonToken.Null);
                     }
                 }
                 else
                 {
-                    _current = value;
+                    this._current = value;
 
-                    if (_token == null && _value == null)
+                    if (this._token == null && this._value == null)
                     {
-                        _token = value as JContainer;
-                        _value = value as JValue;
+                        this._token = value as JContainer;
+                        this._value = value as JValue;
                     }
                 }
 

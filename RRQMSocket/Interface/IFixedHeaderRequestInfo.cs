@@ -19,7 +19,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数据体长度
         /// </summary>
-        int BodyLength { get;}
+        int BodyLength { get; }
 
         /// <summary>
         /// 当收到数据，由框架封送固定协议头。

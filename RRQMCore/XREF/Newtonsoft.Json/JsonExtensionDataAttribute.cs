@@ -41,8 +41,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </summary>
         public JsonExtensionDataAttribute()
         {
-            WriteData = true;
-            ReadData = true;
+            this.WriteData = true;
+            this.ReadData = true;
         }
     }
 }

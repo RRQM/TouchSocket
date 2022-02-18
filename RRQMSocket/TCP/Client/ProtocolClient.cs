@@ -58,9 +58,9 @@ namespace RRQMSocket
             }
             if (subscriber.Protocol > 0)
             {
-                if (usedProtocol.ContainsKey(subscriber.Protocol))
+                if (this.usedProtocol.ContainsKey(subscriber.Protocol))
                 {
-                    throw new RRQMException($"该协议已被类协议使用，描述为：{usedProtocol[subscriber.Protocol]}");
+                    throw new RRQMException($"该协议已被类协议使用，描述为：{this.usedProtocol[subscriber.Protocol]}");
                 }
                 else
                 {
@@ -351,7 +351,7 @@ namespace RRQMSocket
         /// <param name="describe"></param>
         protected void AddUsedProtocol(short procotol, string describe)
         {
-            usedProtocol.Add(procotol, describe);
+            this.usedProtocol.Add(procotol, describe);
         }
 
         /// <summary>
@@ -375,7 +375,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             short procotol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
             switch (procotol)
@@ -402,7 +402,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            HandleProtocolData(-1, byteBlock);
+                            this.HandleProtocolData(-1, byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -415,7 +415,7 @@ namespace RRQMSocket
                         try
                         {
                             int id = RRQMBitConverter.Default.ToInt32(byteBlock.Buffer, 2);
-                            this.RequestCreateChannel(id,null);
+                            this.RequestCreateChannel(id, null);
                         }
                         catch (Exception ex)
                         {
@@ -541,7 +541,7 @@ namespace RRQMSocket
                                     }
                                 }
                             }
-                            HandleProtocolData(procotol, byteBlock);
+                            this.HandleProtocolData(procotol, byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -562,11 +562,11 @@ namespace RRQMSocket
 
             if (heartbeatFrequency > 0)
             {
-                if (heartbeatLoopAction != null)
+                if (this.heartbeatLoopAction != null)
                 {
-                    heartbeatLoopAction.Dispose();
+                    this.heartbeatLoopAction.Dispose();
                 }
-                heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency, (loop) =>
+                this.heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency, (loop) =>
                  {
                      try
                      {
@@ -577,7 +577,7 @@ namespace RRQMSocket
                          this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
                      }
                  });
-                heartbeatLoopAction.RunAsync();
+                this.heartbeatLoopAction.RunAsync();
             }
 
             base.OnConnected(e);
@@ -665,7 +665,7 @@ namespace RRQMSocket
                                 }
                                 block.SetHolding(false);
                             }
-                            HandleStream(new StreamStatusEventArgs(streamOperator.SetStreamResult(new Result(channel.Status.ToResultCode())),
+                            this.HandleStream(new StreamStatusEventArgs(streamOperator.SetStreamResult(new Result(channel.Status.ToResultCode())),
                                 args.Metadata, args.StreamInfo)
                             { Bucket = stream, Message = args.Message });
                         });
@@ -706,7 +706,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public override sealed void Send(byte[] buffer, int offset, int length)
+        public sealed override void Send(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -715,7 +715,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"><inheritdoc/></param>
-        public override sealed void Send(byte[] buffer)
+        public sealed override void Send(byte[] buffer)
         {
             this.Send(buffer, 0, buffer.Length);
         }
@@ -724,7 +724,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public override sealed void Send(ByteBlock byteBlock)
+        public sealed override void Send(ByteBlock byteBlock)
         {
             this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -733,7 +733,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public override sealed void Send(IList<TransferByte> transferBytes)
+        public sealed override void Send(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.Send(transferBytes);
@@ -747,7 +747,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
-        public override sealed void SendAsync(byte[] buffer)
+        public sealed override void SendAsync(byte[] buffer)
         {
             this.SendAsync(buffer, 0, buffer.Length);
         }
@@ -767,7 +767,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public override sealed void SendAsync(byte[] buffer, int offset, int length)
+        public sealed override void SendAsync(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -776,7 +776,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public override sealed void SendAsync(IList<TransferByte> transferBytes)
+        public sealed override void SendAsync(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.SendAsync(transferBytes);
@@ -814,12 +814,12 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Send(short procotol, byte[] buffer, int offset, int length)
         {
-            if (usedProtocol.ContainsKey(procotol))
+            if (this.usedProtocol.ContainsKey(procotol))
             {
                 StringBuilder stringBuilder = new StringBuilder();
-                foreach (var item in usedProtocol.Keys)
+                foreach (var item in this.usedProtocol.Keys)
                 {
-                    stringBuilder.AppendLine($"协议{item}已被使用，描述为：{usedProtocol[item]}");
+                    stringBuilder.AppendLine($"协议{item}已被使用，描述为：{this.usedProtocol[item]}");
                 }
                 throw new RRQMException(stringBuilder.ToString());
             }
@@ -871,16 +871,16 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void SendAsync(short procotol, byte[] buffer, int offset, int length)
         {
-            if (!usedProtocol.ContainsKey(procotol))
+            if (!this.usedProtocol.ContainsKey(procotol))
             {
                 this.InternalSend(procotol, buffer, offset, length);
             }
             else
             {
                 StringBuilder stringBuilder = new StringBuilder();
-                foreach (var item in usedProtocol.Keys)
+                foreach (var item in this.usedProtocol.Keys)
                 {
-                    stringBuilder.AppendLine($"协议{item}已被使用，描述为：{usedProtocol[item]}");
+                    stringBuilder.AppendLine($"协议{item}已被使用，描述为：{this.usedProtocol[item]}");
                 }
                 throw new RRQMException(stringBuilder.ToString());
             }
@@ -1178,7 +1178,7 @@ namespace RRQMSocket
             }
         }
 
-        private void RequestCreateChannel(int id,string clientID)
+        private void RequestCreateChannel(int id, string clientID)
         {
             if (!this.userChannels.ContainsKey(id))
             {

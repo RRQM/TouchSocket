@@ -73,10 +73,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
         public JsonSchemaModel()
         {
-            Type = JsonSchemaType.Any;
-            AllowAdditionalProperties = true;
-            AllowAdditionalItems = true;
-            Required = false;
+            this.Type = JsonSchemaType.Any;
+            this.AllowAdditionalProperties = true;
+            this.AllowAdditionalItems = true;
+            this.Required = false;
         }
 
         public static JsonSchemaModel Create(IList<JsonSchema> schemata)

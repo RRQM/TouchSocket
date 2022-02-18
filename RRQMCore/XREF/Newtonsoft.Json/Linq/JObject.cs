@@ -86,7 +86,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// Gets the container's children tokens.
         /// </summary>
         /// <value>The container's children tokens.</value>
-        protected override IList<JToken> ChildrenTokens => _properties;
+        protected override IList<JToken> ChildrenTokens => this._properties;
 
         /// <summary>
         /// Occurs when a property value changes.
@@ -131,7 +131,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">The contents of the object.</param>
         public JObject(object content)
         {
-            Add(content);
+            this.Add(content);
         }
 
         internal override bool DeepEquals(JToken node)
@@ -141,12 +141,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return false;
             }
 
-            return _properties.Compare(t._properties);
+            return this._properties.Compare(t._properties);
         }
 
         internal override int IndexOfItem(JToken item)
         {
-            return _properties.IndexOfReference(item);
+            return this._properties.IndexOfReference(item);
         }
 
         internal override void InsertItem(int index, JToken item, bool skipParentCheck)
@@ -166,7 +166,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             if (o.Type != JTokenType.Property)
             {
-                throw new ArgumentException("Can not add {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, o.GetType(), GetType()));
+                throw new ArgumentException("Can not add {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, o.GetType(), this.GetType()));
             }
 
             JProperty newProperty = (JProperty)o;
@@ -181,9 +181,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 }
             }
 
-            if (_properties.TryGetValue(newProperty.Name, out existing))
+            if (this._properties.TryGetValue(newProperty.Name, out existing))
             {
-                throw new ArgumentException("Can not add property {0} to {1}. Property with the same name already exists on object.".FormatWith(CultureInfo.InvariantCulture, newProperty.Name, GetType()));
+                throw new ArgumentException("Can not add property {0} to {1}. Property with the same name already exists on object.".FormatWith(CultureInfo.InvariantCulture, newProperty.Name, this.GetType()));
             }
         }
 
@@ -196,11 +196,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             foreach (KeyValuePair<string, JToken> contentItem in o)
             {
-                JProperty existingProperty = Property(contentItem.Key);
+                JProperty existingProperty = this.Property(contentItem.Key);
 
                 if (existingProperty == null)
                 {
-                    Add(contentItem.Key, contentItem.Value);
+                    this.Add(contentItem.Key, contentItem.Value);
                 }
                 else if (contentItem.Value != null)
                 {
@@ -236,7 +236,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal void InternalPropertyChanged(JProperty childProperty)
         {
-            OnPropertyChanged(childProperty.Name);
+            this.OnPropertyChanged(childProperty.Name);
 #if HAVE_COMPONENT_MODEL
             if (_listChanged != null)
             {
@@ -275,7 +275,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="JProperty"/> of this object's properties.</returns>
         public IEnumerable<JProperty> Properties()
         {
-            return _properties.Cast<JProperty>();
+            return this._properties.Cast<JProperty>();
         }
 
         /// <summary>
@@ -290,7 +290,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return null;
             }
 
-            _properties.TryGetValue(name, out JToken property);
+            this._properties.TryGetValue(name, out JToken property);
             return (JProperty)property;
         }
 
@@ -300,7 +300,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A <see cref="JEnumerable{T}"/> of <see cref="JToken"/> of this object's property values.</returns>
         public JEnumerable<JToken> PropertyValues()
         {
-            return new JEnumerable<JToken>(Properties().Select(p => p.Value));
+            return new JEnumerable<JToken>(this.Properties().Select(p => p.Value));
         }
 
         /// <summary>
@@ -343,13 +343,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 ValidationUtils.ArgumentNotNull(propertyName, nameof(propertyName));
 
-                JProperty property = Property(propertyName);
+                JProperty property = this.Property(propertyName);
 
                 return property?.Value;
             }
             set
             {
-                JProperty property = Property(propertyName);
+                JProperty property = this.Property(propertyName);
                 if (property != null)
                 {
                     property.Value = value;
@@ -359,8 +359,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 #if HAVE_INOTIFY_PROPERTY_CHANGING
                     OnPropertyChanging(propertyName);
 #endif
-                    Add(new JProperty(propertyName, value));
-                    OnPropertyChanged(propertyName);
+                    this.Add(new JProperty(propertyName, value));
+                    this.OnPropertyChanged(propertyName);
                 }
             }
         }
@@ -373,7 +373,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <exception cref="JsonReaderException">
         ///     <paramref name="reader"/> is not valid JSON.
         /// </exception>
-        public new static JObject Load(JsonReader reader)
+        public static new JObject Load(JsonReader reader)
         {
             return Load(reader, null);
         }
@@ -388,7 +388,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <exception cref="JsonReaderException">
         ///     <paramref name="reader"/> is not valid JSON.
         /// </exception>
-        public new static JObject Load(JsonReader reader, JsonLoadSettings settings)
+        public static new JObject Load(JsonReader reader, JsonLoadSettings settings)
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
 
@@ -426,7 +426,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <example>
         ///   <code lang="cs" source="..\Src\RRQMCore.XREF.Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParse" title="Parsing a JSON Object from Text" />
         /// </example>
-        public new static JObject Parse(string json)
+        public static new JObject Parse(string json)
         {
             return Parse(json, null);
         }
@@ -444,7 +444,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <example>
         ///   <code lang="cs" source="..\Src\RRQMCore.XREF.Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParse" title="Parsing a JSON Object from Text" />
         /// </example>
-        public new static JObject Parse(string json, JsonLoadSettings settings)
+        public static new JObject Parse(string json, JsonLoadSettings settings)
         {
             using (JsonReader reader = new JsonTextReader(new StringReader(json)))
             {
@@ -464,7 +464,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="o">The object that will be used to create <see cref="JObject"/>.</param>
         /// <returns>A <see cref="JObject"/> with the values of the specified object.</returns>
-        public new static JObject FromObject(object o)
+        public static new JObject FromObject(object o)
         {
             return FromObject(o, JsonSerializer.CreateDefault());
         }
@@ -475,7 +475,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="o">The object that will be used to create <see cref="JObject"/>.</param>
         /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> that will be used to read the object.</param>
         /// <returns>A <see cref="JObject"/> with the values of the specified object.</returns>
-        public new static JObject FromObject(object o, JsonSerializer jsonSerializer)
+        public static new JObject FromObject(object o, JsonSerializer jsonSerializer)
         {
             JToken token = FromObjectInternal(o, jsonSerializer);
 
@@ -496,9 +496,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             writer.WriteStartObject();
 
-            for (int i = 0; i < _properties.Count; i++)
+            for (int i = 0; i < this._properties.Count; i++)
             {
-                _properties[i].WriteTo(writer, converters);
+                this._properties[i].WriteTo(writer, converters);
             }
 
             writer.WriteEndObject();
@@ -511,7 +511,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>The <see cref="RRQMCore.XREF.Newtonsoft.Json.Linq.JToken"/> with the specified property name.</returns>
         public JToken GetValue(string propertyName)
         {
-            return GetValue(propertyName, StringComparison.Ordinal);
+            return this.GetValue(propertyName, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -530,7 +530,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             }
 
             // attempt to get value via dictionary first for performance
-            JProperty property = Property(propertyName);
+            JProperty property = this.Property(propertyName);
             if (property != null)
             {
                 return property.Value;
@@ -539,7 +539,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             // test above already uses this comparison so no need to repeat
             if (comparison != StringComparison.Ordinal)
             {
-                foreach (JProperty p in _properties)
+                foreach (JProperty p in this._properties)
                 {
                     if (string.Equals(p.Name, propertyName, comparison))
                     {
@@ -562,7 +562,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns><c>true</c> if a value was successfully retrieved; otherwise, <c>false</c>.</returns>
         public bool TryGetValue(string propertyName, StringComparison comparison, out JToken value)
         {
-            value = GetValue(propertyName, comparison);
+            value = this.GetValue(propertyName, comparison);
             return (value != null);
         }
 
@@ -575,7 +575,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="value">The value.</param>
         public void Add(string propertyName, JToken value)
         {
-            Add(new JProperty(propertyName, value));
+            this.Add(new JProperty(propertyName, value));
         }
 
         /// <summary>
@@ -587,10 +587,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(propertyName, nameof(propertyName));
 
-            return _properties.Contains(propertyName);
+            return this._properties.Contains(propertyName);
         }
 
-        ICollection<string> IDictionary<string, JToken>.Keys => _properties.Keys;
+        ICollection<string> IDictionary<string, JToken>.Keys => this._properties.Keys;
 
         /// <summary>
         /// Removes the property with the specified name.
@@ -599,7 +599,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns><c>true</c> if item was successfully removed; otherwise, <c>false</c>.</returns>
         public bool Remove(string propertyName)
         {
-            JProperty property = Property(propertyName);
+            JProperty property = this.Property(propertyName);
             if (property == null)
             {
                 return false;
@@ -617,7 +617,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns><c>true</c> if a value was successfully retrieved; otherwise, <c>false</c>.</returns>
         public bool TryGetValue(string propertyName, out JToken value)
         {
-            JProperty property = Property(propertyName);
+            JProperty property = this.Property(propertyName);
             if (property == null)
             {
                 value = null;
@@ -636,17 +636,17 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         void ICollection<KeyValuePair<string, JToken>>.Add(KeyValuePair<string, JToken> item)
         {
-            Add(new JProperty(item.Key, item.Value));
+            this.Add(new JProperty(item.Key, item.Value));
         }
 
         void ICollection<KeyValuePair<string, JToken>>.Clear()
         {
-            RemoveAll();
+            this.RemoveAll();
         }
 
         bool ICollection<KeyValuePair<string, JToken>>.Contains(KeyValuePair<string, JToken> item)
         {
-            JProperty property = Property(item.Key);
+            JProperty property = this.Property(item.Key);
             if (property == null)
             {
                 return false;
@@ -669,13 +669,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 throw new ArgumentException("arrayIndex is equal to or greater than the length of array.");
             }
-            if (Count > array.Length - arrayIndex)
+            if (this.Count > array.Length - arrayIndex)
             {
                 throw new ArgumentException("The number of elements in the source JObject is greater than the available space from arrayIndex to the end of the destination array.");
             }
 
             int index = 0;
-            foreach (JProperty property in _properties)
+            foreach (JProperty property in this._properties)
             {
                 array[arrayIndex + index] = new KeyValuePair<string, JToken>(property.Name, property.Value);
                 index++;
@@ -699,7 +699,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal override int GetDeepHashCode()
         {
-            return ContentsHashCode();
+            return this.ContentsHashCode();
         }
 
         /// <summary>
@@ -710,7 +710,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public IEnumerator<KeyValuePair<string, JToken>> GetEnumerator()
         {
-            foreach (JProperty property in _properties)
+            foreach (JProperty property in this._properties)
             {
                 yield return new KeyValuePair<string, JToken>(property.Name, property.Value);
             }

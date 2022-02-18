@@ -23,9 +23,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
         {
             foreach (JToken t in current)
             {
-                if (Index != null)
+                if (this.Index != null)
                 {
-                    JToken v = GetTokenIndex(t, errorWhenNoMatch, Index.GetValueOrDefault());
+                    JToken v = GetTokenIndex(t, errorWhenNoMatch, this.Index.GetValueOrDefault());
 
                     if (v != null)
                     {

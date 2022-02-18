@@ -47,18 +47,12 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
         /// </summary>
-        public int CanReadLen
-        {
-            get { return this.Len-this.Pos; }
-        }
+        public int CanReadLen => this.Len - this.Pos;
 
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
         /// </summary>
-        public long CanReadLength
-        {
-            get { return this.length - this.position; }
-        }
+        public long CanReadLength => this.length - this.position;
 
         /// <summary>
         /// 构造函数
@@ -76,7 +70,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public static float Ratio
         {
-            get { return ratio; }
+            get => ratio;
             set
             {
                 if (value < 1.5)
@@ -90,10 +84,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 字节实例
         /// </summary>
-        public byte[] Buffer
-        {
-            get { return _buffer; }
-        }
+        public byte[] Buffer => this._buffer;
 
         /// <summary>
         /// 可读取
@@ -118,30 +109,25 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 表示持续性持有，为True时，Dispose将调用无效。
         /// </summary>
-        public bool Holding
-        {
-            get { return holding; }
-        }
+        public bool Holding => this.holding;
 
         /// <summary>
         /// Int真实长度
         /// </summary>
-        public int Len
-        { get { return (int)length; } }
+        public int Len => (int)this.length;
 
         /// <summary>
         /// 真实长度
         /// </summary>
-        public override long Length
-        { get { return length; } }
+        public override long Length => this.length;
 
         /// <summary>
         /// int型流位置
         /// </summary>
         public int Pos
         {
-            get { return (int)position; }
-            set { position = value; }
+            get => (int)this.position;
+            set => this.position = value;
         }
 
         /// <summary>
@@ -149,17 +135,14 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public override long Position
         {
-            get { return position; }
-            set { position = value; }
+            get => this.position;
+            set => this.position = value;
         }
 
         /// <summary>
         /// 使用状态
         /// </summary>
-        public bool Using
-        {
-            get { return @using; }
-        }
+        public bool Using => this.@using;
 
         /// <summary>
         /// 直接完全释放，游离该对象，然后等待GC
@@ -243,7 +226,7 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public int Read(byte[] buffer)
         {
-            return Read(buffer, 0, buffer.Length);
+            return this.Read(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -341,7 +324,7 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public byte[] ToArray()
         {
-            return ToArray(0);
+            return this.ToArray(0);
         }
 
         /// <summary>
@@ -361,7 +344,7 @@ namespace RRQMCore.ByteManager
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public byte[] ToArray(int offset,int length)
+        public byte[] ToArray(int offset, int length)
         {
             if (!this.@using)
             {
@@ -395,7 +378,7 @@ namespace RRQMCore.ByteManager
                 }
                 this.SetCapacity(lend, true);
             }
-            Array.Copy(buffer, offset, _buffer, this.position, count);
+            Array.Copy(buffer, offset, this._buffer, this.position, count);
             this.position += count;
             this.length += count;
             if (this.length < this.position)

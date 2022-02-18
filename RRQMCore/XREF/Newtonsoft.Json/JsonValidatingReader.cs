@@ -85,23 +85,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             public IList<JToken> UniqueArrayItems { get; }
             public JTokenWriter CurrentItemWriter { get; set; }
 
-            public IList<JsonSchemaModel> Schemas => _schemas;
+            public IList<JsonSchemaModel> Schemas => this._schemas;
 
-            public Dictionary<string, bool> RequiredProperties => _requiredProperties;
+            public Dictionary<string, bool> RequiredProperties => this._requiredProperties;
 
-            public JTokenType TokenType => _tokenType;
+            public JTokenType TokenType => this._tokenType;
 
             public SchemaScope(JTokenType tokenType, IList<JsonSchemaModel> schemas)
             {
-                _tokenType = tokenType;
-                _schemas = schemas;
+                this._tokenType = tokenType;
+                this._schemas = schemas;
 
-                _requiredProperties = schemas.SelectMany<JsonSchemaModel, string>(GetRequiredProperties).Distinct().ToDictionary(p => p, p => false);
+                this._requiredProperties = schemas.SelectMany<JsonSchemaModel, string>(this.GetRequiredProperties).Distinct().ToDictionary(p => p, p => false);
 
                 if (tokenType == JTokenType.Array && schemas.Any(s => s.UniqueItems))
                 {
-                    IsUniqueArray = true;
-                    UniqueArrayItems = new List<JToken>();
+                    this.IsUniqueArray = true;
+                    this.UniqueArrayItems = new List<JToken>();
                 }
             }
 
@@ -131,18 +131,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// Gets the text value of the current JSON token.
         /// </summary>
         /// <value></value>
-        public override object Value => _reader.Value;
+        public override object Value => this._reader.Value;
 
         /// <summary>
         /// Gets the depth of the current token in the JSON document.
         /// </summary>
         /// <value>The depth of the current token in the JSON document.</value>
-        public override int Depth => _reader.Depth;
+        public override int Depth => this._reader.Depth;
 
         /// <summary>
         /// Gets the path of the current JSON token.
         /// </summary>
-        public override string Path => _reader.Path;
+        public override string Path => this._reader.Path;
 
         /// <summary>
         /// Gets the quotation mark character used to enclose the value of a string.
@@ -150,7 +150,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value></value>
         public override char QuoteChar
         {
-            get { return _reader.QuoteChar; }
+            get => this._reader.QuoteChar;
             protected internal set { }
         }
 
@@ -158,31 +158,31 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// Gets the type of the current JSON token.
         /// </summary>
         /// <value></value>
-        public override JsonToken TokenType => _reader.TokenType;
+        public override JsonToken TokenType => this._reader.TokenType;
 
         /// <summary>
         /// Gets the .NET type for the current JSON token.
         /// </summary>
         /// <value></value>
-        public override Type ValueType => _reader.ValueType;
+        public override Type ValueType => this._reader.ValueType;
 
         private void Push(SchemaScope scope)
         {
-            _stack.Push(scope);
-            _currentScope = scope;
+            this._stack.Push(scope);
+            this._currentScope = scope;
         }
 
         private SchemaScope Pop()
         {
-            SchemaScope poppedScope = _stack.Pop();
-            _currentScope = (_stack.Count != 0)
-                ? _stack.Peek()
+            SchemaScope poppedScope = this._stack.Pop();
+            this._currentScope = (this._stack.Count != 0)
+                ? this._stack.Peek()
                 : null;
 
             return poppedScope;
         }
 
-        private IList<JsonSchemaModel> CurrentSchemas => _currentScope.Schemas;
+        private IList<JsonSchemaModel> CurrentSchemas => this._currentScope.Schemas;
 
         private static readonly IList<JsonSchemaModel> EmptySchemaList = new List<JsonSchemaModel>();
 
@@ -190,34 +190,34 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                if (_currentScope == null)
+                if (this._currentScope == null)
                 {
-                    return new List<JsonSchemaModel>(new[] { _model });
+                    return new List<JsonSchemaModel>(new[] { this._model });
                 }
 
-                if (_currentScope.Schemas == null || _currentScope.Schemas.Count == 0)
+                if (this._currentScope.Schemas == null || this._currentScope.Schemas.Count == 0)
                 {
                     return EmptySchemaList;
                 }
 
-                switch (_currentScope.TokenType)
+                switch (this._currentScope.TokenType)
                 {
                     case JTokenType.None:
-                        return _currentScope.Schemas;
+                        return this._currentScope.Schemas;
 
                     case JTokenType.Object:
                         {
-                            if (_currentScope.CurrentPropertyName == null)
+                            if (this._currentScope.CurrentPropertyName == null)
                             {
                                 throw new JsonReaderException("CurrentPropertyName has not been set on scope.");
                             }
 
                             IList<JsonSchemaModel> schemas = new List<JsonSchemaModel>();
 
-                            foreach (JsonSchemaModel schema in CurrentSchemas)
+                            foreach (JsonSchemaModel schema in this.CurrentSchemas)
                             {
                                 JsonSchemaModel propertySchema;
-                                if (schema.Properties != null && schema.Properties.TryGetValue(_currentScope.CurrentPropertyName, out propertySchema))
+                                if (schema.Properties != null && schema.Properties.TryGetValue(this._currentScope.CurrentPropertyName, out propertySchema))
                                 {
                                     schemas.Add(propertySchema);
                                 }
@@ -225,7 +225,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                 {
                                     foreach (KeyValuePair<string, JsonSchemaModel> patternProperty in schema.PatternProperties)
                                     {
-                                        if (Regex.IsMatch(_currentScope.CurrentPropertyName, patternProperty.Key))
+                                        if (Regex.IsMatch(this._currentScope.CurrentPropertyName, patternProperty.Key))
                                         {
                                             schemas.Add(patternProperty.Value);
                                         }
@@ -244,7 +244,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         {
                             IList<JsonSchemaModel> schemas = new List<JsonSchemaModel>();
 
-                            foreach (JsonSchemaModel schema in CurrentSchemas)
+                            foreach (JsonSchemaModel schema in this.CurrentSchemas)
                             {
                                 if (!schema.PositionalItemsValidation)
                                 {
@@ -257,9 +257,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                 {
                                     if (schema.Items != null && schema.Items.Count > 0)
                                     {
-                                        if (schema.Items.Count > (_currentScope.ArrayItemCount - 1))
+                                        if (schema.Items.Count > (this._currentScope.ArrayItemCount - 1))
                                         {
-                                            schemas.Add(schema.Items[_currentScope.ArrayItemCount - 1]);
+                                            schemas.Add(schema.Items[this._currentScope.ArrayItemCount - 1]);
                                         }
                                     }
 
@@ -276,7 +276,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return EmptySchemaList;
 
                     default:
-                        throw new ArgumentOutOfRangeException("TokenType", "Unexpected token type: {0}".FormatWith(CultureInfo.InvariantCulture, _currentScope.TokenType));
+                        throw new ArgumentOutOfRangeException("TokenType", "Unexpected token type: {0}".FormatWith(CultureInfo.InvariantCulture, this._currentScope.TokenType));
                 }
             }
         }
@@ -289,7 +289,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 ? message + " Line {0}, position {1}.".FormatWith(CultureInfo.InvariantCulture, lineInfo.LineNumber, lineInfo.LinePosition)
                 : message;
 
-            OnValidationEvent(new JsonSchemaException(exceptionMessage, null, Path, lineInfo.LineNumber, lineInfo.LinePosition));
+            this.OnValidationEvent(new JsonSchemaException(exceptionMessage, null, this.Path, lineInfo.LineNumber, lineInfo.LinePosition));
         }
 
         private void OnValidationEvent(JsonSchemaException exception)
@@ -313,8 +313,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         public JsonValidatingReader(JsonReader reader)
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
-            _reader = reader;
-            _stack = new Stack<SchemaScope>();
+            this._reader = reader;
+            this._stack = new Stack<SchemaScope>();
         }
 
         /// <summary>
@@ -323,16 +323,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The schema.</value>
         public JsonSchema Schema
         {
-            get => _schema;
+            get => this._schema;
             set
             {
-                if (TokenType != JsonToken.None)
+                if (this.TokenType != JsonToken.None)
                 {
                     throw new InvalidOperationException("Cannot change schema while validating JSON.");
                 }
 
-                _schema = value;
-                _model = null;
+                this._schema = value;
+                this._model = null;
             }
         }
 
@@ -340,7 +340,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// Gets the <see cref="JsonReader"/> used to construct this <see cref="JsonValidatingReader"/>.
         /// </summary>
         /// <value>The <see cref="JsonReader"/> specified in the constructor.</value>
-        public JsonReader Reader => _reader;
+        public JsonReader Reader => this._reader;
 
         /// <summary>
         /// Changes the reader's state to <see cref="JsonReader.State.Closed"/>.
@@ -349,9 +349,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         public override void Close()
         {
             base.Close();
-            if (CloseInput)
+            if (this.CloseInput)
             {
-                _reader?.Close();
+                this._reader?.Close();
             }
         }
 
@@ -362,19 +362,19 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            JsonSchemaType? currentNodeType = GetCurrentNodeSchemaType();
+            JsonSchemaType? currentNodeType = this.GetCurrentNodeSchemaType();
             if (currentNodeType != null)
             {
                 if (JsonSchemaGenerator.HasFlag(schema.Disallow, currentNodeType.GetValueOrDefault()))
                 {
-                    RaiseError("Type {0} is disallowed.".FormatWith(CultureInfo.InvariantCulture, currentNodeType), schema);
+                    this.RaiseError("Type {0} is disallowed.".FormatWith(CultureInfo.InvariantCulture, currentNodeType), schema);
                 }
             }
         }
 
         private JsonSchemaType? GetCurrentNodeSchemaType()
         {
-            switch (_reader.TokenType)
+            switch (this._reader.TokenType)
             {
                 case JsonToken.StartObject:
                     return JsonSchemaType.Object;
@@ -408,9 +408,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Int32"/>.</returns>
         public override int? ReadAsInt32()
         {
-            int? i = _reader.ReadAsInt32();
+            int? i = this._reader.ReadAsInt32();
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return i;
         }
 
@@ -422,9 +422,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </returns>
         public override byte[] ReadAsBytes()
         {
-            byte[] data = _reader.ReadAsBytes();
+            byte[] data = this._reader.ReadAsBytes();
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return data;
         }
 
@@ -434,9 +434,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Decimal"/>.</returns>
         public override decimal? ReadAsDecimal()
         {
-            decimal? d = _reader.ReadAsDecimal();
+            decimal? d = this._reader.ReadAsDecimal();
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return d;
         }
 
@@ -446,9 +446,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Double"/>.</returns>
         public override double? ReadAsDouble()
         {
-            double? d = _reader.ReadAsDouble();
+            double? d = this._reader.ReadAsDouble();
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return d;
         }
 
@@ -458,9 +458,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="Boolean"/>.</returns>
         public override bool? ReadAsBoolean()
         {
-            bool? b = _reader.ReadAsBoolean();
+            bool? b = this._reader.ReadAsBoolean();
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return b;
         }
 
@@ -470,9 +470,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="String"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override string ReadAsString()
         {
-            string s = _reader.ReadAsString();
+            string s = this._reader.ReadAsString();
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return s;
         }
 
@@ -482,9 +482,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="DateTime"/>. This method will return <c>null</c> at the end of an array.</returns>
         public override DateTime? ReadAsDateTime()
         {
-            DateTime? dateTime = _reader.ReadAsDateTime();
+            DateTime? dateTime = this._reader.ReadAsDateTime();
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return dateTime;
         }
 
@@ -510,141 +510,141 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// </returns>
         public override bool Read()
         {
-            if (!_reader.Read())
+            if (!this._reader.Read())
             {
                 return false;
             }
 
-            if (_reader.TokenType == JsonToken.Comment)
+            if (this._reader.TokenType == JsonToken.Comment)
             {
                 return true;
             }
 
-            ValidateCurrentToken();
+            this.ValidateCurrentToken();
             return true;
         }
 
         private void ValidateCurrentToken()
         {
             // first time validate has been called. build model
-            if (_model == null)
+            if (this._model == null)
             {
                 JsonSchemaModelBuilder builder = new JsonSchemaModelBuilder();
-                _model = builder.Build(_schema);
+                this._model = builder.Build(this._schema);
 
-                if (!JsonTokenUtils.IsStartToken(_reader.TokenType))
+                if (!JsonTokenUtils.IsStartToken(this._reader.TokenType))
                 {
-                    Push(new SchemaScope(JTokenType.None, CurrentMemberSchemas));
+                    this.Push(new SchemaScope(JTokenType.None, this.CurrentMemberSchemas));
                 }
             }
 
-            switch (_reader.TokenType)
+            switch (this._reader.TokenType)
             {
                 case JsonToken.StartObject:
-                    ProcessValue();
-                    IList<JsonSchemaModel> objectSchemas = CurrentMemberSchemas.Where(ValidateObject).ToList();
-                    Push(new SchemaScope(JTokenType.Object, objectSchemas));
-                    WriteToken(CurrentSchemas);
+                    this.ProcessValue();
+                    IList<JsonSchemaModel> objectSchemas = this.CurrentMemberSchemas.Where(this.ValidateObject).ToList();
+                    this.Push(new SchemaScope(JTokenType.Object, objectSchemas));
+                    this.WriteToken(this.CurrentSchemas);
                     break;
 
                 case JsonToken.StartArray:
-                    ProcessValue();
-                    IList<JsonSchemaModel> arraySchemas = CurrentMemberSchemas.Where(ValidateArray).ToList();
-                    Push(new SchemaScope(JTokenType.Array, arraySchemas));
-                    WriteToken(CurrentSchemas);
+                    this.ProcessValue();
+                    IList<JsonSchemaModel> arraySchemas = this.CurrentMemberSchemas.Where(this.ValidateArray).ToList();
+                    this.Push(new SchemaScope(JTokenType.Array, arraySchemas));
+                    this.WriteToken(this.CurrentSchemas);
                     break;
 
                 case JsonToken.StartConstructor:
-                    ProcessValue();
-                    Push(new SchemaScope(JTokenType.Constructor, null));
-                    WriteToken(CurrentSchemas);
+                    this.ProcessValue();
+                    this.Push(new SchemaScope(JTokenType.Constructor, null));
+                    this.WriteToken(this.CurrentSchemas);
                     break;
 
                 case JsonToken.PropertyName:
-                    WriteToken(CurrentSchemas);
-                    foreach (JsonSchemaModel schema in CurrentSchemas)
+                    this.WriteToken(this.CurrentSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentSchemas)
                     {
-                        ValidatePropertyName(schema);
+                        this.ValidatePropertyName(schema);
                     }
                     break;
 
                 case JsonToken.Raw:
-                    ProcessValue();
+                    this.ProcessValue();
                     break;
 
                 case JsonToken.Integer:
-                    ProcessValue();
-                    WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
+                    this.ProcessValue();
+                    this.WriteToken(this.CurrentMemberSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentMemberSchemas)
                     {
-                        ValidateInteger(schema);
+                        this.ValidateInteger(schema);
                     }
                     break;
 
                 case JsonToken.Float:
-                    ProcessValue();
-                    WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
+                    this.ProcessValue();
+                    this.WriteToken(this.CurrentMemberSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentMemberSchemas)
                     {
-                        ValidateFloat(schema);
+                        this.ValidateFloat(schema);
                     }
                     break;
 
                 case JsonToken.String:
-                    ProcessValue();
-                    WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
+                    this.ProcessValue();
+                    this.WriteToken(this.CurrentMemberSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentMemberSchemas)
                     {
-                        ValidateString(schema);
+                        this.ValidateString(schema);
                     }
                     break;
 
                 case JsonToken.Boolean:
-                    ProcessValue();
-                    WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
+                    this.ProcessValue();
+                    this.WriteToken(this.CurrentMemberSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentMemberSchemas)
                     {
-                        ValidateBoolean(schema);
+                        this.ValidateBoolean(schema);
                     }
                     break;
 
                 case JsonToken.Null:
-                    ProcessValue();
-                    WriteToken(CurrentMemberSchemas);
-                    foreach (JsonSchemaModel schema in CurrentMemberSchemas)
+                    this.ProcessValue();
+                    this.WriteToken(this.CurrentMemberSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentMemberSchemas)
                     {
-                        ValidateNull(schema);
+                        this.ValidateNull(schema);
                     }
                     break;
 
                 case JsonToken.EndObject:
-                    WriteToken(CurrentSchemas);
-                    foreach (JsonSchemaModel schema in CurrentSchemas)
+                    this.WriteToken(this.CurrentSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentSchemas)
                     {
-                        ValidateEndObject(schema);
+                        this.ValidateEndObject(schema);
                     }
-                    Pop();
+                    this.Pop();
                     break;
 
                 case JsonToken.EndArray:
-                    WriteToken(CurrentSchemas);
-                    foreach (JsonSchemaModel schema in CurrentSchemas)
+                    this.WriteToken(this.CurrentSchemas);
+                    foreach (JsonSchemaModel schema in this.CurrentSchemas)
                     {
-                        ValidateEndArray(schema);
+                        this.ValidateEndArray(schema);
                     }
-                    Pop();
+                    this.Pop();
                     break;
 
                 case JsonToken.EndConstructor:
-                    WriteToken(CurrentSchemas);
-                    Pop();
+                    this.WriteToken(this.CurrentSchemas);
+                    this.Pop();
                     break;
 
                 case JsonToken.Undefined:
                 case JsonToken.Date:
                 case JsonToken.Bytes:
                     // these have no equivalent in JSON schema
-                    WriteToken(CurrentMemberSchemas);
+                    this.WriteToken(this.CurrentMemberSchemas);
                     break;
 
                 case JsonToken.None:
@@ -658,7 +658,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         private void WriteToken(IList<JsonSchemaModel> schemas)
         {
-            foreach (SchemaScope schemaScope in _stack)
+            foreach (SchemaScope schemaScope in this._stack)
             {
                 bool isInUniqueArray = (schemaScope.TokenType == JTokenType.Array && schemaScope.IsUniqueArray && schemaScope.ArrayItemCount > 0);
 
@@ -666,7 +666,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 {
                     if (schemaScope.CurrentItemWriter == null)
                     {
-                        if (JsonTokenUtils.IsEndToken(_reader.TokenType))
+                        if (JsonTokenUtils.IsEndToken(this._reader.TokenType))
                         {
                             continue;
                         }
@@ -674,10 +674,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         schemaScope.CurrentItemWriter = new JTokenWriter();
                     }
 
-                    schemaScope.CurrentItemWriter.WriteToken(_reader, false);
+                    schemaScope.CurrentItemWriter.WriteToken(this._reader, false);
 
                     // finished writing current item
-                    if (schemaScope.CurrentItemWriter.Top == 0 && _reader.TokenType != JsonToken.PropertyName)
+                    if (schemaScope.CurrentItemWriter.Top == 0 && this._reader.TokenType != JsonToken.PropertyName)
                     {
                         JToken finishedItem = schemaScope.CurrentItemWriter.Token;
 
@@ -688,7 +688,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         {
                             if (schemaScope.UniqueArrayItems.Contains(finishedItem, JToken.EqualityComparer))
                             {
-                                RaiseError("Non-unique array item at index {0}.".FormatWith(CultureInfo.InvariantCulture, schemaScope.ArrayItemCount - 1), schemaScope.Schemas.First(s => s.UniqueItems));
+                                this.RaiseError("Non-unique array item at index {0}.".FormatWith(CultureInfo.InvariantCulture, schemaScope.ArrayItemCount - 1), schemaScope.Schemas.First(s => s.UniqueItems));
                             }
 
                             schemaScope.UniqueArrayItems.Add(finishedItem);
@@ -704,7 +704,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                         StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
                                         finishedItem.WriteTo(new JsonTextWriter(sw));
 
-                                        RaiseError("Value {0} is not defined in enum.".FormatWith(CultureInfo.InvariantCulture, sw.ToString()), schema);
+                                        this.RaiseError("Value {0} is not defined in enum.".FormatWith(CultureInfo.InvariantCulture, sw.ToString()), schema);
                                     }
                                 }
                             }
@@ -721,12 +721,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            Dictionary<string, bool> requiredProperties = _currentScope.RequiredProperties;
+            Dictionary<string, bool> requiredProperties = this._currentScope.RequiredProperties;
 
             if (requiredProperties != null && requiredProperties.Values.Any(v => !v))
             {
                 IEnumerable<string> unmatchedRequiredProperties = requiredProperties.Where(kv => !kv.Value).Select(kv => kv.Key);
-                RaiseError("Required properties are missing from object: {0}.".FormatWith(CultureInfo.InvariantCulture, string.Join(", ", unmatchedRequiredProperties
+                this.RaiseError("Required properties are missing from object: {0}.".FormatWith(CultureInfo.InvariantCulture, string.Join(", ", unmatchedRequiredProperties
 #if !HAVE_STRING_JOIN_WITH_ENUMERABLE
                     .ToArray()
 #endif
@@ -741,16 +741,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            int arrayItemCount = _currentScope.ArrayItemCount;
+            int arrayItemCount = this._currentScope.ArrayItemCount;
 
             if (schema.MaximumItems != null && arrayItemCount > schema.MaximumItems)
             {
-                RaiseError("Array item count {0} exceeds maximum count of {1}.".FormatWith(CultureInfo.InvariantCulture, arrayItemCount, schema.MaximumItems), schema);
+                this.RaiseError("Array item count {0} exceeds maximum count of {1}.".FormatWith(CultureInfo.InvariantCulture, arrayItemCount, schema.MaximumItems), schema);
             }
 
             if (schema.MinimumItems != null && arrayItemCount < schema.MinimumItems)
             {
-                RaiseError("Array item count {0} is less than minimum count of {1}.".FormatWith(CultureInfo.InvariantCulture, arrayItemCount, schema.MinimumItems), schema);
+                this.RaiseError("Array item count {0} is less than minimum count of {1}.".FormatWith(CultureInfo.InvariantCulture, arrayItemCount, schema.MinimumItems), schema);
             }
         }
 
@@ -761,12 +761,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Null))
+            if (!this.TestType(schema, JsonSchemaType.Null))
             {
                 return;
             }
 
-            ValidateNotDisallowed(schema);
+            this.ValidateNotDisallowed(schema);
         }
 
         private void ValidateBoolean(JsonSchemaModel schema)
@@ -776,12 +776,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Boolean))
+            if (!this.TestType(schema, JsonSchemaType.Boolean))
             {
                 return;
             }
 
-            ValidateNotDisallowed(schema);
+            this.ValidateNotDisallowed(schema);
         }
 
         private void ValidateString(JsonSchemaModel schema)
@@ -791,23 +791,23 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.String))
+            if (!this.TestType(schema, JsonSchemaType.String))
             {
                 return;
             }
 
-            ValidateNotDisallowed(schema);
+            this.ValidateNotDisallowed(schema);
 
-            string value = _reader.Value.ToString();
+            string value = this._reader.Value.ToString();
 
             if (schema.MaximumLength != null && value.Length > schema.MaximumLength)
             {
-                RaiseError("String '{0}' exceeds maximum length of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.MaximumLength), schema);
+                this.RaiseError("String '{0}' exceeds maximum length of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.MaximumLength), schema);
             }
 
             if (schema.MinimumLength != null && value.Length < schema.MinimumLength)
             {
-                RaiseError("String '{0}' is less than minimum length of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.MinimumLength), schema);
+                this.RaiseError("String '{0}' is less than minimum length of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.MinimumLength), schema);
             }
 
             if (schema.Patterns != null)
@@ -816,7 +816,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 {
                     if (!Regex.IsMatch(value, pattern))
                     {
-                        RaiseError("String '{0}' does not match regex pattern '{1}'.".FormatWith(CultureInfo.InvariantCulture, value, pattern), schema);
+                        this.RaiseError("String '{0}' does not match regex pattern '{1}'.".FormatWith(CultureInfo.InvariantCulture, value, pattern), schema);
                     }
                 }
             }
@@ -829,24 +829,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Integer))
+            if (!this.TestType(schema, JsonSchemaType.Integer))
             {
                 return;
             }
 
-            ValidateNotDisallowed(schema);
+            this.ValidateNotDisallowed(schema);
 
-            object value = _reader.Value;
+            object value = this._reader.Value;
 
             if (schema.Maximum != null)
             {
                 if (JValue.Compare(JTokenType.Integer, value, schema.Maximum) > 0)
                 {
-                    RaiseError("Integer {0} exceeds maximum value of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.Maximum), schema);
+                    this.RaiseError("Integer {0} exceeds maximum value of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.Maximum), schema);
                 }
                 if (schema.ExclusiveMaximum && JValue.Compare(JTokenType.Integer, value, schema.Maximum) == 0)
                 {
-                    RaiseError("Integer {0} equals maximum value of {1} and exclusive maximum is true.".FormatWith(CultureInfo.InvariantCulture, value, schema.Maximum), schema);
+                    this.RaiseError("Integer {0} equals maximum value of {1} and exclusive maximum is true.".FormatWith(CultureInfo.InvariantCulture, value, schema.Maximum), schema);
                 }
             }
 
@@ -854,11 +854,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 if (JValue.Compare(JTokenType.Integer, value, schema.Minimum) < 0)
                 {
-                    RaiseError("Integer {0} is less than minimum value of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.Minimum), schema);
+                    this.RaiseError("Integer {0} is less than minimum value of {1}.".FormatWith(CultureInfo.InvariantCulture, value, schema.Minimum), schema);
                 }
                 if (schema.ExclusiveMinimum && JValue.Compare(JTokenType.Integer, value, schema.Minimum) == 0)
                 {
-                    RaiseError("Integer {0} equals minimum value of {1} and exclusive minimum is true.".FormatWith(CultureInfo.InvariantCulture, value, schema.Minimum), schema);
+                    this.RaiseError("Integer {0} equals minimum value of {1} and exclusive minimum is true.".FormatWith(CultureInfo.InvariantCulture, value, schema.Minimum), schema);
                 }
             }
 
@@ -889,26 +889,26 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
                 if (notDivisible)
                 {
-                    RaiseError("Integer {0} is not evenly divisible by {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.DivisibleBy), schema);
+                    this.RaiseError("Integer {0} is not evenly divisible by {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.DivisibleBy), schema);
                 }
             }
         }
 
         private void ProcessValue()
         {
-            if (_currentScope != null && _currentScope.TokenType == JTokenType.Array)
+            if (this._currentScope != null && this._currentScope.TokenType == JTokenType.Array)
             {
-                _currentScope.ArrayItemCount++;
+                this._currentScope.ArrayItemCount++;
 
-                foreach (JsonSchemaModel currentSchema in CurrentSchemas)
+                foreach (JsonSchemaModel currentSchema in this.CurrentSchemas)
                 {
                     // if there is positional validation and the array index is past the number of item validation schemas and there are no additional items then error
                     if (currentSchema != null
                         && currentSchema.PositionalItemsValidation
                         && !currentSchema.AllowAdditionalItems
-                        && (currentSchema.Items == null || _currentScope.ArrayItemCount - 1 >= currentSchema.Items.Count))
+                        && (currentSchema.Items == null || this._currentScope.ArrayItemCount - 1 >= currentSchema.Items.Count))
                     {
-                        RaiseError("Index {0} has not been defined and the schema does not allow additional items.".FormatWith(CultureInfo.InvariantCulture, _currentScope.ArrayItemCount), currentSchema);
+                        this.RaiseError("Index {0} has not been defined and the schema does not allow additional items.".FormatWith(CultureInfo.InvariantCulture, this._currentScope.ArrayItemCount), currentSchema);
                     }
                 }
             }
@@ -921,24 +921,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            if (!TestType(schema, JsonSchemaType.Float))
+            if (!this.TestType(schema, JsonSchemaType.Float))
             {
                 return;
             }
 
-            ValidateNotDisallowed(schema);
+            this.ValidateNotDisallowed(schema);
 
-            double value = Convert.ToDouble(_reader.Value, CultureInfo.InvariantCulture);
+            double value = Convert.ToDouble(this._reader.Value, CultureInfo.InvariantCulture);
 
             if (schema.Maximum != null)
             {
                 if (value > schema.Maximum)
                 {
-                    RaiseError("Float {0} exceeds maximum value of {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Maximum), schema);
+                    this.RaiseError("Float {0} exceeds maximum value of {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Maximum), schema);
                 }
                 if (schema.ExclusiveMaximum && value == schema.Maximum)
                 {
-                    RaiseError("Float {0} equals maximum value of {1} and exclusive maximum is true.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Maximum), schema);
+                    this.RaiseError("Float {0} equals maximum value of {1} and exclusive maximum is true.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Maximum), schema);
                 }
             }
 
@@ -946,11 +946,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json
             {
                 if (value < schema.Minimum)
                 {
-                    RaiseError("Float {0} is less than minimum value of {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Minimum), schema);
+                    this.RaiseError("Float {0} is less than minimum value of {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Minimum), schema);
                 }
                 if (schema.ExclusiveMinimum && value == schema.Minimum)
                 {
-                    RaiseError("Float {0} equals minimum value of {1} and exclusive minimum is true.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Minimum), schema);
+                    this.RaiseError("Float {0} equals minimum value of {1} and exclusive minimum is true.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.Minimum), schema);
                 }
             }
 
@@ -960,7 +960,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
                 if (!IsZero(remainder))
                 {
-                    RaiseError("Float {0} is not evenly divisible by {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.DivisibleBy), schema);
+                    this.RaiseError("Float {0} is not evenly divisible by {1}.".FormatWith(CultureInfo.InvariantCulture, JsonConvert.ToString(value), schema.DivisibleBy), schema);
                 }
             }
         }
@@ -984,24 +984,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return;
             }
 
-            string propertyName = Convert.ToString(_reader.Value, CultureInfo.InvariantCulture);
+            string propertyName = Convert.ToString(this._reader.Value, CultureInfo.InvariantCulture);
 
-            if (_currentScope.RequiredProperties.ContainsKey(propertyName))
+            if (this._currentScope.RequiredProperties.ContainsKey(propertyName))
             {
-                _currentScope.RequiredProperties[propertyName] = true;
+                this._currentScope.RequiredProperties[propertyName] = true;
             }
 
             if (!schema.AllowAdditionalProperties)
             {
-                bool propertyDefinied = IsPropertyDefinied(schema, propertyName);
+                bool propertyDefinied = this.IsPropertyDefinied(schema, propertyName);
 
                 if (!propertyDefinied)
                 {
-                    RaiseError("Property '{0}' has not been defined and the schema does not allow additional properties.".FormatWith(CultureInfo.InvariantCulture, propertyName), schema);
+                    this.RaiseError("Property '{0}' has not been defined and the schema does not allow additional properties.".FormatWith(CultureInfo.InvariantCulture, propertyName), schema);
                 }
             }
 
-            _currentScope.CurrentPropertyName = propertyName;
+            this._currentScope.CurrentPropertyName = propertyName;
         }
 
         private bool IsPropertyDefinied(JsonSchemaModel schema, string propertyName)
@@ -1032,7 +1032,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return true;
             }
 
-            return (TestType(schema, JsonSchemaType.Array));
+            return (this.TestType(schema, JsonSchemaType.Array));
         }
 
         private bool ValidateObject(JsonSchemaModel schema)
@@ -1042,14 +1042,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 return true;
             }
 
-            return (TestType(schema, JsonSchemaType.Object));
+            return (this.TestType(schema, JsonSchemaType.Object));
         }
 
         private bool TestType(JsonSchemaModel currentSchema, JsonSchemaType currentType)
         {
             if (!JsonSchemaGenerator.HasFlag(currentSchema.Type, currentType))
             {
-                RaiseError("Invalid type. Expected {0} but got {1}.".FormatWith(CultureInfo.InvariantCulture, currentSchema.Type, currentType), currentSchema);
+                this.RaiseError("Invalid type. Expected {0} but got {1}.".FormatWith(CultureInfo.InvariantCulture, currentSchema.Type, currentType), currentSchema);
                 return false;
             }
 
@@ -1058,7 +1058,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         bool IJsonLineInfo.HasLineInfo()
         {
-            IJsonLineInfo lineInfo = _reader as IJsonLineInfo;
+            IJsonLineInfo lineInfo = this._reader as IJsonLineInfo;
             return lineInfo != null && lineInfo.HasLineInfo();
         }
 
@@ -1066,7 +1066,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                IJsonLineInfo lineInfo = _reader as IJsonLineInfo;
+                IJsonLineInfo lineInfo = this._reader as IJsonLineInfo;
                 return (lineInfo != null) ? lineInfo.LineNumber : 0;
             }
         }
@@ -1075,7 +1075,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         {
             get
             {
-                IJsonLineInfo lineInfo = _reader as IJsonLineInfo;
+                IJsonLineInfo lineInfo = this._reader as IJsonLineInfo;
                 return (lineInfo != null) ? lineInfo.LinePosition : 0;
             }
         }

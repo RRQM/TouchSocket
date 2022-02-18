@@ -60,8 +60,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
         /// <value>The date time styles used when converting a date to and from JSON.</value>
         public DateTimeStyles DateTimeStyles
         {
-            get => _dateTimeStyles;
-            set => _dateTimeStyles = value;
+            get => this._dateTimeStyles;
+            set => this._dateTimeStyles = value;
         }
 
         /// <summary>
@@ -70,8 +70,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
         /// <value>The date time format used when converting a date to and from JSON.</value>
         public string DateTimeFormat
         {
-            get => _dateTimeFormat ?? string.Empty;
-            set => _dateTimeFormat = (string.IsNullOrEmpty(value)) ? null : value;
+            get => this._dateTimeFormat ?? string.Empty;
+            set => this._dateTimeFormat = (string.IsNullOrEmpty(value)) ? null : value;
         }
 
         /// <summary>
@@ -80,8 +80,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
         /// <value>The culture used when converting a date to and from JSON.</value>
         public CultureInfo Culture
         {
-            get => _culture ?? CultureInfo.CurrentCulture;
-            set => _culture = value;
+            get => this._culture ?? CultureInfo.CurrentCulture;
+            set => this._culture = value;
         }
 
         /// <summary>
@@ -96,13 +96,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
 
             if (value is DateTime dateTime)
             {
-                if ((_dateTimeStyles & DateTimeStyles.AdjustToUniversal) == DateTimeStyles.AdjustToUniversal
-                    || (_dateTimeStyles & DateTimeStyles.AssumeUniversal) == DateTimeStyles.AssumeUniversal)
+                if ((this._dateTimeStyles & DateTimeStyles.AdjustToUniversal) == DateTimeStyles.AdjustToUniversal
+                    || (this._dateTimeStyles & DateTimeStyles.AssumeUniversal) == DateTimeStyles.AssumeUniversal)
                 {
                     dateTime = dateTime.ToUniversalTime();
                 }
 
-                text = dateTime.ToString(_dateTimeFormat ?? DefaultDateTimeFormat, Culture);
+                text = dateTime.ToString(this._dateTimeFormat ?? DefaultDateTimeFormat, this.Culture);
             }
 #if HAVE_DATE_TIME_OFFSET
             else if (value is DateTimeOffset dateTimeOffset)
@@ -195,13 +195,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
             }
 #endif
 
-            if (!string.IsNullOrEmpty(_dateTimeFormat))
+            if (!string.IsNullOrEmpty(this._dateTimeFormat))
             {
-                return DateTime.ParseExact(dateText, _dateTimeFormat, Culture, _dateTimeStyles);
+                return DateTime.ParseExact(dateText, this._dateTimeFormat, this.Culture, this._dateTimeStyles);
             }
             else
             {
-                return DateTime.Parse(dateText, Culture, _dateTimeStyles);
+                return DateTime.Parse(dateText, this.Culture, this._dateTimeStyles);
             }
         }
     }

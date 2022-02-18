@@ -72,7 +72,7 @@ namespace RRQMCore.Helper
                 return -1;
             }
             int hitLength = 0;
-            for (int i = offset; i < length+ offset; i++)
+            for (int i = offset; i < length + offset; i++)
             {
                 if (srcByteArray[i] == subByteArray[hitLength])
                 {

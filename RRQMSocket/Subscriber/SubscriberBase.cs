@@ -48,26 +48,17 @@ namespace RRQMSocket
         /// <summary>
         /// 能否使用
         /// </summary>
-        public bool CanUse
-        {
-            get { return client == null ? false : (client.Online ? true : false); }
-        }
+        public bool CanUse => this.client == null ? false : (this.client.Online ? true : false);
 
         /// <summary>
         /// 客户端
         /// </summary>
-        public IProtocolClientBase Client
-        {
-            get { return client; }
-        }
+        public IProtocolClientBase Client => this.client;
 
         /// <summary>
         /// 协议
         /// </summary>
-        public short Protocol
-        {
-            get { return protocol; }
-        }
+        public short Protocol => this.protocol;
 
         /// <summary>
         /// <inheritdoc/>

@@ -23,8 +23,8 @@ namespace RRQMSocket
         /// </summary>
         public ClientSslOption SslOption
         {
-            get { return (ClientSslOption)GetValue(SslOptionProperty); }
-            set { SetValue(SslOptionProperty, value); }
+            get => (ClientSslOption)this.GetValue(SslOptionProperty);
+            set => this.SetValue(SslOptionProperty, value);
         }
 
         /// <summary>
@@ -39,8 +39,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost RemoteIPHost
         {
-            get { return (IPHost)GetValue(RemoteIPHostProperty); }
-            set { SetValue(RemoteIPHostProperty, value); }
+            get => (IPHost)this.GetValue(RemoteIPHostProperty);
+            set => this.SetValue(RemoteIPHostProperty, value);
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace RRQMSocket
         /// </summary>
         public bool OnlySend
         {
-            get { return (bool)GetValue(OnlySendProperty); }
-            set { SetValue(OnlySendProperty, value); }
+            get => (bool)this.GetValue(OnlySendProperty);
+            set => this.SetValue(OnlySendProperty, value);
         }
 
         /// <summary>
@@ -71,8 +71,8 @@ namespace RRQMSocket
         /// </summary>
         public bool SeparateThreadSend
         {
-            get { return (bool)GetValue(SeparateThreadSendProperty); }
-            set { SetValue(SeparateThreadSendProperty, value); }
+            get => (bool)this.GetValue(SeparateThreadSendProperty);
+            set => this.SetValue(SeparateThreadSendProperty, value);
         }
 
         /// <summary>
@@ -86,8 +86,8 @@ namespace RRQMSocket
         /// </summary>
         public ReceiveType ReceiveType
         {
-            get { return (ReceiveType)GetValue(ReceiveTypeProperty); }
-            set { SetValue(ReceiveTypeProperty, value); }
+            get => (ReceiveType)this.GetValue(ReceiveTypeProperty);
+            set => this.SetValue(ReceiveTypeProperty, value);
         }
 
         /// <summary>
@@ -101,8 +101,8 @@ namespace RRQMSocket
         /// </summary>
         public bool KeepAlive
         {
-            get { return (bool)GetValue(KeepAliveProperty); }
-            set { SetValue(KeepAliveProperty, value); }
+            get => (bool)this.GetValue(KeepAliveProperty);
+            set => this.SetValue(KeepAliveProperty, value);
         }
 
         /// <summary>
@@ -117,8 +117,8 @@ namespace RRQMSocket
         /// </summary>
         public bool NoDelay
         {
-            get { return (bool)GetValue(NoDelayProperty); }
-            set { SetValue(NoDelayProperty, value); }
+            get => (bool)this.GetValue(NoDelayProperty);
+            set => this.SetValue(NoDelayProperty, value);
         }
 
         /// <summary>
@@ -133,8 +133,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost BindIPHost
         {
-            get { return (IPHost)GetValue(BindIPHostProperty); }
-            set { SetValue(BindIPHostProperty, value); }
+            get => (IPHost)this.GetValue(BindIPHostProperty);
+            set => this.SetValue(BindIPHostProperty, value);
         }
 
         /// <summary>

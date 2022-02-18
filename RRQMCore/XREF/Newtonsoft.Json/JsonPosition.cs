@@ -65,34 +65,34 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
         public JsonPosition(JsonContainerType type)
         {
-            Type = type;
-            HasIndex = TypeHasIndex(type);
-            Position = -1;
-            PropertyName = null;
+            this.Type = type;
+            this.HasIndex = TypeHasIndex(type);
+            this.Position = -1;
+            this.PropertyName = null;
         }
 
         internal int CalculateLength()
         {
-            switch (Type)
+            switch (this.Type)
             {
                 case JsonContainerType.Object:
-                    return PropertyName.Length + 5;
+                    return this.PropertyName.Length + 5;
 
                 case JsonContainerType.Array:
                 case JsonContainerType.Constructor:
-                    return MathUtils.IntLength((ulong)Position) + 2;
+                    return MathUtils.IntLength((ulong)this.Position) + 2;
 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(Type));
+                    throw new ArgumentOutOfRangeException(nameof(this.Type));
             }
         }
 
         internal void WriteTo(StringBuilder sb, ref StringWriter writer, ref char[] buffer)
         {
-            switch (Type)
+            switch (this.Type)
             {
                 case JsonContainerType.Object:
-                    string propertyName = PropertyName;
+                    string propertyName = this.PropertyName;
                     if (propertyName.IndexOfAny(SpecialCharacters) != -1)
                     {
                         sb.Append(@"['");
@@ -120,7 +120,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                 case JsonContainerType.Array:
                 case JsonContainerType.Constructor:
                     sb.Append('[');
-                    sb.Append(Position);
+                    sb.Append(this.Position);
                     sb.Append(']');
                     break;
             }

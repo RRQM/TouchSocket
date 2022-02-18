@@ -43,10 +43,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities
     {
         public EnumInfo(bool isFlags, ulong[] values, string[] names, string[] resolvedNames)
         {
-            IsFlags = isFlags;
-            Values = values;
-            Names = names;
-            ResolvedNames = resolvedNames;
+            this.IsFlags = isFlags;
+            this.Values = values;
+            this.Names = names;
+            this.ResolvedNames = resolvedNames;
         }
 
         public readonly bool IsFlags;

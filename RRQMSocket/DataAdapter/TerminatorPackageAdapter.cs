@@ -75,8 +75,8 @@ namespace RRQMSocket
         /// </summary>
         public int MaxSize
         {
-            get { return maxSize; }
-            set { maxSize = value; }
+            get => this.maxSize;
+            set => this.maxSize = value;
         }
 
         /// <summary>
@@ -84,8 +84,8 @@ namespace RRQMSocket
         /// </summary>
         public int MinSize
         {
-            get { return minSize; }
-            set { minSize = value; }
+            get => this.minSize;
+            set => this.minSize = value;
         }
 
         /// <summary>
@@ -93,8 +93,8 @@ namespace RRQMSocket
         /// </summary>
         public bool ReserveTerminatorCode
         {
-            get { return reserveTerminatorCode; }
-            set { reserveTerminatorCode = value; }
+            get => this.reserveTerminatorCode;
+            set => this.reserveTerminatorCode = value;
         }
 
         /// <summary>

@@ -13,7 +13,6 @@ using RRQMCore.ByteManager;
 using RRQMCore.Collections.Concurrent;
 using RRQMCore.Exceptions;
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,7 +95,7 @@ namespace RRQMSocket
 
             this.status = ChannelStatus.Moving;
             this.cacheCapacity = 1024 * 1024 * 20;
-            this.dataQueue = new IntelligentDataQueue<ChannelData>(cacheCapacity)
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(this.cacheCapacity)
             {
                 OverflowWait = false,
 
@@ -117,24 +116,21 @@ namespace RRQMSocket
         /// <summary>
         /// 目的ID地址。
         /// </summary>
-        public string TargetClientID
-        {
-            get { return this.targetClientID; }
-        }
+        public string TargetClientID => this.targetClientID;
 
         /// <summary>
         /// 缓存容量
         /// </summary>
         public int CacheCapacity
         {
-            get { return cacheCapacity; }
+            get => this.cacheCapacity;
             set
             {
                 if (value < 0)
                 {
                     value = 1024;
                 }
-                cacheCapacity = value;
+                this.cacheCapacity = value;
                 this.dataQueue.MaxSize = value;
             }
         }
@@ -142,40 +138,31 @@ namespace RRQMSocket
         /// <summary>
         /// 是否具有数据可读
         /// </summary>
-        public bool Available
-        {
-            get { return dataQueue.Count > 0 ? true : false; }
-        }
+        public bool Available => this.dataQueue.Count > 0 ? true : false;
 
         /// <summary>
         /// 能否写入
         /// </summary>
-        public bool CanWrite { get => (byte)this.status > 3 ? false : true; }
+        public bool CanWrite => (byte)this.status > 3 ? false : true;
 
         /// <summary>
         /// ID
         /// </summary>
-        public int ID
-        {
-            get { return id; }
-        }
+        public int ID => this.id;
 
         /// <summary>
         /// 最后一次操作时显示消息
         /// </summary>
         public string LastOperationMes
         {
-            get { return lastOperationMes; }
-            set { lastOperationMes = value; }
+            get => this.lastOperationMes;
+            set => this.lastOperationMes = value;
         }
 
         /// <summary>
         /// 状态
         /// </summary>
-        public ChannelStatus Status
-        {
-            get { return status; }
-        }
+        public ChannelStatus Status => this.status;
 
         /// <summary>
         /// 取消
@@ -427,45 +414,45 @@ namespace RRQMSocket
                 this.lastOperationMes = null;
                 this.status = ChannelStatus.Moving;
             }
-            moving = true;
+            this.moving = true;
             if (this.status != ChannelStatus.Moving)
             {
-                moving = false;
+                this.moving = false;
                 return false;
             }
 
             if (this.dataQueue.TryDequeue(out ChannelData channelData))
             {
-                if (channelData.type == dataOrder)
+                if (channelData.type == this.dataOrder)
                 {
                     this.currentByteBlock = channelData.byteBlock;
                     return true;
                 }
-                else if (channelData.type == completeOrder)
+                else if (channelData.type == this.completeOrder)
                 {
                     this.RequestComplete();
-                    moving = false;
+                    this.moving = false;
                     return false;
                 }
-                else if (channelData.type == cancelOrder)
+                else if (channelData.type == this.cancelOrder)
                 {
                     this.RequestCancel();
-                    moving = false;
+                    this.moving = false;
                     return false;
                 }
-                else if (channelData.type == disposeOrder)
+                else if (channelData.type == this.disposeOrder)
                 {
                     this.RequestDispose();
-                    moving = false;
+                    this.moving = false;
                     return false;
                 }
-                else if (channelData.type == holdOnOrder)
+                else if (channelData.type == this.holdOnOrder)
                 {
                     channelData.byteBlock.Pos = 6;
                     this.lastOperationMes = channelData.byteBlock.ReadString();
                     channelData.byteBlock.Dispose();
                     this.status = ChannelStatus.HoldOn;
-                    moving = false;
+                    this.moving = false;
                     return false;
                 }
                 else
@@ -482,7 +469,7 @@ namespace RRQMSocket
             else
             {
                 this.status = ChannelStatus.Overtime;
-                moving = false;
+                this.moving = false;
                 return false;
             }
         }
@@ -582,7 +569,7 @@ namespace RRQMSocket
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
             try
             {
-                if (this.targetClientID!=null)
+                if (this.targetClientID != null)
                 {
                     byteBlock.Write(this.targetClientID);
                 }
@@ -670,7 +657,7 @@ namespace RRQMSocket
         {
             this.dataQueue.Enqueue(data);
             this.moveWaitHandle.Set();
-            if (!moving)
+            if (!this.moving)
             {
                 if (data.type == this.completeOrder)
                 {
@@ -687,7 +674,7 @@ namespace RRQMSocket
                     data.byteBlock.Dispose();
                     this.RequestCancel();
                 }
-                else if (data.type ==this.disposeOrder)
+                else if (data.type == this.disposeOrder)
                 {
                     data.byteBlock.Pos = 6;
                     this.lastOperationMes = data.byteBlock.ReadString();
@@ -715,7 +702,7 @@ namespace RRQMSocket
                     {
                         this.client1.RemoveChannel(this.id);
                     }
-                    else if (client2 != null)
+                    else if (this.client2 != null)
                     {
                         this.client2.RemoveChannel(this.id);
                     }

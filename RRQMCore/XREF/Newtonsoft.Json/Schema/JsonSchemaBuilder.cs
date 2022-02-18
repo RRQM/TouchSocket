@@ -66,39 +66,39 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
         public JsonSchemaBuilder(JsonSchemaResolver resolver)
         {
-            _stack = new List<JsonSchema>();
-            _documentSchemas = new Dictionary<string, JsonSchema>();
-            _resolver = resolver;
+            this._stack = new List<JsonSchema>();
+            this._documentSchemas = new Dictionary<string, JsonSchema>();
+            this._resolver = resolver;
         }
 
         private void Push(JsonSchema value)
         {
-            _currentSchema = value;
-            _stack.Add(value);
-            _resolver.LoadedSchemas.Add(value);
-            _documentSchemas.Add(value.Location, value);
+            this._currentSchema = value;
+            this._stack.Add(value);
+            this._resolver.LoadedSchemas.Add(value);
+            this._documentSchemas.Add(value.Location, value);
         }
 
         private JsonSchema Pop()
         {
-            JsonSchema poppedSchema = _currentSchema;
-            _stack.RemoveAt(_stack.Count - 1);
-            _currentSchema = _stack.LastOrDefault();
+            JsonSchema poppedSchema = this._currentSchema;
+            this._stack.RemoveAt(this._stack.Count - 1);
+            this._currentSchema = this._stack.LastOrDefault();
 
             return poppedSchema;
         }
 
-        private JsonSchema CurrentSchema => _currentSchema;
+        private JsonSchema CurrentSchema => this._currentSchema;
 
         internal JsonSchema Read(JsonReader reader)
         {
             JToken schemaToken = JToken.ReadFrom(reader);
 
-            _rootSchema = schemaToken as JObject;
+            this._rootSchema = schemaToken as JObject;
 
-            JsonSchema schema = BuildSchema(schemaToken);
+            JsonSchema schema = this.BuildSchema(schemaToken);
 
-            ResolveReferences(schema);
+            this.ResolveReferences(schema);
 
             return schema;
         }
@@ -117,20 +117,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                 bool locationReference = (reference.StartsWith("#", StringComparison.Ordinal));
                 if (locationReference)
                 {
-                    reference = UnescapeReference(reference);
+                    reference = this.UnescapeReference(reference);
                 }
 
-                JsonSchema resolvedSchema = _resolver.GetSchema(reference);
+                JsonSchema resolvedSchema = this._resolver.GetSchema(reference);
 
                 if (resolvedSchema == null)
                 {
                     if (locationReference)
                     {
                         string[] escapedParts = schema.DeferredReference.TrimStart('#').Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                        JToken currentToken = _rootSchema;
+                        JToken currentToken = this._rootSchema;
                         foreach (string escapedPart in escapedParts)
                         {
-                            string part = UnescapeReference(escapedPart);
+                            string part = this.UnescapeReference(escapedPart);
 
                             if (currentToken.Type == JTokenType.Object)
                             {
@@ -157,7 +157,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
                         if (currentToken != null)
                         {
-                            resolvedSchema = BuildSchema(currentToken);
+                            resolvedSchema = this.BuildSchema(currentToken);
                         }
                     }
 
@@ -181,7 +181,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             {
                 for (int i = 0; i < schema.Extends.Count; i++)
                 {
-                    schema.Extends[i] = ResolveReferences(schema.Extends[i]);
+                    schema.Extends[i] = this.ResolveReferences(schema.Extends[i]);
                 }
             }
 
@@ -189,20 +189,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             {
                 for (int i = 0; i < schema.Items.Count; i++)
                 {
-                    schema.Items[i] = ResolveReferences(schema.Items[i]);
+                    schema.Items[i] = this.ResolveReferences(schema.Items[i]);
                 }
             }
 
             if (schema.AdditionalItems != null)
             {
-                schema.AdditionalItems = ResolveReferences(schema.AdditionalItems);
+                schema.AdditionalItems = this.ResolveReferences(schema.AdditionalItems);
             }
 
             if (schema.PatternProperties != null)
             {
                 foreach (KeyValuePair<string, JsonSchema> patternProperty in schema.PatternProperties.ToList())
                 {
-                    schema.PatternProperties[patternProperty.Key] = ResolveReferences(patternProperty.Value);
+                    schema.PatternProperties[patternProperty.Key] = this.ResolveReferences(patternProperty.Value);
                 }
             }
 
@@ -210,13 +210,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             {
                 foreach (KeyValuePair<string, JsonSchema> property in schema.Properties.ToList())
                 {
-                    schema.Properties[property.Key] = ResolveReferences(property.Value);
+                    schema.Properties[property.Key] = this.ResolveReferences(property.Value);
                 }
             }
 
             if (schema.AdditionalProperties != null)
             {
-                schema.AdditionalProperties = ResolveReferences(schema.AdditionalProperties);
+                schema.AdditionalProperties = this.ResolveReferences(schema.AdditionalProperties);
             }
 
             return schema;
@@ -247,16 +247,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             location = "#" + location;
 
             JsonSchema existingSchema;
-            if (_documentSchemas.TryGetValue(location, out existingSchema))
+            if (this._documentSchemas.TryGetValue(location, out existingSchema))
             {
                 return existingSchema;
             }
 
-            Push(new JsonSchema { Location = location });
+            this.Push(new JsonSchema { Location = location });
 
-            ProcessSchemaProperties(schemaObject);
+            this.ProcessSchemaProperties(schemaObject);
 
-            return Pop();
+            return this.Pop();
         }
 
         private void ProcessSchemaProperties(JObject schemaObject)
@@ -266,119 +266,119 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                 switch (property.Key)
                 {
                     case JsonSchemaConstants.TypePropertyName:
-                        CurrentSchema.Type = ProcessType(property.Value);
+                        this.CurrentSchema.Type = this.ProcessType(property.Value);
                         break;
 
                     case JsonSchemaConstants.IdPropertyName:
-                        CurrentSchema.Id = (string)property.Value;
+                        this.CurrentSchema.Id = (string)property.Value;
                         break;
 
                     case JsonSchemaConstants.TitlePropertyName:
-                        CurrentSchema.Title = (string)property.Value;
+                        this.CurrentSchema.Title = (string)property.Value;
                         break;
 
                     case JsonSchemaConstants.DescriptionPropertyName:
-                        CurrentSchema.Description = (string)property.Value;
+                        this.CurrentSchema.Description = (string)property.Value;
                         break;
 
                     case JsonSchemaConstants.PropertiesPropertyName:
-                        CurrentSchema.Properties = ProcessProperties(property.Value);
+                        this.CurrentSchema.Properties = this.ProcessProperties(property.Value);
                         break;
 
                     case JsonSchemaConstants.ItemsPropertyName:
-                        ProcessItems(property.Value);
+                        this.ProcessItems(property.Value);
                         break;
 
                     case JsonSchemaConstants.AdditionalPropertiesPropertyName:
-                        ProcessAdditionalProperties(property.Value);
+                        this.ProcessAdditionalProperties(property.Value);
                         break;
 
                     case JsonSchemaConstants.AdditionalItemsPropertyName:
-                        ProcessAdditionalItems(property.Value);
+                        this.ProcessAdditionalItems(property.Value);
                         break;
 
                     case JsonSchemaConstants.PatternPropertiesPropertyName:
-                        CurrentSchema.PatternProperties = ProcessProperties(property.Value);
+                        this.CurrentSchema.PatternProperties = this.ProcessProperties(property.Value);
                         break;
 
                     case JsonSchemaConstants.RequiredPropertyName:
-                        CurrentSchema.Required = (bool)property.Value;
+                        this.CurrentSchema.Required = (bool)property.Value;
                         break;
 
                     case JsonSchemaConstants.RequiresPropertyName:
-                        CurrentSchema.Requires = (string)property.Value;
+                        this.CurrentSchema.Requires = (string)property.Value;
                         break;
 
                     case JsonSchemaConstants.MinimumPropertyName:
-                        CurrentSchema.Minimum = (double)property.Value;
+                        this.CurrentSchema.Minimum = (double)property.Value;
                         break;
 
                     case JsonSchemaConstants.MaximumPropertyName:
-                        CurrentSchema.Maximum = (double)property.Value;
+                        this.CurrentSchema.Maximum = (double)property.Value;
                         break;
 
                     case JsonSchemaConstants.ExclusiveMinimumPropertyName:
-                        CurrentSchema.ExclusiveMinimum = (bool)property.Value;
+                        this.CurrentSchema.ExclusiveMinimum = (bool)property.Value;
                         break;
 
                     case JsonSchemaConstants.ExclusiveMaximumPropertyName:
-                        CurrentSchema.ExclusiveMaximum = (bool)property.Value;
+                        this.CurrentSchema.ExclusiveMaximum = (bool)property.Value;
                         break;
 
                     case JsonSchemaConstants.MaximumLengthPropertyName:
-                        CurrentSchema.MaximumLength = (int)property.Value;
+                        this.CurrentSchema.MaximumLength = (int)property.Value;
                         break;
 
                     case JsonSchemaConstants.MinimumLengthPropertyName:
-                        CurrentSchema.MinimumLength = (int)property.Value;
+                        this.CurrentSchema.MinimumLength = (int)property.Value;
                         break;
 
                     case JsonSchemaConstants.MaximumItemsPropertyName:
-                        CurrentSchema.MaximumItems = (int)property.Value;
+                        this.CurrentSchema.MaximumItems = (int)property.Value;
                         break;
 
                     case JsonSchemaConstants.MinimumItemsPropertyName:
-                        CurrentSchema.MinimumItems = (int)property.Value;
+                        this.CurrentSchema.MinimumItems = (int)property.Value;
                         break;
 
                     case JsonSchemaConstants.DivisibleByPropertyName:
-                        CurrentSchema.DivisibleBy = (double)property.Value;
+                        this.CurrentSchema.DivisibleBy = (double)property.Value;
                         break;
 
                     case JsonSchemaConstants.DisallowPropertyName:
-                        CurrentSchema.Disallow = ProcessType(property.Value);
+                        this.CurrentSchema.Disallow = this.ProcessType(property.Value);
                         break;
 
                     case JsonSchemaConstants.DefaultPropertyName:
-                        CurrentSchema.Default = property.Value.DeepClone();
+                        this.CurrentSchema.Default = property.Value.DeepClone();
                         break;
 
                     case JsonSchemaConstants.HiddenPropertyName:
-                        CurrentSchema.Hidden = (bool)property.Value;
+                        this.CurrentSchema.Hidden = (bool)property.Value;
                         break;
 
                     case JsonSchemaConstants.ReadOnlyPropertyName:
-                        CurrentSchema.ReadOnly = (bool)property.Value;
+                        this.CurrentSchema.ReadOnly = (bool)property.Value;
                         break;
 
                     case JsonSchemaConstants.FormatPropertyName:
-                        CurrentSchema.Format = (string)property.Value;
+                        this.CurrentSchema.Format = (string)property.Value;
                         break;
 
                     case JsonSchemaConstants.PatternPropertyName:
-                        CurrentSchema.Pattern = (string)property.Value;
+                        this.CurrentSchema.Pattern = (string)property.Value;
                         break;
 
                     case JsonSchemaConstants.EnumPropertyName:
-                        ProcessEnum(property.Value);
+                        this.ProcessEnum(property.Value);
                         break;
 
                     case JsonSchemaConstants.ExtendsPropertyName:
-                        ProcessExtends(property.Value);
+                        this.ProcessExtends(property.Value);
                         break;
 
                     case JsonSchemaConstants.UniqueItemsPropertyName:
-                        CurrentSchema.UniqueItems = (bool)property.Value;
+                        this.CurrentSchema.UniqueItems = (bool)property.Value;
                         break;
                 }
             }
@@ -392,12 +392,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             {
                 foreach (JToken schemaObject in token)
                 {
-                    schemas.Add(BuildSchema(schemaObject));
+                    schemas.Add(this.BuildSchema(schemaObject));
                 }
             }
             else
             {
-                JsonSchema schema = BuildSchema(token);
+                JsonSchema schema = this.BuildSchema(token);
                 if (schema != null)
                 {
                     schemas.Add(schema);
@@ -406,7 +406,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
             if (schemas.Count > 0)
             {
-                CurrentSchema.Extends = schemas;
+                this.CurrentSchema.Extends = schemas;
             }
         }
 
@@ -417,11 +417,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                 throw JsonException.Create(token, token.Path, "Expected Array token while parsing enum values, got {0}.".FormatWith(CultureInfo.InvariantCulture, token.Type));
             }
 
-            CurrentSchema.Enum = new List<JToken>();
+            this.CurrentSchema.Enum = new List<JToken>();
 
             foreach (JToken enumValue in token)
             {
-                CurrentSchema.Enum.Add(enumValue.DeepClone());
+                this.CurrentSchema.Enum.Add(enumValue.DeepClone());
             }
         }
 
@@ -429,11 +429,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         {
             if (token.Type == JTokenType.Boolean)
             {
-                CurrentSchema.AllowAdditionalProperties = (bool)token;
+                this.CurrentSchema.AllowAdditionalProperties = (bool)token;
             }
             else
             {
-                CurrentSchema.AdditionalProperties = BuildSchema(token);
+                this.CurrentSchema.AdditionalProperties = this.BuildSchema(token);
             }
         }
 
@@ -441,11 +441,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         {
             if (token.Type == JTokenType.Boolean)
             {
-                CurrentSchema.AllowAdditionalItems = (bool)token;
+                this.CurrentSchema.AllowAdditionalItems = (bool)token;
             }
             else
             {
-                CurrentSchema.AdditionalItems = BuildSchema(token);
+                this.CurrentSchema.AdditionalItems = this.BuildSchema(token);
             }
         }
 
@@ -465,7 +465,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                     throw new JsonException("Property {0} has already been defined in schema.".FormatWith(CultureInfo.InvariantCulture, propertyToken.Name));
                 }
 
-                properties.Add(propertyToken.Name, BuildSchema(propertyToken.Value));
+                properties.Add(propertyToken.Name, this.BuildSchema(propertyToken.Value));
             }
 
             return properties;
@@ -473,20 +473,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
         private void ProcessItems(JToken token)
         {
-            CurrentSchema.Items = new List<JsonSchema>();
+            this.CurrentSchema.Items = new List<JsonSchema>();
 
             switch (token.Type)
             {
                 case JTokenType.Object:
-                    CurrentSchema.Items.Add(BuildSchema(token));
-                    CurrentSchema.PositionalItemsValidation = false;
+                    this.CurrentSchema.Items.Add(this.BuildSchema(token));
+                    this.CurrentSchema.PositionalItemsValidation = false;
                     break;
 
                 case JTokenType.Array:
-                    CurrentSchema.PositionalItemsValidation = true;
+                    this.CurrentSchema.PositionalItemsValidation = true;
                     foreach (JToken schemaToken in token)
                     {
-                        CurrentSchema.Items.Add(BuildSchema(schemaToken));
+                        this.CurrentSchema.Items.Add(this.BuildSchema(schemaToken));
                     }
                     break;
 

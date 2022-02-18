@@ -33,10 +33,10 @@ namespace RRQMSocket.Helper
                 throw new ArgumentNullException(nameof(tcpClient));
             }
 
-           
+
             tcpClient.Disconnected += (client, e) =>
             {
-                Task.Run(()=> 
+                Task.Run(() =>
                 {
                     int tryT = tryCount;
                     while (tryCount < 0 || tryT-- > 0)

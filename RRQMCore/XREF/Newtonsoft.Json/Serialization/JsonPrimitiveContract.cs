@@ -57,14 +57,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         public JsonPrimitiveContract(Type underlyingType)
             : base(underlyingType)
         {
-            ContractType = JsonContractType.Primitive;
+            this.ContractType = JsonContractType.Primitive;
 
-            TypeCode = ConvertUtils.GetTypeCode(underlyingType);
-            IsReadOnlyOrFixedSize = true;
+            this.TypeCode = ConvertUtils.GetTypeCode(underlyingType);
+            this.IsReadOnlyOrFixedSize = true;
 
-            if (ReadTypeMap.TryGetValue(NonNullableUnderlyingType, out ReadType readType))
+            if (ReadTypeMap.TryGetValue(this.NonNullableUnderlyingType, out ReadType readType))
             {
-                InternalReadType = readType;
+                this.InternalReadType = readType;
             }
         }
 

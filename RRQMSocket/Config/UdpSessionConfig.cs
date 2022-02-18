@@ -23,8 +23,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost RemoteIPHost
         {
-            get { return (IPHost)GetValue(RemoteIPHostProperty); }
-            set { SetValue(RemoteIPHostProperty, value); }
+            get => (IPHost)this.GetValue(RemoteIPHostProperty);
+            set => this.SetValue(RemoteIPHostProperty, value);
         }
 
         /// <summary>
@@ -38,8 +38,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost BindIPHost
         {
-            get { return (IPHost)GetValue(BindIPHostProperty); }
-            set { SetValue(BindIPHostProperty, value); }
+            get => (IPHost)this.GetValue(BindIPHostProperty);
+            set => this.SetValue(BindIPHostProperty, value);
         }
 
         /// <summary>

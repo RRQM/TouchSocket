@@ -85,7 +85,7 @@ namespace RRQMSocket.WebSocket
         {
             if (this.PayloadData != null)
             {
-                this.PayloadLength = PayloadData.Len;
+                this.PayloadLength = this.PayloadData.Len;
             }
             else
             {

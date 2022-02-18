@@ -49,15 +49,12 @@ namespace RRQMSocket
         /// 已完成长度
         /// </summary>
         /// <returns></returns>
-        public long CompletedLength { get => completedLength; }
+        public long CompletedLength => this.completedLength;
 
         /// <summary>
         /// 最大传输速度（企业版默认1024*1024字节，开源版不限速，所以此值无效。）
         /// </summary>
-        public int MaxSpeed
-        {
-            get { return int.MaxValue; }
-        }
+        public int MaxSpeed => int.MaxValue;
 
         /// <summary>
         /// 包长度，默认512Kb,
@@ -65,32 +62,26 @@ namespace RRQMSocket
         /// </summary>
         public int PackageSize
         {
-            get { return packageSize; }
+            get => this.packageSize;
             set
             {
                 if (value < 1024 || value > 1024 * 1024 * 10)
                 {
                     value = 1024 * 64;
                 }
-                packageSize = value;
+                this.packageSize = value;
             }
         }
 
         /// <summary>
         /// 进度
         /// </summary>
-        public float Progress
-        {
-            get { return progress; }
-        }
+        public float Progress => this.progress;
 
         /// <summary>
         /// 执行结果
         /// </summary>
-        public Result Result
-        {
-            get { return result; }
-        }
+        public Result Result => this.result;
 
         /// <summary>
         /// 可取消令箭
@@ -113,7 +104,7 @@ namespace RRQMSocket
             }
             else
             {
-                new System.ArgumentNullException(nameof(TokenSource), "可取消令箭源为空。");
+                new System.ArgumentNullException(nameof(this.TokenSource), "可取消令箭源为空。");
             }
         }
 

@@ -10,10 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RRQMSocket.Http
 {
@@ -56,8 +52,8 @@ namespace RRQMSocket.Http
         {
             int position = byteBlock.Pos;
             HttpBase requestInfo = this.GetInstance();
-           var result= requestInfo.OnParsingHeader(byteBlock, length);
-            if (result== FilterResult.Success)
+            var result = requestInfo.OnParsingHeader(byteBlock, length);
+            if (result == FilterResult.Success)
             {
                 if (requestInfo.BodyLength > byteBlock.CanReadLen)
                 {

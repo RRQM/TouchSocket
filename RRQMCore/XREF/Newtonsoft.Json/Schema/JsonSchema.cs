@@ -257,7 +257,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
         private readonly string _internalId = Guid.NewGuid().ToString("N");
 
-        internal string InternalId => _internalId;
+        internal string InternalId => this._internalId;
 
         // if this is set then this schema instance is just a deferred reference
         // and will be replaced when the schema reference is resolved
@@ -270,8 +270,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         /// </summary>
         public JsonSchema()
         {
-            AllowAdditionalProperties = true;
-            AllowAdditionalItems = true;
+            this.AllowAdditionalProperties = true;
+            this.AllowAdditionalItems = true;
         }
 
         /// <summary>
@@ -331,7 +331,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         /// <param name="writer">A <see cref="JsonWriter"/> into which this method will write.</param>
         public void WriteTo(JsonWriter writer)
         {
-            WriteTo(writer, new JsonSchemaResolver());
+            this.WriteTo(writer, new JsonSchemaResolver());
         }
 
         /// <summary>
@@ -360,7 +360,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             JsonTextWriter jsonWriter = new JsonTextWriter(writer);
             jsonWriter.Formatting = Formatting.Indented;
 
-            WriteTo(jsonWriter);
+            this.WriteTo(jsonWriter);
 
             return writer.ToString();
         }

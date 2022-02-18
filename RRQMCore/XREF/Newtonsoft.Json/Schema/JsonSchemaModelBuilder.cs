@@ -60,11 +60,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
         public JsonSchemaModel Build(JsonSchema schema)
         {
-            _nodes = new JsonSchemaNodeCollection();
-            _node = AddSchema(null, schema);
+            this._nodes = new JsonSchemaNodeCollection();
+            this._node = this.AddSchema(null, schema);
 
-            _nodeModels = new Dictionary<JsonSchemaNode, JsonSchemaModel>();
-            JsonSchemaModel model = BuildNodeModel(_node);
+            this._nodeModels = new Dictionary<JsonSchemaNode, JsonSchemaModel>();
+            JsonSchemaModel model = this.BuildNodeModel(this._node);
 
             return model;
         }
@@ -86,44 +86,44 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                 newId = JsonSchemaNode.GetId(new[] { schema });
             }
 
-            if (_nodes.Contains(newId))
+            if (this._nodes.Contains(newId))
             {
-                return _nodes[newId];
+                return this._nodes[newId];
             }
 
             JsonSchemaNode currentNode = (existingNode != null)
                 ? existingNode.Combine(schema)
                 : new JsonSchemaNode(schema);
 
-            _nodes.Add(currentNode);
+            this._nodes.Add(currentNode);
 
-            AddProperties(schema.Properties, currentNode.Properties);
+            this.AddProperties(schema.Properties, currentNode.Properties);
 
-            AddProperties(schema.PatternProperties, currentNode.PatternProperties);
+            this.AddProperties(schema.PatternProperties, currentNode.PatternProperties);
 
             if (schema.Items != null)
             {
                 for (int i = 0; i < schema.Items.Count; i++)
                 {
-                    AddItem(currentNode, i, schema.Items[i]);
+                    this.AddItem(currentNode, i, schema.Items[i]);
                 }
             }
 
             if (schema.AdditionalItems != null)
             {
-                AddAdditionalItems(currentNode, schema.AdditionalItems);
+                this.AddAdditionalItems(currentNode, schema.AdditionalItems);
             }
 
             if (schema.AdditionalProperties != null)
             {
-                AddAdditionalProperties(currentNode, schema.AdditionalProperties);
+                this.AddAdditionalProperties(currentNode, schema.AdditionalProperties);
             }
 
             if (schema.Extends != null)
             {
                 foreach (JsonSchema jsonSchema in schema.Extends)
                 {
-                    currentNode = AddSchema(currentNode, jsonSchema);
+                    currentNode = this.AddSchema(currentNode, jsonSchema);
                 }
             }
 
@@ -136,7 +136,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             {
                 foreach (KeyValuePair<string, JsonSchema> property in source)
                 {
-                    AddProperty(target, property.Key, property.Value);
+                    this.AddProperty(target, property.Key, property.Value);
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
             JsonSchemaNode propertyNode;
             target.TryGetValue(propertyName, out propertyNode);
 
-            target[propertyName] = AddSchema(propertyNode, schema);
+            target[propertyName] = this.AddSchema(propertyNode, schema);
         }
 
         public void AddItem(JsonSchemaNode parentNode, int index, JsonSchema schema)
@@ -155,7 +155,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                 ? parentNode.Items[index]
                 : null;
 
-            JsonSchemaNode newItemNode = AddSchema(existingItemNode, schema);
+            JsonSchemaNode newItemNode = this.AddSchema(existingItemNode, schema);
 
             if (!(parentNode.Items.Count > index))
             {
@@ -169,24 +169,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
 
         public void AddAdditionalProperties(JsonSchemaNode parentNode, JsonSchema schema)
         {
-            parentNode.AdditionalProperties = AddSchema(parentNode.AdditionalProperties, schema);
+            parentNode.AdditionalProperties = this.AddSchema(parentNode.AdditionalProperties, schema);
         }
 
         public void AddAdditionalItems(JsonSchemaNode parentNode, JsonSchema schema)
         {
-            parentNode.AdditionalItems = AddSchema(parentNode.AdditionalItems, schema);
+            parentNode.AdditionalItems = this.AddSchema(parentNode.AdditionalItems, schema);
         }
 
         private JsonSchemaModel BuildNodeModel(JsonSchemaNode node)
         {
             JsonSchemaModel model;
-            if (_nodeModels.TryGetValue(node, out model))
+            if (this._nodeModels.TryGetValue(node, out model))
             {
                 return model;
             }
 
             model = JsonSchemaModel.Create(node.Schemas);
-            _nodeModels[node] = model;
+            this._nodeModels[node] = model;
 
             foreach (KeyValuePair<string, JsonSchemaNode> property in node.Properties)
             {
@@ -195,7 +195,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                     model.Properties = new Dictionary<string, JsonSchemaModel>();
                 }
 
-                model.Properties[property.Key] = BuildNodeModel(property.Value);
+                model.Properties[property.Key] = this.BuildNodeModel(property.Value);
             }
             foreach (KeyValuePair<string, JsonSchemaNode> property in node.PatternProperties)
             {
@@ -204,7 +204,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                     model.PatternProperties = new Dictionary<string, JsonSchemaModel>();
                 }
 
-                model.PatternProperties[property.Key] = BuildNodeModel(property.Value);
+                model.PatternProperties[property.Key] = this.BuildNodeModel(property.Value);
             }
             foreach (JsonSchemaNode t in node.Items)
             {
@@ -213,15 +213,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
                     model.Items = new List<JsonSchemaModel>();
                 }
 
-                model.Items.Add(BuildNodeModel(t));
+                model.Items.Add(this.BuildNodeModel(t));
             }
             if (node.AdditionalProperties != null)
             {
-                model.AdditionalProperties = BuildNodeModel(node.AdditionalProperties);
+                model.AdditionalProperties = this.BuildNodeModel(node.AdditionalProperties);
             }
             if (node.AdditionalItems != null)
             {
-                model.AdditionalItems = BuildNodeModel(node.AdditionalItems);
+                model.AdditionalItems = this.BuildNodeModel(node.AdditionalItems);
             }
 
             return model;

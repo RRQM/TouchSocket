@@ -123,8 +123,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public JContainer Parent
         {
             [DebuggerStepThrough]
-            get { return _parent; }
-            internal set { _parent = value; }
+            get => this._parent;
+            internal set => this._parent = value;
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                JContainer parent = Parent;
+                JContainer parent = this.Parent;
                 if (parent == null)
                 {
                     return this;
@@ -185,8 +185,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The <see cref="JToken"/> that contains the next sibling token.</value>
         public JToken Next
         {
-            get => _next;
-            internal set => _next = value;
+            get => this._next;
+            internal set => this._next = value;
         }
 
         /// <summary>
@@ -195,8 +195,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The <see cref="JToken"/> that contains the previous sibling token.</value>
         public JToken Previous
         {
-            get => _previous;
-            internal set => _previous = value;
+            get => this._previous;
+            internal set => this._previous = value;
         }
 
         /// <summary>
@@ -206,7 +206,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                if (Parent == null)
+                if (this.Parent == null)
                 {
                     return string.Empty;
                 }
@@ -256,13 +256,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">A content object that contains simple content or a collection of content objects to be added after this token.</param>
         public void AddAfterSelf(object content)
         {
-            if (_parent == null)
+            if (this._parent == null)
             {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
-            int index = _parent.IndexOfItem(this);
-            _parent.AddInternal(index + 1, content, false);
+            int index = this._parent.IndexOfItem(this);
+            this._parent.AddInternal(index + 1, content, false);
         }
 
         /// <summary>
@@ -271,13 +271,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">A content object that contains simple content or a collection of content objects to be added before this token.</param>
         public void AddBeforeSelf(object content)
         {
-            if (_parent == null)
+            if (this._parent == null)
             {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
-            int index = _parent.IndexOfItem(this);
-            _parent.AddInternal(index, content, false);
+            int index = this._parent.IndexOfItem(this);
+            this._parent.AddInternal(index, content, false);
         }
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A collection of the ancestor tokens of this token.</returns>
         public IEnumerable<JToken> Ancestors()
         {
-            return GetAncestors(false);
+            return this.GetAncestors(false);
         }
 
         /// <summary>
@@ -295,12 +295,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A collection of tokens that contain this token, and the ancestors of this token.</returns>
         public IEnumerable<JToken> AncestorsAndSelf()
         {
-            return GetAncestors(true);
+            return this.GetAncestors(true);
         }
 
         internal IEnumerable<JToken> GetAncestors(bool self)
         {
-            for (JToken current = self ? this : Parent; current != null; current = current.Parent)
+            for (JToken current = self ? this : this.Parent; current != null; current = current.Parent)
             {
                 yield return current;
             }
@@ -312,12 +312,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A collection of the sibling tokens after this tokens, in document order.</returns>
         public IEnumerable<JToken> AfterSelf()
         {
-            if (Parent == null)
+            if (this.Parent == null)
             {
                 yield break;
             }
 
-            for (JToken o = Next; o != null; o = o.Next)
+            for (JToken o = this.Next; o != null; o = o.Next)
             {
                 yield return o;
             }
@@ -329,7 +329,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A collection of the sibling tokens before this token, in document order.</returns>
         public IEnumerable<JToken> BeforeSelf()
         {
-            for (JToken o = Parent.First; o != this; o = o.Next)
+            for (JToken o = this.Parent.First; o != this; o = o.Next)
             {
                 yield return o;
             }
@@ -341,8 +341,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value>The <see cref="JToken"/> with the specified key.</value>
         public virtual JToken this[object key]
         {
-            get => throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, GetType()));
-            set => throw new InvalidOperationException("Cannot set child value on {0}.".FormatWith(CultureInfo.InvariantCulture, GetType()));
+            get => throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, this.GetType()));
+            set => throw new InvalidOperationException("Cannot set child value on {0}.".FormatWith(CultureInfo.InvariantCulture, this.GetType()));
         }
 
         /// <summary>
@@ -363,13 +363,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// Get the first child token of this token.
         /// </summary>
         /// <value>A <see cref="JToken"/> containing the first child token of the <see cref="JToken"/>.</value>
-        public virtual JToken First => throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, GetType()));
+        public virtual JToken First => throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, this.GetType()));
 
         /// <summary>
         /// Get the last child token of this token.
         /// </summary>
         /// <value>A <see cref="JToken"/> containing the last child token of the <see cref="JToken"/>.</value>
-        public virtual JToken Last => throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, GetType()));
+        public virtual JToken Last => throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, this.GetType()));
 
         /// <summary>
         /// Returns a collection of the child tokens of this token, in document order.
@@ -387,7 +387,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A <see cref="JEnumerable{T}"/> containing the child tokens of this <see cref="JToken"/>, in document order.</returns>
         public JEnumerable<T> Children<T>() where T : JToken
         {
-            return new JEnumerable<T>(Children().OfType<T>());
+            return new JEnumerable<T>(this.Children().OfType<T>());
         }
 
         /// <summary>
@@ -397,7 +397,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A <see cref="IEnumerable{T}"/> containing the child values of this <see cref="JToken"/>, in document order.</returns>
         public virtual IEnumerable<T> Values<T>()
         {
-            throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, GetType()));
+            throw new InvalidOperationException("Cannot access child value on {0}.".FormatWith(CultureInfo.InvariantCulture, this.GetType()));
         }
 
         /// <summary>
@@ -405,12 +405,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         public void Remove()
         {
-            if (_parent == null)
+            if (this._parent == null)
             {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
-            _parent.RemoveItem(this);
+            this._parent.RemoveItem(this);
         }
 
         /// <summary>
@@ -419,12 +419,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="value">The value.</param>
         public void Replace(JToken value)
         {
-            if (_parent == null)
+            if (this._parent == null)
             {
                 throw new InvalidOperationException("The parent is missing.");
             }
 
-            _parent.ReplaceItem(this, value);
+            this._parent.ReplaceItem(this, value);
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public override string ToString()
         {
-            return ToString(Formatting.Indented);
+            return this.ToString(Formatting.Indented);
         }
 
         /// <summary>
@@ -458,7 +458,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 JsonTextWriter jw = new JsonTextWriter(sw);
                 jw.Formatting = formatting;
 
-                WriteTo(jw, converters);
+                this.WriteTo(jw, converters);
 
                 return sw.ToString();
             }
@@ -1889,7 +1889,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         IEnumerator<JToken> IEnumerable<JToken>.GetEnumerator()
         {
-            return Children().GetEnumerator();
+            return this.Children().GetEnumerator();
         }
 
         internal abstract int GetDeepHashCode();
@@ -1948,7 +1948,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>The new object created from the JSON value.</returns>
         public T ToObject<T>()
         {
-            return (T)ToObject(typeof(T));
+            return (T)this.ToObject(typeof(T));
         }
 
         /// <summary>
@@ -1964,12 +1964,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
                 if (isEnum)
                 {
-                    if (Type == JTokenType.String)
+                    if (this.Type == JTokenType.String)
                     {
                         try
                         {
                             // use serializer so JsonConverter(typeof(StringEnumConverter)) + EnumMemberAttributes are respected
-                            return ToObject(objectType, JsonSerializer.CreateDefault());
+                            return this.ToObject(objectType, JsonSerializer.CreateDefault());
                         }
                         catch (Exception ex)
                         {
@@ -1978,7 +1978,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                         }
                     }
 
-                    if (Type == JTokenType.Integer)
+                    if (this.Type == JTokenType.Integer)
                     {
                         Type enumType = objectType.IsEnum() ? objectType : Nullable.GetUnderlyingType(objectType);
                         return Enum.ToObject(enumType, ((JValue)this).Value);
@@ -2104,7 +2104,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 }
             }
 
-            return ToObject(objectType, JsonSerializer.CreateDefault());
+            return this.ToObject(objectType, JsonSerializer.CreateDefault());
         }
 
         /// <summary>
@@ -2115,7 +2115,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>The new object created from the JSON value.</returns>
         public T ToObject<T>(JsonSerializer jsonSerializer)
         {
-            return (T)ToObject(typeof(T), jsonSerializer);
+            return (T)this.ToObject(typeof(T), jsonSerializer);
         }
 
         /// <summary>
@@ -2304,7 +2304,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return;
             }
 
-            SetLineInfo(lineInfo.LineNumber, lineInfo.LinePosition);
+            this.SetLineInfo(lineInfo.LineNumber, lineInfo.LinePosition);
         }
 
         private class LineInfoAnnotation
@@ -2314,26 +2314,26 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             public LineInfoAnnotation(int lineNumber, int linePosition)
             {
-                LineNumber = lineNumber;
-                LinePosition = linePosition;
+                this.LineNumber = lineNumber;
+                this.LinePosition = linePosition;
             }
         }
 
         internal void SetLineInfo(int lineNumber, int linePosition)
         {
-            AddAnnotation(new LineInfoAnnotation(lineNumber, linePosition));
+            this.AddAnnotation(new LineInfoAnnotation(lineNumber, linePosition));
         }
 
         bool IJsonLineInfo.HasLineInfo()
         {
-            return (Annotation<LineInfoAnnotation>() != null);
+            return (this.Annotation<LineInfoAnnotation>() != null);
         }
 
         int IJsonLineInfo.LineNumber
         {
             get
             {
-                LineInfoAnnotation annotation = Annotation<LineInfoAnnotation>();
+                LineInfoAnnotation annotation = this.Annotation<LineInfoAnnotation>();
                 if (annotation != null)
                 {
                     return annotation.LineNumber;
@@ -2347,7 +2347,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             get
             {
-                LineInfoAnnotation annotation = Annotation<LineInfoAnnotation>();
+                LineInfoAnnotation annotation = this.Annotation<LineInfoAnnotation>();
                 if (annotation != null)
                 {
                     return annotation.LinePosition;
@@ -2366,7 +2366,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A <see cref="JToken"/>, or <c>null</c>.</returns>
         public JToken SelectToken(string path)
         {
-            return SelectToken(path, false);
+            return this.SelectToken(path, false);
         }
 
         /// <summary>
@@ -2404,7 +2404,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="JToken"/> that contains the selected elements.</returns>
         public IEnumerable<JToken> SelectTokens(string path)
         {
-            return SelectTokens(path, false);
+            return this.SelectTokens(path, false);
         }
 
         /// <summary>
@@ -2460,7 +2460,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>A new instance of the <see cref="JToken"/>.</returns>
         public JToken DeepClone()
         {
-            return CloneToken();
+            return this.CloneToken();
         }
 
         /// <summary>
@@ -2474,15 +2474,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentNullException(nameof(annotation));
             }
 
-            if (_annotations == null)
+            if (this._annotations == null)
             {
-                _annotations = (annotation is object[]) ? new[] { annotation } : annotation;
+                this._annotations = (annotation is object[]) ? new[] { annotation } : annotation;
             }
             else
             {
-                if (!(_annotations is object[] annotations))
+                if (!(this._annotations is object[] annotations))
                 {
-                    _annotations = new[] { _annotations, annotation };
+                    this._annotations = new[] { this._annotations, annotation };
                 }
                 else
                 {
@@ -2494,7 +2494,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     if (index == annotations.Length)
                     {
                         Array.Resize(ref annotations, index * 2);
-                        _annotations = annotations;
+                        this._annotations = annotations;
                     }
                     annotations[index] = annotation;
                 }
@@ -2508,11 +2508,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>The first annotation object that matches the specified type, or <c>null</c> if no annotation is of the specified type.</returns>
         public T Annotation<T>() where T : class
         {
-            if (_annotations != null)
+            if (this._annotations != null)
             {
-                if (!(_annotations is object[] annotations))
+                if (!(this._annotations is object[] annotations))
                 {
-                    return (_annotations as T);
+                    return (this._annotations as T);
                 }
                 for (int i = 0; i < annotations.Length; i++)
                 {
@@ -2544,13 +2544,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (_annotations != null)
+            if (this._annotations != null)
             {
-                if (!(_annotations is object[] annotations))
+                if (!(this._annotations is object[] annotations))
                 {
-                    if (type.IsInstanceOfType(_annotations))
+                    if (type.IsInstanceOfType(this._annotations))
                     {
-                        return _annotations;
+                        return this._annotations;
                     }
                 }
                 else
@@ -2581,12 +2581,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <returns>An <see cref="IEnumerable{T}"/> that contains the annotations for this <see cref="JToken"/>.</returns>
         public IEnumerable<T> Annotations<T>() where T : class
         {
-            if (_annotations == null)
+            if (this._annotations == null)
             {
                 yield break;
             }
 
-            if (_annotations is object[] annotations)
+            if (this._annotations is object[] annotations)
             {
                 for (int i = 0; i < annotations.Length; i++)
                 {
@@ -2604,7 +2604,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 yield break;
             }
 
-            if (!(_annotations is T annotation))
+            if (!(this._annotations is T annotation))
             {
                 yield break;
             }
@@ -2624,12 +2624,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (_annotations == null)
+            if (this._annotations == null)
             {
                 yield break;
             }
 
-            if (_annotations is object[] annotations)
+            if (this._annotations is object[] annotations)
             {
                 for (int i = 0; i < annotations.Length; i++)
                 {
@@ -2647,12 +2647,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 yield break;
             }
 
-            if (!type.IsInstanceOfType(_annotations))
+            if (!type.IsInstanceOfType(this._annotations))
             {
                 yield break;
             }
 
-            yield return _annotations;
+            yield return this._annotations;
         }
 
         /// <summary>
@@ -2661,13 +2661,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <typeparam name="T">The type of annotations to remove.</typeparam>
         public void RemoveAnnotations<T>() where T : class
         {
-            if (_annotations != null)
+            if (this._annotations != null)
             {
-                if (!(_annotations is object[] annotations))
+                if (!(this._annotations is object[] annotations))
                 {
-                    if (_annotations is T)
+                    if (this._annotations is T)
                     {
-                        _annotations = null;
+                        this._annotations = null;
                     }
                 }
                 else
@@ -2699,7 +2699,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     }
                     else
                     {
-                        _annotations = null;
+                        this._annotations = null;
                     }
                 }
             }
@@ -2716,13 +2716,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (_annotations != null)
+            if (this._annotations != null)
             {
-                if (!(_annotations is object[] annotations))
+                if (!(this._annotations is object[] annotations))
                 {
-                    if (type.IsInstanceOfType(_annotations))
+                    if (type.IsInstanceOfType(this._annotations))
                     {
-                        _annotations = null;
+                        this._annotations = null;
                     }
                 }
                 else
@@ -2754,7 +2754,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     }
                     else
                     {
-                        _annotations = null;
+                        this._annotations = null;
                     }
                 }
             }

@@ -40,8 +40,8 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         public int MaxSize
         {
-            get { return maxSize; }
-            set { maxSize = value; }
+            get => this.maxSize;
+            set => this.maxSize = value;
         }
 
         /// <summary>
@@ -164,28 +164,28 @@ namespace RRQMSocket.WebSocket
 
             if (this.dataFrameTemp == null)
             {
-                SplitPackage(buffer, 0, r);
+                this.SplitPackage(buffer, 0, r);
             }
             else
             {
-                if (surPlusLength == r)
+                if (this.surPlusLength == r)
                 {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.dataFrameTemp);
+                    this.dataFrameTemp.PayloadData.Write(buffer, 0, this.surPlusLength);
+                    this.PreviewHandle(this.dataFrameTemp);
                     this.dataFrameTemp = null;
-                    surPlusLength = 0;
+                    this.surPlusLength = 0;
                 }
-                else if (surPlusLength < r)
+                else if (this.surPlusLength < r)
                 {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, surPlusLength);
-                    PreviewHandle(this.dataFrameTemp);
+                    this.dataFrameTemp.PayloadData.Write(buffer, 0, this.surPlusLength);
+                    this.PreviewHandle(this.dataFrameTemp);
                     this.dataFrameTemp = null;
-                    SplitPackage(buffer, surPlusLength, r);
+                    this.SplitPackage(buffer, this.surPlusLength, r);
                 }
                 else
                 {
                     this.dataFrameTemp.PayloadData.Write(buffer, 0, r);
-                    surPlusLength -= r;
+                    this.surPlusLength -= r;
                 }
             }
         }
@@ -258,7 +258,7 @@ namespace RRQMSocket.WebSocket
                     return;
                 }
 
-                if (DecodingFromBytes(dataBuffer, ref offset, length - offset, out WSDataFrame dataFrame))
+                if (this.DecodingFromBytes(dataBuffer, ref offset, length - offset, out WSDataFrame dataFrame))
                 {
                     if (dataFrame.PayloadLength == dataFrame.PayloadData.Len)
                     {

@@ -35,42 +35,27 @@ namespace RRQMSocket
         /// <summary>
         /// 默认远程节点
         /// </summary>
-        public IPHost RemoteIPHost
-        {
-            get { return remoteIPHost; }
-        }
+        public IPHost RemoteIPHost => this.remoteIPHost;
 
         /// <summary>
         /// 监听器
         /// </summary>
-        public NetworkMonitor Monitor
-        {
-            get { return monitor; }
-        }
+        public NetworkMonitor Monitor => this.monitor;
 
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public string ServerName
-        {
-            get { return name; }
-        }
+        public string ServerName => this.name;
 
         /// <summary>
         /// 获取服务器状态
         /// </summary>
-        public ServerState ServerState
-        {
-            get { return serverState; }
-        }
+        public ServerState ServerState => this.serverState;
 
         /// <summary>
         /// 获取配置
         /// </summary>
-        public ServiceConfig ServiceConfig
-        {
-            get { return serviceConfig; }
-        }
+        public ServiceConfig ServiceConfig => this.serviceConfig;
 
         /// <summary>
         /// 关闭服务器并释放服务器资源
@@ -357,7 +342,7 @@ namespace RRQMSocket
         {
             int threadCount = this.ServiceConfig.ThreadCount;
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            PreviewBind(socket);
+            this.PreviewBind(socket);
             socket.Bind(iPHost.EndPoint);
 
             this.monitor = new NetworkMonitor(iPHost, socket);
@@ -374,16 +359,16 @@ namespace RRQMSocket
                         eventArg.RemoteEndPoint = iPHost.EndPoint;
                         if (!socket.ReceiveFromAsync(eventArg))
                         {
-                            ProcessReceive(socket, eventArg);
+                            this.ProcessReceive(socket, eventArg);
                         }
                         break;
                     }
 
                 case ReceiveType.BIO:
                     {
-                        Thread thread = new Thread(Received);
+                        Thread thread = new Thread(this.Received);
                         thread.IsBackground = true;
-                        thread.Start(monitor);
+                        thread.Start(this.monitor);
                         break;
                     }
 
@@ -411,11 +396,11 @@ namespace RRQMSocket
         {
             try
             {
-                HandleReceivedData(endPoint, byteBlock);
+                this.HandleReceivedData(endPoint, byteBlock);
             }
             catch (Exception e)
             {
-                Logger.Debug(LogType.Error, this, $"在处理数据时发生错误，信息：{e.Message}");
+                this.Logger.Debug(LogType.Error, this, $"在处理数据时发生错误，信息：{e.Message}");
             }
             finally
             {
@@ -425,7 +410,7 @@ namespace RRQMSocket
 
         private void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
-            ProcessReceive((Socket)sender, e);
+            this.ProcessReceive((Socket)sender, e);
         }
 
         private void ProcessReceive(Socket socket, SocketAsyncEventArgs e)
@@ -444,7 +429,7 @@ namespace RRQMSocket
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
                     if (!socket.ReceiveFromAsync(e))
                     {
-                        ProcessReceive(socket, e);
+                        this.ProcessReceive(socket, e);
                     }
                 }
             }

@@ -40,10 +40,7 @@ namespace RRQMSocket
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public ITcpClientBase Owner
-        {
-            get { return owner; }
-        }
+        public ITcpClientBase Owner => this.owner;
 
         internal void Received(ByteBlock byteBlock)
         {

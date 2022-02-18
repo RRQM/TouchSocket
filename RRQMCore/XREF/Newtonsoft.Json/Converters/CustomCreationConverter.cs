@@ -73,7 +73,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Converters
                 return null;
             }
 
-            T value = Create(objectType);
+            T value = this.Create(objectType);
             if (value == null)
             {
                 throw new JsonSerializationException("No object created.");

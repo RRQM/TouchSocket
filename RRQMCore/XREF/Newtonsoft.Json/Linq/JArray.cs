@@ -60,7 +60,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// Gets the container's children tokens.
         /// </summary>
         /// <value>The container's children tokens.</value>
-        protected override IList<JToken> ChildrenTokens => _values;
+        protected override IList<JToken> ChildrenTokens => this._values;
 
         /// <summary>
         /// Gets the node type for this <see cref="JToken"/>.
@@ -99,12 +99,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="content">The contents of the array.</param>
         public JArray(object content)
         {
-            Add(content);
+            this.Add(content);
         }
 
         internal override bool DeepEquals(JToken node)
         {
-            return (node is JArray t && ContentsEqual(t));
+            return (node is JArray t && this.ContentsEqual(t));
         }
 
         internal override JToken CloneToken()
@@ -117,7 +117,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="reader">A <see cref="JsonReader"/> that will be read for the content of the <see cref="JArray"/>.</param>
         /// <returns>A <see cref="JArray"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public new static JArray Load(JsonReader reader)
+        public static new JArray Load(JsonReader reader)
         {
             return Load(reader, null);
         }
@@ -129,7 +129,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="settings">The <see cref="JsonLoadSettings"/> used to load the JSON.
         /// If this is <c>null</c>, default load settings will be used.</param>
         /// <returns>A <see cref="JArray"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public new static JArray Load(JsonReader reader, JsonLoadSettings settings)
+        public static new JArray Load(JsonReader reader, JsonLoadSettings settings)
         {
             if (reader.TokenType == JsonToken.None)
             {
@@ -162,7 +162,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <example>
         ///   <code lang="cs" source="..\Src\RRQMCore.XREF.Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParseArray" title="Parsing a JSON Array from Text" />
         /// </example>
-        public new static JArray Parse(string json)
+        public static new JArray Parse(string json)
         {
             return Parse(json, null);
         }
@@ -177,7 +177,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <example>
         ///   <code lang="cs" source="..\Src\RRQMCore.XREF.Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParseArray" title="Parsing a JSON Array from Text" />
         /// </example>
-        public new static JArray Parse(string json, JsonLoadSettings settings)
+        public static new JArray Parse(string json, JsonLoadSettings settings)
         {
             using (JsonReader reader = new JsonTextReader(new StringReader(json)))
             {
@@ -197,7 +197,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="o">The object that will be used to create <see cref="JArray"/>.</param>
         /// <returns>A <see cref="JArray"/> with the values of the specified object.</returns>
-        public new static JArray FromObject(object o)
+        public static new JArray FromObject(object o)
         {
             return FromObject(o, JsonSerializer.CreateDefault());
         }
@@ -208,7 +208,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="o">The object that will be used to create <see cref="JArray"/>.</param>
         /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> that will be used to read the object.</param>
         /// <returns>A <see cref="JArray"/> with the values of the specified object.</returns>
-        public new static JArray FromObject(object o, JsonSerializer jsonSerializer)
+        public static new JArray FromObject(object o, JsonSerializer jsonSerializer)
         {
             JToken token = FromObjectInternal(o, jsonSerializer);
 
@@ -229,9 +229,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             writer.WriteStartArray();
 
-            for (int i = 0; i < _values.Count; i++)
+            for (int i = 0; i < this._values.Count; i++)
             {
-                _values[i].WriteTo(writer, converters);
+                this._values[i].WriteTo(writer, converters);
             }
 
             writer.WriteEndArray();
@@ -252,7 +252,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentException("Accessed JArray values with invalid key value: {0}. Int32 array index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
-                return GetItem((int)key);
+                return this.GetItem((int)key);
             }
             set
             {
@@ -263,7 +263,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                     throw new ArgumentException("Set JArray values with invalid key value: {0}. Int32 array index expected.".FormatWith(CultureInfo.InvariantCulture, MiscellaneousUtils.ToString(key)));
                 }
 
-                SetItem((int)key, value);
+                this.SetItem((int)key, value);
             }
         }
 
@@ -273,18 +273,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <value></value>
         public JToken this[int index]
         {
-            get => GetItem(index);
-            set => SetItem(index, value);
+            get => this.GetItem(index);
+            set => this.SetItem(index, value);
         }
 
         internal override int IndexOfItem(JToken item)
         {
-            return _values.IndexOfReference(item);
+            return this._values.IndexOfReference(item);
         }
 
         internal override void MergeItem(object content, JsonMergeSettings settings)
         {
-            IEnumerable a = (IsMultiContent(content) || content is JArray)
+            IEnumerable a = (this.IsMultiContent(content) || content is JArray)
                 ? (IEnumerable)content
                 : null;
             if (a == null)
@@ -306,7 +306,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public int IndexOf(JToken item)
         {
-            return IndexOfItem(item);
+            return this.IndexOfItem(item);
         }
 
         /// <summary>
@@ -319,7 +319,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </exception>
         public void Insert(int index, JToken item)
         {
-            InsertItem(index, item, false);
+            this.InsertItem(index, item, false);
         }
 
         /// <summary>
@@ -331,7 +331,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </exception>
         public void RemoveAt(int index)
         {
-            RemoveItemAt(index);
+            this.RemoveItemAt(index);
         }
 
         /// <summary>
@@ -342,7 +342,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public IEnumerator<JToken> GetEnumerator()
         {
-            return Children().GetEnumerator();
+            return this.Children().GetEnumerator();
         }
 
         #endregion IList<JToken> Members
@@ -355,7 +355,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="item">The object to add to the <see cref="JArray"/>.</param>
         public void Add(JToken item)
         {
-            Add((object)item);
+            this.Add((object)item);
         }
 
         /// <summary>
@@ -363,7 +363,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         public void Clear()
         {
-            ClearItems();
+            this.ClearItems();
         }
 
         /// <summary>
@@ -375,7 +375,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public bool Contains(JToken item)
         {
-            return ContainsItem(item);
+            return this.ContainsItem(item);
         }
 
         /// <summary>
@@ -385,7 +385,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="arrayIndex">Index of the array.</param>
         public void CopyTo(JToken[] array, int arrayIndex)
         {
-            CopyItemsTo(array, arrayIndex);
+            this.CopyItemsTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -403,14 +403,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </returns>
         public bool Remove(JToken item)
         {
-            return RemoveItem(item);
+            return this.RemoveItem(item);
         }
 
         #endregion ICollection<JToken> Members
 
         internal override int GetDeepHashCode()
         {
-            return ContentsHashCode();
+            return this.ContentsHashCode();
         }
     }
 }

@@ -34,17 +34,14 @@ namespace RRQMSocket
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
 
         private string id;
 
         /// <summary>
         /// 获取服务器分配的ID
         /// </summary>
-        public string ID
-        {
-            get { return id; }
-        }
+        public string ID => this.id;
 
         /// <summary>
         /// 重新设置ID,但是不会同步到服务器
@@ -73,9 +70,9 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (isHandshaked)
+            if (this.isHandshaked)
             {
                 this.HandleTokenReceivedData(byteBlock, requestInfo);
             }

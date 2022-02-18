@@ -59,64 +59,64 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             public IEnumerator<JToken> GetEnumerator()
             {
-                if (_token != null)
+                if (this._token != null)
                 {
-                    yield return _token;
+                    yield return this._token;
                 }
             }
 
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return GetEnumerator();
+                return this.GetEnumerator();
             }
 
             public void Add(JToken item)
             {
-                _token = item;
+                this._token = item;
             }
 
             public void Clear()
             {
-                _token = null;
+                this._token = null;
             }
 
             public bool Contains(JToken item)
             {
-                return (_token == item);
+                return (this._token == item);
             }
 
             public void CopyTo(JToken[] array, int arrayIndex)
             {
-                if (_token != null)
+                if (this._token != null)
                 {
-                    array[arrayIndex] = _token;
+                    array[arrayIndex] = this._token;
                 }
             }
 
             public bool Remove(JToken item)
             {
-                if (_token == item)
+                if (this._token == item)
                 {
-                    _token = null;
+                    this._token = null;
                     return true;
                 }
                 return false;
             }
 
-            public int Count => (_token != null) ? 1 : 0;
+            public int Count => (this._token != null) ? 1 : 0;
 
             public bool IsReadOnly => false;
 
             public int IndexOf(JToken item)
             {
-                return (_token == item) ? 0 : -1;
+                return (this._token == item) ? 0 : -1;
             }
 
             public void Insert(int index, JToken item)
             {
                 if (index == 0)
                 {
-                    _token = item;
+                    this._token = item;
                 }
             }
 
@@ -124,18 +124,18 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 if (index == 0)
                 {
-                    _token = null;
+                    this._token = null;
                 }
             }
 
             public JToken this[int index]
             {
-                get => (index == 0) ? _token : null;
+                get => (index == 0) ? this._token : null;
                 set
                 {
                     if (index == 0)
                     {
-                        _token = value;
+                        this._token = value;
                     }
                 }
             }
@@ -150,7 +150,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// Gets the container's children tokens.
         /// </summary>
         /// <value>The container's children tokens.</value>
-        protected override IList<JToken> ChildrenTokens => _content;
+        protected override IList<JToken> ChildrenTokens => this._content;
 
         /// <summary>
         /// Gets the property name.
@@ -159,7 +159,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public string Name
         {
             [DebuggerStepThrough]
-            get { return _name; }
+            get => this._name;
         }
 
         /// <summary>
@@ -169,20 +169,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public JToken Value
         {
             [DebuggerStepThrough]
-            get { return _content._token; }
+            get => this._content._token;
             set
             {
-                CheckReentrancy();
+                this.CheckReentrancy();
 
                 JToken newValue = value ?? JValue.CreateNull();
 
-                if (_content._token == null)
+                if (this._content._token == null)
                 {
-                    InsertItem(0, newValue, false);
+                    this.InsertItem(0, newValue, false);
                 }
                 else
                 {
-                    SetItem(0, newValue);
+                    this.SetItem(0, newValue);
                 }
             }
         }
@@ -194,7 +194,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public JProperty(JProperty other)
             : base(other)
         {
-            _name = other.Name;
+            this._name = other.Name;
         }
 
         internal override JToken GetItem(int index)
@@ -204,7 +204,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentOutOfRangeException();
             }
 
-            return Value;
+            return this.Value;
         }
 
         internal override void SetItem(int index, JToken item)
@@ -214,16 +214,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 throw new ArgumentOutOfRangeException();
             }
 
-            if (IsTokenUnchanged(Value, item))
+            if (IsTokenUnchanged(this.Value, item))
             {
                 return;
             }
 
-            ((JObject)Parent)?.InternalPropertyChanging(this);
+            ((JObject)this.Parent)?.InternalPropertyChanging(this);
 
             base.SetItem(0, item);
 
-            ((JObject)Parent)?.InternalPropertyChanged(this);
+            ((JObject)this.Parent)?.InternalPropertyChanged(this);
         }
 
         internal override bool RemoveItem(JToken item)
@@ -238,7 +238,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal override int IndexOfItem(JToken item)
         {
-            return _content.IndexOf(item);
+            return this._content.IndexOf(item);
         }
 
         internal override void InsertItem(int index, JToken item, bool skipParentCheck)
@@ -249,7 +249,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return;
             }
 
-            if (Value != null)
+            if (this.Value != null)
             {
                 throw new JsonException("{0} cannot have multiple values.".FormatWith(CultureInfo.InvariantCulture, typeof(JProperty)));
             }
@@ -259,7 +259,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal override bool ContainsItem(JToken item)
         {
-            return (Value == item);
+            return (this.Value == item);
         }
 
         internal override void MergeItem(object content, JsonMergeSettings settings)
@@ -268,7 +268,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
             if (value != null && value.Type != JTokenType.Null)
             {
-                Value = value;
+                this.Value = value;
             }
         }
 
@@ -279,7 +279,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal override bool DeepEquals(JToken node)
         {
-            return (node is JProperty t && _name == t.Name && ContentsEqual(t));
+            return (node is JProperty t && this._name == t.Name && this.ContentsEqual(t));
         }
 
         internal override JToken CloneToken()
@@ -294,7 +294,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override JTokenType Type
         {
             [DebuggerStepThrough]
-            get { return JTokenType.Property; }
+            get => JTokenType.Property;
         }
 
         internal JProperty(string name)
@@ -302,7 +302,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             // called from JTokenWriter
             ValidationUtils.ArgumentNotNull(name, nameof(name));
 
-            _name = name;
+            this._name = name;
         }
 
         /// <summary>
@@ -324,9 +324,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(name, nameof(name));
 
-            _name = name;
+            this._name = name;
 
-            Value = IsMultiContent(content)
+            this.Value = this.IsMultiContent(content)
                 ? new JArray(content)
                 : CreateFromContent(content);
         }
@@ -338,9 +338,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="converters">A collection of <see cref="JsonConverter"/> which will be used when writing the token.</param>
         public override void WriteTo(JsonWriter writer, params JsonConverter[] converters)
         {
-            writer.WritePropertyName(_name);
+            writer.WritePropertyName(this._name);
 
-            JToken value = Value;
+            JToken value = this.Value;
             if (value != null)
             {
                 value.WriteTo(writer, converters);
@@ -353,7 +353,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
 
         internal override int GetDeepHashCode()
         {
-            return _name.GetHashCode() ^ (Value?.GetDeepHashCode() ?? 0);
+            return this._name.GetHashCode() ^ (this.Value?.GetDeepHashCode() ?? 0);
         }
 
         /// <summary>
@@ -361,7 +361,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="reader">A <see cref="JsonReader"/> that will be read for the content of the <see cref="JProperty"/>.</param>
         /// <returns>A <see cref="JProperty"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public new static JProperty Load(JsonReader reader)
+        public static new JProperty Load(JsonReader reader)
         {
             return Load(reader, null);
         }
@@ -373,7 +373,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="settings">The <see cref="JsonLoadSettings"/> used to load the JSON.
         /// If this is <c>null</c>, default load settings will be used.</param>
         /// <returns>A <see cref="JProperty"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public new static JProperty Load(JsonReader reader, JsonLoadSettings settings)
+        public static new JProperty Load(JsonReader reader, JsonLoadSettings settings)
         {
             if (reader.TokenType == JsonToken.None)
             {

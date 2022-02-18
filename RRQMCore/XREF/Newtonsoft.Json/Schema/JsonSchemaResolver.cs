@@ -73,7 +73,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         /// </summary>
         public JsonSchemaResolver()
         {
-            LoadedSchemas = new List<JsonSchema>();
+            this.LoadedSchemas = new List<JsonSchema>();
         }
 
         /// <summary>
@@ -83,11 +83,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Schema
         /// <returns>A <see cref="JsonSchema"/> for the specified reference.</returns>
         public virtual JsonSchema GetSchema(string reference)
         {
-            JsonSchema schema = LoadedSchemas.SingleOrDefault(s => string.Equals(s.Id, reference, StringComparison.Ordinal));
+            JsonSchema schema = this.LoadedSchemas.SingleOrDefault(s => string.Equals(s.Id, reference, StringComparison.Ordinal));
 
             if (schema == null)
             {
-                schema = LoadedSchemas.SingleOrDefault(s => string.Equals(s.Location, reference, StringComparison.Ordinal));
+                schema = this.LoadedSchemas.SingleOrDefault(s => string.Equals(s.Location, reference, StringComparison.Ordinal));
             }
 
             return schema;

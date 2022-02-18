@@ -121,13 +121,13 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <value>The type created during deserialization.</value>
         public Type CreatedType
         {
-            get => _createdType;
+            get => this._createdType;
             set
             {
-                _createdType = value;
+                this._createdType = value;
 
-                IsSealed = _createdType.IsSealed();
-                IsInstantiable = !(_createdType.IsInterface() || _createdType.IsAbstract());
+                this.IsSealed = this._createdType.IsSealed();
+                this.IsInstantiable = !(this._createdType.IsInterface() || this._createdType.IsAbstract());
             }
         }
 
@@ -155,12 +155,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_onDeserializedCallbacks == null)
+                if (this._onDeserializedCallbacks == null)
                 {
-                    _onDeserializedCallbacks = new List<SerializationCallback>();
+                    this._onDeserializedCallbacks = new List<SerializationCallback>();
                 }
 
-                return _onDeserializedCallbacks;
+                return this._onDeserializedCallbacks;
             }
         }
 
@@ -172,12 +172,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_onDeserializingCallbacks == null)
+                if (this._onDeserializingCallbacks == null)
                 {
-                    _onDeserializingCallbacks = new List<SerializationCallback>();
+                    this._onDeserializingCallbacks = new List<SerializationCallback>();
                 }
 
-                return _onDeserializingCallbacks;
+                return this._onDeserializingCallbacks;
             }
         }
 
@@ -189,12 +189,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_onSerializedCallbacks == null)
+                if (this._onSerializedCallbacks == null)
                 {
-                    _onSerializedCallbacks = new List<SerializationCallback>();
+                    this._onSerializedCallbacks = new List<SerializationCallback>();
                 }
 
-                return _onSerializedCallbacks;
+                return this._onSerializedCallbacks;
             }
         }
 
@@ -206,12 +206,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_onSerializingCallbacks == null)
+                if (this._onSerializingCallbacks == null)
                 {
-                    _onSerializingCallbacks = new List<SerializationCallback>();
+                    this._onSerializingCallbacks = new List<SerializationCallback>();
                 }
 
-                return _onSerializingCallbacks;
+                return this._onSerializingCallbacks;
             }
         }
 
@@ -223,12 +223,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             get
             {
-                if (_onErrorCallbacks == null)
+                if (this._onErrorCallbacks == null)
                 {
-                    _onErrorCallbacks = new List<SerializationErrorCallback>();
+                    this._onErrorCallbacks = new List<SerializationErrorCallback>();
                 }
 
-                return _onErrorCallbacks;
+                return this._onErrorCallbacks;
             }
         }
 
@@ -248,24 +248,24 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         {
             ValidationUtils.ArgumentNotNull(underlyingType, nameof(underlyingType));
 
-            UnderlyingType = underlyingType;
+            this.UnderlyingType = underlyingType;
 
-            IsNullable = ReflectionUtils.IsNullable(underlyingType);
-            NonNullableUnderlyingType = (IsNullable && ReflectionUtils.IsNullableType(underlyingType)) ? Nullable.GetUnderlyingType(underlyingType) : underlyingType;
+            this.IsNullable = ReflectionUtils.IsNullable(underlyingType);
+            this.NonNullableUnderlyingType = (this.IsNullable && ReflectionUtils.IsNullableType(underlyingType)) ? Nullable.GetUnderlyingType(underlyingType) : underlyingType;
 
-            CreatedType = NonNullableUnderlyingType;
+            this.CreatedType = this.NonNullableUnderlyingType;
 
-            IsConvertable = ConvertUtils.IsConvertible(NonNullableUnderlyingType);
-            IsEnum = NonNullableUnderlyingType.IsEnum();
+            this.IsConvertable = ConvertUtils.IsConvertible(this.NonNullableUnderlyingType);
+            this.IsEnum = this.NonNullableUnderlyingType.IsEnum();
 
-            InternalReadType = ReadType.Read;
+            this.InternalReadType = ReadType.Read;
         }
 
         internal void InvokeOnSerializing(object o, StreamingContext context)
         {
-            if (_onSerializingCallbacks != null)
+            if (this._onSerializingCallbacks != null)
             {
-                foreach (SerializationCallback callback in _onSerializingCallbacks)
+                foreach (SerializationCallback callback in this._onSerializingCallbacks)
                 {
                     callback(o, context);
                 }
@@ -274,9 +274,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         internal void InvokeOnSerialized(object o, StreamingContext context)
         {
-            if (_onSerializedCallbacks != null)
+            if (this._onSerializedCallbacks != null)
             {
-                foreach (SerializationCallback callback in _onSerializedCallbacks)
+                foreach (SerializationCallback callback in this._onSerializedCallbacks)
                 {
                     callback(o, context);
                 }
@@ -285,9 +285,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         internal void InvokeOnDeserializing(object o, StreamingContext context)
         {
-            if (_onDeserializingCallbacks != null)
+            if (this._onDeserializingCallbacks != null)
             {
-                foreach (SerializationCallback callback in _onDeserializingCallbacks)
+                foreach (SerializationCallback callback in this._onDeserializingCallbacks)
                 {
                     callback(o, context);
                 }
@@ -296,9 +296,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         internal void InvokeOnDeserialized(object o, StreamingContext context)
         {
-            if (_onDeserializedCallbacks != null)
+            if (this._onDeserializedCallbacks != null)
             {
-                foreach (SerializationCallback callback in _onDeserializedCallbacks)
+                foreach (SerializationCallback callback in this._onDeserializedCallbacks)
                 {
                     callback(o, context);
                 }
@@ -307,9 +307,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         internal void InvokeOnError(object o, StreamingContext context, ErrorContext errorContext)
         {
-            if (_onErrorCallbacks != null)
+            if (this._onErrorCallbacks != null)
             {
-                foreach (SerializationErrorCallback callback in _onErrorCallbacks)
+                foreach (SerializationErrorCallback callback in this._onErrorCallbacks)
                 {
                     callback(o, context, errorContext);
                 }

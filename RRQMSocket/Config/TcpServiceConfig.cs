@@ -23,8 +23,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost[] ListenIPHosts
         {
-            get { return (IPHost[])GetValue(ListenIPHostsProperty); }
-            set { SetValue(ListenIPHostsProperty, value); }
+            get => (IPHost[])this.GetValue(ListenIPHostsProperty);
+            set => this.SetValue(ListenIPHostsProperty, value);
         }
 
         /// <summary>
@@ -38,8 +38,8 @@ namespace RRQMSocket
         /// </summary>
         public int Backlog
         {
-            get { return (int)GetValue(BacklogProperty); }
-            set { SetValue(BacklogProperty, value); }
+            get => (int)this.GetValue(BacklogProperty);
+            set => this.SetValue(BacklogProperty, value);
         }
 
         /// <summary>
@@ -53,8 +53,8 @@ namespace RRQMSocket
         /// </summary>
         public int MaxCount
         {
-            get { return (int)GetValue(MaxCountProperty); }
-            set { SetValue(MaxCountProperty, value); }
+            get => (int)this.GetValue(MaxCountProperty);
+            set => this.SetValue(MaxCountProperty, value);
         }
 
         /// <summary>
@@ -68,8 +68,8 @@ namespace RRQMSocket
         /// </summary>
         public int ClearInterval
         {
-            get { return (int)GetValue(ClearIntervalProperty); }
-            set { SetValue(ClearIntervalProperty, value); }
+            get => (int)this.GetValue(ClearIntervalProperty);
+            set => this.SetValue(ClearIntervalProperty, value);
         }
 
         /// <summary>
@@ -84,8 +84,8 @@ namespace RRQMSocket
         /// </summary>
         public ClearType ClearType
         {
-            get { return (ClearType)GetValue(ClearTypeProperty); }
-            set { SetValue(ClearTypeProperty, value); }
+            get => (ClearType)this.GetValue(ClearTypeProperty);
+            set => this.SetValue(ClearTypeProperty, value);
         }
 
         /// <summary>
@@ -100,8 +100,8 @@ namespace RRQMSocket
         /// </summary>
         public ServiceSslOption SslOption
         {
-            get { return (ServiceSslOption)GetValue(SslOptionProperty); }
-            set { SetValue(SslOptionProperty, value); }
+            get => (ServiceSslOption)this.GetValue(SslOptionProperty);
+            set => this.SetValue(SslOptionProperty, value);
         }
 
         /// <summary>

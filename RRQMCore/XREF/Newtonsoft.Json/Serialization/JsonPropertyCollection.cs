@@ -61,10 +61,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             : base(StringComparer.Ordinal)
         {
             ValidationUtils.ArgumentNotNull(type, "type");
-            _type = type;
+            this._type = type;
 
             // foreach over List<T> to avoid boxing the Enumerator
-            _list = (List<JsonProperty>)Items;
+            this._list = (List<JsonProperty>)this.Items;
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <param name="property">The property to add to the collection.</param>
         public void AddProperty(JsonProperty property)
         {
-            if (Contains(property.PropertyName))
+            if (this.Contains(property.PropertyName))
             {
                 // don't overwrite existing property with ignored property
                 if (property.Ignored)
@@ -97,7 +97,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 if (existingProperty.Ignored)
                 {
                     // remove ignored property so it can be replaced in collection
-                    Remove(existingProperty);
+                    this.Remove(existingProperty);
                     duplicateProperty = false;
                 }
                 else
@@ -108,7 +108,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                             || (existingProperty.DeclaringType.IsInterface() && property.DeclaringType.ImplementInterface(existingProperty.DeclaringType)))
                         {
                             // current property is on a derived class and hides the existing
-                            Remove(existingProperty);
+                            this.Remove(existingProperty);
                             duplicateProperty = false;
                         }
                         if (existingProperty.DeclaringType.IsSubclassOf(property.DeclaringType)
@@ -118,7 +118,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                             return;
                         }
 
-                        if (_type.ImplementInterface(existingProperty.DeclaringType) && _type.ImplementInterface(property.DeclaringType))
+                        if (this._type.ImplementInterface(existingProperty.DeclaringType) && this._type.ImplementInterface(property.DeclaringType))
                         {
                             // current property was already defined on another interface
                             return;
@@ -128,11 +128,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
                 if (duplicateProperty)
                 {
-                    throw new JsonSerializationException("A member with the name '{0}' already exists on '{1}'. Use the JsonPropertyAttribute to specify another name.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, _type));
+                    throw new JsonSerializationException("A member with the name '{0}' already exists on '{1}'. Use the JsonPropertyAttribute to specify another name.".FormatWith(CultureInfo.InvariantCulture, property.PropertyName, this._type));
                 }
             }
 
-            Add(property);
+            this.Add(property);
         }
 
         /// <summary>
@@ -144,10 +144,10 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <returns>A matching property if found.</returns>
         public JsonProperty GetClosestMatchProperty(string propertyName)
         {
-            JsonProperty property = GetProperty(propertyName, StringComparison.Ordinal);
+            JsonProperty property = this.GetProperty(propertyName, StringComparison.Ordinal);
             if (property == null)
             {
-                property = GetProperty(propertyName, StringComparison.OrdinalIgnoreCase);
+                property = this.GetProperty(propertyName, StringComparison.OrdinalIgnoreCase);
             }
 
             return property;
@@ -156,25 +156,25 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 #if NETCOREAPP3_1_OR_GREATER
         private new bool TryGetValue(string key, out JsonProperty item)
         {
-            if (Dictionary == null)
+            if (this.Dictionary == null)
             {
                 item = default(JsonProperty);
                 return false;
             }
 
-            return Dictionary.TryGetValue(key, out item);
+            return this.Dictionary.TryGetValue(key, out item);
         }
 #else
 
         private bool TryGetValue(string key, out JsonProperty item)
         {
-            if (Dictionary == null)
+            if (this.Dictionary == null)
             {
                 item = default(JsonProperty);
                 return false;
             }
 
-            return Dictionary.TryGetValue(key, out item);
+            return this.Dictionary.TryGetValue(key, out item);
         }
 
 #endif
@@ -190,7 +190,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             // KeyedCollection has an ordinal comparer
             if (comparisonType == StringComparison.Ordinal)
             {
-                if (TryGetValue(propertyName, out JsonProperty property))
+                if (this.TryGetValue(propertyName, out JsonProperty property))
                 {
                     return property;
                 }
@@ -198,9 +198,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 return null;
             }
 
-            for (int i = 0; i < _list.Count; i++)
+            for (int i = 0; i < this._list.Count; i++)
             {
-                JsonProperty property = _list[i];
+                JsonProperty property = this._list[i];
                 if (string.Equals(propertyName, property.PropertyName, comparisonType))
                 {
                     return property;

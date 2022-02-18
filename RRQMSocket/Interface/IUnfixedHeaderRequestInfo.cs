@@ -10,11 +10,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -35,7 +30,7 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         /// <param name="length"></param>
         /// <returns>是否满足解析包头</returns>
-        FilterResult OnParsingHeader(ByteBlock byteBlock,int length);
+        FilterResult OnParsingHeader(ByteBlock byteBlock, int length);
 
         /// <summary>
         /// 当收到数据，由框架封送有效载荷数据。

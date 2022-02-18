@@ -66,7 +66,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                 throw new ArgumentException("An ObjectId must be 12 bytes", nameof(value));
             }
 
-            Value = value;
+            this.Value = value;
         }
     }
 }

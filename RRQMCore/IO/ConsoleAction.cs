@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMCore.IO
 {
@@ -25,7 +22,7 @@ namespace RRQMCore.IO
             this.Add(helpOrder, "帮助信息", () =>
             {
                 List<string> s = new List<string>();
-                foreach (var item in actions)
+                foreach (var item in this.actions)
                 {
                     if (!s.Contains(item.Value.FullOrder.ToLower()))
                     {
@@ -39,10 +36,7 @@ namespace RRQMCore.IO
         /// <summary>
         /// 帮助信息指令
         /// </summary>
-        public string HelpOrder
-        {
-            get { return helpOrder; }
-        }
+        public string HelpOrder => this.helpOrder;
 
 
         private Dictionary<string, VAction> actions = new Dictionary<string, VAction>();
@@ -98,17 +92,38 @@ namespace RRQMCore.IO
     {
         private Action action;
 
-        public Action Action
-        {
-            get { return action; }
-        }
+
+        /* 项目“RRQMCore (net5)”的未合并的更改
+        在此之前:
+                public Action Action
+                {
+                    get { return action; }
+        在此之后:
+                public Action Action => this.action; }
+        */
+
+        /* 项目“RRQMCore (netcoreapp3.1)”的未合并的更改
+        在此之前:
+                public Action Action
+                {
+                    get { return action; }
+        在此之后:
+                public Action Action => this.action; }
+        */
+
+        /* 项目“RRQMCore (netstandard2.0)”的未合并的更改
+        在此之前:
+                public Action Action
+                {
+                    get { return action; }
+        在此之后:
+                public Action Action => this.action; }
+        */
+        public Action Action => this.action;
 
         private string fullOrder;
 
-        public string FullOrder
-        {
-            get { return fullOrder; }
-        }
+        public string FullOrder => this.fullOrder;
 
 
         private string description;
@@ -126,10 +141,7 @@ namespace RRQMCore.IO
             this.description = description ?? throw new ArgumentNullException(nameof(description));
         }
 
-        public string Description
-        {
-            get { return description; }
-        }
+        public string Description => this.description;
 
     }
 }

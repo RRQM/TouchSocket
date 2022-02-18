@@ -23,8 +23,8 @@ namespace RRQMSocket
         /// </summary>
         public ReceiveType ReceiveType
         {
-            get { return (ReceiveType)GetValue(ReceiveTypeProperty); }
-            set { SetValue(ReceiveTypeProperty, value); }
+            get => (ReceiveType)this.GetValue(ReceiveTypeProperty);
+            set => this.SetValue(ReceiveTypeProperty, value);
         }
 
         /// <summary>
@@ -38,8 +38,8 @@ namespace RRQMSocket
         /// </summary>
         public int ThreadCount
         {
-            get { return (int)GetValue(ThreadCountProperty); }
-            set { SetValue(ThreadCountProperty, value); }
+            get => (int)this.GetValue(ThreadCountProperty);
+            set => this.SetValue(ThreadCountProperty, value);
         }
 
         /// <summary>
@@ -53,8 +53,8 @@ namespace RRQMSocket
         /// </summary>
         public string ServerName
         {
-            get { return (string)GetValue(ServerNameProperty); }
-            set { SetValue(ServerNameProperty, value); }
+            get => (string)this.GetValue(ServerNameProperty);
+            set => this.SetValue(ServerNameProperty, value);
         }
 
         /// <summary>

@@ -55,37 +55,37 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public TraceJsonWriter(JsonWriter innerWriter)
         {
-            _innerWriter = innerWriter;
+            this._innerWriter = innerWriter;
 
-            _sw = new StringWriter(CultureInfo.InvariantCulture);
+            this._sw = new StringWriter(CultureInfo.InvariantCulture);
             // prefix the message in the stringwriter to avoid concat with a potentially large JSON string
-            _sw.Write("Serialized JSON: " + Environment.NewLine);
+            this._sw.Write("Serialized JSON: " + Environment.NewLine);
 
-            _textWriter = new JsonTextWriter(_sw);
-            _textWriter.Formatting = Formatting.Indented;
-            _textWriter.Culture = innerWriter.Culture;
-            _textWriter.DateFormatHandling = innerWriter.DateFormatHandling;
-            _textWriter.DateFormatString = innerWriter.DateFormatString;
-            _textWriter.DateTimeZoneHandling = innerWriter.DateTimeZoneHandling;
-            _textWriter.FloatFormatHandling = innerWriter.FloatFormatHandling;
+            this._textWriter = new JsonTextWriter(this._sw);
+            this._textWriter.Formatting = Formatting.Indented;
+            this._textWriter.Culture = innerWriter.Culture;
+            this._textWriter.DateFormatHandling = innerWriter.DateFormatHandling;
+            this._textWriter.DateFormatString = innerWriter.DateFormatString;
+            this._textWriter.DateTimeZoneHandling = innerWriter.DateTimeZoneHandling;
+            this._textWriter.FloatFormatHandling = innerWriter.FloatFormatHandling;
         }
 
         public string GetSerializedJsonMessage()
         {
-            return _sw.ToString();
+            return this._sw.ToString();
         }
 
         public override void WriteValue(decimal value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(decimal? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -98,15 +98,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(bool value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(bool? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -119,15 +119,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(byte value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(byte? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -140,15 +140,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(char value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(char? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -161,8 +161,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(byte[] value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value == null)
             {
                 base.WriteUndefined();
@@ -175,15 +175,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(DateTime value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(DateTime? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -219,15 +219,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(double value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(double? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -240,29 +240,29 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteUndefined()
         {
-            _textWriter.WriteUndefined();
-            _innerWriter.WriteUndefined();
+            this._textWriter.WriteUndefined();
+            this._innerWriter.WriteUndefined();
             base.WriteUndefined();
         }
 
         public override void WriteNull()
         {
-            _textWriter.WriteNull();
-            _innerWriter.WriteNull();
+            this._textWriter.WriteNull();
+            this._innerWriter.WriteNull();
             base.WriteUndefined();
         }
 
         public override void WriteValue(float value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(float? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -275,15 +275,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(Guid value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(Guid? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -296,15 +296,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(int value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(int? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -317,15 +317,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(long value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(long? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -348,8 +348,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             else
 #endif
             {
-                _textWriter.WriteValue(value);
-                _innerWriter.WriteValue(value);
+                this._textWriter.WriteValue(value);
+                this._innerWriter.WriteValue(value);
                 if (value == null)
                 {
                     base.WriteUndefined();
@@ -357,22 +357,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
                 else
                 {
                     // base.WriteValue(value) will error
-                    InternalWriteValue(JsonToken.String);
+                    this.InternalWriteValue(JsonToken.String);
                 }
             }
         }
 
         public override void WriteValue(sbyte value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(sbyte? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -385,15 +385,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(short value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(short? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -406,22 +406,22 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(string value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(TimeSpan value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(TimeSpan? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -434,15 +434,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(uint value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(uint? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -455,15 +455,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(ulong value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(ulong? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -476,8 +476,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(Uri value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value == null)
             {
                 base.WriteUndefined();
@@ -490,15 +490,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteValue(ushort value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             base.WriteValue(value);
         }
 
         public override void WriteValue(ushort? value)
         {
-            _textWriter.WriteValue(value);
-            _innerWriter.WriteValue(value);
+            this._textWriter.WriteValue(value);
+            this._innerWriter.WriteValue(value);
             if (value.HasValue)
             {
                 base.WriteValue(value.GetValueOrDefault());
@@ -511,57 +511,57 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteWhitespace(string ws)
         {
-            _textWriter.WriteWhitespace(ws);
-            _innerWriter.WriteWhitespace(ws);
+            this._textWriter.WriteWhitespace(ws);
+            this._innerWriter.WriteWhitespace(ws);
             base.WriteWhitespace(ws);
         }
 
         public override void WriteComment(string text)
         {
-            _textWriter.WriteComment(text);
-            _innerWriter.WriteComment(text);
+            this._textWriter.WriteComment(text);
+            this._innerWriter.WriteComment(text);
             base.WriteComment(text);
         }
 
         public override void WriteStartArray()
         {
-            _textWriter.WriteStartArray();
-            _innerWriter.WriteStartArray();
+            this._textWriter.WriteStartArray();
+            this._innerWriter.WriteStartArray();
             base.WriteStartArray();
         }
 
         public override void WriteEndArray()
         {
-            _textWriter.WriteEndArray();
-            _innerWriter.WriteEndArray();
+            this._textWriter.WriteEndArray();
+            this._innerWriter.WriteEndArray();
             base.WriteEndArray();
         }
 
         public override void WriteStartConstructor(string name)
         {
-            _textWriter.WriteStartConstructor(name);
-            _innerWriter.WriteStartConstructor(name);
+            this._textWriter.WriteStartConstructor(name);
+            this._innerWriter.WriteStartConstructor(name);
             base.WriteStartConstructor(name);
         }
 
         public override void WriteEndConstructor()
         {
-            _textWriter.WriteEndConstructor();
-            _innerWriter.WriteEndConstructor();
+            this._textWriter.WriteEndConstructor();
+            this._innerWriter.WriteEndConstructor();
             base.WriteEndConstructor();
         }
 
         public override void WritePropertyName(string name)
         {
-            _textWriter.WritePropertyName(name);
-            _innerWriter.WritePropertyName(name);
+            this._textWriter.WritePropertyName(name);
+            this._innerWriter.WritePropertyName(name);
             base.WritePropertyName(name);
         }
 
         public override void WritePropertyName(string name, bool escape)
         {
-            _textWriter.WritePropertyName(name, escape);
-            _innerWriter.WritePropertyName(name, escape);
+            this._textWriter.WritePropertyName(name, escape);
+            this._innerWriter.WritePropertyName(name, escape);
 
             // method with escape will error
             base.WritePropertyName(name);
@@ -569,45 +569,45 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
 
         public override void WriteStartObject()
         {
-            _textWriter.WriteStartObject();
-            _innerWriter.WriteStartObject();
+            this._textWriter.WriteStartObject();
+            this._innerWriter.WriteStartObject();
             base.WriteStartObject();
         }
 
         public override void WriteEndObject()
         {
-            _textWriter.WriteEndObject();
-            _innerWriter.WriteEndObject();
+            this._textWriter.WriteEndObject();
+            this._innerWriter.WriteEndObject();
             base.WriteEndObject();
         }
 
         public override void WriteRawValue(string json)
         {
-            _textWriter.WriteRawValue(json);
-            _innerWriter.WriteRawValue(json);
+            this._textWriter.WriteRawValue(json);
+            this._innerWriter.WriteRawValue(json);
 
             // calling base method will write json twice
-            InternalWriteValue(JsonToken.Undefined);
+            this.InternalWriteValue(JsonToken.Undefined);
         }
 
         public override void WriteRaw(string json)
         {
-            _textWriter.WriteRaw(json);
-            _innerWriter.WriteRaw(json);
+            this._textWriter.WriteRaw(json);
+            this._innerWriter.WriteRaw(json);
             base.WriteRaw(json);
         }
 
         public override void Close()
         {
-            _textWriter.Close();
-            _innerWriter.Close();
+            this._textWriter.Close();
+            this._innerWriter.Close();
             base.Close();
         }
 
         public override void Flush()
         {
-            _textWriter.Flush();
-            _innerWriter.Flush();
+            this._textWriter.Flush();
+            this._innerWriter.Flush();
         }
     }
 }

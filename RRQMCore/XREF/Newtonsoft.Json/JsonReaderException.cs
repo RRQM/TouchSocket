@@ -122,9 +122,9 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         public JsonReaderException(string message, string path, int lineNumber, int linePosition, Exception innerException)
             : base(message, innerException)
         {
-            Path = path;
-            LineNumber = lineNumber;
-            LinePosition = linePosition;
+            this.Path = path;
+            this.LineNumber = lineNumber;
+            this.LinePosition = linePosition;
         }
 
         internal static JsonReaderException Create(JsonReader reader, string message)

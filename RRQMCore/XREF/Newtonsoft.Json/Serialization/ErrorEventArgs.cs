@@ -65,8 +65,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         /// <param name="errorContext">The error context.</param>
         public ErrorEventArgs(object currentObject, ErrorContext errorContext)
         {
-            CurrentObject = currentObject;
-            ErrorContext = errorContext;
+            this.CurrentObject = currentObject;
+            this.ErrorContext = errorContext;
         }
     }
 }

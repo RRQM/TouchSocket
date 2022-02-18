@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -40,8 +39,8 @@ namespace RRQMSocket
 
         private DataAdapterTester()
         {
-            asyncBytes = new RRQMCore.Collections.Concurrent.IntelligentDataQueue<TransferByte>(1024*1024*10);
-            waitHandle = new AutoResetEvent(false);
+            this.asyncBytes = new RRQMCore.Collections.Concurrent.IntelligentDataQueue<TransferByte>(1024 * 1024 * 10);
+            this.waitHandle = new AutoResetEvent(false);
             this.sendThread = new Thread(this.BeginSend);
             this.sendThread.IsBackground = true;
             this.sendThread.Name = "DataAdapterTesterThread";
@@ -93,18 +92,18 @@ namespace RRQMSocket
             this.timeout = timeout;
             this.runWaitHandle = new AutoResetEvent(false);
             this.stopwatch = new Stopwatch();
-            stopwatch.Start();
+            this.stopwatch.Start();
             Task.Run(() =>
             {
                 for (int i = 0; i < testCount; i++)
                 {
-                    adapter.Send(buffer, offset, length, false);
+                    this.adapter.Send(buffer, offset, length, false);
                 }
             });
-            if (runWaitHandle.WaitOne(this.timeout))
+            if (this.runWaitHandle.WaitOne(this.timeout))
             {
-                stopwatch.Stop();
-                return stopwatch.Elapsed;
+                this.stopwatch.Stop();
+                return this.stopwatch.Elapsed;
             }
 
             throw new TimeoutException();
@@ -152,9 +151,9 @@ namespace RRQMSocket
 
         private void OnReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            count++;
+            this.count++;
             this.receivedCallBack?.Invoke(byteBlock, requestInfo);
-            if (count == this.expectedCount)
+            if (this.count == this.expectedCount)
             {
                 this.runWaitHandle.Set();
             }
@@ -181,10 +180,10 @@ namespace RRQMSocket
                 {
                     if (block == null)
                     {
-                        block = BytePool.GetByteBlock(bufferLength);
+                        block = BytePool.GetByteBlock(this.bufferLength);
                         byteBlocks.Add(block);
                     }
-                    int surLen = bufferLength - block.Pos;
+                    int surLen = this.bufferLength - block.Pos;
                     if (surLen < asyncByte.Length)//不能完成写入
                     {
                         block.Write(asyncByte.Buffer, asyncByte.Offset, surLen);
@@ -226,8 +225,8 @@ namespace RRQMSocket
 
         private ByteBlock Write(TransferByte transferByte, ref int offset)
         {
-            ByteBlock block = BytePool.GetByteBlock(bufferLength, true);
-            int len = Math.Min(transferByte.Length - offset, bufferLength);
+            ByteBlock block = BytePool.GetByteBlock(this.bufferLength, true);
+            int len = Math.Min(transferByte.Length - offset, this.bufferLength);
             block.Write(transferByte.Buffer, offset, len);
             offset += len;
 
