@@ -18,14 +18,5 @@ namespace RRQMSocket.RPC.XmlRpc
     /// </summary>
     public class XmlRpcSocketClient : SimpleSocketClient, ICaller
     {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override sealed bool CanSetDataHandlingAdapter => false;
-
-        internal void InternalSetAdapter(DataHandlingAdapter adapter)
-        {
-            this.SetAdapter(adapter);
-        }
     }
 }

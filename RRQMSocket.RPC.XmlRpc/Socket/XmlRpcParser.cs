@@ -50,7 +50,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public int MaxPackageSize
         {
-            get { return maxPackageSize; }
+            get { return this.maxPackageSize; }
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public string ProxyToken
         {
-            get { return proxyToken; }
+            get { return this.proxyToken; }
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace RRQMSocket.RPC.XmlRpc
         protected override void OnConnecting(XmlRpcSocketClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.Received += this.OnReceived;
-            socketClient.InternalSetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
+            e.DataHandlingAdapter = new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server);
             base.OnConnecting(socketClient, e);
         }
 
