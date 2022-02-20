@@ -18,7 +18,7 @@ namespace RRQMSocket
     /// <summary>
     /// 协议订阅
     /// </summary>
-    public class ProtocolSubscriber : SubscriberBase, ISendBase, IDisposable
+    public class ProtocolSubscriber : SubscriberBase, ISenderBase, IDisposable
     {
         /// <summary>
         /// 构造函数

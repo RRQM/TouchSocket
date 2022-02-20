@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Run;
-using RRQMCore.Serialization;
 
 namespace RRQMSocket
 {
@@ -31,24 +30,5 @@ namespace RRQMSocket
         /// ID
         /// </summary>
         public string ID { get; set; }
-
-        /// <summary>
-        /// 转化数据
-        /// </summary>
-        /// <returns></returns>
-        internal byte[] GetData()
-        {
-            return RRQMCore.Data.Security.DataLock.EncryptDES(SerializeConvert.RRQMBinarySerialize(this), "RRQMRRQM");
-        }
-
-        /// <summary>
-        /// 获取对象
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        internal static WaitVerify GetVerifyInfo(byte[] buffer)
-        {
-            return SerializeConvert.RRQMBinaryDeserialize<WaitVerify>(RRQMCore.Data.Security.DataLock.DecryptDES(buffer, "RRQMRRQM"));
-        }
     }
 }

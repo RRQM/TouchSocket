@@ -21,7 +21,16 @@ namespace RRQMSocket
         /// <summary>
         /// 令箭
         /// </summary>
-        public string Token { get; internal set; }
+        public string Token { get; private set; }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="token"></param>
+        public VerifyOption(string token)
+        {
+            this.Token = token;
+        }
 
         /// <summary>
         /// 是否接受

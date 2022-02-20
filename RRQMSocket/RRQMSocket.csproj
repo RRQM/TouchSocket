@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>6.6.0</Version>
+		<Version>7.0.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -12,10 +12,15 @@
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的网络通信框架。包含了TCP、UDP、Ssl、Channel、Protocol、Token、租户模式等一系列的通信模块。且支持除了IOCP以外的BIO和Select模型。更加的灵活、便捷。让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-增加：Channel类，可直接由Client向Client开通。
+增加：SocketClient可直接通过ID向同服务器的其他客户端发送数据。
+增加：Token及其派生系，也可使用断线重连。
+增加：TcpService系增加IDChanged事件。
+修改：Token系的验证令箭方式，采用json字符验证，让常规TCP也能模仿鉴权。
+优化：NATService，可转发至多个目标端口。
+删除：客户端配置移除OnlySend属性，由ReceiveType.None代替。
 
-API：https://gitee.com/RRQM_Home/RRQMBox/wikis
-DEMO：https://gitee.com/dotnetchina/RRQMSocket</Description>
+API：https://www.yuque.com/eo2w71/rrqm
+DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -77,7 +82,7 @@ DEMO：https://gitee.com/dotnetchina/RRQMSocket</Description>
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="6.6.0" />
+	  <PackageReference Include="RRQMCore" Version="7.0.0" />
 	</ItemGroup>
 
 </Project>

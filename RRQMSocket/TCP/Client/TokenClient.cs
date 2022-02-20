@@ -10,9 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
+using RRQMCore.Helper;
 using RRQMCore.Run;
+using System;
 using System.Threading;
 
 namespace RRQMSocket
@@ -35,14 +38,17 @@ namespace RRQMSocket
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
 
         private string id;
 
         /// <summary>
         /// 获取服务器分配的ID
         /// </summary>
-        public string ID => this.id;
+        public string ID
+        {
+            get { return this.id; }
+        }
 
         /// <summary>
         /// 重新设置ID,但是不会同步到服务器
@@ -58,7 +64,7 @@ namespace RRQMSocket
         /// </summary>
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTokenVerifyException"></exception>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         public override ITcpClient Connect()
         {
             return this.Connect("rrqm");
@@ -71,7 +77,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
@@ -79,7 +85,7 @@ namespace RRQMSocket
             }
             else
             {
-                WaitVerify waitVerify = WaitVerify.GetVerifyInfo(byteBlock.ToArray());
+                WaitVerify waitVerify = byteBlock.ToArray().ToJsonObject<WaitVerify>();
                 this.waitHandlePool.SetRun(waitVerify);
                 System.Threading.SpinWait.SpinUntil(() =>
                 {
@@ -100,7 +106,7 @@ namespace RRQMSocket
         /// </summary>
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTokenVerifyException"></exception>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         public virtual ITcpClient Connect(string verifyToken, CancellationToken token = default)
         {
             lock (this)
@@ -118,7 +124,8 @@ namespace RRQMSocket
                 WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
                 waitData.SetCancellationToken(token);
 
-                byte[] data = waitVerify.GetData();
+
+                byte[] data = waitVerify.ToJsonBytes();
                 base.Send(data, 0, data.Length);
                 try
                 {
@@ -160,7 +167,7 @@ namespace RRQMSocket
                         case WaitDataStatus.Overtime:
                             this.BreakOut("连接超时");
                             this.MainSocket.Dispose();
-                            throw new RRQMTimeoutException("连接超时");
+                            throw new TimeoutException("连接超时");
                         case WaitDataStatus.Canceled:
                         case WaitDataStatus.Disposed:
                         default:

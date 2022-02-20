@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Event;
+
 
 namespace RRQMSocket
 {
@@ -33,6 +34,9 @@ namespace RRQMSocket
         /// <summary>
         /// 数据块
         /// </summary>
-        public ByteBlock ByteBlock => this.byteBlock;
+        public ByteBlock ByteBlock
+        {
+            get { return this.byteBlock; }
+        }
     }
 }

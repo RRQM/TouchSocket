@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Helper;
 using System.Collections.Generic;
 using System.Text;
@@ -76,8 +77,8 @@ namespace RRQMSocket
         /// </summary>
         public int MaxSize
         {
-            get => this.maxSize;
-            set => this.maxSize = value;
+            get { return this.maxSize; }
+            set { this.maxSize = value; }
         }
 
         /// <summary>
@@ -85,8 +86,8 @@ namespace RRQMSocket
         /// </summary>
         public int MinSize
         {
-            get => this.minSize;
-            set => this.minSize = value;
+            get { return this.minSize; }
+            set { this.minSize = value; }
         }
 
         /// <summary>
@@ -94,8 +95,8 @@ namespace RRQMSocket
         /// </summary>
         public bool ReserveTerminatorCode
         {
-            get => this.reserveTerminatorCode;
-            set => this.reserveTerminatorCode = value;
+            get { return this.reserveTerminatorCode; }
+            set { this.reserveTerminatorCode = value; }
         }
 
         /// <summary>

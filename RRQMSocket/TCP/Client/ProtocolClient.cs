@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
@@ -45,6 +45,14 @@ namespace RRQMSocket
             this.usedProtocol = new Dictionary<short, string>();
             this.protocolSubscriberCollection = new ConcurrentDictionary<short, ProtocolSubscriberCollection>();
             this.userChannels = new ConcurrentDictionary<int, Channel>();
+        }
+
+        /// <summary>
+        /// 已被使用的协议集合。
+        /// </summary>
+        public Dictionary<short, string> UsedProtocol
+        {
+            get { return this.usedProtocol; }
         }
 
         /// <summary>
@@ -81,6 +89,16 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool ChannelExisted(int id)
+        {
+            return this.userChannels.ContainsKey(id);
+        }
+
+        /// <summary>
         /// 创建通道
         /// </summary>
         /// <returns></returns>
@@ -96,11 +114,6 @@ namespace RRQMSocket
                     return channel;
                 }
             }
-        }
-
-        internal void RemoveChannel(int id)
-        {
-            this.userChannels.TryRemove(id, out _);
         }
 
         /// <summary>
@@ -173,7 +186,7 @@ namespace RRQMSocket
                         }
                     case WaitDataStatus.Overtime:
                         {
-                            throw new RRQMTimeoutException("等待结果超时");
+                            throw new TimeoutException("等待结果超时");
                         }
                     default:
                         {
@@ -234,7 +247,7 @@ namespace RRQMSocket
                         }
                     case WaitDataStatus.Overtime:
                         {
-                            throw new RRQMTimeoutException("等待结果超时");
+                            throw new TimeoutException("等待结果超时");
                         }
                     default:
                         {
@@ -277,16 +290,18 @@ namespace RRQMSocket
         /// 重新设置ID,并且同步到服务器
         /// </summary>
         /// <param name="id"></param>
+        /// <exception cref="RRQMException"></exception>
         public override void ResetID(string id)
         {
             this.ResetID(id, default);
         }
 
         /// <summary>
-        /// 重置ID
+        /// 重新设置ID,并且同步到服务器
         /// </summary>
         /// <param name="id"></param>
         /// <param name="cancellationToken"></param>
+        /// <exception cref="RRQMException"></exception>
         public void ResetID(string id, CancellationToken cancellationToken)
         {
             WaitSetID waitSetID = new WaitSetID();
@@ -312,15 +327,12 @@ namespace RRQMSocket
                         break;
                     }
                 case WaitDataStatus.Overtime:
-                    throw new RRQMException("同步ID超时");
+                    throw new TimeoutException(ResType.Overtime.GetResString());
                 case WaitDataStatus.Canceled:
                     break;
-
                 case WaitDataStatus.Disposed:
-                    break;
-
                 default:
-                    break;
+                    throw new RRQMException(ResType.UnknownError.GetResString());
             }
         }
 
@@ -345,14 +357,19 @@ namespace RRQMSocket
             return false;
         }
 
+        internal void RemoveChannel(int id)
+        {
+            this.userChannels.TryRemove(id, out _);
+        }
+
         /// <summary>
         /// 添加已被使用的协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="describe"></param>
-        protected void AddUsedProtocol(short procotol, string describe)
+        protected void AddUsedProtocol(short protocol, string describe)
         {
-            this.usedProtocol.Add(procotol, describe);
+            this.usedProtocol.Add(protocol, describe);
         }
 
         /// <summary>
@@ -361,9 +378,9 @@ namespace RRQMSocket
         /// 所以真实数据起点为2，
         /// 长度为Length-2。
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected abstract void HandleProtocolData(short procotol, ByteBlock byteBlock);
+        protected abstract void HandleProtocolData(short protocol, ByteBlock byteBlock);
 
         /// <summary>
         /// 流数据处理
@@ -376,10 +393,10 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            short procotol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
-            switch (procotol)
+            short protocol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
+            switch (protocol)
             {
                 case 0:
                     {
@@ -442,7 +459,7 @@ namespace RRQMSocket
                         {
                             byteBlock.Pos = 2;
                             int id = byteBlock.ReadInt32();
-                            this.ReceivedChannelData(id, procotol, byteBlock);
+                            this.ReceivedChannelData(id, protocol, byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -490,6 +507,7 @@ namespace RRQMSocket
                         }
                     }
                     break;
+
                 case -12://create channel to client return
                     {
                         try
@@ -499,7 +517,7 @@ namespace RRQMSocket
                         }
                         catch (Exception ex)
                         {
-                            this.logger.Debug(LogType.Error, this, $"在{procotol}中发生错误。", ex);
+                            this.logger.Debug(LogType.Error, this, $"在{protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -523,7 +541,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            if (this.protocolSubscriberCollection.TryGetValue(procotol, out ProtocolSubscriberCollection subscribers))
+                            if (this.protocolSubscriberCollection.TryGetValue(protocol, out ProtocolSubscriberCollection subscribers))
                             {
                                 ProtocolSubscriberEventArgs args = new ProtocolSubscriberEventArgs(byteBlock);
                                 foreach (var protocolSubscriber in subscribers)
@@ -542,7 +560,7 @@ namespace RRQMSocket
                                     }
                                 }
                             }
-                            this.HandleProtocolData(procotol, byteBlock);
+                            this.HandleProtocolData(protocol, byteBlock);
                         }
                         catch (Exception ex)
                         {
@@ -707,7 +725,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void Send(byte[] buffer, int offset, int length)
+        public override sealed void Send(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -716,7 +734,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"><inheritdoc/></param>
-        public sealed override void Send(byte[] buffer)
+        public override sealed void Send(byte[] buffer)
         {
             this.Send(buffer, 0, buffer.Length);
         }
@@ -725,7 +743,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public sealed override void Send(ByteBlock byteBlock)
+        public override sealed void Send(ByteBlock byteBlock)
         {
             this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -734,7 +752,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void Send(IList<TransferByte> transferBytes)
+        public override sealed void Send(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.Send(transferBytes);
@@ -748,7 +766,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
-        public sealed override void SendAsync(byte[] buffer)
+        public override sealed void SendAsync(byte[] buffer)
         {
             this.SendAsync(buffer, 0, buffer.Length);
         }
@@ -768,7 +786,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void SendAsync(byte[] buffer, int offset, int length)
+        public override sealed void SendAsync(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -777,7 +795,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void SendAsync(IList<TransferByte> transferBytes)
+        public override sealed void SendAsync(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.SendAsync(transferBytes);
@@ -790,32 +808,32 @@ namespace RRQMSocket
         /// <summary>
         /// 发送协议状态
         /// </summary>
-        /// <param name="procotol"></param>
-        public void Send(short procotol)
+        /// <param name="protocol"></param>
+        public void Send(short protocol)
         {
-            this.Send(procotol, new byte[0], 0, 0);
+            this.Send(protocol, new byte[0], 0, 0);
         }
 
         /// <summary>
         /// 发送字节
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
-        public void Send(short procotol, byte[] buffer)
+        public void Send(short protocol, byte[] buffer)
         {
-            this.Send(procotol, buffer, 0, buffer.Length);
+            this.Send(protocol, buffer, 0, buffer.Length);
         }
 
         /// <summary>
         /// 发送字节
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void Send(short procotol, byte[] buffer, int offset, int length)
+        public void Send(short protocol, byte[] buffer, int offset, int length)
         {
-            if (this.usedProtocol.ContainsKey(procotol))
+            if (this.usedProtocol.ContainsKey(protocol))
             {
                 StringBuilder stringBuilder = new StringBuilder();
                 foreach (var item in this.usedProtocol.Keys)
@@ -826,18 +844,18 @@ namespace RRQMSocket
             }
             else
             {
-                this.InternalSend(procotol, buffer, offset, length);
+                this.InternalSend(protocol, buffer, offset, length);
             }
         }
 
         /// <summary>
         /// 发送协议流
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="dataByteBlock"></param>
-        public void Send(short procotol, ByteBlock dataByteBlock)
+        public void Send(short protocol, ByteBlock dataByteBlock)
         {
-            this.Send(procotol, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
+            this.Send(protocol, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
         }
 
         #endregion 协议同步发送
@@ -847,34 +865,34 @@ namespace RRQMSocket
         /// <summary>
         /// 异步发送协议状态
         /// </summary>
-        /// <param name="procotol"></param>
-        public void SendAsync(short procotol)
+        /// <param name="protocol"></param>
+        public void SendAsync(short protocol)
         {
-            this.Send(procotol, new byte[0], 0, 0);
+            this.Send(protocol, new byte[0], 0, 0);
         }
 
         /// <summary>
         /// 异步发送字节
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
-        public void SendAsync(short procotol, byte[] buffer)
+        public void SendAsync(short protocol, byte[] buffer)
         {
-            this.Send(procotol, buffer, 0, buffer.Length);
+            this.Send(protocol, buffer, 0, buffer.Length);
         }
 
         /// <summary>
         /// 异步发送字节
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void SendAsync(short procotol, byte[] buffer, int offset, int length)
+        public void SendAsync(short protocol, byte[] buffer, int offset, int length)
         {
-            if (!this.usedProtocol.ContainsKey(procotol))
+            if (!this.usedProtocol.ContainsKey(protocol))
             {
-                this.InternalSend(procotol, buffer, offset, length);
+                this.InternalSend(protocol, buffer, offset, length);
             }
             else
             {
@@ -890,11 +908,11 @@ namespace RRQMSocket
         /// <summary>
         /// 异步发送协议流
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="dataByteBlock"></param>
-        public void SendAsync(short procotol, ByteBlock dataByteBlock)
+        public void SendAsync(short protocol, ByteBlock dataByteBlock)
         {
-            this.Send(procotol, dataByteBlock.Buffer, 0, dataByteBlock.Len);
+            this.Send(protocol, dataByteBlock.Buffer, 0, dataByteBlock.Len);
         }
 
         #endregion 协议异步发送
@@ -904,15 +922,15 @@ namespace RRQMSocket
         /// <summary>
         /// 内部发送，不会检测用户协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected void InternalSend(short procotol, byte[] buffer, int offset, int length)
+        protected void InternalSend(short protocol, byte[] buffer, int offset, int length)
         {
-            if (procotol > 0)
+            if (protocol > 0)
             {
-                this.SocketSend(procotol, buffer, offset, length);
+                this.SocketSend(protocol, buffer, offset, length);
             }
             else
             {
@@ -923,13 +941,13 @@ namespace RRQMSocket
         /// <summary>
         /// 内部发送，不会检测用户协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
-        protected void InternalSend(short procotol, byte[] buffer)
+        protected void InternalSend(short protocol, byte[] buffer)
         {
-            if (procotol > 0)
+            if (protocol > 0)
             {
-                this.SocketSend(procotol, buffer, 0, buffer.Length);
+                this.SocketSend(protocol, buffer, 0, buffer.Length);
             }
             else
             {
@@ -940,11 +958,11 @@ namespace RRQMSocket
         /// <summary>
         /// 内部发送，不会检测用户协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected void InternalSend(short procotol, ByteBlock byteBlock)
+        protected void InternalSend(short protocol, ByteBlock byteBlock)
         {
-            this.InternalSend(procotol, byteBlock.Buffer, 0, byteBlock.Len);
+            this.InternalSend(protocol, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion 内部同步发送
@@ -954,15 +972,15 @@ namespace RRQMSocket
         /// <summary>
         /// 内部发送，不会检测用户协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected void InternalSendAsync(short procotol, byte[] buffer, int offset, int length)
+        protected void InternalSendAsync(short protocol, byte[] buffer, int offset, int length)
         {
-            if (procotol > 0)
+            if (protocol > 0)
             {
-                this.SocketSendAsync(procotol, buffer, offset, length);
+                this.SocketSendAsync(protocol, buffer, offset, length);
             }
             else
             {
@@ -973,13 +991,13 @@ namespace RRQMSocket
         /// <summary>
         /// 内部发送，不会检测用户协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="buffer"></param>
-        protected void InternalSendAsync(short procotol, byte[] buffer)
+        protected void InternalSendAsync(short protocol, byte[] buffer)
         {
-            if (procotol > 0)
+            if (protocol > 0)
             {
-                this.SocketSendAsync(procotol, buffer, 0, buffer.Length);
+                this.SocketSendAsync(protocol, buffer, 0, buffer.Length);
             }
             else
             {
@@ -990,37 +1008,37 @@ namespace RRQMSocket
         /// <summary>
         /// 内部发送，不会检测用户协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected void InternalSendAsync(short procotol, ByteBlock byteBlock)
+        protected void InternalSendAsync(short protocol, ByteBlock byteBlock)
         {
-            this.InternalSendAsync(procotol, byteBlock.Buffer, 0, byteBlock.Len);
+            this.InternalSendAsync(protocol, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion 内部异步发送
 
         #region Socket同步直发
 
-        internal void SocketSend(short procotol, byte[] dataBuffer)
+        internal void SocketSend(short protocol, byte[] dataBuffer)
         {
-            this.SocketSend(procotol, dataBuffer, 0, dataBuffer.Length);
+            this.SocketSend(protocol, dataBuffer, 0, dataBuffer.Length);
         }
 
-        internal void SocketSend(short procotol, ByteBlock byteBlock)
+        internal void SocketSend(short protocol, ByteBlock byteBlock)
         {
-            this.SocketSend(procotol, byteBlock.Buffer, 0, byteBlock.Len);
+            this.SocketSend(protocol, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
-        internal void SocketSend(short procotol)
+        internal void SocketSend(short protocol)
         {
-            this.SocketSend(procotol, new byte[0], 0, 0);
+            this.SocketSend(protocol, new byte[0], 0, 0);
         }
 
-        internal void SocketSend(short procotol, byte[] dataBuffer, int offset, int length)
+        internal void SocketSend(short protocol, byte[] dataBuffer, int offset, int length)
         {
             TransferByte[] transferBytes = new TransferByte[]
             {
-            new TransferByte(RRQMBitConverter.Default.GetBytes(procotol)),
+            new TransferByte(RRQMBitConverter.Default.GetBytes(protocol)),
             new TransferByte(dataBuffer,offset,length)
             };
             base.Send(transferBytes);
@@ -1030,21 +1048,21 @@ namespace RRQMSocket
 
         #region Socket异步直发
 
-        internal void SocketSendAsync(short procotol, byte[] dataBuffer)
+        internal void SocketSendAsync(short protocol, byte[] dataBuffer)
         {
-            this.SocketSendAsync(procotol, dataBuffer, 0, dataBuffer.Length);
+            this.SocketSendAsync(protocol, dataBuffer, 0, dataBuffer.Length);
         }
 
-        internal void SocketSendAsync(short procotol)
+        internal void SocketSendAsync(short protocol)
         {
-            this.SocketSendAsync(procotol, new byte[0], 0, 0);
+            this.SocketSendAsync(protocol, new byte[0], 0, 0);
         }
 
-        internal void SocketSendAsync(short procotol, byte[] dataBuffer, int offset, int length)
+        internal void SocketSendAsync(short protocol, byte[] dataBuffer, int offset, int length)
         {
             TransferByte[] transferBytes = new TransferByte[]
              {
-            new TransferByte(RRQMBitConverter.Default.GetBytes(procotol)),
+            new TransferByte(RRQMBitConverter.Default.GetBytes(protocol)),
             new TransferByte(dataBuffer,offset,length)
              };
             base.SendAsync(transferBytes);
@@ -1190,16 +1208,6 @@ namespace RRQMSocket
                     channel.Dispose();
                 }
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public bool ChannelExisted(int id)
-        {
-            return this.userChannels.ContainsKey(id);
         }
     }
 }

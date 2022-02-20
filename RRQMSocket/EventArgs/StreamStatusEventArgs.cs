@@ -24,7 +24,10 @@ namespace RRQMSocket
         /// <summary>
         /// 结果
         /// </summary>
-        public Result Result => this.result;
+        public Result Result
+        {
+            get { return this.result; }
+        }
 
         /// <summary>
         /// 构造函数

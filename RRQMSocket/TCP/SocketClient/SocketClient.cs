@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
@@ -39,6 +40,7 @@ namespace RRQMSocket
         /// 设置在线状态
         /// </summary>
         protected bool online;
+
         private ClearType clearType;
         private DataHandlingAdapter dataHandlingAdapter;
         private SocketAsyncEventArgs eventArgs;
@@ -51,36 +53,51 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public virtual bool CanSetDataHandlingAdapter => true;
+        public virtual bool CanSetDataHandlingAdapter { get => true; }
 
         /// <summary>
         /// 选择清理类型
         /// </summary>
         public ClearType ClearType
         {
-            get => this.clearType;
-            set => this.clearType = value;
+            get { return this.clearType; }
+            set { this.clearType = value; }
         }
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter => this.dataHandlingAdapter;
+        public DataHandlingAdapter DataHandlingAdapter
+        {
+            get
+            {
+                return this.dataHandlingAdapter;
+            }
+        }
 
         /// <summary>
         /// 用于索引的ID
         /// </summary>
-        public string ID => this.id;
+        public string ID
+        {
+            get { return this.id; }
+        }
 
         /// <summary>
         /// IP地址
         /// </summary>
-        public string IP => this.ip;
+        public string IP
+        {
+            get { return this.ip; }
+        }
 
         /// <summary>
         /// 主通信器
         /// </summary>
-        public Socket MainSocket => this.mainSocket;
+        public Socket MainSocket
+        {
+            get { return this.mainSocket; }
+        }
 
         /// <summary>
         /// IP及端口
@@ -95,12 +112,18 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public int Port => this.port;
+        public int Port
+        {
+            get { return this.port; }
+        }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public ReceiveType ReceiveType => this.receiveType;
+        public ReceiveType ReceiveType
+        {
+            get { return this.receiveType; }
+        }
 
         /// <summary>
         /// 端口号
@@ -108,17 +131,26 @@ namespace RRQMSocket
         /// <summary>
         /// 包含此辅助类的主服务器类
         /// </summary>
-        public TcpServiceBase Service => this.service;
+        public TcpServiceBase Service
+        {
+            get { return this.service; }
+        }
 
         /// <summary>
         /// 服务配置
         /// </summary>
-        public ServiceConfig ServiceConfig => this.serviceConfig;
+        public ServiceConfig ServiceConfig
+        {
+            get { return this.serviceConfig; }
+        }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool UseSsl => this.useSsl;
+        public bool UseSsl
+        {
+            get { return this.useSsl; }
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -152,6 +184,19 @@ namespace RRQMSocket
                 this.workStream = new NetworkStream(this.mainSocket, true);
             }
             return this.workStream;
+        }
+
+        /// <summary>
+        /// 重新设置ID
+        /// </summary>
+        /// <param name="newID"></param>
+        public void ResetID(string newID)
+        {
+            if (this.id == newID)
+            {
+                return;
+            }
+            this.ResetID(new WaitSetID() { OldID = this.id, NewID = newID });
         }
 
         /// <summary>
@@ -367,7 +412,7 @@ namespace RRQMSocket
 
                     if (this.service != null)
                     {
-                        this.service.SocketClients.TryRemove(this.id);
+                        this.service.SocketClients.TryRemove(this.id, out _);
                     }
 
                     if (this.online)
@@ -476,28 +521,16 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 重新设置ID
-        /// </summary>
-        /// <param name="newID"></param>
-        public void ResetID(string newID)
-        {
-            if (this.id == newID)
-            {
-                return;
-            }
-            this.ResetID(new WaitSetID() { OldID = this.id, NewID = newID });
-        }
-
-        /// <summary>
         /// 设置适配器，该方法不会检验<see cref="CanSetDataHandlingAdapter"/>的值。
         /// </summary>
         /// <param name="adapter"></param>
         protected void SetAdapter(DataHandlingAdapter adapter)
         {
-            if (adapter == null)
+            if (adapter is null)
             {
-                throw new RRQMException("数据处理适配器为空");
+                throw new ArgumentNullException(nameof(adapter));
             }
+
             if (adapter.owner != null)
             {
                 throw new RRQMException("此适配器已被其他终端使用，请重新创建对象。");
@@ -603,7 +636,7 @@ namespace RRQMSocket
                     }
                     if (this.dataHandlingAdapter == null)
                     {
-                        this.logger.Debug(LogType.Error, this, "数据处理适配器为空");
+                        this.logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetResString());
                         return;
                     }
                     this.dataHandlingAdapter.Received(byteBlock);
@@ -703,9 +736,13 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
+            if (this.disposable)
+            {
+                return;
+            }
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
             this.dataHandlingAdapter.Send(buffer, offset, length, false);
         }
@@ -728,9 +765,13 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public virtual void Send(IList<TransferByte> transferBytes)
         {
+            if (this.disposable)
+            {
+                return;
+            }
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
@@ -769,9 +810,13 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(byte[] buffer, int offset, int length)
         {
+            if (this.disposable)
+            {
+                return;
+            }
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
             this.dataHandlingAdapter.Send(buffer, offset, length, true);
         }
@@ -806,9 +851,13 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public virtual void SendAsync(IList<TransferByte> transferBytes)
         {
+            if (this.disposable)
+            {
+                return;
+            }
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
@@ -833,6 +882,98 @@ namespace RRQMSocket
         }
 
         #endregion 异步发送
+
+        #region ID发送
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Send(string id, byte[] buffer)
+        {
+            this.Send(id, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Send(string id, byte[] buffer, int offset, int length)
+        {
+            this.service.Send(id, buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Send(string id, ByteBlock byteBlock)
+        {
+            this.Send(id, byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(string id, byte[] buffer)
+        {
+            this.SendAsync(id, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(string id, byte[] buffer, int offset, int length)
+        {
+            this.service.SendAsync(id, buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(string id, ByteBlock byteBlock)
+        {
+            this.SendAsync(id, byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        #endregion ID发送
 
         private void Sent(byte[] buffer, int offset, int length, bool isAsync)
         {

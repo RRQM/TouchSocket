@@ -37,7 +37,7 @@ namespace RRQMSocket
         /// </summary>
         public int BufferLength
         {
-            get => this.bufferLength;
+            get { return this.bufferLength; }
             set
             {
                 if (value < 1024 || value > 1024 * 1024 * 10)
@@ -53,8 +53,8 @@ namespace RRQMSocket
         /// </summary>
         public ILog Logger
         {
-            get => this.logger;
-            set => this.logger = value;
+            get { return this.logger; }
+            set { this.logger = value; }
         }
 
         /// <summary>

@@ -49,8 +49,8 @@ namespace RRQMSocket
         /// </summary>
         public static int CacheLength
         {
-            get => cacheLength;
-            set => cacheLength = value;
+            get { return cacheLength; }
+            set { cacheLength = value; }
         }
 
         internal AsyncSender(Socket socket, EndPoint endPoint, Action<Exception> onError)

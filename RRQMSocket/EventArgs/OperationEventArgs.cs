@@ -25,8 +25,8 @@ namespace RRQMSocket
         /// </summary>
         public bool IsPermitOperation
         {
-            get => this.isPermitOperation;
-            set => this.isPermitOperation = value;
+            get { return this.isPermitOperation; }
+            set { this.isPermitOperation = value; }
         }
     }
 }

@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using System;
 using System.Collections.Generic;
 
@@ -40,8 +40,8 @@ namespace RRQMSocket
         /// </summary>
         public FixedHeaderType FixedHeaderType
         {
-            get => this.fixedHeaderType;
-            set => this.fixedHeaderType = value;
+            get { return this.fixedHeaderType; }
+            set { this.fixedHeaderType = value; }
         }
 
         /// <summary>
@@ -49,8 +49,8 @@ namespace RRQMSocket
         /// </summary>
         public int MaxPackageSize
         {
-            get => this.maxPackageSize;
-            set => this.maxPackageSize = value;
+            get { return this.maxPackageSize; }
+            set { this.maxPackageSize = value; }
         }
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace RRQMSocket
         /// </summary>
         public int MinPackageSize
         {
-            get => this.minPackageSize;
-            set => this.minPackageSize = value;
+            get { return this.minPackageSize; }
+            set { this.minPackageSize = value; }
         }
 
         /// <summary>

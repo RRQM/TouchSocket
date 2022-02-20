@@ -25,14 +25,20 @@ namespace RRQMSocket
         /// <summary>
         /// 连接令箭
         /// </summary>
-        public string VerifyToken => this.verifyToken;
+        public string VerifyToken
+        {
+            get { return this.verifyToken; }
+        }
 
         private int verifyTimeout;
 
         /// <summary>
         /// 验证超时时间,默认为3000ms
         /// </summary>
-        public int VerifyTimeout => this.verifyTimeout;
+        public int VerifyTimeout
+        {
+            get { return this.verifyTimeout; }
+        }
 
         /// <summary>
         /// 载入配置

@@ -59,11 +59,17 @@ namespace RRQMSocket
         /// <summary>
         /// 信息
         /// </summary>
-        public string Message => this.message;
+        public string Message
+        {
+            get { return this.message; }
+        }
 
         /// <summary>
         /// 结果类型
         /// </summary>
-        public DataResultCode ResultCode => this.resultCode;
+        public DataResultCode ResultCode
+        {
+            get { return this.resultCode; }
+        }
     }
 }

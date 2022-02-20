@@ -10,9 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Collections.Concurrent;
-using RRQMCore.Exceptions;
+
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -117,14 +118,17 @@ namespace RRQMSocket
         /// <summary>
         /// 目的ID地址。
         /// </summary>
-        public string TargetClientID => this.targetClientID;
+        public string TargetClientID
+        {
+            get { return this.targetClientID; }
+        }
 
         /// <summary>
         /// 缓存容量
         /// </summary>
         public int CacheCapacity
         {
-            get => this.cacheCapacity;
+            get { return this.cacheCapacity; }
             set
             {
                 if (value < 0)
@@ -139,31 +143,40 @@ namespace RRQMSocket
         /// <summary>
         /// 是否具有数据可读
         /// </summary>
-        public bool Available => this.dataQueue.Count > 0 ? true : false;
+        public bool Available
+        {
+            get { return this.dataQueue.Count > 0 ? true : false; }
+        }
 
         /// <summary>
         /// 能否写入
         /// </summary>
-        public bool CanWrite => (byte)this.status > 3 ? false : true;
+        public bool CanWrite { get => (byte)this.status > 3 ? false : true; }
 
         /// <summary>
         /// ID
         /// </summary>
-        public int ID => this.id;
+        public int ID
+        {
+            get { return this.id; }
+        }
 
         /// <summary>
         /// 最后一次操作时显示消息
         /// </summary>
         public string LastOperationMes
         {
-            get => this.lastOperationMes;
-            set => this.lastOperationMes = value;
+            get { return this.lastOperationMes; }
+            set { this.lastOperationMes = value; }
         }
 
         /// <summary>
         /// 状态
         /// </summary>
-        public ChannelStatus Status => this.status;
+        public ChannelStatus Status
+        {
+            get { return this.status; }
+        }
 
         /// <summary>
         /// 取消

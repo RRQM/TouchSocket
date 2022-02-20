@@ -25,8 +25,8 @@ namespace RRQMSocket
         /// </summary>
         public int HeartbeatFrequency
         {
-            get => (int)this.GetValue(HeartbeatFrequencyProperty);
-            set => this.SetValue(HeartbeatFrequencyProperty, value);
+            get { return (int)this.GetValue(HeartbeatFrequencyProperty); }
+            set { this.SetValue(HeartbeatFrequencyProperty, value); }
         }
 
         /// <summary>

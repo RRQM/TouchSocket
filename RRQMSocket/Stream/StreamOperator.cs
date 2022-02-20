@@ -44,18 +44,19 @@ namespace RRQMSocket
         /// </summary>
         protected long speedTemp;
 
-        private CancellationTokenSource tokenSource;
-
         /// <summary>
         /// 已完成长度
         /// </summary>
         /// <returns></returns>
-        public long CompletedLength => this.completedLength;
+        public long CompletedLength { get => this.completedLength; }
 
         /// <summary>
         /// 最大传输速度（企业版默认1024*1024字节，开源版不限速，所以此值无效。）
         /// </summary>
-        public int MaxSpeed => int.MaxValue;
+        public int MaxSpeed
+        {
+            get { return int.MaxValue; }
+        }
 
         /// <summary>
         /// 包长度，默认512Kb,
@@ -63,7 +64,7 @@ namespace RRQMSocket
         /// </summary>
         public int PackageSize
         {
-            get => this.packageSize;
+            get { return this.packageSize; }
             set
             {
                 if (value < 1024 || value > 1024 * 1024 * 10)
@@ -77,47 +78,23 @@ namespace RRQMSocket
         /// <summary>
         /// 进度
         /// </summary>
-        public float Progress => this.progress;
+        public float Progress
+        {
+            get { return this.progress; }
+        }
 
         /// <summary>
         /// 执行结果
         /// </summary>
-        public Result Result => this.result;
+        public Result Result
+        {
+            get { return this.result; }
+        }
 
         /// <summary>
         /// 可取消令箭
         /// </summary>
         public CancellationToken Token { get; set; }
-
-        /// <summary>
-        /// 可取消令箭源
-        /// </summary>
-        public CancellationTokenSource TokenSource => this.tokenSource;
-
-        /// <summary>
-        /// 取消任务
-        /// </summary>
-        public void Cancel()
-        {
-            if (this.tokenSource != null)
-            {
-                this.tokenSource.Cancel();
-            }
-            else
-            {
-                new System.ArgumentNullException(nameof(this.TokenSource), "可取消令箭源为空。");
-            }
-        }
-
-        /// <summary>
-        /// 设置可取消令箭源
-        /// </summary>
-        /// <param name="tokenSource"></param>
-        public void SetCancellationTokenSource(CancellationTokenSource tokenSource)
-        {
-            this.tokenSource = tokenSource;
-            this.Token = tokenSource.Token;
-        }
 
         /// <summary>
         /// 从上次获取到此次获得的速度
