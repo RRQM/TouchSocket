@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Run;
 using RRQMSocket.Http;
 using RRQMSocket.WebSocket.Helper;
@@ -50,8 +51,8 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         public string WebSocketVersion
         {
-            get => this.webSocketVersion;
-            set => this.webSocketVersion = value;
+            get { return this.webSocketVersion; }
+            set { this.webSocketVersion = value; }
         }
 
         /// <summary>
@@ -120,7 +121,7 @@ namespace RRQMSocket.WebSocket
                         }
                     case WaitDataStatus.Overtime:
                         this.MainSocket.Dispose();
-                        throw new RRQMTimeoutException("连接超时");
+                        throw new TimeoutException("连接超时");
                     case WaitDataStatus.Canceled:
                     case WaitDataStatus.Disposed:
                     default:
@@ -168,7 +169,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
