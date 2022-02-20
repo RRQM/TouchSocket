@@ -14,57 +14,63 @@
 using RRQMCore.Serialization;
 using System.Threading;
 
-namespace RRQMSocket.RPC
+namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
     /// RPC调用设置
     /// </summary>
-    public class InvokeOption
+    public struct InvokeOption : IInvokeOption
     {
-        private static InvokeOption onlySend;
-
-        private static InvokeOption waitInvoke;
-
-        private static InvokeOption waitSend;
-
-        private InvokeType invokeType = InvokeType.GlobalInstance;
-
-        private SerializationType serializationType = SerializationType.RRQMBinary;
-
-        private int timeout = 5000;
+        private int timeout;
 
         static InvokeOption()
         {
-            onlySend = new InvokeOption();
-            onlySend.FeedbackType = FeedbackType.OnlySend;
+            OnlySend = new InvokeOption(timeout: 5000);
+            OnlySend.FeedbackType = FeedbackType.OnlySend;
 
-            waitSend = new InvokeOption();
-            waitSend.FeedbackType = FeedbackType.WaitSend;
+            WaitSend = new InvokeOption(timeout: 5000);
+            WaitSend.FeedbackType = FeedbackType.WaitSend;
 
-            waitInvoke = new InvokeOption();
-            waitInvoke.FeedbackType = FeedbackType.WaitInvoke;
+            WaitInvoke = new InvokeOption(timeout: 5000);
+            WaitInvoke.FeedbackType = FeedbackType.WaitInvoke;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="feedbackType"></param>
+        /// <param name="invokeType"></param>
+        /// <param name="serializationType"></param>
+        /// <param name="cancellationToken"></param>
+        public InvokeOption(int timeout = 5000, FeedbackType feedbackType = FeedbackType.WaitInvoke,
+            InvokeType invokeType = InvokeType.GlobalInstance, SerializationType serializationType = SerializationType.RRQMBinary,
+            CancellationToken cancellationToken = default) : this()
+        {
+            this.Timeout = timeout;
+            this.FeedbackType = feedbackType;
+            this.InvokeType = invokeType;
+            this.SerializationType = serializationType;
+            this.CancellationToken = cancellationToken;
         }
 
         /// <summary>
         /// 默认设置。
         /// Timeout=5000ms
         /// </summary>
-        public static InvokeOption OnlySend
-        { get { return onlySend; } }
+        public static InvokeOption OnlySend;
 
         /// <summary>
         /// 默认设置。
         /// Timeout=5000ms
         /// </summary>
-        public static InvokeOption WaitInvoke
-        { get { return waitInvoke; } }
+        public static InvokeOption WaitInvoke;
 
         /// <summary>
         /// 默认设置。
         /// Timeout=5000 ms
         /// </summary>
-        public static InvokeOption WaitSend
-        { get { return waitSend; } }
+        public static InvokeOption WaitSend;
 
         /// <summary>
         /// 调用反馈
@@ -74,20 +80,12 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 调用类型
         /// </summary>
-        public InvokeType InvokeType
-        {
-            get { return invokeType; }
-            set { invokeType = value; }
-        }
+        public InvokeType InvokeType { get; set; }
 
         /// <summary>
         /// RRQMRPC序列化类型
         /// </summary>
-        public SerializationType SerializationType
-        {
-            get { return serializationType; }
-            set { serializationType = value; }
-        }
+        public SerializationType SerializationType { get; set; }
 
         /// <summary>
         /// 调用超时，
@@ -95,26 +93,23 @@ namespace RRQMSocket.RPC
         /// </summary>
         public int Timeout
         {
-            get { return timeout; }
+            get
+            {
+                if (this.timeout < 1000)
+                {
+                    return 5000;
+                }
+                return this.timeout;
+            }
             set
             {
-                if (value < 1000)
-                {
-                    value = 1000;
-                }
-                timeout = value;
+                this.timeout = value;
             }
         }
-
-        private CancellationToken cancellationToken;
 
         /// <summary>
         /// 可以取消的调用令箭
         /// </summary>
-        public CancellationToken CancellationToken
-        {
-            get { return cancellationToken; }
-            set { cancellationToken = value; }
-        }
+        public CancellationToken CancellationToken { get; set; }
     }
 }

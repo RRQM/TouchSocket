@@ -50,7 +50,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public string ProxyToken
         {
-            get { return proxyToken; }
+            get { return this.proxyToken; }
         }
 
         private List<ServerCellCode> codes;
@@ -60,7 +60,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public List<ServerCellCode> Codes
         {
-            get { return codes; }
+            get { return this.codes; }
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public RpcType RpcType
         {
-            get { return rpcType; }
+            get { return this.rpcType; }
         }
     }
 }

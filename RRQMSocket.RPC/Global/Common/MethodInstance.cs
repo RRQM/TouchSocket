@@ -23,59 +23,14 @@ namespace RRQMSocket.RPC
     public class MethodInstance
     {
         /// <summary>
-        /// 执行此RPC的实例
+        /// 是否异步执行
         /// </summary>
-        public IServerProvider Provider { get; internal set; }
-
-        /// <summary>
-        /// 实例类型
-        /// </summary>
-        public Type ProviderType { get; internal set; }
-
-        /// <summary>
-        /// RPC函数
-        /// </summary>
-        public MethodInfo Method { get; internal set; }
-
-        /// <summary>
-        /// RPC属性集合
-        /// </summary>
-        public RPCAttribute[] RPCAttributes { get; internal set; }
+        public AsyncType AsyncType { get; internal set; }
 
         /// <summary>
         /// 描述属性集合
         /// </summary>
         public DescriptionAttribute DescriptionAttribute { get; internal set; }
-
-        /// <summary>
-        /// 方法唯一令箭
-        /// </summary>
-        public int MethodToken { get; internal set; }
-
-        /// <summary>
-        /// 返回值类型，无返回值时为Null
-        /// </summary>
-        public Type ReturnType { get; internal set; }
-
-        /// <summary>
-        /// 参数类型集合，已处理out及ref，无参数时为空集合，
-        /// </summary>
-        public Type[] ParameterTypes { get; internal set; }
-
-        /// <summary>
-        /// 参数集合
-        /// </summary>
-        public ParameterInfo[] Parameters { get; internal set; }
-
-        /// <summary>
-        /// 参数名集合
-        /// </summary>
-        public string[] ParameterNames { get; internal set; }
-
-        /// <summary>
-        /// 是否异步执行
-        /// </summary>
-        public AsyncType AsyncType { get; internal set; }
 
         /// <summary>
         /// 是否有引用类型
@@ -88,10 +43,53 @@ namespace RRQMSocket.RPC
         public bool IsEnable { get; internal set; }
 
         /// <summary>
+        /// RPC函数
+        /// </summary>
+        public MethodInfo Method { get; internal set; }
+
+        /// <summary>
         /// 函数标识
         /// </summary>
         public MethodFlags MethodFlags { get; internal set; }
 
+        /// <summary>
+        /// 方法唯一令箭
+        /// </summary>
+        public int MethodToken { get; internal set; }
+
+        /// <summary>
+        /// 参数名集合
+        /// </summary>
+        public string[] ParameterNames { get; internal set; }
+
+        /// <summary>
+        /// 参数集合
+        /// </summary>
+        public ParameterInfo[] Parameters { get; internal set; }
+
+        /// <summary>
+        /// 参数类型集合，已处理out及ref，无参数时为空集合，
+        /// </summary>
+        public Type[] ParameterTypes { get; internal set; }
+
+        /// <summary>
+        /// 执行此RPC的实例
+        /// </summary>
+        public IServerProvider Provider { get; internal set; }
+
+        /// <summary>
+        /// 实例类型
+        /// </summary>
+        public Type ProviderType { get; internal set; }
+        /// <summary>
+        /// 返回值类型，无返回值时为Null
+        /// </summary>
+        public Type ReturnType { get; internal set; }
+
+        /// <summary>
+        /// RPC属性集合
+        /// </summary>
+        public RPCAttribute[] RPCAttributes { get; internal set; }
         /// <summary>
         /// 获取指定类型属性标签
         /// </summary>

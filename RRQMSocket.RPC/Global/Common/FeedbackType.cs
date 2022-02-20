@@ -27,7 +27,6 @@ namespace RRQMSocket.RPC
         /// 等待，直到发送抵达
         /// </summary>
         WaitSend,
-
         /// <summary>
         /// 等待，直到调用完成
         /// </summary>

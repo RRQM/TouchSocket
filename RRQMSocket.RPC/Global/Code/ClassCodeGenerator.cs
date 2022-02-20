@@ -48,7 +48,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public Assembly Assembly
         {
-            get { return assembly; }
+            get { return this.assembly; }
         }
 
         /// <summary>
@@ -102,11 +102,11 @@ namespace RRQMSocket.RPC
             }
             else if (listType.Contains(type.Name) || dicType.Contains(type.Name))
             {
-                return genericTypeDic[type];
+                return this.genericTypeDic[type];
             }
-            else if (propertyDic.ContainsKey(type))
+            else if (this.propertyDic.ContainsKey(type))
             {
-                return propertyDic[type].Name;
+                return this.propertyDic[type].Name;
             }
             else
             {
@@ -126,23 +126,23 @@ namespace RRQMSocket.RPC
             {
                 if (type.IsArray)
                 {
-                    AddTypeString(type.GetElementType());
+                    this.AddTypeString(type.GetElementType());
                 }
                 else if (type.IsGenericType)
                 {
                     Type[] types = type.GetGenericArguments();
                     foreach (Type itemType in types)
                     {
-                        AddTypeString(itemType);
+                        this.AddTypeString(itemType);
                     }
 
                     if (listType.Contains(type.Name))
                     {
                         string typeInnerString = this.GetTypeFullName(types[0]);
                         string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
-                        if (!genericTypeDic.ContainsKey(type))
+                        if (!this.genericTypeDic.ContainsKey(type))
                         {
-                            genericTypeDic.Add(type, typeString);
+                            this.genericTypeDic.Add(type, typeString);
                         }
                     }
                     else if (dicType.Contains(type.Name))
@@ -150,9 +150,9 @@ namespace RRQMSocket.RPC
                         string keyString = this.GetTypeFullName(types[0]);
                         string valueString = this.GetTypeFullName(types[1]);
                         string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
-                        if (!genericTypeDic.ContainsKey(type))
+                        if (!this.genericTypeDic.ContainsKey(type))
                         {
-                            genericTypeDic.Add(type, typeString);
+                            this.genericTypeDic.Add(type, typeString);
                         }
                     }
                 }
@@ -210,9 +210,9 @@ namespace RRQMSocket.RPC
                     }
 
                     stringBuilder.AppendLine("}");
-                    if (!propertyDic.ContainsKey(type))
+                    if (!this.propertyDic.ContainsKey(type))
                     {
-                        propertyDic.Add(type, new ClassCellCode() { Name = type.Name, Code = stringBuilder.ToString() });
+                        this.propertyDic.Add(type, new ClassCellCode() { Name = type.Name, Code = stringBuilder.ToString() });
                     }
                 }
                 else
@@ -248,13 +248,13 @@ namespace RRQMSocket.RPC
 
                     if (!type.IsStruct() && type.BaseType != typeof(object))
                     {
-                        AddTypeString(type.BaseType);
+                        this.AddTypeString(type.BaseType);
                         if (type.BaseType.IsGenericType)
                         {
                             Type[] types = type.BaseType.GetGenericArguments();
                             foreach (Type itemType in types)
                             {
-                                AddTypeString(itemType);
+                                this.AddTypeString(itemType);
                             }
                             if (listType.Contains(type.BaseType.Name))
                             {
@@ -279,8 +279,8 @@ namespace RRQMSocket.RPC
 
                     foreach (PropertyInfo itemProperty in propertyInfos)
                     {
-                        AddTypeString(itemProperty.PropertyType);
-                        if (propertyDic.ContainsKey(itemProperty.PropertyType))
+                        this.AddTypeString(itemProperty.PropertyType);
+                        if (this.propertyDic.ContainsKey(itemProperty.PropertyType))
                         {
                             stringBuilder.Append($"public {itemProperty.PropertyType.Name} {itemProperty.Name}");
                         }
@@ -289,7 +289,7 @@ namespace RRQMSocket.RPC
                             Type[] types = itemProperty.PropertyType.GetGenericArguments();
                             foreach (Type itemType in types)
                             {
-                                AddTypeString(itemType);
+                                this.AddTypeString(itemType);
                             }
 
                             if (listType.Contains(itemProperty.PropertyType.Name))
@@ -306,7 +306,7 @@ namespace RRQMSocket.RPC
                         }
                         else
                         {
-                            AddTypeString(itemProperty.PropertyType);
+                            this.AddTypeString(itemProperty.PropertyType);
                             stringBuilder.Append($"public {itemProperty.PropertyType.FullName} {itemProperty.Name}");
                         }
 
@@ -315,9 +315,9 @@ namespace RRQMSocket.RPC
 
                     stringBuilder.AppendLine("}");
 
-                    if (!propertyDic.ContainsKey(type))
+                    if (!this.propertyDic.ContainsKey(type))
                     {
-                        propertyDic.Add(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
+                        this.propertyDic.Add(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
                     }
                 }
             }

@@ -37,7 +37,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public UdpSession Service
         {
-            get { return service; }
+            get { return this.service; }
         }
 
         private EndPoint callerEndPoint;
@@ -47,7 +47,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public EndPoint CallerEndPoint
         {
-            get { return callerEndPoint; }
+            get { return this.callerEndPoint; }
         }
     }
 }

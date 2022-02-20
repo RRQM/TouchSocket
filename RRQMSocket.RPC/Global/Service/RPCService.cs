@@ -10,9 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,16 +63,13 @@ namespace RRQMSocket.RPC
         public ServerProviderCollection ServerProviders { get; private set; }
 
         /// <summary>
-        /// 添加RPC解析器
+        /// 添加RPC解析器，并将之前注册的服务应用
         /// </summary>
         /// <param name="key">名称</param>
         /// <param name="parser">解析器实例</param>
         public void AddRPCParser(string key, IRPCParser parser)
         {
-            this.RPCParsers.Add(key, parser);
-            parser.SetRPCService(this);
-            parser.SetExecuteMethod(PreviewExecuteMethod);
-            parser.SetMethodMap(this.MethodMap);
+            this.AddRPCParser(key, parser, true);
         }
 
         /// <summary>
@@ -86,7 +82,7 @@ namespace RRQMSocket.RPC
         {
             this.RPCParsers.Add(key, parser);
             parser.SetRPCService(this);
-            parser.SetExecuteMethod(PreviewExecuteMethod);
+            parser.SetExecuteMethod(this.PreviewExecuteMethod);
             parser.SetMethodMap(this.MethodMap);
 
             if (applyServer)
@@ -209,12 +205,7 @@ namespace RRQMSocket.RPC
         {
             serverProvider.RPCService = this;
             this.ServerProviders.Add(serverProvider);
-
-            if (this.RPCParsers.Count == 0)
-            {
-                throw new RRQMRPCException("请至少添加一种RPC解析器");
-            }
-            MethodInstance[] methodInstances = GlobalTools.GetMethodInstances(serverProvider, true);
+            MethodInstance[] methodInstances = GlobalTools.GetMethodInstances(serverProvider);
 
             foreach (var item in methodInstances)
             {
@@ -229,14 +220,22 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 移除RPC解析器
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="parserName"></param>
         /// <param name="parser"></param>
-        public void RemoveRPCParser(string key, out IRPCParser parser)
+        /// <returns></returns>
+        public bool RemoveRPCParser(string parserName, out IRPCParser parser)
         {
-            if (!this.RPCParsers.TryRemove(key, out parser))
-            {
-                throw new RRQMException("没有找到该解析器");
-            }
+            return this.RPCParsers.TryRemove(parserName, out parser);
+        }
+
+        /// <summary>
+        /// 移除RPC解析器
+        /// </summary>
+        /// <param name="parserName"></param>
+        /// <returns></returns>
+        public bool RemoveRPCParser(string parserName)
+        {
+            return this.RemoveRPCParser(parserName, out _);
         }
 
         /// <summary>
@@ -272,7 +271,7 @@ namespace RRQMSocket.RPC
             {
                 e.DataHandlingAdapter = new FixedHeaderPackageAdapter();
             };
-            this.service.Received += Service_Received;
+            this.service.Received += this.Service_Received;
             this.service.Setup(new ProtocolServiceConfig() { ListenIPHosts = new IPHost[] { iPHost } });
             this.service.Start();
         }
@@ -458,12 +457,12 @@ namespace RRQMSocket.RPC
             {
                 Task.Run(() =>
                 {
-                    ExecuteMethod(parser, methodInvoker, methodInstance);
+                    this.ExecuteMethod(parser, methodInvoker, methodInstance);
                 });
             }
             else
             {
-                ExecuteMethod(parser, methodInvoker, methodInstance);
+                this.ExecuteMethod(parser, methodInvoker, methodInstance);
             }
         }
 

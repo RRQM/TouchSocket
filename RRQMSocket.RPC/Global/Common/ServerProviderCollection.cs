@@ -40,7 +40,7 @@ namespace RRQMSocket.RPC
                     throw new RRQMRPCException("相同类型的服务已添加");
                 }
             }
-            servers.Add(serverProvider);
+            this.servers.Add(serverProvider);
         }
 
         internal void Remove(Type serverType)

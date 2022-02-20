@@ -64,7 +64,7 @@ namespace RRQMSocket.RPC
         private static int ExistReturnNullParameters = 500000000;
         private static int ExistReturnExistParameters = 700000000;
 
-        internal static MethodInstance[] GetMethodInstances(IServerProvider serverProvider, bool isSetToken)
+        internal static MethodInstance[] GetMethodInstances(IServerProvider serverProvider)
         {
             List<MethodInstance> instances = new List<MethodInstance>();
 
@@ -129,16 +129,13 @@ namespace RRQMSocket.RPC
                     {
                         methodInstance.ReturnType = null;
 
-                        if (isSetToken)
+                        if (parameters.Length == 0)
                         {
-                            if (parameters.Length == 0)
-                            {
-                                methodInstance.MethodToken = ++nullReturnNullParameters;
-                            }
-                            else
-                            {
-                                methodInstance.MethodToken = ++nullReturnExistParameters;
-                            }
+                            methodInstance.MethodToken = ++nullReturnNullParameters;
+                        }
+                        else
+                        {
+                            methodInstance.MethodToken = ++nullReturnExistParameters;
                         }
                     }
                     else
@@ -160,16 +157,13 @@ namespace RRQMSocket.RPC
                             methodInstance.ReturnType = method.ReturnType;
                         }
 
-                        if (isSetToken)
+                        if (parameters.Length == 0)
                         {
-                            if (parameters.Length == 0)
-                            {
-                                methodInstance.MethodToken = ++ExistReturnNullParameters;
-                            }
-                            else
-                            {
-                                methodInstance.MethodToken = ++ExistReturnExistParameters;
-                            }
+                            methodInstance.MethodToken = ++ExistReturnNullParameters;
+                        }
+                        else
+                        {
+                            methodInstance.MethodToken = ++ExistReturnExistParameters;
                         }
                     }
                     instances.Add(methodInstance);

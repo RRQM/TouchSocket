@@ -49,8 +49,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public Dictionary<string, MethodCellCode> Methods
         {
-            get { return methods; }
-            set { methods = value; }
+            get { return this.methods; }
+            set { this.methods = value; }
         }
 
         private Dictionary<string, ClassCellCode> classCellCodes;
@@ -60,8 +60,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public Dictionary<string, ClassCellCode> ClassCellCodes
         {
-            get { return classCellCodes; }
-            set { classCellCodes = value; }
+            get { return this.classCellCodes; }
+            set { this.classCellCodes = value; }
         }
     }
 }

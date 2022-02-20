@@ -76,7 +76,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodName"></param>
         /// <param name="methodFlags"></param>
         /// <param name="async"></param>
-        public RRQMRPCAttribute(string methodName, MethodFlags methodFlags, bool async) : base(methodName,methodFlags)
+        public RRQMRPCAttribute(string methodName, MethodFlags methodFlags, bool async) : base(methodName, methodFlags)
         {
             this.Async = async;
         }

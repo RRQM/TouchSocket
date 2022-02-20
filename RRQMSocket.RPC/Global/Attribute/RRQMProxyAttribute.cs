@@ -11,16 +11,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
     /// 代理类
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
     public class RRQMProxyAttribute : Attribute
     {
         private string className;
@@ -43,8 +40,8 @@ namespace RRQMSocket.RPC
         /// 构造函数
         /// </summary>
         public RRQMProxyAttribute()
-        { 
-        
+        {
+
         }
 
         /// <summary>
@@ -52,8 +49,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public string ClassName
         {
-            get { return className; }
-            set { className = value; }
+            get { return this.className; }
+            set { this.className = value; }
         }
 
     }

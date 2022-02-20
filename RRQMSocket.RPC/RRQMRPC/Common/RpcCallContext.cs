@@ -74,7 +74,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public MethodInvoker MethodInvoker => methodInvoker;
+        public MethodInvoker MethodInvoker => this.methodInvoker;
 
         /// <summary>
         /// 序列化类型
