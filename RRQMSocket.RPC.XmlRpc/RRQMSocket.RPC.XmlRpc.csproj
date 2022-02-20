@@ -4,19 +4,17 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>6.6.0</Version>
+		<Version>7.0.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
-		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Description>
-			介绍：这是一个扩展于RRQMSocket.RPC的XmlRpc组件，可以通过该组件直接创建XmlRpc服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持XmlRpc全功能。
+		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
+		<Description>介绍：这是一个扩展于RRQMSocket.RPC的XmlRpc组件，可以通过该组件直接创建XmlRpc服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持XmlRpc全功能。
 
-			更新说明：
-			优化：支持Ssl加密。
+更新说明：
+适配更新。
 
-			API：https://www.yuque.com/eo2w71/rrqm
-			DEMO：https://gitee.com/RRQM_Home/RRQMBox
-		</Description>
+API：https://www.yuque.com/eo2w71/rrqm
+DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -77,7 +75,7 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMSocket.Http" Version="6.6.0" />
-	  <PackageReference Include="RRQMSocket.RPC" Version="6.6.0" />
+	  <PackageReference Include="RRQMSocket.Http" Version="7.0.0" />
+	  <PackageReference Include="RRQMSocket.RPC" Version="7.0.0" />
 	</ItemGroup>
 </Project>

@@ -24,8 +24,8 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public int MaxPackageSize
         {
-            get { return (int)GetValue(MaxPackageSizeProperty); }
-            set { SetValue(MaxPackageSizeProperty, value); }
+            get { return (int)this.GetValue(MaxPackageSizeProperty); }
+            set { this.SetValue(MaxPackageSizeProperty, value); }
         }
 
         /// <summary>
@@ -39,8 +39,8 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public int Timeout
         {
-            get { return (int)GetValue(TimeoutProperty); }
-            set { SetValue(TimeoutProperty, value); }
+            get { return (int)this.GetValue(TimeoutProperty); }
+            set { this.SetValue(TimeoutProperty, value); }
         }
 
         /// <summary>

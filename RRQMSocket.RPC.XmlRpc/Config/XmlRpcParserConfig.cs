@@ -25,8 +25,8 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public string ProxyToken
         {
-            get { return (string)GetValue(ProxyTokenProperty); }
-            set { SetValue(ProxyTokenProperty, value); }
+            get { return (string)this.GetValue(ProxyTokenProperty); }
+            set { this.SetValue(ProxyTokenProperty, value); }
         }
 
         /// <summary>
@@ -40,8 +40,8 @@ namespace RRQMSocket.RPC.XmlRpc
         /// </summary>
         public int MaxPackageSize
         {
-            get { return (int)GetValue(MaxPackageSizeProperty); }
-            set { SetValue(MaxPackageSizeProperty, value); }
+            get { return (int)this.GetValue(MaxPackageSizeProperty); }
+            set { this.SetValue(MaxPackageSizeProperty, value); }
         }
 
         /// <summary>
