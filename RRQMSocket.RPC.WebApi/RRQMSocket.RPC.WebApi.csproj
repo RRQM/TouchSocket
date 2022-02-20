@@ -8,14 +8,16 @@
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Description>介绍：这是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过该组件直接创建WebApi服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持HTTP/HTTPS，路由、Get传参、Post传参等。
+		<Description>
+			介绍：这是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过该组件直接创建WebApi服务解析器，让Web端、移动端可以跨语言调用RPC函数。功能支持HTTP/HTTPS，路由、Get传参、Post传参等。
 
-更新说明：
-适配更新。
+			更新说明：
+			适配更新。
 
-API：https://gitee.com/RRQM_Home/RRQMBox/wikis
-DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
-		<PackageProjectUrl>https://gitee.com/RRQM_Home/rrqmsocket.rpc</PackageProjectUrl>
+			API：https://www.yuque.com/eo2w71/rrqm
+			DEMO：https://gitee.com/RRQM_Home/RRQMBox
+		</Description>
+		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<PackageIcon>RRQM.png</PackageIcon>
