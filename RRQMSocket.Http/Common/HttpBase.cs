@@ -50,7 +50,7 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 字符数据
         /// </summary>
-        public string Body => this.content == null ? null : this.encoding.GetString(this.content);
+        public string Body { get { return this.content == null ? null : this.encoding.GetString(this.content); } }
         /// <summary>
         /// 内容长度
         /// </summary>
@@ -59,7 +59,10 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 内容器
         /// </summary>
-        public byte[] Content => this.content;
+        public byte[] Content
+        {
+            get { return this.content; }
+        }
 
         /// <summary>
         /// 内容编码
@@ -79,8 +82,8 @@ namespace RRQMSocket.Http
         /// </summary>
         public Encoding Encoding
         {
-            get => this.encoding;
-            set => this.encoding = value;
+            get { return this.encoding; }
+            set { this.encoding = value; }
         }
 
         /// <summary>
@@ -91,7 +94,8 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 请求头集合
         /// </summary>
-        public Dictionary<string, string> Headers => this.headers;
+        public Dictionary<string, string> Headers
+        { get { return this.headers; } }
         /// <summary>
         /// 协议名称
         /// </summary>
@@ -105,7 +109,10 @@ namespace RRQMSocket.Http
         /// <summary>
         /// 请求行
         /// </summary>
-        public string RequestLine => this.requestLine;
+        public string RequestLine
+        {
+            get { return this.requestLine; }
+        }
 
         /// <summary>
         /// 构建数据
