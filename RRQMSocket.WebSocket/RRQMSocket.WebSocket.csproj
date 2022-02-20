@@ -9,13 +9,15 @@
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<PackageTags>IOCP,TCP,UDP,Socket,WebSocket</PackageTags>
-		<Description>介绍：这是一个高效，超轻量级的WebSocket框架。它包含了Service和Client两大组件，支持Ssl，同时定义了文本、二进制或其他类型数据的快捷发送、分片发送接口，可与js等任意WebSocket组件交互。
+		<Description>
+			介绍：这是一个高效，超轻量级的WebSocket框架。它包含了Service和Client两大组件，支持Ssl，同时定义了文本、二进制或其他类型数据的快捷发送、分片发送接口，可与js等任意WebSocket组件交互。
 
-更新说明：
-适配更新。
+			更新说明：
+			适配更新。
 
-API：https://gitee.com/RRQM_Home/RRQMBox/wikis
-DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
+			API：https://www.yuque.com/eo2w71/rrqm
+			DEMO：https://gitee.com/RRQM_Home/RRQMBox
+		</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

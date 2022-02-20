@@ -8,14 +8,16 @@
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Description>介绍：这是一个扩展于RRQMSocket.RPC的JsonRpc组件，支持TCP、HTTP/HTTPS协议调用JsonRpc。让Web端、移动端可以跨语言调用RPC函数。功能支持JsonRpc 2.0全功能。
+		<Description>
+			介绍：这是一个扩展于RRQMSocket.RPC的JsonRpc组件，支持TCP、HTTP/HTTPS协议调用JsonRpc。让Web端、移动端可以跨语言调用RPC函数。功能支持JsonRpc 2.0全功能。
 
-更新说明：
-适配更新
+			更新说明：
+			适配更新
 
-API：https://gitee.com/RRQM_Home/RRQMBox/wikis
-DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
-		<PackageProjectUrl>https://gitee.com/RRQM_Home/rrqmsocket.rpc</PackageProjectUrl>
+			API：https://www.yuque.com/eo2w71/rrqm
+			DEMO：https://gitee.com/RRQM_Home/RRQMBox
+		</Description>
+		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<PackageIcon>RRQM.png</PackageIcon>
