@@ -41,8 +41,8 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         public int MaxSize
         {
-            get => this.maxSize;
-            set => this.maxSize = value;
+            get { return this.maxSize; }
+            set { this.maxSize = value; }
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace RRQMSocket.WebSocket
             dataFrame.Opcode = (WSDataType)(dataBuffer[offset] & 0xf);
             dataFrame.Mask = (dataBuffer[++offset] >> 7) == 1;
 
-            int payloadLength = (int)(dataBuffer[offset] & 0x7f);
+            int payloadLength = dataBuffer[offset] & 0x7f;
             if (payloadLength < 126)
             {
                 offset++;

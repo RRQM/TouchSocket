@@ -17,7 +17,7 @@ namespace RRQMSocket.WebSocket
     /// <summary>
     /// WebSocket终端基类接口
     /// </summary>
-    public interface IWSClientBase : ITcpClientBase, ISendBase
+    public interface IWSClientBase : ITcpClientBase, IClientSender
     {
         /// <summary>
         /// WebSocket版本号。

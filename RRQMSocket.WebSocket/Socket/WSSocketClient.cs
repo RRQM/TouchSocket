@@ -39,15 +39,15 @@ namespace RRQMSocket.WebSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public sealed override bool CanSetDataHandlingAdapter => false;
+        public override sealed bool CanSetDataHandlingAdapter => false;
 
         /// <summary>
         /// WebSocket版本号
         /// </summary>
         public string WebSocketVersion
         {
-            get => this.webSocketVersion;
-            set => this.webSocketVersion = value;
+            get { return this.webSocketVersion; }
+            set { this.webSocketVersion = value; }
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
