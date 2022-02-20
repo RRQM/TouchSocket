@@ -18,14 +18,6 @@ namespace RRQMSocket.RPC.WebApi
     /// </summary>
     public class WebApiSocketClient : SimpleSocketClient, ICaller
     {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override sealed bool CanSetDataHandlingAdapter => false;
 
-        internal void InternalSetAdapter(DataHandlingAdapter adapter)
-        {
-            this.SetAdapter(adapter);
-        }
     }
 }

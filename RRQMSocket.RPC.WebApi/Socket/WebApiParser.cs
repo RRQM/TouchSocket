@@ -47,7 +47,7 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public int MaxPackageSize
         {
-            get { return maxPackageSize; }
+            get { return this.maxPackageSize; }
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace RRQMSocket.RPC.WebApi
         protected override void OnConnecting(WebApiSocketClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.Received += this.OnReceived;
-            socketClient.InternalSetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
+            e.DataHandlingAdapter = new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server);
             base.OnConnecting(socketClient, e);
         }
 

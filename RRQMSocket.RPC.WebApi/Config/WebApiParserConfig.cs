@@ -24,8 +24,8 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public ApiDataConverter ApiDataConverter
         {
-            get { return (ApiDataConverter)GetValue(ApiDataConverterProperty); }
-            set { SetValue(ApiDataConverterProperty, value); }
+            get { return (ApiDataConverter)this.GetValue(ApiDataConverterProperty); }
+            set { this.SetValue(ApiDataConverterProperty, value); }
         }
 
         /// <summary>
@@ -40,8 +40,8 @@ namespace RRQMSocket.RPC.WebApi
         /// </summary>
         public int MaxPackageSize
         {
-            get { return (int)GetValue(MaxPackageSizeProperty); }
-            set { SetValue(MaxPackageSizeProperty, value); }
+            get { return (int)this.GetValue(MaxPackageSizeProperty); }
+            set { this.SetValue(MaxPackageSizeProperty, value); }
         }
 
         /// <summary>
