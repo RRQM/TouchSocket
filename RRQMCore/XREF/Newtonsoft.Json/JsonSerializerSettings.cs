@@ -255,9 +255,12 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         public IReferenceResolver ReferenceResolver
         {
             get => this.ReferenceResolverProvider?.Invoke();
-            set => this.ReferenceResolverProvider = (value != null)
+            set
+            {
+                this.ReferenceResolverProvider = (value != null)
                     ? () => value
-                    : (Serialization.Func<IReferenceResolver>)null;
+                    : null;
+            }
         }
 
         /// <summary>

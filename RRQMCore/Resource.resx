@@ -126,6 +126,9 @@
   <data name="Canceled" xml:space="preserve">
     <value>取消操作</value>
   </data>
+  <data name="ClientNotFind" xml:space="preserve">
+    <value>没有找到ID为{0}的客户端。</value>
+  </data>
   <data name="CreateWriteStreamFail" xml:space="preserve">
     <value>从‘{0}’创建写入流失败，信息：{1}。</value>
   </data>
@@ -134,6 +137,12 @@
   </data>
   <data name="Error" xml:space="preserve">
     <value>发生未知错误。</value>
+  </data>
+  <data name="EventExisted" xml:space="preserve">
+    <value>名称为“{0}”的事件已存在。</value>
+  </data>
+  <data name="EventNotExist" xml:space="preserve">
+    <value>名称为“{0}”的事件不存在。</value>
   </data>
   <data name="Exception" xml:space="preserve">
     <value>其他异常消息。</value>
@@ -153,11 +162,8 @@
   <data name="NoResponse" xml:space="preserve">
     <value>长时间没有响应。</value>
   </data>
-  <data name="NotFindClient" xml:space="preserve">
-    <value>没有找到ID为{0}的客户端。</value>
-  </data>
-  <data name="NotFindStream" xml:space="preserve">
-    <value>没有找到路径‘{0}’对应的流文件。</value>
+  <data name="NullDataAdapter" xml:space="preserve">
+    <value>数据处理适配器为空，可能客户端已掉线。</value>
   </data>
   <data name="Overtime" xml:space="preserve">
     <value>操作超时</value>
@@ -182,6 +188,9 @@
   </data>
   <data name="StreamBucketNull" xml:space="preserve">
     <value>接收流容器为空。</value>
+  </data>
+  <data name="StreamNotFind" xml:space="preserve">
+    <value>没有找到路径‘{0}’对应的流文件。</value>
   </data>
   <data name="StreamReferencing" xml:space="preserve">
     <value>路径‘{0}’对应的流文件，仍然被‘{1}’对象应用。</value>

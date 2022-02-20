@@ -51,12 +51,15 @@ namespace RRQMCore.Run
         /// <summary>
         /// 状态
         /// </summary>
-        public WaitDataStatus Status => this.status;
+        public WaitDataStatus Status { get => this.status; }
 
         /// <summary>
         /// 等待数据结果
         /// </summary>
-        public T WaitResult => this.waitResult;
+        public T WaitResult
+        {
+            get { return this.waitResult; }
+        }
 
         /// <summary>
         /// 取消任务

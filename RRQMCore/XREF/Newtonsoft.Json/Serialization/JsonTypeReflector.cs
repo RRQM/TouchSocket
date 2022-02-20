@@ -526,12 +526,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             }
         }
 
-        public static ReflectionDelegateFactory ReflectionDelegateFactory =>
+        public static ReflectionDelegateFactory ReflectionDelegateFactory
+        {
+            get
+            {
 #if !(PORTABLE40 || PORTABLE || DOTNET || NETSTANDARD2_0)
-                LateBoundReflectionDelegateFactory.Instance;
+                return LateBoundReflectionDelegateFactory.Instance;
 #else
-                ExpressionReflectionDelegateFactory.Instance;
+                return ExpressionReflectionDelegateFactory.Instance;
 #endif
-
+            }
+        }
     }
 }

@@ -37,12 +37,18 @@ namespace RRQMCore.Collections.Concurrent
         /// <summary>
         /// 允许的最大长度
         /// </summary>
-        public int MaxCount => this.maxCount;
+        public int MaxCount
+        {
+            get { return this.maxCount; }
+        }
 
         /// <summary>
         /// 长度
         /// </summary>
-        public new int Count => this.count;
+        public new int Count
+        {
+            get { return this.count; }
+        }
 
         /// <summary>
         /// 入队

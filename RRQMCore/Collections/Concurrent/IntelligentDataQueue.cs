@@ -28,8 +28,8 @@ namespace RRQMCore.Collections.Concurrent
         /// </summary>
         public bool OverflowWait
         {
-            get => this.overflowWait;
-            set => this.overflowWait = value;
+            get { return this.overflowWait; }
+            set { this.overflowWait = value; }
         }
 
         private Action<bool> onQueueChanged;
@@ -38,15 +38,18 @@ namespace RRQMCore.Collections.Concurrent
         /// </summary>
         public Action<bool> OnQueueChanged
         {
-            get => this.onQueueChanged;
-            set => this.onQueueChanged = value;
+            get { return this.onQueueChanged; }
+            set { this.onQueueChanged = value; }
         }
 
         private bool free;
         /// <summary>
         /// 是否有空位允许入队
         /// </summary>
-        public bool Free => this.free;
+        public bool Free
+        {
+            get { return this.free; }
+        }
 
         private long actualSize;
 
@@ -75,7 +78,7 @@ namespace RRQMCore.Collections.Concurrent
         /// </summary>
         public long MaxSize
         {
-            get => this.maxSize;
+            get { return this.maxSize; }
             set
             {
                 if (value < 1)
@@ -89,7 +92,10 @@ namespace RRQMCore.Collections.Concurrent
         /// <summary>
         /// 实际尺寸
         /// </summary>
-        public long ActualSize => this.actualSize;
+        public long ActualSize
+        {
+            get { return this.actualSize; }
+        }
 
         /// <summary>
         /// 清空队列

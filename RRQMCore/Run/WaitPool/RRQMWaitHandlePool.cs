@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
+
 using RRQMCore.Helper;
 using System;
 using System.Collections.Concurrent;

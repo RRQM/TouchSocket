@@ -219,7 +219,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="reader">A <see cref="JsonReader"/> that will be read for the content of the <see cref="JConstructor"/>.</param>
         /// <returns>A <see cref="JConstructor"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public static new JConstructor Load(JsonReader reader)
+        public new static JConstructor Load(JsonReader reader)
         {
             return Load(reader, null);
         }
@@ -231,7 +231,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="settings">The <see cref="JsonLoadSettings"/> used to load the JSON.
         /// If this is <c>null</c>, default load settings will be used.</param>
         /// <returns>A <see cref="JConstructor"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public static new JConstructor Load(JsonReader reader, JsonLoadSettings settings)
+        public new static JConstructor Load(JsonReader reader, JsonLoadSettings settings)
         {
             if (reader.TokenType == JsonToken.None)
             {

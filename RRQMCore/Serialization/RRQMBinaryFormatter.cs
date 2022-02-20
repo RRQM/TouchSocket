@@ -60,7 +60,7 @@ namespace RRQMCore.Serialization
                 }
                 else if (graph is sbyte sby)
                 {
-                    data = RRQMBitConverter.Default.GetBytes((short)sby);
+                    data = RRQMBitConverter.Default.GetBytes(sby);
                 }
                 else if (graph is bool b)
                 {
@@ -188,7 +188,7 @@ namespace RRQMCore.Serialization
                     byte[] propertyBytes = Encoding.UTF8.GetBytes(property.Name);
                     if (propertyBytes.Length > byte.MaxValue)
                     {
-                        throw new Exceptions.RRQMException($"属性名：{property.Name}超长");
+                        throw new RRQMException($"属性名：{property.Name}超长");
                     }
                     byte lenBytes = (byte)propertyBytes.Length;
                     stream.Write(lenBytes);
@@ -238,7 +238,7 @@ namespace RRQMCore.Serialization
         {
             if (data[offset] != 1)
             {
-                throw new Exceptions.RRQMException("数据流解析错误");
+                throw new RRQMException("数据流解析错误");
             }
             offset += 1;
             return this.Deserialize(type, data, ref offset);

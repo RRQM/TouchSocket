@@ -101,7 +101,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param>
         /// <param name="value">The value.</param>
         /// <param name="serializer">The calling serializer.</param>
-        public sealed override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override sealed void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             if (!(value != null ? value is T : ReflectionUtils.IsNullable(typeof(T))))
             {
@@ -126,7 +126,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <param name="existingValue">The existing value of object being read.</param>
         /// <param name="serializer">The calling serializer.</param>
         /// <returns>The object value.</returns>
-        public sealed override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override sealed object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             bool existingIsNull = existingValue == null;
             if (!(existingIsNull || existingValue is T))
@@ -154,7 +154,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <returns>
         /// 	<c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.
         /// </returns>
-        public sealed override bool CanConvert(Type objectType)
+        public override sealed bool CanConvert(Type objectType)
         {
             return typeof(T).IsAssignableFrom(objectType);
         }

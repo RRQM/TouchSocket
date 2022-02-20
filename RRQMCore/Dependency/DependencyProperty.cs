@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
+
 using System;
 using System.Reflection;
 
@@ -30,28 +30,40 @@ namespace RRQMCore.Dependency
         /// <summary>
         /// 属性名
         /// </summary>
-        public string Name => this.name;
+        public string Name
+        {
+            get { return this.name; }
+        }
 
         private Type owner;
 
         /// <summary>
         /// 所属类型
         /// </summary>
-        public Type Owner => this.owner;
+        public Type Owner
+        {
+            get { return this.owner; }
+        }
 
         private Type valueType;
 
         /// <summary>
         /// 值类型
         /// </summary>
-        public Type ValueType => this.valueType;
+        public Type ValueType
+        {
+            get { return this.valueType; }
+        }
 
         private object value;
 
         /// <summary>
         /// 默认值
         /// </summary>
-        public object DefauleValue => this.value;
+        public object DefauleValue
+        {
+            get { return this.value; }
+        }
 
         internal void DataValidation(object value)
         {

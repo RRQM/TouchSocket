@@ -65,7 +65,8 @@ namespace RRQMCore.Collections.Concurrent
         /// <summary>
         /// 是否只读
         /// </summary>
-        public bool IsReadOnly => false;
+        public bool IsReadOnly
+        { get { return false; } }
 
         /// <summary>
         /// 将某项添加到 System.Collections.Generic.ICollection`1 中。

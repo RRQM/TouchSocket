@@ -374,7 +374,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <exception cref="JsonReaderException">
         ///     <paramref name="reader"/> is not valid JSON.
         /// </exception>
-        public static new JObject Load(JsonReader reader)
+        public new static JObject Load(JsonReader reader)
         {
             return Load(reader, null);
         }
@@ -389,7 +389,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <exception cref="JsonReaderException">
         ///     <paramref name="reader"/> is not valid JSON.
         /// </exception>
-        public static new JObject Load(JsonReader reader, JsonLoadSettings settings)
+        public new static JObject Load(JsonReader reader, JsonLoadSettings settings)
         {
             ValidationUtils.ArgumentNotNull(reader, nameof(reader));
 
@@ -427,7 +427,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <example>
         ///   <code lang="cs" source="..\Src\RRQMCore.XREF.Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParse" title="Parsing a JSON Object from Text" />
         /// </example>
-        public static new JObject Parse(string json)
+        public new static JObject Parse(string json)
         {
             return Parse(json, null);
         }
@@ -445,7 +445,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <example>
         ///   <code lang="cs" source="..\Src\RRQMCore.XREF.Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParse" title="Parsing a JSON Object from Text" />
         /// </example>
-        public static new JObject Parse(string json, JsonLoadSettings settings)
+        public new static JObject Parse(string json, JsonLoadSettings settings)
         {
             using (JsonReader reader = new JsonTextReader(new StringReader(json)))
             {
@@ -465,7 +465,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="o">The object that will be used to create <see cref="JObject"/>.</param>
         /// <returns>A <see cref="JObject"/> with the values of the specified object.</returns>
-        public static new JObject FromObject(object o)
+        public new static JObject FromObject(object o)
         {
             return FromObject(o, JsonSerializer.CreateDefault());
         }
@@ -476,7 +476,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="o">The object that will be used to create <see cref="JObject"/>.</param>
         /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> that will be used to read the object.</param>
         /// <returns>A <see cref="JObject"/> with the values of the specified object.</returns>
-        public static new JObject FromObject(object o, JsonSerializer jsonSerializer)
+        public new static JObject FromObject(object o, JsonSerializer jsonSerializer)
         {
             JToken token = FromObjectInternal(o, jsonSerializer);
 

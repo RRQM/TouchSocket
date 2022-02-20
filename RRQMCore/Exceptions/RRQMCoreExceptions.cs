@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace RRQMCore.Exceptions
+namespace RRQMCore
 {
     /// <summary>
     /// 若汝棋茗程序集异常类基类
@@ -52,5 +52,70 @@ namespace RRQMCore.Exceptions
         /// <param name="context"></param>
         protected RRQMException(System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
+    /// 消息已注册
+    /// </summary>
+    [Serializable]
+    public class MessageRegisteredException : RRQMException
+    {
+        /// <summary>
+        ///构造函数
+        /// </summary>
+        /// <param name="mes"></param>
+        public MessageRegisteredException(string mes) : base(mes)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 未找到消息异常类
+    /// </summary>
+    [Serializable]
+    public class MessageNotFoundException : RRQMException
+    {
+        /// <summary>
+        ///构造函数
+        /// </summary>
+        /// <param name="mes"></param>
+        public MessageNotFoundException(string mes) : base(mes)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 内存块已释放
+    /// </summary>
+    [Serializable]
+    public class ByteBlockDisposedException : RRQMException
+    {
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ByteBlockDisposedException() { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        public ByteBlockDisposedException(string message) : base(message) { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        public ByteBlockDisposedException(string message, Exception inner) : base(message, inner) { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected ByteBlockDisposedException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }
