@@ -41,16 +41,6 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public FileSocketClient()
         {
-            AddUsedProtocol(FileUtility.P200, "Client pull file from SocketClient.");
-            AddUsedProtocol(FileUtility.P201, "Client begin pull file from SocketClient.");
-            AddUsedProtocol(FileUtility.P202, "Client push file to SocketClient.");
-            AddUsedProtocol(FileUtility.P203, "SocketClient pull file from client.");
-            AddUsedProtocol(FileUtility.P204, "SocketClient begin pull file from client.");
-            AddUsedProtocol(FileUtility.P205, "SocketClient push file to client.");
-            for (short i = FileUtility.PMin; i < FileUtility.PMax; i++)
-            {
-                AddUsedProtocol(i, "保留协议");
-            }
             this.eventArgs = new ConcurrentDictionary<int, FileOperationEventArgs>();
         }
 
@@ -69,8 +59,8 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public ResponseType ResponseType
         {
-            get { return responseType; }
-            set { responseType = value; }
+            get { return this.responseType; }
+            set { this.responseType = value; }
         }
 
         /// <summary>
@@ -78,14 +68,14 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public string RootPath
         {
-            get { return rootPath; }
+            get { return this.rootPath; }
             set
             {
                 if (value == null)
                 {
                     value = string.Empty;
                 }
-                rootPath = value;
+                this.rootPath = value;
             }
         }
 
@@ -341,11 +331,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件终端处理其他协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void FileTransferHandleDefaultData(short procotol, ByteBlock byteBlock)
+        protected virtual void FileTransferHandleDefaultData(short protocol, ByteBlock byteBlock)
         {
-            this.OnHandleDefaultData(procotol, byteBlock);
+            this.OnHandleDefaultData(protocol, byteBlock);
         }
 
         /// <summary>
@@ -356,7 +346,7 @@ namespace RRQMSocket.FileTransfer
         {
             try
             {
-                this.BeforeFileTransfer.Invoke(this, e);
+                this.BeforeFileTransfer?.Invoke(this, e);
             }
             catch (Exception ex)
             {
@@ -372,7 +362,7 @@ namespace RRQMSocket.FileTransfer
         {
             try
             {
-                this.FinishedFileTransfer.Invoke(this, e);
+                this.FinishedFileTransfer?.Invoke(this, e);
             }
             catch (Exception ex)
             {
@@ -383,13 +373,13 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 封装协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected override sealed void RPCHandleDefaultData(short procotol, ByteBlock byteBlock)
+        protected override sealed void RPCHandleDefaultData(short protocol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
 
-            switch (procotol)
+            switch (protocol)
             {
                 case FileUtility.P200:
                     {
@@ -481,7 +471,7 @@ namespace RRQMSocket.FileTransfer
                                 }
                                 else
                                 {
-                                    this.InternalSend(FileUtility.P206, block.WriteObject(new WaitTransfer() { Sign = waitFileInfo.Sign, Status=7 }, SerializationType.Json));
+                                    this.InternalSend(FileUtility.P206, block.WriteObject(new WaitTransfer() { Sign = waitFileInfo.Sign, Status = 7 }, SerializationType.Json));
                                 }
                             }
 
@@ -611,7 +601,7 @@ namespace RRQMSocket.FileTransfer
 
                 default:
                     {
-                        this.FileTransferHandleDefaultData(procotol, byteBlock);
+                        this.FileTransferHandleDefaultData(protocol, byteBlock);
                         break;
                     }
             }
@@ -652,7 +642,6 @@ namespace RRQMSocket.FileTransfer
                     waitData.SetCancellationToken(fileOperator.Token);
 
                     waitData.Wait(60 * 1000);
-
                     switch (waitData.Status)
                     {
                         case WaitDataStatus.SetRunning:
@@ -754,7 +743,6 @@ namespace RRQMSocket.FileTransfer
                     {
                         long position = waitTransfer.Position;
                         fileOperator.SetFileCompletedLength(waitTransfer.Position);
-
                         while (true)
                         {
                             if (fileOperator.Token.IsCancellationRequested)
@@ -817,6 +805,16 @@ namespace RRQMSocket.FileTransfer
             {
                 return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetResString()));
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void OnBreakOut()
+        {
+            this.BeforeFileTransfer = null;
+            this.FinishedFileTransfer = null;
+            base.OnBreakOut();
         }
 
         /// <summary>

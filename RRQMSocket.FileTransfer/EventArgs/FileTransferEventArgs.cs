@@ -43,7 +43,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public FileRequest FileRequest
         {
-            get { return fileRequest; }
+            get { return this.fileRequest; }
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public TransferType TransferType
         {
-            get { return transferType; }
+            get { return this.transferType; }
         }
 
         private Metadata metadata;
@@ -61,7 +61,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public Metadata Metadata
         {
-            get { return metadata; }
+            get { return this.metadata; }
         }
 
         private RRQMFileInfo fileInfo;
@@ -71,7 +71,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public RRQMFileInfo FileInfo
         {
-            get { return fileInfo; }
+            get { return this.fileInfo; }
         }
     }
 }

@@ -41,8 +41,8 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public bool IsPermitOperation
         {
-            get { return isPermitOperation; }
-            set { isPermitOperation = value; }
+            get { return this.isPermitOperation; }
+            set { this.isPermitOperation = value; }
         }
 
         private FileOperator fileOperator;
@@ -52,7 +52,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public FileOperator FileOperator
         {
-            get { return fileOperator; }
+            get { return this.fileOperator; }
         }
     }
 }

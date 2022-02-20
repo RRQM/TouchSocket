@@ -48,7 +48,7 @@ namespace RRQMSocket.FileTransfer
             }
             else
             {
-                return new Result(ResultCode.Error, ResType.NotFindStream.GetResString(path));
+                return new Result(ResultCode.Error, ResType.StreamNotFind.GetResString(path));
             }
         }
 
@@ -183,7 +183,7 @@ namespace RRQMSocket.FileTransfer
             }
             else
             {
-                return new Result(ResultCode.Error, ResType.NotFindStream.GetResString(path));
+                return new Result(ResultCode.Error, ResType.StreamNotFind.GetResString(path));
             }
         }
 
@@ -217,7 +217,7 @@ namespace RRQMSocket.FileTransfer
             }
             else
             {
-                return new Result(ResultCode.Error, ResType.NotFindStream.GetResString(path));
+                return new Result(ResultCode.Error, ResType.StreamNotFind.GetResString(path));
             }
         }
 
@@ -251,7 +251,7 @@ namespace RRQMSocket.FileTransfer
             }
             else
             {
-                return new Result(ResultCode.Error, ResType.NotFindStream.GetResString(path));
+                return new Result(ResultCode.Error, ResType.StreamNotFind.GetResString(path));
             }
         }
 

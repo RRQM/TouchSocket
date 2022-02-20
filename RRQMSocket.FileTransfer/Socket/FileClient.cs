@@ -40,17 +40,17 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public FileClient()
         {
-            AddUsedProtocol(FileUtility.P200, "Client pull file from SocketClient.");
-            AddUsedProtocol(FileUtility.P201, "Client begin pull file from SocketClient.");
-            AddUsedProtocol(FileUtility.P202, "Client push file to SocketClient.");
-            AddUsedProtocol(FileUtility.P203, "SocketClient pull file from client.");
-            AddUsedProtocol(FileUtility.P204, "SocketClient begin pull file from client.");
-            AddUsedProtocol(FileUtility.P205, "SocketClient push file to client.");
-            AddUsedProtocol(FileUtility.P206, "Client push file to client.");
+            this.AddUsedProtocol(FileUtility.P200, "Client pull file from SocketClient.");
+            this.AddUsedProtocol(FileUtility.P201, "Client begin pull file from SocketClient.");
+            this.AddUsedProtocol(FileUtility.P202, "Client push file to SocketClient.");
+            this.AddUsedProtocol(FileUtility.P203, "SocketClient pull file from client.");
+            this.AddUsedProtocol(FileUtility.P204, "SocketClient begin pull file from client.");
+            this.AddUsedProtocol(FileUtility.P205, "SocketClient push file to client.");
+            this.AddUsedProtocol(FileUtility.P206, "Client push file to client.");
 
             for (short i = FileUtility.PMin; i < FileUtility.PMax; i++)
             {
-                AddUsedProtocol(i, "保留协议");
+                this.AddUsedProtocol(i, "保留协议");
             }
             this.eventArgs = new ConcurrentDictionary<int, FileOperationEventArgs>();
         }
@@ -70,8 +70,8 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public ResponseType ResponseType
         {
-            get { return responseType; }
-            set { responseType = value; }
+            get { return this.responseType; }
+            set { this.responseType = value; }
         }
 
         /// <summary>
@@ -79,14 +79,14 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public string RootPath
         {
-            get { return rootPath; }
+            get { return this.rootPath; }
             set
             {
                 if (value == null)
                 {
                     value = string.Empty;
                 }
-                rootPath = value;
+                this.rootPath = value;
             }
         }
 
@@ -140,7 +140,7 @@ namespace RRQMSocket.FileTransfer
                             WaitFileInfo waitFileResult = (WaitFileInfo)waitData.WaitResult;
                             if (waitFileResult.Status == 1)
                             {
-                                return this.OnPreviewPullFile(null,fileOperator, waitFileResult);
+                                return this.OnPreviewPullFile(null, fileOperator, waitFileResult);
                             }
                             else if (waitFileResult.Status == 2)
                             {
@@ -192,11 +192,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 从对点拉取文件
         /// </summary>
-        public Result PullFile(string clientID,FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Result PullFile(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
         {
-            if (string.IsNullOrEmpty(clientID)|| clientID == this.ID)
+            if (string.IsNullOrEmpty(clientID) || clientID == this.ID)
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error,$"{nameof(clientID)}不能为空，或者等于自身ID"));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, $"{nameof(clientID)}不能为空，或者等于自身ID"));
             }
 
             if (fileRequest is null)
@@ -245,7 +245,7 @@ namespace RRQMSocket.FileTransfer
                             WaitFileInfo waitFileResult = (WaitFileInfo)waitData.WaitResult;
                             if (waitFileResult.Status == 1)
                             {
-                                return this.OnPreviewPullFile(clientID,fileOperator, waitFileResult);
+                                return this.OnPreviewPullFile(clientID, fileOperator, waitFileResult);
                             }
                             else if (waitFileResult.Status == 2)
                             {
@@ -265,7 +265,7 @@ namespace RRQMSocket.FileTransfer
                             }
                             else if (waitFileResult.Status == 7)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.NotFindClient.GetResString(clientID)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ClientNotFind.GetResString(clientID)));
                             }
                             else
                             {
@@ -306,11 +306,11 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        public async Task<Result> PullFileAsync(string clientID,FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public async Task<Result> PullFileAsync(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
         {
             return await Task.Run(() =>
             {
-                return this.PullFile(clientID,fileRequest, fileOperator, metadata);
+                return this.PullFile(clientID, fileRequest, fileOperator, metadata);
             });
         }
 
@@ -543,7 +543,7 @@ namespace RRQMSocket.FileTransfer
                             }
                             else if (waitResult.Status == 7)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.NotFindClient.GetResString(clientID)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ClientNotFind.GetResString(clientID)));
                             }
                             else
                             {
@@ -610,11 +610,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件终端处理其他协议
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void FileTransferHandleDefaultData(short procotol, ByteBlock byteBlock)
+        protected virtual void FileTransferHandleDefaultData(short protocol, ByteBlock byteBlock)
         {
-            this.OnHandleDefaultData(procotol, byteBlock);
+            this.OnHandleDefaultData(protocol, byteBlock);
         }
 
         /// <summary>
@@ -663,11 +663,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void RPCHandleDefaultData(short procotol, ByteBlock byteBlock)
+        protected sealed override void RPCHandleDefaultData(short protocol, ByteBlock byteBlock)
         {
-            switch (procotol)
+            switch (protocol)
             {
                 case FileUtility.P200:
                     {
@@ -832,13 +832,13 @@ namespace RRQMSocket.FileTransfer
                     }
                 default:
                     {
-                        this.FileTransferHandleDefaultData(procotol, byteBlock);
+                        this.FileTransferHandleDefaultData(protocol, byteBlock);
                         break;
                     }
             }
         }
 
-        private Result OnPreviewPullFile(string clientID,FileOperator fileOperator, WaitFileInfo waitFileInfo)
+        private Result OnPreviewPullFile(string clientID, FileOperator fileOperator, WaitFileInfo waitFileInfo)
         {
             FileRequest fileRequest = waitFileInfo.FileRequest;
             string savePath;
@@ -870,7 +870,7 @@ namespace RRQMSocket.FileTransfer
                     ChannelID = channel.ID,
                     Path = remoteFileInfo.FilePath,
                     Position = remoteFileInfo.Posotion,
-                     ClientID=clientID
+                    ClientID = clientID
                 };
 
                 WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitTransfer);
@@ -1127,13 +1127,13 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        private void P204_P211_BeginPullFile(short orderType,WaitTransfer waitTransfer)
+        private void P204_P211_BeginPullFile(short orderType, WaitTransfer waitTransfer)
         {
             //2.加载流异常
             //3.事件操作器异常
             //4.通道建立异常
 
-            Task.Run(()=> 
+            Task.Run(() =>
             {
                 FileTransferStatusEventArgs e;
                 if (this.eventArgs.TryRemove(waitTransfer.EventHashCode, out FileOperationEventArgs args))
@@ -1286,7 +1286,7 @@ namespace RRQMSocket.FileTransfer
                 if (RRQMStreamPool.LoadWriteStream(savePath, args.FileOperator, args.FileRequest, ref fileInfo, out RRQMStream stream, out string mes))
                 {
 
-                    Channel channel=null;
+                    Channel channel = null;
                     try
                     {
                         if (orderType == FileUtility.P205)
@@ -1339,7 +1339,7 @@ namespace RRQMSocket.FileTransfer
                     catch (Exception ex)
                     {
                         fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
-                        if (channel!=null)
+                        if (channel != null)
                         {
                             channel.Cancel(ex.Message);
                         }
