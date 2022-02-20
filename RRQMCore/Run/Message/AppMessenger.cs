@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -33,8 +33,8 @@ namespace RRQMCore.Run
         /// </summary>
         public bool AllowMultiple
         {
-            get => this.allowMultiple;
-            set => this.allowMultiple = value;
+            get { return this.allowMultiple; }
+            set { this.allowMultiple = value; }
         }
 
         /// <summary>

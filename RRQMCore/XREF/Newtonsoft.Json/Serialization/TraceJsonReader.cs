@@ -163,8 +163,20 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
             return this._innerReader is IJsonLineInfo lineInfo && lineInfo.HasLineInfo();
         }
 
-        int IJsonLineInfo.LineNumber => (this._innerReader is IJsonLineInfo lineInfo) ? lineInfo.LineNumber : 0;
+        int IJsonLineInfo.LineNumber
+        {
+            get
+            {
+                return (this._innerReader is IJsonLineInfo lineInfo) ? lineInfo.LineNumber : 0;
+            }
+        }
 
-        int IJsonLineInfo.LinePosition => (this._innerReader is IJsonLineInfo lineInfo) ? lineInfo.LinePosition : 0;
+        int IJsonLineInfo.LinePosition
+        {
+            get
+            {
+                return (this._innerReader is IJsonLineInfo lineInfo) ? lineInfo.LinePosition : 0;
+            }
+        }
     }
 }

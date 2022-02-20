@@ -160,7 +160,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public string Name
         {
             [DebuggerStepThrough]
-            get => this._name;
+            get { return this._name; }
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public JToken Value
         {
             [DebuggerStepThrough]
-            get => this._content._token;
+            get { return this._content._token; }
             set
             {
                 this.CheckReentrancy();
@@ -295,7 +295,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public override JTokenType Type
         {
             [DebuggerStepThrough]
-            get => JTokenType.Property;
+            get { return JTokenType.Property; }
         }
 
         internal JProperty(string name)
@@ -362,7 +362,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// </summary>
         /// <param name="reader">A <see cref="JsonReader"/> that will be read for the content of the <see cref="JProperty"/>.</param>
         /// <returns>A <see cref="JProperty"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public static new JProperty Load(JsonReader reader)
+        public new static JProperty Load(JsonReader reader)
         {
             return Load(reader, null);
         }
@@ -374,7 +374,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         /// <param name="settings">The <see cref="JsonLoadSettings"/> used to load the JSON.
         /// If this is <c>null</c>, default load settings will be used.</param>
         /// <returns>A <see cref="JProperty"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public static new JProperty Load(JsonReader reader, JsonLoadSettings settings)
+        public new static JProperty Load(JsonReader reader, JsonLoadSettings settings)
         {
             if (reader.TokenType == JsonToken.None)
             {

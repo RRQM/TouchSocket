@@ -522,7 +522,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
 
                     object value = (binaryType != BsonBinaryType.Uuid)
                         ? data
-                        : (object)new Guid(data);
+                        : new Guid(data);
 
                     this.SetToken(JsonToken.Bytes, value);
                     break;

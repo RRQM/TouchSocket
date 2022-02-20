@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
+
 using RRQMCore.Serialization;
 using RRQMCore.XREF.Newtonsoft.Json;
 using System;
@@ -48,12 +48,18 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
         /// </summary>
-        public int CanReadLen => this.Len - this.Pos;
+        public int CanReadLen
+        {
+            get { return this.Len - this.Pos; }
+        }
 
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
         /// </summary>
-        public long CanReadLength => this.length - this.position;
+        public long CanReadLength
+        {
+            get { return this.length - this.position; }
+        }
 
         /// <summary>
         /// 构造函数
@@ -71,7 +77,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public static float Ratio
         {
-            get => ratio;
+            get { return ratio; }
             set
             {
                 if (value < 1.5)
@@ -85,7 +91,10 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 字节实例
         /// </summary>
-        public byte[] Buffer => this._buffer;
+        public byte[] Buffer
+        {
+            get { return this._buffer; }
+        }
 
         /// <summary>
         /// 可读取
@@ -110,25 +119,30 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 表示持续性持有，为True时，Dispose将调用无效。
         /// </summary>
-        public bool Holding => this.holding;
+        public bool Holding
+        {
+            get { return this.holding; }
+        }
 
         /// <summary>
         /// Int真实长度
         /// </summary>
-        public int Len => (int)this.length;
+        public int Len
+        { get { return (int)this.length; } }
 
         /// <summary>
         /// 真实长度
         /// </summary>
-        public override long Length => this.length;
+        public override long Length
+        { get { return this.length; } }
 
         /// <summary>
         /// int型流位置
         /// </summary>
         public int Pos
         {
-            get => (int)this.position;
-            set => this.position = value;
+            get { return (int)this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -136,14 +150,17 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public override long Position
         {
-            get => this.position;
-            set => this.position = value;
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
         /// 使用状态
         /// </summary>
-        public bool Using => this.@using;
+        public bool Using
+        {
+            get { return this.@using; }
+        }
 
         /// <summary>
         /// 直接完全释放，游离该对象，然后等待GC

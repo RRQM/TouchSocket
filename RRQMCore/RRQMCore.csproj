@@ -4,14 +4,17 @@
 		<TargetFrameworks>net45;net5;netcoreapp3.1;netstandard2.0</TargetFrameworks>
 		<Authors>若汝棋茗</Authors>
 		<PackageIcon>RRQM.png</PackageIcon>
-		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
-		<Version>6.6.0</Version>
+		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
+		<Version>7.0.0</Version>
 		<LangVersion>9.0</LangVersion>
 		<SignAssembly>true</SignAssembly>
 		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
 
 更新内容：
-增加：ConsoleAction。
+增加：AppConfigBase，更加方便的使用APP配置文件。
+增加：FileLogger，将日志按日期在本地文件保存。
+增加：LoggerGroup，能够在一个日志记录中，使用多个记录器。
+修改：Log修改为ConsoleLogger，将日志进行控制台输出。
 
 特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
 特此感谢其作者！！！

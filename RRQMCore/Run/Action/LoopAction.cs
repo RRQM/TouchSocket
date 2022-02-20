@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -105,31 +105,46 @@ namespace RRQMCore.Run
         /// <summary>
         /// 已执行次数
         /// </summary>
-        public int ExecutedCount => this.executedCount;
+        public int ExecutedCount
+        {
+            get { return this.executedCount; }
+        }
 
         /// <summary>
         /// 执行间隔
         /// </summary>
-        public TimeSpan Interval => this.interval;
+        public TimeSpan Interval
+        {
+            get { return this.interval; }
+        }
 
         /// <summary>
         /// 循环次数
         /// </summary>
-        public int LoopCount => this.loopCount;
+        public int LoopCount
+        {
+            get { return this.loopCount; }
+        }
 
         private Action<LoopAction> action;
 
         /// <summary>
         /// 执行委托
         /// </summary>
-        public Action<LoopAction> ExecuteAction => this.action;
+        public Action<LoopAction> ExecuteAction
+        {
+            get { return this.action; }
+        }
 
         private RunStatus runStatus;
 
         /// <summary>
         /// 是否在运行
         /// </summary>
-        public RunStatus RunStatus => this.runStatus;
+        public RunStatus RunStatus
+        {
+            get { return this.runStatus; }
+        }
 
         /// <summary>
         /// 运行

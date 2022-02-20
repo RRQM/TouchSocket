@@ -48,7 +48,10 @@ namespace RRQMCore.IO
         /// <summary>
         /// 帮助信息指令
         /// </summary>
-        public string HelpOrder => this.helpOrder;
+        public string HelpOrder
+        {
+            get { return this.helpOrder; }
+        }
 
 
         private Dictionary<string, VAction> actions = new Dictionary<string, VAction>();
@@ -104,38 +107,17 @@ namespace RRQMCore.IO
     {
         private Action action;
 
-
-        /* 项目“RRQMCore (net5)”的未合并的更改
-        在此之前:
-                public Action Action
-                {
-                    get { return action; }
-        在此之后:
-                public Action Action => this.action; }
-        */
-
-        /* 项目“RRQMCore (netcoreapp3.1)”的未合并的更改
-        在此之前:
-                public Action Action
-                {
-                    get { return action; }
-        在此之后:
-                public Action Action => this.action; }
-        */
-
-        /* 项目“RRQMCore (netstandard2.0)”的未合并的更改
-        在此之前:
-                public Action Action
-                {
-                    get { return action; }
-        在此之后:
-                public Action Action => this.action; }
-        */
-        public Action Action => this.action;
+        public Action Action
+        {
+            get { return this.action; }
+        }
 
         private string fullOrder;
 
-        public string FullOrder => this.fullOrder;
+        public string FullOrder
+        {
+            get { return this.fullOrder; }
+        }
 
 
         private string description;
@@ -153,7 +135,10 @@ namespace RRQMCore.IO
             this.description = description ?? throw new ArgumentNullException(nameof(description));
         }
 
-        public string Description => this.description;
+        public string Description
+        {
+            get { return this.description; }
+        }
 
     }
 }

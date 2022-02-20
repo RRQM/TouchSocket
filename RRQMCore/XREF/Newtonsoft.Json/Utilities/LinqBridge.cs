@@ -1853,7 +1853,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             foreach (var num in source)
                 checked
                 {
-                    sum += (int)num;
+                    sum += num;
                     count++;
                 }
 
@@ -2038,7 +2038,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             foreach (var num in source)
                 checked
                 {
-                    sum += (long)num;
+                    sum += num;
                     count++;
                 }
 
@@ -2602,14 +2602,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Utilities.LinqBridge
             foreach (var num in source)
                 checked
                 {
-                    sum += (decimal)num;
+                    sum += num;
                     count++;
                 }
 
             if (count == 0)
                 throw new System.InvalidOperationException();
 
-            return (decimal)sum / count;
+            return sum / count;
         }
 
         /// <summary>

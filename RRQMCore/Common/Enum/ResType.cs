@@ -14,7 +14,7 @@
 namespace RRQMCore
 {
     /// <summary>
-    /// RRQMCore资源枚举
+    /// RRQM资源枚举
     /// </summary>
     public enum ResType
     {
@@ -71,12 +71,12 @@ namespace RRQMCore
         /// <summary>
         /// 没有找到流文件
         /// </summary>
-        NotFindStream,
+        StreamNotFind,
 
         /// <summary>
         /// 没有找到客户端
         /// </summary>
-        NotFindClient,
+        ClientNotFind,
 
         /// <summary>
         /// 流文件正在被应用
@@ -116,6 +116,26 @@ namespace RRQMCore
         /// <summary>
         /// 内存块已释放
         /// </summary>
-        ByteBlockDisposed
+        ByteBlockDisposed,
+
+        /// <summary>
+        /// 数据处理适配器为空
+        /// </summary>
+        NullDataAdapter,
+
+        /// <summary>
+        /// 操作超时
+        /// </summary>
+        Overtime,
+
+        /// <summary>
+        /// 名称为“{0}”的事件已存在
+        /// </summary>
+        EventExisted,
+
+        /// <summary>
+        /// 名称为“{0}”的事件不存在
+        /// </summary>
+        EventNotExist
     }
 }

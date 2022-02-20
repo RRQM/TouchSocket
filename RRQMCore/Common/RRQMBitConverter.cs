@@ -41,7 +41,10 @@ namespace RRQMCore
         /// <summary>
         /// 以默认小端，可通过<see cref="RRQMBitConverter.DefaultEndianType"/>重新指定默认端。
         /// </summary>
-        public static RRQMBitConverter Default => @default;
+        public static RRQMBitConverter Default
+        {
+            get { return @default; }
+        }
 
         private static EndianType @defaultEndianType;
         /// <summary>
@@ -49,7 +52,7 @@ namespace RRQMCore
         /// </summary>
         public static EndianType DefaultEndianType
         {
-            get => @defaultEndianType;
+            get { return @defaultEndianType; }
             set
             {
                 @defaultEndianType = value;
@@ -81,34 +84,10 @@ namespace RRQMCore
         /// <summary>
         /// 指定大小端。
         /// </summary>
-
-        /* 项目“RRQMCore (net5)”的未合并的更改
-        在此之前:
-                public EndianType EndianType
-                {
-                    get { return endianType; }
-        在此之后:
-                public EndianType EndianType => this.endianType; }
-        */
-
-        /* 项目“RRQMCore (netcoreapp3.1)”的未合并的更改
-        在此之前:
-                public EndianType EndianType
-                {
-                    get { return endianType; }
-        在此之后:
-                public EndianType EndianType => this.endianType; }
-        */
-
-        /* 项目“RRQMCore (netstandard2.0)”的未合并的更改
-        在此之前:
-                public EndianType EndianType
-                {
-                    get { return endianType; }
-        在此之后:
-                public EndianType EndianType => this.endianType; }
-        */
-        public EndianType EndianType => this.endianType;
+        public EndianType EndianType
+        {
+            get { return this.endianType; }
+        }
 
         /// <summary>
         /// 判断当前系统是否为设置的大小端

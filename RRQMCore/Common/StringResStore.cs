@@ -27,7 +27,12 @@ namespace RRQMCore
         /// <returns></returns>
         public static string GetResString(this Enum @enum)
         {
-            return Resource.ResourceManager.GetString(@enum.ToString());
+            string res = Resource.ResourceManager.GetString(@enum.ToString());
+            if (res == null)
+            {
+                return @enum.ToString();
+            }
+            return res;
         }
 
         /// <summary>
@@ -38,7 +43,12 @@ namespace RRQMCore
         /// <returns></returns>
         public static string GetResString(this Enum @enum, params object[] objs)
         {
-            return Resource.ResourceManager.GetString(@enum.ToString()).Format(objs);
+            string res = Resource.ResourceManager.GetString(@enum.ToString());
+            if (res == null)
+            {
+                return @enum.ToString();
+            }
+            return res.Format(objs);
         }
     }
 }

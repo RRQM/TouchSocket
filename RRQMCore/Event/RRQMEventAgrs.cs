@@ -13,7 +13,7 @@
 
 using System;
 
-namespace RRQMCore.Event
+namespace RRQMCore
 {
     /// <summary>
     /// 若汝棋茗所有事件基类

@@ -151,7 +151,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value></value>
         public override char QuoteChar
         {
-            get => this._reader.QuoteChar;
+            get { return this._reader.QuoteChar; }
             protected internal set { }
         }
 
