@@ -40,7 +40,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public Result Result
         {
-            get { return result; }
+            get { return this.result; }
         }
     }
 }

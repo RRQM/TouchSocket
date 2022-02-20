@@ -33,8 +33,8 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public string RootPath
         {
-            get { return (string)GetValue(RootPathProperty); }
-            set { SetValue(RootPathProperty, value); }
+            get { return (string)this.GetValue(RootPathProperty); }
+            set { this.SetValue(RootPathProperty, value); }
         }
 
         /// <summary>
@@ -49,8 +49,8 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public ResponseType ResponseType
         {
-            get { return (ResponseType)GetValue(ResponseTypeProperty); }
-            set { SetValue(ResponseTypeProperty, value); }
+            get { return (ResponseType)this.GetValue(ResponseTypeProperty); }
+            set { this.SetValue(ResponseTypeProperty, value); }
         }
 
         /// <summary>

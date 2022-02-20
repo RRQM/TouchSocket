@@ -29,7 +29,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        Result PullFile(string clientID,FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
+        Result PullFile(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
         /// <summary>
         /// 异步从对点拉取文件
@@ -39,7 +39,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        Task<Result> PullFileAsync(string clientID,FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
+        Task<Result> PullFileAsync(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
         /// <summary>
         /// 向对点推送文件
@@ -49,7 +49,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        Result PushFile(string clientID,FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
+        Result PushFile(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
         /// <summary>
         /// 异步向对点推送文件
@@ -59,6 +59,6 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileOperator"></param>
         /// <param name="metadata"></param>
         /// <returns></returns>
-        Task<Result> PushFileAsync(string clientID,FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
+        Task<Result> PushFileAsync(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
     }
 }

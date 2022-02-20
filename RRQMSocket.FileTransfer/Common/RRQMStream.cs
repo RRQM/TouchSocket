@@ -34,14 +34,14 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件信息
         /// </summary>
-        public RRQMFileInfo FileInfo { get => fileInfo; }
+        public RRQMFileInfo FileInfo { get => this.fileInfo; }
 
         /// <summary>
         /// 流类型
         /// </summary>
         public StreamOperationType StreamType
         {
-            get { return streamType; }
+            get { return this.streamType; }
         }
 
         /// <summary>
@@ -103,10 +103,10 @@ namespace RRQMSocket.FileTransfer
         {
             if (this.streamType == StreamOperationType.RRQMWrite)
             {
-                if (DateTime.Now.TimeOfDay - lastTime > TimeSpan.FromMilliseconds(saveInterval))
+                if (DateTime.Now.TimeOfDay - this.lastTime > TimeSpan.FromMilliseconds(saveInterval))
                 {
                     SerializeConvert.XmlSerializeToFile(this.fileInfo, this.rrqmPath.Replace(".rrqm", string.Empty) + ".temp");
-                    lastTime = DateTime.Now.TimeOfDay;
+                    this.lastTime = DateTime.Now.TimeOfDay;
                 }
             }
         }

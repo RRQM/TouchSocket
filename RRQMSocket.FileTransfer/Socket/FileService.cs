@@ -16,10 +16,27 @@ using RRQMSocket.RPC.RRQMRPC;
 namespace RRQMSocket.FileTransfer
 {
     /// <summary>
-    /// 通讯服务端主类
+    /// 泛型文件服务器
     /// </summary>
-    public class FileService : TcpParser<FileSocketClient>
+    public class FileService<TClient> : TcpRpcParser<TClient> where TClient : FileSocketClient, new()
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public FileService()
+        {
+            this.AddUsedProtocol(FileUtility.P200, "Client pull file from SocketClient.");
+            this.AddUsedProtocol(FileUtility.P201, "Client begin pull file from SocketClient.");
+            this.AddUsedProtocol(FileUtility.P202, "Client push file to SocketClient.");
+            this.AddUsedProtocol(FileUtility.P203, "SocketClient pull file from client.");
+            this.AddUsedProtocol(FileUtility.P204, "SocketClient begin pull file from client.");
+            this.AddUsedProtocol(FileUtility.P205, "SocketClient push file to client.");
+            for (short i = FileUtility.PMin; i < FileUtility.PMax; i++)
+            {
+                this.AddUsedProtocol(i, "保留协议");
+            }
+        }
+
         #region 字段
 
         private ResponseType responseType;
@@ -32,12 +49,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件传输开始之前
         /// </summary>
-        public event RRQMFileOperationEventHandler<FileSocketClient> BeforeFileTransfer;
+        public event RRQMFileOperationEventHandler<TClient> BeforeFileTransfer;
 
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
-        public event RRQMTransferFileEventHandler<FileSocketClient> FinishedFileTransfer;
+        public event RRQMTransferFileEventHandler<TClient> FinishedFileTransfer;
 
         #endregion 事件
 
@@ -57,7 +74,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override void OnConnecting(FileSocketClient socketClient, ClientOperationEventArgs e)
+        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
             socketClient.BeforeFileTransfer += this.OnBeforeFileTransfer;
             socketClient.FinishedFileTransfer += this.OnFinishedFileTransfer;
@@ -68,12 +85,20 @@ namespace RRQMSocket.FileTransfer
 
         private void OnBeforeFileTransfer(FileSocketClient client, FileOperationEventArgs e)
         {
-            this.BeforeFileTransfer?.Invoke(client, e);
+            this.BeforeFileTransfer?.Invoke((TClient)client, e);
         }
 
         private void OnFinishedFileTransfer(FileSocketClient client, FileTransferStatusEventArgs e)
         {
-            this.FinishedFileTransfer?.Invoke(client, e);
+            this.FinishedFileTransfer?.Invoke((TClient)client, e);
         }
+    }
+
+    /// <summary>
+    /// 文件服务器
+    /// </summary>
+    public class FileService : FileService<FileSocketClient>
+    {
+
     }
 }

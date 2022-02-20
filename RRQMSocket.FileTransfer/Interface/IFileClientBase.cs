@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
+using RRQMSocket.RPC.RRQMRPC;
 using System.Threading.Tasks;
 
 namespace RRQMSocket.FileTransfer
@@ -18,7 +19,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 文件服务器基类
     /// </summary>
-    public interface IFileClientBase : IProtocolClientBase
+    public interface IFileClientBase : ITcpRpcClientBase
     {
         /// <summary>
         /// 根路径
