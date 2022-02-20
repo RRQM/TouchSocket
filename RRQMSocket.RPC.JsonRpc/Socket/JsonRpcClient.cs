@@ -10,15 +10,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Helper;
 using RRQMCore.Run;
 using RRQMCore.XREF.Newtonsoft.Json;
 using RRQMCore.XREF.Newtonsoft.Json.Linq;
 using RRQMSocket.Http;
+using RRQMSocket.RPC.RRQMRPC;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
@@ -43,7 +46,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcClient()
         {
-            waitHandle = new RRQMWaitHandlePool<IWaitResult>();
+            this.waitHandle = new RRQMWaitHandlePool<IWaitResult>();
         }
 
         /// <summary>
@@ -51,7 +54,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public int MaxPackageSize
         {
-            get { return maxPackageSize; }
+            get { return this.maxPackageSize; }
         }
 
         /// <summary>
@@ -59,7 +62,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcProtocolType ProtocolType
         {
-            get { return protocolType; }
+            get { return this.protocolType; }
         }
 
         /// <summary>
@@ -69,17 +72,17 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
-        public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             JsonRpcWaitContext context = new JsonRpcWaitContext();
             WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
+            if (invokeOption == default)
             {
                 invokeOption = InvokeOption.WaitInvoke;
             }
@@ -154,7 +157,7 @@ namespace RRQMSocket.RPC.JsonRpc
 
                         if (resultContext.Status == 0)
                         {
-                            throw new RRQMTimeoutException("等待结果超时");
+                            throw new TimeoutException("等待结果超时");
                         }
                         if (resultContext.error != null)
                         {
@@ -184,16 +187,16 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             JsonRpcWaitContext context = new JsonRpcWaitContext();
             WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
+            if (invokeOption == default)
             {
                 invokeOption = InvokeOption.WaitInvoke;
             }
@@ -268,7 +271,7 @@ namespace RRQMSocket.RPC.JsonRpc
 
                         if (resultContext.Status == 0)
                         {
-                            throw new RRQMTimeoutException("等待结果超时");
+                            throw new TimeoutException("等待结果超时");
                         }
                         if (resultContext.error != null)
                         {
@@ -287,10 +290,10 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void Invoke(string method, InvokeOption invokeOption, params object[] parameters)
+        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
         {
             this.Invoke(method, invokeOption, ref parameters, null);
         }
@@ -301,13 +304,50 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
-        public T Invoke<T>(string method, InvokeOption invokeOption, params object[] parameters)
+        public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
             return this.Invoke<T>(method, invokeOption, ref parameters, null);
+        }
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">函数名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="TimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+             {
+                 this.Invoke(method, invokeOption, parameters);
+             });
+        }
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="TimeoutException">调用超时</exception>
+        /// <exception cref="RRQMSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRPCInvokeException">RPC异常</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>服务器返回结果</returns>
+        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+            {
+                return this.Invoke<T>(method, invokeOption, parameters);
+            });
         }
 
         /// <summary>

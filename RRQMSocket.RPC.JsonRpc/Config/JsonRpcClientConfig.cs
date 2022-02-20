@@ -24,8 +24,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcProtocolType ProtocolType
         {
-            get { return (JsonRpcProtocolType)GetValue(ProtocolTypeProperty); }
-            set { SetValue(ProtocolTypeProperty, value); }
+            get { return (JsonRpcProtocolType)this.GetValue(ProtocolTypeProperty); }
+            set { this.SetValue(ProtocolTypeProperty, value); }
         }
 
         /// <summary>
@@ -40,8 +40,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public int MaxPackageSize
         {
-            get { return (int)GetValue(MaxPackageSizeProperty); }
-            set { SetValue(MaxPackageSizeProperty, value); }
+            get { return (int)this.GetValue(MaxPackageSizeProperty); }
+            set { this.SetValue(MaxPackageSizeProperty, value); }
         }
 
         /// <summary>

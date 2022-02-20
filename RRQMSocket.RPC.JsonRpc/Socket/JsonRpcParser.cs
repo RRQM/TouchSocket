@@ -53,7 +53,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public InvokeType InvokeType
         {
-            get { return invokeType; }
+            get { return this.invokeType; }
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public int MaxPackageSize
         {
-            get { return maxPackageSize; }
+            get { return this.maxPackageSize; }
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public MethodMap MethodMap
         {
-            get { return methodMap; }
+            get { return this.methodMap; }
         }
 
         /// <summary>
@@ -77,15 +77,15 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcProtocolType ProtocolType
         {
-            get { return protocolType; }
+            get { return this.protocolType; }
         }
-        
+
         /// <summary>
         /// 代理令箭，当获取代理文件时需验证令箭
         /// </summary>
         public string ProxyToken
         {
-            get { return proxyToken; }
+            get { return this.proxyToken; }
         }
 
         /// <summary>
@@ -478,16 +478,16 @@ namespace RRQMSocket.RPC.JsonRpc
             switch (this.protocolType)
             {
                 case JsonRpcProtocolType.Tcp:
-                    socketClient.InternalSetAdapter(new TerminatorPackageAdapter(this.maxPackageSize, "\r\n"));
+                    e.DataHandlingAdapter = new TerminatorPackageAdapter(this.maxPackageSize, "\r\n");
                     break;
 
                 case JsonRpcProtocolType.Http:
-                    socketClient.InternalSetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server));
+                    e.DataHandlingAdapter = new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server);
                     break;
             }
             base.OnConnecting(socketClient, e);
         }
-        
+
         private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
         {
             MethodInvoker methodInvoker = new MethodInvoker();

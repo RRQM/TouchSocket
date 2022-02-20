@@ -24,8 +24,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcProtocolType ProtocolType
         {
-            get { return (JsonRpcProtocolType)GetValue(ProtocolTypeProperty); }
-            set { SetValue(ProtocolTypeProperty, value); }
+            get { return (JsonRpcProtocolType)this.GetValue(ProtocolTypeProperty); }
+            set { this.SetValue(ProtocolTypeProperty, value); }
         }
 
         /// <summary>
@@ -40,8 +40,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public int MaxPackageSize
         {
-            get { return (int)GetValue(MaxPackageSizeProperty); }
-            set { SetValue(MaxPackageSizeProperty, value); }
+            get { return (int)this.GetValue(MaxPackageSizeProperty); }
+            set { this.SetValue(MaxPackageSizeProperty, value); }
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public InvokeType InvokeType
         {
-            get { return (InvokeType)GetValue(InvokeTypeProperty); }
-            set { SetValue(InvokeTypeProperty, value); }
+            get { return (InvokeType)this.GetValue(InvokeTypeProperty); }
+            set { this.SetValue(InvokeTypeProperty, value); }
         }
 
         /// <summary>
@@ -70,8 +70,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public string ProxyToken
         {
-            get { return (string)GetValue(ProxyTokenProperty); }
-            set { SetValue(ProxyTokenProperty, value); }
+            get { return (string)this.GetValue(ProxyTokenProperty); }
+            set { this.SetValue(ProxyTokenProperty, value); }
         }
 
         /// <summary>
