@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Log;
 using System;
 using System.Net;
@@ -36,27 +37,42 @@ namespace RRQMSocket
         /// <summary>
         /// 默认远程节点
         /// </summary>
-        public IPHost RemoteIPHost => this.remoteIPHost;
+        public IPHost RemoteIPHost
+        {
+            get { return this.remoteIPHost; }
+        }
 
         /// <summary>
         /// 监听器
         /// </summary>
-        public NetworkMonitor Monitor => this.monitor;
+        public NetworkMonitor Monitor
+        {
+            get { return this.monitor; }
+        }
 
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public string ServerName => this.name;
+        public string ServerName
+        {
+            get { return this.name; }
+        }
 
         /// <summary>
         /// 获取服务器状态
         /// </summary>
-        public ServerState ServerState => this.serverState;
+        public ServerState ServerState
+        {
+            get { return this.serverState; }
+        }
 
         /// <summary>
         /// 获取配置
         /// </summary>
-        public ServiceConfig ServiceConfig => this.serviceConfig;
+        public ServiceConfig ServiceConfig
+        {
+            get { return this.serviceConfig; }
+        }
 
         /// <summary>
         /// 关闭服务器并释放服务器资源
@@ -369,7 +385,7 @@ namespace RRQMSocket
                     {
                         Thread thread = new Thread(this.Received);
                         thread.IsBackground = true;
-                        thread.Start(this.monitor);
+                        thread.Start();
                         break;
                     }
 
@@ -379,17 +395,24 @@ namespace RRQMSocket
             }
         }
 
-        private void Received(object o)
+        private void Received()
         {
-            NetworkMonitor monitor = (NetworkMonitor)o;
 
-            EndPoint endPoint = monitor.IPHost.EndPoint;
             while (true)
             {
-                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                int r = monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
-                byteBlock.SetLength(r);
-                this.HandleBuffer(endPoint, byteBlock);
+                try
+                {
+                    EndPoint endPoint = this.monitor.IPHost.EndPoint;
+                    ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                    int r = this.monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
+                    byteBlock.SetLength(r);
+                    this.HandleBuffer(endPoint, byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Debug(LogType.Error, this, ex.Message, ex);
+                    break;
+                }
             }
         }
 
@@ -416,22 +439,27 @@ namespace RRQMSocket
 
         private void ProcessReceive(Socket socket, SocketAsyncEventArgs e)
         {
-            if (!this.disposable)
+            if (this.serverState == ServerState.Running && e.SocketError == SocketError.Success)
             {
-                if (e.SocketError == SocketError.Success)
+                ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                byteBlock.SetLength(e.BytesTransferred);
+
+                this.HandleBuffer(e.RemoteEndPoint, byteBlock);
+
+                ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
+                e.UserToken = newByteBlock;
+                e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
+
+                try
                 {
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.SetLength(e.BytesTransferred);
-
-                    this.HandleBuffer(e.RemoteEndPoint, byteBlock);
-
-                    ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                    e.UserToken = newByteBlock;
-                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
                     if (!socket.ReceiveFromAsync(e))
                     {
                         this.ProcessReceive(socket, e);
                     }
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Debug(LogType.Error, this, ex.Message, ex);
                 }
             }
         }

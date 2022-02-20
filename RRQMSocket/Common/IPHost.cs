@@ -10,7 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
+
+using RRQMCore;
 using RRQMSocket.Common;
 using System.Net;
 using System.Net.Sockets;
@@ -114,7 +115,10 @@ namespace RRQMSocket
         /// <summary>
         /// 协议名
         /// </summary>
-        public string Scheme => this.scheme;
+        public string Scheme
+        {
+            get { return this.scheme; }
+        }
 
         /// <summary>
         /// 从IPAddress和端口号

@@ -24,8 +24,8 @@ namespace RRQMSocket
         /// </summary>
         public ClientSslOption SslOption
         {
-            get => (ClientSslOption)this.GetValue(SslOptionProperty);
-            set => this.SetValue(SslOptionProperty, value);
+            get { return (ClientSslOption)this.GetValue(SslOptionProperty); }
+            set { this.SetValue(SslOptionProperty, value); }
         }
 
         /// <summary>
@@ -36,44 +36,27 @@ namespace RRQMSocket
             DependencyProperty.Register("SslOption", typeof(ClientSslOption), typeof(TcpClientConfig), null);
 
         /// <summary>
-        /// 远程IPHost
+        /// 远程连接地址
         /// </summary>
         public IPHost RemoteIPHost
         {
-            get => (IPHost)this.GetValue(RemoteIPHostProperty);
-            set => this.SetValue(RemoteIPHostProperty, value);
+            get { return (IPHost)this.GetValue(RemoteIPHostProperty); }
+            set { this.SetValue(RemoteIPHostProperty, value); }
         }
 
         /// <summary>
-        /// 远程IPHost，所需类型<see cref="IPHost"/>
+        /// 远程连接地址，所需类型<see cref="IPHost"/>
         /// </summary>
         public static readonly DependencyProperty RemoteIPHostProperty =
             DependencyProperty.Register("RemoteIPHost", typeof(IPHost), typeof(TcpClientConfig), null);
-
-        /// <summary>
-        /// 仅发送，即不开启接收线程，
-        /// 同时不会感知断开操作。
-        /// </summary>
-        public bool OnlySend
-        {
-            get => (bool)this.GetValue(OnlySendProperty);
-            set => this.SetValue(OnlySendProperty, value);
-        }
-
-        /// <summary>
-        /// 仅发送，即不开启接收线程，
-        /// 同时不会感知断开操作，所需类型<see cref="bool"/>
-        /// </summary>
-        public static readonly DependencyProperty OnlySendProperty =
-            DependencyProperty.Register("OnlySend", typeof(bool), typeof(TcpClientConfig), false);
 
         /// <summary>
         /// 在异步发送时，使用独立线程发送
         /// </summary>
         public bool SeparateThreadSend
         {
-            get => (bool)this.GetValue(SeparateThreadSendProperty);
-            set => this.SetValue(SeparateThreadSendProperty, value);
+            get { return (bool)this.GetValue(SeparateThreadSendProperty); }
+            set { this.SetValue(SeparateThreadSendProperty, value); }
         }
 
         /// <summary>
@@ -83,27 +66,12 @@ namespace RRQMSocket
             DependencyProperty.Register("SeparateThreadSend", typeof(bool), typeof(TcpClientConfig), false);
 
         /// <summary>
-        /// 接收类型
-        /// </summary>
-        public ReceiveType ReceiveType
-        {
-            get => (ReceiveType)this.GetValue(ReceiveTypeProperty);
-            set => this.SetValue(ReceiveTypeProperty, value);
-        }
-
-        /// <summary>
-        /// 接收类型，所需类型<see cref="RRQMSocket. ReceiveType"/>
-        /// </summary>
-        public static readonly DependencyProperty ReceiveTypeProperty =
-            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(TcpClientConfig), ReceiveType.IOCP);
-
-        /// <summary>
         /// 在Socket配置KeepAlive属性
         /// </summary>
         public bool KeepAlive
         {
-            get => (bool)this.GetValue(KeepAliveProperty);
-            set => this.SetValue(KeepAliveProperty, value);
+            get { return (bool)this.GetValue(KeepAliveProperty); }
+            set { this.SetValue(KeepAliveProperty, value); }
         }
 
         /// <summary>
@@ -118,8 +86,8 @@ namespace RRQMSocket
         /// </summary>
         public bool NoDelay
         {
-            get => (bool)this.GetValue(NoDelayProperty);
-            set => this.SetValue(NoDelayProperty, value);
+            get { return (bool)this.GetValue(NoDelayProperty); }
+            set { this.SetValue(NoDelayProperty, value); }
         }
 
         /// <summary>
@@ -134,8 +102,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost BindIPHost
         {
-            get => (IPHost)this.GetValue(BindIPHostProperty);
-            set => this.SetValue(BindIPHostProperty, value);
+            get { return (IPHost)this.GetValue(BindIPHostProperty); }
+            set { this.SetValue(BindIPHostProperty, value); }
         }
 
         /// <summary>

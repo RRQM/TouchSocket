@@ -27,8 +27,8 @@ namespace RRQMSocket
         /// </summary>
         public SslProtocols SslProtocols
         {
-            get => this.sslProtocols;
-            set => this.sslProtocols = value;
+            get { return this.sslProtocols; }
+            set { this.sslProtocols = value; }
         }
 
         private bool checkCertificateRevocation;
@@ -38,8 +38,8 @@ namespace RRQMSocket
         /// </summary>
         public bool CheckCertificateRevocation
         {
-            get => this.checkCertificateRevocation;
-            set => this.checkCertificateRevocation = value;
+            get { return this.checkCertificateRevocation; }
+            set { this.checkCertificateRevocation = value; }
         }
 
         /// <summary>

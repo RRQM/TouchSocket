@@ -25,7 +25,8 @@ namespace RRQMSocket
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count => this.tokenDic.Count;
+        public int Count
+        { get { return this.tokenDic.Count; } }
 
         private ConcurrentDictionary<string, ISocketClient> tokenDic = new ConcurrentDictionary<string, ISocketClient>();
 
@@ -52,13 +53,20 @@ namespace RRQMSocket
             return this.tokenDic.Values.ToArray();
         }
 
-        internal bool TryRemove(string id)
+        internal bool TryRemove(string id, out ISocketClient socketClient)
         {
-            if (string.IsNullOrEmpty(id))
+            return this.tokenDic.TryRemove(id, out socketClient);
+        }
+
+        internal bool TryRemove<TClient>(string id, out TClient socketClient)
+        {
+            if (this.tokenDic.TryRemove(id, out ISocketClient client))
             {
-                return false;
+                socketClient = (TClient)client;
+                return true;
             }
-            return this.tokenDic.TryRemove(id, out _);
+            socketClient = default;
+            return false;
         }
 
         /// <summary>

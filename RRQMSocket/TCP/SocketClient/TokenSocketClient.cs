@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Helper;
 using RRQMCore.Run;
 
 namespace RRQMSocket
@@ -36,24 +37,30 @@ namespace RRQMSocket
         /// <summary>
         /// 验证超时时间,默认为3000ms
         /// </summary>
-        public int VerifyTimeout => this.verifyTimeout;
+        public int VerifyTimeout
+        {
+            get { return this.verifyTimeout; }
+        }
 
         /// <summary>
         /// 连接令箭
         /// </summary>
-        public string VerifyToken => this.verifyToken;
+        public string VerifyToken
+        {
+            get { return this.verifyToken; }
+        }
 
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
 
         /// <summary>
         /// 处理接收数据
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
@@ -63,15 +70,14 @@ namespace RRQMSocket
             {
                 try
                 {
-                    WaitVerify waitVerify = WaitVerify.GetVerifyInfo(byteBlock.ToArray());
-                    VerifyOption verifyOption = new VerifyOption();
-                    verifyOption.Token = waitVerify.Token;
+                    WaitVerify waitVerify = byteBlock.ToArray().ToJsonObject<WaitVerify>();
+                    VerifyOption verifyOption = new VerifyOption(waitVerify.Token);
                     this.OnVerifyToken(verifyOption);
                     if (verifyOption.Accept)
                     {
                         waitVerify.ID = this.ID;
                         waitVerify.Status = 1;
-                        var data = waitVerify.GetData();
+                        var data = waitVerify.ToJsonBytes();
                         base.Send(data, 0, data.Length);
                         this.isHandshaked = true;
                         this.online = true;
@@ -81,7 +87,7 @@ namespace RRQMSocket
                     {
                         waitVerify.Status = 2;
                         waitVerify.Message = verifyOption.ErrorMessage;
-                        var data = waitVerify.GetData();
+                        var data = waitVerify.ToJsonBytes();
                         base.Send(data, 0, data.Length);
                         this.BreakOut(verifyOption.ErrorMessage);
                     }
@@ -103,6 +109,13 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 处理Token数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
+
+        /// <summary>
         /// 收到非正常连接。
         /// 一般地，这是由其他类型客户端发起的连接。
         /// </summary>
@@ -113,14 +126,6 @@ namespace RRQMSocket
         {
             return false;
         }
-
-        /// <summary>
-        /// 处理Token数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
-
         /// <summary>
         /// 当验证Token时
         /// </summary>

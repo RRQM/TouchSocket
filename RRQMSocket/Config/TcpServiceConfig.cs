@@ -24,8 +24,8 @@ namespace RRQMSocket
         /// </summary>
         public IPHost[] ListenIPHosts
         {
-            get => (IPHost[])this.GetValue(ListenIPHostsProperty);
-            set => this.SetValue(ListenIPHostsProperty, value);
+            get { return (IPHost[])this.GetValue(ListenIPHostsProperty); }
+            set { this.SetValue(ListenIPHostsProperty, value); }
         }
 
         /// <summary>
@@ -39,8 +39,8 @@ namespace RRQMSocket
         /// </summary>
         public int Backlog
         {
-            get => (int)this.GetValue(BacklogProperty);
-            set => this.SetValue(BacklogProperty, value);
+            get { return (int)this.GetValue(BacklogProperty); }
+            set { this.SetValue(BacklogProperty, value); }
         }
 
         /// <summary>
@@ -54,8 +54,8 @@ namespace RRQMSocket
         /// </summary>
         public int MaxCount
         {
-            get => (int)this.GetValue(MaxCountProperty);
-            set => this.SetValue(MaxCountProperty, value);
+            get { return (int)this.GetValue(MaxCountProperty); }
+            set { this.SetValue(MaxCountProperty, value); }
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace RRQMSocket
         /// </summary>
         public int ClearInterval
         {
-            get => (int)this.GetValue(ClearIntervalProperty);
-            set => this.SetValue(ClearIntervalProperty, value);
+            get { return (int)this.GetValue(ClearIntervalProperty); }
+            set { this.SetValue(ClearIntervalProperty, value); }
         }
 
         /// <summary>
@@ -81,17 +81,23 @@ namespace RRQMSocket
             DependencyProperty.Register("ClearInterval", typeof(int), typeof(TcpServiceConfig), 60 * 1000);
 
         /// <summary>
-        /// 统计类型，可叠加位域
+        /// 清理统计类型。
+        /// <para><see cref="ClearType.Receive"/>为在收到数据时，刷新统计，如果一直有数据接收，则不会被主动清理断开</para>
+        /// <para><see cref="ClearType.Send"/>为在发送数据时，刷新统计，如果一直有数据发送，则不会被主动清理断开</para>
+        /// <para>二者可叠加使用。</para>
         /// </summary>
         public ClearType ClearType
         {
-            get => (ClearType)this.GetValue(ClearTypeProperty);
-            set => this.SetValue(ClearTypeProperty, value);
+            get { return (ClearType)this.GetValue(ClearTypeProperty); }
+            set { this.SetValue(ClearTypeProperty, value); }
         }
 
         /// <summary>
-        /// 统计类型，可叠加位域
-        /// 所需类型<see cref="ClearType"/>
+        /// 清理统计类型。
+        /// <para><see cref="ClearType.Receive"/>为在收到数据时，刷新统计，如果一直有数据接收，则不会被主动清理断开</para>
+        /// <para><see cref="ClearType.Send"/>为在发送数据时，刷新统计，如果一直有数据发送，则不会被主动清理断开</para>
+        /// <para>二者可叠加使用。</para>
+        /// 所需类型<see cref="RRQMSocket.ClearType"/>
         /// </summary>
         public static readonly DependencyProperty ClearTypeProperty =
             DependencyProperty.Register("ClearType", typeof(ClearType), typeof(TcpServiceConfig), ClearType.Send | ClearType.Receive);
@@ -101,8 +107,8 @@ namespace RRQMSocket
         /// </summary>
         public ServiceSslOption SslOption
         {
-            get => (ServiceSslOption)this.GetValue(SslOptionProperty);
-            set => this.SetValue(SslOptionProperty, value);
+            get { return (ServiceSslOption)this.GetValue(SslOptionProperty); }
+            set { this.SetValue(SslOptionProperty, value); }
         }
 
         /// <summary>

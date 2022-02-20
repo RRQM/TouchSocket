@@ -20,19 +20,38 @@ namespace RRQMSocket
     public class NATServiceConfig : TcpServiceConfig
     {
         /// <summary>
-        /// 转发的目标地址
+        /// 转发的目标地址集合。
         /// </summary>
-        public IPHost TargetIPHost
+        public IPHost[] TargetIPHosts
         {
-            get => (IPHost)this.GetValue(TargetIPHostProperty);
-            set => this.SetValue(TargetIPHostProperty, value);
+            get { return (IPHost[])this.GetValue(TargetIPHostsProperty); }
+            set { this.SetValue(TargetIPHostsProperty, value); }
         }
 
         /// <summary>
-        /// 转发的目标地址，
-        /// 所需类型<see cref="IPHost"/>
+        /// 转发的目标地址集合，
+        /// 所需类型<see cref="IPHost"/>数组
         /// </summary>
-        public static readonly DependencyProperty TargetIPHostProperty =
-            DependencyProperty.Register("TargetIPHost", typeof(IPHost), typeof(NATServiceConfig), null);
+        public static readonly DependencyProperty TargetIPHostsProperty =
+            DependencyProperty.Register("TargetIPHosts", typeof(IPHost[]), typeof(NATServiceConfig), null);
+
+
+        /// <summary>
+        /// 转发的类型
+        /// </summary>
+        public NATMode NATMode
+        {
+            get { return (NATMode)this.GetValue(NATModeProperty); }
+            set { this.SetValue(NATModeProperty, value); }
+        }
+
+        /// <summary>
+        /// 转发的类型，
+        /// 所需类型<see cref="RRQMSocket.NATMode"/>
+        /// </summary>
+        public static readonly DependencyProperty NATModeProperty =
+            DependencyProperty.Register("NATMode", typeof(NATMode), typeof(NATServiceConfig), NATMode.TwoWay);
+
+
     }
 }

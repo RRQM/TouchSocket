@@ -37,11 +37,11 @@ namespace RRQMSocket
         /// <summary>
         /// 处理协议数据
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected override void HandleProtocolData(short procotol, ByteBlock byteBlock)
+        protected override void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
-            this.Received.Invoke(this, procotol, byteBlock);
+            this.Received.Invoke(this, protocol, byteBlock);
         }
 
         /// <summary>

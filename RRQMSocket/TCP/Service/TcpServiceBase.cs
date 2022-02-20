@@ -10,12 +10,17 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+using RRQMCore.ByteManager;
+
+using System.Collections.Generic;
+
 namespace RRQMSocket
 {
     /// <summary>
     /// Tcp服务器基类
     /// </summary>
-    public abstract class TcpServiceBase : BaseSocket, ITcpServiceBase
+    public abstract class TcpServiceBase : BaseSocket, ITcpServiceBase, IIDSender
     {
         /// <summary>
         /// <inheritdoc/>
@@ -128,5 +133,111 @@ namespace RRQMSocket
         /// </summary>
         /// <returns></returns>
         public abstract IService Stop();
+
+        #region ID发送
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Send(string id, byte[] buffer)
+        {
+            this.Send(id, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Send(string id, byte[] buffer, int offset, int length)
+        {
+            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            {
+                client.Send(buffer, offset, length);
+            }
+            else
+            {
+                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(id));
+            }
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void Send(string id, ByteBlock byteBlock)
+        {
+            this.Send(id, byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(string id, byte[] buffer)
+        {
+            this.SendAsync(id, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(string id, byte[] buffer, int offset, int length)
+        {
+            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            {
+                client.SendAsync(buffer, offset, length);
+            }
+            else
+            {
+                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(id));
+            }
+        }
+
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="id">用于检索TcpSocketClient</param>
+        /// <param name="byteBlock"></param>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="RRQMNotConnectedException"></exception>
+        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public void SendAsync(string id, ByteBlock byteBlock)
+        {
+            this.SendAsync(id, byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        #endregion ID发送
     }
 }

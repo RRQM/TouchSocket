@@ -20,12 +20,15 @@ namespace RRQMSocket
     public class TokenServiceConfig : TcpServiceConfig
     {
         /// <summary>
-        /// 连接令箭,当为null或空时，重置为默认值“rrqm”
+        /// 连接令箭，当为null或空时，重置为默认值“rrqm”
         /// </summary>
         public string VerifyToken
         {
-            get => (string)this.GetValue(VerifyTokenProperty);
-            set => this.SetValue(VerifyTokenProperty, value);
+            get { return (string)this.GetValue(VerifyTokenProperty); }
+            set
+            {
+                this.SetValue(VerifyTokenProperty, value);
+            }
         }
 
         /// <summary>
@@ -39,8 +42,11 @@ namespace RRQMSocket
         /// </summary>
         public int VerifyTimeout
         {
-            get => (int)this.GetValue(VerifyTimeoutProperty);
-            set => this.SetValue(VerifyTimeoutProperty, value);
+            get { return (int)this.GetValue(VerifyTimeoutProperty); }
+            set
+            {
+                this.SetValue(VerifyTimeoutProperty, value);
+            }
         }
 
         /// <summary>

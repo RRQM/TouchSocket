@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,7 +27,7 @@ namespace RRQMSocket
     ///</listheader>
     ///</list>
     /// </summary>
-    public class WaitSenderSubscriber : SubscriberBase, ISendBase, IWaitSender
+    public class WaitSenderSubscriber : SubscriberBase, ISenderBase, IWaitSender
     {
         /// <summary>
         /// 构造函数
@@ -46,8 +47,8 @@ namespace RRQMSocket
         /// </summary>
         public int Timeout
         {
-            get => this.timeout;
-            set => this.timeout = value;
+            get { return this.timeout; }
+            set { this.timeout = value; }
         }
 
         /// <summary>
@@ -136,7 +137,7 @@ namespace RRQMSocket
                             return this.waitData.WaitResult;
                         }
                     case RRQMCore.Run.WaitDataStatus.Overtime:
-                        throw new RRQMTimeoutException("操作已超时。");
+                        throw new TimeoutException("操作已超时。");
                     case RRQMCore.Run.WaitDataStatus.Canceled:
                     case RRQMCore.Run.WaitDataStatus.Disposed:
                     default:

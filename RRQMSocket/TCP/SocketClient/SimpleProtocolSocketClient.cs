@@ -35,13 +35,24 @@ namespace RRQMSocket
         public event RRQMStreamStatusEventHandler<SimpleProtocolSocketClient> ReceivedStream;
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void OnBreakOut()
+        {
+            this.Received = null;
+            this.BeforeReceiveStream = null;
+            this.ReceivedStream = null;
+            base.OnBreakOut();
+        }
+
+        /// <summary>
         /// 处理协议数据
         /// </summary>
-        /// <param name="procotol"></param>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected override void HandleProtocolData(short procotol, ByteBlock byteBlock)
+        protected override void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
-            this.Received.Invoke(this, procotol, byteBlock);
+            this.Received?.Invoke(this, protocol, byteBlock);
         }
 
         /// <summary>
@@ -50,7 +61,7 @@ namespace RRQMSocket
         /// <param name="args"></param>
         protected override void HandleStream(StreamStatusEventArgs args)
         {
-            this.ReceivedStream.Invoke(this, args);
+            this.ReceivedStream?.Invoke(this, args);
         }
 
         /// <summary>
@@ -59,7 +70,7 @@ namespace RRQMSocket
         /// <param name="args"></param>
         protected override void PreviewHandleStream(StreamOperationEventArgs args)
         {
-            this.BeforeReceiveStream.Invoke(this, args);
+            this.BeforeReceiveStream?.Invoke(this, args);
         }
     }
 }

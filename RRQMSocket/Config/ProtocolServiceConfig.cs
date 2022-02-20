@@ -24,8 +24,8 @@ namespace RRQMSocket
         /// </summary>
         public bool CanResetID
         {
-            get => (bool)this.GetValue(CanResetIDProperty);
-            set => this.SetValue(CanResetIDProperty, value);
+            get { return (bool)this.GetValue(CanResetIDProperty); }
+            set { this.SetValue(CanResetIDProperty, value); }
         }
 
         /// <summary>

@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
@@ -22,27 +23,23 @@ using System.Threading.Tasks;
 namespace RRQMSocket
 {
     /// <summary>
-    /// TCP服务器
+    /// TCP泛型服务器，由客户自己指定<see cref="SocketClient"/>类型。
     /// </summary>
     public class TcpService<TClient> : TcpServiceBase, ITcpService<TClient>, ITcpServiceBase where TClient : SocketClient, new()
     {
-        static TcpService()
-        {
-            iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
-        }
-
         /// <summary>
         /// 构造函数
         /// </summary>
         public TcpService()
         {
+            this.iDGenerator = new RRQMCore.SnowflakeIDGenerator(4);
             this.socketClients = new SocketClientCollection();
             this.rawClients = new System.Collections.Concurrent.ConcurrentQueue<TClient>();
         }
 
         #region 变量
 
-        private static readonly RRQMCore.SnowflakeIDGenerator iDGenerator;
+        private readonly RRQMCore.SnowflakeIDGenerator iDGenerator;
         private int backlog;
         private int clearInterval;
         private ClearType clearType;
@@ -63,47 +60,69 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool UseSsl => this.useSsl;
+        public override bool UseSsl
+        {
+            get { return this.useSsl; }
+        }
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
-        public int ClearInterval => this.clearInterval;
+        public int ClearInterval
+        {
+            get { return this.clearInterval; }
+        }
 
         /// <summary>
-        /// 清理选择类型
+        /// 清理类型
         /// </summary>
-        public ClearType ClearType { get => this.clearType; set => this.clearType = value; }
+        public ClearType ClearType => this.clearType;
 
         /// <summary>
         /// 最大可连接数
         /// </summary>
-        public int MaxCount => this.maxCount;
+        public int MaxCount
+        {
+            get { return this.maxCount; }
+        }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override NetworkMonitor[] Monitors => this.monitors;
+        public override NetworkMonitor[] Monitors
+        {
+            get { return this.monitors; }
+        }
 
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public override string ServerName => this.name;
+        public override string ServerName
+        {
+            get { return this.name; }
+        }
 
         /// <summary>
         /// 服务器状态
         /// </summary>
-        public override ServerState ServerState => this.serverState;
+        public override ServerState ServerState
+        {
+            get { return this.serverState; }
+        }
 
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        public override ServiceConfig ServiceConfig => this.serviceConfig;
+        public override ServiceConfig ServiceConfig
+        { get { return this.serviceConfig; } }
 
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
-        public override SocketClientCollection SocketClients => this.socketClients;
+        public override SocketClientCollection SocketClients
+        {
+            get { return this.socketClients; }
+        }
 
         #endregion 属性
 
@@ -125,11 +144,16 @@ namespace RRQMSocket
         public event RRQMMessageEventHandler<TClient> Disconnected;
 
         /// <summary>
+        /// 当客户端ID被修改时触发。
+        /// </summary>
+        public event RRQMEventHandler<TClient> IDChanged;
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientConnected(ISocketClient socketClient, MesEventArgs e)
+        protected override sealed void OnClientConnected(ISocketClient socketClient, MesEventArgs e)
         {
             this.OnConnected((TClient)socketClient, e);
         }
@@ -139,7 +163,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
             this.OnConnecting((TClient)socketClient, e);
         }
@@ -149,7 +173,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientDisconnected(ISocketClient socketClient, MesEventArgs e)
+        protected override sealed void OnClientDisconnected(ISocketClient socketClient, MesEventArgs e)
         {
             this.OnDisconnected((TClient)socketClient, e);
         }
@@ -184,15 +208,25 @@ namespace RRQMSocket
             this.Disconnected?.Invoke(socketClient, e);
         }
 
+        /// <summary>
+        /// 当客户端ID被修改时触发
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected virtual void OnIDChanged(TClient socketClient, RRQMEventArgs e)
+        {
+            this.IDChanged?.Invoke(socketClient, e);
+        }
+
         #endregion 事件
 
         /// <summary>
         /// 获取默认的新ID
         /// </summary>
         /// <returns></returns>
-        public static string GetDefaultNewID()
+        public string GetDefaultNewID()
         {
-            return iDGenerator.NextID().ToString();
+            return this.iDGenerator.NextID().ToString();
         }
 
         /// <summary>
@@ -248,118 +282,59 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 重新设置ID
+        ///  重新设置ID
         /// </summary>
         /// <param name="waitSetID"></param>
-        /// <returns></returns>
+        /// <exception cref="ClientNotFindException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="RRQMException"></exception>
         public override void ResetID(WaitSetID waitSetID)
         {
-            if (!this.socketClients.TryGetSocketClient(waitSetID.OldID, out TClient client))
+            if (waitSetID is null)
             {
-                throw new RRQMException("oldID不存在");
+                throw new ArgumentNullException(nameof(waitSetID));
             }
-            if (this.socketClients.TryRemove(waitSetID.OldID))
+
+            if (string.IsNullOrEmpty(waitSetID.NewID))
             {
-                client.id = waitSetID.NewID;
-                if (!this.socketClients.TryAdd(client))
+                throw new ArgumentNullException(nameof(waitSetID.NewID));
+            }
+            if (waitSetID.OldID == waitSetID.NewID)
+            {
+                return;
+            }
+            if (this.socketClients.TryRemove(waitSetID.OldID, out TClient socketClient))
+            {
+                socketClient.id = waitSetID.NewID;
+                if (this.socketClients.TryAdd(socketClient))
                 {
-                    client.id = waitSetID.OldID;
-                    this.socketClients.TryAdd(client);
+                    this.OnIDChanged(socketClient, new RRQMEventArgs());
+                    return;
+                }
+                else
+                {
+                    socketClient.id = waitSetID.OldID;
+                    this.socketClients.TryAdd(socketClient);
                     throw new RRQMException("ID重复");
                 }
             }
             else
             {
-                throw new RRQMException("oldID不存在");
+                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(waitSetID.OldID));
             }
         }
 
         /// <summary>
-        /// 发送字节流
+        /// 重置ID
         /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
+        /// <exception cref="ClientNotFindException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id, byte[] buffer)
+        public void ResetID(string oldID, string newID)
         {
-            this.Send(id, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id, byte[] buffer, int offset, int length)
-        {
-            this.SocketClients[id].Send(buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void Send(string id, ByteBlock byteBlock)
-        {
-            this.Send(id, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void SendAsync(string id, byte[] buffer)
-        {
-            this.SendAsync(id, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void SendAsync(string id, byte[] buffer, int offset, int length)
-        {
-            this.SocketClients[id].SendAsync(buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public virtual void SendAsync(string id, ByteBlock byteBlock)
-        {
-            this.SendAsync(id, byteBlock.Buffer, 0, byteBlock.Len);
+            WaitSetID waitSetID = new WaitSetID() { OldID = oldID, NewID = newID, Sign = -1 };
+            this.ResetID(waitSetID);
         }
 
         /// <summary>
@@ -709,7 +684,7 @@ namespace RRQMSocket
                     client.useSsl = this.useSsl;
                     client.LoadSocketAndReadIpPort(socket);
                     ClientOperationEventArgs clientArgs = new ClientOperationEventArgs();
-                    clientArgs.ID = GetDefaultNewID();
+                    clientArgs.ID = this.GetDefaultNewID();
                     client.OnEvent(1, clientArgs);//Connecting
                     if (clientArgs.IsPermitOperation)
                     {

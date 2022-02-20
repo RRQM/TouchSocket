@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,6 @@ namespace RRQMSocket
         private TcpClientConfig clientConfig;
         private DataHandlingAdapter dataHandlingAdapter;
         private Socket mainSocket;
-        private bool onlySend;
         private ReceiveType receiveType;
         private bool receiving;
         private bool separateThreadSend;
@@ -62,17 +62,23 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public virtual bool CanSetDataHandlingAdapter => true;
+        public virtual bool CanSetDataHandlingAdapter { get => true; }
 
         /// <summary>
         /// 客户端配置
         /// </summary>
-        public TcpClientConfig ClientConfig => this.clientConfig;
+        public TcpClientConfig ClientConfig
+        {
+            get { return this.clientConfig; }
+        }
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter => this.dataHandlingAdapter;
+        public DataHandlingAdapter DataHandlingAdapter
+        {
+            get { return this.dataHandlingAdapter; }
+        }
 
         /// <summary>
         /// IP地址
@@ -84,8 +90,11 @@ namespace RRQMSocket
         /// </summary>
         public Socket MainSocket
         {
-            get => this.mainSocket;
-            internal set => this.mainSocket = value;
+            get { return this.mainSocket; }
+            internal set
+            {
+                this.mainSocket = value;
+            }
         }
 
         /// <summary>
@@ -99,11 +108,6 @@ namespace RRQMSocket
         public bool Online => this.online;
 
         /// <summary>
-        /// 仅发送，即不会开启接收线程。
-        /// </summary>
-        public bool OnlySend => this.onlySend;
-
-        /// <summary>
         /// 端口号
         /// </summary>
         public int Port { get; private set; }
@@ -111,17 +115,26 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public ReceiveType ReceiveType => this.receiveType;
+        public ReceiveType ReceiveType
+        {
+            get { return this.receiveType; }
+        }
 
         /// <summary>
         /// 在异步发送时，使用独立线程发送
         /// </summary>
-        public bool SeparateThreadSend => this.separateThreadSend;
+        public bool SeparateThreadSend
+        {
+            get { return this.separateThreadSend; }
+        }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool UseSsl => this.useSsl;
+        public bool UseSsl
+        {
+            get { return this.useSsl; }
+        }
 
         #region 断开操作
 
@@ -336,10 +349,6 @@ namespace RRQMSocket
                 {
                     case ReceiveType.IOCP:
                         {
-                            if (this.onlySend)
-                            {
-                                return;
-                            }
                             this.eventArgs = new SocketAsyncEventArgs();
                             this.eventArgs.Completed += this.EventArgs_Completed;
 
@@ -355,10 +364,6 @@ namespace RRQMSocket
                     case ReceiveType.Select:
                     case ReceiveType.BIO:
                         {
-                            if (this.onlySend)
-                            {
-                                return;
-                            }
                             Thread thread;
                             if (this.useSsl)
                             {
@@ -465,7 +470,6 @@ namespace RRQMSocket
             }
             this.logger = clientConfig.Logger;
             this.BufferLength = clientConfig.BufferLength;
-            this.onlySend = clientConfig.OnlySend;
             this.separateThreadSend = clientConfig.SeparateThreadSend;
             this.receiveType = clientConfig.ReceiveType;
             if (clientConfig.GetValue(TcpClientConfig.SslOptionProperty) != null)
@@ -572,10 +576,11 @@ namespace RRQMSocket
         /// <param name="adapter"></param>
         protected void SetAdapter(DataHandlingAdapter adapter)
         {
-            if (adapter == null)
+            if (adapter is null)
             {
-                throw new RRQMException("数据处理适配器为空");
+                throw new ArgumentNullException(nameof(adapter));
             }
+
             if (adapter.owner != null)
             {
                 throw new RRQMException("此适配器已被其他终端使用，请重新创建对象。");
@@ -669,7 +674,7 @@ namespace RRQMSocket
                 this.PreviewHandleReceivedData(byteBlock);
                 if (this.dataHandlingAdapter == null)
                 {
-                    this.Logger.Debug(LogType.Error, this, "数据处理适配器为空", null);
+                    this.Logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetResString(), null);
                     return;
                 }
                 this.dataHandlingAdapter.Received(byteBlock);
@@ -723,7 +728,7 @@ namespace RRQMSocket
         {
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
             this.dataHandlingAdapter.Send(buffer, offset, length, false);
         }
@@ -736,7 +741,7 @@ namespace RRQMSocket
         {
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
 
             if (this.dataHandlingAdapter.CanSplicingSend)
@@ -776,9 +781,13 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(byte[] buffer, int offset, int length)
         {
+            if (this.disposable)
+            {
+                return;
+            }
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
             this.dataHandlingAdapter.Send(buffer, offset, length, true);
         }
@@ -813,9 +822,13 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public virtual void SendAsync(IList<TransferByte> transferBytes)
         {
+            if (this.disposable)
+            {
+                return;
+            }
             if (this.dataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), "数据处理适配器为空");
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
             if (this.dataHandlingAdapter.CanSplicingSend)
             {

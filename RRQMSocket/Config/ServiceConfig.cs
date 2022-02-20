@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
+using System.Threading;
 
 namespace RRQMSocket
 {
@@ -20,46 +21,32 @@ namespace RRQMSocket
     public class ServiceConfig : RRQMConfig
     {
         /// <summary>
-        /// 接收类型
-        /// </summary>
-        public ReceiveType ReceiveType
-        {
-            get => (ReceiveType)this.GetValue(ReceiveTypeProperty);
-            set => this.SetValue(ReceiveTypeProperty, value);
-        }
-
-        /// <summary>
-        /// 接收类型，所需类型<see cref="RRQMSocket. ReceiveType"/>
-        /// </summary>
-        public static readonly DependencyProperty ReceiveTypeProperty =
-            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(ServiceConfig), ReceiveType.IOCP);
-
-        /// <summary>
-        /// 多线程数量
+        /// 多线程数量，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/>
         /// </summary>
         public int ThreadCount
         {
-            get => (int)this.GetValue(ThreadCountProperty);
-            set => this.SetValue(ThreadCountProperty, value);
+            get { return (int)this.GetValue(ThreadCountProperty); }
+            set { this.SetValue(ThreadCountProperty, value); }
         }
 
         /// <summary>
-        /// 多线程数量依赖属性，所需类型<see cref="int"/>
+        /// 多线程数量，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/>
+        /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ThreadCountProperty =
             DependencyProperty.Register("ThreadCount", typeof(int), typeof(ServiceConfig), 10);
 
         /// <summary>
-        /// 名称
+        /// 服务名称，用于标识，无实际意义
         /// </summary>
         public string ServerName
         {
-            get => (string)this.GetValue(ServerNameProperty);
-            set => this.SetValue(ServerNameProperty, value);
+            get { return (string)this.GetValue(ServerNameProperty); }
+            set { this.SetValue(ServerNameProperty, value); }
         }
 
         /// <summary>
-        /// 名称，所需类型<see cref="string"/>
+        /// 服务名称，用于标识，无实际意义，所需类型<see cref="string"/>
         /// </summary>
         public static readonly DependencyProperty ServerNameProperty =
             DependencyProperty.Register("ServerName", typeof(string), typeof(ServiceConfig), "RRQMServer");

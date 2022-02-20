@@ -14,7 +14,6 @@ using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace RRQMSocket
 {
@@ -23,12 +22,10 @@ namespace RRQMSocket
     /// </summary>
     public class NATSocketClient : SocketClient
     {
-        private SocketAsyncEventArgs eventArgs;
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanSetDataHandlingAdapter => false;
+        public sealed override bool CanSetDataHandlingAdapter => false;
 
         /// <summary>
         /// 构造函数
@@ -38,68 +35,29 @@ namespace RRQMSocket
             this.SetAdapter(new NormalDataHandlingAdapter());
         }
 
-        private Socket targetSocket;
+        private Socket[] targetSockets;
 
-        internal void BeginRunTargetSocket(Socket socket)
+        internal void BeginRunTargetSocket(NATMode mode, Socket[] sockets)
         {
-            this.targetSocket = socket;
-            switch (this.ReceiveType)
+            this.targetSockets = sockets;
+
+            if (mode == NATMode.OneWay)
             {
-                case ReceiveType.IOCP:
-                    {
-                        this.eventArgs = new SocketAsyncEventArgs();
-                        this.eventArgs.Completed += this.EventArgs_Completed;
-                        ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                        this.eventArgs.UserToken = byteBlock;
-                        this.eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                        if (!this.targetSocket.ReceiveAsync(this.eventArgs))
-                        {
-                            this.ProcessReceived(this.eventArgs);
-                        }
-                        break;
-                    }
-                case ReceiveType.BIO:
-                    {
-                        Thread thread = new Thread(this.BIOReceive);
-                        thread.IsBackground = true;
-                        thread.Name = $"{this.id}客户端转发线程";
-                        thread.Start();
-                        break;
-                    }
-                default:
-                    break;
+                return;
             }
-        }
-
-        private void BIOReceive()
-        {
-            while (true)
+            foreach (var socket in sockets)
             {
-                if (this.disposable)
-                {
-                    this.BreakOut(null);
-                    break;
-                }
+                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
+                eventArgs.Completed += this.EventArgs_Completed;
                 ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-
-                try
+                eventArgs.UserToken = new NATModel(socket, byteBlock);
+                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
+                if (!socket.ReceiveAsync(eventArgs))
                 {
-                    int r = this.targetSocket.Receive(byteBlock.Buffer);
-                    if (r == 0)
-                    {
-                        byteBlock.Dispose();
-                        this.BreakOut("远程终端主动断开");
-                        break;
-                    }
-                    byteBlock.SetLength(r);
-                    this.HandleReceivedDataFromTarget(byteBlock);
-                }
-                catch (Exception ex)
-                {
-                    this.BreakOut(ex.Message);
-                    break;
+                    this.ProcessReceived(eventArgs);
                 }
             }
+
         }
 
         private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
@@ -118,17 +76,18 @@ namespace RRQMSocket
         {
             if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
             {
-                ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                NATModel model = (NATModel)e.UserToken;
+                ByteBlock byteBlock = model.ByteBlock;
                 byteBlock.SetLength(e.BytesTransferred);
                 this.HandleReceivedDataFromTarget(byteBlock);
 
                 try
                 {
                     ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                    e.UserToken = newByteBlock;
+                    model.ByteBlock = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 
-                    if (!this.targetSocket.ReceiveAsync(e))
+                    if (!model.Socket.ReceiveAsync(e))
                     {
                         this.ProcessReceived(e);
                     }
@@ -150,12 +109,12 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         protected virtual void HandleReceivedDataFromTarget(ByteBlock byteBlock)
         {
+            if (this.disposable)
+            {
+                return;
+            }
             try
             {
-                if (this.disposable)
-                {
-                    return;
-                }
                 this.Send(byteBlock);
             }
             catch (Exception ex)
@@ -175,7 +134,22 @@ namespace RRQMSocket
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.targetSocket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
+            if (this.disposable || this.targetSockets == null)
+            {
+                return;
+            }
+
+            foreach (var socket in this.targetSockets)
+            {
+                try
+                {
+                    socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
+                }
+                catch
+                {
+                }
+            }
+
         }
 
         /// <summary>
@@ -183,7 +157,13 @@ namespace RRQMSocket
         /// </summary>
         public override void Dispose()
         {
-            this.targetSocket.Dispose();
+            if (this.targetSockets != null)
+            {
+                foreach (var socket in this.targetSockets)
+                {
+                    socket.Dispose();
+                }
+            }
             base.Dispose();
         }
     }

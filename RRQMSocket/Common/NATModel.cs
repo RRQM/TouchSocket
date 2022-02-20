@@ -10,19 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Log;
-using System;
+using RRQMCore.ByteManager;
+using System.Net.Sockets;
 
 namespace RRQMSocket
 {
-    /// <summary>
-    /// 终端接口
-    /// </summary>
-    public interface IClient : IDisposable
+    internal class NATModel
     {
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        ILog Logger { get; }
+        public Socket Socket;
+        public ByteBlock ByteBlock;
+
+        public NATModel(Socket socket, ByteBlock byteBlock)
+        {
+            this.Socket = socket;
+            this.ByteBlock = byteBlock;
+        }
     }
 }

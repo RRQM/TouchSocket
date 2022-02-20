@@ -10,7 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
+
 using RRQMSocket;
 using System.Net;
 
@@ -20,6 +22,14 @@ using System.Net;
 /// <param name="client"></param>
 /// <param name="e"></param>
 public delegate void RRQMMessageEventHandler<TClient>(TClient client, MesEventArgs e) where TClient : IClient;
+
+/// <summary>
+/// 普通通知
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void RRQMEventHandler<TClient>(TClient client, RRQMEventArgs e) where TClient : IClient;
 
 /// <summary>
 /// 客户端连接

@@ -10,8 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
@@ -23,9 +25,39 @@ namespace RRQMSocket
         private bool canResetID;
 
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ProtocolService()
+        {
+            this.usedProtocol = new Dictionary<short, string>();
+        }
+
+        private readonly Dictionary<short, string> usedProtocol;
+
+        /// <summary>
+        /// 已被使用的协议集合。
+        /// </summary>
+        public Dictionary<short, string> UsedProtocol
+        {
+            get { return this.usedProtocol; }
+        }
+
+        /// <summary>
+        /// 添加已被使用的协议
+        /// </summary>
+        /// <param name="protocol"></param>
+        /// <param name="describe"></param>
+        protected void AddUsedProtocol(short protocol, string describe)
+        {
+            this.usedProtocol.Add(protocol, describe);
+        }
+
+        /// <summary>
         /// 重置ID
         /// </summary>
         /// <param name="waitSetID"></param>
+        /// <exception cref="ClientNotFindException"></exception>
+        /// <exception cref="RRQMException"></exception>
         public override void ResetID(WaitSetID waitSetID)
         {
             if (!this.canResetID)
@@ -41,6 +73,36 @@ namespace RRQMSocket
             else
             {
                 throw new RRQMException("新ID不可用，请清理客户端重新修改ID");
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
+        {
+            socketClient.protocolCanUse = this.ProtocolCanUse;
+            base.OnConnecting(socketClient, e);
+        }
+
+        /// <summary>
+        /// 判断协议是否能被使用
+        /// </summary>
+        /// <param name="protocol"></param>
+        public void ProtocolCanUse(short protocol)
+        {
+            if (protocol > 0)
+            {
+                if (this.usedProtocol.ContainsKey(protocol))
+                {
+                    throw new ProtocolException($"该协议已被类协议使用，描述为：{this.usedProtocol[protocol]}");
+                }
+            }
+            else
+            {
+                throw new ProtocolException($"用户协议必须大于0");
             }
         }
 
@@ -88,9 +150,9 @@ namespace RRQMSocket
             base.OnConnecting(socketClient, e);
         }
 
-        private void OnReceive(SimpleProtocolSocketClient socketClient, short procotol, ByteBlock byteBlock)
+        private void OnReceive(SimpleProtocolSocketClient socketClient, short protocol, ByteBlock byteBlock)
         {
-            this.Received?.Invoke(socketClient, procotol, byteBlock);
+            this.Received?.Invoke(socketClient, protocol, byteBlock);
         }
 
         private void OnBeforeReceiveStream(SimpleProtocolSocketClient client, StreamOperationEventArgs e)
