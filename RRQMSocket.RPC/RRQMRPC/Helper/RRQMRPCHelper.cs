@@ -11,34 +11,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace RRQMSocket.RPC.RRQMRPC
+namespace RRQMSocket.RPC.RRQMRPC.Helper
 {
     /// <summary>
-    /// RRQMRPC接口
+    /// RRQMRPCHelper
     /// </summary>
-    public interface IRRQMRpcParser
+    public static class RRQMRPCHelper
     {
-        /// <summary>
-        /// 代理令箭，当客户端获取代理文件时需验证令箭
-        /// </summary>
-        string ProxyToken { get; }
 
-        /// <summary>
-        /// 函数仓库
-        /// </summary>
-        MethodStore MethodStore { get; }
-
-        /// <summary>
-        /// 序列化选择器
-        /// </summary>
-        SerializationSelector SerializationSelector { get; }
-
-        /// <summary>
-        /// 获取注册函数
-        /// </summary>
-        /// <param name="proxyToken"></param>
-        /// <param name="caller">调用作用者/></param>
-        /// <returns></returns>
-        MethodItem[] GetRegisteredMethodItems(string proxyToken, ICaller caller);
     }
 }

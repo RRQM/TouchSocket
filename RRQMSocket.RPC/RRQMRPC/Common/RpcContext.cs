@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
@@ -27,6 +28,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal string methodName;
         internal List<byte[]> parametersBytes;
         internal byte[] returnParameterBytes;
+        internal int timeout;
         private byte feedback;
         private byte invokeType;
         private byte serializationType;
@@ -36,7 +38,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public byte Feedback
         {
-            get { return feedback; }
+            get { return this.feedback; }
         }
 
         /// <summary>
@@ -44,8 +46,17 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public string ID
         {
-            get { return id; }
+            get { return this.id; }
         }
+
+        /// <summary>
+        /// 调用超时设置
+        /// </summary>
+        public int Timeout
+        {
+            get { return this.timeout; }
+        }
+
 
         /// <summary>
         /// 调用类型
@@ -60,7 +71,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public int MethodToken
         {
-            get { return methodToken; }
+            get { return this.methodToken; }
         }
 
         /// <summary>
@@ -68,7 +79,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public string MethodName
         {
-            get { return methodName; }
+            get { return this.methodName; }
         }
 
         /// <summary>
@@ -76,7 +87,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public List<byte[]> ParametersBytes
         {
-            get { return parametersBytes; }
+            get { return this.parametersBytes; }
         }
 
         /// <summary>
@@ -84,7 +95,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public byte[] ReturnParameterBytes
         {
-            get { return returnParameterBytes; }
+            get { return this.returnParameterBytes; }
         }
 
         /// <summary>
@@ -92,7 +103,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public SerializationType SerializationType
         {
-            get { return (SerializationType)serializationType; }
+            get { return (SerializationType)this.serializationType; }
         }
 
         /// <summary>
@@ -103,6 +114,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         public static RpcContext Deserialize(ByteBlock byteBlock)
         {
             RpcContext context = new RpcContext();
+            context.timeout = byteBlock.ReadInt32();
             context.sign = byteBlock.ReadInt32();
             context.status = byteBlock.ReadByte();
             context.invokeType = byteBlock.ReadByte();
@@ -123,11 +135,13 @@ namespace RRQMSocket.RPC.RRQMRPC
             return context;
         }
 
-        internal void LoadInvokeOption(InvokeOption invokeOption)
+        internal void LoadInvokeOption(IInvokeOption option)
         {
+            InvokeOption invokeOption = (InvokeOption)option;
             this.invokeType = (byte)invokeOption.InvokeType;
             this.feedback = (byte)invokeOption.FeedbackType;
             this.serializationType = (byte)invokeOption.SerializationType;
+            this.timeout = option.Timeout;
         }
 
         /// <summary>
@@ -136,6 +150,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="byteBlock"></param>
         public void Serialize(ByteBlock byteBlock)
         {
+            byteBlock.Write(this.timeout);
             byteBlock.Write(this.sign);
             byteBlock.Write(this.status);
             byteBlock.Write(this.invokeType);
@@ -158,6 +173,48 @@ namespace RRQMSocket.RPC.RRQMRPC
             else
             {
                 byteBlock.Write((byte)0);
+            }
+        }
+
+
+        internal void ThrowStatus()
+        {
+            switch (this.Status)
+            {
+                case 0:
+                    {
+                        throw new RRQMRPCException($"返回状态异常，信息：{this.Message}");
+                    }
+                case 1:
+                    {
+                        return;//正常。
+                    }
+                case 2:
+                    {
+                        throw new RRQMRPCInvokeException($"未找到该公共方法，或该方法未标记{nameof(RPCAttribute)}");
+                    }
+                case 3:
+                    {
+                        throw new RRQMRPCException("该方法已被禁用");
+                    }
+                case 4:
+                    {
+                        throw new RRQMAbandonRPCException($"服务器已阻止本次行为，信息：{this.Message}");
+                    }
+                case 5:
+                    {
+                        throw new RRQMRPCInvokeException($"函数执行异常，详细信息：{this.Message}");
+                    }
+                case 6:
+                    {
+                        throw new RRQMRPCException($"函数异常，信息：{this.Message}");
+                    }
+                case 7:
+                    {
+                        throw new ClientNotFindException(ResType.ClientNotFind.GetResString(this.ID));
+                    }
+                default:
+                    throw new RRQMRPCException($"未知状态定义，信息：{this.Message}");
             }
         }
     }

@@ -40,7 +40,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         public string[] GetMethods()
         {
-            return methodKeyToMethodItem.Keys.ToArray();
+            return this.methodKeyToMethodItem.Keys.ToArray();
         }
 
         /// <summary>
@@ -49,8 +49,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodItem"></param>
         internal void AddMethodItem(MethodItem methodItem)
         {
-            tokenToMethodItem.Add(methodItem.MethodToken, methodItem);
-            methodKeyToMethodItem.Add(methodItem.Method, methodItem);
+            this.tokenToMethodItem.Add(methodItem.MethodToken, methodItem);
+            this.methodKeyToMethodItem.Add(methodItem.Method, methodItem);
         }
 
         /// <summary>
@@ -59,10 +59,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="methodToken"></param>
         internal void RemoveMethodItem(int methodToken)
         {
-            if (tokenToMethodItem.TryGetValue(methodToken, out MethodItem methodItem))
+            if (this.tokenToMethodItem.TryGetValue(methodToken, out MethodItem methodItem))
             {
-                tokenToMethodItem.Remove(methodToken);
-                methodKeyToMethodItem.Remove(methodItem.Method);
+                this.tokenToMethodItem.Remove(methodToken);
+                this.methodKeyToMethodItem.Remove(methodItem.Method);
             }
         }
 
@@ -83,7 +83,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns></returns>
         public bool TryGetMethodItem(string method, out MethodItem methodItem)
         {
-            return methodKeyToMethodItem.TryGetValue(method, out methodItem);
+            return this.methodKeyToMethodItem.TryGetValue(method, out methodItem);
         }
     }
 }

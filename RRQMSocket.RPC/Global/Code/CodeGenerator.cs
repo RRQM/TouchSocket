@@ -44,9 +44,9 @@ namespace RRQMSocket.RPC
         /// <param name="type"></param>
         /// <param name="className"></param>
         /// <returns></returns>
-        public static bool TryGetProxyTypeName(Type type,out string className)
+        public static bool TryGetProxyTypeName(Type type, out string className)
         {
-            return proxyType.TryGetValue(type,out className);
+            return proxyType.TryGetValue(type, out className);
         }
 
         /// <summary>
@@ -409,7 +409,6 @@ namespace RRQMSocket.RPC
             codeString.AppendLine("using System;");
             codeString.AppendLine("using RRQMSocket.RPC;");
             codeString.AppendLine("using RRQMSocket.RPC.RRQMRPC;");
-            codeString.AppendLine("using RRQMCore.Exceptions;");
             codeString.AppendLine("using System.Collections.Generic;");
             codeString.AppendLine("using System.Diagnostics;");
             codeString.AppendLine("using System.Text;");

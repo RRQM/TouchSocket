@@ -10,44 +10,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Exceptions;
+using System.Threading;
 
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 放弃RPC执行
+    /// 调用配置接口
     /// </summary>
-
-    public class RRQMAbandonRPCException : RRQMException
+    public interface IInvokeOption
     {
         /// <summary>
-        /// 构造函数
+        /// 可以取消的调用令箭
         /// </summary>
-        /// <param name="feedback">是否反馈信息</param>
-        /// <param name="message">信息</param>
-        public RRQMAbandonRPCException(bool feedback, string message) : base(message)
-        {
-            this.Feedback = feedback;
-        }
+        public CancellationToken CancellationToken { get; set; }
 
         /// <summary>
-        /// 构造函数
+        /// 调用反馈
         /// </summary>
-        /// <param name="message">信息</param>
-        public RRQMAbandonRPCException(string message) : this(true, message)
-        {
-        }
+        public FeedbackType FeedbackType { get; set; }
 
         /// <summary>
-        /// 构造函数
+        /// 调用超时
         /// </summary>
-        public RRQMAbandonRPCException() : this(true, null)
-        {
-        }
-
-        /// <summary>
-        /// 是否反馈信息
-        /// </summary>
-        public bool Feedback { get; private set; }
+        public int Timeout { get; set; }
     }
 }

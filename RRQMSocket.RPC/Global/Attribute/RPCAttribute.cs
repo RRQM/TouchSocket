@@ -67,8 +67,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public bool Async
         {
-            get { return async; }
-            set { async = value; }
+            get { return this.async; }
+            set { this.async = value; }
         }
 
         /// <summary>
@@ -76,8 +76,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public MethodFlags MethodFlags
         {
-            get { return methodFlags; }
-            set { methodFlags = value; }
+            get { return this.methodFlags; }
+            set { this.methodFlags = value; }
         }
 
         /// <summary>

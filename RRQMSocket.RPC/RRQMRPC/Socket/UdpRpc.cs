@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Exceptions;
+
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
 {
@@ -85,7 +86,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public SerializationSelector SerializationSelector
         {
-            get { return serializationSelector; }
+            get { return this.serializationSelector; }
         }
 
         /// <summary>
@@ -162,7 +163,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 count++;
             }
-            throw new RRQMTimeoutException("初始化超时");
+            throw new TimeoutException("初始化超时");
         }
 
         /// <summary>
@@ -251,6 +252,42 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         #region RPC
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">函数名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="TimeoutException"></exception>
+        /// <exception cref="RRQMSerializationException"></exception>
+        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+            {
+                this.Invoke(method, invokeOption, parameters);
+            });
+        }
+
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">RPC调用设置</param>
+        /// <exception cref="TimeoutException">调用超时</exception>
+        /// <exception cref="RRQMSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRPCInvokeException">RPC异常</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>服务器返回结果</returns>
+        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+            {
+                return this.Invoke<T>(method, invokeOption, parameters);
+            });
+        }
 
         /// <summary>
         /// RPC调用
@@ -259,13 +296,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
-        public T Invoke<T>(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
@@ -275,7 +312,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
+            if (invokeOption == default)
             {
                 invokeOption = InvokeOption.WaitInvoke;
             }
@@ -321,7 +358,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             return default;
@@ -381,7 +418,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     }
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             return default;
@@ -404,12 +441,12 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
@@ -419,7 +456,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
+            if (invokeOption == default)
             {
                 invokeOption = InvokeOption.WaitInvoke;
             }
@@ -466,7 +503,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             break;
@@ -517,7 +554,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     }
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             break;
@@ -539,12 +576,12 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public void Invoke(string method, InvokeOption invokeOption, params object[] parameters)
+        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
@@ -554,7 +591,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
+            if (invokeOption == default)
             {
                 invokeOption = InvokeOption.WaitInvoke;
             }
@@ -597,7 +634,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             break;
@@ -638,7 +675,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     }
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             break;
@@ -660,13 +697,13 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
-        /// <exception cref="RRQMTimeoutException"></exception>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="RRQMSerializationException"></exception>
         /// <exception cref="RRQMRPCNoRegisterException"></exception>
         /// <exception cref="RRQMRPCInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
-        public T Invoke<T>(string method, InvokeOption invokeOption, params object[] parameters)
+        public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
@@ -676,7 +713,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
             context.methodToken = methodItem.MethodToken;
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == null)
+            if (invokeOption == default)
             {
                 invokeOption = InvokeOption.WaitInvoke;
             }
@@ -715,7 +752,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                             {
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             return default;
@@ -756,7 +793,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                                     }
                                 case WaitDataStatus.Overtime:
                                     {
-                                        throw new RRQMTimeoutException("等待结果超时");
+                                        throw new TimeoutException("等待结果超时");
                                     }
                             }
                             return default;
@@ -864,7 +901,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
             catch (Exception ex)
             {
-                Logger.Debug(LogType.Error, this, ex.Message);
+                this.Logger.Debug(LogType.Error, this, ex.Message);
             }
             finally
             {
@@ -944,9 +981,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
-            short procotol = RRQMBitConverter.Default.ToInt16(buffer, 0);
+            short protocol = RRQMBitConverter.Default.ToInt16(buffer, 0);
 
-            switch (procotol)
+            switch (protocol)
             {
                 case 100:/*100，请求RPC文件*/
                     {
@@ -959,7 +996,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
+                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -974,7 +1011,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
+                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -988,7 +1025,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
+                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -1005,7 +1042,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
+                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -1018,7 +1055,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         catch (Exception e)
                         {
-                            Logger.Debug(LogType.Error, this, $"错误代码: {procotol}, 错误详情:{e.Message}");
+                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -1140,12 +1177,12 @@ namespace RRQMSocket.RPC.RRQMRPC
 
         #region UDP发送
 
-        private void UDPSend(short procotol, byte[] buffer, int offset, int length)
+        private void UDPSend(short protocol, byte[] buffer, int offset, int length)
         {
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 2);
             try
             {
-                byteBlock.Write(RRQMBitConverter.Default.GetBytes(procotol));
+                byteBlock.Write(RRQMBitConverter.Default.GetBytes(protocol));
                 byteBlock.Write(buffer, offset, length);
                 this.Send(byteBlock.Buffer, 0, byteBlock.Len);
             }
@@ -1159,22 +1196,22 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        private void UDPSend(short procotol)
+        private void UDPSend(short protocol)
         {
-            this.UDPSend(procotol, new byte[0], 0, 0);
+            this.UDPSend(protocol, new byte[0], 0, 0);
         }
 
-        private void UDPSend(short procotol, byte[] buffer)
+        private void UDPSend(short protocol, byte[] buffer)
         {
-            this.UDPSend(procotol, buffer, 0, buffer.Length);
+            this.UDPSend(protocol, buffer, 0, buffer.Length);
         }
 
-        private void UDPSend(short procotol, EndPoint endPoint, byte[] buffer, int offset, int length)
+        private void UDPSend(short protocol, EndPoint endPoint, byte[] buffer, int offset, int length)
         {
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 2);
             try
             {
-                byteBlock.Write(RRQMBitConverter.Default.GetBytes(procotol));
+                byteBlock.Write(RRQMBitConverter.Default.GetBytes(protocol));
                 byteBlock.Write(buffer, offset, length);
                 this.Send(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
             }
@@ -1184,9 +1221,9 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        private void UDPSend(short procotol, EndPoint endPoint, byte[] buffer)
+        private void UDPSend(short protocol, EndPoint endPoint, byte[] buffer)
         {
-            this.UDPSend(procotol, endPoint, buffer, 0, buffer.Length);
+            this.UDPSend(protocol, endPoint, buffer, 0, buffer.Length);
         }
 
         #endregion UDP发送

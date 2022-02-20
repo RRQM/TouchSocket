@@ -29,7 +29,7 @@ namespace RRQMSocket.RPC
         /// 数量
         /// </summary>
         public int Count
-        { get { return parsers.Count; } }
+        { get { return this.parsers.Count; } }
 
         /// <summary>
         /// 获取IRPCParser

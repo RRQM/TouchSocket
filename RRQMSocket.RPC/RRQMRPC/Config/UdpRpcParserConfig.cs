@@ -36,8 +36,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public string ProxyToken
         {
-            get { return (string)GetValue(ProxyTokenProperty); }
-            set { SetValue(ProxyTokenProperty, value); }
+            get { return (string)this.GetValue(ProxyTokenProperty); }
+            set { this.SetValue(ProxyTokenProperty, value); }
         }
 
         /// <summary>
@@ -45,8 +45,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         public SerializationSelector SerializationSelector
         {
-            get { return (SerializationSelector)GetValue(SerializationSelectorProperty); }
-            set { SetValue(SerializationSelectorProperty, value); }
+            get { return (SerializationSelector)this.GetValue(SerializationSelectorProperty); }
+            set { this.SetValue(SerializationSelectorProperty, value); }
         }
     }
 }

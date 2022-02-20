@@ -4,19 +4,20 @@
     <ApplicationIcon>RRQM.ico</ApplicationIcon>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-    <Version>6.6.0</Version>
+    <Version>7.0.0</Version>
 	  <LangVersion>9.0</LangVersion>
     <Company>若汝棋茗</Company>
-    <Copyright>Copyright © 2021 若汝棋茗</Copyright>
-    <Description>
-		介绍：这是一个高性能的RPC微服务框架，支持Ssl加密、异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
+    <Copyright>Copyright © 2022 若汝棋茗</Copyright>
+    <Description>介绍：这是一个高性能的RPC微服务框架，支持Ssl加密、异步调用、权限管理、错误状态返回、服务回调等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
 
-		更新说明：
-		适配更新。
+更新说明：
+增加：InvokeAsync方法。
+增加：RpcSocketClient可通过ID直接反向调用其他客户端RPC。
+优化：生成代理的代码包含异常提示。
+修改：EventBus，有ID代替发布者验证。
 
-		API：https://www.yuque.com/eo2w71/rrqm
-		DEMO：https://gitee.com/RRQM_Home/RRQMBox
-	</Description>
+API：https://www.yuque.com/eo2w71/rrqm
+DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 	<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -85,6 +86,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="RRQMSocket" Version="6.6.0" />
+	  <PackageReference Include="RRQMSocket" Version="7.0.0" />
 	</ItemGroup>
 </Project>

@@ -38,7 +38,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         public ClassCodeGenerator ClassCodeGenerator
         {
-            get { return classCodeGenerator; }
+            get { return this.classCodeGenerator; }
         }
 
         /// <summary>
@@ -63,13 +63,22 @@ namespace RRQMSocket.RPC
             bool isRef = false;
             string methodName = CodeGenerator.GetMethodName<T>(methodInstance);
             StringBuilder codeString = new StringBuilder();
+            string description;
             if (methodInstance.DescriptionAttribute != null)
             {
-                codeString.AppendLine("///<summary>");
-                codeString.AppendLine($"///{methodInstance.DescriptionAttribute.Description}");
-                codeString.AppendLine("///</summary>");
+                description = methodInstance.DescriptionAttribute.Description;
             }
-
+            else
+            {
+                description = "无注释信息";
+            }
+            codeString.AppendLine("///<summary>");
+            codeString.AppendLine($"///{description}");
+            codeString.AppendLine("///</summary>");
+            codeString.AppendLine("/// <exception cref=\"TimeoutException\">调用超时</exception>");
+            codeString.AppendLine("/// <exception cref=\"RRQMSerializationException\">序列化异常</exception>");
+            codeString.AppendLine("/// <exception cref=\"RRQMRPCInvokeException\">RPC异常</exception>");
+            codeString.AppendLine("/// <exception cref=\"RRQMException\">其他异常</exception>");
             if (methodInstance.ReturnType == null)
             {
                 codeString.Append(string.Format("  void {0} ", methodName));
@@ -141,20 +150,21 @@ namespace RRQMSocket.RPC
             {
                 codeString.Append(",");
             }
-            codeString.AppendLine("InvokeOption invokeOption = null);");
+            codeString.AppendLine("IInvokeOption invokeOption = default);");
 
             if (!isOut && !isRef)//没有out或者ref
             {
-                if (methodInstance.DescriptionAttribute != null)
-                {
-                    codeString.AppendLine("///<summary>");
-                    codeString.AppendLine($"///{methodInstance.DescriptionAttribute.Description}");
-                    codeString.AppendLine("///</summary>");
-                }
+                codeString.AppendLine("///<summary>");
+                codeString.AppendLine($"///{description}");
+                codeString.AppendLine("///</summary>");
+                codeString.AppendLine("/// <exception cref=\"TimeoutException\">调用超时</exception>");
+                codeString.AppendLine("/// <exception cref=\"RRQMSerializationException\">序列化异常</exception>");
+                codeString.AppendLine("/// <exception cref=\"RRQMRPCInvokeException\">RPC异常</exception>");
+                codeString.AppendLine("/// <exception cref=\"RRQMException\">其他异常</exception>");
 
                 if (methodInstance.ReturnType == null)
                 {
-                    codeString.Append(string.Format("void {0} ", methodName + "Async"));
+                    codeString.Append(string.Format("Task {0} ", methodName + "Async"));
                 }
                 else
                 {
@@ -197,7 +207,7 @@ namespace RRQMSocket.RPC
                 {
                     codeString.Append(",");
                 }
-                codeString.AppendLine("InvokeOption invokeOption = null);");
+                codeString.AppendLine("IInvokeOption invokeOption = default);");
             }
 
             return codeString.ToString();
@@ -219,6 +229,11 @@ namespace RRQMSocket.RPC
             codeString.AppendLine("///<summary>");
             codeString.AppendLine("///<inheritdoc/>");
             codeString.AppendLine("///</summary>");
+            codeString.AppendLine("/// <exception cref=\"TimeoutException\">调用超时</exception>");
+            codeString.AppendLine("/// <exception cref=\"RRQMSerializationException\">序列化异常</exception>");
+            codeString.AppendLine("/// <exception cref=\"RRQMRPCInvokeException\">RPC异常</exception>");
+            codeString.AppendLine("/// <exception cref=\"RRQMException\">其他异常</exception>");
+
             if (methodInstance.ReturnType == null)
             {
                 isReturn = false;
@@ -292,7 +307,7 @@ namespace RRQMSocket.RPC
             {
                 codeString.Append(",");
             }
-            codeString.AppendLine("InvokeOption invokeOption = null)");
+            codeString.AppendLine("IInvokeOption invokeOption = default)");
 
             codeString.AppendLine("{");//方法开始
 
@@ -404,17 +419,20 @@ namespace RRQMSocket.RPC
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine("///<inheritdoc/>");
                 codeString.AppendLine("///</summary>");
+                codeString.AppendLine("/// <exception cref=\"TimeoutException\">调用超时</exception>");
+                codeString.AppendLine("/// <exception cref=\"RRQMSerializationException\">序列化异常</exception>");
+                codeString.AppendLine("/// <exception cref=\"RRQMRPCInvokeException\">RPC异常</exception>");
+                codeString.AppendLine("/// <exception cref=\"RRQMException\">其他异常</exception>");
                 if (methodInstance.ReturnType == null)
                 {
                     isReturn = false;
-                    codeString.Append(string.Format("public  async void {0} ", methodName + "Async"));
+                    codeString.Append(string.Format("public Task {0} ", methodName + "Async"));
                 }
                 else
                 {
                     isReturn = true;
-                    codeString.Append(string.Format("public  async Task<{0}> {1} ", this.GetName(methodInstance.ReturnType), methodName + "Async"));
+                    codeString.Append(string.Format("public Task<{0}> {1} ", this.GetName(methodInstance.ReturnType), methodName + "Async"));
                 }
-
                 codeString.Append("(");//方法参数
 
                 for (int i = 0; i < parameters.Length; i++)
@@ -423,9 +441,9 @@ namespace RRQMSocket.RPC
                     {
                         codeString.Append(",");
                     }
-
                     codeString.Append(string.Format("{0} {1}", this.GetName(parameters[i].ParameterType), parameters[i].Name));
-                    if (parameters[i].DefaultValue != System.DBNull.Value)
+
+                    if (parameters[i].HasDefaultValue)
                     {
                         object defaultValue = parameters[i].DefaultValue;
                         if (defaultValue == null)
@@ -446,43 +464,44 @@ namespace RRQMSocket.RPC
                         }
                     }
                 }
-
                 if (parameters.Length > 0)
                 {
                     codeString.Append(",");
                 }
-                codeString.AppendLine("InvokeOption invokeOption = null)");
+                codeString.AppendLine("IInvokeOption invokeOption = default)");
+
                 codeString.AppendLine("{");//方法开始
+
                 codeString.AppendLine("if(Client==null)");
                 codeString.AppendLine("{");
-                codeString.AppendLine("throw new RRQMRPCException(\"RPCClient为空，请先初始化或者进行赋值\");");
+                codeString.AppendLine("throw new RRQMRPCException(\"IRPCClient为空，请先初始化或者进行赋值\");");
                 codeString.AppendLine("}");
-                if (isReturn)
-                {
-                    codeString.AppendLine("return await Task.Run(() =>{");
-                    codeString.Append(string.Format("return {0}(", methodName));
-                }
-                else
-                {
-                    codeString.AppendLine("await Task.Run(() =>{");
-                    codeString.Append(string.Format("{0}(", methodName));
-                }
 
-                for (int i = 0; i < parameters.Length; i++)
+                codeString.Append($"object[] parameters = new object[]");
+                codeString.Append("{");
+                foreach (ParameterInfo parameter in parameters)
                 {
-                    if (i > 0)
+                    codeString.Append(parameter.Name);
+                    if (parameter != parameters[parameters.Length - 1])
                     {
                         codeString.Append(",");
                     }
+                }
+                codeString.AppendLine("};");
 
-                    codeString.Append(string.Format("{0}", parameters[i].Name));
-                }
-                if (parameters.Length > 0)
+                if (isReturn)
                 {
-                    codeString.Append(",");
+                    codeString.Append(string.Format("return Client.InvokeAsync<{0}>", this.GetName(methodInstance.ReturnType)));
+                    codeString.Append("(");
+                    codeString.Append(string.Format("\"{0}\"", methodName));
+                    codeString.AppendLine(",invokeOption, parameters);");
                 }
-                codeString.Append("invokeOption);");
-                codeString.AppendLine("});");
+                else
+                {
+                    codeString.Append("return Client.InvokeAsync(");
+                    codeString.Append(string.Format("\"{0}\"", methodName));
+                    codeString.AppendLine(",invokeOption, parameters);");
+                }
                 codeString.AppendLine("}");
             }
             return codeString.ToString();
