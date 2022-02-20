@@ -33,7 +33,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public string JsonString
         {
-            get { return jsonString; }
+            get { return this.jsonString; }
         }
 
         /// <summary>
@@ -41,8 +41,8 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         public JsonRpcProtocolType ProtocolType
         {
-            get { return protocolType; }
-            set { protocolType = value; }
+            get { return this.protocolType; }
+            set { this.protocolType = value; }
         }
 
 #pragma warning disable CS1591

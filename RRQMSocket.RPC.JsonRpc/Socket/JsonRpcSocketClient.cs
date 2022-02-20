@@ -18,14 +18,6 @@ namespace RRQMSocket.RPC.JsonRpc
     /// </summary>
     public class JsonRpcSocketClient : SimpleSocketClient, ICaller
     {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override sealed bool CanSetDataHandlingAdapter => false;
 
-        internal void InternalSetAdapter(DataHandlingAdapter adapter)
-        {
-            this.SetAdapter(adapter);
-        }
     }
 }
