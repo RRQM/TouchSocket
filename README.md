@@ -84,7 +84,7 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 
 ## ✨简单示例
 
- **_更多配置请查看API文档的配置说明文档，一下仅以最简方式创建实例。_** 
+ **_以下仅以最简方式创建示例，更多详情请查看[API文档](https://www.yuque.com/eo2w71/rrqm/2c5dab34026d2b45ada6e51ae9e51a5a)。_** 
 
  **【TcpService】** 
 
@@ -120,7 +120,6 @@ tcpClient.Send(Encoding.UTF8.GetBytes("RRQM"));
 ```
 
  **【TcpClient 断线重连】** 
-
 
 ```
 tcpClient.UseReconnection(tryCount:5,printLog:true);
@@ -269,10 +268,34 @@ private static void MyWSClient_Received(IWSClientBase client, WSDataFrame dataFr
 
 ```
 
+ **【RPC调用】** 
+
+- WebApi：下列服务，可让浏览器通过`url/XUnitTestServer/Sum?a=10&b=20`来调用，结果可选xml或json。
+- JsonRpc：下列服务，可让普通TCP使用`{"jsonrpc":"2.0","method":"Sum","params":[10，20],"id":1}`来调用，也能让web通过http/https来调用。
+- xmlRpc：下列服务，可通过http+xml的形式调用。
+- RRQMRPC：使用专有协议调用。
+
+ **_其中除WebApi之外，其他调用均可生成C#代理调用。_** 
+
+```
+[Route("/[controller]/[action]")]
+public class XUnitTestServer : ControllerBase
+{
+
+    [XmlRpc]
+    [JsonRpc]
+    [Route]
+    [RRQMRPC]
+    public int Sum(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
 
 
 ## 🧲应用场景模拟
-[场景入口](https://gitee.com/RRQM_Home/RRQMBox/wikis/%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%E6%A8%A1%E6%8B%9F)
+[场景入口](https://www.yuque.com/eo2w71/rrqm/b138b52168853afb65369ca8171f14b9)
 
 ***
 
@@ -282,10 +305,6 @@ private static void MyWSClient_Received(IWSClientBase client, WSDataFrame dataFr
 
 [![Giteye chart](https://chart.giteye.net/gitee/dotnetchina/RRQMSocket/RJ9NH249.png)](https://giteye.net/chart/RJ9NH249)
 
-## 后续开发计划
-
-1. FTP功能开发
-
 ## 支持作者
 
-[支持入口](https://gitee.com/RRQM_Home/RRQMBox/wikis/%E6%94%AF%E6%8C%81%E4%BD%9C%E8%80%85)
+[支持入口](https://www.yuque.com/eo2w71/rrqm/a5199820843b324f025633fdeee44394)
