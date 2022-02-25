@@ -21,7 +21,9 @@ namespace RRQMSocket
     public class ServiceConfig : RRQMConfig
     {
         /// <summary>
-        /// 多线程数量，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/>
+        /// 多线程数量，默认为10。
+        /// <para>当<see cref="ReceiveType.BIO"/>或<see cref="ReceiveType.IOCP"/>时，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/></para>
+        /// <para>当<see cref="ReceiveType.Select"/>时，该值表示选择线程的数量，例如：当该值为10时，如有1000个连接，则每个线程会处理约100个连接的数据交互</para>
         /// </summary>
         public int ThreadCount
         {
@@ -30,7 +32,9 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 多线程数量，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/>
+        /// 多线程数量，默认为10。
+        /// <para>当<see cref="ReceiveType.BIO"/>或<see cref="ReceiveType.IOCP"/>时，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/></para>
+        /// <para>当<see cref="ReceiveType.Select"/>时，该值表示选择线程的数量，例如：当该值为10时，如有1000个连接，则每个线程会处理约100个连接的数据交互</para>
         /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ThreadCountProperty =

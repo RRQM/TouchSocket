@@ -12,13 +12,14 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
+using RRQMCore.Collections.Concurrent;
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace RRQMSocket
 {
@@ -52,7 +53,8 @@ namespace RRQMSocket
         private ServiceConfig serviceConfig;
         private SocketClientCollection socketClients;
         private bool useSsl;
-
+        private ConcurrentList<string>[] selectIDs;
+        private ConcurrentList<string> freeIDs;
         #endregion 变量
 
         #region 属性
@@ -308,6 +310,10 @@ namespace RRQMSocket
                 socketClient.id = waitSetID.NewID;
                 if (this.socketClients.TryAdd(socketClient))
                 {
+                    if (this.receiveType== ReceiveType.Select)
+                    {
+                        this.freeIDs.Add(socketClient.id);
+                    }
                     this.OnIDChanged(socketClient, new RRQMEventArgs());
                     return;
                 }
@@ -466,6 +472,10 @@ namespace RRQMSocket
             {
                 throw new RRQMException("配置文件为空");
             }
+            if (serviceConfig.ThreadCount <= 0)
+            {
+                throw new RRQMException("线程数量必须大于0");
+            }
             this.maxCount = (int)serviceConfig.GetValue(TcpServiceConfig.MaxCountProperty);
             this.clearInterval = (int)serviceConfig.GetValue(TcpServiceConfig.ClearIntervalProperty);
             this.backlog = (int)serviceConfig.GetValue(TcpServiceConfig.BacklogProperty);
@@ -498,7 +508,7 @@ namespace RRQMSocket
         {
             if (e.LastOperation == SocketAsyncOperation.Accept)
             {
-                this.ProcessAccept(e);
+                this.OnAccepted(e);
             }
         }
 
@@ -508,17 +518,25 @@ namespace RRQMSocket
             thread1.IsBackground = true;
             thread1.Name = "CheckClient";
             thread1.Start();
-
+            int threadCount = this.ServiceConfig.ThreadCount;
             if (this.receiveType == ReceiveType.Select)
             {
-                Thread thread2 = new Thread(this.SelectClient);
-                thread2.IsBackground = true;
-                thread2.Name = "SelectClient";
-                thread2.Start();
+                this.selectIDs = new ConcurrentList<string>[threadCount];
+                for (int i = 0; i < threadCount; i++)
+                {
+                    ConcurrentList<string> list = new ConcurrentList<string>();
+                    this.selectIDs[i] = list;
+                    Thread thread2 = new Thread(this.SelectClient);
+                    thread2.IsBackground = true;
+                    thread2.Name = "SelectThread" + i;
+                    thread2.Start(list);
+                }
+                this.freeIDs = this.selectIDs[0];
             }
-
-            int threadCount = this.ServiceConfig.ThreadCount;
-            ThreadPool.SetMinThreads(this.serviceConfig.ThreadCount, this.serviceConfig.ThreadCount);
+            else
+            {
+                ThreadPool.SetMinThreads(threadCount, threadCount);
+            }
         }
 
         private void BeginListen(IPHost[] iPHosts)
@@ -557,7 +575,7 @@ namespace RRQMSocket
                 e.Completed += this.Args_Completed;
                 if (!networkMonitor.Socket.AcceptAsync(e))
                 {
-                    this.ProcessAccept(e);
+                    this.OnAccepted(e);
                 }
             }
         }
@@ -572,6 +590,18 @@ namespace RRQMSocket
                 if (collection.Length == 0 && this.disposable)
                 {
                     return;
+                }
+                if (this.receiveType== ReceiveType.Select)
+                {
+                    var v = this.selectIDs[0];
+                    foreach (var item in this.selectIDs)
+                    {
+                        if (v.Count > item.Count)
+                        {
+                            v = item;
+                        }
+                    }
+                    this.freeIDs = v;
                 }
                 foreach (var token in collection)
                 {
@@ -600,42 +630,46 @@ namespace RRQMSocket
             }
         }
 
-        private void SelectClient()
+        private void SelectClient(object o)
         {
+            ConcurrentList<string> ids = (ConcurrentList<string>)o;
             int sleep = 0;
             long dataSize = 0;
             while (true)
             {
+                if (this.disposable && ids.Count == 0)
+                {
+                    break;
+                }
                 if (dataSize > 0)
                 {
                     dataSize = 0;
-                    sleep = 0;
+                    sleep = 1;
                 }
                 else
                 {
-                    if (sleep++ > 1000)
+                    if (++sleep > 100)
                     {
-                        sleep = 0;
+                        sleep = 100;
                     }
-                }
-                Thread.Sleep(sleep);
-                string[] collection = this.SocketClients.GetIDs();
-                if (collection.Length == 0 && this.disposable)
-                {
-                    return;
+                    Thread.Sleep(sleep);
                 }
 
-                foreach (var token in collection)
+                foreach (var id in ids)
                 {
-                    if (this.SocketClients.TryGetSocketClient(token, out TClient client))
+                    if (this.TryGetSocketClient(id, out TClient client))
                     {
                         dataSize += client.TryReceive();
+                    }
+                    else
+                    {
+                        ids.Remove(id);
                     }
                 }
             }
         }
 
-        private void ProcessAccept(SocketAsyncEventArgs e)
+        private void OnAccepted(SocketAsyncEventArgs e)
         {
             if (!this.disposable)
             {
@@ -656,7 +690,7 @@ namespace RRQMSocket
                 {
                     if (!((Socket)e.UserToken).AcceptAsync(e))
                     {
-                        this.ProcessAccept(e);
+                        this.OnAccepted(e);
                     }
                 }
                 catch
@@ -691,6 +725,10 @@ namespace RRQMSocket
                         client.id = clientArgs.ID;
                         if (this.SocketClients.TryAdd(client))
                         {
+                            if (this.receiveType == ReceiveType.Select)
+                            {
+                                this.freeIDs.Add(client.id);
+                            }
                             client.OnEvent(2, new MesEventArgs("新客户端连接"));
                         }
                         else
