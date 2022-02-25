@@ -82,7 +82,7 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="7.0.1" />
+	  <PackageReference Include="RRQMCore" Version="7.0.0" />
 	</ItemGroup>
 
 </Project>
