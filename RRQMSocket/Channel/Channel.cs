@@ -580,6 +580,7 @@ namespace RRQMSocket
             }
 
             SpinWait.SpinUntil(() => { return this.canFree; });
+
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
             try
             {
