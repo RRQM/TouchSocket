@@ -13,6 +13,7 @@
 
 using RRQMCore;
 using RRQMSocket.Common;
+using System;
 using System.Net;
 using System.Net.Sockets;
 
@@ -23,38 +24,30 @@ namespace RRQMSocket
     /// </summary>
     public class IPHost
     {
+        private bool isUri;
+
+        private Uri uri;
+
         /// <summary>
-        /// 从字符串获取ip和port
+        /// 构造函数
         /// </summary>
+        /// <param name="host">可以输入类似“127.0.0.1:7789”、“http://baidu.com”类型的参数</param>
         public IPHost(string host)
         {
             if (RRQMSocketTools.IsURL(host))
             {
-                int start = host.IndexOf("://");
-                int end = host.LastIndexOf(":");
-                this.scheme = host.Substring(0, start);
+                this.isUri = true;
+                this.uri = new Uri(host);
 
-                string hostName;
-                string port;
-                if (end > start)
+                if (RRQMSocketTools.IsIPv4(uri.Host) || RRQMSocketTools.IsIPV6(uri.Host))
                 {
-                    hostName = host.Substring(start + 3, end - (start + 3));
-                    port = host.Substring(end + 1, host.Length - (end + 1));
+                    this.Analysis(uri.Host, uri.Port.ToString());
                 }
                 else
                 {
-                    throw new RRQMException("必须包含端口信息。");
-                }
-
-                if (RRQMSocketTools.IsIPv4(hostName) && RRQMSocketTools.IsIPv4(hostName))
-                {
-                    this.Analysis(hostName, port);
-                }
-                else
-                {
-                    if (HostNameToIP(hostName, out IPAddress[] addresses))
+                    if (HostNameToIP(uri.Host, out IPAddress[] addresses))
                     {
-                        this.Analysis(addresses[0].ToString(), port);
+                        this.Analysis(addresses[0].ToString(), uri.Port.ToString());
                     }
                 }
             }
@@ -63,6 +56,88 @@ namespace RRQMSocket
                 int r = host.LastIndexOf(":");
                 string ip = host.Substring(0, r);
                 this.Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
+            }
+        }
+
+        /// <summary>
+        /// 从IPAddress和端口号
+        /// </summary>
+        /// <param name="iPAddress"></param>
+        /// <param name="port"></param>
+        public IPHost(IPAddress iPAddress, int port) : this($"{iPAddress}:{port}")
+        {
+        }
+
+        /// <summary>
+        /// 从端口号创建
+        /// </summary>
+        /// <param name="port"></param>
+        public IPHost(int port) : this($"0.0.0.0:{port}")
+        {
+        }
+
+        /// <summary>
+        /// 寻址方案
+        /// </summary>
+        public AddressFamily AddressFamily { get; private set; }
+
+        /// <summary>
+        /// 终结点
+        /// </summary>
+        public IPEndPoint EndPoint { get; private set; }
+
+        /// <summary>
+        /// IP
+        /// </summary>
+        public string IP { get; private set; }
+
+        /// <summary>
+        /// 是否为Uri
+        /// </summary>
+        public bool IsUri
+        {
+            get { return isUri; }
+        }
+
+        /// <summary>
+        /// 端口号
+        /// </summary>
+        public int Port { get; private set; }
+
+        /// <summary>
+        /// 统一资源标识
+        /// </summary>
+        public Uri Uri
+        {
+            get { return uri; }
+        }
+
+        /// <summary>
+        /// 返回对象字符串
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return this.EndPoint == null ? null : this.EndPoint.ToString();
+        }
+
+        private static bool HostNameToIP(string hostname, out IPAddress[] address)
+        {
+            try
+            {
+                IPHostEntry hostInfo = Dns.GetHostEntry(hostname);
+                address = hostInfo.AddressList;
+                if (address.Length > 0)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            catch
+            {
+                address = null;
+                return false;
             }
         }
 
@@ -88,82 +163,6 @@ namespace RRQMSocket
             {
                 throw new RRQMException("IPHost不合法");
             }
-        }
-
-        private static bool HostNameToIP(string hostname, out IPAddress[] address)
-        {
-            try
-            {
-                IPHostEntry hostInfo = Dns.GetHostEntry(hostname);
-                address = hostInfo.AddressList;
-                if (address.Length > 0)
-                {
-                    return true;
-                }
-
-                return false;
-            }
-            catch
-            {
-                address = null;
-                return false;
-            }
-        }
-
-        private string scheme;
-
-        /// <summary>
-        /// 协议名
-        /// </summary>
-        public string Scheme
-        {
-            get { return this.scheme; }
-        }
-
-        /// <summary>
-        /// 从IPAddress和端口号
-        /// </summary>
-        /// <param name="iPAddress"></param>
-        /// <param name="port"></param>
-        public IPHost(IPAddress iPAddress, int port) : this($"{iPAddress}:{port}")
-        {
-        }
-
-        /// <summary>
-        /// 从端口号创建
-        /// </summary>
-        /// <param name="port"></param>
-        public IPHost(int port) : this($"0.0.0.0:{port}")
-        {
-        }
-
-        /// <summary>
-        /// IP
-        /// </summary>
-        public string IP { get; private set; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        public int Port { get; private set; }
-
-        /// <summary>
-        /// 寻址方案
-        /// </summary>
-        public AddressFamily AddressFamily { get; private set; }
-
-        /// <summary>
-        /// 终结点
-        /// </summary>
-        public IPEndPoint EndPoint { get; private set; }
-
-        /// <summary>
-        /// 返回对象字符串
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return this.EndPoint == null ? null : this.EndPoint.ToString();
         }
     }
 }
