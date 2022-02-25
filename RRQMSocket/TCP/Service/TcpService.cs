@@ -654,9 +654,10 @@ namespace RRQMSocket
                     }
                     Thread.Sleep(sleep);
                 }
-
-                foreach (var id in ids)
+                int count = ids.Count;
+                for (int i = count - 1; i >= 0; i--)
                 {
+                    string id = ids[i];
                     if (this.TryGetSocketClient(id, out TClient client))
                     {
                         dataSize += client.TryReceive();
