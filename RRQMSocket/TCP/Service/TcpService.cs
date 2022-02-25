@@ -40,7 +40,7 @@ namespace RRQMSocket
 
         #region 变量
 
-        private readonly RRQMCore.SnowflakeIDGenerator iDGenerator;
+        private readonly SnowflakeIDGenerator iDGenerator;
         private int backlog;
         private int clearInterval;
         private ClearType clearType;
@@ -655,7 +655,7 @@ namespace RRQMSocket
                     Thread.Sleep(sleep);
                 }
                 int count = ids.Count;
-                for (int i = count - 1; i >= 0; i--)
+                for (int i = count-1; i >=0; i--)
                 {
                     string id = ids[i];
                     if (this.TryGetSocketClient(id, out TClient client))
