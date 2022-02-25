@@ -228,18 +228,6 @@ namespace RRQMSocket
             {
                 this.BreakOut($"超时无数据交互，被主动清理");
             }
-
-            if (this.receiveType == ReceiveType.Select)
-            {
-                try
-                {
-                    this.mainSocket.Send(new byte[0]);
-                }
-                catch (Exception ex)
-                {
-                    this.BreakOut(ex.Message);
-                }
-            }
         }
 
         /// <summary>
@@ -298,15 +286,26 @@ namespace RRQMSocket
             {
                 try
                 {
-                    int available = this.mainSocket.Available;
-                    if (available > 0)
+                    if (this.mainSocket.Poll(-1, SelectMode.SelectRead))
                     {
-                        this.SelectReceiveData();
-                        return available;
-                    }
-                    else if (!this.mainSocket.Connected)
-                    {
-                        this.BreakOut("客户端主动断开连接");
+                        int available = this.mainSocket.Available;
+                        if (available > 0)
+                        {
+                            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                            int r = this.GetStream().Read(byteBlock.Buffer, 0, byteBlock.Capacity);
+                            if (r == 0)
+                            {
+                                byteBlock.Dispose();
+                                this.BreakOut("远程终端主动断开");
+                            }
+                            byteBlock.SetLength(r);
+                            this.HandleBuffer(byteBlock);
+                            return available;
+                        }
+                        else
+                        {
+                            this.BreakOut("客户端主动断开连接");
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -405,12 +404,10 @@ namespace RRQMSocket
                     if (this.eventArgs != null)
                     {
                         this.eventArgs.Dispose();
-                        this.eventArgs = null;
                     }
                     if (this.mainSocket != null)
                     {
                         this.mainSocket.Dispose();
-                        this.mainSocket = null;
                     }
                     if (this.workStream != null)
                     {
@@ -688,26 +685,6 @@ namespace RRQMSocket
                 {
                     this.BreakOut("远程主机主动断开连接");
                 }
-            }
-        }
-
-        private void SelectReceiveData()
-        {
-            try
-            {
-                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                int r = this.GetStream().Read(byteBlock.Buffer, 0, byteBlock.Capacity);
-                if (r == 0)
-                {
-                    byteBlock.Dispose();
-                    this.BreakOut("远程终端主动断开");
-                }
-                byteBlock.SetLength(r);
-                this.HandleBuffer(byteBlock);
-            }
-            catch (Exception ex)
-            {
-                this.BreakOut(ex.Message);
             }
         }
 
