@@ -21,9 +21,6 @@
 合抱之木，生于毫末；九层之台，起于垒土。
 
 </div>
-<div align="center">
-<img src="https://i.bmp.ovh/imgs/2021/06/0bb09b575906f48b.png"  alt="图片名称" align=center />
-</div>
 
 ## 🎀描述
 | 名称|地址 |描述|
@@ -51,7 +48,7 @@
 - Blazor
 - Xamarin
 - Mono
-- Unity（在IL2cpp编译时，需要导入源码）
+- Unity（在IL2cpp编译时，需要导入源码，Mono则直接加载dll即可）
 - 其他（即所有C#系）
 
 ## 🌴RRQMSocket特点速览
