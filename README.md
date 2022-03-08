@@ -296,8 +296,6 @@ public class XUnitTestServer : ControllerBase
 
 谢谢大家对我的支持，如果还有其他问题，请加群QQ：234762506讨论。
 
-[![Giteye chart](https://chart.giteye.net/gitee/dotnetchina/RRQMSocket/RJ9NH249.png)](https://giteye.net/chart/RJ9NH249)
-
 ## 支持作者
 
 [支持入口](https://www.yuque.com/eo2w71/rrqm/a5199820843b324f025633fdeee44394)
