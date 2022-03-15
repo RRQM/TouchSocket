@@ -26,6 +26,13 @@ namespace RRQMSocket
     /// </summary>
     public abstract class UdpSession : BaseSocket, IService, IClient
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public UdpSession()
+        {
+            this.monitor = new NetworkMonitor(null, new Socket(SocketType.Dgram, ProtocolType.Udp));
+        }
         private IPHost remoteIPHost;
         private NetworkMonitor monitor;
         private string name;
