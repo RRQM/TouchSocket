@@ -10,108 +10,85 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
+using RRQMCore.Extensions;
 using RRQMCore.Log;
 using RRQMCore.XREF.Newtonsoft.Json;
 using RRQMCore.XREF.Newtonsoft.Json.Linq;
 using RRQMSocket.Http;
+using RRQMSocket.Http.Plugins;
 using System;
-using System.Collections.Concurrent;
-using System.Text;
 
 namespace RRQMSocket.RPC.JsonRpc
 {
     /// <summary>
-    /// JsonRpcParser解析器
+    /// JsonRpcParser解析器插件
     /// </summary>
-    public class JsonRpcParser : TcpService<JsonRpcSocketClient>, IRPCParser
+    public class JsonRpcParserPlugin : HttpPluginBase, IRpcParser
     {
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>> idTypeInstance;
         private ActionMap actionMap;
-        private InvokeType invokeType;
-        private int maxPackageSize;
+        private string jsonRpcUrl;
         private MethodMap methodMap;
-        private JsonRpcProtocolType protocolType;
-        private string proxyToken;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public JsonRpcParser()
+        public JsonRpcParserPlugin(string jsonRpcUrl = "/jsonrpc")
         {
-            this.idTypeInstance = new ConcurrentDictionary<string, ConcurrentDictionary<Type, IServerProvider>>();
             this.actionMap = new ActionMap();
+            this.JsonRpcUrl = jsonRpcUrl;
         }
 
         /// <summary>
         /// 函数键映射图
         /// </summary>
-        public ActionMap ActionMap
-        { get { return this.actionMap; } }
-        /// <summary>
-        /// 调用类型
-        /// </summary>
-        public InvokeType InvokeType
-        {
-            get { return this.invokeType; }
-        }
+        public ActionMap ActionMap => this.actionMap;
 
         /// <summary>
-        /// 最大数据包长度
+        /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
         /// </summary>
-        public int MaxPackageSize
+        public string JsonRpcUrl
         {
-            get { return this.maxPackageSize; }
+            get => this.jsonRpcUrl;
+            set => this.jsonRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
         }
 
         /// <summary>
         /// 函数映射
         /// </summary>
-        public MethodMap MethodMap
-        {
-            get { return this.methodMap; }
-        }
-
-        /// <summary>
-        /// 协议类型
-        /// </summary>
-        public JsonRpcProtocolType ProtocolType
-        {
-            get { return this.protocolType; }
-        }
+        public MethodMap MethodMap => this.methodMap;
 
         /// <summary>
         /// 代理令箭，当获取代理文件时需验证令箭
         /// </summary>
-        public string ProxyToken
-        {
-            get { return this.proxyToken; }
-        }
+        public string ProxyToken { get; set; }
 
         /// <summary>
         /// 所属服务器
         /// </summary>
-        public RPCService RPCService { get; private set; }
+        public RpcService RpcService { get; private set; }
+
         /// <summary>
         /// 执行函数
         /// </summary>
-        public Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; private set; }
+        public Action<IRpcParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="args"></param>
-        public void GetProxyInfo(GetProxyInfoArgs args)
+        public virtual void GetProxyInfo(GetProxyInfoArgs args)
         {
             if (args.RpcType.HasFlag(RpcType.JsonRpc))
             {
                 if (args.ProxyToken != this.ProxyToken)
                 {
-                    args.ErrorMessage = "在验证JsonRpc时令箭不正确。";
-                    args.IsSuccess = false;
+                    args.Message = "在验证JsonRpc时令箭不正确。";
+                    args.RemoveOperation(Operation.Permit);
                     return;
                 }
-                foreach (var item in this.RPCService.ServerProviders)
+                foreach (var item in this.RpcService.ServerProviders)
                 {
                     var serverCellCode = CodeGenerator.Generator<JsonRpcAttribute>(item.GetType());
                     args.Codes.Add(serverCellCode);
@@ -119,14 +96,11 @@ namespace RRQMSocket.RPC.JsonRpc
             }
         }
 
-        /// <summary>
-        /// 结束调用
-        /// </summary>
-        /// <param name="methodInvoker"></param>
-        /// <param name="methodInstance"></param>
-        public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        #region RPC解析器
+
+        void IRpcParser.OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            ISocketClient socketClient = (ISocketClient)methodInvoker.Caller;
+            ISocketClient client = (ISocketClient)methodInvoker.Caller;
             error error = new error();
 
             switch (methodInvoker.Status)
@@ -170,14 +144,13 @@ namespace RRQMSocket.RPC.JsonRpc
             JsonRpcContext jsonRpcContext = (JsonRpcContext)methodInvoker.Flag;
             if (jsonRpcContext.needResponse)
             {
-                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                this.BuildResponseByteBlock(byteBlock, methodInvoker, jsonRpcContext.id, methodInvoker.ReturnParameter, error);
-                if (socketClient.Online)
+                ByteBlock byteBlock = BytePool.GetByteBlock();
+                this.BuildResponseByteBlock(client, byteBlock, methodInvoker, jsonRpcContext.id, methodInvoker.ReturnParameter, error);
+                if (client.Online)
                 {
                     try
                     {
-                        string s = Encoding.UTF8.GetString(byteBlock.ToArray());
-                        socketClient.Send(byteBlock);
+                        client.Send(byteBlock);
                     }
                     catch (Exception ex)
                     {
@@ -191,22 +164,17 @@ namespace RRQMSocket.RPC.JsonRpc
             }
         }
 
-        /// <summary>
-        /// 初始化
-        /// </summary>
-        /// <param name="provider"></param>
-        /// <param name="methodInstances"></param>
-        public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
-                foreach (var att in methodInstance.RPCAttributes)
+                foreach (var att in methodInstance.RpcAttributes)
                 {
                     if (att is JsonRpcAttribute attribute)
                     {
                         if (methodInstance.IsByRef)
                         {
-                            throw new RRQMRPCException($"JsonRpc服务中不允许有out及ref关键字，服务：{methodInstance.Method.Name}");
+                            throw new RpcException($"JsonRpc服务中不允许有out及ref关键字，服务：{methodInstance.Name}");
                         }
 
                         string actionKey = CodeGenerator.GetMethodName<JsonRpcAttribute>(methodInstance);
@@ -217,47 +185,54 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         catch
                         {
-                            throw new RRQMRPCException($"函数键为{actionKey}的方法已注册。");
+                            throw new RpcException($"函数键为{actionKey}的方法已注册。");
                         }
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// 取消注册服务
-        /// </summary>
-        /// <param name="provider"></param>
-        /// <param name="methodInstances"></param>
-        public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
         }
 
-        /// <summary>
-        /// 设置执行委托
-        /// </summary>
-        /// <param name="executeMethod"></param>
-        public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
+        void IRpcParser.SetExecuteMethod(Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod)
         {
             this.RRQMExecuteMethod = executeMethod;
         }
 
-        /// <summary>
-        /// 设置地图映射
-        /// </summary>
-        /// <param name="methodMap"></param>
-        public void SetMethodMap(MethodMap methodMap)
+        void IRpcParser.SetMethodMap(MethodMap methodMap)
         {
             this.methodMap = methodMap;
         }
 
-        /// <summary>
-        /// 设置服务
-        /// </summary>
-        /// <param name="service"></param>
-        public void SetRPCService(RPCService service)
+        void IRpcParser.SetRpcService(RpcService service)
         {
-            this.RPCService = service;
+            this.RpcService = service;
+        }
+
+        #endregion RPC解析器
+
+        /// <summary>
+        /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
+        /// </summary>
+        /// <param name="jsonRpcUrl"></param>
+        /// <returns></returns>
+        public JsonRpcParserPlugin SetJsonRpcUrl(string jsonRpcUrl)
+        {
+            this.JsonRpcUrl = jsonRpcUrl;
+            return this;
+        }
+
+        /// <summary>
+        /// 设置代理令箭，当获取代理文件时需验证令箭
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public JsonRpcParserPlugin SetProxyToken(string value)
+        {
+            this.ProxyToken = value;
+            return this;
         }
 
         /// <summary>
@@ -293,7 +268,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     {
                         if (methodInstance.ParameterNames.Length > 1)
                         {
-                            throw new RRQMRPCException("调用参数计数不匹配");
+                            throw new RpcException("调用参数计数不匹配");
                         }
                         else
                         {
@@ -303,7 +278,6 @@ namespace RRQMSocket.RPC.JsonRpc
                             jsonRpcServerCallContext.context = jsonRpcContext;
                             jsonRpcServerCallContext.jsonString = jsonString;
                             jsonRpcServerCallContext.methodInstance = methodInstance;
-                            jsonRpcServerCallContext.protocolType = this.protocolType;
                             jsonRpcContext.parameters = new object[] { jsonRpcServerCallContext };
                         }
                     }
@@ -311,7 +285,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     {
                         if (methodInstance.ParameterNames.Length != 0)
                         {
-                            throw new RRQMRPCException("调用参数计数不匹配");
+                            throw new RpcException("调用参数计数不匹配");
                         }
                     }
                     return;
@@ -330,7 +304,6 @@ namespace RRQMSocket.RPC.JsonRpc
                         jsonRpcServerCallContext.context = jsonRpcContext;
                         jsonRpcServerCallContext.jsonString = jsonString;
                         jsonRpcServerCallContext.methodInstance = methodInstance;
-                        jsonRpcServerCallContext.protocolType = this.protocolType;
                         jsonRpcContext.parameters[0] = jsonRpcServerCallContext;
                         i = 1;
                     }
@@ -347,7 +320,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         }
                         else
                         {
-                            throw new RRQMRPCException("调用参数计数不匹配");
+                            throw new RpcException("调用参数计数不匹配");
                         }
                     }
                 }
@@ -358,7 +331,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     {
                         if (array.Count != methodInstance.ParameterNames.Length - 1)
                         {
-                            throw new RRQMRPCException("调用参数计数不匹配");
+                            throw new RpcException("调用参数计数不匹配");
                         }
                         jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
 
@@ -368,7 +341,6 @@ namespace RRQMSocket.RPC.JsonRpc
                         jsonRpcServerCallContext.context = jsonRpcContext;
                         jsonRpcServerCallContext.jsonString = jsonString;
                         jsonRpcServerCallContext.methodInstance = methodInstance;
-                        jsonRpcServerCallContext.protocolType = this.protocolType;
 
                         jsonRpcContext.parameters[0] = jsonRpcServerCallContext;
                         for (int i = 0; i < array.Count; i++)
@@ -380,7 +352,7 @@ namespace RRQMSocket.RPC.JsonRpc
                     {
                         if (array.Count != methodInstance.ParameterNames.Length)
                         {
-                            throw new RRQMRPCException("调用参数计数不匹配");
+                            throw new RpcException("调用参数计数不匹配");
                         }
                         jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
 
@@ -398,14 +370,101 @@ namespace RRQMSocket.RPC.JsonRpc
         }
 
         /// <summary>
-        /// 构建响应数据
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="responseByteBlock"></param>
-        /// <param name="methodInvoker"></param>
-        /// <param name="id"></param>
-        /// <param name="result"></param>
-        /// <param name="error"></param>
-        protected virtual void BuildResponseByteBlock(ByteBlock responseByteBlock, MethodInvoker methodInvoker, string id, object result, error error)
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            if (this.jsonRpcUrl == "/" || e.Request.RelativeURL.Equals(this.jsonRpcUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                MethodInvoker methodInvoker = new MethodInvoker();
+                methodInvoker.Caller = client;
+                MethodInstance methodInstance = null;
+                JsonRpcContext context = null;
+                try
+                {
+                    string jsonString = e.Request.GetBody();
+
+                    methodInvoker.Flag = e.Request;
+
+                    this.BuildRequestContext(methodInvoker, jsonString, out methodInstance, out context);
+
+                    if (methodInstance == null)
+                    {
+                        methodInvoker.Status = InvokeStatus.UnFound;
+                    }
+                    else if (methodInstance.IsEnable)
+                    {
+                        methodInvoker.Parameters = context.parameters;
+                    }
+                    else
+                    {
+                        methodInvoker.Status = InvokeStatus.UnEnable;
+                    }
+                    e.Handled = true;
+                }
+                catch (Exception ex)
+                {
+                    methodInvoker.Status = InvokeStatus.Exception;
+                    methodInvoker.StatusMessage = ex.Message;
+                }
+
+                methodInvoker.Flag = context;
+
+                this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
+            }
+            base.OnPost(client, e);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected override void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
+        {
+            if (client.Protocol == Protocol.TCP)
+            {
+                MethodInvoker methodInvoker = new MethodInvoker();
+                methodInvoker.Caller = client;
+                MethodInstance methodInstance = null;
+                JsonRpcContext context = null;
+                try
+                {
+                    string jsonString = jsonString = e.ByteBlock.ToString();
+                    this.BuildRequestContext(methodInvoker, jsonString, out methodInstance, out context);
+
+                    if (methodInstance == null)
+                    {
+                        methodInvoker.Status = InvokeStatus.UnFound;
+                    }
+                    else if (methodInstance.IsEnable)
+                    {
+                        methodInvoker.Parameters = context.parameters;
+                    }
+                    else
+                    {
+                        methodInvoker.Status = InvokeStatus.UnEnable;
+                    }
+
+                    e.Handled = true;
+                }
+                catch (Exception ex)
+                {
+                    methodInvoker.Status = InvokeStatus.Exception;
+                    methodInvoker.StatusMessage = ex.Message;
+                }
+
+                methodInvoker.Flag = context;
+
+                this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
+            }
+
+            base.OnReceivedData(client, e);
+        }
+
+        private void BuildResponseByteBlock(ITcpClientBase client, ByteBlock responseByteBlock, MethodInvoker methodInvoker, string id, object result, error error)
         {
             JObject jobject = new JObject();
             if (error == null)
@@ -414,14 +473,7 @@ namespace RRQMSocket.RPC.JsonRpc
                 jobject.Add("jsonrpc", JToken.FromObject("2.0"));
                 if (result != null)
                 {
-                    if (result.GetType().FullName == "Newtonsoft.Json.Linq.JObject")
-                    {
-                        jobject.Add("result", JToken.Parse(((dynamic)result).ToString(0)));
-                    }
-                    else
-                    {
-                        jobject.Add("result", JToken.FromObject(result));
-                    }
+                    jobject.Add("result", JToken.FromObject(result));
                 }
                 else
                 {
@@ -436,126 +488,20 @@ namespace RRQMSocket.RPC.JsonRpc
                 jobject.Add("error", JToken.FromObject(error));
                 jobject.Add("id", id == null ? null : JToken.FromObject(id));
             }
-            switch (this.protocolType)
+            if (client.Protocol == Protocol.TCP)
             {
-                case JsonRpcProtocolType.Tcp:
-                    {
-                        responseByteBlock.Write(Encoding.UTF8.GetBytes(jobject.ToString(Formatting.None)));
-                        break;
-                    }
-                case JsonRpcProtocolType.Http:
-                    {
-                        HttpResponse httpResponse = new HttpResponse();
-                        httpResponse.FromJson(jobject.ToString(Formatting.None));
-                        httpResponse.Build(responseByteBlock);
-                        break;
-                    }
+                responseByteBlock.Write(jobject.ToString(Formatting.None).ToUTF8Bytes());
             }
-        }
-
-        /// <summary>
-        /// 载入配置
-        /// </summary>
-        /// <param name="serviceConfig"></param>
-        protected override void LoadConfig(ServiceConfig serviceConfig)
-        {
-            this.protocolType = (JsonRpcProtocolType)serviceConfig.GetValue(JsonRpcParserConfig.ProtocolTypeProperty);
-            this.maxPackageSize = (int)serviceConfig.GetValue(JsonRpcParserConfig.MaxPackageSizeProperty);
-            this.invokeType = (InvokeType)serviceConfig.GetValue(JsonRpcParserConfig.InvokeTypeProperty);
-            this.proxyToken = serviceConfig.GetValue<string>(JsonRpcParserConfig.ProxyTokenProperty);
-            base.LoadConfig(serviceConfig);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override void OnConnecting(JsonRpcSocketClient socketClient, ClientOperationEventArgs e)
-        {
-            socketClient.Received += this.OnReceived;
-
-            switch (this.protocolType)
+            else if (client.Protocol == Protocol.Http)
             {
-                case JsonRpcProtocolType.Tcp:
-                    e.DataHandlingAdapter = new TerminatorPackageAdapter(this.maxPackageSize, "\r\n");
-                    break;
-
-                case JsonRpcProtocolType.Http:
-                    e.DataHandlingAdapter = new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Server);
-                    break;
+                HttpResponse httpResponse = new HttpResponse();
+                httpResponse.FromJson(jobject.ToString(Formatting.None));
+                httpResponse.Build(responseByteBlock);
             }
-            base.OnConnecting(socketClient, e);
-        }
-
-        private void OnReceived(SimpleSocketClient socketClient, ByteBlock byteBlock, object obj)
-        {
-            MethodInvoker methodInvoker = new MethodInvoker();
-            methodInvoker.Caller = (JsonRpcSocketClient)socketClient;
-            methodInvoker.InvokeType = this.invokeType;
-
-            MethodInstance methodInstance = null;
-            JsonRpcContext context = null;
-            try
+            else
             {
-                string jsonString = null;
-                switch (this.protocolType)
-                {
-                    case JsonRpcProtocolType.Tcp:
-                        {
-                            jsonString = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                            break;
-                        }
-                    case JsonRpcProtocolType.Http:
-                        {
-                            HttpRequest httpRequest = (HttpRequest)obj;
-                            jsonString = httpRequest.Body;
-                            methodInvoker.Flag = httpRequest;
-                            break;
-                        }
-                }
-                this.BuildRequestContext(methodInvoker, jsonString, out methodInstance, out context);
-
-                if (methodInstance == null)
-                {
-                    methodInvoker.Status = InvokeStatus.UnFound;
-                }
-                else if (methodInstance.IsEnable)
-                {
-                    methodInvoker.Parameters = context.parameters;
-                    if (this.invokeType == InvokeType.CustomInstance)
-                    {
-                        ConcurrentDictionary<Type, IServerProvider> typeInstance;
-                        if (!this.idTypeInstance.TryGetValue(socketClient.ID, out typeInstance))
-                        {
-                            typeInstance = new ConcurrentDictionary<Type, IServerProvider>();
-                            this.idTypeInstance.TryAdd(socketClient.ID, typeInstance);
-                        }
-
-                        IServerProvider instance;
-                        if (!typeInstance.TryGetValue(methodInstance.ProviderType, out instance))
-                        {
-                            instance = (IServerProvider)Activator.CreateInstance(methodInstance.ProviderType);
-                            typeInstance.TryAdd(methodInstance.ProviderType, instance);
-                        }
-
-                        methodInvoker.CustomServerProvider = instance;
-                    }
-                }
-                else
-                {
-                    methodInvoker.Status = InvokeStatus.UnEnable;
-                }
+                client.Logger.Warning("JsonRpc只能适用于TCP协议或HTTP协议");
             }
-            catch (Exception ex)
-            {
-                methodInvoker.Status = InvokeStatus.Exception;
-                methodInvoker.StatusMessage = ex.Message;
-            }
-
-            methodInvoker.Flag = context;
-
-            this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
         }
     }
 }

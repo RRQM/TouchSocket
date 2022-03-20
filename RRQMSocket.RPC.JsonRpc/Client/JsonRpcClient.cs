@@ -12,8 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using RRQMCore.Run;
 using RRQMCore.XREF.Newtonsoft.Json;
 using RRQMCore.XREF.Newtonsoft.Json.Linq;
@@ -28,52 +27,37 @@ namespace RRQMSocket.RPC.JsonRpc
     /// <summary>
     /// JsonRpc客户端
     /// </summary>
-    public class JsonRpcClient : TcpClient, IJsonRpcClient
+    public class JsonRpcClient : WaitingTcpClient, IRpcClient
     {
-        private int maxPackageSize;
-
-        private JsonRpcProtocolType protocolType;
+        private JRPT jrpt;
 
         private RRQMWaitHandlePool<IWaitResult> waitHandle;
 
         /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override bool CanSetDataHandlingAdapter => false;
-
-        /// <summary>
         /// 构造函数
         /// </summary>
-        public JsonRpcClient()
+        public JsonRpcClient(JRPT pt)
         {
+            this.jrpt = pt;
             this.waitHandle = new RRQMWaitHandlePool<IWaitResult>();
-        }
-
-        /// <summary>
-        /// 最大数据包长度
-        /// </summary>
-        public int MaxPackageSize
-        {
-            get { return this.maxPackageSize; }
         }
 
         /// <summary>
         /// 协议类型
         /// </summary>
-        public JsonRpcProtocolType ProtocolType
-        {
-            get { return this.protocolType; }
-        }
+        public JRPT JRPT => this.jrpt;
+
+        #region RPC调用
 
         /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RpcException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
@@ -81,13 +65,12 @@ namespace RRQMSocket.RPC.JsonRpc
             JsonRpcWaitContext context = new JsonRpcWaitContext();
             WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
-            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == default)
+            using (ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength))
             {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-            try
-            {
+                if (invokeOption == default)
+                {
+                    invokeOption = InvokeOption.WaitInvoke;
+                }
                 JObject jobject = new JObject();
                 jobject.Add("jsonrpc", JToken.FromObject("2.0"));
                 jobject.Add("method", JToken.FromObject(method));
@@ -101,19 +84,20 @@ namespace RRQMSocket.RPC.JsonRpc
                 {
                     jobject.Add("id", null);
                 }
-                switch (this.protocolType)
+                switch (this.jrpt)
                 {
-                    case JsonRpcProtocolType.Tcp:
+                    case JRPT.Tcp:
                         {
                             byteBlock.Write(Encoding.UTF8.GetBytes(jobject.ToString(Formatting.None)));
                             break;
                         }
-                    case JsonRpcProtocolType.Http:
+                    case JRPT.Http:
                         {
-                            HttpRequest httpRequest = new HttpRequest();
-                            httpRequest.Method = "POST";
-                            httpRequest.FromJson(jobject.ToString(Formatting.None));
-                            httpRequest.Build(byteBlock);
+                            HttpRequest request = new HttpRequest();
+                            request.Method = "POST";
+                            request.URL = this.RemoteIPHost.GetUrlPath();
+                            request.FromJson(jobject.ToString(Formatting.None));
+                            request.Build(byteBlock);
                         }
                         break;
                 }
@@ -122,86 +106,69 @@ namespace RRQMSocket.RPC.JsonRpc
                     case FeedbackType.OnlySend:
                         {
                             this.SendAsync(byteBlock);
+                            this.waitHandle.Destroy(waitData);
+                            return default;
                         }
-                        break;
-
                     case FeedbackType.WaitSend:
+                        {
+                            this.Send(byteBlock);
+                            this.waitHandle.Destroy(waitData);
+                            return default;
+                        }
                     case FeedbackType.WaitInvoke:
                         {
                             this.Send(byteBlock);
-                        }
-                        break;
+                            waitData.Wait(invokeOption.Timeout);
+                            JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
+                            this.waitHandle.Destroy(waitData);
 
+                            if (resultContext.Status == 0)
+                            {
+                                throw new TimeoutException("等待结果超时");
+                            }
+                            if (resultContext.error != null)
+                            {
+                                throw new RpcException(resultContext.error.message);
+                            }
+
+                            if (resultContext.Return == null)
+                            {
+                                return default;
+                            }
+                            if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
+                            {
+                                return (T)resultContext.Return.ToString().ParseToType(typeof(T));
+                            }
+
+                            return JsonConvert.DeserializeObject<T>(resultContext.Return.ToString());
+                        }
                     default:
-                        break;
-                }
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                case FeedbackType.WaitSend:
-                    {
-                        this.waitHandle.Destroy(waitData);
                         return default;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        waitData.Wait(invokeOption.Timeout);
-                        JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
-                        this.waitHandle.Destroy(waitData);
-
-                        if (resultContext.Status == 0)
-                        {
-                            throw new TimeoutException("等待结果超时");
-                        }
-                        if (resultContext.error != null)
-                        {
-                            throw new RRQMRPCException(resultContext.error.message);
-                        }
-
-                        if (resultContext.Return == null)
-                        {
-                            return default;
-                        }
-                        if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
-                        {
-                            return (T)resultContext.Return.ToString().ParseToType(typeof(T));
-                        }
-
-                        return JsonConvert.DeserializeObject<T>(resultContext.Return.ToString());
-                    }
-                default:
-                    return default;
+                }
             }
         }
 
         /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RpcException"></exception>
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             JsonRpcWaitContext context = new JsonRpcWaitContext();
             WaitData<IWaitResult> waitData = this.waitHandle.GetWaitData(context);
 
-            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            if (invokeOption == default)
+            using (ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength))
             {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-            try
-            {
+                if (invokeOption == default)
+                {
+                    invokeOption = InvokeOption.WaitInvoke;
+                }
                 JObject jobject = new JObject();
                 jobject.Add("jsonrpc", JToken.FromObject("2.0"));
                 jobject.Add("method", JToken.FromObject(method));
@@ -215,19 +182,20 @@ namespace RRQMSocket.RPC.JsonRpc
                 {
                     jobject.Add("id", null);
                 }
-                switch (this.protocolType)
+                switch (this.jrpt)
                 {
-                    case JsonRpcProtocolType.Tcp:
+                    case JRPT.Tcp:
                         {
                             byteBlock.Write(Encoding.UTF8.GetBytes(jobject.ToString(Formatting.None)));
                             break;
                         }
-                    case JsonRpcProtocolType.Http:
+                    case JRPT.Http:
                         {
-                            HttpRequest httpRequest = new HttpRequest();
-                            httpRequest.Method = "POST";
-                            httpRequest.FromJson(jobject.ToString(Formatting.None));
-                            httpRequest.Build(byteBlock);
+                            HttpRequest request = new HttpRequest();
+                            request.Method = "POST";
+                            request.URL = this.RemoteIPHost.GetUrlPath();
+                            request.FromJson(jobject.ToString(Formatting.None));
+                            request.Build(byteBlock);
                         }
                         break;
                 }
@@ -236,62 +204,46 @@ namespace RRQMSocket.RPC.JsonRpc
                     case FeedbackType.OnlySend:
                         {
                             this.SendAsync(byteBlock);
+                            this.waitHandle.Destroy(waitData);
+                            return;
                         }
-                        break;
-
                     case FeedbackType.WaitSend:
+                        {
+                            this.Send(byteBlock);
+                            this.waitHandle.Destroy(waitData);
+                            return;
+                        }
                     case FeedbackType.WaitInvoke:
                         {
                             this.Send(byteBlock);
-                        }
-                        break;
+                            waitData.Wait(invokeOption.Timeout);
+                            JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
+                            this.waitHandle.Destroy(waitData);
 
+                            if (resultContext.Status == 0)
+                            {
+                                throw new TimeoutException("等待结果超时");
+                            }
+                            if (resultContext.error != null)
+                            {
+                                throw new RpcException(resultContext.error.message);
+                            }
+                            break;
+                        }
                     default:
-                        break;
+                        return;
                 }
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                case FeedbackType.WaitSend:
-                    {
-                        this.waitHandle.Destroy(waitData);
-                        return;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        waitData.Wait(invokeOption.Timeout);
-                        JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
-                        this.waitHandle.Destroy(waitData);
-
-                        if (resultContext.Status == 0)
-                        {
-                            throw new TimeoutException("等待结果超时");
-                        }
-                        if (resultContext.error != null)
-                        {
-                            throw new RRQMRPCException(resultContext.error.message);
-                        }
-                        return;
-                    }
-                default:
-                    return;
             }
         }
 
         /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RpcException"></exception>
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
         {
@@ -299,13 +251,13 @@ namespace RRQMSocket.RPC.JsonRpc
         }
 
         /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RpcException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
@@ -318,10 +270,9 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="method">函数名</param>
         /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">RPC调用设置</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RpcException"></exception>
         /// <exception cref="RRQMException"></exception>
         public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
         {
@@ -336,10 +287,9 @@ namespace RRQMSocket.RPC.JsonRpc
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">RPC调用设置</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">RPC异常</exception>
+        /// <exception cref="RpcException">Rpc异常</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         /// <returns>服务器返回结果</returns>
         public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
@@ -350,6 +300,8 @@ namespace RRQMSocket.RPC.JsonRpc
             });
         }
 
+        #endregion RPC调用
+
         /// <summary>
         /// 处理数据
         /// </summary>
@@ -357,11 +309,11 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            switch (this.protocolType)
+            switch (this.jrpt)
             {
-                case JsonRpcProtocolType.Tcp:
+                case JRPT.Tcp:
                     {
-                        string jsonString = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                        string jsonString = byteBlock.ToString();
                         JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(jsonString, typeof(JsonResponseContext));
                         if (responseContext != null)
                         {
@@ -375,10 +327,10 @@ namespace RRQMSocket.RPC.JsonRpc
                         break;
                     }
 
-                case JsonRpcProtocolType.Http:
+                case JRPT.Http:
                     {
                         HttpResponse httpResponse = (HttpResponse)requestInfo;
-                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(httpResponse.Body, typeof(JsonResponseContext));
+                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(httpResponse.GetBody(), typeof(JsonResponseContext));
                         if (responseContext != null)
                         {
                             JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
@@ -391,26 +343,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         break;
                     }
             }
-        }
-
-        /// <summary>
-        /// 禁用适配器赋值
-        /// </summary>
-        /// <param name="adapter"></param>
-        public override sealed void SetDataHandlingAdapter(DataHandlingAdapter adapter)
-        {
-            throw new RRQMException($"{nameof(JsonRpcSocketClient)}不允许设置适配器。");
-        }
-
-        /// <summary>
-        /// 载入配置
-        /// </summary>
-        /// <param name="clientConfig"></param>
-        protected override void LoadConfig(TcpClientConfig clientConfig)
-        {
-            base.LoadConfig(clientConfig);
-            this.maxPackageSize = (int)clientConfig.GetValue(JsonRpcClientConfig.MaxPackageSizeProperty);
-            this.protocolType = (JsonRpcProtocolType)clientConfig.GetValue(JsonRpcClientConfig.ProtocolTypeProperty);
+            base.HandleReceivedData(byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -419,14 +352,14 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <param name="e"></param>
         protected override void OnConnecting(ClientConnectingEventArgs e)
         {
-            switch (this.protocolType)
+            switch (this.jrpt)
             {
-                case JsonRpcProtocolType.Tcp:
-                    base.SetAdapter(new TerminatorPackageAdapter(this.maxPackageSize, "\r\n"));
+                case JRPT.Tcp:
+                    e.DataHandlingAdapter = new TerminatorPackageAdapter(this.MaxPackageSize, "\r\n");
                     break;
 
-                case JsonRpcProtocolType.Http:
-                    base.SetAdapter(new HttpDataHandlingAdapter(this.maxPackageSize, HttpType.Client));
+                case JRPT.Http:
+                    e.DataHandlingAdapter = new HttpClientDataHandlingAdapter(this.MaxPackageSize);
                     break;
             }
             base.OnConnecting(e);

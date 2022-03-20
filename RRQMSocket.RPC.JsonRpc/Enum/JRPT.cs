@@ -15,7 +15,7 @@ namespace RRQMSocket.RPC.JsonRpc
     /// <summary>
     /// JsonRpc协议类型
     /// </summary>
-    public enum JsonRpcProtocolType : byte
+    public enum JRPT : byte
     {
         /// <summary>
         /// 普通TCP协议

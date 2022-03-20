@@ -20,40 +20,41 @@ namespace RRQMSocket.RPC.JsonRpc
     /// </summary>
     public class JsonRpcServerCallContext : ICallContext
     {
-        internal ICaller caller;
+        internal object caller;
         internal JsonRpcContext context;
         internal MethodInstance methodInstance;
         internal string jsonString;
-        internal JsonRpcProtocolType protocolType;
         internal MethodInvoker methodInvoker;
         internal CancellationTokenSource tokenSource = default;
 
         /// <summary>
         /// Json字符串
         /// </summary>
-        public string JsonString
-        {
-            get { return this.jsonString; }
-        }
+        public string JsonString => this.jsonString;
 
         /// <summary>
-        /// 协议类型
+        /// <inheritdoc/>
         /// </summary>
-        public JsonRpcProtocolType ProtocolType
-        {
-            get { return this.protocolType; }
-            set { this.protocolType = value; }
-        }
+        public object Caller => this.caller;
 
-#pragma warning disable CS1591
-        public ICaller Caller => this.caller;
-
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public IRpcContext Context => this.context;
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public MethodInstance MethodInstance => this.methodInstance;
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public MethodInvoker MethodInvoker => this.methodInvoker;
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public CancellationTokenSource TokenSource => this.tokenSource;
     }
 }

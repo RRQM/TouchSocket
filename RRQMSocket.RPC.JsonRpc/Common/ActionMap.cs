@@ -35,8 +35,7 @@ namespace RRQMSocket.RPC.JsonRpc
         /// <summary>
         /// 服务键集合
         /// </summary>
-        public IEnumerable<string> ActionKeys
-        { get { return this.actionMap.Keys; } }
+        public IEnumerable<string> ActionKeys => this.actionMap.Keys;
 
         /// <summary>
         /// 通过routeUrl获取函数实例
