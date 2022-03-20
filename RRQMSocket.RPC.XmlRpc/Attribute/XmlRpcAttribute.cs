@@ -18,7 +18,7 @@ namespace RRQMSocket.RPC.XmlRpc
     /// 适用于XmlRpc的标记
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class XmlRpcAttribute : RPCAttribute
+    public sealed class XmlRpcAttribute : RpcAttribute
     {
     }
 }
