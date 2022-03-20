@@ -35,8 +35,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <summary>
         /// 路由路径集合
         /// </summary>
-        public IEnumerable<string> Urls
-        { get { return this.routeMap.Keys; } }
+        public IEnumerable<string> Urls => this.routeMap.Keys;
 
         /// <summary>
         /// 通过routeUrl获取函数实例

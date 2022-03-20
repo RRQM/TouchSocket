@@ -10,7 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
+using RRQMCore;
+using RRQMCore.Extensions;
 using RRQMCore.XREF.Newtonsoft.Json;
 using RRQMSocket.Http;
 
@@ -29,7 +30,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="methodInstance"></param>
         public override void OnPost(HttpRequest httpRequest, ref MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            switch (httpRequest.Content_Type)
+            switch (httpRequest.ContentType)
             {
                 case "application/x-www-form-urlencoded":
                     {
@@ -57,7 +58,7 @@ namespace RRQMSocket.RPC.WebApi
                             {
                                 if (i == 0)
                                 {
-                                    methodInvoker.Parameters[i] = JsonConvert.DeserializeObject(httpRequest.Body, methodInstance.ParameterTypes[0]);
+                                    methodInvoker.Parameters[i] = JsonConvert.DeserializeObject(httpRequest.GetBody(), methodInstance.ParameterTypes[0]);
                                 }
                                 else
                                 {
@@ -78,7 +79,6 @@ namespace RRQMSocket.RPC.WebApi
         /// <returns></returns>
         public override HttpResponse OnResult(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            HttpRequest httpRequest = (HttpRequest)methodInvoker.Flag;
             HttpResponse httpResponse = new HttpResponse();
             switch (methodInvoker.Status)
             {

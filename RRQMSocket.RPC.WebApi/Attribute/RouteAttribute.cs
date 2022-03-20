@@ -17,8 +17,8 @@ namespace RRQMSocket.RPC.WebApi
     /// <summary>
     /// 适用于WebApi的路由标记
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class RouteAttribute : RPCAttribute
+    [AttributeUsage(AttributeTargets.Class,AllowMultiple = false, Inherited = false)]
+    public sealed class RouteAttribute : Attribute
     {
         /// <summary>
         /// 构造函数
@@ -39,6 +39,6 @@ namespace RRQMSocket.RPC.WebApi
         /// <summary>
         /// 路由模板
         /// </summary>
-        public string Template { get; private set; }
+        public string Template { get; set; }
     }
 }
