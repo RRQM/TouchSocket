@@ -35,17 +35,11 @@ namespace RRQMSocket
         /// <summary>
         /// 流长度
         /// </summary>
-        public long Size
-        {
-            get { return this.size; }
-        }
+        public long Size => this.size;
 
         /// <summary>
         /// 流类型
         /// </summary>
-        public string StreamType
-        {
-            get { return this.streamType; }
-        }
+        public string StreamType => this.streamType;
     }
 }

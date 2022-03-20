@@ -31,20 +31,21 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="serviceConfig"></param>
-        protected override void LoadConfig(ServiceConfig serviceConfig)
+        protected override void LoadConfig(RRQMConfig serviceConfig)
         {
-            this.iPHosts = this.ServiceConfig.GetValue<IPHost[]>(NATServiceConfig.TargetIPHostsProperty);
+            this.iPHosts = this.Config.GetValue<IPHost[]>(RRQMConfigExtensions.TargetIPHostsProperty);
             if (this.iPHosts == null || this.iPHosts.Length == 0)
             {
                 throw new RRQMException("目标地址未设置");
             }
-            this.mode = this.ServiceConfig.GetValue<NATMode>(NATServiceConfig.NATModeProperty);
+            this.mode = this.Config.GetValue<NATMode>(RRQMConfigExtensions.NATModeProperty);
             if (this.mode == NATMode.OneWayToListen)
             {
                 serviceConfig.ReceiveType = ReceiveType.None;
             }
             base.LoadConfig(serviceConfig);
         }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -69,7 +70,7 @@ namespace RRQMSocket
             if (sockets.Count == 0)
             {
                 this.logger.Debug(RRQMCore.Log.LogType.Error, this, "转发地址均无法建立，已拒绝本次连接。", null);
-                e.IsPermitOperation = false;
+                e.RemoveOperation(Operation.Permit);
                 return;
             }
 

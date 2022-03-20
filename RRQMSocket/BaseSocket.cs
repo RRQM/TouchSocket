@@ -10,34 +10,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Dependency;
 using RRQMCore.Log;
-using System;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 通讯基类
     /// </summary>
-    public abstract class BaseSocket : ISocket, IDisposable
+    public abstract class BaseSocket : RRQMDependencyObject, ISocket
     {
-        private int bufferLength;
-
         /// <summary>
         /// 日志记录器
         /// </summary>
         protected ILog logger;
 
-        /// <summary>
-        /// 判断是否已释放资源
-        /// </summary>
-        protected bool disposable = false;
+        private int bufferLength;
 
         /// <summary>
         /// 数据交互缓存池限制，min=1024 byte，Max=10Mb byte
         /// </summary>
         public int BufferLength
         {
-            get { return this.bufferLength; }
+            get => this.bufferLength;
             set
             {
                 if (value < 1024 || value > 1024 * 1024 * 10)
@@ -53,16 +48,8 @@ namespace RRQMSocket
         /// </summary>
         public ILog Logger
         {
-            get { return this.logger; }
-            set { this.logger = value; }
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public virtual void Dispose()
-        {
-            this.disposable = true;
+            get => this.logger;
+            set => this.logger = value;
         }
     }
 }

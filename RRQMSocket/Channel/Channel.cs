@@ -33,7 +33,7 @@ namespace RRQMSocket
         private int cacheCapacity;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private ProtocolClient client1;
+        private ProtocolClientBase client1;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private ProtocolSocketClient client2;
@@ -58,7 +58,7 @@ namespace RRQMSocket
         private short holdOnOrder;
         private short queueChangedOrder;
 
-        internal Channel(ProtocolClient client, string targetClientID)
+        internal Channel(ProtocolClientBase client, string targetClientID)
         {
             this.client1 = client;
             this.bufferLength = client.BufferLength;
@@ -118,17 +118,14 @@ namespace RRQMSocket
         /// <summary>
         /// 目的ID地址。
         /// </summary>
-        public string TargetClientID
-        {
-            get { return this.targetClientID; }
-        }
+        public string TargetClientID => this.targetClientID;
 
         /// <summary>
         /// 缓存容量
         /// </summary>
         public int CacheCapacity
         {
-            get { return this.cacheCapacity; }
+            get => this.cacheCapacity;
             set
             {
                 if (value < 0)
@@ -143,40 +140,31 @@ namespace RRQMSocket
         /// <summary>
         /// 是否具有数据可读
         /// </summary>
-        public bool Available
-        {
-            get { return this.dataQueue.Count > 0 ? true : false; }
-        }
+        public bool Available => this.dataQueue.Count > 0 ? true : false;
 
         /// <summary>
         /// 能否写入
         /// </summary>
-        public bool CanWrite { get => (byte)this.status > 3 ? false : true; }
+        public bool CanWrite => (byte)this.status > 3 ? false : true;
 
         /// <summary>
         /// ID
         /// </summary>
-        public int ID
-        {
-            get { return this.id; }
-        }
+        public int ID => this.id;
 
         /// <summary>
         /// 最后一次操作时显示消息
         /// </summary>
         public string LastOperationMes
         {
-            get { return this.lastOperationMes; }
-            set { this.lastOperationMes = value; }
+            get => this.lastOperationMes;
+            set => this.lastOperationMes = value;
         }
 
         /// <summary>
         /// 状态
         /// </summary>
-        public ChannelStatus Status
-        {
-            get { return this.status; }
-        }
+        public ChannelStatus Status => this.status;
 
         /// <summary>
         /// 取消
@@ -580,7 +568,6 @@ namespace RRQMSocket
             }
 
             SpinWait.SpinUntil(() => { return this.canFree; });
-
             ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
             try
             {

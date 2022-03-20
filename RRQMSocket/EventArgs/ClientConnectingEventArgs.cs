@@ -18,7 +18,7 @@ namespace RRQMSocket
     /// <summary>
     /// 客户端连接事件。
     /// </summary>
-    public class ClientConnectingEventArgs : MesEventArgs
+    public class ClientConnectingEventArgs : ClientOperationEventArgs
     {
         private Socket socket;
 
@@ -32,16 +32,8 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 数据处理适配器
-        /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter { get; set; }
-
-        /// <summary>
         /// 新初始化的通信器
         /// </summary>
-        public Socket Socket
-        {
-            get { return this.socket; }
-        }
+        public Socket Socket => this.socket;
     }
 }

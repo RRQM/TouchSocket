@@ -34,9 +34,6 @@ namespace RRQMSocket
         /// <summary>
         /// 数据块
         /// </summary>
-        public ByteBlock ByteBlock
-        {
-            get { return this.byteBlock; }
-        }
+        public ByteBlock ByteBlock => this.byteBlock;
     }
 }

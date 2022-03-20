@@ -48,15 +48,12 @@ namespace RRQMSocket
         /// 已完成长度
         /// </summary>
         /// <returns></returns>
-        public long CompletedLength { get => this.completedLength; }
+        public long CompletedLength => this.completedLength;
 
         /// <summary>
         /// 最大传输速度（企业版默认1024*1024字节，开源版不限速，所以此值无效。）
         /// </summary>
-        public int MaxSpeed
-        {
-            get { return int.MaxValue; }
-        }
+        public int MaxSpeed => int.MaxValue;
 
         /// <summary>
         /// 包长度，默认512Kb,
@@ -64,7 +61,7 @@ namespace RRQMSocket
         /// </summary>
         public int PackageSize
         {
-            get { return this.packageSize; }
+            get => this.packageSize;
             set
             {
                 if (value < 1024 || value > 1024 * 1024 * 10)
@@ -78,18 +75,12 @@ namespace RRQMSocket
         /// <summary>
         /// 进度
         /// </summary>
-        public float Progress
-        {
-            get { return this.progress; }
-        }
+        public float Progress => this.progress;
 
         /// <summary>
         /// 执行结果
         /// </summary>
-        public Result Result
-        {
-            get { return this.result; }
-        }
+        public Result Result => this.result;
 
         /// <summary>
         /// 可取消令箭

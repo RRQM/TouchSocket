@@ -51,17 +51,6 @@ namespace RRQMSocket
         public int FixedSize { get; private set; }
 
         /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="dataResult"></param>
-        /// <returns></returns>
-        protected override bool OnReceivingError(DataResult dataResult)
-        {
-            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
-            return true;
-        }
-
-        /// <summary>
         /// 预处理
         /// </summary>
         /// <param name="byteBlock"></param>
@@ -186,7 +175,11 @@ namespace RRQMSocket
         /// </summary>
         protected override void Reset()
         {
-            this.tempByteBlock = null;
+            if (this.tempByteBlock!=null)
+            {
+                this.tempByteBlock.Dispose();
+                this.tempByteBlock = null;
+            }
             this.surPlusLength = 0;
         }
 

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Extensions;
 using System;
 using System.Text.RegularExpressions;
 
@@ -18,7 +19,7 @@ namespace RRQMSocket.Common
     /// <summary>
     /// RRQMSocketTools
     /// </summary>
-    public class RRQMSocketTools
+    public class RRQMSocketUtility
     {
         /// <summary>
         /// 判断输入的字符串是否是一个超链接
@@ -76,7 +77,7 @@ namespace RRQMSocket.Common
             {
                 return false;
             }
-            int count = RRQMCore.Common.RRQMCoreTools.GetStringCount(input, "::");
+            int count = RRQMCoreExtensions.HitStringCount(input, "::");
             if (count > 1)
             {
                 return false;

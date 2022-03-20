@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.Dependency;
-using RRQMCore.Log;
 
 namespace RRQMSocket
 {
@@ -22,21 +21,6 @@ namespace RRQMSocket
     public class RRQMConfig : RRQMDependencyObject
     {
         /// <summary>
-        /// 内部日志记录器，可自行继承<see cref="ILog"/>接口实现，默认为控制台输出。
-        /// </summary>
-        public ILog Logger
-        {
-            get { return (ILog)this.GetValue(LoggerProperty); }
-            set { this.SetValue(LoggerProperty, value); }
-        }
-
-        /// <summary>
-        /// 内部日志记录器，可自行继承<see cref="ILog"/>接口实现，默认为控制台输出。所需类型<see cref="ILog"/>
-        /// </summary>
-        public static readonly DependencyProperty LoggerProperty =
-            DependencyProperty.Register("Logger", typeof(ILog), typeof(RRQMConfig), new ConsoleLogger());
-
-        /// <summary>
         /// 接收缓存容量，默认1024*10，其作用有两个：
         /// <list type="number">
         /// <item>指示单次可接受的最大数据量</item>
@@ -45,8 +29,23 @@ namespace RRQMSocket
         /// </summary>
         public int BufferLength
         {
-            get { return (int)this.GetValue(BufferLengthProperty); }
-            set { this.SetValue(BufferLengthProperty, value); }
+            get => (int)this.GetValue(BufferLengthProperty);
+            set => this.SetValue(BufferLengthProperty, value);
+        }
+
+        /// <summary>
+        /// 接收缓存容量，默认1024*10，其作用有两个：
+        /// <list type="number">
+        /// <item>指示单次可接受的最大数据量</item>
+        /// <item>指示常规申请内存块的长度</item>
+        /// </list>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public RRQMConfig SetBufferLength(int value)
+        {
+            this.BufferLength = value;
+            return this;
         }
 
         /// <summary>
@@ -61,27 +60,62 @@ namespace RRQMSocket
             DependencyProperty.Register("BufferLength", typeof(int), typeof(RRQMConfig), 1024 * 10);
 
         /// <summary>
-        /// 接收类型，默认为<see cref="ReceiveType.IOCP"/>
-        /// <para><see cref="ReceiveType.IOCP"/>为完成端口IO模式，在一般情况下该模式效率最高，但是不支持Ssl。</para>
-        /// <para><see cref="ReceiveType.BIO"/>为线程阻塞模式，意味着每个接收对应一个线程。</para>
-        /// <para><see cref="ReceiveType.Select"/>为选择IO模式，可容纳10w连接。</para>
+        /// 接收类型，默认为<see cref="ReceiveType.Auto"/>
+        /// <para><see cref="ReceiveType.Auto"/>为自动接收数据，然后主动触发。</para>
         /// <para><see cref="ReceiveType.None"/>为不投递IO接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。注意：连接端不会感知主动断开</para>
         /// </summary>
         public ReceiveType ReceiveType
         {
-            get { return (ReceiveType)this.GetValue(ReceiveTypeProperty); }
-            set { this.SetValue(ReceiveTypeProperty, value); }
+            get => (ReceiveType)this.GetValue(ReceiveTypeProperty);
+            set => this.SetValue(ReceiveTypeProperty, value);
         }
 
         /// <summary>
-        /// 接收类型，默认为<see cref="ReceiveType.IOCP"/>
-        /// <para><see cref="ReceiveType.IOCP"/>为完成端口IO模式，在一般情况下该模式效率最高，但是不支持Ssl。</para>
-        /// <para><see cref="ReceiveType.BIO"/>为线程阻塞模式，意味着每个接收对应一个线程。</para>
-        /// <para><see cref="ReceiveType.Select"/>为选择IO模式，可容纳10w连接。</para>
+        /// 接收类型，默认为<see cref="ReceiveType.Auto"/>
+        /// <para><see cref="ReceiveType.Auto"/>为自动接收数据，然后主动触发。</para>
+        /// <para><see cref="ReceiveType.None"/>为不投递IO接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。注意：连接端不会感知主动断开</para>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public RRQMConfig SetReceiveType(ReceiveType value)
+        {
+            this.ReceiveType = value;
+            return this;
+        }
+
+        /// <summary>
+        /// 接收类型，默认为<see cref="ReceiveType.Auto"/>
+        /// <para><see cref="ReceiveType.Auto"/>为自动接收数据，然后主动触发。</para>
         /// <para><see cref="ReceiveType.None"/>为不投递IO接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。注意：连接端不会感知主动断开</para>
         /// 所需类型<see cref="RRQMSocket. ReceiveType"/>
         /// </summary>
         public static readonly DependencyProperty ReceiveTypeProperty =
-            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(ServiceConfig), ReceiveType.IOCP);
+            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(RRQMConfig), ReceiveType.Auto);
+
+        /// <summary>
+        /// 使用插件
+        /// </summary>
+        public bool IsUsePlugin
+        {
+            get => (bool)this.GetValue(IsUsePluginProperty);
+            set => this.SetValue(IsUsePluginProperty, value);
+        }
+
+        /// <summary>
+        /// 启用插件
+        /// </summary>
+        /// <returns></returns>
+        public RRQMConfig UsePlugin()
+        {
+            this.IsUsePlugin = true;
+            return this;
+        }
+
+        /// <summary>
+        /// 使用插件,
+        /// 所需类型<see cref="bool"></see>
+        /// </summary>
+        public static readonly DependencyProperty IsUsePluginProperty =
+            DependencyProperty.Register("IsUsePlugin", typeof(bool), typeof(RRQMConfig), false);
     }
 }

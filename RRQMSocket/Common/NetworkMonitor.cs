@@ -36,19 +36,13 @@ namespace RRQMSocket
         /// <summary>
         /// 监听地址组
         /// </summary>
-        public IPHost IPHost
-        {
-            get { return this.iPHost; }
-        }
+        public IPHost IPHost => this.iPHost;
 
         private Socket socket;
 
         /// <summary>
         /// Socket组件
         /// </summary>
-        public Socket Socket
-        {
-            get { return this.socket; }
-        }
+        public Socket Socket => this.socket;
     }
 }

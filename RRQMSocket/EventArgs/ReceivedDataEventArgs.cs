@@ -10,13 +10,36 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+using RRQMCore.ByteManager;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// TokenClient配置
+    /// 插件处理事件
     /// </summary>
-    public class TokenClientConfig : TcpClientConfig
+    public class ReceivedDataEventArgs : RRQMEventArgs
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.ByteBlock = byteBlock;
+            this.RequestInfo = requestInfo;
+        }
+
+        /// <summary>
+        /// 数据载体
+        /// </summary>
+        public ByteBlock ByteBlock { get; }
+
+
+        /// <summary>
+        /// 对象载体
+        /// </summary>
+        public IRequestInfo RequestInfo { get; }
     }
 }

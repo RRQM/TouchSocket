@@ -12,43 +12,69 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using RRQMCore.Run;
 using System;
 using System.Threading;
 
 namespace RRQMSocket
 {
+
     /// <summary>
-    /// 需要验证的TCP客户端
+    /// 需要Token验证的TCP客户端
     /// </summary>
-    public abstract class TokenClient : TcpClient, ITokenClient
+    public class TokenClient : TokenClientBase
+    {
+        /// <summary>
+        /// 接收到数据
+        /// </summary>
+        public event RRQMReceivedEventHandler<TokenClient> Received;
+
+        /// <summary>
+        /// 接收数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected sealed override void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.Received?.Invoke(this, byteBlock, requestInfo);
+            base.HandleTokenReceivedData(byteBlock, requestInfo);
+        }
+    }
+
+    /// <summary>
+    /// 需要Token验证的TCP客户端基类
+    /// </summary>
+    public class TokenClientBase : TcpClientBase, ITokenClient
     {
         private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TokenClient()
+        public TokenClientBase()
         {
             this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
+            this.Protocol = Protocol.RRQMToken;
         }
 
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
 
         private string id;
 
         /// <summary>
         /// 获取服务器分配的ID
         /// </summary>
-        public string ID
-        {
-            get { return this.id; }
-        }
+        public string ID => this.id;
+
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool IsHandshaked => this.isHandshaked;
 
         /// <summary>
         /// 重新设置ID,但是不会同步到服务器
@@ -77,7 +103,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
@@ -85,21 +111,28 @@ namespace RRQMSocket
             }
             else
             {
-                WaitVerify waitVerify = byteBlock.ToArray().ToJsonObject<WaitVerify>();
+                WaitVerify waitVerify = byteBlock.ToString().ToJsonObject<WaitVerify>();
                 this.waitHandlePool.SetRun(waitVerify);
-                System.Threading.SpinWait.SpinUntil(() =>
+                SpinWait.SpinUntil(() =>
                 {
                     return waitVerify.Handle;
                 }, 3000);
             }
+            base.HandleReceivedData(byteBlock, requestInfo);
         }
 
         /// <summary>
-        /// 处理Token数据
+        /// 处理Token数据，覆盖父类方法将不会触发事件和插件。
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
+        protected virtual void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<ITokenPlugin>("OnHandleTokenData", this, new ReceivedDataEventArgs(byteBlock, requestInfo));
+            }
+        }
 
         /// <summary>
         /// 连接到服务器
@@ -109,106 +142,109 @@ namespace RRQMSocket
         /// <exception cref="TimeoutException"></exception>
         public virtual ITcpClient Connect(string verifyToken, CancellationToken token = default)
         {
-            lock (this)
+            if (!this.Online)
             {
-                if (this.Online)
-                {
-                    return this;
-                }
-                this.ConnectService();
-                this.BeginReceive();
-                WaitVerify waitVerify = new WaitVerify()
-                {
-                    Token = verifyToken
-                };
-                WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
-                waitData.SetCancellationToken(token);
+                base.Connect();
+            }
 
+            WaitVerify waitVerify = new WaitVerify()
+            {
+                Token = verifyToken
+            };
+            WaitData<IWaitResult> waitData = this.waitHandlePool.GetWaitData(waitVerify);
+            waitData.SetCancellationToken(token);
 
-                byte[] data = waitVerify.ToJsonBytes();
-                base.Send(data, 0, data.Length);
-                try
+            byte[] data = waitVerify.ToJsonBytes();
+            base.Send(data, 0, data.Length);
+            try
+            {
+                switch (waitData.Wait(1000 * 10))
                 {
-                    switch (waitData.Wait(1000 * 10))
-                    {
-                        case WaitDataStatus.SetRunning:
+                    case WaitDataStatus.SetRunning:
+                        {
+                            WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
+                            if (verifyResult.Status == 1)
                             {
-                                WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
-                                if (verifyResult.Status == 1)
-                                {
-                                    this.id = verifyResult.ID;
-                                    this.isHandshaked = true;
-                                    this.PreviewConnected(new MesEventArgs("Token客户端成功连接"));
-                                    verifyResult.Handle = true;
-                                    return this;
-                                }
-                                else if (verifyResult.Status == 3)
-                                {
-                                    verifyResult.Handle = true;
-                                    this.BreakOut("连接数量已达到服务器设定最大值");
-                                    this.MainSocket.Dispose();
-                                    throw new RRQMException("连接数量已达到服务器设定最大值");
-                                }
-                                else if (verifyResult.Status == 4)
-                                {
-                                    verifyResult.Handle = true;
-                                    this.BreakOut("服务器拒绝连接");
-                                    this.MainSocket.Dispose();
-                                    throw new RRQMException("服务器拒绝连接");
-                                }
-                                else
-                                {
-                                    verifyResult.Handle = true;
-                                    this.BreakOut(verifyResult.Message);
-                                    this.MainSocket.Dispose();
-                                    throw new RRQMTokenVerifyException(verifyResult.Message);
-                                }
+                                this.id = verifyResult.ID;
+                                this.isHandshaked = true;
+                                this.OnHandshaked(new MesEventArgs("Token客户端成功连接"));
+                                verifyResult.Handle = true;
+                                return this;
                             }
-                        case WaitDataStatus.Overtime:
-                            this.BreakOut("连接超时");
-                            this.MainSocket.Dispose();
-                            throw new TimeoutException("连接超时");
-                        case WaitDataStatus.Canceled:
-                        case WaitDataStatus.Disposed:
-                        default:
-                            this.MainSocket.Dispose();
-                            this.BreakOut(null);
-                            return this;
-                    }
-                }
-                finally
-                {
-                    this.WaitHandlePool.Destroy(waitData);
+                            else if (verifyResult.Status == 3)
+                            {
+                                verifyResult.Handle = true;
+                                this.Close("连接数量已达到服务器设定最大值");
+                                throw new RRQMException("连接数量已达到服务器设定最大值");
+                            }
+                            else if (verifyResult.Status == 4)
+                            {
+                                verifyResult.Handle = true;
+                                this.Close("服务器拒绝连接");
+                                throw new RRQMException("服务器拒绝连接");
+                            }
+                            else
+                            {
+                                verifyResult.Handle = true;
+                                this.Close(verifyResult.Message);
+                                throw new RRQMTokenVerifyException(verifyResult.Message);
+                            }
+                        }
+                    case WaitDataStatus.Overtime:
+                        this.Close("连接超时");
+                        throw new TimeoutException("连接超时");
+                    case WaitDataStatus.Canceled:
+                    case WaitDataStatus.Disposed:
+                    default:
+                        this.Close(null);
+                        return this;
                 }
             }
+            finally
+            {
+                this.WaitHandlePool.Destroy(waitData);
+            }
         }
+
+        #region 事件
+
+        /// <summary>
+        /// 在完成握手连接时
+        /// </summary>
+        public event RRQMMessageEventHandler<TokenClientBase> Handshaked;
+
+        /// <summary>
+        /// 在完成握手连接时，覆盖父类方法将不会触发插件
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnHandshaked(MesEventArgs e)
+        {
+            this.Handshaked?.Invoke(this, e);
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<ITokenPlugin>("OnHandshaked", this, e);
+            }
+        }
+
+        #endregion 事件
 
         /// <summary>
         /// 加载配置
         /// </summary>
-        /// <param name="clientConfig"></param>
-        protected override void LoadConfig(TcpClientConfig clientConfig)
+        /// <param name="config"></param>
+        protected override void LoadConfig(RRQMConfig config)
         {
-            base.LoadConfig(clientConfig);
-        }
-
-        /// <summary>
-        /// 准备连接前设置。
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void PreviewConnected(MesEventArgs e)
-        {
-            this.online = true;
-            this.OnConnected(e);
+            base.LoadConfig(config);
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        protected override void OnBreakOut()
+        /// <param name="e"></param>
+        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
         {
             this.isHandshaked = false;
-            base.OnBreakOut();
+            base.OnDisconnected(e);
         }
     }
 }

@@ -34,25 +34,33 @@ namespace RRQMSocket
         /// <param name="host">可以输入类似“127.0.0.1:7789”、“http://baidu.com”类型的参数</param>
         public IPHost(string host)
         {
-            if (RRQMSocketTools.IsURL(host))
+            if (RRQMSocketUtility.IsURL(host))
             {
                 this.isUri = true;
                 this.uri = new Uri(host);
-
-                if (RRQMSocketTools.IsIPv4(uri.Host) || RRQMSocketTools.IsIPV6(uri.Host))
+                if (this.uri.Port > 0)
                 {
-                    this.Analysis(uri.Host, uri.Port.ToString());
+                    this.Host = $"{this.uri.Host}:{this.uri.Port}";
                 }
                 else
                 {
-                    if (HostNameToIP(uri.Host, out IPAddress[] addresses))
+                    this.Host = this.uri.Host;
+                }
+                if (RRQMSocketUtility.IsIPv4(this.uri.Host) || RRQMSocketUtility.IsIPV6(this.uri.Host))
+                {
+                    this.Analysis(this.uri.Host, this.uri.Port.ToString());
+                }
+                else
+                {
+                    if (HostNameToIP(this.uri.Host, out IPAddress[] addresses))
                     {
-                        this.Analysis(addresses[0].ToString(), uri.Port.ToString());
+                        this.Analysis(addresses[0].ToString(), this.uri.Port.ToString());
                     }
                 }
             }
             else
             {
+                this.Host = host;
                 int r = host.LastIndexOf(":");
                 string ip = host.Substring(0, r);
                 this.Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
@@ -77,6 +85,11 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 具有端口信息的host
+        /// </summary>
+        public string Host { get;private set; }
+
+        /// <summary>
         /// 寻址方案
         /// </summary>
         public AddressFamily AddressFamily { get; private set; }
@@ -94,10 +107,7 @@ namespace RRQMSocket
         /// <summary>
         /// 是否为Uri
         /// </summary>
-        public bool IsUri
-        {
-            get { return isUri; }
-        }
+        public bool IsUri => this.isUri;
 
         /// <summary>
         /// 端口号
@@ -107,13 +117,23 @@ namespace RRQMSocket
         /// <summary>
         /// 统一资源标识
         /// </summary>
-        public Uri Uri
+        public Uri Uri => this.uri;
+
+        /// <summary>
+        /// 获取Url全路径
+        /// </summary>
+        /// <returns></returns>
+        public string GetUrlPath()
         {
-            get { return uri; }
+            if (this.isUri)
+            {
+                return this.uri.PathAndQuery;
+            }
+            return default;
         }
 
         /// <summary>
-        /// 返回对象字符串
+        /// 返回EndPoint字符串
         /// </summary>
         /// <returns></returns>
         public override string ToString()

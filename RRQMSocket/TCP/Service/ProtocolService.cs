@@ -20,10 +20,8 @@ namespace RRQMSocket
     /// <summary>
     /// 协议服务器
     /// </summary>
-    public class ProtocolService<TClient> : TokenService<TClient> where TClient : ProtocolSocketClient, new()
+    public class ProtocolService<TClient> : TokenService<TClient> where TClient : ProtocolSocketClient
     {
-        private bool canResetID;
-
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -32,15 +30,19 @@ namespace RRQMSocket
             this.usedProtocol = new Dictionary<short, string>();
         }
 
-        private readonly Dictionary<short, string> usedProtocol;
+        #region 事件
+        /// <summary>
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
+        /// </summary>
+        public event RRQMStreamOperationEventHandler<ProtocolSocketClient> StreamTransfering;
 
         /// <summary>
-        /// 已被使用的协议集合。
+        /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
         /// </summary>
-        public Dictionary<short, string> UsedProtocol
-        {
-            get { return this.usedProtocol; }
-        }
+        public event RRQMStreamStatusEventHandler<ProtocolSocketClient> StreamTransfered;
+        #endregion 事件
+
+        private readonly Dictionary<short, string> usedProtocol;
 
         /// <summary>
         /// 添加已被使用的协议
@@ -60,10 +62,6 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public override void ResetID(WaitSetID waitSetID)
         {
-            if (!this.canResetID)
-            {
-                throw new RRQMException("服务器不允许修改ID");
-            }
             base.ResetID(waitSetID);
             if (this.TryGetSocketClient(waitSetID.NewID, out TClient client))
             {
@@ -83,8 +81,57 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
+            socketClient.streamTransfered = this.PrivateStreamTransfered;
+            socketClient.streamTransfering = this.PrivateStreamTransfering;
+            socketClient.handleProtocolData = this.HandleProtocolData;
             socketClient.protocolCanUse = this.ProtocolCanUse;
             base.OnConnecting(socketClient, e);
+        }
+
+        private void HandleProtocolData(ProtocolSocketClient client, short protocol, ByteBlock byteBlock)
+        {
+            this.OnHandleProtocolData((TClient)client, protocol, byteBlock);
+        }
+
+        private void PrivateStreamTransfering(ProtocolSocketClient client, StreamOperationEventArgs e)
+        {
+            this.OnStreamTransfering((TClient)client, e);
+        }
+
+        private void PrivateStreamTransfered(ProtocolSocketClient client, StreamStatusEventArgs e)
+        {
+            this.OnStreamTransfered((TClient)client, e);
+        }
+
+        /// <summary>
+        /// 处理协议数据，父类方法为空。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="protocol"></param>
+        /// <param name="byteBlock"></param>
+        protected virtual void OnHandleProtocolData(TClient client, short protocol, ByteBlock byteBlock)
+        {
+
+        }
+
+        /// <summary>
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。覆盖父类方法将不会触发事件和插件。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnStreamTransfering(TClient client, StreamOperationEventArgs e)
+        {
+            this.StreamTransfering?.Invoke(client, e);
+        }
+
+        /// <summary>
+        /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。覆盖父类方法将不会触发事件和插件。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnStreamTransfered(TClient client, StreamStatusEventArgs e)
+        {
+            this.StreamTransfered?.Invoke(client, e);
         }
 
         /// <summary>
@@ -105,64 +152,27 @@ namespace RRQMSocket
                 throw new ProtocolException($"用户协议必须大于0");
             }
         }
-
-        /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="serverConfig"></param>
-        protected override void LoadConfig(ServiceConfig serverConfig)
-        {
-            base.LoadConfig(serverConfig);
-            this.canResetID = (bool)serverConfig.GetValue(ProtocolServiceConfig.CanResetIDProperty);
-        }
     }
 
     /// <summary>
     /// 简单协议服务器
     /// </summary>
-    public class ProtocolService : ProtocolService<SimpleProtocolSocketClient>
+    public class ProtocolService : ProtocolService<ProtocolSocketClient>
     {
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event RRQMProtocolReceivedEventHandler<SimpleProtocolSocketClient> Received;
+        public event RRQMProtocolReceivedEventHandler<ProtocolSocketClient> Received;
 
         /// <summary>
-        /// 预处理流
+        /// <inheritdoc/>重写：覆盖父类方法将不会触发事件。
         /// </summary>
-        public event RRQMStreamOperationEventHandler<SimpleProtocolSocketClient> BeforeReceiveStream;
-
-        /// <summary>
-        /// 收到流数据
-        /// </summary>
-        public event RRQMStreamStatusEventHandler<SimpleProtocolSocketClient> ReceivedStream;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override void OnConnecting(SimpleProtocolSocketClient socketClient, ClientOperationEventArgs e)
+        /// <param name="client"></param>
+        /// <param name="protocol"></param>
+        /// <param name="byteBlock"></param>
+        protected override void OnHandleProtocolData(ProtocolSocketClient client, short protocol, ByteBlock byteBlock)
         {
-            socketClient.Received += this.OnReceive;
-            socketClient.BeforeReceiveStream += this.OnBeforeReceiveStream;
-            socketClient.ReceivedStream += this.OnReceivedStream;
-            base.OnConnecting(socketClient, e);
-        }
-
-        private void OnReceive(SimpleProtocolSocketClient socketClient, short protocol, ByteBlock byteBlock)
-        {
-            this.Received?.Invoke(socketClient, protocol, byteBlock);
-        }
-
-        private void OnBeforeReceiveStream(SimpleProtocolSocketClient client, StreamOperationEventArgs e)
-        {
-            this.BeforeReceiveStream?.Invoke(client, e);
-        }
-
-        private void OnReceivedStream(SimpleProtocolSocketClient client, StreamStatusEventArgs e)
-        {
-            this.ReceivedStream?.Invoke(client, e);
+            this.Received?.Invoke(client, protocol, byteBlock);
         }
     }
 }

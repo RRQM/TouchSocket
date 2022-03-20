@@ -43,17 +43,11 @@ namespace RRQMSocket
         /// <summary>
         /// 用于可传输的元数据
         /// </summary>
-        public Metadata Metadata
-        {
-            get { return this.metadata; }
-        }
+        public Metadata Metadata => this.metadata;
 
         /// <summary>
         /// 流信息
         /// </summary>
-        public StreamInfo StreamInfo
-        {
-            get { return this.streamInfo; }
-        }
+        public StreamInfo StreamInfo => this.streamInfo;
     }
 }

@@ -14,6 +14,7 @@ using RRQMCore;
 using RRQMCore.ByteManager;
 
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,15 +26,26 @@ namespace RRQMSocket
     public interface IClientSender : ISenderBase
     {
         /// <summary>
-        /// 同步组合发送
+        /// 同步组合发送数据。
+        /// <para>内部已经封装Ssl和发送长度检测，即：调用完成即表示数据全部发送完毕。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="transferBytes"></param>
+        /// <param name="transferBytes">组合数据</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void Send(IList<TransferByte> transferBytes);
 
         /// <summary>
-        /// 异步组合发送
+        /// 异步组合发送数据。
+        /// <para>在<see cref="ITcpClient"/>时，如果使用独立线程发送，则不会触发异常。</para>
+        /// <para>在<see cref="ITcpClientBase"/>时，相当于<see cref="Socket.BeginSend(byte[], int, int, SocketFlags, out SocketError, System.AsyncCallback, object)"/>。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="transferBytes"></param>
+        /// <param name="transferBytes">组合数据</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void SendAsync(IList<TransferByte> transferBytes);
     }
 
@@ -43,61 +55,76 @@ namespace RRQMSocket
     public interface ISenderBase
     {
         /// <summary>
-        /// 发送字节流
+        /// 同步发送数据。
+        /// <para>内部已经封装Ssl和发送长度检测，即：调用完成即表示数据全部发送完毕。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">数据长度</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void Send(byte[] buffer, int offset, int length);
 
         /// <summary>
-        /// 发送字节流
+        /// 同步发送数据。
+        /// <para>内部已经封装Ssl和发送长度检测，即：调用完成即表示数据全部发送完毕。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
+        /// <param name="buffer">数据缓存区</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void Send(byte[] buffer);
 
         /// <summary>
-        /// 发送流中的有效数据
+        /// 同步发送数据。
+        /// <para>内部已经封装Ssl和发送长度检测，即：调用完成即表示数据全部发送完毕。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
+        /// <param name="byteBlock">数据块</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void Send(ByteBlock byteBlock);
 
         /// <summary>
-        /// IOCP发送
+        /// 异步发送数据。
+        /// <para>在<see cref="ITcpClient"/>时，如果使用独立线程发送，则不会触发异常。</para>
+        /// <para>在<see cref="ITcpClientBase"/>时，相当于<see cref="Socket.BeginSend(byte[], int, int, SocketFlags, out SocketError, System.AsyncCallback, object)"/>。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">数据长度</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void SendAsync(byte[] buffer, int offset, int length);
 
         /// <summary>
-        /// IOCP发送
+        /// 异步发送数据。
+        /// <para>在<see cref="ITcpClient"/>时，如果使用独立线程发送，则不会触发异常。</para>
+        /// <para>在<see cref="ITcpClientBase"/>时，相当于<see cref="Socket.BeginSend(byte[], int, int, SocketFlags, out SocketError, System.AsyncCallback, object)"/>。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
+        /// <param name="buffer">数据缓存区</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void SendAsync(byte[] buffer);
 
         /// <summary>
-        /// IOCP发送流中的有效数据
+        /// 异步发送数据。
+        /// <para>在<see cref="ITcpClient"/>时，如果使用独立线程发送，则不会触发异常。</para>
+        /// <para>在<see cref="ITcpClientBase"/>时，相当于<see cref="Socket.BeginSend(byte[], int, int, SocketFlags, out SocketError, System.AsyncCallback, object)"/>。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
+        /// <param name="byteBlock">数据块</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
         void SendAsync(ByteBlock byteBlock);
     }
 
@@ -180,71 +207,77 @@ namespace RRQMSocket
         /// <summary>
         /// 发送字节流
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="token"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns></returns>
-        byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token = default);
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="length">长度</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        byte[] SendThenReturn(byte[] buffer, int offset, int length, int timeout = 1000 * 5, CancellationToken token = default);
 
         /// <summary>
         /// 发送字节流
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="token"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns></returns>
-        byte[] SendThenReturn(byte[] buffer, CancellationToken token = default);
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        byte[] SendThenReturn(byte[] buffer, int timeout = 1000 * 5, CancellationToken token = default);
 
         /// <summary>
         /// 发送流中的有效数据
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="token"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns></returns>
-        byte[] SendThenReturn(ByteBlock byteBlock, CancellationToken token = default);
+        /// <param name="byteBlock">数据块载体</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        byte[] SendThenReturn(ByteBlock byteBlock, int timeout = 1000 * 5, CancellationToken token = default);
 
         /// <summary>
-        /// IOCP发送
+        /// 异步发送
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="token"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns></returns>
-        Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token = default);
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="length">长度</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, int timeout = 1000 * 5, CancellationToken token = default);
 
         /// <summary>
-        /// IOCP发送
+        /// 异步发送
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="token"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns></returns>
-        Task<byte[]> SendThenReturnAsync(byte[] buffer, CancellationToken token = default);
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        Task<byte[]> SendThenReturnAsync(byte[] buffer, int timeout = 1000 * 5, CancellationToken token = default);
 
         /// <summary>
-        /// IOCP发送流中的有效数据
+        /// 异步发送
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="token"></param>
-        /// <exception cref="RRQMNotConnectedException"></exception>
-        /// <exception cref="RRQMOverlengthException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        /// <returns></returns>
-        Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, CancellationToken token = default);
+        /// <param name="byteBlock">数据块载体</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, int timeout = 1000 * 5, CancellationToken token = default);
     }
 }

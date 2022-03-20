@@ -10,13 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+
 namespace RRQMSocket
 {
     /// <summary>
     /// Client消息操作事件
     /// </summary>
-    public class ClientOperationEventArgs : OperationEventArgs
+    public class ClientOperationEventArgs : RRQMEventArgs
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ClientOperationEventArgs()
+        {
+            this.AddOperation(Operation.Permit);
+        }
+
         /// <summary>
         /// 数据处理适配器
         /// </summary>

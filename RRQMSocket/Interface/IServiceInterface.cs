@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
-
+using RRQMCore.Dependency;
 using System;
 
 namespace RRQMSocket
@@ -21,6 +21,16 @@ namespace RRQMSocket
     /// </summary>
     public interface ITcpServiceBase : IService
     {
+        /// <summary>
+        /// 插件管理器
+        /// </summary>
+        IPluginsManager PluginsManager { get; set; }
+
+        /// <summary>
+        /// 内置IOC容器
+        /// </summary>
+        IContainer Container { get; set; }
+
         /// <summary>
         /// 使用Ssl加密
         /// </summary>
@@ -35,6 +45,11 @@ namespace RRQMSocket
         /// 网络监听集合
         /// </summary>
         NetworkMonitor[] Monitors { get; }
+
+        /// <summary>
+        /// 适配器能接收的最大数据包长度。
+        /// </summary>
+        int MaxPackageSize { get; }
 
         /// <summary>
         /// 重新设置ID
@@ -62,7 +77,7 @@ namespace RRQMSocket
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        event RRQMMessageEventHandler<TClient> Connected;
+        event RRQMEventHandler<TClient> Connected;
 
         /// <summary>
         /// 有用户连接的时候
@@ -72,7 +87,7 @@ namespace RRQMSocket
         /// <summary>
         /// 有用户断开连接
         /// </summary>
-        event RRQMMessageEventHandler<TClient> Disconnected;
+        event RRQMTcpClientDisconnectedEventHandler<TClient> Disconnected;
 
         /// <summary>
         /// 获取最大可连接数
@@ -113,7 +128,7 @@ namespace RRQMSocket
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        ServiceConfig ServiceConfig { get; }
+        RRQMConfig Config { get; }
 
         /// <summary>
         /// 名称
@@ -126,7 +141,7 @@ namespace RRQMSocket
         /// <param name="serverConfig">配置</param>
         /// <exception cref="RRQMException"></exception>
         /// <returns>设置的服务实例</returns>
-        IService Setup(ServiceConfig serverConfig);
+        IService Setup(RRQMConfig serverConfig);
 
         /// <summary>
         /// 配置服务器

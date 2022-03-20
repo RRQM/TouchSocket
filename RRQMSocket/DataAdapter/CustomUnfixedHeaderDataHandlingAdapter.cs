@@ -29,78 +29,49 @@ namespace RRQMSocket
         /// <returns></returns>
         protected override FilterResult Filter(ByteBlock byteBlock, int length, bool beCached, ref TUnfixedHeaderRequestInfo request)
         {
-            int position = byteBlock.Pos;//先记录初始流位置，防止不能解析时，可以重置流位置。
             if (beCached)
             {
-                if (request.BodyLength > byteBlock.CanReadLen)
+                if (request.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
                 {
-                    return FilterResult.GoOn;
+                    return FilterResult.Cache;
+                }
+
+                byteBlock.Read(out byte[] body, request.BodyLength);
+                if (request.OnParsingBody(body))
+                {
+                    return FilterResult.Success;
                 }
                 else
                 {
-                    DataResult dataResult = request.OnParsingBody(byteBlock.ToArray(byteBlock.Pos, request.BodyLength));
-                    switch (dataResult.ResultCode)
-                    {
-                        case DataResultCode.Success:
-                            byteBlock.Pos += request.BodyLength;
-                            return FilterResult.Success;
-                        case DataResultCode.Cache:
-                            byteBlock.Pos += request.BodyLength;
-                            return FilterResult.Cache;
-                        case DataResultCode.Error:
-                        case DataResultCode.Exception:
-                        default:
-                            byteBlock.Pos = position;
-                            this.OnReceivingError(dataResult);
-                            return FilterResult.Cache;
-                    }
+                    request = default;//放弃所有解析
+                    return FilterResult.GoOn;
                 }
             }
             else
             {
                 TUnfixedHeaderRequestInfo requestInfo = this.GetInstance();
-                var result = requestInfo.OnParsingHeader(byteBlock, length);
-                if (result == FilterResult.Success)
+                if (requestInfo.OnParsingHeader(byteBlock,length))
                 {
-                    if (requestInfo.BodyLength > 0)
+                    request = requestInfo;
+                    if (requestInfo.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
                     {
-                        if (requestInfo.BodyLength > byteBlock.CanReadLen)
-                        {
-                            request = requestInfo;
-                            return FilterResult.GoOn;
-                        }
-                        else
-                        {
-                            DataResult dataResult = requestInfo.OnParsingBody(byteBlock.ToArray(byteBlock.Pos, requestInfo.BodyLength));
-                            switch (dataResult.ResultCode)
-                            {
-                                case DataResultCode.Success:
-                                    byteBlock.Pos += requestInfo.BodyLength;
-                                    request = requestInfo;
-                                    return FilterResult.Success;
+                        return FilterResult.Cache;
+                    }
 
-                                case DataResultCode.Cache:
-                                    byteBlock.Pos += requestInfo.BodyLength;
-                                    return FilterResult.Cache;
-
-                                case DataResultCode.Error:
-                                case DataResultCode.Exception:
-                                default:
-                                    byteBlock.Pos = position;
-                                    this.OnReceivingError(dataResult);
-                                    return FilterResult.Cache;
-                            }
-                        }
+                    byteBlock.Read(out byte[] body, requestInfo.BodyLength);
+                    if (requestInfo.OnParsingBody(body))
+                    {
+                        return FilterResult.Success;
                     }
                     else
                     {
-                        request = requestInfo;
-                        return FilterResult.Success;
+                        request = default;//放弃所有解析
+                        return FilterResult.GoOn;
                     }
                 }
                 else
                 {
-                    return result;
+                    return FilterResult.Cache;
                 }
             }
         }

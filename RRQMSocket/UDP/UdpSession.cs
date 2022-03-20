@@ -12,83 +12,102 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
+using RRQMCore.Dependency;
 using RRQMCore.Log;
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace RRQMSocket
 {
     /// <summary>
+    /// 若汝棋茗内置UDP会话
+    /// </summary>
+    public class UdpSession : UdpSessionBase
+    {
+        /// <summary>
+        /// 当收到数据时
+        /// </summary>
+        public event RRQMUDPByteBlockEventHandler Received;
+
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        /// <param name="remoteEndPoint"></param>
+        /// <param name="byteBlock"></param>
+        protected override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        {
+            Received?.Invoke(remoteEndPoint, byteBlock);
+        }
+    }
+
+    /// <summary>
     /// TCP服务器
     /// </summary>
-    public abstract class UdpSession : BaseSocket, IService, IClient
+    public abstract class UdpSessionBase : BaseSocket, IService, IClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public UdpSession()
+        public UdpSessionBase()
         {
+            this.Protocol = Protocol.UDP;
+            this.Container = new Container();
+            this.Container.RegisterTransient<ILog, ConsoleLogger>();
             this.monitor = new NetworkMonitor(null, new Socket(SocketType.Dgram, ProtocolType.Udp));
         }
+
         private IPHost remoteIPHost;
         private NetworkMonitor monitor;
-        private string name;
         private long recivedCount;
         private ServerState serverState;
-        private ServiceConfig serviceConfig;
+        private RRQMConfig serviceConfig;
         private bool study;
+        
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public IContainer Container { get; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public virtual Protocol Protocol { get; set; }
 
         /// <summary>
         /// 默认远程节点
         /// </summary>
-        public IPHost RemoteIPHost
-        {
-            get { return this.remoteIPHost; }
-        }
+        public IPHost RemoteIPHost => this.remoteIPHost;
 
         /// <summary>
         /// 监听器
         /// </summary>
-        public NetworkMonitor Monitor
-        {
-            get { return this.monitor; }
-        }
+        public NetworkMonitor Monitor => this.monitor;
 
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public string ServerName
-        {
-            get { return this.name; }
-        }
+        public string ServerName => this.Config == null ? null : this.Config.GetValue<string>(RRQMConfigExtensions.ServerNameProperty);
 
         /// <summary>
         /// 获取服务器状态
         /// </summary>
-        public ServerState ServerState
-        {
-            get { return this.serverState; }
-        }
+        public ServerState ServerState => this.serverState;
 
         /// <summary>
         /// 获取配置
         /// </summary>
-        public ServiceConfig ServiceConfig
-        {
-            get { return this.serviceConfig; }
-        }
+        public RRQMConfig Config => this.serviceConfig;
 
         /// <summary>
-        /// 关闭服务器并释放服务器资源
+        /// <inheritdoc/>
         /// </summary>
-        public override void Dispose()
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
-            base.Dispose();
             this.Stop();
             this.serverState = ServerState.Disposed;
+            base.Dispose(disposing);
         }
 
         #region 向默认远程同步发送
@@ -256,7 +275,7 @@ namespace RRQMSocket
         /// 配置服务
         /// </summary>
         /// <param name="serverConfig"></param>
-        public IService Setup(ServiceConfig serverConfig)
+        public IService Setup(RRQMConfig serverConfig)
         {
             this.serviceConfig = serverConfig;
             this.LoadConfig(this.serviceConfig);
@@ -269,7 +288,8 @@ namespace RRQMSocket
         /// <param name="port"></param>
         public IService Setup(int port)
         {
-            UdpSessionConfig serverConfig = new UdpSessionConfig();
+            RRQMConfig serverConfig = new RRQMConfig();
+            serverConfig.SetBindIPHost(new IPHost(port));
             return this.Setup(serverConfig);
         }
 
@@ -287,7 +307,7 @@ namespace RRQMSocket
             {
                 case ServerState.None:
                     {
-                        if (this.serviceConfig.GetValue<IPHost>(UdpSessionConfig.BindIPHostProperty) is IPHost iPHost)
+                        if (this.serviceConfig.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) is IPHost iPHost)
                         {
                             this.BeginReceive(iPHost);
                         }
@@ -299,7 +319,7 @@ namespace RRQMSocket
 
                 case ServerState.Stopped:
                     {
-                        if (this.serviceConfig.GetValue<IPHost>(UdpSessionConfig.BindIPHostProperty) is IPHost iPHost)
+                        if (this.serviceConfig.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) is IPHost iPHost)
                         {
                             this.BeginReceive(iPHost);
                         }
@@ -340,16 +360,15 @@ namespace RRQMSocket
         /// 加载配置
         /// </summary>
         /// <param name="serverConfig"></param>
-        protected virtual void LoadConfig(ServiceConfig serverConfig)
+        protected virtual void LoadConfig(RRQMConfig serverConfig)
         {
             if (serverConfig == null)
             {
                 throw new RRQMException("配置文件为空");
             }
-            this.logger = serverConfig.Logger;
-            this.remoteIPHost = serverConfig.GetValue<IPHost>(UdpSessionConfig.RemoteIPHostProperty);
+            this.logger = this.Container.Resolve<ILog>();
+            this.remoteIPHost = serverConfig.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
             this.BufferLength = serverConfig.BufferLength;
-            this.name = serverConfig.ServerName;
         }
 
         /// <summary>
@@ -364,7 +383,7 @@ namespace RRQMSocket
 
         private void BeginReceive(IPHost iPHost)
         {
-            int threadCount = this.ServiceConfig.ThreadCount;
+            int threadCount = this.Config.GetValue<int>(RRQMConfigExtensions.ThreadCountProperty);
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             this.PreviewBind(socket);
             socket.Bind(iPHost.EndPoint);
@@ -373,7 +392,7 @@ namespace RRQMSocket
 
             switch (this.serviceConfig.ReceiveType)
             {
-                case ReceiveType.IOCP:
+                case ReceiveType.Auto:
                     {
                         SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
                         eventArg.Completed += this.IO_Completed;
@@ -387,39 +406,8 @@ namespace RRQMSocket
                         }
                         break;
                     }
-
-                case ReceiveType.BIO:
-                    {
-                        Thread thread = new Thread(this.Received);
-                        thread.IsBackground = true;
-                        thread.Start();
-                        break;
-                    }
-
-                case ReceiveType.Select:
                 default:
-                    throw new RRQMException("UDP中只支持IOCP和BIO模式");
-            }
-        }
-
-        private void Received()
-        {
-
-            while (true)
-            {
-                try
-                {
-                    EndPoint endPoint = this.monitor.IPHost.EndPoint;
-                    ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                    int r = this.monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
-                    byteBlock.SetLength(r);
-                    this.HandleBuffer(endPoint, byteBlock);
-                }
-                catch (Exception ex)
-                {
-                    this.logger.Debug(LogType.Error, this, ex.Message, ex);
-                    break;
-                }
+                    throw new RRQMException("UDP中只支持Auto模式");
             }
         }
 

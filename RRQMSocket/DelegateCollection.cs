@@ -40,12 +40,12 @@ public delegate void RRQMEventHandler<TClient>(TClient client, RRQMEventArgs e) 
 public delegate void RRQMTcpClientConnectingEventHandler<TClient>(TClient client, ClientConnectingEventArgs e) where TClient : ITcpClientBase;
 
 /// <summary>
-/// 有操作的显示信息
+/// 客户端断开连接
 /// </summary>
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMOperationEventHandler<TClient>(TClient client, OperationEventArgs e) where TClient : IClient;
+public delegate void RRQMTcpClientDisconnectedEventHandler<TClient>(TClient client, ClientDisconnectedEventArgs e) where TClient : ITcpClientBase;
 
 /// <summary>
 /// 正在连接事件
@@ -62,6 +62,13 @@ public delegate void RRQMClientOperationEventHandler<TClient>(TClient client, Cl
 /// <param name="protocol"></param>
 /// <param name="byteBlock"></param>
 public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short protocol, ByteBlock byteBlock) where TClient : IProtocolClientBase;
+
+/// <summary>
+/// 插件数据
+/// </summary>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void RRQMPluginReceivedEventHandler<TClient>(TClient client, ReceivedDataEventArgs e) where TClient : IClient;
 
 /// <summary>
 /// 普通数据
@@ -91,10 +98,3 @@ public delegate void RRQMStreamStatusEventHandler<TClient>(TClient socketClient,
 /// <param name="endpoint"></param>
 /// <param name="e"></param>
 public delegate void RRQMUDPByteBlockEventHandler(EndPoint endpoint, ByteBlock e);
-
-/// <summary>
-/// Channel收到数据
-/// </summary>
-/// <param name="channel"></param>
-/// <param name="e"></param>
-public delegate void RRQMChannelReceivedEventHandler(Channel channel, BytesHandledEventArgs e);

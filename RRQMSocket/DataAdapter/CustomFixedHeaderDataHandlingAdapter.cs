@@ -25,55 +25,68 @@ namespace RRQMSocket
         public abstract int HeaderLength { get; }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
+        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
+        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Pos"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
+        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="length"></param>
-        /// <param name="beCached"></param>
-        /// <param name="request"></param>
+        /// <param name="byteBlock">字节块</param>
+        /// <param name="length">剩余有效数据长度，计算实质为:ByteBlock.Len和ByteBlock.Pos的差值。</param>
+        /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
+        /// <param name="request">对象。</param>
         /// <returns></returns>
         protected override FilterResult Filter(ByteBlock byteBlock, int length, bool beCached, ref TFixedHeaderRequestInfo request)
         {
-            if (this.HeaderLength > length)
+            if (beCached)
             {
-                return FilterResult.Cache;
-            }
-
-            int position = byteBlock.Pos;//先记录初始流位置，防止不能解析时，可以重置流位置。
-            TFixedHeaderRequestInfo requestInfo = this.GetInstance();
-            var result = requestInfo.OnParsingHeader(byteBlock.ToArray(byteBlock.Pos, this.HeaderLength));
-            if (result == FilterResult.Success)
-            {
-                if (requestInfo.BodyLength > length - this.HeaderLength)
+                if (request.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
                 {
-                    byteBlock.Pos = position;
                     return FilterResult.Cache;
                 }
 
-                byteBlock.Pos += this.HeaderLength;
-                DataResult dataResult = requestInfo.OnParsingBody(byteBlock.ToArray(byteBlock.Pos, requestInfo.BodyLength));
-                switch (dataResult.ResultCode)
+                byteBlock.Read(out byte[] body, request.BodyLength);
+                if (request.OnParsingBody(body))
                 {
-                    case DataResultCode.Success:
-                        byteBlock.Pos += requestInfo.BodyLength;
-                        request = requestInfo;
-                        return FilterResult.Success;
-
-                    case DataResultCode.Cache:
-                        byteBlock.Pos += requestInfo.BodyLength;
-                        return FilterResult.Cache;
-
-                    case DataResultCode.Error:
-                    case DataResultCode.Exception:
-                    default:
-                        byteBlock.Pos = position;
-                        this.OnReceivingError(dataResult);
-                        return FilterResult.Cache;
+                    return FilterResult.Success;
+                }
+                else
+                {
+                    request = default;//放弃所有解析
+                    return FilterResult.GoOn;
                 }
             }
             else
             {
-                return result;
+                if (this.HeaderLength > length)
+                {
+                    return FilterResult.Cache;
+                }
+
+                TFixedHeaderRequestInfo requestInfo = this.GetInstance();
+                byteBlock.Read(out byte[] header, this.HeaderLength);
+                if (requestInfo.OnParsingHeader(header))
+                {
+                    request = requestInfo;
+                    if (requestInfo.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
+                    {
+                        return FilterResult.Cache;
+                    }
+
+                    byteBlock.Read(out byte[] body,requestInfo.BodyLength);
+                    if (requestInfo.OnParsingBody(body))
+                    {
+                        return FilterResult.Success;
+                    }
+                    else
+                    {
+                        request = default;//放弃所有解析
+                        return FilterResult.GoOn;
+                    }
+                }
+                else
+                {
+                    return FilterResult.GoOn;
+                }
             }
         }
 

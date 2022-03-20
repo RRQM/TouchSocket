@@ -33,11 +33,11 @@ namespace RRQMSocket
 
         private byte[] buffer = new byte[1024 * 1024];
 
-        private bool dispose;
+        private volatile bool dispose;
 
         private Action<Exception> onError;
 
-        private bool sending;
+        private volatile bool sending;
 
         private Socket socket;
 
@@ -49,8 +49,8 @@ namespace RRQMSocket
         /// </summary>
         public static int CacheLength
         {
-            get { return cacheLength; }
-            set { cacheLength = value; }
+            get => cacheLength;
+            set => cacheLength = value;
         }
 
         internal AsyncSender(Socket socket, EndPoint endPoint, Action<Exception> onError)

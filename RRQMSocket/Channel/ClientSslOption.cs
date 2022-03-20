@@ -37,8 +37,8 @@ namespace RRQMSocket
         /// </summary>
         public string TargetHost
         {
-            get { return this.targetHost; }
-            set { this.targetHost = value; }
+            get => this.targetHost;
+            set => this.targetHost = value;
         }
 
         private X509CertificateCollection clientCertificates;
@@ -48,8 +48,8 @@ namespace RRQMSocket
         /// </summary>
         public X509CertificateCollection ClientCertificates
         {
-            get { return this.clientCertificates; }
-            set { this.clientCertificates = value; }
+            get => this.clientCertificates;
+            set => this.clientCertificates = value;
         }
     }
 }

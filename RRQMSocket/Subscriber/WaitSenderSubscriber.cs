@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using System;
 using System.Threading;
@@ -22,7 +23,7 @@ namespace RRQMSocket
     ///<list type="bullet">
     /// <listheader>
     ///  <term>使用注意事项</term>
-    ///  <description><see cref="SendThenReturn(ByteBlock, CancellationToken)"/>函数在执行时，为Lock同步。
+    ///  <description><see cref="SendThenReturn(byte[], int, int, int, CancellationToken)"/>函数在执行时，为Lock同步。
     ///  但是也有可能收到上次未返回的数据。</description>
     ///</listheader>
     ///</list>
@@ -40,29 +41,16 @@ namespace RRQMSocket
 
         private RRQMCore.Run.WaitData<byte[]> waitData;
 
-        private int timeout = 60 * 1000;
-
-        /// <summary>
-        /// 超时设置
-        /// </summary>
-        public int Timeout
-        {
-            get { return this.timeout; }
-            set { this.timeout = value; }
-        }
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
         protected override void OnReceived(ProtocolSubscriberEventArgs e)
         {
-            e.Handled = true;
+            e.AddOperation(RRQMCore.Operation.Handled);
             byte[] data = e.ByteBlock.ToArray(2);
             this.waitData.Set(data);
         }
-
-#pragma warning disable CS1591
 
         /// <summary>
         /// <inheritdoc/>
@@ -122,7 +110,19 @@ namespace RRQMSocket
             this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
         }
 
-        public byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token = default)
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="length">长度</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        public byte[] SendThenReturn(byte[] buffer, int offset, int length, int timeout = 5000, CancellationToken token = default)
         {
             lock (this)
             {
@@ -130,7 +130,7 @@ namespace RRQMSocket
                 this.client.Send(this.protocol, buffer, offset, length);
                 this.waitData.SetCancellationToken(token);
 
-                switch (this.waitData.Wait(this.timeout))
+                switch (this.waitData.Wait(timeout))
                 {
                     case RRQMCore.Run.WaitDataStatus.SetRunning:
                         {
@@ -146,34 +146,84 @@ namespace RRQMSocket
             }
         }
 
-        public byte[] SendThenReturn(byte[] buffer, CancellationToken token = default)
+        /// <summary>
+        /// 发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        public byte[] SendThenReturn(byte[] buffer, int timeout = 5000, CancellationToken token = default)
         {
-            return this.SendThenReturn(buffer, 0, buffer.Length, token);
+            return this.SendThenReturn(buffer, 0, buffer.Length, timeout, token);
         }
 
-        public byte[] SendThenReturn(ByteBlock byteBlock, CancellationToken token = default)
+        /// <summary>
+        /// 发送流中的有效数据
+        /// </summary>
+        /// <param name="byteBlock">数据块载体</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        public byte[] SendThenReturn(ByteBlock byteBlock, int timeout = 5000, CancellationToken token = default)
         {
-            return this.SendThenReturn(byteBlock.Buffer, 0, byteBlock.Len, token);
+            return this.SendThenReturn(byteBlock.Buffer, 0, byteBlock.Len, timeout, token);
         }
 
-        public Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
+        /// <summary>
+        /// 异步发送
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="length">长度</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        public Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, int timeout, CancellationToken token = default)
         {
             return Task.Run(() =>
              {
-                 return this.SendThenReturn(buffer, offset, length, token);
+                 return this.SendThenReturn(buffer, offset, length, timeout, token);
              });
         }
 
-        public Task<byte[]> SendThenReturnAsync(byte[] buffer, CancellationToken token = default)
+        /// <summary>
+        /// 异步发送
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        public Task<byte[]> SendThenReturnAsync(byte[] buffer, int timeout = 5000, CancellationToken token = default)
         {
-            return this.SendThenReturnAsync(buffer, 0, buffer.Length, token);
+            return this.SendThenReturnAsync(buffer, 0, buffer.Length, timeout, token);
         }
 
-        public Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, CancellationToken token = default)
+        /// <summary>
+        /// 异步发送
+        /// </summary>
+        /// <param name="byteBlock">数据块载体</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令箭</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>返回的数据</returns>
+        public Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, int timeout = 5000, CancellationToken token = default)
         {
-            return this.SendThenReturnAsync(byteBlock.Buffer, 0, byteBlock.Len, token);
+            return this.SendThenReturnAsync(byteBlock.Buffer, 0, byteBlock.Len, timeout, token);
         }
-
-#pragma warning restore CS1591
     }
 }

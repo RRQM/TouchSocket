@@ -10,38 +10,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 简单TCP客户端
+    /// 协议数据事件
     /// </summary>
-    public class SimpleTcpClient : TcpClient
+    public class ProtocolDataEventArgs : RRQMEventArgs
     {
         /// <summary>
-        /// 接收到数据
+        /// 构造函数
         /// </summary>
-        public event RRQMReceivedEventHandler<SimpleTcpClient> Received;
-
-        /// <summary>
-        /// 接收数据
-        /// </summary>
+        /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        public ProtocolDataEventArgs(short protocol, ByteBlock byteBlock)
         {
-            this.OnReceived(byteBlock, requestInfo);
+            this.Protocol = protocol;
+            this.ByteBlock = byteBlock;
         }
 
         /// <summary>
-        /// 接收到数据
+        /// 协议
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected virtual void OnReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.Received?.Invoke(this, byteBlock, requestInfo);
-        }
+        public short Protocol { get; }
+
+        /// <summary>
+        /// 数据流，实际解析时应当偏移两个字节
+        /// </summary>
+        public ByteBlock ByteBlock { get; }
     }
 }
