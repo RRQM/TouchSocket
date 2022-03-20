@@ -4,15 +4,16 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>7.0.0</Version>
+		<Version>8.0.0-beta</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<PackageTags>IOCP,TCP,UDP,Socket,WebSocket</PackageTags>
 		<Description>介绍：这是一个高效，超轻量级的WebSocket框架。它包含了Service和Client两大组件，支持Ssl，同时定义了文本、二进制或其他类型数据的快捷发送、分片发送接口，可与js等任意WebSocket组件交互。
 
-更新说明：
-适配更新。
+更新说明
+修改：取消WSService，由插件WebSocketServerPlugin替代其功能。
+新增：支持WSCommandLinePlugin，让快捷执行成为可能。
 
 API：https://www.yuque.com/eo2w71/rrqm
 DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
@@ -77,8 +78,8 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RRQMSocket" Version="7.0.0" />
-		<PackageReference Include="RRQMSocket.Http" Version="7.0.0" />
+		<PackageReference Include="RRQMSocket" Version="8.0.0-beta" />
+		<PackageReference Include="RRQMSocket.Http" Version="8.0.0-beta" />
 	</ItemGroup>
 
 </Project>
