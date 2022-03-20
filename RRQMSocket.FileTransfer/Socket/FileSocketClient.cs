@@ -15,7 +15,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using RRQMCore.Run;
 using RRQMCore.Serialization;
-using RRQMSocket.Helper;
+using RRQMSocket.Extensions;
 using RRQMSocket.RPC.RRQMRPC;
 using System;
 using System.Collections.Concurrent;
@@ -34,7 +34,8 @@ namespace RRQMSocket.FileTransfer
         private ResponseType responseType;
 
         private string rootPath = string.Empty;
-
+        internal RRQMFileOperationEventHandler<FileSocketClient> internalFileTransfering;
+        internal RRQMTransferFileEventHandler<FileSocketClient> internalFileTransfered;
 
         /// <summary>
         /// 构造函数
@@ -45,22 +46,12 @@ namespace RRQMSocket.FileTransfer
         }
 
         /// <summary>
-        /// 文件传输开始之前
-        /// </summary>
-        public event RRQMFileOperationEventHandler<FileSocketClient> BeforeFileTransfer;
-
-        /// <summary>
-        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
-        /// </summary>
-        public event RRQMTransferFileEventHandler<FileSocketClient> FinishedFileTransfer;
-
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public ResponseType ResponseType
         {
-            get { return this.responseType; }
-            set { this.responseType = value; }
+            get => this.responseType;
+            set => this.responseType = value;
         }
 
         /// <summary>
@@ -68,7 +59,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public string RootPath
         {
-            get { return this.rootPath; }
+            get => this.rootPath;
             set
             {
                 if (value == null)
@@ -342,32 +333,34 @@ namespace RRQMSocket.FileTransfer
         /// 在传输之前
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnBeforeFileTransfer(FileOperationEventArgs e)
+        protected virtual void OnFileTransfering(FileOperationEventArgs e)
         {
-            try
+            if (this.UsePlugin)
             {
-                this.BeforeFileTransfer?.Invoke(this, e);
+                this.PluginsManager.Raise<IFilePlugin>("OnFileTransfering",this,e);
+                if (e.Handled)
+                {
+                    return;
+                }
             }
-            catch (Exception ex)
-            {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(BeforeFileTransfer)}中发生异常", ex);
-            }
+            this.internalFileTransfering?.Invoke(this, e);
         }
 
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnFinishedFileTransfer(FileTransferStatusEventArgs e)
+        protected virtual void OnFileTransfered(FileTransferStatusEventArgs e)
         {
-            try
+            if (this.UsePlugin)
             {
-                this.FinishedFileTransfer?.Invoke(this, e);
+                this.PluginsManager.Raise<IFilePlugin>("OnFileTransfered", this, e);
+                if (e.Handled)
+                {
+                    return;
+                }
             }
-            catch (Exception ex)
-            {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FinishedFileTransfer)}中发生异常", ex);
-            }
+            this.internalFileTransfered?.Invoke(this, e);
         }
 
         /// <summary>
@@ -375,7 +368,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected override sealed void RPCHandleDefaultData(short protocol, ByteBlock byteBlock)
+        protected override sealed void RpcHandleDefaultData(short protocol, ByteBlock byteBlock)
         {
             byte[] buffer = byteBlock.Buffer;
 
@@ -465,7 +458,6 @@ namespace RRQMSocket.FileTransfer
                             {
                                 if (this.Service.SocketClients.TryGetSocketClient(waitFileInfo.ClientID, out FileSocketClient client))
                                 {
-
                                     waitFileInfo.ClientID = this.ID;
                                     client.InternalSend(FileUtility.P207, block.WriteObject(waitFileInfo, SerializationType.Json));
                                 }
@@ -474,7 +466,6 @@ namespace RRQMSocket.FileTransfer
                                     this.InternalSend(FileUtility.P206, block.WriteObject(new WaitTransfer() { Sign = waitFileInfo.Sign, Status = 7 }, SerializationType.Json));
                                 }
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -515,7 +506,6 @@ namespace RRQMSocket.FileTransfer
                             {
                                 if (this.Service.SocketClients.TryGetSocketClient(waitFileInfo.ClientID, out FileSocketClient client))
                                 {
-
                                     waitFileInfo.ClientID = this.ID;
                                     client.InternalSend(FileUtility.P209, block.WriteObject(waitFileInfo, SerializationType.Json));
                                 }
@@ -525,7 +515,6 @@ namespace RRQMSocket.FileTransfer
                                     this.InternalSend(FileUtility.P208, block.WriteObject(waitFileInfo, SerializationType.Json));
                                 }
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -544,12 +533,10 @@ namespace RRQMSocket.FileTransfer
                             {
                                 if (this.Service.SocketClients.TryGetSocketClient(waitFileInfo.ClientID, out FileSocketClient client))
                                 {
-
                                     waitFileInfo.ClientID = this.ID;
                                     client.InternalSend(FileUtility.P208, block.WriteObject(waitFileInfo, SerializationType.Json));
                                 }
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -642,6 +629,7 @@ namespace RRQMSocket.FileTransfer
                     waitData.SetCancellationToken(fileOperator.Token);
 
                     waitData.Wait(60 * 1000);
+
                     switch (waitData.Status)
                     {
                         case WaitDataStatus.SetRunning:
@@ -810,11 +798,11 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        protected override void OnBreakOut()
+        protected override void OnClose()
         {
-            this.BeforeFileTransfer = null;
-            this.FinishedFileTransfer = null;
-            base.OnBreakOut();
+            this.internalFileTransfering = null;
+            this.internalFileTransfered = null;
+            base.OnClose();
         }
 
         /// <summary>
@@ -845,7 +833,7 @@ namespace RRQMSocket.FileTransfer
             waitFileInfo.FileRequest.Path = fullPath;
 
             FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Pull, waitFileInfo.FileRequest, new FileOperator(), waitFileInfo.Metadata, null);
-            this.OnBeforeFileTransfer(args);
+            this.OnFileTransfering(args);
             fullPath = waitFileInfo.FileRequest.Path;
             if (string.IsNullOrEmpty(fullPath))
             {
@@ -872,7 +860,7 @@ namespace RRQMSocket.FileTransfer
                                     eventArgs.FileRequest,
                                     eventArgs.Metadata,
                                     new Result(ResultCode.Overtime, ResType.NoResponse.GetResString()), null);
-                               this.OnFinishedFileTransfer(e);
+                               this.OnFileTransfered(e);
                            }
                        });
                     return waitFileInfo;
@@ -954,7 +942,7 @@ namespace RRQMSocket.FileTransfer
 
                             e = new FileTransferStatusEventArgs(TransferType.Pull, args.FileRequest, args.Metadata,
                                fileOperator.SetFileResult(new Result(channel.Status.ToResultCode())), null);
-                            this.OnFinishedFileTransfer(e);
+                            this.OnFileTransfered(e);
                         }
 
                         return;
@@ -983,7 +971,7 @@ namespace RRQMSocket.FileTransfer
 
             this.SendDefaultObject(201, waitTransfer);
 
-            this.OnFinishedFileTransfer(e);
+            this.OnFileTransfered(e);
         }
 
         /// <summary>
@@ -1016,7 +1004,7 @@ namespace RRQMSocket.FileTransfer
             FileOperator fileOperator = new FileOperator() { PackageSize = waitRemoteFileInfo.PackageSize };
             FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Push, waitRemoteFileInfo.FileRequest,
                 fileOperator, waitRemoteFileInfo.Metadata, waitRemoteFileInfo.FileInfo);
-            this.OnBeforeFileTransfer(args);
+            this.OnFileTransfering(args);
 
             savePath = waitRemoteFileInfo.FileRequest.SavePath;
 
@@ -1098,7 +1086,7 @@ namespace RRQMSocket.FileTransfer
                         RRQMStreamPool.TryReleaseWriteStream(savePath, fileOperator);
                     }
 
-                    this.OnFinishedFileTransfer(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
+                    this.OnFileTransfered(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                     return;
                 }
                 else
@@ -1106,14 +1094,14 @@ namespace RRQMSocket.FileTransfer
                     waitTransfer.Status = 4;
                     waitTransfer.Message = mes;
                     fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetResString()));
-                    this.OnFinishedFileTransfer(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
+                    this.OnFileTransfered(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                 }
             }
             else
             {
-                fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteNotSupported.GetResString()));
+                fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetResString(args.Message)));
                 waitTransfer.Status = 2;
-                this.OnFinishedFileTransfer(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
+                this.OnFileTransfered(new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
             }
 
             this.SendDefaultObject(202, waitTransfer);

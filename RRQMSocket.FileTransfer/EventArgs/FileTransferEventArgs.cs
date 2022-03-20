@@ -30,6 +30,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="fileInfo"></param>
         public FileTransferEventArgs(TransferType transferType, FileRequest fileRequest, Metadata metadata, RRQMFileInfo fileInfo)
         {
+            this.IsPermitOperation = true;
             this.metadata = metadata;
             this.fileRequest = fileRequest;
             this.transferType = transferType;
@@ -41,37 +42,25 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件请求
         /// </summary>
-        public FileRequest FileRequest
-        {
-            get { return this.fileRequest; }
-        }
+        public FileRequest FileRequest => this.fileRequest;
 
         /// <summary>
         /// 传输类型
         /// </summary>
-        public TransferType TransferType
-        {
-            get { return this.transferType; }
-        }
+        public TransferType TransferType => this.transferType;
 
         private Metadata metadata;
 
         /// <summary>
         /// 元数据
         /// </summary>
-        public Metadata Metadata
-        {
-            get { return this.metadata; }
-        }
+        public Metadata Metadata => this.metadata;
 
         private RRQMFileInfo fileInfo;
 
         /// <summary>
         /// 文件信息
         /// </summary>
-        public RRQMFileInfo FileInfo
-        {
-            get { return this.fileInfo; }
-        }
+        public RRQMFileInfo FileInfo => this.fileInfo;
     }
 }

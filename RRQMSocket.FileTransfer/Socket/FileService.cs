@@ -18,7 +18,7 @@ namespace RRQMSocket.FileTransfer
     /// <summary>
     /// 泛型文件服务器
     /// </summary>
-    public class FileService<TClient> : TcpRpcParser<TClient> where TClient : FileSocketClient, new()
+    public class FileService<TClient> : TcpRpcParser<TClient> where TClient : FileSocketClient
     {
         /// <summary>
         /// 构造函数
@@ -49,12 +49,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件传输开始之前
         /// </summary>
-        public event RRQMFileOperationEventHandler<TClient> BeforeFileTransfer;
+        public event RRQMFileOperationEventHandler<TClient> FileTransfering;
 
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
-        public event RRQMTransferFileEventHandler<TClient> FinishedFileTransfer;
+        public event RRQMTransferFileEventHandler<TClient> FileTransfered;
 
         #endregion 事件
 
@@ -62,10 +62,10 @@ namespace RRQMSocket.FileTransfer
         /// 载入配置
         /// </summary>
         /// <param name="serviceConfig"></param>
-        protected override void LoadConfig(ServiceConfig serviceConfig)
+        protected override void LoadConfig(RRQMConfig serviceConfig)
         {
-            this.responseType = serviceConfig.GetValue<ResponseType>(FileServiceConfig.ResponseTypeProperty);
-            this.rootPath = serviceConfig.GetValue<string>(FileServiceConfig.RootPathProperty);
+            this.responseType = serviceConfig.GetValue<ResponseType>(FileConfigExtensions.ResponseTypeProperty);
+            this.rootPath = serviceConfig.GetValue<string>(FileConfigExtensions.RootPathProperty);
             base.LoadConfig(serviceConfig);
         }
 
@@ -76,21 +76,21 @@ namespace RRQMSocket.FileTransfer
         /// <param name="e"></param>
         protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
-            socketClient.BeforeFileTransfer += this.OnBeforeFileTransfer;
-            socketClient.FinishedFileTransfer += this.OnFinishedFileTransfer;
+            socketClient.internalFileTransfering += this.PrivateFileTransfering;
+            socketClient.internalFileTransfered += this.PrivateFileTransfered;
             socketClient.ResponseType = this.responseType;
             socketClient.RootPath = this.rootPath;
             base.OnConnecting(socketClient, e);
         }
 
-        private void OnBeforeFileTransfer(FileSocketClient client, FileOperationEventArgs e)
+        private void PrivateFileTransfering(FileSocketClient client, FileOperationEventArgs e)
         {
-            this.BeforeFileTransfer?.Invoke((TClient)client, e);
+            this.FileTransfering?.Invoke((TClient)client, e);
         }
 
-        private void OnFinishedFileTransfer(FileSocketClient client, FileTransferStatusEventArgs e)
+        private void PrivateFileTransfered(FileSocketClient client, FileTransferStatusEventArgs e)
         {
-            this.FinishedFileTransfer?.Invoke((TClient)client, e);
+            this.FileTransfered?.Invoke((TClient)client, e);
         }
     }
 
@@ -99,6 +99,5 @@ namespace RRQMSocket.FileTransfer
     /// </summary>
     public class FileService : FileService<FileSocketClient>
     {
-
     }
 }

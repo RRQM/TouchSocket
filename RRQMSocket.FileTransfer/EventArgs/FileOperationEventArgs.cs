@@ -30,19 +30,7 @@ namespace RRQMSocket.FileTransfer
         public FileOperationEventArgs(TransferType transferType, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata, RRQMFileInfo fileInfo)
             : base(transferType, fileRequest, metadata, fileInfo)
         {
-            this.isPermitOperation = true;
             this.fileOperator = fileOperator;
-        }
-
-        private bool isPermitOperation;
-
-        /// <summary>
-        /// 是否允许操作
-        /// </summary>
-        public bool IsPermitOperation
-        {
-            get { return this.isPermitOperation; }
-            set { this.isPermitOperation = value; }
         }
 
         private FileOperator fileOperator;
@@ -50,9 +38,6 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件操作器
         /// </summary>
-        public FileOperator FileOperator
-        {
-            get { return this.fileOperator; }
-        }
+        public FileOperator FileOperator => this.fileOperator;
     }
 }

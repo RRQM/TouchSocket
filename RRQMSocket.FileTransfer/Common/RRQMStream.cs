@@ -34,15 +34,12 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 文件信息
         /// </summary>
-        public RRQMFileInfo FileInfo { get => this.fileInfo; }
+        public RRQMFileInfo FileInfo => this.fileInfo;
 
         /// <summary>
         /// 流类型
         /// </summary>
-        public StreamOperationType StreamType
-        {
-            get { return this.streamType; }
-        }
+        public StreamOperationType StreamType => this.streamType;
 
         /// <summary>
         /// 不支持操作
@@ -83,7 +80,7 @@ namespace RRQMSocket.FileTransfer
         /// </summary>
         public static int SaveInterval
         {
-            get { return saveInterval; }
+            get => saveInterval;
             set
             {
                 if (value < 0)
