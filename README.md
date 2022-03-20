@@ -72,44 +72,69 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 - [源代码仓库主页](https://gitee.com/RRQM_Home) 
 - 交流QQ群：234762506
 
-## 🌟API手册
-- [ API首页 ](https://www.yuque.com/eo2w71/rrqm/2c5dab34026d2b45ada6e51ae9e51a5a)
+## 🌟使用说明文档
+- [ 说明文档首页 ](https://www.yuque.com/eo2w71/rrqm/2c5dab34026d2b45ada6e51ae9e51a5a)
 
 ## ✨简单示例
 
- **_以下仅以最简方式创建示例，更多详情请查看[API文档](https://www.yuque.com/eo2w71/rrqm/2c5dab34026d2b45ada6e51ae9e51a5a)。_** 
+ **_以下仅以最简方式创建示例，更多详情请查看[说明文档](https://www.yuque.com/eo2w71/rrqm/2c5dab34026d2b45ada6e51ae9e51a5a)。_** 
 
  **【TcpService】** 
 
 ```
 TcpService service = new TcpService();
-service.Connecting += (client, e) =>{};//有客户端正在连接
-service.Connected += (client, e) =>{};//有客户端连接
-service.Disconnected += (client, e) =>{};//有客户端断开连接
-service.Received += (client, byteBlock, obj) =>
+service.Connecting += (client, e) => { };//有客户端正在连接
+service.Connected += (client, e) => { };//有客户端连接
+service.Disconnected += (client, e) => { };//有客户端断开连接
+service.Received += (client, byteBlock, requestInfo) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-    Console.WriteLine($"已从{client.Name}接收到信息：{mes}");//Name即IP+Port
+    string mes = byteBlock.ToString();
+    Console.WriteLine($"已从{client.ID}接收到信息：{mes}");
+
+    client.Send(mes);//将收到的信息直接返回给发送方
+
+    //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+
+    var clients = service.GetClients();
+    foreach (var targetClient in clients)//将收到的信息返回给在线的所有客户端。
+    {
+        if (targetClient.ID != client.ID)
+        {
+            targetClient.Send(mes);
+        }
+    }
 };
-//声明配置
-var config = new TcpServiceConfig();
-config.ListenIPHosts = new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) };//同时监听两个地址
-//载入配置
-service.Setup(config);
-//启动
- service.Start();
+
+service.Setup(new RRQMConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .SetMaxCount(10000)
+    .SetThreadCount(100))
+    .Start();//启动
 ```
 
  **【TcpClient】** 
 ```
-SimpleTcpClient tcpClient = new SimpleTcpClient();
-tcpClient.Connected += (client, e) =>{};//成功连接到服务器
-tcpClient.Disconnected += (client, e) =>{};//从服务器断开连接，当连接不成功时不会触发。
+TcpClient tcpClient = new TcpClient();
+tcpClient.Connected += (client, e) => { };//成功连接到服务器
+tcpClient.Disconnected += (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
+tcpClient.Received += (client, byteBlock, requestInfo) =>
+{
+    //从服务器收到信息
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    Console.WriteLine($"接收到信息：{mes}");
+};
+
+//声明配置
+RRQMConfig config = new RRQMConfig();
+config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+    .UsePlugin()
+    .SetBufferLength(1024 * 10);
+
 //载入配置
-tcpClient.Setup("127.0.0.1:7789");
+tcpClient.Setup(config);
 tcpClient.Connect();
-tcpClient.Send(Encoding.UTF8.GetBytes("RRQM"));
+tcpClient.Send("RRQM");
 ```
 
  **【TcpClient 断线重连】** 
@@ -147,118 +172,68 @@ RRQMBitConverter.DefaultEndianType = EndianType.Little;
 
 在[RRQMBox](https://gitee.com/RRQM_Home/RRQMBox/tree/master/Ssl%E8%AF%81%E4%B9%A6%E7%9B%B8%E5%85%B3)中，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
 
-在服务器中只需设置配置SslOption属性和接收模式（接收模式在Ssl模式下只支持BIO和Select）。
+在服务器中只需设置配置SslOption属性和接收模式。
 
  **服务器配置** 
 ```
-config.SslOption = new ServiceSslOption() { Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), SslProtocols = SslProtocols.Tls12 };
-config.ReceiveType = ReceiveType.Select;
+config.SetServerSslOption(new ServiceSslOption() { Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), SslProtocols = SslProtocols.Tls12 });
 ```
 
  **客户端配置** 
 
 ```
-config.ReceiveType = ReceiveType.BIO;
-config.SslOption = new ClientSslOption()
+config.SetClientSslOption(new ClientSslOption()
 {
     ClientCertificates = new X509CertificateCollection() { new X509Certificate2("RRQMSocket.pfx", "RRQMSocket") },
     SslProtocols = SslProtocols.Tls12,
     TargetHost = "127.0.0.1",
     CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
-};
+});
 ```
 
- **【WS服务器】** 
+ **【Http服务器】** 
+
+HttpService支持**Https协议**、**静态页面**、**WebSocket**、**JsonRpc**、**XmlRpc**、**WebApi**插件的挂载。
 
 ```
-WSService wSService = new WSService();
-wSService.Received += WSService_Received;
-wSService.Connected += WSService_Connected;
+var service = new HttpService();
 
-var config = new WSServiceConfig();
-config.ListenIPHosts = new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) };//同时监听两个地址
-config.ReceiveType = ReceiveType.IOCP;
+service.AddPlugin<MyHttpPlug>();
+service.AddPlugin<HttpStaticPagePlugin>().
+   AddFolder("../../../../../api");//添加静态页面
 
-wSService.Setup(config).Start();
-Console.WriteLine("WS服务器已启动");
+service.AddPlugin<WebSocketServerPlugin>().//添加WebSocket功能
+   SetTimeout(10 * 1000).
+   SetWSUrl("/ws").
+   SetCallback(WSCallback);
+
+service.AddPlugin<MyWebSocketPlugin>();//添加WS事务触发。
+
+service.AddPlugin<MyWSCommandLinePlugin>();//添加WS命令行事务。
+
+var config = new RRQMConfig();
+config.UsePlugin()
+    .SetReceiveType(ReceiveType.Auto)
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) });
+
+service.Setup(config).Start();
+Console.WriteLine("Http服务器已启动");
+Console.WriteLine("浏览器访问：http://127.0.0.1:7789/index.html");
+Console.WriteLine("WS访问：ws://127.0.0.1:7789/ws");
 ```
 
- **【WSs服务器】** 
-
-创建WSs服务器时，其他配置不变，只需要在`config`中加入以下代码即可。
-
-在[RRQMBox](https://gitee.com/RRQM_Home/RRQMBox/tree/master/Ssl%E8%AF%81%E4%B9%A6%E7%9B%B8%E5%85%B3)中，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
+ **【WebSocket客户端】** 
 ```csharp
-//config.SslOption = new ServiceSslOption() { Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), SslProtocols = SslProtocols.Tls12 };//Ssl配置，当为null的时候，相当于创建了ws服务器，当赋值的时候，相当于wss服务器。
-config.ReceiveType = ReceiveType.Select;//在没有ssl配置时，请使用IOCP模式，速度会好些，使用ssl时，可以选择Select和BIO，区别请看API
-```
+WSClient myWSClient = new WSClient();
+myWSClient.Setup("ws://127.0.0.1:7789/ws");
+myWSClient.Connect();
+Console.WriteLine("连接成功");
 
- **【WS客户端】** 
-```csharp
-SimpleWSClient client = new SimpleWSClient();
-WSClientConfig config = new WSClientConfig();
-config.RemoteIPHost = new IPHost("127.0.0.1:7789");
-client .Setup(config);
-client .Connect();
 Console.WriteLine("连接成功");
 while (true)
 {
-    client.Send(Console.ReadLine());
+    myWSClient.SendWithWS(Console.ReadLine());
 }
-```
-***注意：当使用域名连接时，IPHost中的字符串必须显式指定端口，例如百度地址：IPHost("ws://baidu.com:80")***
-
-
- **【WSs客户端】** 
-
-同样的，在客户端配置中，只需要加入以下代码即可。
-
-***注意：当使用域名连接时，TargetHost为域名，例如连接到IPHost("ws://baidu.com:80")时，TargetHost应当填写：baidu.com***
-```csharp
-config.SslOption = new ClientSslOption()
-{
-    ClientCertificates = new X509CertificateCollection() { new X509Certificate2("RRQMSocket.pfx", "RRQMSocket") },
-    SslProtocols = SslProtocols.Tls12,
-    TargetHost = "127.0.0.1",
-    CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
-};
-config.ReceiveType = ReceiveType.BIO;
-```
-
- **【WS 接收数据（服务器、客户端均可用）】** 
-
-```
-private static void MyWSClient_Received(IWSClientBase client, WSDataFrame dataFrame)
-{
-    switch (dataFrame.Opcode)
-    {
-        case WSDataType.Cont:
-            Console.WriteLine($"收到中间数据，长度为：{dataFrame.PayloadLength}");
-            break;
-        case WSDataType.Text:
-            Console.WriteLine(dataFrame.GetMessage());
-            break;
-        case WSDataType.Binary:
-            if (dataFrame.FIN)
-            {
-                Console.WriteLine($"收到二进制数据，长度为：{dataFrame.PayloadLength}");
-            }
-            else
-            {
-                Console.WriteLine($"收到未结束的二进制数据，长度为：{dataFrame.PayloadLength}");
-            }
-            break;
-        case WSDataType.Close:
-            break;
-        case WSDataType.Ping:
-            break;
-        case WSDataType.Pong:
-            break;
-        default:
-            break;
-    }
-}
-
 ```
 
  **【RPC调用】** 
