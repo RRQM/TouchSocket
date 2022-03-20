@@ -1,0 +1,92 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net45;net5;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+		<Authors>若汝棋茗</Authors>
+		<PackageIcon>RRQM.png</PackageIcon>
+		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
+		<Version>7.0.1</Version>
+		<LangVersion>9.0</LangVersion>
+		<SignAssembly>true</SignAssembly>
+		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
+
+更新内容：
+增加：AppConfigBase，更加方便的使用APP配置文件。
+增加：FileLogger，将日志按日期在本地文件保存。
+增加：LoggerGroup，能够在一个日志记录中，使用多个记录器。
+修改：Log修改为ConsoleLogger，将日志进行控制台输出。
+
+特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
+特此感谢其作者！！！
+附带其Github：https://github.com/JamesNK/Newtonsoft.Json</Description>
+		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
+		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
+		<ApplicationIcon>RRQM.ico</ApplicationIcon>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageTags>MemoryPool,ObjectPool,Serialize,Tool</PackageTags>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+		<DocumentationFile>bin\Debug\netstandard2.0\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+		<DocumentationFile>bin\Release\netstandard2.0\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+		<DocumentationFile>bin\Debug\net45\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+		<DocumentationFile>bin\Release\net45\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5|AnyCPU'">
+		<DocumentationFile>bin\Debug\net5\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5|AnyCPU'">
+		<DocumentationFile>bin\Release\net5\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Debug\netcoreapp3.1\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Release\netcoreapp3.1\RRQMCore.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="RRQM.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Resource.Designer.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Resource.resx</DependentUpon>
+		</Compile>
+		<Compile Update="RRQMCore\Resource.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resource.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Update="Resource.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+		  <CustomToolNamespace>RRQMCore</CustomToolNamespace>
+		</EmbeddedResource>
+		<EmbeddedResource Update="RRQMCore\Resource.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resource.Designer.cs</LastGenOutput>
+			<CustomToolNamespace>RRQMCore</CustomToolNamespace>
+		</EmbeddedResource>
+	</ItemGroup>
+</Project>
