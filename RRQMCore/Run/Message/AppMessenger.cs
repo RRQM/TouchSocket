@@ -33,8 +33,8 @@ namespace RRQMCore.Run
         /// </summary>
         public bool AllowMultiple
         {
-            get { return this.allowMultiple; }
-            set { this.allowMultiple = value; }
+            get => this.allowMultiple;
+            set => this.allowMultiple = value;
         }
 
         /// <summary>

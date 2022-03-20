@@ -19,11 +19,13 @@ namespace RRQMCore.Collections.Concurrent
 {
     /// <summary>
     /// 线程安全的List，其基本操作和List一致。
+    /// <para>该集合虽然是线程安全，但是不支持在foreach时修改集合，仅可以遍历成员。</para>
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ConcurrentList<T> : IList<T>
     {
         private readonly List<T> list;
+
         [NonSerialized]
         private readonly ReaderWriterLockSlim locker;
 
@@ -283,7 +285,6 @@ namespace RRQMCore.Collections.Concurrent
             {
                 this.locker.ExitWriteLock();
             }
-
         }
 
         /// <summary>

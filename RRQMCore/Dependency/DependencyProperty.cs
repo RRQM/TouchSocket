@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Reflection;
 
 namespace RRQMCore.Dependency
 {
@@ -30,40 +29,28 @@ namespace RRQMCore.Dependency
         /// <summary>
         /// 属性名
         /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
+        public string Name => this.name;
 
         private Type owner;
 
         /// <summary>
         /// 所属类型
         /// </summary>
-        public Type Owner
-        {
-            get { return this.owner; }
-        }
+        public Type Owner => this.owner;
 
         private Type valueType;
 
         /// <summary>
         /// 值类型
         /// </summary>
-        public Type ValueType
-        {
-            get { return this.valueType; }
-        }
+        public Type ValueType => this.valueType;
 
         private object value;
 
         /// <summary>
         /// 默认值
         /// </summary>
-        public object DefauleValue
-        {
-            get { return this.value; }
-        }
+        public object DefauleValue => this.value;
 
         internal void DataValidation(object value)
         {
@@ -96,7 +83,6 @@ namespace RRQMCore.Dependency
         /// <returns></returns>
         public static DependencyProperty Register(string propertyName, Type valueType, Type owner, object value)
         {
-            FieldInfo fieldInfo = owner.GetField($"{propertyName}Property");
             DependencyProperty dp = new DependencyProperty();
             dp.name = propertyName;
             dp.valueType = valueType;

@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RRQMCore.Run
@@ -20,28 +22,34 @@ namespace RRQMCore.Run
     /// </summary>
     public class EasyAction
     {
+        static ConcurrentDictionary<object, Timer> timers = new ConcurrentDictionary<object, Timer>();
         /// <summary>
         /// 延迟执行
         /// </summary>
         /// <param name="action"></param>
-        /// <param name="timeSpan"></param>
-        public static void DelayRun(TimeSpan timeSpan, Action action)
+        /// <param name="delayTimeSpan"></param>
+        public static void DelayRun(TimeSpan delayTimeSpan, Action action)
         {
-            Task.Run(async () =>
-            {
-                await Task.Delay(timeSpan);
-                action?.Invoke();
-            });
+            DelayRun(delayTimeSpan.Milliseconds, action);
         }
 
         /// <summary>
         /// 延迟执行
         /// </summary>
         /// <param name="action"></param>
-        /// <param name="ticks"></param>
-        public static void DelayRun(int ticks, Action action)
+        /// <param name="delay"></param>
+        public static void DelayRun(int delay, Action action)
         {
-            DelayRun(TimeSpan.FromMilliseconds(ticks), action);
+            object obj = new object();
+            Timer timer = new Timer((o) =>
+            {
+                if (timers.TryRemove(o, out Timer timer1))
+                {
+                    timer1.Dispose();
+                }
+                action?.Invoke();
+            }, obj, delay, Timeout.Infinite);
+            timers.TryAdd(obj, timer);
         }
 
         /// <summary>

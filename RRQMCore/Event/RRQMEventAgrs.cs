@@ -20,5 +20,67 @@ namespace RRQMCore
     /// </summary>
     public class RRQMEventArgs : EventArgs
     {
+        /// <summary>
+        /// 是否允许操作
+        /// </summary>
+        public bool IsPermitOperation
+        {
+            get => this.operation.HasFlag(Operation.Permit);
+            set
+            {
+                if (value)
+                {
+                    this.AddOperation(Operation.Permit);
+                }
+                else
+                {
+                    this.RemoveOperation(Operation.Permit);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 是否已处理
+        /// </summary>
+        public bool Handled
+        {
+            get => this.operation.HasFlag(Operation.Handled);
+            set
+            {
+                if (value)
+                {
+                    this.AddOperation(Operation.Handled);
+                }
+                else
+                {
+                    this.RemoveOperation(Operation.Handled);
+                }
+            }
+        }
+
+        private Operation operation;
+
+        /// <summary>
+        /// 操作类型。
+        /// </summary>
+        public Operation Operation => this.operation;
+
+        /// <summary>
+        /// 添加操作
+        /// </summary>
+        /// <param name="operation"></param>
+        public void AddOperation(Operation operation)
+        {
+            this.operation |= operation;
+        }
+
+        /// <summary>
+        /// 移除操作
+        /// </summary>
+        /// <param name="operation"></param>
+        public void RemoveOperation(Operation operation)
+        {
+            this.operation ^= operation;
+        }
     }
 }

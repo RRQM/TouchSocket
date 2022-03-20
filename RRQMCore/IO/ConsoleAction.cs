@@ -20,7 +20,6 @@ namespace RRQMCore.IO
     /// </summary>
     public class ConsoleAction
     {
-
         private string helpOrder;
 
         /// <summary>
@@ -48,11 +47,7 @@ namespace RRQMCore.IO
         /// <summary>
         /// 帮助信息指令
         /// </summary>
-        public string HelpOrder
-        {
-            get { return this.helpOrder; }
-        }
-
+        public string HelpOrder => this.helpOrder;
 
         private Dictionary<string, VAction> actions = new Dictionary<string, VAction>();
 
@@ -88,7 +83,6 @@ namespace RRQMCore.IO
                 try
                 {
                     vAction.Action.Invoke();
-
                 }
                 catch (Exception ex)
                 {
@@ -107,18 +101,11 @@ namespace RRQMCore.IO
     {
         private Action action;
 
-        public Action Action
-        {
-            get { return this.action; }
-        }
+        public Action Action => this.action;
 
         private string fullOrder;
 
-        public string FullOrder
-        {
-            get { return this.fullOrder; }
-        }
-
+        public string FullOrder => this.fullOrder;
 
         private string description;
 
@@ -135,10 +122,6 @@ namespace RRQMCore.IO
             this.description = description ?? throw new ArgumentNullException(nameof(description));
         }
 
-        public string Description
-        {
-            get { return this.description; }
-        }
-
+        public string Description => this.description;
     }
 }

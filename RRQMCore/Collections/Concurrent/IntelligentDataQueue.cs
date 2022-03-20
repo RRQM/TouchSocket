@@ -23,33 +23,33 @@ namespace RRQMCore.Collections.Concurrent
     public class IntelligentDataQueue<T> : ConcurrentQueue<T> where T : IQueueData
     {
         private bool overflowWait;
+
         /// <summary>
         /// 溢出等待
         /// </summary>
         public bool OverflowWait
         {
-            get { return this.overflowWait; }
-            set { this.overflowWait = value; }
+            get => this.overflowWait;
+            set => this.overflowWait = value;
         }
 
         private Action<bool> onQueueChanged;
+
         /// <summary>
         /// 在队列修改时
         /// </summary>
         public Action<bool> OnQueueChanged
         {
-            get { return this.onQueueChanged; }
-            set { this.onQueueChanged = value; }
+            get => this.onQueueChanged;
+            set => this.onQueueChanged = value;
         }
 
         private bool free;
+
         /// <summary>
         /// 是否有空位允许入队
         /// </summary>
-        public bool Free
-        {
-            get { return this.free; }
-        }
+        public bool Free => this.free;
 
         private long actualSize;
 
@@ -78,7 +78,7 @@ namespace RRQMCore.Collections.Concurrent
         /// </summary>
         public long MaxSize
         {
-            get { return this.maxSize; }
+            get => this.maxSize;
             set
             {
                 if (value < 1)
@@ -92,10 +92,7 @@ namespace RRQMCore.Collections.Concurrent
         /// <summary>
         /// 实际尺寸
         /// </summary>
-        public long ActualSize
-        {
-            get { return this.actualSize; }
-        }
+        public long ActualSize => this.actualSize;
 
         /// <summary>
         /// 清空队列

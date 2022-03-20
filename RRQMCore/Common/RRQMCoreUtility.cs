@@ -18,7 +18,7 @@ namespace RRQMCore
     /// <summary>
     /// 常量
     /// </summary>
-    public class RRQMReadonly
+    public class RRQMCoreUtility
     {
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
         public static readonly Type stringType = typeof(string);
@@ -39,7 +39,9 @@ namespace RRQMCore
         public static readonly Type bytesType = typeof(byte[]);
         public static readonly Type dicType = typeof(IDictionary);
         public static readonly Type iEnumerableType = typeof(IEnumerable);
+        public static readonly Type arrayType = typeof(Array);
         public static readonly Type listType = typeof(IList);
+        public static readonly Type nullableType = typeof(Nullable<>);
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释
     }
 }

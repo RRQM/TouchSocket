@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using RRQMCore.XREF.Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,6 @@ namespace RRQMCore
     /// </summary>
     public abstract class AppConfigBase
     {
-
         private readonly string fullPath;
 
         /// <summary>
@@ -40,7 +39,6 @@ namespace RRQMCore
 
             this.fullPath = fullPath;
         }
-
 
         /// <summary>
         /// 保存配置
@@ -116,7 +114,7 @@ namespace RRQMCore
             return _default;
         }
 
-        static Dictionary<Type, object> list = new Dictionary<Type, object>();
+        private static Dictionary<Type, object> list = new Dictionary<Type, object>();
 
         /// <summary>
         /// 获取默认配置，每次调用该方法时，都会重新加载配置。

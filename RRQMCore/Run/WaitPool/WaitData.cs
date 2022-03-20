@@ -51,15 +51,12 @@ namespace RRQMCore.Run
         /// <summary>
         /// 状态
         /// </summary>
-        public WaitDataStatus Status { get => this.status; }
+        public WaitDataStatus Status => this.status;
 
         /// <summary>
         /// 等待数据结果
         /// </summary>
-        public T WaitResult
-        {
-            get { return this.waitResult; }
-        }
+        public T WaitResult => this.waitResult;
 
         /// <summary>
         /// 取消任务
@@ -82,7 +79,8 @@ namespace RRQMCore.Run
         }
 
         /// <summary>
-        /// Reset
+        /// Reset。
+        /// 设置<see cref="WaitResult"/>为null。然后重置状态为<see cref="WaitDataStatus.Default"/>，waitHandle.Reset()
         /// </summary>
         public bool Reset()
         {
@@ -119,10 +117,7 @@ namespace RRQMCore.Run
         {
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(() =>
-                {
-                    this.Cancel();
-                });
+                cancellationToken.Register(this.Cancel);
             }
         }
 

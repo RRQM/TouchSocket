@@ -11,10 +11,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
+using RRQMCore.Reflection;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -110,15 +112,15 @@ namespace RRQMCore.Serialization
                 {
                     var enumValType = Enum.GetUnderlyingType(graph.GetType());
 
-                    if (enumValType == RRQMReadonly.byteType)
+                    if (enumValType == RRQMCoreUtility.byteType)
                     {
                         data = new byte[] { (byte)graph };
                     }
-                    else if (enumValType == RRQMReadonly.shortType)
+                    else if (enumValType == RRQMCoreUtility.shortType)
                     {
                         data = RRQMBitConverter.Default.GetBytes((short)graph);
                     }
-                    else if (enumValType == RRQMReadonly.intType)
+                    else if (enumValType == RRQMCoreUtility.intType)
                     {
                         data = RRQMBitConverter.Default.GetBytes((int)graph);
                     }
@@ -246,68 +248,73 @@ namespace RRQMCore.Serialization
 
         private dynamic Deserialize(Type type, byte[] datas, ref int offset)
         {
+            bool nullable = type.IsNullableType();
+            if (nullable)
+            {
+                type = type.GenericTypeArguments[0];
+            }
             dynamic obj;
             int len = RRQMBitConverter.Default.ToInt32(datas, offset);
             offset += 4;
             if (len > 0)
             {
-                if (type == RRQMReadonly.stringType)
+                if (type == RRQMCoreUtility.stringType)
                 {
                     obj = Encoding.UTF8.GetString(datas, offset, len);
                 }
-                else if (type == RRQMReadonly.byteType)
+                else if (type == RRQMCoreUtility.byteType)
                 {
                     obj = datas[offset];
                 }
-                else if (type == RRQMReadonly.sbyteType)
+                else if (type == RRQMCoreUtility.sbyteType)
                 {
                     obj = (sbyte)(RRQMBitConverter.Default.ToInt16(datas, offset));
                 }
-                else if (type == RRQMReadonly.boolType)
+                else if (type == RRQMCoreUtility.boolType)
                 {
                     obj = (RRQMBitConverter.Default.ToBoolean(datas, offset));
                 }
-                else if (type == RRQMReadonly.shortType)
+                else if (type == RRQMCoreUtility.shortType)
                 {
                     obj = (RRQMBitConverter.Default.ToInt16(datas, offset));
                 }
-                else if (type == RRQMReadonly.ushortType)
+                else if (type == RRQMCoreUtility.ushortType)
                 {
                     obj = (RRQMBitConverter.Default.ToUInt16(datas, offset));
                 }
-                else if (type == RRQMReadonly.intType)
+                else if (type == RRQMCoreUtility.intType)
                 {
                     obj = (RRQMBitConverter.Default.ToInt32(datas, offset));
                 }
-                else if (type == RRQMReadonly.uintType)
+                else if (type == RRQMCoreUtility.uintType)
                 {
                     obj = (RRQMBitConverter.Default.ToUInt32(datas, offset));
                 }
-                else if (type == RRQMReadonly.longType)
+                else if (type == RRQMCoreUtility.longType)
                 {
                     obj = (RRQMBitConverter.Default.ToInt64(datas, offset));
                 }
-                else if (type == RRQMReadonly.ulongType)
+                else if (type == RRQMCoreUtility.ulongType)
                 {
                     obj = (RRQMBitConverter.Default.ToUInt64(datas, offset));
                 }
-                else if (type == RRQMReadonly.floatType)
+                else if (type == RRQMCoreUtility.floatType)
                 {
                     obj = (RRQMBitConverter.Default.ToSingle(datas, offset));
                 }
-                else if (type == RRQMReadonly.doubleType)
+                else if (type == RRQMCoreUtility.doubleType)
                 {
                     obj = (RRQMBitConverter.Default.ToDouble(datas, offset));
                 }
-                else if (type == RRQMReadonly.decimalType)
+                else if (type == RRQMCoreUtility.decimalType)
                 {
                     obj = (RRQMBitConverter.Default.ToDouble(datas, offset));
                 }
-                else if (type == RRQMReadonly.charType)
+                else if (type == RRQMCoreUtility.charType)
                 {
                     obj = (RRQMBitConverter.Default.ToChar(datas, offset));
                 }
-                else if (type == RRQMReadonly.dateTimeType)
+                else if (type == RRQMCoreUtility.dateTimeType)
                 {
                     obj = (new DateTime(long.Parse(Encoding.UTF8.GetString(datas, offset, len))));
                 }
@@ -332,7 +339,7 @@ namespace RRQMCore.Serialization
                         obj = Enum.ToObject(type, RRQMBitConverter.Default.ToInt64(datas, offset));
                     }
                 }
-                else if (type == RRQMReadonly.bytesType)
+                else if (type == RRQMCoreUtility.bytesType)
                 {
                     byte[] data = new byte[len];
                     Buffer.BlockCopy(datas, offset, data, 0, len);
@@ -349,7 +356,14 @@ namespace RRQMCore.Serialization
             }
             else
             {
-                obj = type.GetDefault();
+                if (nullable)
+                {
+                    obj = null;
+                }
+                else
+                {
+                    obj = type.GetDefault();
+                }
             }
             offset += len;
             return obj;
@@ -357,7 +371,7 @@ namespace RRQMCore.Serialization
 
         private dynamic DeserializeClass(Type type, byte[] datas, int offset, int length)
         {
-            InstanceObject instanceObject = GetOrAddInstance(type);
+            SerializObject instanceObject = GetOrAddInstance(type);
 
             object instance;
             switch (instanceObject.instanceType)
@@ -371,16 +385,19 @@ namespace RRQMCore.Serialization
                             int len = datas[offset];
                             string propertyName = Encoding.UTF8.GetString(datas, offset + 1, len);
                             offset += len + 1;
-                            PropertyInfo propertyInfo = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                            if (propertyInfo == null)
+
+                            if (instanceObject.Properties.ContainsKey(propertyName))
+                            {
+                                PropertyInfo property = instanceObject.Properties[propertyName];
+                                object obj = this.Deserialize(property.PropertyType, datas, ref offset);
+                                property.SetValue(instance, obj);
+                            }
+                            else
                             {
                                 int pLen = RRQMBitConverter.Default.ToInt32(datas, offset);
                                 offset += 4;
                                 offset += pLen;
-                                continue;
                             }
-                            object obj = this.Deserialize(propertyInfo.PropertyType, datas, ref offset);
-                            propertyInfo.SetValue(instance, obj);
                         }
                         break;
                     }
@@ -463,44 +480,43 @@ namespace RRQMCore.Serialization
 
         private static PropertyInfo[] GetProperties(Type type)
         {
-            return type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
         }
 
-        private static readonly ConcurrentDictionary<string, InstanceObject> InstanceCache = new ConcurrentDictionary<string, InstanceObject>();
+        private static readonly ConcurrentDictionary<string, SerializObject> InstanceCache = new ConcurrentDictionary<string, SerializObject>();
 
-        private static InstanceObject GetOrAddInstance(Type type)
+        private static SerializObject GetOrAddInstance(Type type)
         {
-            if (InstanceCache.TryGetValue(type.FullName, out InstanceObject instance))
+            if (InstanceCache.TryGetValue(type.FullName, out SerializObject instance))
             {
                 return instance;
             }
-
-            if (type.IsArray && !type.IsGenericType)//数组
+            if (type.IsArray)//数组
             {
-                InstanceObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (v) =>
+                SerializObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (Func<string, SerializObject>)((v) =>
                 {
-                    InstanceObject instanceObject = new InstanceObject();
+                    SerializObject instanceObject = new SerializObject();
                     instanceObject.Type = type;
                     instanceObject.ArrayType = type.GetElementType();
                     instanceObject.instanceType = InstanceType.Array;
-                    instanceObject.Properties = GetProperties(type);
-                    instanceObject.ProTypes = instanceObject.Properties.Select(a => a.PropertyType).ToArray();
                     return instanceObject;
-                });
+                }));
                 return typeInfo;
             }
             else if (type.IsClass || type.IsStruct())
             {
-                InstanceObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (v) =>
+                if (type.IsNullableType())
                 {
-                    InstanceObject instanceObject = new InstanceObject();
-                    instanceObject.Type = type;
-                    instanceObject.Properties = GetProperties(type);
-                    instanceObject.ProTypes = instanceObject.Properties.Select(a => a.PropertyType).ToArray();
+                    type = type.GetGenericArguments()[0];
+                }
 
+                SerializObject serializObject = InstanceCache.GetOrAdd(type.FullName, (v) =>
+                {
+                    SerializObject instanceObject = new SerializObject();
+                    instanceObject.Type = type;
                     if (type.IsGenericType)
                     {
-                        instanceObject.AddMethod = type.GetMethod("Add");
+                        instanceObject.AddMethod = new Method(type.GetMethod("Add"));
                         instanceObject.ArgTypes = type.GetGenericArguments();
                         type = type.GetGenericTypeDefinition().MakeGenericType(instanceObject.ArgTypes);
 
@@ -513,7 +529,7 @@ namespace RRQMCore.Serialization
                             instanceObject.instanceType = InstanceType.Dictionary;
                         }
                     }
-                    else if (RRQMReadonly.listType.IsAssignableFrom(type))
+                    else if (RRQMCoreUtility.listType.IsAssignableFrom(type))
                     {
                         Type baseType = type.BaseType;
                         while (!baseType.IsGenericType)
@@ -522,10 +538,10 @@ namespace RRQMCore.Serialization
                         }
                         instanceObject.ArgTypes = baseType.GetGenericArguments();
 
-                        instanceObject.AddMethod = type.GetMethod("Add");
+                        instanceObject.AddMethod = new Reflection.Method(type.GetMethod("Add"));
                         instanceObject.instanceType = InstanceType.List;
                     }
-                    else if (RRQMReadonly.dicType.IsAssignableFrom(type))
+                    else if (RRQMCoreUtility.dicType.IsAssignableFrom(type))
                     {
                         Type baseType = type.BaseType;
                         while (!baseType.IsGenericType)
@@ -533,16 +549,17 @@ namespace RRQMCore.Serialization
                             baseType = baseType.BaseType;
                         }
                         instanceObject.ArgTypes = baseType.GetGenericArguments();
-                        instanceObject.AddMethod = type.GetMethod("Add");
+                        instanceObject.AddMethod = new Reflection.Method(type.GetMethod("Add"));
                         instanceObject.instanceType = InstanceType.Dictionary;
                     }
                     else
                     {
+                        instanceObject.Properties = GetProperties(type).ToDictionary(a=>a.Name);
                         instanceObject.instanceType = InstanceType.Class;
                     }
                     return instanceObject;
                 });
-                return typeInfo;
+                return serializObject;
             }
             return null;
         }

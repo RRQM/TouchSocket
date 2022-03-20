@@ -38,21 +38,20 @@ namespace RRQMCore
         }
 
         private static RRQMBitConverter @default;
+
         /// <summary>
         /// 以默认小端，可通过<see cref="RRQMBitConverter.DefaultEndianType"/>重新指定默认端。
         /// </summary>
-        public static RRQMBitConverter Default
-        {
-            get { return @default; }
-        }
+        public static RRQMBitConverter Default => @default;
 
         private static EndianType @defaultEndianType;
+
         /// <summary>
         /// 默认大小端切换。
         /// </summary>
         public static EndianType DefaultEndianType
         {
-            get { return @defaultEndianType; }
+            get => @defaultEndianType;
             set
             {
                 @defaultEndianType = value;
@@ -61,17 +60,19 @@ namespace RRQMCore
                     case EndianType.Little:
                         @default = LittleEndian;
                         break;
+
                     case EndianType.Big:
                         @default = BigEndian;
                         break;
+
                     default:
                         break;
                 }
             }
         }
 
-
         private EndianType endianType;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -84,10 +85,7 @@ namespace RRQMCore
         /// <summary>
         /// 指定大小端。
         /// </summary>
-        public EndianType EndianType
-        {
-            get { return this.endianType; }
-        }
+        public EndianType EndianType => this.endianType;
 
         /// <summary>
         /// 判断当前系统是否为设置的大小端
@@ -99,6 +97,7 @@ namespace RRQMCore
         }
 
         #region ushort
+
         /// <summary>
         /// 转换为指定端2字节
         /// </summary>
@@ -130,9 +129,11 @@ namespace RRQMCore
             }
             return BitConverter.ToUInt16(bytes, 0);
         }
-        #endregion
+
+        #endregion ushort
 
         #region ulong
+
         /// <summary>
         /// 转换为指定端8字节
         /// </summary>
@@ -165,9 +166,11 @@ namespace RRQMCore
             }
             return BitConverter.ToUInt64(bytes, 0);
         }
-        #endregion
+
+        #endregion ulong
 
         #region bool
+
         /// <summary>
         /// 转换为指定端1字节
         /// </summary>
@@ -188,9 +191,11 @@ namespace RRQMCore
         {
             return BitConverter.ToBoolean(buffer, offset);
         }
-        #endregion
+
+        #endregion bool
 
         #region char
+
         /// <summary>
         /// 转换为指定端2字节
         /// </summary>
@@ -223,9 +228,11 @@ namespace RRQMCore
             }
             return BitConverter.ToChar(bytes, 0);
         }
-        #endregion
+
+        #endregion char
 
         #region short
+
         /// <summary>
         /// 转换为指定端2字节
         /// </summary>
@@ -258,9 +265,11 @@ namespace RRQMCore
             }
             return BitConverter.ToInt16(bytes, 0);
         }
-        #endregion
+
+        #endregion short
 
         #region int
+
         /// <summary>
         /// 转换为指定端4字节
         /// </summary>
@@ -293,8 +302,11 @@ namespace RRQMCore
             }
             return BitConverter.ToInt32(bytes, 0);
         }
-        #endregion
+
+        #endregion int
+
         #region long
+
         /// <summary>
         /// 转换为指定端8字节
         /// </summary>
@@ -327,8 +339,11 @@ namespace RRQMCore
             }
             return BitConverter.ToInt64(bytes, 0);
         }
-        #endregion
+
+        #endregion long
+
         #region uint
+
         /// <summary>
         /// 转换为指定端4字节
         /// </summary>
@@ -361,9 +376,11 @@ namespace RRQMCore
             }
             return BitConverter.ToUInt32(bytes, 0);
         }
-        #endregion
+
+        #endregion uint
 
         #region float
+
         /// <summary>
         /// 转换为指定端4字节
         /// </summary>
@@ -396,9 +413,11 @@ namespace RRQMCore
             }
             return BitConverter.ToSingle(bytes, 0);
         }
-        #endregion
+
+        #endregion float
 
         #region long
+
         /// <summary>
         /// 转换为指定端8字节
         /// </summary>
@@ -431,6 +450,7 @@ namespace RRQMCore
             }
             return BitConverter.ToDouble(bytes, 0);
         }
-        #endregion
+
+        #endregion long
     }
 }

@@ -10,45 +10,60 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Extensions;
 using System;
+using System.Threading;
 
 namespace RRQMCore
 {
     /// <summary>
-    /// 字符串资源字典
+    /// 读取锁
     /// </summary>
-    public static class StringResStore
+    public struct ReadLock : IDisposable
     {
+        private ReaderWriterLockSlim _locks;
+
         /// <summary>
-        /// 获取资源字符
+        /// 构造函数
         /// </summary>
-        /// <param name="enum"></param>
-        /// <returns></returns>
-        public static string GetResString(this Enum @enum)
+        /// <param name="locks"></param>
+        public ReadLock(ReaderWriterLockSlim locks)
         {
-            string res = Resource.ResourceManager.GetString(@enum.ToString());
-            if (res == null)
-            {
-                return @enum.ToString();
-            }
-            return res;
+            this._locks = locks;
+            this._locks.EnterReadLock();
         }
 
         /// <summary>
-        /// 获取资源字符
+        /// 释放
         /// </summary>
-        /// <param name="enum"></param>
-        /// <param name="objs"></param>
-        /// <returns></returns>
-        public static string GetResString(this Enum @enum, params object[] objs)
+        public void Dispose()
         {
-            string res = Resource.ResourceManager.GetString(@enum.ToString());
-            if (res == null)
-            {
-                return @enum.ToString();
-            }
-            return res.Format(objs);
+            this._locks.ExitReadLock();
+        }
+    }
+
+    /// <summary>
+    /// 写入锁
+    /// </summary>
+    public struct WriteLock : IDisposable
+    {
+        private ReaderWriterLockSlim _locks;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="locks"></param>
+        public WriteLock(ReaderWriterLockSlim locks)
+        {
+            this._locks = locks;
+            this._locks.EnterWriteLock();
+        }
+
+        /// <summary>
+        /// 释放
+        /// </summary>
+        public void Dispose()
+        {
+            this._locks.ExitWriteLock();
         }
     }
 }

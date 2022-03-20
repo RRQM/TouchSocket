@@ -10,31 +10,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Reflection;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 
-namespace RRQMCore.Common
+namespace RRQMCore.Serialization
 {
-    /// <summary>
-    /// RRQMCoreTools
-    /// </summary>
-    public static class RRQMCoreTools
+    class SerializObject
     {
-        /// <summary>
-        /// 判断字符串compare 在 input字符串中出现的次数
-        /// </summary>
-        /// <param name="input">源字符串</param>
-        /// <param name="compare">用于比较的字符串</param>
-        /// <returns>字符串compare 在 input字符串中出现的次数</returns>
-        public static int GetStringCount(string input, string compare)
+        public InstanceType instanceType;
+        public Type Type;
+
+        public object GetInstance()
         {
-            int index = input.IndexOf(compare);
-            if (index != -1)
-            {
-                return 1 + GetStringCount(input.Substring(index + compare.Length), compare);
-            }
-            else
-            {
-                return 0;
-            }
+            return Activator.CreateInstance(this.Type);
         }
+
+        public Type[] ArgTypes;
+        public Type ArrayType;
+        public Dictionary<string,PropertyInfo>Properties;
+        public Method AddMethod;
     }
 }
