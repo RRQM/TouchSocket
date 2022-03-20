@@ -15,70 +15,11 @@ using System;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// RPC方法标记属性类
+    /// Rpc方法标记属性类
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class RRQMRPCAttribute : RPCAttribute
+    public sealed class RRQMRPCAttribute : RpcAttribute
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public RRQMRPCAttribute()
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodName">指定键</param>
-        public RRQMRPCAttribute(string methodName) : this(methodName, MethodFlags.None)
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodFlags"></param>
-        public RRQMRPCAttribute(MethodFlags methodFlags) : this(null, methodFlags)
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="async"></param>
-        public RRQMRPCAttribute(bool async) : this(null, MethodFlags.None, async)
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodFlags"></param>
-        /// <param name="async"></param>
-        public RRQMRPCAttribute(MethodFlags methodFlags, bool async) : this(null, methodFlags, async)
-        {
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodName"></param>
-        /// <param name="methodFlags"></param>
-        public RRQMRPCAttribute(string methodName, MethodFlags methodFlags) : base(methodFlags)
-        {
-            this.MethodName = methodName;
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodName"></param>
-        /// <param name="methodFlags"></param>
-        /// <param name="async"></param>
-        public RRQMRPCAttribute(string methodName, MethodFlags methodFlags, bool async) : base(methodName, methodFlags)
-        {
-            this.Async = async;
-        }
+       
     }
 }

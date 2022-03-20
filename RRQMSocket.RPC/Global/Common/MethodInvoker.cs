@@ -34,19 +34,9 @@ namespace RRQMSocket.RPC
         public InvokeStatus Status;
 
         /// <summary>
-        /// 调用类型
-        /// </summary>
-        public InvokeType InvokeType;
-
-        /// <summary>
         /// 异步执行
         /// </summary>
         public bool AsyncRun;
-
-        /// <summary>
-        /// 自定义调用实例
-        /// </summary>
-        public IServerProvider CustomServerProvider;
 
         /// <summary>
         /// 状态消息
@@ -61,6 +51,6 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 此函数执行者
         /// </summary>
-        public ICaller Caller;
+        public object Caller;
     }
 }

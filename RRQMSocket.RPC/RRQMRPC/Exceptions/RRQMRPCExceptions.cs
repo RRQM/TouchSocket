@@ -86,98 +86,98 @@ namespace RRQMSocket.RPC.RRQMRPC
     }
 
     /// <summary>
-    /// RPC添加方法键异常
+    /// Rpc添加方法键异常
     /// </summary>
-    public class RRQMRPCKeyException : RRQMException
+    public class RpcKeyException : RRQMException
     {
         /// <summary>
         ///构造函数
         /// </summary>
-        public RRQMRPCKeyException() : base() { }
+        public RpcKeyException() : base() { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
-        public RRQMRPCKeyException(string message) : base(message) { }
+        public RpcKeyException(string message) : base(message) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inner"></param>
-        public RRQMRPCKeyException(string message, System.Exception inner) : base(message, inner) { }
+        public RpcKeyException(string message, System.Exception inner) : base(message, inner) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="info"></param>
         /// <param name="context"></param>
-        protected RRQMRPCKeyException(System.Runtime.Serialization.SerializationInfo info,
+        protected RpcKeyException(System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
-    /// RPC无注册异常
+    /// Rpc无注册异常
     /// </summary>
-    public class RRQMRPCNoRegisterException : RRQMException
+    public class RpcNoRegisterException : RRQMException
     {
         /// <summary>
         ///构造函数
         /// </summary>
-        public RRQMRPCNoRegisterException() : base() { }
+        public RpcNoRegisterException() : base() { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
-        public RRQMRPCNoRegisterException(string message) : base(message) { }
+        public RpcNoRegisterException(string message) : base(message) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inner"></param>
-        public RRQMRPCNoRegisterException(string message, System.Exception inner) : base(message, inner) { }
+        public RpcNoRegisterException(string message, System.Exception inner) : base(message, inner) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="info"></param>
         /// <param name="context"></param>
-        protected RRQMRPCNoRegisterException(System.Runtime.Serialization.SerializationInfo info,
+        protected RpcNoRegisterException(System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
     /// 序列化异常类
     /// </summary>
-    public class RRQMSerializationException : RRQMException
+    public class RpcSerializationException : RRQMException
     {
         /// <summary>
         ///构造函数
         /// </summary>
-        public RRQMSerializationException() : base() { }
+        public RpcSerializationException() : base() { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
-        public RRQMSerializationException(string message) : base(message) { }
+        public RpcSerializationException(string message) : base(message) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inner"></param>
-        public RRQMSerializationException(string message, System.Exception inner) : base(message, inner) { }
+        public RpcSerializationException(string message, System.Exception inner) : base(message, inner) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="info"></param>
         /// <param name="context"></param>
-        protected RRQMSerializationException(System.Runtime.Serialization.SerializationInfo info,
+        protected RpcSerializationException(System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

@@ -12,42 +12,36 @@
 //------------------------------------------------------------------------------
 using System.Net;
 
-namespace RRQMSocket.RPC
+namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
     /// Udp调用者
     /// </summary>
-    public class UdpCaller : ICaller
+    public class UdpCaller
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="service"></param>
         /// <param name="callerEndPoint"></param>
-        public UdpCaller(UdpSession service, EndPoint callerEndPoint)
+        public UdpCaller(UdpSessionBase service, EndPoint callerEndPoint)
         {
             this.service = service;
             this.callerEndPoint = callerEndPoint;
         }
 
-        private UdpSession service;
+        private UdpSessionBase service;
 
         /// <summary>
         /// Udp服务器
         /// </summary>
-        public UdpSession Service
-        {
-            get { return this.service; }
-        }
+        public UdpSessionBase Service => this.service;
 
         private EndPoint callerEndPoint;
 
         /// <summary>
         /// 调用者终结点
         /// </summary>
-        public EndPoint CallerEndPoint
-        {
-            get { return this.callerEndPoint; }
-        }
+        public EndPoint CallerEndPoint => this.callerEndPoint;
     }
 }

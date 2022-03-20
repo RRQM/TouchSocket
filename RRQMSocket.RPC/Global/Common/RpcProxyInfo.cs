@@ -14,7 +14,7 @@
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC代理文件程序
+    /// Rpc代理文件程序
     /// </summary>
     public class RpcProxyInfo
     {

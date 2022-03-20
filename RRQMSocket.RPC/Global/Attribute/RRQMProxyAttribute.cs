@@ -49,8 +49,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public string ClassName
         {
-            get { return this.className; }
-            set { this.className = value; }
+            get => this.className;
+            set => this.className = value;
         }
 
     }

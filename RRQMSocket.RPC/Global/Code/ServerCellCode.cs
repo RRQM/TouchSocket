@@ -33,14 +33,6 @@ namespace RRQMSocket.RPC
         /// </summary>
         public string Name { get; set; }
 
-#if NET45_OR_GREATER
-
-        /// <summary>
-        /// 引用
-        /// </summary>
-        public string[] Refs { get; set; }
-
-#endif
 
         private Dictionary<string, MethodCellCode> methods;
 
@@ -49,8 +41,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public Dictionary<string, MethodCellCode> Methods
         {
-            get { return this.methods; }
-            set { this.methods = value; }
+            get => this.methods;
+            set => this.methods = value;
         }
 
         private Dictionary<string, ClassCellCode> classCellCodes;
@@ -60,8 +52,8 @@ namespace RRQMSocket.RPC
         /// </summary>
         public Dictionary<string, ClassCellCode> ClassCellCodes
         {
-            get { return this.classCellCodes; }
-            set { this.classCellCodes = value; }
+            get => this.classCellCodes;
+            set => this.classCellCodes = value;
         }
     }
 }

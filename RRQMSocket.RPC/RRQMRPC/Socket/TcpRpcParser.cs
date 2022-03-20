@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
 using RRQMCore.Serialization;
 using System;
 using System.Collections.Generic;
@@ -21,31 +20,33 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// TCP RPC解释器
+    /// TCP Rpc解释器
     /// </summary>
     public class TcpRpcParser : TcpRpcParser<RpcSocketClient>
     {
     }
 
     /// <summary>
-    /// TcpRPCParser泛型类型
+    /// TcpRpcParser泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public class TcpRpcParser<TClient> : ProtocolService<TClient>, IRPCParser, IIDInvoke, IRRQMRpcParser where TClient : RpcSocketClient, new()
+    public class TcpRpcParser<TClient> : ProtocolService<TClient>, IRpcParser, IIDInvoke, IRRQMRPCParser where TClient : RpcSocketClient
     {
         private MethodStore methodStore;
+        private string publisherID;
         private SerializationSelector serializationSelector;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         public TcpRpcParser()
         {
-            this.AddUsedProtocol(100, "请求RPC代理文件(弃用)");
-            this.AddUsedProtocol(101, "RPC调用");
+            this.AddUsedProtocol(100, "请求Rpc代理文件(弃用)");
+            this.AddUsedProtocol(101, "Rpc调用");
             this.AddUsedProtocol(102, "获取注册服务");
             this.AddUsedProtocol(103, "ID调用客户端");
-            this.AddUsedProtocol(104, "RPC回调");
-            this.AddUsedProtocol(105, "取消RPC调用");
+            this.AddUsedProtocol(104, "Rpc回调");
+            this.AddUsedProtocol(105, "取消Rpc调用");
             this.AddUsedProtocol(106, "发布事件");
             this.AddUsedProtocol(107, "取消发布事件");
             this.AddUsedProtocol(108, "订阅事件");
@@ -53,29 +54,20 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.AddUsedProtocol(110, "分发触发");
             this.AddUsedProtocol(111, "获取所有事件");
             this.AddUsedProtocol(112, "请求取消订阅");
-            this.AddUsedProtocol(113, "取消RPC回调");
+            this.AddUsedProtocol(113, "取消Rpc回调");
 
             for (short i = 114; i < 200; i++)
             {
                 this.AddUsedProtocol(i, "保留协议");
             }
             this.methodStore = new MethodStore();
+            this.publisherID = this.GetDefaultNewID();
         }
-
-        /// <summary>
-        /// 预处理流
-        /// </summary>
-        public event RRQMStreamOperationEventHandler<TClient> BeforeReceiveStream;
 
         /// <summary>
         /// 收到协议数据
         /// </summary>
         public event RRQMProtocolReceivedEventHandler<TClient> Received;
-
-        /// <summary>
-        /// 收到流数据
-        /// </summary>
-        public event RRQMStreamStatusEventHandler<TClient> ReceivedStream;
 
         /// <summary>
         /// <inheritdoc/>
@@ -95,20 +87,17 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public RPCService RPCService { get; private set; }
+        public RpcService RpcService { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; private set; }
+        public Action<IRpcParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public SerializationSelector SerializationSelector
-        {
-            get { return this.serializationSelector; }
-        }
+        public SerializationSelector SerializationSelector => this.serializationSelector;
 
         /// <summary>
         /// <inheritdoc/>
@@ -120,11 +109,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 if (args.ProxyToken != this.ProxyToken)
                 {
-                    args.ErrorMessage = "在验证RRQMRPC时令箭不正确。";
-                    args.IsSuccess = false;
+                    args.Message = "在验证RRQMRPC时令箭不正确。";
+                    args.RemoveOperation(Operation.Permit);
                     return;
                 }
-                foreach (var item in this.RPCService.ServerProviders)
+                foreach (var item in this.RpcService.ServerProviders)
                 {
                     var serverCellCode = CodeGenerator.Generator<RRQMRPCAttribute>(item.GetType());
                     args.Codes.Add(serverCellCode);
@@ -138,7 +127,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="proxyToken"></param>
         /// <param name="caller"></param>
         /// <returns></returns>
-        public virtual MethodItem[] GetRegisteredMethodItems(string proxyToken, ICaller caller)
+        public virtual MethodItem[] GetRegisteredMethodItems(string proxyToken, object caller)
         {
             if (proxyToken == this.ProxyToken)
             {
@@ -147,18 +136,18 @@ namespace RRQMSocket.RPC.RRQMRPC
             return null;
         }
 
-        #region RPC
+        #region Rpc
 
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         public void Invoke(string id, string method, IInvokeOption invokeOption, params object[] parameters)
@@ -174,15 +163,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         /// <returns>返回值</returns>
@@ -199,15 +188,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         public Task InvokeAsync(string id, string method, IInvokeOption invokeOption, params object[] parameters)
@@ -226,15 +215,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         /// <returns>返回值</returns>
@@ -253,14 +242,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        #endregion RPC
+        #endregion Rpc
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="methodInvoker"></param>
-        /// <param name="methodInstance"></param>
-        public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        #region RPC解析器
+
+        void IRpcParser.OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             RpcContext context = (RpcContext)methodInvoker.Flag;
 
@@ -347,12 +333,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="provider"></param>
-        /// <param name="methodInstances"></param>
-        public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var item in methodInstances)
             {
@@ -365,7 +346,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (string.IsNullOrEmpty(attribute.MethodName))
                     {
-                        methodItem.Method = item.Method.Name;
+                        methodItem.Method = item.Name;
                     }
                     else
                     {
@@ -377,12 +358,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="provider"></param>
-        /// <param name="methodInstances"></param>
-        public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var item in methodInstances)
             {
@@ -390,42 +366,32 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="executeMethod"></param>
-        public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
+        void IRpcParser.SetExecuteMethod(Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod)
         {
             this.RRQMExecuteMethod = executeMethod;
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="methodMap"></param>
-        public void SetMethodMap(MethodMap methodMap)
+        void IRpcParser.SetMethodMap(MethodMap methodMap)
         {
             this.MethodMap = methodMap;
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="service"></param>
-        public void SetRPCService(RPCService service)
+        void IRpcParser.SetRpcService(RpcService service)
         {
-            this.RPCService = service;
+            this.RpcService = service;
         }
+
+        #endregion RPC解析器
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="ServiceConfig"></param>
-        protected override void LoadConfig(ServiceConfig ServiceConfig)
+        /// <param name="RRQMConfig"></param>
+        protected override void LoadConfig(RRQMConfig RRQMConfig)
         {
-            this.serializationSelector = ServiceConfig.GetValue<SerializationSelector>(TcpRpcParserConfig.SerializationSelectorProperty);
-            this.ProxyToken = ServiceConfig.GetValue<string>(TcpRpcParserConfig.ProxyTokenProperty);
-            base.LoadConfig(ServiceConfig);
+            this.serializationSelector = RRQMConfig.GetValue<SerializationSelector>(RRQMRPCConfigExtensions.SerializationSelectorProperty);
+            this.ProxyToken = RRQMConfig.GetValue<string>(RpcConfigExtensions.ProxyTokenProperty);
+            base.LoadConfig(RRQMConfig);
         }
 
         /// <summary>
@@ -435,33 +401,27 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="e"></param>
         protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
-            socketClient.Received += this.OnReceived;
-            socketClient.BeforeReceiveStream += this.OnBeforeReceiveStream;
-            socketClient.ReceivedStream += this.OnReceivedStream;
             socketClient.methodMap = this.MethodMap;
             socketClient.executeMethod = this.Execute;
             socketClient.serializationSelector = this.serializationSelector;
             base.OnConnecting(socketClient, e);
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="protocol"></param>
+        /// <param name="byteBlock"></param>
+        protected override void OnHandleProtocolData(TClient client, short protocol, ByteBlock byteBlock)
+        {
+            this.Received?.Invoke(client, protocol, byteBlock);
+            base.OnHandleProtocolData(client, protocol, byteBlock);
+        }
+
         private void Execute(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             this.RRQMExecuteMethod.Invoke(this, methodInvoker, methodInstance);
-        }
-
-        private void OnBeforeReceiveStream(RpcSocketClient client, StreamOperationEventArgs e)
-        {
-            this.BeforeReceiveStream?.Invoke((TClient)client, e);
-        }
-
-        private void OnReceived(RpcSocketClient client, short protocol, ByteBlock byteBlock)
-        {
-            this.Received?.Invoke((TClient)client, protocol, byteBlock);
-        }
-
-        private void OnReceivedStream(RpcSocketClient client, StreamStatusEventArgs e)
-        {
-            this.ReceivedStream?.Invoke((TClient)client, e);
         }
     }
 }

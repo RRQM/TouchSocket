@@ -18,9 +18,9 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// RPC辅助类接口
+    /// Rpc辅助类接口
     /// </summary>
-    public interface ITcpRpcClientBase : IProtocolClientBase, ICaller, IRpcClient, IIDInvoke
+    public interface ITcpRpcClientBase : IProtocolClientBase, IRpcClient, IIDInvoke
     {
 
     }
@@ -28,7 +28,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// RRQMRPC接口
     /// </summary>
-    public interface IRRQMRpcParser
+    public interface IRRQMRPCParser
     {
         /// <summary>
         /// 代理令箭，当客户端获取代理文件时需验证令箭
@@ -51,18 +51,18 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <param name="proxyToken"></param>
         /// <param name="caller">调用作用者/></param>
         /// <returns></returns>
-        MethodItem[] GetRegisteredMethodItems(string proxyToken, ICaller caller);
+        MethodItem[] GetRegisteredMethodItems(string proxyToken, object caller);
     }
 
-    interface ITcpRpcClient : ITcpRpcClientBase, IRPCParser
+    interface ITcpRpcClient : ITcpRpcClientBase, IRpcParser
     {
 
     }
 
     /// <summary>
-    /// 客户端RPC接口
+    /// 客户端Rpc接口
     /// </summary>
-    public interface IRRQMRpcClient : IRpcClient
+    public interface IRRQMRPCClient : IRpcClient
     {
         /// <summary>
         /// 获取ID
@@ -94,58 +94,58 @@ namespace RRQMSocket.RPC.RRQMRPC
     public interface IIDInvoke
     {
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         Task InvokeAsync(string id, string method, IInvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         /// <returns>返回值</returns>
         Task<T> InvokeAsync<T>(string id, string method, IInvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         void Invoke(string id, string method, IInvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
-        /// 反向调用客户端RPC
+        /// 反向调用客户端Rpc
         /// </summary>
         /// <param name="id">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         /// <returns>返回值</returns>

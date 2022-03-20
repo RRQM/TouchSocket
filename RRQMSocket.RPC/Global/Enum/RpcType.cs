@@ -15,7 +15,7 @@ using System;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC类型
+    /// Rpc类型
     /// </summary>
     [Flags]
     public enum RpcType
@@ -36,8 +36,13 @@ namespace RRQMSocket.RPC
         XmlRpc = 4,
 
         /// <summary>
-        /// 反向RPC
+        /// 反向Rpc
         /// </summary>
-        RRQMCallbackRPC = 8
+        RRQMCallbackRpc = 8,
+
+        /// <summary>
+        /// WebApi
+        /// </summary>
+        WebApi=16
     }
 }

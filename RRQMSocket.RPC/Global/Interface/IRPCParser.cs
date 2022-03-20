@@ -15,20 +15,20 @@ using System;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC解析器
+    /// Rpc解析器
     /// </summary>
-    public interface IRPCParser : IDisposable
+    public interface IRpcParser : IDisposable
     {
         /// <summary>
         /// 设置执行函数
         /// </summary>
         /// <param name="executeMethod"></param>
-        void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod);
+        void SetExecuteMethod(Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod);
 
         /// <summary>
         /// 执行函数
         /// </summary>
-        Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; }
+        Action<IRpcParser, MethodInvoker, MethodInstance> RRQMExecuteMethod { get; }
 
         /// <summary>
         /// 获取函数映射图
@@ -38,7 +38,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 包含此解析器的服务器实例
         /// </summary>
-        RPCService RPCService { get; }
+        RpcService RpcService { get; }
 
         /// <summary>
         /// 结束调用
@@ -71,7 +71,7 @@ namespace RRQMSocket.RPC
         /// 设置服务
         /// </summary>
         /// <param name="service"></param>
-        void SetRPCService(RPCService service);
+        void SetRpcService(RpcService service);
 
         /// <summary>
         /// 获取代理信息

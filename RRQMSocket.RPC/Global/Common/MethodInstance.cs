@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Reflection;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -18,34 +19,33 @@ using System.Reflection;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC函数实例
+    /// Rpc函数实例
     /// </summary>
-    public class MethodInstance
+    public class MethodInstance : Method
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        public MethodInstance(MethodInfo methodInfo) : base(methodInfo)
+        {
+
+        }
+
         /// <summary>
         /// 是否异步执行
         /// </summary>
         public AsyncType AsyncType { get; internal set; }
 
         /// <summary>
-        /// 描述属性集合
+        /// 描述属性
         /// </summary>
         public DescriptionAttribute DescriptionAttribute { get; internal set; }
-
-        /// <summary>
-        /// 是否有引用类型
-        /// </summary>
-        public bool IsByRef { get; internal set; }
 
         /// <summary>
         /// 是否可用
         /// </summary>
         public bool IsEnable { get; internal set; }
-
-        /// <summary>
-        /// RPC函数
-        /// </summary>
-        public MethodInfo Method { get; internal set; }
 
         /// <summary>
         /// 函数标识
@@ -73,7 +73,7 @@ namespace RRQMSocket.RPC
         public Type[] ParameterTypes { get; internal set; }
 
         /// <summary>
-        /// 执行此RPC的实例
+        /// 执行此Rpc的实例
         /// </summary>
         public IServerProvider Provider { get; internal set; }
 
@@ -81,15 +81,12 @@ namespace RRQMSocket.RPC
         /// 实例类型
         /// </summary>
         public Type ProviderType { get; internal set; }
-        /// <summary>
-        /// 返回值类型，无返回值时为Null
-        /// </summary>
-        public Type ReturnType { get; internal set; }
 
         /// <summary>
-        /// RPC属性集合
+        /// Rpc属性集合
         /// </summary>
-        public RPCAttribute[] RPCAttributes { get; internal set; }
+        public RpcAttribute[] RpcAttributes { get; internal set; }
+
         /// <summary>
         /// 获取指定类型属性标签
         /// </summary>
@@ -97,7 +94,7 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         public T GetAttribute<T>()
         {
-            object attribute = this.RPCAttributes.FirstOrDefault((a) => { return a.GetType() == typeof(T); });
+            object attribute = this.RpcAttributes.FirstOrDefault((a) => { return a.GetType() == typeof(T); });
             if (attribute == null)
             {
                 return default;

@@ -10,7 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
+using RRQMCore;
+using RRQMCore.Extensions;
 using RRQMCore.Serialization;
 using RRQMCore.XREF.Newtonsoft.Json;
 using System;
@@ -51,7 +52,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
                     }
                 default:
-                    throw new RRQMRPCException("未指定的反序列化方式");
+                    throw new RpcException("未指定的反序列化方式");
             }
         }
 
@@ -83,7 +84,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         return SerializeConvert.XmlSerializeToBytes(parameter);
                     }
                 default:
-                    throw new RRQMRPCException("未指定的序列化方式");
+                    throw new RpcException("未指定的序列化方式");
             }
         }
     }

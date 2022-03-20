@@ -17,16 +17,16 @@ using System;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// 放弃RPC执行
+    /// 放弃Rpc执行
     /// </summary>
-    public class RRQMAbandonRPCException : RRQMException
+    public class AbandonRpcException : RRQMException
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="feedback">是否反馈信息</param>
         /// <param name="message">信息</param>
-        public RRQMAbandonRPCException(bool feedback, string message) : base(message)
+        public AbandonRpcException(bool feedback, string message) : base(message)
         {
             this.Feedback = feedback;
         }
@@ -35,14 +35,14 @@ namespace RRQMSocket.RPC
         /// 构造函数
         /// </summary>
         /// <param name="message">信息</param>
-        public RRQMAbandonRPCException(string message) : this(true, message)
+        public AbandonRpcException(string message) : this(true, message)
         {
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMAbandonRPCException() : this(true, null)
+        public AbandonRpcException() : this(true, null)
         {
         }
 
@@ -53,68 +53,68 @@ namespace RRQMSocket.RPC
     }
 
     /// <summary>
-    /// RPC异常
+    /// Rpc异常
     /// </summary>
     [Serializable]
-    public class RRQMRPCException : RRQMException
+    public class RpcException : RRQMException
     {
         /// <summary>
         ///构造函数
         /// </summary>
-        public RRQMRPCException() : base() { }
+        public RpcException() : base() { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
-        public RRQMRPCException(string message) : base(message) { }
+        public RpcException(string message) : base(message) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inner"></param>
-        public RRQMRPCException(string message, System.Exception inner) : base(message, inner) { }
+        public RpcException(string message, System.Exception inner) : base(message, inner) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="info"></param>
         /// <param name="context"></param>
-        protected RRQMRPCException(System.Runtime.Serialization.SerializationInfo info,
+        protected RpcException(System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>
-    /// RPC调用异常
+    /// Rpc调用异常
     /// </summary>
     [Serializable]
-    public class RRQMRPCInvokeException : RRQMException
+    public class RRQMRpcInvokeException : RRQMException
     {
         /// <summary>
         ///构造函数
         /// </summary>
-        public RRQMRPCInvokeException() : base() { }
+        public RRQMRpcInvokeException() : base() { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
-        public RRQMRPCInvokeException(string message) : base(message) { }
+        public RRQMRpcInvokeException(string message) : base(message) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inner"></param>
-        public RRQMRPCInvokeException(string message, System.Exception inner) : base(message, inner) { }
+        public RRQMRpcInvokeException(string message, System.Exception inner) : base(message, inner) { }
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="info"></param>
         /// <param name="context"></param>
-        protected RRQMRPCInvokeException(System.Runtime.Serialization.SerializationInfo info,
+        protected RRQMRpcInvokeException(System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

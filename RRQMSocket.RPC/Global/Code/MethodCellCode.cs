@@ -27,11 +27,35 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 代码本体
         /// </summary>
-        public string Code { get; set; }
+        public string CodeTemple { get; set; }
+
+        /// <summary>
+        /// 调用唯一键
+        /// </summary>
+        public string InvokeKey { get; set; }
+
+        /// <summary>
+        /// 获取实际代码
+        /// </summary>
+        /// <returns></returns>
+        public string GetCode()
+        {
+          return  this.CodeTemple.Replace("{0}",this.Name)
+                .Replace("{1}", string.IsNullOrEmpty(this.InvokeKey) ? this.Name : this.InvokeKey);
+        }
 
         /// <summary>
         /// 接口代码。
         /// </summary>
-        public string InterfaceCode { get; set; }
+        public string InterfaceTemple { get; set; }
+
+        /// <summary>
+        /// 获取实际接口代码
+        /// </summary>
+        /// <returns></returns>
+        public string GetInterfaceCode()
+        {
+            return string.Format(this.InterfaceTemple, this.Name);
+        }
     }
 }
