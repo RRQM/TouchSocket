@@ -18,49 +18,47 @@ using System.Diagnostics;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPCParser集合
+    /// RpcParser集合
     /// </summary>
     [DebuggerDisplay("Count")]
-    public class RPCParserCollection : IEnumerable<IRPCParser>
+    public class RpcParserCollection : IEnumerable<IRpcParser>
     {
-        private ConcurrentDictionary<string, IRPCParser> parsers = new ConcurrentDictionary<string, IRPCParser>();
+        private ConcurrentDictionary<string, IRpcParser> parsers = new ConcurrentDictionary<string, IRpcParser>();
 
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count
-        { get { return this.parsers.Count; } }
+        public int Count => this.parsers.Count;
 
         /// <summary>
-        /// 获取IRPCParser
+        /// 获取IRpcParser
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public IRPCParser this[string key]
-        { get { return this.parsers[key]; } }
+        public IRpcParser this[string key] => this.parsers[key];
 
         /// <summary>
-        /// 获取IRPCParser
+        /// 获取IRpcParser
         /// </summary>
         /// <param name="key"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public bool TryGetRPCParser(string key, out IRPCParser parser)
+        public bool TryGetRpcParser(string key, out IRpcParser parser)
         {
             return this.parsers.TryGetValue(key, out parser);
         }
 
-        internal void Add(string key, IRPCParser parser)
+        internal void Add(string key, IRpcParser parser)
         {
             if (this.parsers.Values.Contains(parser))
             {
-                throw new RRQMRPCException("重复添加解析器");
+                throw new RpcException("重复添加解析器");
             }
 
             this.parsers.TryAdd(key, parser);
         }
 
-        internal bool TryRemove(string key, out IRPCParser parser)
+        internal bool TryRemove(string key, out IRpcParser parser)
         {
             return this.parsers.TryRemove(key, out parser);
         }
@@ -74,7 +72,7 @@ namespace RRQMSocket.RPC
         /// 返回枚举对象
         /// </summary>
         /// <returns></returns>
-        IEnumerator<IRPCParser> IEnumerable<IRPCParser>.GetEnumerator()
+        IEnumerator<IRpcParser> IEnumerable<IRpcParser>.GetEnumerator()
         {
             return this.parsers.Values.GetEnumerator();
         }

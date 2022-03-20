@@ -19,15 +19,15 @@
 //namespace RRQMSocket.RPC
 //{
 //    /// <summary>
-//    /// 远程RPC解析器
+//    /// 远程Rpc解析器
 //    /// </summary>
-//    public class RemoteRpcParser : IRPCParser
+//    public class RemoteRpcParser : IRpcParser
 //    {
-//        public Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod => throw new NotImplementedException();
+//        public Action<IRpcParser, MethodInvoker, MethodInstance> RRQMExecuteMethod => throw new NotImplementedException();
 
 //        public MethodMap MethodMap => throw new NotImplementedException();
 
-//        public RPCService RPCService => throw new NotImplementedException();
+//        public RpcService RpcService => throw new NotImplementedException();
 
 //        public void Dispose()
 //        {
@@ -54,7 +54,7 @@
 //            throw new NotImplementedException();
 //        }
 
-//        public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
+//        public void SetExecuteMethod(Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod)
 //        {
 //            throw new NotImplementedException();
 //        }
@@ -64,7 +64,7 @@
 //            throw new NotImplementedException();
 //        }
 
-//        public void SetRPCService(RPCService service)
+//        public void SetRpcService(RpcService service)
 //        {
 //            throw new NotImplementedException();
 //        }

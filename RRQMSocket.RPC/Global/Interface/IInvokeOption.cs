@@ -22,7 +22,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 可以取消的调用令箭
         /// </summary>
-        public CancellationToken CancellationToken { get; set; }
+        public CancellationToken Token { get; set; }
 
         /// <summary>
         /// 调用反馈

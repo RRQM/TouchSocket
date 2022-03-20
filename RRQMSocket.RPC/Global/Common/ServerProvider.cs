@@ -14,43 +14,43 @@
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC范围类
+    /// Rpc范围类
     /// </summary>
     public abstract class ServerProvider : IServerProvider
     {
         /// <summary>
         /// 该服务所属的服务器
         /// </summary>
-        public RPCService RPCService { get; set; }
+        public RpcService RpcService { get; set; }
 
         /// <summary>
-        /// RPC即将进入,
-        /// 若是想放弃本次执行，请抛出<see cref="RRQMAbandonRPCException"/>
+        /// Rpc即将进入,
+        /// 若是想放弃本次执行，请抛出<see cref="AbandonRpcException"/>
         /// </summary>
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public virtual void RPCEnter(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        public virtual void RpcEnter(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
         }
 
         /// <summary>
-        /// 执行RPC发生错误
+        /// 执行Rpc发生错误
         /// </summary>
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public virtual void RPCError(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        public virtual void RpcError(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
         }
 
         /// <summary>
-        /// RPC方法执行完成
+        /// Rpc方法执行完成
         /// </summary>
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        public virtual void RPCLeave(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        public virtual void RpcLeave(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
         }
     }

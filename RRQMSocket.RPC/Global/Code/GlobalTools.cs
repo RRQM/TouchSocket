@@ -10,7 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
+using RRQMCore;
+using RRQMCore.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -76,14 +77,13 @@ namespace RRQMSocket.RPC
                 {
                     continue;
                 }
-                IEnumerable<RPCAttribute> attributes = method.GetCustomAttributes<RPCAttribute>(true);
+                IEnumerable<RpcAttribute> attributes = method.GetCustomAttributes<RpcAttribute>(true);
                 if (attributes.Count() > 0)
                 {
-                    MethodInstance methodInstance = new MethodInstance();
+                    MethodInstance methodInstance = new MethodInstance(method);
                     methodInstance.Provider = serverProvider;
                     methodInstance.ProviderType = serverProvider.GetType();
-                    methodInstance.Method = method;
-                    methodInstance.RPCAttributes = attributes.ToArray();
+                    methodInstance.RpcAttributes = attributes.ToArray();
                     methodInstance.DescriptionAttribute = method.GetCustomAttribute<DescriptionAttribute>();
                     methodInstance.IsEnable = true;
                     methodInstance.Parameters = method.GetParameters();
@@ -99,7 +99,7 @@ namespace RRQMSocket.RPC
                     {
                         if (methodInstance.Parameters.Length == 0 || !typeof(ICallContext).IsAssignableFrom(methodInstance.Parameters[0].ParameterType))
                         {
-                            throw new RRQMRPCException($"函数：{method}，标识包含{MethodFlags.IncludeCallContext}时，必须包含{nameof(ICallContext)}或其派生类参数，且为第一参数。");
+                            throw new RpcException($"函数：{method}，标识包含{MethodFlags.IncludeCallContext}时，必须包含{nameof(ICallContext)}或其派生类参数，且为第一参数。");
                         }
                     }
                     List<string> names = new List<string>();
@@ -108,27 +108,16 @@ namespace RRQMSocket.RPC
                         names.Add(parameterInfo.Name);
                     }
                     methodInstance.ParameterNames = names.ToArray();
-                    if (typeof(Task).IsAssignableFrom(method.ReturnType))
-                    {
-                        methodInstance.AsyncType = methodInstance.AsyncType | AsyncType.Task;
-                    }
-
                     ParameterInfo[] parameters = method.GetParameters();
                     List<Type> types = new List<Type>();
                     foreach (var parameter in parameters)
                     {
                         types.Add(parameter.ParameterType.GetRefOutType());
-                        if (parameter.ParameterType.IsByRef)
-                        {
-                            methodInstance.IsByRef = true;
-                        }
                     }
                     methodInstance.ParameterTypes = types.ToArray();
 
                     if (method.ReturnType == typeof(void) || method.ReturnType == typeof(Task))
                     {
-                        methodInstance.ReturnType = null;
-
                         if (parameters.Length == 0)
                         {
                             methodInstance.MethodToken = ++nullReturnNullParameters;
@@ -140,23 +129,6 @@ namespace RRQMSocket.RPC
                     }
                     else
                     {
-                        if (methodInstance.AsyncType.HasFlag(AsyncType.Task))
-                        {
-                            Type[] ts = method.ReturnType.GetGenericArguments();
-                            if (ts.Length == 1)
-                            {
-                                methodInstance.ReturnType = ts[0];
-                            }
-                            else
-                            {
-                                methodInstance.ReturnType = null;
-                            }
-                        }
-                        else
-                        {
-                            methodInstance.ReturnType = method.ReturnType;
-                        }
-
                         if (parameters.Length == 0)
                         {
                             methodInstance.MethodToken = ++ExistReturnNullParameters;

@@ -26,8 +26,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 服务数量
         /// </summary>
-        public int Count
-        { get { return this.servers.Count; } }
+        public int Count => this.servers.Count;
 
         private List<IServerProvider> servers = new List<IServerProvider>();
 
@@ -37,7 +36,7 @@ namespace RRQMSocket.RPC
             {
                 if (serverProvider.GetType().FullName == server.GetType().FullName)
                 {
-                    throw new RRQMRPCException("相同类型的服务已添加");
+                    throw new RpcException("相同类型的服务已添加");
                 }
             }
             this.servers.Add(serverProvider);

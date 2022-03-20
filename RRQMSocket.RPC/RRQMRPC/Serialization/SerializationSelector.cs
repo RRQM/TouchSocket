@@ -21,7 +21,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     public abstract class SerializationSelector
     {
         /// <summary>
-        /// 序列化RPC方法返回值参数
+        /// 序列化Rpc方法返回值参数
         /// </summary>
         /// <param name="serializationType"></param>
         /// <param name="parameter"></param>

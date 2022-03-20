@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,10 +46,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 程序集
         /// </summary>
-        public Assembly Assembly
-        {
-            get { return this.assembly; }
-        }
+        public Assembly Assembly => this.assembly;
 
         /// <summary>
         /// 获取类单元参数
@@ -158,13 +155,13 @@ namespace RRQMSocket.RPC
                 }
                 else if (type.IsInterface || type.IsAbstract)
                 {
-                    throw new RRQMRPCException("服务参数类型不允许接口或抽象类");
+                    throw new RpcException("服务参数类型不允许接口或抽象类");
                 }
                 else if (type.IsEnum)
                 {
                     Type baseType = Enum.GetUnderlyingType(type);
                     StringBuilder stringBuilder = new StringBuilder();
-                    if (baseType == RRQMReadonly.byteType)
+                    if (baseType == RRQMCoreUtility.byteType)
                     {
                         stringBuilder.AppendLine($"public enum {type.Name}:byte");
                         stringBuilder.AppendLine("{");
@@ -175,7 +172,7 @@ namespace RRQMSocket.RPC
                             stringBuilder.AppendLine($"{enumString}={(byte)item},");
                         }
                     }
-                    else if (baseType == RRQMReadonly.shortType)
+                    else if (baseType == RRQMCoreUtility.shortType)
                     {
                         stringBuilder.AppendLine($"public enum {type.Name}:short");
                         stringBuilder.AppendLine("{");
@@ -186,7 +183,7 @@ namespace RRQMSocket.RPC
                             stringBuilder.AppendLine($"{enumString}={(short)item},");
                         }
                     }
-                    else if (baseType == RRQMReadonly.intType)
+                    else if (baseType == RRQMCoreUtility.intType)
                     {
                         stringBuilder.AppendLine($"public enum {type.Name}:int");
                         stringBuilder.AppendLine("{");
@@ -197,7 +194,7 @@ namespace RRQMSocket.RPC
                             stringBuilder.AppendLine($"{enumString}={(int)item},");
                         }
                     }
-                    else if (baseType == RRQMReadonly.longType)
+                    else if (baseType == RRQMCoreUtility.longType)
                     {
                         stringBuilder.AppendLine($"public enum {type.Name}:long");
                         stringBuilder.AppendLine("{");

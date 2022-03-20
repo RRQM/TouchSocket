@@ -10,7 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
+using RRQMCore;
+using RRQMCore.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,25 +30,13 @@ namespace RRQMSocket.RPC
         private static Dictionary<Type, string> proxyType = new Dictionary<Type, string>();
 
         /// <summary>
-        /// 是否包含类型
+        /// 生成回调。
         /// </summary>
-        /// <param name="type"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="methodInstance"></param>
+        /// <param name="methodCellCode"></param>
         /// <returns></returns>
-        public static bool ContainsType(Type type)
-        {
-            return proxyType.ContainsKey(type);
-        }
-
-        /// <summary>
-        /// 获取类型代理名称
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="className"></param>
-        /// <returns></returns>
-        public static bool TryGetProxyTypeName(Type type, out string className)
-        {
-            return proxyType.TryGetValue(type, out className);
-        }
+        public delegate bool GeneratorCallback<T>(MethodInstance methodInstance, MethodCellCode methodCellCode)where T:RpcAttribute;
 
         /// <summary>
         /// 添加代理类型
@@ -86,284 +75,13 @@ namespace RRQMSocket.RPC
         }
 
         /// <summary>
-        /// 从类型获取函数实例
+        /// 是否包含类型
         /// </summary>
-        /// <typeparam name="TServer"></typeparam>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static MethodInstance[] GetMethodInstances<TServer>() where TServer : IServerProvider
+        public static bool ContainsType(Type type)
         {
-            return GetMethodInstances(typeof(TServer));
-        }
-
-        /// <summary>
-        /// 从类型获取函数实例
-        /// </summary>
-        /// <param name="serverType"></param>
-        /// <returns></returns>
-        public static MethodInstance[] GetMethodInstances(Type serverType)
-        {
-            if (!typeof(IServerProvider).IsAssignableFrom(serverType))
-            {
-                throw new RRQMRPCException($"服务类型必须从{nameof(IServerProvider)}派生。");
-            }
-            List<MethodInstance> instances = new List<MethodInstance>();
-
-            MethodInfo[] methodInfos = serverType.GetMethods();
-
-            foreach (MethodInfo method in methodInfos)
-            {
-                if (method.IsGenericMethod)
-                {
-                    continue;
-                }
-                IEnumerable<RPCAttribute> attributes = method.GetCustomAttributes<RPCAttribute>(true);
-                if (attributes.Count() > 0)
-                {
-                    MethodInstance methodInstance = new MethodInstance();
-                    methodInstance.Provider = null;
-                    methodInstance.ProviderType = serverType;
-                    methodInstance.Method = method;
-                    methodInstance.RPCAttributes = attributes.ToArray();
-                    methodInstance.DescriptionAttribute = method.GetCustomAttribute<DescriptionAttribute>();
-                    methodInstance.IsEnable = true;
-                    methodInstance.Parameters = method.GetParameters();
-                    foreach (var item in attributes)
-                    {
-                        if (item.Async)
-                        {
-                            methodInstance.AsyncType |= AsyncType.Async;
-                        }
-                        methodInstance.MethodFlags |= item.MethodFlags;
-                    }
-                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
-                    {
-                        if (methodInstance.Parameters.Length == 0 || !typeof(ICallContext).IsAssignableFrom(methodInstance.Parameters[0].ParameterType))
-                        {
-                            throw new RRQMRPCException($"函数：{method}，标识包含{MethodFlags.IncludeCallContext}时，必须包含{nameof(ICallContext)}或其派生类参数，且为第一参数。");
-                        }
-                    }
-                    List<string> names = new List<string>();
-                    foreach (var parameterInfo in methodInstance.Parameters)
-                    {
-                        names.Add(parameterInfo.Name);
-                    }
-                    methodInstance.ParameterNames = names.ToArray();
-                    if (typeof(Task).IsAssignableFrom(method.ReturnType))
-                    {
-                        methodInstance.AsyncType = methodInstance.AsyncType | AsyncType.Task;
-                    }
-
-                    ParameterInfo[] parameters = method.GetParameters();
-                    List<Type> types = new List<Type>();
-                    foreach (var parameter in parameters)
-                    {
-                        types.Add(parameter.ParameterType.GetRefOutType());
-                        if (parameter.ParameterType.IsByRef)
-                        {
-                            methodInstance.IsByRef = true;
-                        }
-                    }
-                    methodInstance.ParameterTypes = types.ToArray();
-
-                    if (method.ReturnType == typeof(void) || method.ReturnType == typeof(Task))
-                    {
-                        methodInstance.ReturnType = null;
-                    }
-                    else
-                    {
-                        if (methodInstance.AsyncType.HasFlag(AsyncType.Task))
-                        {
-                            Type[] ts = method.ReturnType.GetGenericArguments();
-                            if (ts.Length == 1)
-                            {
-                                methodInstance.ReturnType = ts[0];
-                            }
-                            else
-                            {
-                                methodInstance.ReturnType = null;
-                            }
-                        }
-                        else
-                        {
-                            methodInstance.ReturnType = method.ReturnType;
-                        }
-                    }
-                    instances.Add(methodInstance);
-                }
-            }
-
-            return instances.ToArray();
-        }
-
-        /// <summary>
-        /// 生成代码代理
-        /// </summary>
-        /// <typeparam name="TServer">服务类型</typeparam>
-        /// <typeparam name="TAttribute">属性标签</typeparam>
-        /// <returns></returns>
-        public static ServerCellCode Generator<TServer, TAttribute>() where TServer : IServerProvider where TAttribute : RPCAttribute
-        {
-            ServerCellCode serverCellCode = new ServerCellCode();
-            MethodInstance[] methodInstances = GetMethodInstances<TServer>();
-            List<string> refs = new List<string>();
-
-            ClassCodeGenerator classCodeGenerator = new ClassCodeGenerator(typeof(TServer).Assembly);
-
-            serverCellCode.Name = typeof(TServer).Name;
-            List<MethodInstance> instances = new List<MethodInstance>();
-
-            foreach (MethodInstance methodInstance in methodInstances)
-            {
-                foreach (RPCAttribute att in methodInstance.RPCAttributes)
-                {
-                    if (att is TAttribute attribute)
-                    {
-                        if (methodInstance.ReturnType != null)
-                        {
-                            if (!refs.Contains(methodInstance.ReturnType.Assembly.Location))
-                            {
-                                refs.Add(methodInstance.ReturnType.Assembly.Location);
-                            }
-
-                            classCodeGenerator.AddTypeString(methodInstance.ReturnType);
-                        }
-
-                        int i = 0;
-                        if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
-                        {
-                            i = 1;
-                        }
-                        for (; i < methodInstance.ParameterTypes.Length; i++)
-                        {
-                            if (!refs.Contains(methodInstance.ParameterTypes[i].Assembly.Location))
-                            {
-                                refs.Add(methodInstance.ParameterTypes[i].Assembly.Location);
-                            }
-                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i]);
-                        }
-
-                        instances.Add(methodInstance);
-                        break;
-                    }
-                }
-            }
-            foreach (var item in classCodeGenerator.GetClassCellCodes())
-            {
-                serverCellCode.ClassCellCodes.Add(item.Name, item);
-            }
-
-#if NET45_OR_GREATER
-            serverCellCode.Refs = refs.ToArray();
-#endif
-
-            ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
-
-            foreach (var item in instances)
-            {
-                MethodCellCode methodCellCode = new MethodCellCode();
-                methodCellCode.InterfaceCode = serverCodeGenerator.GetInterfaceProxy<TAttribute>(item);
-                methodCellCode.Code = serverCodeGenerator.GetMethodProxy<TAttribute>(item);
-                methodCellCode.Name = CodeGenerator.GetMethodName<TAttribute>(item);
-                serverCellCode.Methods.Add(methodCellCode.Name, methodCellCode);
-            }
-
-            return serverCellCode;
-        }
-
-        /// <summary>
-        /// 获取方法名
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="methodInstance"></param>
-        /// <returns></returns>
-        public static string GetMethodName<T>(MethodInstance methodInstance) where T : RPCAttribute
-        {
-            string mname = methodInstance.GetAttribute<T>().MethodName;
-            string methodName;
-            if (string.IsNullOrEmpty(mname))
-            {
-                methodName = methodInstance.Method.Name;
-            }
-            else
-            {
-                methodName = mname;
-            }
-            return methodName;
-        }
-
-        /// <summary>
-        /// 生成代码代理
-        /// </summary>
-        /// <typeparam name="TAttribute">属性标签</typeparam>
-        /// <param name="serverType">服务类型</param>
-        /// <returns></returns>
-        public static ServerCellCode Generator<TAttribute>(Type serverType) where TAttribute : RPCAttribute
-        {
-            ServerCellCode serverCellCode = new ServerCellCode();
-            MethodInstance[] methodInstances = GetMethodInstances(serverType);
-            List<string> refs = new List<string>();
-
-            ClassCodeGenerator classCodeGenerator = new ClassCodeGenerator(serverType.Assembly);
-
-            serverCellCode.Name = serverType.Name;
-            List<MethodInstance> instances = new List<MethodInstance>();
-
-            foreach (MethodInstance methodInstance in methodInstances)
-            {
-                foreach (RPCAttribute att in methodInstance.RPCAttributes)
-                {
-                    if (att is TAttribute attribute)
-                    {
-                        if (methodInstance.ReturnType != null)
-                        {
-                            if (!refs.Contains(methodInstance.ReturnType.Assembly.Location))
-                            {
-                                refs.Add(methodInstance.ReturnType.Assembly.Location);
-                            }
-
-                            classCodeGenerator.AddTypeString(methodInstance.ReturnType);
-                        }
-
-                        int i = 0;
-                        if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
-                        {
-                            i = 1;
-                        }
-                        for (; i < methodInstance.ParameterTypes.Length; i++)
-                        {
-                            if (!refs.Contains(methodInstance.ParameterTypes[i].Assembly.Location))
-                            {
-                                refs.Add(methodInstance.ParameterTypes[i].Assembly.Location);
-                            }
-                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i]);
-                        }
-
-                        instances.Add(methodInstance);
-                        break;
-                    }
-                }
-            }
-            foreach (var item in classCodeGenerator.GetClassCellCodes())
-            {
-                serverCellCode.ClassCellCodes.Add(item.Name, item);
-            }
-
-#if NET45_OR_GREATER
-            serverCellCode.Refs = refs.ToArray();
-#endif
-
-            ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
-
-            foreach (var item in instances)
-            {
-                MethodCellCode methodCellCode = new MethodCellCode();
-                methodCellCode.InterfaceCode = serverCodeGenerator.GetInterfaceProxy<TAttribute>(item);
-                methodCellCode.Code = serverCodeGenerator.GetMethodProxy<TAttribute>(item);
-                methodCellCode.Name = CodeGenerator.GetMethodName<TAttribute>(item);
-                serverCellCode.Methods.Add(methodCellCode.Name, methodCellCode);
-            }
-
-            return serverCellCode;
+            return proxyType.ContainsKey(type);
         }
 
         /// <summary>
@@ -407,6 +125,8 @@ namespace RRQMSocket.RPC
             string namesp = string.IsNullOrEmpty(@namespace) ? "RRQMProxy" : @namespace;
 
             codeString.AppendLine("using System;");
+            codeString.AppendLine("using RRQMCore;");
+            codeString.AppendLine("using RRQMSocket;");
             codeString.AppendLine("using RRQMSocket.RPC;");
             codeString.AppendLine("using RRQMSocket.RPC.RRQMRPC;");
             codeString.AppendLine("using System.Collections.Generic;");
@@ -423,7 +143,7 @@ namespace RRQMSocket.RPC
                 codeString.AppendLine("{");
                 foreach (var item in serverCellCode.Methods.Values)
                 {
-                    codeString.AppendLine(item.InterfaceCode);
+                    codeString.AppendLine(item.GetInterfaceCode());
                 }
                 codeString.AppendLine("}");
                 //接口
@@ -438,7 +158,7 @@ namespace RRQMSocket.RPC
                 codeString.AppendLine("public IRpcClient Client{get;private set; }");
                 foreach (var item in serverCellCode.Methods.Values)
                 {
-                    codeString.AppendLine(item.Code);
+                    codeString.AppendLine(item.GetCode());
                 }
                 codeString.AppendLine("}");
                 //类
@@ -452,6 +172,198 @@ namespace RRQMSocket.RPC
             codeString.AppendLine("}");
 
             return codeString.ToString();
+        }
+
+        /// <summary>
+        /// 生成代码代理
+        /// </summary>
+        /// <typeparam name="TServer">服务类型</typeparam>
+        /// <typeparam name="TAttribute">属性标签</typeparam>
+        /// <param name="onMethod">当每次使用<see cref="MethodInstance"/>生成<see cref="MethodCellCode"/>时</param>
+        /// <returns></returns>
+        public static ServerCellCode Generator<TServer, TAttribute>(GeneratorCallback<TAttribute> onMethod = default) where TServer : IServerProvider where TAttribute : RpcAttribute
+        {
+            return Generator<TAttribute>(typeof(TServer), onMethod);
+        }
+
+        /// <summary>
+        /// 生成代码代理
+        /// </summary>
+        /// <typeparam name="TAttribute">属性标签</typeparam>
+        /// <param name="serverType">服务类型</param>
+        /// <param name="onMethod">当每次使用<see cref="MethodInstance"/>生成<see cref="MethodCellCode"/>时</param>
+        /// <returns></returns>
+        public static ServerCellCode Generator<TAttribute>(Type serverType, GeneratorCallback<TAttribute> onMethod = default) where TAttribute : RpcAttribute
+        {
+            ServerCellCode serverCellCode = new ServerCellCode();
+            MethodInstance[] methodInstances = GetMethodInstances(serverType);
+
+            ClassCodeGenerator classCodeGenerator = new ClassCodeGenerator(serverType.Assembly);
+
+            serverCellCode.Name = serverType.Name;
+            List<MethodInstance> instances = new List<MethodInstance>();
+
+            foreach (MethodInstance methodInstance in methodInstances)
+            {
+                foreach (RpcAttribute att in methodInstance.RpcAttributes)
+                {
+                    if (att is TAttribute)
+                    {
+                        if (methodInstance.ReturnType != null)
+                        {
+                            classCodeGenerator.AddTypeString(methodInstance.ReturnType);
+                        }
+
+                        int i = 0;
+                        if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                        {
+                            i = 1;
+                        }
+                        for (; i < methodInstance.ParameterTypes.Length; i++)
+                        {
+                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i]);
+                        }
+
+                        instances.Add(methodInstance);
+                        break;
+                    }
+                }
+            }
+            foreach (var item in classCodeGenerator.GetClassCellCodes())
+            {
+                serverCellCode.ClassCellCodes.Add(item.Name, item);
+            }
+
+            ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
+
+            foreach (var item in instances)
+            {
+                MethodCellCode methodCellCode = new MethodCellCode();
+                methodCellCode.InterfaceTemple = serverCodeGenerator.GetInterfaceProxy<TAttribute>(item);
+                methodCellCode.CodeTemple = serverCodeGenerator.GetMethodProxy<TAttribute>(item);
+                methodCellCode.Name = CodeGenerator.GetMethodName<TAttribute>(item);
+                if (onMethod != null)
+                {
+                    if (onMethod.Invoke(item, methodCellCode))
+                    {
+                        serverCellCode.Methods.Add(methodCellCode.Name, methodCellCode);
+                    }
+                }
+                else
+                {
+                    serverCellCode.Methods.Add(methodCellCode.Name, methodCellCode);
+                }
+            }
+
+            return serverCellCode;
+        }
+
+        /// <summary>
+        /// 从类型获取函数实例
+        /// </summary>
+        /// <typeparam name="TServer"></typeparam>
+        /// <returns></returns>
+        public static MethodInstance[] GetMethodInstances<TServer>() where TServer : IServerProvider
+        {
+            return GetMethodInstances(typeof(TServer));
+        }
+
+        /// <summary>
+        /// 从类型获取函数实例
+        /// </summary>
+        /// <param name="serverType"></param>
+        /// <returns></returns>
+        public static MethodInstance[] GetMethodInstances(Type serverType)
+        {
+            if (!typeof(IServerProvider).IsAssignableFrom(serverType))
+            {
+                throw new RpcException($"服务类型必须从{nameof(IServerProvider)}派生。");
+            }
+            List<MethodInstance> instances = new List<MethodInstance>();
+
+            MethodInfo[] methodInfos = serverType.GetMethods();
+
+            foreach (MethodInfo method in methodInfos)
+            {
+                if (method.IsGenericMethod)
+                {
+                    continue;
+                }
+                IEnumerable<RpcAttribute> attributes = method.GetCustomAttributes<RpcAttribute>(true);
+                if (attributes.Count() > 0)
+                {
+                    MethodInstance methodInstance = new MethodInstance(method);
+                    methodInstance.Provider = null;
+                    methodInstance.ProviderType = serverType;
+                    methodInstance.RpcAttributes = attributes.ToArray();
+                    methodInstance.DescriptionAttribute = method.GetCustomAttribute<DescriptionAttribute>();
+                    methodInstance.IsEnable = true;
+                    methodInstance.Parameters = method.GetParameters();
+                    foreach (var item in attributes)
+                    {
+                        if (item.Async)
+                        {
+                            methodInstance.AsyncType |= AsyncType.Async;
+                        }
+                        methodInstance.MethodFlags |= item.MethodFlags;
+                    }
+                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                    {
+                        if (methodInstance.Parameters.Length == 0 || !typeof(ICallContext).IsAssignableFrom(methodInstance.Parameters[0].ParameterType))
+                        {
+                            throw new RpcException($"函数：{method}，标识包含{MethodFlags.IncludeCallContext}时，必须包含{nameof(ICallContext)}或其派生类参数，且为第一参数。");
+                        }
+                    }
+                    List<string> names = new List<string>();
+                    foreach (var parameterInfo in methodInstance.Parameters)
+                    {
+                        names.Add(parameterInfo.Name);
+                    }
+                    methodInstance.ParameterNames = names.ToArray();
+                    ParameterInfo[] parameters = method.GetParameters();
+                    List<Type> types = new List<Type>();
+                    foreach (var parameter in parameters)
+                    {
+                        types.Add(parameter.ParameterType.GetRefOutType());
+                    }
+                    methodInstance.ParameterTypes = types.ToArray();
+                    instances.Add(methodInstance);
+                }
+            }
+
+            return instances.ToArray();
+        }
+
+        /// <summary>
+        /// 获取函数名称
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="methodInstance"></param>
+        /// <returns></returns>
+        public static string GetMethodName<T>(MethodInstance methodInstance) where T : RpcAttribute
+        {
+            string mname = methodInstance.GetAttribute<T>().MethodName;
+            string methodName;
+            if (string.IsNullOrEmpty(mname))
+            {
+                methodName = methodInstance.Name;
+            }
+            else
+            {
+                methodName = mname;
+            }
+            return methodName;
+        }
+
+        /// <summary>
+        /// 获取类型代理名称
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="className"></param>
+        /// <returns></returns>
+        public static bool TryGetProxyTypeName(Type type, out string className)
+        {
+            return proxyType.TryGetValue(type, out className);
         }
     }
 }

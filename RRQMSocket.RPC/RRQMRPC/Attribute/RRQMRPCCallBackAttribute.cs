@@ -15,10 +15,10 @@ using System;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// RPC方法标记属性类
+    /// Rpc方法标记属性类
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    public sealed class RRQMRPCCallBackAttribute : RPCAttribute
+    public sealed class RRQMRPCCallBackAttribute : RpcAttribute
     {
     }
 }

@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
-
+using RRQMCore.Dependency;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,20 +21,21 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC服务器类
+    /// Rpc服务器类
     /// </summary>
-    public class RPCService : IDisposable
+    public class RpcService : IDisposable
     {
         private ProtocolService service;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RPCService()
+        public RpcService()
         {
             this.ServerProviders = new ServerProviderCollection();
-            this.RPCParsers = new RPCParserCollection();
+            this.RpcParsers = new RpcParserCollection();
             this.MethodMap = new MethodMap();
+            this.Container = new Container();
         }
 
         /// <summary>
@@ -48,14 +49,19 @@ namespace RRQMSocket.RPC
         public string NameSpace { get; set; }
 
         /// <summary>
+        /// 注入容器
+        /// </summary>
+        public IContainer Container { get; set; }
+
+        /// <summary>
         /// 获取函数映射图实例
         /// </summary>
         public MethodMap MethodMap { get; private set; }
 
         /// <summary>
-        /// 获取RPC解析器集合
+        /// 获取Rpc解析器集合
         /// </summary>
-        public RPCParserCollection RPCParsers { get; private set; }
+        public RpcParserCollection RpcParsers { get; private set; }
 
         /// <summary>
         /// 服务实例集合
@@ -63,25 +69,25 @@ namespace RRQMSocket.RPC
         public ServerProviderCollection ServerProviders { get; private set; }
 
         /// <summary>
-        /// 添加RPC解析器，并将之前注册的服务应用
+        /// 添加Rpc解析器，并将之前注册的服务应用
         /// </summary>
         /// <param name="key">名称</param>
         /// <param name="parser">解析器实例</param>
-        public void AddRPCParser(string key, IRPCParser parser)
+        public void AddRpcParser(string key, IRpcParser parser)
         {
-            this.AddRPCParser(key, parser, true);
+            this.AddRpcParser(key, parser, true);
         }
 
         /// <summary>
-        /// 添加RPC解析器
+        /// 添加Rpc解析器
         /// </summary>
         /// <param name="key">名称</param>
         /// <param name="parser">解析器实例</param>
         /// <param name="applyServer">是否应用已注册服务</param>
-        public void AddRPCParser(string key, IRPCParser parser, bool applyServer)
+        public void AddRpcParser(string key, IRpcParser parser, bool applyServer)
         {
-            this.RPCParsers.Add(key, parser);
-            parser.SetRPCService(this);
+            this.RpcParsers.Add(key, parser);
+            parser.SetRpcService(this);
             parser.SetExecuteMethod(this.PreviewExecuteMethod);
             parser.SetMethodMap(this.MethodMap);
 
@@ -113,11 +119,11 @@ namespace RRQMSocket.RPC
         public void Dispose()
         {
             this.StopShareProxy();
-            foreach (var item in this.RPCParsers)
+            foreach (var item in this.RpcParsers)
             {
                 item.Dispose();
             }
-            this.RPCParsers = null;
+            this.RpcParsers = null;
         }
 
         /// <summary>
@@ -129,7 +135,7 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         public RpcProxyInfo GetProxyInfo(IPHost iPHost, RpcType rpcType, string proxyToken)
         {
-            SimpleProtocolClient client = new SimpleProtocolClient();
+            ProtocolClient client = new ProtocolClient();
             client.Connecting += (client, e) =>
             {
                 e.DataHandlingAdapter = new FixedHeaderPackageAdapter();
@@ -137,10 +143,10 @@ namespace RRQMSocket.RPC
             ByteBlock byteBlock = new ByteBlock();
             try
             {
-                ProtocolClientConfig config = new ProtocolClientConfig();
-                config.RemoteIPHost = iPHost;
+                RRQMConfig config = new RRQMConfig();
+                config.SetRemoteIPHost(iPHost);
                 client.Setup(config).Connect();
-                WaitSenderSubscriber subscriber = new WaitSenderSubscriber(100) { Timeout = 3 * 1000 };
+                WaitSenderSubscriber subscriber = new WaitSenderSubscriber(100);
                 client.AddProtocolSubscriber(subscriber);
 
                 byteBlock.Write((int)rpcType);
@@ -190,9 +196,9 @@ namespace RRQMSocket.RPC
         {
             if (!typeof(IServerProvider).IsAssignableFrom(providerType))
             {
-                throw new RRQMRPCException("类型不相符");
+                throw new RpcException("类型不相符");
             }
-            IServerProvider serverProvider = (IServerProvider)Activator.CreateInstance(providerType);
+            IServerProvider serverProvider = (IServerProvider)this.Container.Resolve(providerType);
             this.RegisterServer(serverProvider);
             return serverProvider;
         }
@@ -203,7 +209,7 @@ namespace RRQMSocket.RPC
         /// <param name="serverProvider"></param>
         public void RegisterServer(IServerProvider serverProvider)
         {
-            serverProvider.RPCService = this;
+            serverProvider.RpcService = this;
             this.ServerProviders.Add(serverProvider);
             MethodInstance[] methodInstances = GlobalTools.GetMethodInstances(serverProvider);
 
@@ -211,31 +217,31 @@ namespace RRQMSocket.RPC
             {
                 this.MethodMap.Add(item);
             }
-            foreach (var parser in this.RPCParsers)
+            foreach (var parser in this.RpcParsers)
             {
                 parser.OnRegisterServer(serverProvider, methodInstances);
             }
         }
 
         /// <summary>
-        /// 移除RPC解析器
+        /// 移除Rpc解析器
         /// </summary>
         /// <param name="parserName"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public bool RemoveRPCParser(string parserName, out IRPCParser parser)
+        public bool RemoveRpcParser(string parserName, out IRpcParser parser)
         {
-            return this.RPCParsers.TryRemove(parserName, out parser);
+            return this.RpcParsers.TryRemove(parserName, out parser);
         }
 
         /// <summary>
-        /// 移除RPC解析器
+        /// 移除Rpc解析器
         /// </summary>
         /// <param name="parserName"></param>
         /// <returns></returns>
-        public bool RemoveRPCParser(string parserName)
+        public bool RemoveRpcParser(string parserName)
         {
-            return this.RemoveRPCParser(parserName, out _);
+            return this.RemoveRpcParser(parserName, out _);
         }
 
         /// <summary>
@@ -243,7 +249,7 @@ namespace RRQMSocket.RPC
         /// </summary>
         /// <param name="methodToken">方法名</param>
         /// <param name="enable">可用性</param>
-        /// <exception cref="RRQMRPCException"></exception>
+        /// <exception cref="RpcException"></exception>
         public void SetMethodEnable(int methodToken, bool enable)
         {
             if (this.MethodMap.TryGet(methodToken, out MethodInstance methodInstance))
@@ -252,7 +258,7 @@ namespace RRQMSocket.RPC
             }
             else
             {
-                throw new RRQMRPCException("未找到该方法");
+                throw new RpcException("未找到该方法");
             }
         }
 
@@ -272,7 +278,7 @@ namespace RRQMSocket.RPC
                 e.DataHandlingAdapter = new FixedHeaderPackageAdapter();
             };
             this.service.Received += this.Service_Received;
-            this.service.Setup(new ProtocolServiceConfig() { ListenIPHosts = new IPHost[] { iPHost } });
+            this.service.Setup(new RRQMConfig().SetListenIPHosts(new IPHost[] { iPHost }));
             this.service.Start();
         }
 
@@ -294,9 +300,9 @@ namespace RRQMSocket.RPC
         /// <param name="parserKey"></param>
         /// <param name="parser"></param>
         /// <returns></returns>
-        public bool TryGetRPCParser(string parserKey, out IRPCParser parser)
+        public bool TryGetRpcParser(string parserKey, out IRpcParser parser)
         {
-            return this.RPCParsers.TryGetRPCParser(parserKey, out parser);
+            return this.RpcParsers.TryGetRpcParser(parserKey, out parser);
         }
 
         /// <summary>
@@ -318,12 +324,12 @@ namespace RRQMSocket.RPC
         {
             if (!typeof(IServerProvider).IsAssignableFrom(providerType))
             {
-                throw new RRQMRPCException("类型不相符");
+                throw new RpcException("类型不相符");
             }
             this.ServerProviders.Remove(providerType);
             if (this.MethodMap.RemoveServer(providerType, out IServerProvider serverProvider, out MethodInstance[] instances))
             {
-                foreach (var parser in this.RPCParsers)
+                foreach (var parser in this.RpcParsers)
                 {
                     parser.OnUnregisterServer(serverProvider, instances);
                 }
@@ -343,31 +349,26 @@ namespace RRQMSocket.RPC
             return this.UnregisterServer(typeof(T));
         }
 
-        private void ExecuteMethod(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        private void ExecuteMethod(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             if (methodInvoker.Status == InvokeStatus.Ready)
             {
                 IServerProvider serverProvider = this.GetServerProvider(methodInvoker, methodInstance);
                 try
                 {
-                    serverProvider.RPCEnter(parser, methodInvoker, methodInstance);
-                    if (methodInstance.AsyncType.HasFlag(AsyncType.Task))
+                    serverProvider.RpcEnter(parser, methodInvoker, methodInstance);
+                    if (methodInstance.HasReturn)
                     {
-                        dynamic task = methodInstance.Method.Invoke(serverProvider, methodInvoker.Parameters);
-                        task.Wait();
-                        if (methodInstance.ReturnType != null)
-                        {
-                            methodInvoker.ReturnParameter = task.Result;
-                        }
+                        methodInvoker.ReturnParameter = methodInstance.Invoke(serverProvider, methodInvoker.Parameters);
                     }
                     else
                     {
-                        methodInvoker.ReturnParameter = methodInstance.Method.Invoke(serverProvider, methodInvoker.Parameters);
+                        methodInstance.Invoke(serverProvider, methodInvoker.Parameters);
                     }
-                    serverProvider.RPCLeave(parser, methodInvoker, methodInstance);
+                    serverProvider.RpcLeave(parser, methodInvoker, methodInstance);
                     methodInvoker.Status = InvokeStatus.Success;
                 }
-                catch (RRQMAbandonRPCException e)
+                catch (AbandonRpcException e)
                 {
                     methodInvoker.Status = InvokeStatus.Abort;
                     methodInvoker.StatusMessage = "函数被阻止执行，信息：" + e.Message;
@@ -383,13 +384,13 @@ namespace RRQMSocket.RPC
                     {
                         methodInvoker.StatusMessage = "函数内部发生异常，信息：未知";
                     }
-                    serverProvider.RPCError(parser, methodInvoker, methodInstance);
+                    serverProvider.RpcError(parser, methodInvoker, methodInstance);
                 }
                 catch (Exception e)
                 {
                     methodInvoker.Status = InvokeStatus.Exception;
                     methodInvoker.StatusMessage = e.Message;
-                    serverProvider.RPCError(parser, methodInvoker, methodInstance);
+                    serverProvider.RpcError(parser, methodInvoker, methodInstance);
                 }
             }
 
@@ -398,24 +399,7 @@ namespace RRQMSocket.RPC
 
         private IServerProvider GetServerProvider(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            switch (methodInvoker.InvokeType)
-            {
-                default:
-                case InvokeType.GlobalInstance:
-                    {
-                        return methodInstance.Provider;
-                    }
-                case InvokeType.CustomInstance:
-                    {
-                        if (methodInvoker.CustomServerProvider == null)
-                        {
-                            throw new RRQMRPCException($"调用类型为{InvokeType.CustomInstance}时，{methodInvoker.CustomServerProvider}不能为空。");
-                        }
-                        return methodInvoker.CustomServerProvider;
-                    }
-                case InvokeType.NewInstance:
-                    return (IServerProvider)Activator.CreateInstance(methodInstance.Provider.GetType());
-            }
+            return methodInstance.Provider;
         }
 
         /// <summary>
@@ -426,23 +410,21 @@ namespace RRQMSocket.RPC
         /// <returns></returns>
         public RpcProxyInfo GetProxyInfo(RpcType rpcType, string proxyToken)
         {
-            GetProxyInfoArgs args = new GetProxyInfoArgs(proxyToken, rpcType)
-            {
-                IsSuccess = true,
-            };
-            if (this.RPCParsers.Count == 0)
+            GetProxyInfoArgs args = new GetProxyInfoArgs(proxyToken, rpcType);
+            if (this.RpcParsers.Count == 0)
             {
                 return new RpcProxyInfo() { IsSuccess = false, ErrorMessage = "没有可用解析器提供代理。" };
             }
-            foreach (var item in this.RPCParsers)
+
+            foreach (var item in this.RpcParsers)
             {
                 item.GetProxyInfo(args);
-                if (!args.IsSuccess)
+                if (!args.Operation.HasFlag(RRQMCore.Operation.Permit))
                 {
                     return new RpcProxyInfo()
                     {
                         IsSuccess = false,
-                        ErrorMessage = args.ErrorMessage,
+                        ErrorMessage = args.Message,
                         Namespace = this.NameSpace,
                         Version = this.Version
                     };
@@ -451,7 +433,7 @@ namespace RRQMSocket.RPC
             return new RpcProxyInfo() { IsSuccess = true, Version = this.Version, Namespace = this.NameSpace, Codes = args.Codes.ToArray() };
         }
 
-        private void PreviewExecuteMethod(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
+        private void PreviewExecuteMethod(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             if (methodInvoker.Status == InvokeStatus.Ready && methodInstance.AsyncType.HasFlag(AsyncType.Async))
             {
@@ -466,7 +448,7 @@ namespace RRQMSocket.RPC
             }
         }
 
-        private void Service_Received(SimpleProtocolSocketClient socketClient, short protocol, ByteBlock byteBlock)
+        private void Service_Received(ProtocolSocketClient socketClient, short protocol, ByteBlock byteBlock)
         {
             switch (protocol)
             {

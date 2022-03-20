@@ -28,11 +28,6 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 异步
         /// </summary>
-        Async = 2,
-
-        /// <summary>
-        /// 返回值Task
-        /// </summary>
-        Task = 4
+        Async = 2
     }
 }

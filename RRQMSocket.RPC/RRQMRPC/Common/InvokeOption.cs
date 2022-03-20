@@ -17,7 +17,7 @@ using System.Threading;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// RPC调用设置
+    /// Rpc调用设置
     /// </summary>
     public struct InvokeOption : IInvokeOption
     {
@@ -40,18 +40,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="timeout"></param>
         /// <param name="feedbackType"></param>
-        /// <param name="invokeType"></param>
         /// <param name="serializationType"></param>
         /// <param name="cancellationToken"></param>
-        public InvokeOption(int timeout = 5000, FeedbackType feedbackType = FeedbackType.WaitInvoke,
-            InvokeType invokeType = InvokeType.GlobalInstance, SerializationType serializationType = SerializationType.RRQMBinary,
+        public InvokeOption(int timeout = 5000, FeedbackType feedbackType = FeedbackType.WaitInvoke, SerializationType serializationType = SerializationType.RRQMBinary,
             CancellationToken cancellationToken = default) : this()
         {
             this.Timeout = timeout;
             this.FeedbackType = feedbackType;
-            this.InvokeType = invokeType;
             this.SerializationType = serializationType;
-            this.CancellationToken = cancellationToken;
+            this.Token = cancellationToken;
         }
 
         /// <summary>
@@ -78,11 +75,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         public FeedbackType FeedbackType { get; set; }
 
         /// <summary>
-        /// 调用类型
-        /// </summary>
-        public InvokeType InvokeType { get; set; }
-
-        /// <summary>
         /// RRQMRPC序列化类型
         /// </summary>
         public SerializationType SerializationType { get; set; }
@@ -101,15 +93,12 @@ namespace RRQMSocket.RPC.RRQMRPC
                 }
                 return this.timeout;
             }
-            set
-            {
-                this.timeout = value;
-            }
+            set => this.timeout = value;
         }
 
         /// <summary>
         /// 可以取消的调用令箭
         /// </summary>
-        public CancellationToken CancellationToken { get; set; }
+        public CancellationToken Token { get; set; }
     }
 }

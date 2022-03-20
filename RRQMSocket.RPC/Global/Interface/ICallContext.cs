@@ -28,7 +28,7 @@ namespace RRQMSocket.RPC
         /// <summary>
         /// 实际调用者
         /// </summary>
-        ICaller Caller { get; }
+        object Caller { get; }
 
         /// <summary>
         /// 调用信使
@@ -36,7 +36,7 @@ namespace RRQMSocket.RPC
         MethodInvoker MethodInvoker { get; }
 
         /// <summary>
-        /// RPC请求实际
+        /// Rpc请求实际
         /// </summary>
         IRpcContext Context { get; }
 

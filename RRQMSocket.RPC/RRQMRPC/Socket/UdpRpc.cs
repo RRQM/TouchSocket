@@ -25,12 +25,12 @@ using System.Threading.Tasks;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// UDP RPC解释器
+    /// UDP Rpc解释器
     /// </summary>
-    public class UdpRpc : UdpSession, IRPCParser, IRRQMRpcParser, IRRQMRpcClient
+    public class UdpRpc : UdpSessionBase, IRpcParser, IRRQMRPCParser, IRRQMRPCClient
     {
         private ConcurrentDictionary<int, RpcCallContext> contextDic;
-        private Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod;
+        private Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod;
         private MethodMap methodMap;
         private MethodStore methodStore;
         private SerializationSelector serializationSelector;
@@ -74,25 +74,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public RPCService RPCService { get; private set; }
+        public RpcService RpcService { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public Action<IRPCParser, MethodInvoker, MethodInstance> RRQMExecuteMethod => this.executeMethod;
+        public Action<IRpcParser, MethodInvoker, MethodInstance> RRQMExecuteMethod => this.executeMethod;
 
         /// <summary>
         /// 序列化选择器
         /// </summary>
-        public SerializationSelector SerializationSelector
-        {
-            get { return this.serializationSelector; }
-        }
+        public SerializationSelector SerializationSelector => this.serializationSelector;
 
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
 
         /// <summary>
         /// 发现服务
@@ -104,7 +101,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             if (this.ServerState != ServerState.Running)
             {
-                throw new RRQMRPCException("UDP端需要先绑定本地监听端口");
+                throw new RpcException("UDP端需要先绑定本地监听端口");
             }
 
             int count = 0;
@@ -169,7 +166,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public virtual void ExecuteContext(RpcContext context, ICaller caller)
+        public virtual void ExecuteContext(RpcContext context, object caller)
         {
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = caller;
@@ -231,11 +228,11 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 if (args.ProxyToken != this.ProxyToken)
                 {
-                    args.ErrorMessage = "在验证RRQMRPC时令箭不正确。";
-                    args.IsSuccess = false;
+                    args.Message = "在验证RRQMRPC时令箭不正确。";
+                    args.RemoveOperation(Operation.Permit);
                     return;
                 }
-                foreach (var item in this.RPCService.ServerProviders)
+                foreach (var item in this.RpcService.ServerProviders)
                 {
                     var serverCellCode = CodeGenerator.Generator<RRQMRPCAttribute>(item.GetType());
                     args.Codes.Add(serverCellCode);
@@ -246,67 +243,31 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public virtual MethodItem[] GetRegisteredMethodItems(string proxyToken, ICaller caller)
+        public virtual MethodItem[] GetRegisteredMethodItems(string proxyToken, object caller)
         {
             return this.methodStore.GetAllMethodItem();
         }
 
-        #region RPC
-        /// <summary>
-        /// 函数式调用
-        /// </summary>
-        /// <param name="method">函数名</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">RPC调用设置</param>
-        /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return Task.Run(() =>
-            {
-                this.Invoke(method, invokeOption, parameters);
-            });
-        }
+        #region Rpc
 
         /// <summary>
-        /// 函数式调用
-        /// </summary>
-        /// <param name="method">方法名</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">RPC调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RRQMSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRPCInvokeException">RPC异常</exception>
-        /// <exception cref="RRQMException">其他异常</exception>
-        /// <returns>服务器返回结果</returns>
-        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return Task.Run(() =>
-            {
-                return this.Invoke<T>(method, invokeOption, parameters);
-            });
-        }
-
-        /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
-        /// <exception cref="RRQMRPCNoRegisterException"></exception>
+        /// <exception cref="RpcSerializationException"></exception>
+        /// <exception cref="RRQMRpcInvokeException"></exception>
+        /// <exception cref="RpcNoRegisterException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
+                throw new RpcNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RpcContext context = new RpcContext();
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
@@ -317,10 +278,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                 invokeOption = InvokeOption.WaitInvoke;
             }
 
-            if (invokeOption.CancellationToken.CanBeCanceled)
+            if (invokeOption.Token.CanBeCanceled)
             {
-                waitData.SetCancellationToken(invokeOption.CancellationToken);
-                invokeOption.CancellationToken.Register(() =>
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(() =>
                 {
                     this.CanceledInvoke(context.Sign);
                 });
@@ -396,23 +357,23 @@ namespace RRQMSocket.RPC.RRQMRPC
                                         }
                                         else if (resultContext.Status == 2)
                                         {
-                                            throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
+                                            throw new RRQMRpcInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
                                         }
                                         else if (resultContext.Status == 3)
                                         {
-                                            throw new RRQMRPCException("该方法已被禁用");
+                                            throw new RpcException("该方法已被禁用");
                                         }
                                         else if (resultContext.Status == 4)
                                         {
-                                            throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                                            throw new RpcException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                                         }
                                         else if (resultContext.Status == 5)
                                         {
-                                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                                            throw new RRQMRpcInvokeException("函数执行异常，详细信息：" + resultContext.Message);
                                         }
                                         else if (resultContext.Status == 6)
                                         {
-                                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
+                                            throw new RpcException($"函数异常，信息：{resultContext.Message}");
                                         }
                                         break;
                                     }
@@ -435,22 +396,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <param name="types"></param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCNoRegisterException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RpcSerializationException"></exception>
+        /// <exception cref="RpcNoRegisterException"></exception>
+        /// <exception cref="RRQMRpcInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
+                throw new RpcNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RpcContext context = new RpcContext();
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
@@ -461,10 +422,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                 invokeOption = InvokeOption.WaitInvoke;
             }
 
-            if (invokeOption.CancellationToken.CanBeCanceled)
+            if (invokeOption.Token.CanBeCanceled)
             {
-                waitData.SetCancellationToken(invokeOption.CancellationToken);
-                invokeOption.CancellationToken.Register(() =>
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(() =>
                 {
                     this.CanceledInvoke(context.Sign);
                 });
@@ -532,23 +493,23 @@ namespace RRQMSocket.RPC.RRQMRPC
                                         }
                                         else if (resultContext.Status == 2)
                                         {
-                                            throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
+                                            throw new RRQMRpcInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
                                         }
                                         else if (resultContext.Status == 3)
                                         {
-                                            throw new RRQMRPCException("该方法已被禁用");
+                                            throw new RpcException("该方法已被禁用");
                                         }
                                         else if (resultContext.Status == 4)
                                         {
-                                            throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                                            throw new RpcException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                                         }
                                         else if (resultContext.Status == 5)
                                         {
-                                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                                            throw new RRQMRpcInvokeException("函数执行异常，详细信息：" + resultContext.Message);
                                         }
                                         else if (resultContext.Status == 6)
                                         {
-                                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
+                                            throw new RpcException($"函数异常，信息：{resultContext.Message}");
                                         }
                                         break;
                                     }
@@ -571,21 +532,21 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
-        /// <exception cref="RRQMRPCNoRegisterException"></exception>
+        /// <exception cref="RpcSerializationException"></exception>
+        /// <exception cref="RRQMRpcInvokeException"></exception>
+        /// <exception cref="RpcNoRegisterException"></exception>
         /// <exception cref="RRQMException"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
+                throw new RpcNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RpcContext context = new RpcContext();
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
@@ -596,10 +557,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                 invokeOption = InvokeOption.WaitInvoke;
             }
 
-            if (invokeOption.CancellationToken.CanBeCanceled)
+            if (invokeOption.Token.CanBeCanceled)
             {
-                waitData.SetCancellationToken(invokeOption.CancellationToken);
-                invokeOption.CancellationToken.Register(() =>
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(() =>
                 {
                     this.CanceledInvoke(context.Sign);
                 });
@@ -653,23 +614,23 @@ namespace RRQMSocket.RPC.RRQMRPC
                                         }
                                         else if (resultContext.Status == 2)
                                         {
-                                            throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
+                                            throw new RRQMRpcInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
                                         }
                                         else if (resultContext.Status == 3)
                                         {
-                                            throw new RRQMRPCException("该方法已被禁用");
+                                            throw new RpcException("该方法已被禁用");
                                         }
                                         else if (resultContext.Status == 4)
                                         {
-                                            throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                                            throw new RpcException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                                         }
                                         else if (resultContext.Status == 5)
                                         {
-                                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                                            throw new RRQMRpcInvokeException("函数执行异常，详细信息：" + resultContext.Message);
                                         }
                                         else if (resultContext.Status == 6)
                                         {
-                                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
+                                            throw new RpcException($"函数异常，信息：{resultContext.Message}");
                                         }
                                         break;
                                     }
@@ -692,22 +653,22 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// RPC调用
+        /// Rpc调用
         /// </summary>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="RRQMSerializationException"></exception>
-        /// <exception cref="RRQMRPCNoRegisterException"></exception>
-        /// <exception cref="RRQMRPCInvokeException"></exception>
+        /// <exception cref="RpcSerializationException"></exception>
+        /// <exception cref="RpcNoRegisterException"></exception>
+        /// <exception cref="RRQMRpcInvokeException"></exception>
         /// <exception cref="RRQMException"></exception>
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
             if (!this.methodStore.TryGetMethodItem(method, out MethodItem methodItem))
             {
-                throw new RRQMRPCNoRegisterException($"服务名为{method}的服务未找到注册信息");
+                throw new RpcNoRegisterException($"服务名为{method}的服务未找到注册信息");
             }
             RpcContext context = new RpcContext();
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
@@ -718,10 +679,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                 invokeOption = InvokeOption.WaitInvoke;
             }
 
-            if (invokeOption.CancellationToken.CanBeCanceled)
+            if (invokeOption.Token.CanBeCanceled)
             {
-                waitData.SetCancellationToken(invokeOption.CancellationToken);
-                invokeOption.CancellationToken.Register(() =>
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(() =>
                 {
                     this.CanceledInvoke(context.Sign);
                 });
@@ -771,23 +732,23 @@ namespace RRQMSocket.RPC.RRQMRPC
                                         }
                                         else if (resultContext.Status == 2)
                                         {
-                                            throw new RRQMRPCInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
+                                            throw new RRQMRpcInvokeException("未找到该公共方法，或该方法未标记RRQMRPCMethod");
                                         }
                                         else if (resultContext.Status == 3)
                                         {
-                                            throw new RRQMRPCException("该方法已被禁用");
+                                            throw new RpcException("该方法已被禁用");
                                         }
                                         else if (resultContext.Status == 4)
                                         {
-                                            throw new RRQMRPCException($"服务器已阻止本次行为，信息：{resultContext.Message}");
+                                            throw new RpcException($"服务器已阻止本次行为，信息：{resultContext.Message}");
                                         }
                                         else if (resultContext.Status == 5)
                                         {
-                                            throw new RRQMRPCInvokeException("函数执行异常，详细信息：" + resultContext.Message);
+                                            throw new RRQMRpcInvokeException("函数执行异常，详细信息：" + resultContext.Message);
                                         }
                                         else if (resultContext.Status == 6)
                                         {
-                                            throw new RRQMRPCException($"函数异常，信息：{resultContext.Message}");
+                                            throw new RpcException($"函数异常，信息：{resultContext.Message}");
                                         }
                                         break;
                                     }
@@ -810,12 +771,48 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        #endregion RPC
+        /// <summary>
+        /// 函数式调用
+        /// </summary>
+        /// <param name="method">函数名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
+        /// <exception cref="TimeoutException"></exception>
+        /// <exception cref="RpcSerializationException"></exception>
+        /// <exception cref="RRQMRpcInvokeException"></exception>
+        /// <exception cref="RRQMException"></exception>
+        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+            {
+                this.Invoke(method, invokeOption, parameters);
+            });
+        }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 函数式调用
         /// </summary>
-        public void OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
+        /// <exception cref="TimeoutException">调用超时</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">Rpc异常</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>服务器返回结果</returns>
+        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+            {
+                return this.Invoke<T>(method, invokeOption, parameters);
+            });
+        }
+
+        #endregion Rpc
+
+        #region RPC解析器
+
+        void IRpcParser.OnEndInvoke(MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
             RpcContext context = (RpcContext)methodInvoker.Flag;
             if (context.Feedback != 2)
@@ -909,10 +906,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var item in methodInstances)
             {
@@ -925,7 +919,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     if (string.IsNullOrEmpty(attribute.MethodName))
                     {
-                        methodItem.Method = item.Method.Name;
+                        methodItem.Method = item.Name;
                     }
                     else
                     {
@@ -937,10 +931,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(IServerProvider provider, MethodInstance[] methodInstances)
         {
             foreach (var item in methodInstances)
             {
@@ -948,29 +939,22 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void SetExecuteMethod(Action<IRPCParser, MethodInvoker, MethodInstance> executeMethod)
+        void IRpcParser.SetExecuteMethod(Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod)
         {
             this.executeMethod = executeMethod;
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void SetMethodMap(MethodMap methodMap)
+        void IRpcParser.SetMethodMap(MethodMap methodMap)
         {
             this.methodMap = methodMap;
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void SetRPCService(RPCService service)
+        void IRpcParser.SetRpcService(RpcService service)
         {
-            this.RPCService = service;
+            this.RpcService = service;
         }
+
+        #endregion RPC解析器
 
         /// <summary>
         /// 密封处理
@@ -985,12 +969,12 @@ namespace RRQMSocket.RPC.RRQMRPC
 
             switch (protocol)
             {
-                case 100:/*100，请求RPC文件*/
+                case 100:/*100，请求Rpc文件*/
                     {
                         try
                         {
                             DiscoveryServiceWaitResult waitResult = SerializeConvert.RRQMBinaryDeserialize<DiscoveryServiceWaitResult>(buffer, 2);
-                            waitResult.Methods = ((IRRQMRpcParser)this).GetRegisteredMethodItems(waitResult.PT, new UdpCaller(this, remoteEndPoint));
+                            waitResult.Methods = ((IRRQMRPCParser)this).GetRegisteredMethodItems(waitResult.PT, new UdpCaller(this, remoteEndPoint));
                             byte[] data = SerializeConvert.RRQMBinarySerialize(waitResult);
                             this.UDPSend(104, remoteEndPoint, data, 0, data.Length);
                         }
@@ -1046,7 +1030,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 104:/*104，请求RPC文件返回*/
+                case 104:/*104，请求Rpc文件返回*/
                     {
                         try
                         {
@@ -1065,15 +1049,15 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        protected override void LoadConfig(ServiceConfig serviceConfig)
+        protected override void LoadConfig(RRQMConfig serviceConfig)
         {
-            this.serializationSelector = (SerializationSelector)serviceConfig.GetValue(UdpRpcParserConfig.SerializationSelectorProperty);
-            this.ProxyToken = (string)serviceConfig.GetValue(UdpRpcParserConfig.ProxyTokenProperty);
+            this.serializationSelector = (SerializationSelector)serviceConfig.GetValue(RRQMRPCConfigExtensions.SerializationSelectorProperty);
+            this.ProxyToken = (string)serviceConfig.GetValue(RpcConfigExtensions.ProxyTokenProperty);
             base.LoadConfig(serviceConfig);
         }
 
         /// <summary>
-        /// RPC完成初始化后
+        /// Rpc完成初始化后
         /// </summary>
         /// <param name="args"></param>
         protected virtual void OnServiceDiscovered(MesEventArgs args)
@@ -1098,7 +1082,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             MethodInvoker methodInvoker = new MethodInvoker();
             methodInvoker.Caller = new UdpCaller(this, endPoint);
             methodInvoker.Flag = context;
-            methodInvoker.InvokeType = context.InvokeType;
             if (this.methodMap.TryGet(context.MethodToken, out MethodInstance methodInstance))
             {
                 try

@@ -15,70 +15,28 @@ using System;
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC方法属性基类
+    /// Rpc方法属性基类
     /// </summary>
-    public abstract class RPCAttribute : Attribute
+    public abstract class RpcAttribute : Attribute
     {
-        private MethodFlags methodFlags = MethodFlags.None;
-
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RPCAttribute()
+        public RpcAttribute()
         {
-            this.async = true;
+            this.Async = true;
+            this.MethodFlags = MethodFlags.None;
         }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodFlags"></param>
-        public RPCAttribute(MethodFlags methodFlags)
-        {
-            this.methodFlags = methodFlags;
-            this.async = true;
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodName"></param>
-        /// <param name="methodFlags"></param>
-        public RPCAttribute(string methodName, MethodFlags methodFlags)
-        {
-            this.MethodName = methodName;
-            this.methodFlags = methodFlags;
-            this.async = true;
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="methodName"></param>
-        public RPCAttribute(string methodName)
-        {
-            this.MethodName = methodName;
-            this.async = true;
-        }
-
-        private bool async;
         /// <summary>
         /// 异步执行(默认True)。
         /// </summary>
-        public bool Async
-        {
-            get { return this.async; }
-            set { this.async = value; }
-        }
+        public bool Async { get; set; }
 
         /// <summary>
         /// 函数标识
         /// </summary>
-        public MethodFlags MethodFlags
-        {
-            get { return this.methodFlags; }
-            set { this.methodFlags = value; }
-        }
+        public MethodFlags MethodFlags { get; set; }
 
         /// <summary>
         /// 函数名

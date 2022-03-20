@@ -14,38 +14,38 @@
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RRQM的RPC服务接口
+    /// RRQM的Rpc服务接口
     /// </summary>
     public interface IServerProvider
     {
         /// <summary>
         /// 该服务所属的服务器
         /// </summary>
-        RPCService RPCService { get; set; }
+        RpcService RpcService { get; set; }
 
         /// <summary>
-        /// RPC即将进入,
-        /// 若是想放弃本次执行，请抛出<see cref="RRQMAbandonRPCException"/>
+        /// Rpc即将进入,
+        /// 若是想放弃本次执行，请抛出<see cref="AbandonRpcException"/>
         /// </summary>
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        void RPCEnter(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
+        void RpcEnter(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
-        /// 执行RPC发生错误
+        /// 执行Rpc发生错误
         /// </summary>
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        void RPCError(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
+        void RpcError(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
 
         /// <summary>
-        /// RPC方法执行完成
+        /// Rpc方法执行完成
         /// </summary>
         /// <param name="parser"></param>
         /// <param name="methodInvoker"></param>
         /// <param name="methodInstance"></param>
-        void RPCLeave(IRPCParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
+        void RpcLeave(IRpcParser parser, MethodInvoker methodInvoker, MethodInstance methodInstance);
     }
 }

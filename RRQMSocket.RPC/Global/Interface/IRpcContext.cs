@@ -14,7 +14,7 @@
 namespace RRQMSocket.RPC
 {
     /// <summary>
-    /// RPC上下文
+    /// Rpc上下文
     /// </summary>
     public interface IRpcContext
     {

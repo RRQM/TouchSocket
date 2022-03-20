@@ -19,7 +19,7 @@ using System.Collections.Generic;
 namespace RRQMSocket.RPC.RRQMRPC
 {
     /// <summary>
-    /// RPC传输类
+    /// Rpc传输类
     /// </summary>
     public sealed class RpcContext : WaitResult, IRpcContext
     {
@@ -30,81 +30,47 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal byte[] returnParameterBytes;
         internal int timeout;
         private byte feedback;
-        private byte invokeType;
         private byte serializationType;
 
         /// <summary>
         /// 反馈类型
         /// </summary>
-        public byte Feedback
-        {
-            get { return this.feedback; }
-        }
+        public byte Feedback => this.feedback;
 
         /// <summary>
         /// 调用ID
         /// </summary>
-        public string ID
-        {
-            get { return this.id; }
-        }
+        public string ID => this.id;
 
         /// <summary>
         /// 调用超时设置
         /// </summary>
-        public int Timeout
-        {
-            get { return this.timeout; }
-        }
-
-
-        /// <summary>
-        /// 调用类型
-        /// </summary>
-        public InvokeType InvokeType
-        {
-            get { return (InvokeType)this.invokeType; }
-        }
+        public int Timeout => this.timeout;
 
         /// <summary>
         /// 函数键
         /// </summary>
-        public int MethodToken
-        {
-            get { return this.methodToken; }
-        }
+        public int MethodToken => this.methodToken;
 
         /// <summary>
         /// 函数名
         /// </summary>
-        public string MethodName
-        {
-            get { return this.methodName; }
-        }
+        public string MethodName => this.methodName;
 
         /// <summary>
         /// 参数数据
         /// </summary>
-        public List<byte[]> ParametersBytes
-        {
-            get { return this.parametersBytes; }
-        }
+        public List<byte[]> ParametersBytes => this.parametersBytes;
 
         /// <summary>
         /// 反回参数数据
         /// </summary>
-        public byte[] ReturnParameterBytes
-        {
-            get { return this.returnParameterBytes; }
-        }
+        public byte[] ReturnParameterBytes => this.returnParameterBytes;
 
         /// <summary>
         /// 序列化类型
         /// </summary>
-        public SerializationType SerializationType
-        {
-            get { return (SerializationType)this.serializationType; }
-        }
+        public SerializationType SerializationType => (SerializationType)this.serializationType;
 
         /// <summary>
         /// 解包
@@ -117,7 +83,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             context.timeout = byteBlock.ReadInt32();
             context.sign = byteBlock.ReadInt32();
             context.status = byteBlock.ReadByte();
-            context.invokeType = byteBlock.ReadByte();
             context.feedback = byteBlock.ReadByte();
             context.serializationType = byteBlock.ReadByte();
             context.methodToken = byteBlock.ReadInt32();
@@ -138,7 +103,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal void LoadInvokeOption(IInvokeOption option)
         {
             InvokeOption invokeOption = (InvokeOption)option;
-            this.invokeType = (byte)invokeOption.InvokeType;
             this.feedback = (byte)invokeOption.FeedbackType;
             this.serializationType = (byte)invokeOption.SerializationType;
             this.timeout = option.Timeout;
@@ -153,7 +117,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             byteBlock.Write(this.timeout);
             byteBlock.Write(this.sign);
             byteBlock.Write(this.status);
-            byteBlock.Write(this.invokeType);
             byteBlock.Write(this.feedback);
             byteBlock.Write(this.serializationType);
             byteBlock.Write(this.methodToken);
@@ -183,7 +146,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 case 0:
                     {
-                        throw new RRQMRPCException($"返回状态异常，信息：{this.Message}");
+                        throw new RpcException($"返回状态异常，信息：{this.Message}");
                     }
                 case 1:
                     {
@@ -191,30 +154,30 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 case 2:
                     {
-                        throw new RRQMRPCInvokeException($"未找到该公共方法，或该方法未标记{nameof(RPCAttribute)}");
+                        throw new RpcException($"未找到该公共方法，或该方法未标记{nameof(RpcAttribute)}");
                     }
                 case 3:
                     {
-                        throw new RRQMRPCException("该方法已被禁用");
+                        throw new RpcException("该方法已被禁用");
                     }
                 case 4:
                     {
-                        throw new RRQMAbandonRPCException($"服务器已阻止本次行为，信息：{this.Message}");
+                        throw new AbandonRpcException($"服务器已阻止本次行为，信息：{this.Message}");
                     }
                 case 5:
                     {
-                        throw new RRQMRPCInvokeException($"函数执行异常，详细信息：{this.Message}");
+                        throw new RRQMRpcInvokeException($"函数执行异常，详细信息：{this.Message}");
                     }
                 case 6:
                     {
-                        throw new RRQMRPCException($"函数异常，信息：{this.Message}");
+                        throw new RpcException($"函数异常，信息：{this.Message}");
                     }
                 case 7:
                     {
                         throw new ClientNotFindException(ResType.ClientNotFind.GetResString(this.ID));
                     }
                 default:
-                    throw new RRQMRPCException($"未知状态定义，信息：{this.Message}");
+                    throw new RpcException($"未知状态定义，信息：{this.Message}");
             }
         }
     }
