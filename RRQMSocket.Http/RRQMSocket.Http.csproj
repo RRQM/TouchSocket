@@ -4,14 +4,15 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>7.0.0</Version>
+		<Version>8.0.0-beta</Version>
 		<LangVersion>9.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
 		<Description>介绍：这是一个能够简单解析HTTP/HTTPS的扩展库，能够为RRQMSocket扩展解析HTTP的能力。
 
 更新说明：
-无更新内容。
+增加：HttpService，很快速的搭建http服务器，目前支持静态网页、xmlRpc、webApi、WebSocket、jsonRpc扩展插件。
+增加：HttpClient，同步请求响应。
 
 API：https://www.yuque.com/eo2w71/rrqm
 DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
@@ -64,6 +65,11 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 		<DocumentationFile>bin\Release\netcoreapp3.1\RRQMSocket.Http.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
+		<Reference Include="System.Web" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<None Include="LICENSE">
 			<Pack>True</Pack>
@@ -75,6 +81,6 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMSocket" Version="7.0.0" />
+	  <PackageReference Include="RRQMSocket" Version="8.0.0-beta" />
 	</ItemGroup>
 </Project>

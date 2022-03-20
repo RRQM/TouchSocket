@@ -324,5 +324,11 @@ namespace RRQMSocket.Http
         /// </summary>
         [Description("WWW-Authenticate")]
         WwwAuthenticate = 50,
+
+        /// <summary>
+        /// Origin。
+        /// </summary>
+        [Description("Origin")]
+        Origin = 51,
     }
 }

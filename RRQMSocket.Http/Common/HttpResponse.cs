@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,14 +25,35 @@ namespace RRQMSocket.Http
     public class HttpResponse : HttpBase
     {
         /// <summary>
-        /// 状态码
+        /// 状态码，默认200
         /// </summary>
-        public string StatusCode { get; set; }
+        public string StatusCode { get; set; } = "200";
 
         /// <summary>
-        /// 状态消息
+        /// 是否包含分块
         /// </summary>
-        public string StatusMessage { get; set; }
+        public bool HasChunk { get; set; }
+
+        /// <summary>
+        /// 分块数据
+        /// </summary>
+        public List<byte[]> Chunks { get; set; }
+
+        /// <summary>
+        /// 状态消息，默认Success
+        /// </summary>
+        public string StatusMessage { get; set; } = "Success";
+
+        /// <summary>
+        /// 构建响应数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public override void Build(ByteBlock byteBlock)
+        {
+            this.BuildHeader(byteBlock);
+            this.BuildContent(byteBlock);
+        }
+
 
         /// <summary>
         /// 获取头数据
@@ -40,6 +63,37 @@ namespace RRQMSocket.Http
         public string GetHeader(string fieldName)
         {
             return this.GetHeaderByKey(fieldName);
+        }
+
+        /// <summary>
+        /// 读取数据
+        /// </summary>
+        protected override void LoadHeaderProterties()
+        {
+            var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
+            if (first.Length > 0)
+            {
+                string[] ps = first[0].Split('/');
+                if (ps.Length == 2)
+                {
+                    this.Protocols = ps[0];
+                    this.ProtocolVersion = ps[1];
+                }
+            }
+            if (first.Length > 1)
+            {
+                this.StatusCode = first[1];
+            }
+            if (first.Length > 2)
+            {
+                this.StatusMessage = first[2];
+            }
+
+            string transferEncoding = this.GetHeader(HttpHeaders.TransferEncoding);
+            if ("chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase))
+            {
+                this.HasChunk = true;
+            }
         }
 
         /// <summary>
@@ -62,6 +116,14 @@ namespace RRQMSocket.Http
             this.SetHeaderByKey(fieldName, value);
         }
 
+        private void BuildContent(ByteBlock byteBlock)
+        {
+            if (this.ContentLength > 0)
+            {
+                byteBlock.Write(this.content);
+            }
+        }
+
         /// <summary>
         /// 构建响应头部
         /// </summary>
@@ -69,11 +131,13 @@ namespace RRQMSocket.Http
         private void BuildHeader(ByteBlock byteBlock)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            if (!string.IsNullOrEmpty(this.StatusCode))
-                stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}");
-            if (!string.IsNullOrEmpty(this.Content_Type))
-                stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
-            stringBuilder.AppendLine("Content-Length: " + this.BodyLength);
+            stringBuilder.AppendLine($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}");
+
+            if (this.ContentLength > 0)
+            {
+                this.SetHeaderByKey(HttpHeaders.ContentLength, this.ContentLength.ToString());
+            }
+
             foreach (var headerkey in this.Headers.Keys)
             {
                 stringBuilder.Append($"{headerkey}: ");
@@ -84,50 +148,39 @@ namespace RRQMSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
-        private void BuildContent(ByteBlock byteBlock)
-        {
-            if (this.BodyLength > 0)
-            {
-                byteBlock.Write(this.Content);
-            }
-        }
-
         /// <summary>
-        /// 构建响应数据
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="byteBlock"></param>
-        public override void Build(ByteBlock byteBlock)
+        /// <returns></returns>
+        public override byte[] GetContent()
         {
-            this.BuildHeader(byteBlock);
-            this.BuildContent(byteBlock);
-        }
-
-        /// <summary>
-        /// 读取数据
-        /// </summary>
-        public override void ReadFromBase()
-        {
-            var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
-            if (first.Length > 0)
+            if (this.HasChunk)
             {
-                string[] ps = first[0].Split('/');
-                if (ps.Length == 2)
+                using (ByteBlock byteBlock = new ByteBlock())
                 {
-                    this.Protocols = ps[0];
-                    this.ProtocolVersion = ps[1];
+                    foreach (var item in this.Chunks)
+                    {
+                        byteBlock.Write(item);
+                    }
+
+                    return byteBlock.ToArray();
                 }
             }
-            if (first.Length > 1)
+            else
             {
-                this.StatusCode = first[1];
+                return this.content;
             }
-            if (first.Length > 2)
-            {
-                this.StatusMessage = first[2];
-            }
-            string contentLength = this.GetHeader(HttpHeaders.ContentLength);
-            int.TryParse(contentLength, out int content_Length);
-            this.BodyLength = content_Length;
+        }
+        byte[] content;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="content"></param>
+        public override void SetContent(byte[] content)
+        {
+            this.content = content;
+            this.ContentLength = content.Length;
         }
     }
 }

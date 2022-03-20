@@ -14,18 +14,18 @@
 namespace RRQMSocket.Http
 {
     /// <summary>
-    /// 解析类型
+    /// HTTP/HTTPS服务器
     /// </summary>
-    public enum HttpType : byte
+    public class HttpService<TClient> : TcpService<TClient> where TClient : HttpSocketClient
     {
-        /// <summary>
-        /// 服务器
-        /// </summary>
-        Server,
 
-        /// <summary>
-        /// 客户端
-        /// </summary>
-        Client
+    }
+
+    /// <summary>
+    /// HTTP/HTTPS服务器
+    /// </summary>
+    public class HttpService : HttpService<HttpSocketClient>
+    {
+
     }
 }
