@@ -10,7 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
+using RRQMCore;
+using RRQMCore.Extensions;
 using RRQMCore.Serialization;
 using RRQMSocket.Http;
 
@@ -29,7 +30,7 @@ namespace RRQMSocket.RPC.WebApi
         /// <param name="methodInstance"></param>
         public override void OnPost(HttpRequest httpRequest, ref MethodInvoker methodInvoker, MethodInstance methodInstance)
         {
-            switch (httpRequest.Content_Type)
+            switch (httpRequest.ContentType)
             {
                 case "application/x-www-form-urlencoded":
                     {
@@ -58,7 +59,7 @@ namespace RRQMSocket.RPC.WebApi
                                 if (i == 0)
                                 {
                                     methodInvoker.Parameters[i] = SerializeConvert.XmlDeserializeFromBytes(
-                                        httpRequest.Encoding.GetBytes(httpRequest.Body), methodInstance.ParameterTypes[0]);
+                                        httpRequest.Encoding.GetBytes(httpRequest.GetBody()), methodInstance.ParameterTypes[0]);
                                 }
                                 else
                                 {
