@@ -26,10 +26,5 @@ namespace RRQMSocket
         public ProtocolSubscriberEventArgs(ByteBlock byteBlock) : base(byteBlock)
         {
         }
-
-        /// <summary>
-        /// 标识该数据已被处理。
-        /// </summary>
-        public bool Handled { get; set; }
     }
 }

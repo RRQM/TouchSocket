@@ -26,16 +26,6 @@ namespace RRQMSocket
         public override bool CanSplicingSend => false;
 
         /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="dataResult"></param>
-        /// <returns></returns>
-        protected override bool OnReceivingError(DataResult dataResult)
-        {
-            return false;
-        }
-
-        /// <summary>
         /// 当接收到数据时处理数据
         /// </summary>
         /// <param name="byteBlock">数据流</param>

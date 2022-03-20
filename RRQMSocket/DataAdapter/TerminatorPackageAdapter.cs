@@ -12,8 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using System.Collections.Generic;
 using System.Text;
 
@@ -24,8 +23,6 @@ namespace RRQMSocket
     /// </summary>
     public class TerminatorPackageAdapter : DataHandlingAdapter
     {
-        private int maxSize = 1024;
-
         private int minSize = 0;
 
         private bool reserveTerminatorCode;
@@ -62,7 +59,7 @@ namespace RRQMSocket
         /// <param name="terminatorCode"></param>
         public TerminatorPackageAdapter(int maxSize, int minSize, byte[] terminatorCode)
         {
-            this.maxSize = maxSize;
+            this.MaxPackageSize = maxSize;
             this.minSize = minSize;
             this.terminatorCode = terminatorCode;
         }
@@ -73,21 +70,12 @@ namespace RRQMSocket
         public override bool CanSplicingSend => true;
 
         /// <summary>
-        /// 在未找到终止因子时，允许的最大长度，默认1024
-        /// </summary>
-        public int MaxSize
-        {
-            get { return this.maxSize; }
-            set { this.maxSize = value; }
-        }
-
-        /// <summary>
         /// 即使找到了终止因子，也不会结束，默认0
         /// </summary>
         public int MinSize
         {
-            get { return this.minSize; }
-            set { this.minSize = value; }
+            get => this.minSize;
+            set => this.minSize = value;
         }
 
         /// <summary>
@@ -95,19 +83,8 @@ namespace RRQMSocket
         /// </summary>
         public bool ReserveTerminatorCode
         {
-            get { return this.reserveTerminatorCode; }
-            set { this.reserveTerminatorCode = value; }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="dataResult"></param>
-        /// <returns></returns>
-        protected override bool OnReceivingError(DataResult dataResult)
-        {
-            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
-            return true;
+            get => this.reserveTerminatorCode;
+            set => this.reserveTerminatorCode = value;
         }
 
         /// <summary>
@@ -128,7 +105,7 @@ namespace RRQMSocket
             List<int> indexes = buffer.IndexOfInclude(0, r, this.terminatorCode);
             if (indexes.Count == 0)
             {
-                if (r > this.MaxSize)
+                if (r > this.MaxPackageSize)
                 {
                     if (this.tempByteBlock != null)
                     {
@@ -189,7 +166,7 @@ namespace RRQMSocket
         /// <param name="isAsync"></param>
         protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
         {
-            if (length > this.maxSize)
+            if (length > this.MaxPackageSize)
             {
                 throw new RRQMException("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
@@ -228,7 +205,7 @@ namespace RRQMSocket
             {
                 length += item.Length;
             }
-            if (length > this.maxSize)
+            if (length > this.MaxPackageSize)
             {
                 throw new RRQMException("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }

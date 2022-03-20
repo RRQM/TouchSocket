@@ -20,8 +20,6 @@ namespace RRQMSocket
     /// </summary>
     public class StreamOperationEventArgs : StreamEventArgs
     {
-        private bool isPermitOperation = true;
-
         private StreamOperator streamOperator;
 
         /// <summary>
@@ -33,23 +31,13 @@ namespace RRQMSocket
         public StreamOperationEventArgs(StreamOperator streamOperator, Metadata metadata, StreamInfo streamInfo) : base(metadata, streamInfo)
         {
             this.streamOperator = streamOperator ?? throw new ArgumentNullException(nameof(streamOperator));
+            this.AddOperation(Operation.Permit);
         }
 
-        /// <summary>
-        /// 是否允许操作
-        /// </summary>
-        public bool IsPermitOperation
-        {
-            get { return this.isPermitOperation; }
-            set { this.isPermitOperation = value; }
-        }
 
         /// <summary>
         /// 流操作
         /// </summary>
-        public StreamOperator StreamOperator
-        {
-            get { return this.streamOperator; }
-        }
+        public StreamOperator StreamOperator => this.streamOperator;
     }
 }

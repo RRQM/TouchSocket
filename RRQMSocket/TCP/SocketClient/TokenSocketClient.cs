@@ -10,19 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using RRQMCore.Run;
+using System;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 令箭辅助类
     /// </summary>
-    public abstract class TokenSocketClient : SocketClient, ITokenClientBase
+    public class TokenSocketClient : SocketClient, ITokenClientBase
     {
-        internal int verifyTimeout;
-        internal string verifyToken;
+        internal Action<TokenSocketClient, MesEventArgs> internalOnHandshaked;
+        internal Action<TokenSocketClient, VerifyOptionEventArgs> internalOnVerifyToken;
+        internal Action<TokenSocketClient, ReceivedDataEventArgs> internalOnAbnormalVerify;
+        internal Action<TokenSocketClient, ByteBlock, IRequestInfo> internalHandleTokenData;
         private bool isHandshaked;
         private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
 
@@ -32,6 +36,7 @@ namespace RRQMSocket
         public TokenSocketClient()
         {
             this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
+            this.Protocol = Protocol.RRQMToken;
         }
 
         /// <summary>
@@ -39,7 +44,8 @@ namespace RRQMSocket
         /// </summary>
         public int VerifyTimeout
         {
-            get { return this.verifyTimeout; }
+            get => this.GetValue<int>(RRQMConfigExtensions.VerifyTimeoutProperty);
+            set => this.SetValue(RRQMConfigExtensions.VerifyTimeoutProperty, value);
         }
 
         /// <summary>
@@ -47,98 +53,146 @@ namespace RRQMSocket
         /// </summary>
         public string VerifyToken
         {
-            get { return this.verifyToken; }
+            get => this.GetValue<string>(RRQMConfigExtensions.VerifyTokenProperty);
+            set => this.SetValue(RRQMConfigExtensions.VerifyTokenProperty, value);
         }
 
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool { get => this.waitHandlePool; }
+        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool IsHandshaked => this.isHandshaked;
 
         /// <summary>
         /// 处理接收数据
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.isHandshaked)
             {
-                this.HandleTokenReceivedData(byteBlock, requestInfo);
+                this.HandleTokenData(byteBlock, requestInfo);
             }
             else
             {
                 try
                 {
-                    WaitVerify waitVerify = byteBlock.ToArray().ToJsonObject<WaitVerify>();
-                    VerifyOption verifyOption = new VerifyOption(waitVerify.Token);
-                    this.OnVerifyToken(verifyOption);
-                    if (verifyOption.Accept)
+                    WaitVerify waitVerify = byteBlock.ToString().ToJsonObject<WaitVerify>();
+                    VerifyOptionEventArgs args = new VerifyOptionEventArgs(waitVerify.Token);
+                    this.OnVerifyToken(args);
+                    if (!args.Operation.HasFlag(Operation.Handled))
+                    {
+                        this.internalOnVerifyToken?.Invoke(this, args);
+                    }
+
+                    if (args.Operation.HasFlag(Operation.Permit))
                     {
                         waitVerify.ID = this.ID;
                         waitVerify.Status = 1;
                         var data = waitVerify.ToJsonBytes();
                         base.Send(data, 0, data.Length);
                         this.isHandshaked = true;
-                        this.online = true;
-                        this.OnConnected(new MesEventArgs("Token客户端成功连接"));
+                        this.OnHandshaked(new MesEventArgs("Token客户端成功连接"));
                     }
                     else
                     {
                         waitVerify.Status = 2;
-                        waitVerify.Message = verifyOption.ErrorMessage;
+                        waitVerify.Message = args.Message;
                         var data = waitVerify.ToJsonBytes();
                         base.Send(data, 0, data.Length);
-                        this.BreakOut(verifyOption.ErrorMessage);
+                        this.Close(args.Message);
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
-                    if (this.OnAbnormalVerify(byteBlock, requestInfo))
+                    ReceivedDataEventArgs args = new ReceivedDataEventArgs(byteBlock, requestInfo);
+                    this.OnAbnormalVerify(args);
+                    if (!args.Operation.HasFlag(Operation.Handled))
+                    {
+                        this.internalOnAbnormalVerify?.Invoke(this, args);
+                    }
+                    if (args.Operation.HasFlag(Operation.Permit))
                     {
                         this.isHandshaked = true;
-                        this.online = true;
-                        this.OnConnected(new MesEventArgs("非常规Token客户端成功连接"));
+                        this.OnHandshaked(new MesEventArgs("非常规Token客户端成功连接"));
                     }
                     else
                     {
-                        this.BreakOut(ex.Message);
+                        this.Close(ex.Message);
                     }
                 }
             }
+            base.HandleReceivedData(byteBlock, requestInfo);
         }
 
         /// <summary>
-        /// 处理Token数据
+        /// 在完成握手连接时
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected abstract void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo);
-
-        /// <summary>
-        /// 收到非正常连接。
-        /// 一般地，这是由其他类型客户端发起的连接。
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        /// <returns>返回值指示，是否接受该请求</returns>
-        protected virtual bool OnAbnormalVerify(ByteBlock byteBlock, IRequestInfo requestInfo)
+        /// <param name="e"></param>
+        protected virtual void OnHandshaked(MesEventArgs e)
         {
-            return false;
-        }
-        /// <summary>
-        /// 当验证Token时
-        /// </summary>
-        /// <param name="verifyOption"></param>
-        protected virtual void OnVerifyToken(VerifyOption verifyOption)
-        {
-            if (verifyOption.Token == this.verifyToken)
+            this.internalOnHandshaked?.Invoke(this, e);
+            if (this.UsePlugin)
             {
-                verifyOption.Accept = true;
+                this.PluginsManager.Raise<ITokenPlugin>("OnHandshaked", this, e);
+            }
+        }
+
+        /// <summary>
+        /// 处理Token数据，覆盖父类方法将不会触发事件和插件。
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected virtual void HandleTokenData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.internalHandleTokenData?.Invoke(this, byteBlock, requestInfo);
+            if (this.usePlugin)
+            {
+                this.PluginsManager.Raise<ITokenPlugin>("OnHandleTokenData", this, new ReceivedDataEventArgs(byteBlock, requestInfo));
+            }
+        }
+
+        /// <summary>
+        /// 收到非正常连接。覆盖父类方法将不会触发事件和插件。
+        ///<para> 一般地，这是由普通TCP发起的连接请求。</para>
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnAbnormalVerify(ReceivedDataEventArgs e)
+        {
+            e.RemoveOperation(Operation.Permit);
+            this.internalOnAbnormalVerify?.Invoke(this, e);
+
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<ITokenPlugin>("OnAbnormalVerify", this, e);
+            }
+        }
+
+        /// <summary>
+        /// 当验证Token时，覆盖父类方法将不会触发事件和插件。
+        /// </summary>
+        /// <param name="e">参数</param>
+        protected virtual void OnVerifyToken(VerifyOptionEventArgs e)
+        {
+            if (e.Token == this.VerifyToken)
+            {
+                e.AddOperation(Operation.Permit);
             }
             else
             {
-                verifyOption.ErrorMessage = "Token不受理";
+                e.Message = "Token不受理";
+            }
+
+            this.internalOnVerifyToken?.Invoke(this, e);
+
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<ITokenPlugin>("OnVerifyToken", this, e);
             }
         }
 
@@ -146,16 +200,25 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
-        protected override void PreviewConnected(MesEventArgs e)
+        protected override void OnConnected(RRQMEventArgs e)
         {
-            this.BeginReceive();
-            RRQMCore.Run.EasyAction.DelayRun(this.verifyTimeout, () =>
-             {
-                 if (!this.isHandshaked)
-                 {
-                     this.BreakOut("验证超时");
-                 }
-             });
+            EasyAction.DelayRun(this.VerifyTimeout, () =>
+            {
+                if (!this.isHandshaked)
+                {
+                    this.Close("验证超时");
+                }
+            });
+            base.OnConnected(e);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void OnClose()
+        {
+            this.isHandshaked = false;
+            base.OnClose();
         }
     }
 }

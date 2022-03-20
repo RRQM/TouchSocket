@@ -25,8 +25,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count
-        { get { return this.tokenDic.Count; } }
+        public int Count => this.tokenDic.Count;
 
         private ConcurrentDictionary<string, ISocketClient> tokenDic = new ConcurrentDictionary<string, ISocketClient>();
 
@@ -55,11 +54,22 @@ namespace RRQMSocket
 
         internal bool TryRemove(string id, out ISocketClient socketClient)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                socketClient = null;
+                return false;
+            }
             return this.tokenDic.TryRemove(id, out socketClient);
         }
 
-        internal bool TryRemove<TClient>(string id, out TClient socketClient)
+        internal bool TryRemove<TClient>(string id, out TClient socketClient) where TClient : ISocketClient
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                socketClient = default;
+                return false;
+            }
+
             if (this.tokenDic.TryRemove(id, out ISocketClient client))
             {
                 socketClient = (TClient)client;
@@ -77,6 +87,12 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool TryGetSocketClient(string id, out ISocketClient socketClient)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                socketClient = null;
+                return false;
+            }
+
             return this.tokenDic.TryGetValue(id, out socketClient);
         }
 
@@ -89,6 +105,12 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool TryGetSocketClient<TClient>(string id, out TClient socketClient) where TClient : ISocketClient
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                socketClient = default;
+                return false;
+            }
+
             if (this.tokenDic.TryGetValue(id, out ISocketClient client))
             {
                 socketClient = (TClient)client;
@@ -105,6 +127,11 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool SocketClientExist(string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                return false;
+            }
+
             if (this.tokenDic.ContainsKey(id))
             {
                 return true;
@@ -124,14 +151,6 @@ namespace RRQMSocket
                 ISocketClient t;
                 this.TryGetSocketClient(id, out t);
                 return t;
-            }
-        }
-
-        internal void Clear()
-        {
-            foreach (var client in this.tokenDic.Values)
-            {
-                client.Dispose();
             }
         }
     }

@@ -18,40 +18,89 @@ namespace RRQMSocket
     /// <summary>
     /// Token服务器
     /// </summary>
-    public class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient, new()
+    public class TokenService<TClient> : TcpService<TClient> where TClient : TokenSocketClient
     {
-        private string verifyToken;
+        /// <summary>
+        /// 验证超时时间,默认为3000ms
+        /// </summary>
+        public int VerifyTimeout
+        {
+            get => this.GetValue<int>(RRQMConfigExtensions.VerifyTimeoutProperty);
+            set => this.SetValue(RRQMConfigExtensions.VerifyTimeoutProperty, value);
+        }
 
         /// <summary>
         /// 连接令箭
         /// </summary>
         public string VerifyToken
         {
-            get { return this.verifyToken; }
+            get => this.GetValue<string>(RRQMConfigExtensions.VerifyTokenProperty);
+            set => this.SetValue(RRQMConfigExtensions.VerifyTokenProperty, value);
         }
 
-        private int verifyTimeout;
+        #region 事件
 
         /// <summary>
-        /// 验证超时时间,默认为3000ms
+        /// 在完成握手连接时
         /// </summary>
-        public int VerifyTimeout
+        public event RRQMMessageEventHandler<TClient> Handshaked;
+
+        /// <summary>
+        /// 在完成握手连接时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnHandshaked(TClient client, MesEventArgs e)
         {
-            get { return this.verifyTimeout; }
+            this.Handshaked?.Invoke(client, e);
         }
+
+        /// <summary>
+        /// 在验证Token时
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        protected virtual void OnVerifyToken(TClient client, VerifyOptionEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// 收到非正常连接。
+        /// 一般地，这是由其他类型客户端发起的连接。
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        protected virtual void OnAbnormalVerify(TClient client, ReceivedDataEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// 处理Token收到的数据
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected virtual void HandleTokenData(TClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+
+        }
+
+        #endregion 事件
 
         /// <summary>
         /// 载入配置
         /// </summary>
-        /// <param name="ServiceConfig"></param>
-        protected override void LoadConfig(ServiceConfig ServiceConfig)
+        /// <param name="RRQMConfig"></param>
+        protected override void LoadConfig(RRQMConfig RRQMConfig)
         {
-            base.LoadConfig(ServiceConfig);
-            this.verifyTimeout = (int)ServiceConfig.GetValue(TokenServiceConfig.VerifyTimeoutProperty);
-            this.verifyToken = (string)ServiceConfig.GetValue(TokenServiceConfig.VerifyTokenProperty);
-            if (string.IsNullOrEmpty(this.verifyToken))
+            base.LoadConfig(RRQMConfig);
+            this.SetValue(RRQMConfigExtensions.VerifyTimeoutProperty, (int)RRQMConfig.GetValue(RRQMConfigExtensions.VerifyTimeoutProperty));
+            this.SetValue(RRQMConfigExtensions.VerifyTokenProperty, (string)RRQMConfig.GetValue(RRQMConfigExtensions.VerifyTokenProperty));
+            if (string.IsNullOrEmpty(this.VerifyToken))
             {
-                this.verifyToken = "rrqm";
+                this.SetValue(RRQMConfigExtensions.VerifyTokenProperty, "rrqm");
             }
         }
 
@@ -62,36 +111,56 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
         {
-            socketClient.verifyTimeout = this.verifyTimeout;
-            socketClient.verifyToken = this.verifyToken;
+            socketClient.internalOnHandshaked = this.PrivateHandshaked;
+            socketClient.internalOnVerifyToken = this.PrivateVerifyToken;
+            socketClient.internalOnAbnormalVerify = this.PrivateAbnormalVerify;
+            socketClient.internalHandleTokenData = this.PrivateHandleTokenData;
+            socketClient.SetValue(RRQMConfigExtensions.VerifyTimeoutProperty, this.VerifyTimeout);
+            socketClient.SetValue(RRQMConfigExtensions.VerifyTokenProperty, this.VerifyToken);
             base.OnConnecting(socketClient, e);
+        }
+
+        private void PrivateVerifyToken(TokenSocketClient client, VerifyOptionEventArgs e)
+        {
+            this.OnVerifyToken((TClient)client, e);
+        }
+
+        private void PrivateAbnormalVerify(TokenSocketClient client, ReceivedDataEventArgs e)
+        {
+            this.OnAbnormalVerify((TClient)client, e);
+        }
+
+        private void PrivateHandshaked(TokenSocketClient client, MesEventArgs e)
+        {
+            this.OnHandshaked((TClient)client, e);
+        }
+
+        private void PrivateHandleTokenData(TokenSocketClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.HandleTokenData((TClient)client, byteBlock, requestInfo);
         }
     }
 
     /// <summary>
     /// 简单Token服务器
     /// </summary>
-    public class TokenService : TokenService<SimpleTokenSocketClient>
+    public class TokenService : TokenService<TokenSocketClient>
     {
         /// <summary>
-        /// 处理数据
+        /// 收到数据
         /// </summary>
-        public event RRQMReceivedEventHandler<SimpleTokenSocketClient> Received;
+        public event RRQMReceivedEventHandler<TokenSocketClient> Received;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override void OnConnecting(SimpleTokenSocketClient socketClient, ClientOperationEventArgs e)
+        /// <param name="client"></param>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected override void HandleTokenData(TokenSocketClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            socketClient.Received += this.OnReceive;
-            base.OnConnecting(socketClient, e);
-        }
-
-        private void OnReceive(SimpleTokenSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.Received?.Invoke(socketClient, byteBlock, requestInfo);
+            this.Received?.Invoke(client, byteBlock, requestInfo);
+            base.HandleTokenData(client, byteBlock, requestInfo);
         }
     }
 }

@@ -26,8 +26,8 @@ namespace RRQMSocket
         /// </summary>
         public X509Certificate Certificate
         {
-            get { return this.certificate; }
-            set { this.certificate = value; }
+            get => this.certificate;
+            set => this.certificate = value;
         }
 
         private bool clientCertificateRequired;
@@ -37,8 +37,8 @@ namespace RRQMSocket
         /// </summary>
         public bool ClientCertificateRequired
         {
-            get { return this.clientCertificateRequired; }
-            set { this.clientCertificateRequired = value; }
+            get => this.clientCertificateRequired;
+            set => this.clientCertificateRequired = value;
         }
     }
 }

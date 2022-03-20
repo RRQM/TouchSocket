@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
+using RRQMCore.Dependency;
 using RRQMCore.Log;
 using System;
 using System.IO;
@@ -26,16 +26,26 @@ namespace RRQMSocket
     /// <summary>
     /// 终端接口
     /// </summary>
-    public interface IClient : IDisposable
+    public interface IClient : IRRQMDependencyObject, IDisposable
     {
         /// <summary>
         /// 日志记录器
         /// </summary>
         ILog Logger { get; }
+
+        /// <summary>
+        /// 终端协议
+        /// </summary>
+        Protocol Protocol { get; set; }
+
+        /// <summary>
+        /// 简单IOC容器
+        /// </summary>
+        IContainer Container { get; }
     }
 
     /// <summary>
-    /// 定制协议的终端接口
+    /// 自定义协议的客户端终端接口
     /// </summary>
     public interface IProtocolClient : ITokenClient, IProtocolClientBase
     {
@@ -56,7 +66,7 @@ namespace RRQMSocket
     }
 
     /// <summary>
-    /// 协议客户端基类
+    /// 自定义协议的终端基础接口
     /// </summary>
     public interface IProtocolClientBase : ITokenClientBase
     {
@@ -208,14 +218,14 @@ namespace RRQMSocket
         event RRQMTcpClientConnectingEventHandler<ITcpClient> Connecting;
 
         /// <summary>
-        /// 断开连接
+        /// 远程IPHost。
         /// </summary>
-        event RRQMMessageEventHandler<ITcpClient> Disconnected;
+        IPHost RemoteIPHost { get; }
 
         /// <summary>
         /// 客户端配置
         /// </summary>
-        TcpClientConfig ClientConfig { get; }
+        RRQMConfig Config { get; }
 
         /// <summary>
         /// 独立线程发送
@@ -235,17 +245,11 @@ namespace RRQMSocket
         Task<ITcpClient> ConnectAsync();
 
         /// <summary>
-        /// 断开连接
-        /// </summary>
-        /// <returns></returns>
-        ITcpClient Disconnect();
-
-        /// <summary>
         /// 配置服务器
         /// </summary>
         /// <param name="clientConfig"></param>
         /// <exception cref="RRQMException"></exception>
-        ITcpClient Setup(TcpClientConfig clientConfig);
+        ITcpClient Setup(RRQMConfig clientConfig);
 
         /// <summary>
         /// 配置服务器
@@ -256,14 +260,29 @@ namespace RRQMSocket
     }
 
     /// <summary>
-    /// TCP客户端接口
+    /// TCP终端基础接口
     /// </summary>
-    public interface ITcpClientBase : IClient
+    public interface ITcpClientBase : IClient, ISenderBase
     {
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        event RRQMTcpClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
+
+        /// <summary>
+        /// 插件管理器
+        /// </summary>
+        IPluginsManager PluginsManager { get; }
+
         /// <summary>
         /// 缓存池大小
         /// </summary>
         int BufferLength { get; }
+
+        /// <summary>
+        /// 适配器能接收的最大数据包长度。
+        /// </summary>
+        int MaxPackageSize { get; }
 
         /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
@@ -286,12 +305,8 @@ namespace RRQMSocket
         Socket MainSocket { get; }
 
         /// <summary>
-        /// IP及端口号
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
         /// 判断是否在线
+        /// <para>该属性仅表示TCP状态是否在线</para>
         /// </summary>
         bool Online { get; }
 
@@ -309,13 +324,20 @@ namespace RRQMSocket
         /// 使用Ssl加密
         /// </summary>
         bool UseSsl { get; }
+
         /// <summary>
         /// 关闭Socket信道，并随后释放资源
         /// </summary>
         void Close();
 
         /// <summary>
-        /// 获取流，在正常模式下为<see cref="System.Net.Sockets.NetworkStream"/>，在Ssl模式下为<see cref="SslStream"/>。
+        /// 中断终端，传递中断消息
+        /// </summary>
+        /// <param name="msg"></param>
+        void Close(string msg);
+
+        /// <summary>
+        /// 获取流，在正常模式下为<see cref="NetworkStream"/>，在Ssl模式下为<see cref="SslStream"/>。
         /// </summary>
         /// <returns></returns>
         Stream GetStream();
@@ -331,10 +353,41 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="how"></param>
         void Shutdown(SocketShutdown how);
+
+        #region 默认发送
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">数据长度</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(byte[] buffer);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="byteBlock">数据块载体</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(ByteBlock byteBlock);
+        #endregion
     }
 
     /// <summary>
-    /// 具有验证功能的终端接口
+    /// 具有Token验证功能的终端接口
     /// </summary>
     public interface ITokenClient : ITcpClient, ITokenClientBase
     {
@@ -348,9 +401,13 @@ namespace RRQMSocket
     }
 
     /// <summary>
-    /// Token客户端基类
+    /// 具有Token验证功能的终端基础接口
     /// </summary>
     public interface ITokenClientBase : ITcpClientBase
     {
+        /// <summary>
+        /// 是否已完成握手
+        /// </summary>
+        bool IsHandshaked { get; }
     }
 }

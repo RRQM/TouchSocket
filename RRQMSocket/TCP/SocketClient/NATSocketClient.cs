@@ -57,7 +57,6 @@ namespace RRQMSocket
                     this.ProcessReceived(eventArgs);
                 }
             }
-
         }
 
         private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
@@ -68,7 +67,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.BreakOut(ex.Message);
+                this.Close(ex.Message);
             }
         }
 
@@ -94,12 +93,12 @@ namespace RRQMSocket
                 }
                 catch (Exception ex)
                 {
-                    this.BreakOut(ex.Message);
+                    this.Close(ex.Message);
                 }
             }
             else
             {
-                this.BreakOut("远程终端主动断开");
+                this.Close("远程终端主动断开");
             }
         }
 
@@ -109,7 +108,7 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         protected virtual void HandleReceivedDataFromTarget(ByteBlock byteBlock)
         {
-            if (this.disposable)
+            if (this.disposedValue)
             {
                 return;
             }
@@ -134,7 +133,7 @@ namespace RRQMSocket
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.disposable || this.targetSockets == null)
+            if (this.disposedValue || this.targetSockets == null)
             {
                 return;
             }
@@ -149,13 +148,13 @@ namespace RRQMSocket
                 {
                 }
             }
-
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override void Dispose()
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
             if (this.targetSockets != null)
             {
@@ -164,7 +163,7 @@ namespace RRQMSocket
                     socket.Dispose();
                 }
             }
-            base.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

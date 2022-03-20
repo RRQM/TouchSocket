@@ -23,9 +23,16 @@ namespace RRQMSocket
     /// </summary>
     public class FixedHeaderPackageAdapter : DataHandlingAdapter
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public FixedHeaderPackageAdapter()
+        {
+            this.MaxPackageSize = 1024 * 1024 * 10;
+        }
+
         private byte[] agreementTempBytes;//协议临时包
         private FixedHeaderType fixedHeaderType = FixedHeaderType.Int;
-        private int maxPackageSize = 1024 * 1024 * 10;
         private int minPackageSize = 0;
         private int surPlusLength = 0;//包剩余长度
         private ByteBlock tempByteBlock;//临时包
@@ -40,17 +47,8 @@ namespace RRQMSocket
         /// </summary>
         public FixedHeaderType FixedHeaderType
         {
-            get { return this.fixedHeaderType; }
-            set { this.fixedHeaderType = value; }
-        }
-
-        /// <summary>
-        /// 获取或设置包数据的最大值（默认为1024*1024*10）
-        /// </summary>
-        public int MaxPackageSize
-        {
-            get { return this.maxPackageSize; }
-            set { this.maxPackageSize = value; }
+            get => this.fixedHeaderType;
+            set => this.fixedHeaderType = value;
         }
 
         /// <summary>
@@ -58,19 +56,8 @@ namespace RRQMSocket
         /// </summary>
         public int MinPackageSize
         {
-            get { return this.minPackageSize; }
-            set { this.minPackageSize = value; }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="dataResult"></param>
-        /// <returns></returns>
-        protected override bool OnReceivingError(DataResult dataResult)
-        {
-            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
-            return true;
+            get => this.minPackageSize;
+            set => this.minPackageSize = value;
         }
 
         /// <summary>
@@ -199,7 +186,7 @@ namespace RRQMSocket
                 throw new RRQMException("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            if (length > this.maxPackageSize)
+            if (length > this.MaxPackageSize)
             {
                 throw new RRQMException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
@@ -335,7 +322,7 @@ namespace RRQMSocket
                 {
                     throw new RRQMException("接收数据长度小于设定值，已放弃接收");
                 }
-                else if (length > this.maxPackageSize)
+                else if (length > this.MaxPackageSize)
                 {
                     throw new RRQMException("接收数据长度大于设定值，已放弃接收");
                 }

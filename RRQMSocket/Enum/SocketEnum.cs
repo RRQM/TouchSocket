@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.ByteManager;
 using System;
 
 namespace RRQMSocket
@@ -73,48 +74,23 @@ namespace RRQMSocket
     }
 
     /// <summary>
-    /// 数据处理结果
-    /// </summary>
-    public enum DataResultCode
-    {
-        /// <summary>
-        /// 成功
-        /// </summary>
-        Success,
-
-        /// <summary>
-        /// 有错误
-        /// </summary>
-        Error,
-
-        /// <summary>
-        /// 异常
-        /// </summary>
-        Exception,
-
-        /// <summary>
-        /// 缓存本次数据，不做任何处理
-        /// </summary>
-        Cache
-    }
-
-    /// <summary>
     /// 过滤结果
     /// </summary>
     public enum FilterResult
     {
         /// <summary>
-        /// 缓存数据，一般原因是本次数据不满足任何解析。
+        /// 缓存后续所有<see cref="ByteBlock.CanReadLen"/>数据。
         /// </summary>
         Cache,
 
         /// <summary>
-        /// 成功
+        /// 操作成功
         /// </summary>
         Success,
 
         /// <summary>
-        /// 不缓存数据，继续接收，一般原因是本次接收满足解析部分数据，或者本次数据无效。
+        /// 继续操作，一般原因是本次数据有部分无效，但已经调整了<see cref="ByteBlock.Pos"/>属性，所以继续后续解析。
+        /// <para>或者想放弃当前数据的操作，直接设置<see cref="ByteBlock.Pos"/>与<see cref="ByteBlock.Len"/>相等即可。</para>
         /// </summary>
         GoOn
     }
@@ -146,22 +122,13 @@ namespace RRQMSocket
     public enum ReceiveType : byte
     {
         /// <summary>
-        /// 完成端口，在该模式下，不支持Ssl。
+        /// 该模式下会自动接收数据，然后主动触发。
         /// </summary>
-        IOCP,
+        Auto,
 
         /// <summary>
-        /// 独立线程阻塞
-        /// </summary>
-        BIO,
-
-        /// <summary>
-        /// 在Select模式下工作
-        /// </summary>
-        Select,
-
-        /// <summary>
-        /// 在该模式下，不会投递接收申请，用户可以自由发挥。
+        /// 在该模式下，不会投递接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。
+        /// <para>注意：连接端不会感知主动断开</para>
         /// </summary>
         None
     }

@@ -98,7 +98,7 @@ namespace RRQMSocket
             {
                 for (int i = 0; i < testCount; i++)
                 {
-                    this.adapter.Send(buffer, offset, length, false);
+                    this.adapter.SendInput(buffer, offset, length, false);
                 }
             });
             if (this.runWaitHandle.WaitOne(this.timeout))
@@ -134,7 +134,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            this.adapter.Received(block);
+                            this.adapter.ReceivedInput(block);
                         }
                         finally
                         {

@@ -28,21 +28,15 @@ namespace RRQMSocket
         protected ByteBlock tempByteBlock;
 
         /// <summary>
-        /// 数据包最大值
-        /// </summary>
-        public abstract int MaxSize { get; set; }
-
-
-        /// <summary>
         /// 默认不支持拼接发送
         /// </summary>
         public override bool CanSplicingSend => false;
 
         /// <summary>
-        /// 筛选解析数据。
-        /// <para>当完全不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，同时不要对<see cref="ByteBlock"/>做任何属性修改。</para>
-        /// <para>当满足部分解析条件时，请返回<see cref="FilterResult.GoOn"/>，同时请实例化TRequest，该实例在下次接收时会再次传递，届时<paramref name="beCached"/>将为true，最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
-        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>，同时请实例化TRequest，最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
+        /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
+        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
+        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Pos"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
+        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
         /// </summary>
         /// <param name="byteBlock">字节块</param>
         /// <param name="length">剩余有效数据长度，计算实质为:ByteBlock.Len和ByteBlock.Pos的差值。</param>
@@ -105,8 +99,8 @@ namespace RRQMSocket
         /// <param name="request"></param>
         protected virtual void OnReceivedSuccess(TRequest request)
         {
-
         }
+
         private void Single(ByteBlock byteBlock, bool dis)
         {
             try
@@ -121,34 +115,21 @@ namespace RRQMSocket
                             this.tempRequest = default;
                             this.OnReceivedSuccess(this.tempRequest);
                             break;
-                        case FilterResult.GoOn:
-                            if (byteBlock.Len - byteBlock.Pos > 0)
+
+                        case FilterResult.Cache:
+                            if (byteBlock.CanReadLen> 0)
                             {
                                 this.tempByteBlock = new ByteBlock();
                                 this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
-                                if (this.tempByteBlock.Len > this.MaxSize)
+                                if (this.tempByteBlock.Len > this.MaxPackageSize)
                                 {
-                                    if (this.OnReceivingError(new DataResult("缓存的数据长度大于设定值的情况下未收到解析信号", DataResultCode.Error)))
-                                    {
-                                        this.Reset();
-                                    }
+                                    this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
                                 }
                             }
                             return;
-                        case FilterResult.Cache:
-                            this.tempByteBlock = new ByteBlock();
-                            this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.Len - byteBlock.Pos);
-                            this.tempRequest = default;
-                            if (this.tempByteBlock.Len > this.MaxSize)
-                            {
-                                if (this.OnReceivingError(new DataResult("缓存的数据长度大于设定值的情况下未收到解析信号", DataResultCode.Error)))
-                                {
-                                    this.Reset();
-                                }
-                            }
-                            return;
-                        default:
-                            return;
+
+                        case FilterResult.GoOn:
+                            break;
                     }
                 }
             }

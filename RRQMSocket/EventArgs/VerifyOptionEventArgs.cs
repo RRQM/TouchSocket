@@ -14,21 +14,22 @@
 namespace RRQMSocket
 {
     /// <summary>
-    /// 处理字节事件
+    /// Token连接验证
     /// </summary>
-    public class BytesHandledEventArgs : BytesEventArgs
+    public class VerifyOptionEventArgs : MesEventArgs
     {
+        /// <summary>
+        /// 令箭
+        /// </summary>
+        public string Token { get; private set; }
+
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="data"></param>
-        public BytesHandledEventArgs(byte[] data) : base(data)
+        /// <param name="token"></param>
+        public VerifyOptionEventArgs(string token)
         {
+            this.Token = token;
         }
-
-        /// <summary>
-        /// 已处理
-        /// </summary>
-        public bool Handled { get; set; }
     }
 }

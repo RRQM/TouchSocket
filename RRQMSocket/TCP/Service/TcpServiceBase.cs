@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
+using RRQMCore.Dependency;
 using System.Collections.Generic;
 
 namespace RRQMSocket
@@ -22,10 +22,16 @@ namespace RRQMSocket
     /// </summary>
     public abstract class TcpServiceBase : BaseSocket, ITcpServiceBase, IIDSender
     {
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public abstract NetworkMonitor[] Monitors { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract string ServerName { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -35,12 +41,7 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract ServiceConfig ServiceConfig { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract string ServerName { get; }
+        public abstract RRQMConfig Config { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -53,46 +54,24 @@ namespace RRQMSocket
         public abstract bool UseSsl { get; }
 
         /// <summary>
-        /// 客户端连接完成
+        /// 插件管理器
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected abstract void OnClientConnected(ISocketClient socketClient, MesEventArgs e);
-
-        /// <summary>
-        /// 客户端断开连接
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected abstract void OnClientDisconnected(ISocketClient socketClient, MesEventArgs e);
-
-        /// <summary>
-        /// 客户端请求连接
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected abstract void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e);
-
-        internal void OnInternalConnected(ISocketClient socketClient, MesEventArgs e)
-        {
-            this.OnClientConnected(socketClient, e);
-        }
-
-        internal void OnInternalDisconnected(ISocketClient socketClient, MesEventArgs e)
-        {
-            this.OnClientDisconnected(socketClient, e);
-        }
-
-        internal void OnInternalConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
-        {
-            this.OnClientConnecting(socketClient, e);
-        }
+        public abstract IPluginsManager PluginsManager { get; set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="waitSetID"></param>
-        public abstract void ResetID(WaitSetID waitSetID);
+        public abstract IContainer Container { get; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract int MaxPackageSize { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract void Clear();
 
         /// <summary>
         /// <inheritdoc/>
@@ -106,14 +85,15 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract void Clear();
+        /// <param name="waitSetID"></param>
+        public abstract void ResetID(WaitSetID waitSetID);
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="serverConfig"></param>
         /// <returns></returns>
-        public abstract IService Setup(ServiceConfig serverConfig);
+        public abstract IService Setup(RRQMConfig serverConfig);
 
         /// <summary>
         /// <inheritdoc/>
@@ -133,6 +113,55 @@ namespace RRQMSocket
         /// </summary>
         /// <returns></returns>
         public abstract IService Stop();
+
+        internal void OnInternalConnected(ISocketClient socketClient, RRQMEventArgs e)
+        {
+            this.OnClientConnected(socketClient, e);
+        }
+
+        internal void OnInternalConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        {
+            this.OnClientConnecting(socketClient, e);
+        }
+
+        internal void OnInternalDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
+        {
+            this.OnClientDisconnected(socketClient, e);
+        }
+
+        internal void OnInternalReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.OnClientReceivedData(socketClient, byteBlock, requestInfo);
+        }
+
+        /// <summary>
+        /// 客户端连接完成
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected abstract void OnClientConnected(ISocketClient socketClient, RRQMEventArgs e);
+
+        /// <summary>
+        /// 客户端请求连接
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected abstract void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e);
+
+        /// <summary>
+        /// 客户端断开连接
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected abstract void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e);
+
+        /// <summary>
+        /// 收到数据时
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected abstract void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo);
 
         #region ID发送
 

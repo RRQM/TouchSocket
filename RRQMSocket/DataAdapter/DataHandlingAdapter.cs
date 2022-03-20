@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Extensions;
 using System;
 using System.Collections.Generic;
 
@@ -23,15 +24,7 @@ namespace RRQMSocket
     {
         internal ITcpClientBase owner;
 
-        /// <summary>
-        /// 当接收数据处理完成后，回调该函数执行接收
-        /// </summary>
-        internal Action<ByteBlock, IRequestInfo> ReceivedCallBack;
-
-        /// <summary>
-        /// 当接收数据处理完成后，回调该函数执行发送
-        /// </summary>
-        internal Action<byte[], int, int, bool> SendCallBack;
+        private int maxPackageSize = 1024 * 1024;
 
         /// <summary>
         /// 拼接发送
@@ -39,14 +32,34 @@ namespace RRQMSocket
         public abstract bool CanSplicingSend { get; }
 
         /// <summary>
-        /// 适配器拥有者。
+        /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
         /// </summary>
-        public ITcpClientBase Owner
+        public int MaxPackageSize
         {
-            get { return this.owner; }
+            get { return maxPackageSize; }
+            set { maxPackageSize = value; }
         }
 
-        internal void Received(ByteBlock byteBlock)
+        /// <summary>
+        /// 适配器拥有者。
+        /// </summary>
+        public ITcpClientBase Owner => this.owner;
+
+        /// <summary>
+        /// 当接收数据处理完成后，回调该函数执行接收
+        /// </summary>
+        public Action<ByteBlock, IRequestInfo> ReceivedCallBack { get; set; }
+
+        /// <summary>
+        /// 当接收数据处理完成后，回调该函数执行发送
+        /// </summary>
+        public Action<byte[], int, int, bool> SendCallBack { get; set; }
+
+        /// <summary>
+        /// 收到数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public void ReceivedInput(ByteBlock byteBlock)
         {
             try
             {
@@ -54,11 +67,18 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.OnReceivingError(new DataResult(ex.Message, DataResultCode.Exception));
+                this.OnError(ex.Message);
             }
         }
 
-        internal void Send(byte[] buffer, int offset, int length, bool isAsync)
+        /// <summary>
+        /// 发送数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="isAsync"></param>
+        public void SendInput(byte[] buffer, int offset, int length, bool isAsync)
         {
             this.PreviewSend(buffer, offset, length, isAsync);
         }
@@ -91,11 +111,22 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 在接收解析时发生错误。
+        /// 在解析时发生错误。
         /// </summary>
-        /// <param name="dataResult">错误异常</param>
-        /// <returns>返回值指示，是否调用<see cref="Reset"/></returns>
-        protected abstract bool OnReceivingError(DataResult dataResult);
+        /// <param name="error">错误异常</param>
+        /// <param name="reset">是否调用<see cref="Reset"/></param>
+        /// <param name="log">是否记录日志</param>
+        protected virtual void OnError(string error, bool reset = true, bool log = true)
+        {
+            if (reset)
+            {
+                this.Reset();
+            }
+            if (log && this.owner != null && this.owner.Logger != null)
+            {
+                this.owner.Logger.Error(error);
+            }
+        }
 
         /// <summary>
         /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock, IRequestInfo)"/>处理数据
@@ -121,7 +152,7 @@ namespace RRQMSocket
         protected abstract void PreviewSend(IList<TransferByte> transferBytes, bool isAsync);
 
         /// <summary>
-        /// 重置解析器到初始状态，一般在<see cref="OnReceivingError(DataResult)"/>被触发时，由返回值指示是否调用。
+        /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。
         /// </summary>
         protected abstract void Reset();
     }

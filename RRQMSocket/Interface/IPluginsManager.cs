@@ -11,47 +11,51 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
+using System;
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 端口转发配置
+    /// 插件管理器接口
     /// </summary>
-    public class NATServiceConfig : TcpServiceConfig
+    public interface IPluginsManager: IEnumerable<IPlugin>
     {
         /// <summary>
-        /// 转发的目标地址集合。
+        /// 注入容器
         /// </summary>
-        public IPHost[] TargetIPHosts
-        {
-            get { return (IPHost[])this.GetValue(TargetIPHostsProperty); }
-            set { this.SetValue(TargetIPHostsProperty, value); }
-        }
+        public IContainer  Container { get; }
 
         /// <summary>
-        /// 转发的目标地址集合，
-        /// 所需类型<see cref="IPHost"/>数组
+        /// 添加插件
         /// </summary>
-        public static readonly DependencyProperty TargetIPHostsProperty =
-            DependencyProperty.Register("TargetIPHosts", typeof(IPHost[]), typeof(NATServiceConfig), null);
-
+        /// <param name="plugin">插件</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        void Add(IPlugin plugin);
 
         /// <summary>
-        /// 转发的类型
+        /// 移除插件
         /// </summary>
-        public NATMode NATMode
-        {
-            get { return (NATMode)this.GetValue(NATModeProperty); }
-            set { this.SetValue(NATModeProperty, value); }
-        }
+        /// <param name="plugin"></param>
+        void Remove(IPlugin plugin);
 
         /// <summary>
-        /// 转发的类型，
-        /// 所需类型<see cref="RRQMSocket.NATMode"/>
+        /// 移除插件
         /// </summary>
-        public static readonly DependencyProperty NATModeProperty =
-            DependencyProperty.Register("NATMode", typeof(NATMode), typeof(NATServiceConfig), NATMode.TwoWay);
+        /// <param name="type"></param>
+        void Remove(Type type);
 
+        /// <summary>
+        /// 清除所有插件
+        /// </summary>
+        void Clear();
 
+        /// <summary>
+        /// 触发对应方法
+        /// </summary>
+        /// <typeparam name="TPlugin">接口类型</typeparam>
+        /// <param name="name">触发名称</param>
+        /// <param name="params">参数</param>
+        void Raise<TPlugin>(string name, params object[] @params) where TPlugin : IPlugin;
     }
 }
