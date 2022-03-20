@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using System.Collections.Generic;
 
 namespace RRQMSocket.WebSocket
@@ -41,8 +41,8 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         public int MaxSize
         {
-            get { return this.maxSize; }
-            set { this.maxSize = value; }
+            get => this.maxSize;
+            set => this.maxSize = value;
         }
 
         /// <summary>
@@ -131,17 +131,6 @@ namespace RRQMSocket.WebSocket
                 offset += surlen;
             }
 
-            return true;
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="dataResult"></param>
-        /// <returns></returns>
-        protected override bool OnReceivingError(DataResult dataResult)
-        {
-            this.Owner.Logger.Debug(RRQMCore.Log.LogType.Error, this, dataResult.Message, null);
             return true;
         }
 

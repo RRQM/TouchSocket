@@ -11,12 +11,120 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore.ByteManager;
+using RRQMSocket.Http;
+
 namespace RRQMSocket.WebSocket
 {
     /// <summary>
     /// 用户终端接口
     /// </summary>
-    public interface IWSClient : ITcpClient, IWSClientBase
+    public interface IWSClient:IHttpClient
     {
+        /// <summary>
+        /// WebSocket版本号。
+        /// </summary>
+        string WebSocketVersion { get; set; }
+
+        /// <summary>
+        /// 是否已经完成握手
+        /// </summary>
+        public bool IsHandshaked { get; }
+
+        /// <summary>
+        /// 通过WebSocket协议发送文本。
+        /// </summary>
+        /// <param name="text"></param>
+        void Send(string text);
+
+        /// <summary>
+        /// 通过WebSocket协议发送文本。
+        /// </summary>
+        /// <param name="text"></param>
+        void SendAsync(string text);
+
+        /// <summary>
+        /// 发送WebSocket数据帧
+        /// </summary>
+        /// <param name="dataFrame"></param>
+        void Send(WSDataFrame dataFrame);
+
+        /// <summary>
+        /// 发送WebSocket数据帧
+        /// </summary>
+        /// <param name="dataFrame"></param>
+        void SendAsync(WSDataFrame dataFrame);
+
+        #region 同步分包发送
+
+        /// <summary>
+        /// 分包发送。
+        /// <para>
+        /// 消息分片，它的构成是由起始帧(FIN为0，opcode非0)，然后若干(0个或多个)帧(FIN为0，opcode为0)，然后结束帧(FIN为1，opcode为0)
+        /// </para>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="packageSize"></param>
+        void SubpackageSend(byte[] buffer, int offset, int length, int packageSize);
+
+        /// <summary>
+        /// 分包发送。
+        /// <para>
+        /// 消息分片，它的构成是由起始帧(FIN为0，opcode非0)，然后若干(0个或多个)帧(FIN为0，opcode为0)，然后结束帧(FIN为1，opcode为0)
+        /// </para>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="packageSize"></param>
+        void SubpackageSend(byte[] buffer, int packageSize);
+
+        /// <summary>
+        /// 分包发送。
+        /// <para>
+        /// 消息分片，它的构成是由起始帧(FIN为0，opcode非0)，然后若干(0个或多个)帧(FIN为0，opcode为0)，然后结束帧(FIN为1，opcode为0)
+        /// </para>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="packageSize"></param>
+        void SubpackageSend(ByteBlock byteBlock, int packageSize);
+
+        #endregion 同步分包发送
+
+        #region 异步分包发送
+
+        /// <summary>
+        /// 分包发送。
+        /// <para>
+        /// 消息分片，它的构成是由起始帧(FIN为0，opcode非0)，然后若干(0个或多个)帧(FIN为0，opcode为0)，然后结束帧(FIN为1，opcode为0)
+        /// </para>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="packageSize"></param>
+        void SubpackageSendAsync(byte[] buffer, int offset, int length, int packageSize);
+
+        /// <summary>
+        /// 分包发送。
+        /// <para>
+        /// 消息分片，它的构成是由起始帧(FIN为0，opcode非0)，然后若干(0个或多个)帧(FIN为0，opcode为0)，然后结束帧(FIN为1，opcode为0)
+        /// </para>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="packageSize"></param>
+        void SubpackageSendAsync(byte[] buffer, int packageSize);
+
+        /// <summary>
+        /// 分包发送。
+        /// <para>
+        /// 消息分片，它的构成是由起始帧(FIN为0，opcode非0)，然后若干(0个或多个)帧(FIN为0，opcode为0)，然后结束帧(FIN为1，opcode为0)
+        /// </para>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="packageSize"></param>
+        void SubpackageSendAsync(ByteBlock byteBlock, int packageSize);
+
+        #endregion 异步分包发送
     }
 }

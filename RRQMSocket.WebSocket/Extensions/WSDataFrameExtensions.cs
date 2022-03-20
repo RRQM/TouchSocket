@@ -13,12 +13,12 @@
 using RRQMCore.ByteManager;
 using System.Text;
 
-namespace RRQMSocket.WebSocket.Helper
+namespace RRQMSocket.WebSocket
 {
     /// <summary>
     /// WSDataFrame辅助扩展类
     /// </summary>
-    public static class WSDataFrameHelper
+    public static class WSDataFrameExtensions
     {
         /// <summary>
         /// 追加文本
@@ -144,12 +144,12 @@ namespace RRQMSocket.WebSocket.Helper
         }
 
         /// <summary>
-        /// 获取消息。
+        /// 当<see cref="WSDataType.Text"/>时，转换为Text消息。
         /// </summary>
         /// <param name="dataFrame"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static string GetMessage(this WSDataFrame dataFrame, Encoding encoding = default)
+        public static string ToText(this WSDataFrame dataFrame, Encoding encoding = default)
         {
             return (encoding == default ? Encoding.UTF8 : encoding).GetString(dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadLength);
         }

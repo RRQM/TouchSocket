@@ -12,7 +12,8 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
+using RRQMSocket.Http;
 using System;
 using System.Text;
 
@@ -40,6 +41,35 @@ namespace RRQMSocket.WebSocket
         }
 
         /// <summary>
+        /// 获取WS的请求头
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="url"></param>
+        /// <param name="version"></param>
+        /// <param name="base64Key"></param>
+        /// <returns></returns>
+        public static HttpRequest GetWSRequest(string host, string url, string version, out string base64Key)
+        {
+            HttpRequest request = new HttpRequest();
+            request.Method = "GET";
+            request.URL = url;
+            request.Protocols = "HTTP";
+            request.ProtocolVersion = "1.1";
+            request.SetHeader(HttpHeaders.Host, host);
+            request.SetHeader(HttpHeaders.Connection, "Upgrade");
+            request.SetHeader(HttpHeaders.Pragma, "no-cache");
+            request.SetHeader(HttpHeaders.UserAgent, "RRQMSocket.WebSocket");
+            request.SetHeader(HttpHeaders.Upgrade, "websocket");
+            request.SetHeader(HttpHeaders.Origin, "RRQM");
+            request.SetHeader("Sec-WebSocket-Version", $"{version}");
+            request.SetHeader(HttpHeaders.AcceptEncoding, "deflate, br");
+            base64Key = WSTools.CreateBase64Key();
+            request.SetHeader("Sec-WebSocket-Key", $"{base64Key}");
+
+            return request;
+        }
+
+        /// <summary>
         /// 计算Base64值
         /// </summary>
         /// <param name="str"></param>
@@ -48,6 +78,42 @@ namespace RRQMSocket.WebSocket
         public static string CalculateBase64Key(string str, Encoding encoding)
         {
             return (str + acceptMask).ToSha1(encoding).ToBase64();
+        }
+
+        /// <summary>
+        /// 获取响应
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public static bool TryGetResponse(HttpRequest request, out HttpResponse response)
+        {
+            string upgrade = request.GetHeader("Upgrade");
+            if (string.IsNullOrEmpty(upgrade))
+            {
+                response = null;
+                return false;
+            }
+            string connection = request.GetHeader("Connection");
+            if (string.IsNullOrEmpty(connection))
+            {
+                response = null;
+                return false;
+            }
+            string secWebSocketKey = request.GetHeader("Sec-WebSocket-Key");
+            if (string.IsNullOrEmpty(secWebSocketKey))
+            {
+                response = null;
+                return false;
+            }
+
+            response = new HttpResponse();
+            response.StatusCode = "101";
+            response.StatusMessage = "Switching Protocols";
+            response.SetHeader(HttpHeaders.Connection, "Upgrade");
+            response.SetHeader(HttpHeaders.Upgrade, "websocket");
+            response.SetHeader("Sec-WebSocket-Accept", CalculateBase64Key(secWebSocketKey, request.Encoding));
+            return true;
         }
 
         /// <summary>
