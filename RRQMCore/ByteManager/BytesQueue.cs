@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
@@ -32,8 +32,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 占用空间
         /// </summary>
-        public long FullSize
-        { get { return this.size * this.bytesQueue.Count; } }
+        public long FullSize => this.size * this.bytesQueue.Count;
 
         private ConcurrentQueue<byte[]> bytesQueue = new ConcurrentQueue<byte[]>();
 

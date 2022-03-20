@@ -124,8 +124,8 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
         public JContainer Parent
         {
             [DebuggerStepThrough]
-            get { return this._parent; }
-            internal set { this._parent = value; }
+            get => this._parent;
+            internal set => this._parent = value;
         }
 
         /// <summary>

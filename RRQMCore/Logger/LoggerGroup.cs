@@ -47,7 +47,6 @@ namespace RRQMCore.Log
                 }
                 catch
                 {
-
                 }
             }
         }
@@ -82,7 +81,6 @@ namespace RRQMCore.Log
                     }
                     catch
                     {
-
                     }
                 }
             }

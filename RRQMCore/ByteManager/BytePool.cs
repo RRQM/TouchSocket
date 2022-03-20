@@ -45,8 +45,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public static bool AutoZero
         {
-            get { return autoZero; }
-            set { autoZero = value; }
+            get => autoZero;
+            set => autoZero = value;
         }
 
         /// <summary>
@@ -54,24 +54,21 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public static int KeyCapacity
         {
-            get { return keyCapacity; }
-            set { keyCapacity = value; }
+            get => keyCapacity;
+            set => keyCapacity = value;
         }
 
         /// <summary>
         /// 单个块最大值
         /// </summary>
-        public static int MaxBlockSize
-        {
-            get { return maxBlockSize; }
-        }
+        public static int MaxBlockSize => maxBlockSize;
 
         /// <summary>
         /// 允许的内存池最大值
         /// </summary>
         public static long MaxSize
         {
-            get { return maxSize; }
+            get => maxSize;
             set
             {
                 if (value < 1024)
@@ -85,10 +82,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 单个块最小值
         /// </summary>
-        public static int MinBlockSize
-        {
-            get { return minBlockSize; }
-        }
+        public static int MinBlockSize => minBlockSize;
 
         /// <summary>
         /// 添加尺寸键

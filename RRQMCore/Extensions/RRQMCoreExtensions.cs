@@ -10,27 +10,27 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using RRQMCore.XREF.Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace RRQMCore.Helper
+namespace RRQMCore.Extensions
 {
     /// <summary>
     /// 辅助扩展类
     /// </summary>
-    public static class RRQMCoreHelper
+    public static class RRQMCoreExtensions
     {
-
         #region 日志
+
         /// <summary>
         /// 输出消息日志
         /// </summary>
@@ -114,7 +114,272 @@ namespace RRQMCore.Helper
         {
             logger.Debug(LogType.Error, source, ex.Message, ex);
         }
+
         #endregion 日志
+
+        #region Json转换
+
+        /// <summary>
+        /// 序列化成Json数据
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static byte[] ToJsonBytes(this object obj)
+        {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(obj, Formatting.None));
+        }
+
+        /// <summary>
+        /// 转换为json字符串。
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static string ToJsonString(this object obj)
+        {
+            return JsonConvert.SerializeObject(obj, Formatting.None);
+        }
+
+        /// <summary>
+        ///  反序列化成Json数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public static T ToJsonObject<T>(this byte[] buffer, int offset, int len)
+        {
+            return Encoding.UTF8.GetString(buffer, offset, len).ToJsonObject<T>();
+        }
+
+        /// <summary>
+        ///  反序列化成Json数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        public static T ToJsonObject<T>(this byte[] buffer)
+        {
+            return Encoding.UTF8.GetString(buffer).ToJsonObject<T>();
+        }
+
+        /// <summary>
+        ///  反序列化成Json数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="jsonString"></param>
+        /// <returns></returns>
+        public static T ToJsonObject<T>(this string jsonString)
+        {
+            return JsonConvert.DeserializeObject<T>(jsonString);
+        }
+
+        /// <summary>
+        /// 反序列化成Json数据
+        /// </summary>
+        /// <param name="jsonString"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static object ToJsonObject(this string jsonString, Type type)
+        {
+            return JsonConvert.DeserializeObject(jsonString, type);
+        }
+
+        #endregion Json转换
+
+        #region 字符串扩展
+
+        /// <summary>
+        /// 判断字符串compare 在 input字符串中出现的次数
+        /// </summary>
+        /// <param name="input">源字符串</param>
+        /// <param name="compare">用于比较的字符串</param>
+        /// <returns>字符串compare 在 input字符串中出现的次数</returns>
+        public static int HitStringCount(this string input, string compare)
+        {
+            int index = input.IndexOf(compare);
+            if (index != -1)
+            {
+                return 1 + HitStringCount(input.Substring(index + compare.Length), compare);
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 将字符转换为对应类型。
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="destinationType"></param>
+        /// <returns></returns>
+        public static object ParseToType(this string value, Type destinationType)
+        {
+            object returnValue;
+            if ((value == null) || destinationType.IsInstanceOfType(value))
+            {
+                return value;
+            }
+            string str = value as string;
+            if ((str != null) && (str.Length == 0))
+            {
+                return null;
+            }
+            TypeConverter converter = TypeDescriptor.GetConverter(destinationType);
+            bool flag = converter.CanConvertFrom(value.GetType());
+            if (!flag)
+            {
+                converter = TypeDescriptor.GetConverter(value.GetType());
+            }
+            if (!flag && !converter.CanConvertTo(destinationType))
+            {
+                throw new InvalidOperationException("无法转换成类型：" + value.ToString() + "==>" + destinationType);
+            }
+            try
+            {
+                returnValue = flag ? converter.ConvertFrom(null, null, value) : converter.ConvertTo(null, null, value, destinationType);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(" 类型转换出错：" + value.ToString() + "==>" + destinationType, e);
+            }
+            return returnValue;
+        }
+
+        /// <summary>
+        /// 只按第一个匹配项分割
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="split"></param>
+        /// <returns></returns>
+        public static string[] SplitFirst(this string str, char split)
+        {
+            List<string> s = new List<string>();
+            int index = str.IndexOf(split);
+            if (index > 0)
+            {
+                s.Add(str.Substring(0, index).Trim());
+                s.Add(str.Substring(index + 1, str.Length - index - 1).Trim());
+            }
+
+            return s.ToArray();
+        }
+
+        /// <summary>
+        /// 按字符串分割
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        public static string[] Split(this string str, string pattern)
+        {
+            return Regex.Split(str, pattern);
+        }
+
+        /// <summary>
+        /// 只按最后一个匹配项分割
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="split"></param>
+        /// <returns></returns>
+        public static string[] SplitLast(this string str, char split)
+        {
+            List<string> s = new List<string>();
+            int index = str.LastIndexOf(split);
+            if (index > 0)
+            {
+                s.Add(str.Substring(0, index).Trim());
+                s.Add(str.Substring(index + 1, str.Length - index - 1).Trim());
+            }
+
+            return s.ToArray();
+        }
+
+        /// <summary>
+        /// 按格式填充
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ps"></param>
+        /// <returns></returns>
+        public static string Format(this string str, params object[] ps)
+        {
+            return string.Format(str, ps);
+        }
+
+        /// <summary>
+        /// 转换为SHA1。
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static byte[] ToSha1(this string value, Encoding encoding)
+        {
+            SHA1 sha1 = new SHA1CryptoServiceProvider();
+            return sha1.ComputeHash(encoding.GetBytes(value));
+        }
+
+        /// <summary>
+        /// 转换为UTF-8数据，效果等于<see cref="Encoding.UTF8"/>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static byte[] ToUTF8Bytes(this string value)
+        {
+            return Encoding.UTF8.GetBytes(value);
+        }
+
+        /// <summary>
+        /// 将16进制的字符转换为数组。
+        /// </summary>
+        /// <param name="hexString"></param>
+        /// <param name="splite"></param>
+        /// <returns></returns>
+        public static byte[] ByHexStringToBytes(this string hexString, string splite = default)
+        {
+            if (!string.IsNullOrEmpty(splite))
+            {
+                hexString = hexString.Replace(splite, string.Empty);
+            }
+
+            if ((hexString.Length % 2) != 0)
+            {
+                hexString += " ";
+            }
+            byte[] returnBytes = new byte[hexString.Length / 2];
+            for (int i = 0; i < returnBytes.Length; i++)
+            {
+                returnBytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
+            }
+            return returnBytes;
+        }
+
+        /// <summary>
+        /// 将16进制的字符转换为int32。
+        /// </summary>
+        /// <param name="hexString"></param>
+        /// <returns></returns>
+        public static int ByHexStringToInt32(this string hexString)
+        {
+            if (string.IsNullOrEmpty(hexString))
+            {
+                return default;
+            }
+            return int.Parse(hexString, System.Globalization.NumberStyles.HexNumber);
+        }
+        #endregion
+
+        #region 字节数组扩展
+        /// <summary>
+        /// 转Base64。
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string ToBase64(this byte[] data)
+        {
+            return Convert.ToBase64String(data);
+        }
+
 
         /// <summary>
         /// 索引包含数组
@@ -188,200 +453,26 @@ namespace RRQMCore.Helper
 
             return -1;
         }
-
-        #region Json转换
         /// <summary>
-        /// 序列化成Json数据
+        /// 字节数组转16进制字符
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static byte[] ToJsonBytes(this object obj)
-        {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(obj));
-        }
-
-        /// <summary>
-        ///  反序列化成Json数据
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
-        /// <param name="len"></param>
+        /// <param name="length"></param>
+        /// <param name="splite"></param>
         /// <returns></returns>
-        public static T ToJsonObject<T>(this byte[] buffer, int offset, int len)
+        public static string ByBytesToHexString(this byte[] buffer, int offset, int length, string splite = default)
         {
-            return Encoding.UTF8.GetString(buffer, offset, len).ToJsonObject<T>();
+            if (string.IsNullOrEmpty(splite))
+            {
+                return BitConverter.ToString(buffer, offset, length).Replace("-", string.Empty);
+            }
+            else
+            {
+                return BitConverter.ToString(buffer, offset, length).Replace("-", splite);
+            }
         }
-
-        /// <summary>
-        ///  反序列化成Json数据
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public static T ToJsonObject<T>(this byte[] buffer)
-        {
-            return Encoding.UTF8.GetString(buffer).ToJsonObject<T>();
-        }
-
-        /// <summary>
-        ///  反序列化成Json数据
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
-        public static T ToJsonObject<T>(this string jsonString)
-        {
-            return JsonConvert.DeserializeObject<T>(jsonString);
-        }
-
-        /// <summary>
-        /// 反序列化成Json数据
-        /// </summary>
-        /// <param name="jsonString"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object ToJsonObject(this string jsonString, Type type)
-        {
-            return JsonConvert.DeserializeObject(jsonString, type);
-        }
-
-        #endregion Json转换
-
-        /// <summary>
-        /// 只按第一个匹配项分割
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="split"></param>
-        /// <returns></returns>
-        public static string[] SplitFirst(this string str, char split)
-        {
-            List<string> s = new List<string>();
-            int index = str.IndexOf(split);
-            if (index > 0)
-            {
-                s.Add(str.Substring(0, index).Trim());
-                s.Add(str.Substring(index + 1, str.Length - index - 1).Trim());
-            }
-
-            return s.ToArray();
-        }
-
-        /// <summary>
-        /// 按字符串分割
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="pattern"></param>
-        /// <returns></returns>
-        public static string[] Split(this string str, string pattern)
-        {
-            return Regex.Split(str, pattern);
-        }
-
-        /// <summary>
-        /// 只按最后一个匹配项分割
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="split"></param>
-        /// <returns></returns>
-        public static string[] SplitLast(this string str, char split)
-        {
-            List<string> s = new List<string>();
-            int index = str.LastIndexOf(split);
-            if (index > 0)
-            {
-                s.Add(str.Substring(0, index).Trim());
-                s.Add(str.Substring(index + 1, str.Length - index - 1).Trim());
-            }
-
-            return s.ToArray();
-        }
-
-        /// <summary>
-        /// 将字符串转换为指定类型
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object ParseToType(this string str, Type type)
-        {
-            dynamic obj = null;
-            if (type == RRQMReadonly.stringType)
-            {
-                obj = str;
-            }
-            else if (type == RRQMReadonly.byteType)
-            {
-                obj = byte.Parse(str);
-            }
-            else if (type == RRQMReadonly.boolType)
-            {
-                obj = bool.Parse(str);
-            }
-            else if (type == RRQMReadonly.shortType)
-            {
-                obj = short.Parse(str);
-            }
-            else if (type == RRQMReadonly.intType)
-            {
-                obj = int.Parse(str);
-            }
-            else if (type == RRQMReadonly.longType)
-            {
-                obj = long.Parse(str);
-            }
-            else if (type == RRQMReadonly.floatType)
-            {
-                obj = float.Parse(str);
-            }
-            else if (type == RRQMReadonly.doubleType)
-            {
-                obj = double.Parse(str);
-            }
-            else if (type == RRQMReadonly.decimalType)
-            {
-                obj = decimal.Parse(str);
-            }
-            else if (type == RRQMReadonly.dateTimeType)
-            {
-                obj = DateTime.Parse(str);
-            }
-
-            return obj;
-        }
-
-        /// <summary>
-        /// 按格式填充
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="ps"></param>
-        /// <returns></returns>
-        public static string Format(this string str, params object[] ps)
-        {
-            return string.Format(str, ps);
-        }
-
-        /// <summary>
-        /// 转换为SHA1。
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="encoding"></param>
-        /// <returns></returns>
-        public static byte[] ToSha1(this string value, Encoding encoding)
-        {
-            SHA1 sha1 = new SHA1CryptoServiceProvider();
-            return sha1.ComputeHash(encoding.GetBytes(value));
-        }
-
-        /// <summary>
-        /// 转换为UTF-8数据
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static byte[] ToUTF8Bytes(this string value)
-        {
-            return Encoding.UTF8.GetBytes(value);
-        }
+        #endregion
 
         /// <summary>
         /// 获取自定义attribute
@@ -424,16 +515,6 @@ namespace RRQMCore.Helper
             {
             }
 #endif
-        }
-
-        /// <summary>
-        /// 转Base64。
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static string ToBase64(this byte[] data)
-        {
-            return Convert.ToBase64String(data);
         }
 
         /// <summary>
@@ -502,18 +583,7 @@ namespace RRQMCore.Helper
             }
         }
 
-        /// <summary>
-        /// 转utf-8字符串
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public static string ToUtf8String(this ByteBlock byteBlock, int offset, int length)
-        {
-            return Encoding.UTF8.GetString(byteBlock.Buffer, offset, length);
-        }
-
+        #region Type扩展
         /// <summary>
         /// 获取类型
         /// </summary>
@@ -554,5 +624,112 @@ namespace RRQMCore.Helper
             }
             return false;
         }
+
+        /// <summary>
+        /// 判断该类型是否为可空类型
+        /// </summary>
+        /// <param name="theType"></param>
+        /// <returns></returns>
+        public static bool IsNullableType(this Type theType)
+        {
+            return (theType.IsGenericType && theType.
+              GetGenericTypeDefinition().Equals
+              (RRQMCoreUtility.nullableType));
+        }
+        #endregion
+
+        #region 类型转换
+        ///<summary> 
+        ///  将字符串格式化成指定的数据类型
+        ///</summary> 
+        ///<param name="str"></param> 
+        ///<param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="splits"></param> 
+        ///   <returns></returns> 
+        public static bool TryParseToType(string str, Type type, out object value, char[] splits = default)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                value = default;
+                return true;
+            }
+
+            if (type == null)
+            {
+                value = str;
+                return true;
+            }
+            if (type.IsArray)
+            {
+                Type elementType = type.GetElementType();
+                string[] strs;
+                if (splits == null)
+                {
+                    strs = str.Split(new char[] { ' ', ';', '-', '/' });
+                }
+                else
+                {
+                    strs = str.Split(splits);
+                }
+
+                Array array = Array.CreateInstance(elementType, strs.Length);
+                for (int i = 0, c = strs.Length; i < c; ++i)
+                {
+                    object o;
+                    if (ConvertSimpleType(strs[i], elementType, out o))
+                    {
+                        array.SetValue(o, i);
+                    }
+                    else
+                    {
+                        value = default;
+                        return false;
+                    }
+                }
+                value = array;
+                return true;
+            }
+            return ConvertSimpleType(str, type, out value);
+        }
+
+
+
+        private static bool ConvertSimpleType(string value, Type destinationType, out object returnValue)
+        {
+            if ((value == null) || destinationType.IsInstanceOfType(value))
+            {
+                returnValue = value;
+                return true;
+            }
+
+            if (string.IsNullOrEmpty(value))
+            {
+                returnValue = default;
+                return true;
+            }
+            TypeConverter converter = TypeDescriptor.GetConverter(destinationType);
+            bool flag = converter.CanConvertFrom(value.GetType());
+            if (!flag)
+            {
+                converter = TypeDescriptor.GetConverter(value.GetType());
+            }
+            if (!flag && !converter.CanConvertTo(destinationType))
+            {
+                returnValue = default;
+                return false;
+            }
+            try
+            {
+                returnValue = flag ? converter.ConvertFrom(null, null, value) : converter.ConvertTo(null, null, value, destinationType);
+            }
+            catch
+            {
+                returnValue = default;
+                return false;
+            }
+            return true;
+        }
+        #endregion
     }
 }

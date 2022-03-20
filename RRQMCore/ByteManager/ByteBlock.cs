@@ -22,6 +22,7 @@ namespace RRQMCore.ByteManager
     /// <summary>
     /// 字节块流
     /// </summary>
+    [System.Diagnostics.DebuggerDisplay("Len={Len}")]
     public sealed class ByteBlock : Stream, IDisposable
     {
         internal bool @using;
@@ -48,18 +49,12 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
         /// </summary>
-        public int CanReadLen
-        {
-            get { return this.Len - this.Pos; }
-        }
+        public int CanReadLen => this.Len - this.Pos;
 
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
         /// </summary>
-        public long CanReadLength
-        {
-            get { return this.length - this.position; }
-        }
+        public long CanReadLength => this.length - this.position;
 
         /// <summary>
         /// 构造函数
@@ -77,7 +72,7 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public static float Ratio
         {
-            get { return ratio; }
+            get => ratio;
             set
             {
                 if (value < 1.5)
@@ -91,10 +86,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 字节实例
         /// </summary>
-        public byte[] Buffer
-        {
-            get { return this._buffer; }
-        }
+        public byte[] Buffer => this._buffer;
 
         /// <summary>
         /// 可读取
@@ -119,30 +111,25 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 表示持续性持有，为True时，Dispose将调用无效。
         /// </summary>
-        public bool Holding
-        {
-            get { return this.holding; }
-        }
+        public bool Holding => this.holding;
 
         /// <summary>
         /// Int真实长度
         /// </summary>
-        public int Len
-        { get { return (int)this.length; } }
+        public int Len => (int)this.length;
 
         /// <summary>
         /// 真实长度
         /// </summary>
-        public override long Length
-        { get { return this.length; } }
+        public override long Length => this.length;
 
         /// <summary>
         /// int型流位置
         /// </summary>
         public int Pos
         {
-            get { return (int)this.position; }
-            set { this.position = value; }
+            get => (int)this.position;
+            set => this.position = value;
         }
 
         /// <summary>
@@ -150,17 +137,14 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public override long Position
         {
-            get { return this.position; }
-            set { this.position = value; }
+            get => this.position;
+            set => this.position = value;
         }
 
         /// <summary>
         /// 使用状态
         /// </summary>
-        public bool Using
-        {
-            get { return this.@using; }
-        }
+        public bool Using => this.@using;
 
         /// <summary>
         /// 直接完全释放，游离该对象，然后等待GC
@@ -218,32 +202,44 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 读取
+        /// 读取数据，然后递增Pos
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
-        /// <param name="count"></param>
+        /// <param name="length"></param>
         /// <returns></returns>
         /// <exception cref="ByteBlockDisposedException"></exception>
-        public override int Read(byte[] buffer, int offset, int count)
+        public override int Read(byte[] buffer, int offset, int length)
         {
             if (!this.@using)
             {
                 throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
-            int len = this._buffer.Length - this.position > count ? count : this._buffer.Length - (int)this.position;
+            int len = this._buffer.Length - this.position > length ? length : this._buffer.Length - (int)this.position;
             Array.Copy(this._buffer, this.position, buffer, offset, len);
             this.position += len;
             return len;
         }
 
         /// <summary>
-        /// 读取数据
+        /// 读取数据，然后递增Pos
         /// </summary>
         /// <param name="buffer"></param>
         /// <returns></returns>
         public int Read(byte[] buffer)
         {
+            return this.Read(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 读取数据，然后递增Pos
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public int Read(out byte[] buffer,int length)
+        {
+            buffer = new byte[length];
             return this.Read(buffer, 0, buffer.Length);
         }
 
@@ -637,7 +633,8 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 写入<see cref="string"/>值
+        /// 写入<see cref="string"/>值。
+        /// <para>读取时必须使用ReadString</para>
         /// </summary>
         /// <param name="value"></param>
         public ByteBlock Write(string value)
@@ -913,5 +910,43 @@ namespace RRQMCore.ByteManager
         }
 
         #endregion Object
+
+        /// <summary>
+        /// 转换为UTF-8字符
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return this.ToString(0, this.Len);
+        }
+
+        /// <summary>
+        /// 转换为UTF-8字符
+        /// </summary>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">长度</param>
+        /// <returns></returns>
+        public string ToString(int offset, int length)
+        {
+            if (!this.@using)
+            {
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+            }
+            return Encoding.UTF8.GetString(this._buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 转换为UTF-8字符
+        /// </summary>
+        /// <param name="offset">偏移量</param>
+        /// <returns></returns>
+        public string ToString(int offset)
+        {
+            if (!this.@using)
+            {
+                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+            }
+            return Encoding.UTF8.GetString(this._buffer, offset, this.Len - offset);
+        }
     }
 }

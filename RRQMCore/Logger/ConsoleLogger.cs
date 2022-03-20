@@ -39,31 +39,36 @@ namespace RRQMCore.Log
         /// <param name="exception"></param>
         public virtual void Debug(LogType logType, object source, string message, Exception exception)
         {
-            Console.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff"));
-            Console.Write(" | ");
-            switch (logType)
+            lock (typeof(ConsoleLogger))
             {
-                case LogType.Warning:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-                case LogType.Error:
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    break;
-                case LogType.Message:
-                default:
-                    break;
-            }
-            Console.Write(logType.ToString());
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write(" | ");
-            Console.Write(message);
-
-            if (exception != null)
-            {
+                Console.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff"));
                 Console.Write(" | ");
-                Console.Write($"【堆栈】：{(exception == null ? "未知" : exception.StackTrace)}");
+                switch (logType)
+                {
+                    case LogType.Warning:
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        break;
+
+                    case LogType.Error:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+
+                    case LogType.Message:
+                    default:
+                        break;
+                }
+                Console.Write(logType.ToString());
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(" | ");
+                Console.Write(message);
+
+                if (exception != null)
+                {
+                    Console.Write(" | ");
+                    Console.Write($"【堆栈】：{(exception == null ? "未知" : exception.StackTrace)}");
+                }
+                Console.WriteLine();
             }
-            Console.WriteLine();
         }
     }
 }

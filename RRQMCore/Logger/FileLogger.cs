@@ -78,7 +78,7 @@ namespace RRQMCore.Log
         {
             try
             {
-                lock (this)
+                lock (typeof(FileLogger))
                 {
                     string path = Path.Combine(this.rootPath, DateTime.Now.ToString("[yyyy-MM-dd]") + ".log");
                     File.AppendAllText(path, logString);

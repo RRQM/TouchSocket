@@ -25,8 +25,8 @@ namespace RRQMCore
         /// </summary>
         public RRQMException() : base()
         {
-
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -90,11 +90,11 @@ namespace RRQMCore
     [Serializable]
     public class ByteBlockDisposedException : RRQMException
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>
-        public ByteBlockDisposedException() { }
+        public ByteBlockDisposedException()
+        { }
 
         /// <summary>
         /// 构造函数

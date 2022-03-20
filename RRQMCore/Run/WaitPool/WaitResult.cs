@@ -40,8 +40,8 @@ namespace RRQMCore.Run
         /// </summary>
         public string Message
         {
-            get { return this.message; }
-            set { this.message = value; }
+            get => this.message;
+            set => this.message = value;
         }
 
         /// <summary>
@@ -49,8 +49,8 @@ namespace RRQMCore.Run
         /// </summary>
         public int Sign
         {
-            get { return this.sign; }
-            set { this.sign = value; }
+            get => this.sign;
+            set => this.sign = value;
         }
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace RRQMCore.Run
         /// </summary>
         public byte Status
         {
-            get { return this.status; }
-            set { this.status = value; }
+            get => this.status;
+            set => this.status = value;
         }
     }
 }

@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;

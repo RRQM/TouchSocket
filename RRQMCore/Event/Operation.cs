@@ -11,22 +11,28 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Reflection;
 
-namespace RRQMCore.Serialization
+namespace RRQMCore
 {
-    internal class InstanceObject
+    /// <summary>
+    /// 操作
+    /// </summary>
+    [Flags]
+    public enum Operation
     {
-        internal InstanceType instanceType;
-        internal Type Type;
-        internal object GetInstance()
-        {
-            return Activator.CreateInstance(this.Type);
-        }
-        internal Type[] ArgTypes;
-        internal Type ArrayType;
-        internal Type[] ProTypes;
-        internal PropertyInfo[] Properties;
-        internal MethodInfo AddMethod;
+        /// <summary>
+        /// 无任何状态
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// 已处理
+        /// </summary>
+        Handled = 1,
+
+        /// <summary>
+        /// 允许该操作
+        /// </summary>
+        Permit = 2
     }
 }
