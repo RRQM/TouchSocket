@@ -38,9 +38,6 @@ namespace RRQMSocket.FileTransfer
         /// <summary>
         /// 结果
         /// </summary>
-        public Result Result
-        {
-            get { return this.result; }
-        }
+        public Result Result => this.result;
     }
 }

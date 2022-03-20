@@ -17,12 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace RRQMSocket.FileTransfer.Helper
+namespace RRQMSocket.FileTransfer
 {
     /// <summary>
     /// 文件客户端辅助扩展
     /// </summary>
-    public static class FileClientHelper
+    public static class FileClientExtensions
     {
         /// <summary>
         /// 批量推送文件
