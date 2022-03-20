@@ -243,8 +243,6 @@ while (true)
 - xmlRpc：下列服务，可通过http+xml的形式调用。
 - RRQMRPC：使用专有协议调用。
 
- **_其中除WebApi之外，其他调用均可生成C#代理调用。_** 
-
 ```
 [Route("/[controller]/[action]")]
 public class XUnitTestServer : ControllerBase
