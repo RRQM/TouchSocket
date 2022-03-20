@@ -10,18 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
+using RRQMSocket.Http;
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
-namespace RRQMSocket.Http
+namespace RRQMSocket
 {
     /// <summary>
-    /// 枚举扩展类
+    /// Http扩展辅助
     /// </summary>
-    public static class EnumHelper
+    public static class HttpExtensions
     {
         private static ConcurrentDictionary<Enum, string> _cache = new ConcurrentDictionary<Enum, string>();
 

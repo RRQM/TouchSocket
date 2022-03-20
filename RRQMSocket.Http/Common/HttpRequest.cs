@@ -12,8 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using RRQMCore.ByteManager;
-
-using RRQMCore.Helper;
+using RRQMCore.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,43 +62,6 @@ namespace RRQMSocket.Http
         public string URL { get; set; }
 
         /// <summary>
-        /// 构建响应头部
-        /// </summary>
-        /// <returns></returns>
-        private void BuildHeader(ByteBlock byteBlock)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine($"{this.Method} / HTTP/{this.ProtocolVersion}");
-
-            this.SetHeader(HttpHeaders.UserAgent, "RRQMHTTP");
-
-            if (!string.IsNullOrEmpty(this.Content_Type))
-                stringBuilder.AppendLine("Content-Type: " + this.Content_Type);
-            stringBuilder.AppendLine("Content-Length: " + this.BodyLength);
-
-            foreach (var headerkey in this.Headers.Keys)
-            {
-                stringBuilder.Append($"{headerkey}: ");
-                stringBuilder.AppendLine(this.Headers[headerkey]);
-            }
-
-            stringBuilder.AppendLine();
-            byteBlock.Write(this.Encoding.GetBytes(stringBuilder.ToString()));
-        }
-
-        private void BuildContent(ByteBlock byteBlock)
-        {
-            if (this.BodyLength > 0)
-            {
-                if (this.BodyLength != this.Content.Length)
-                {
-                    throw new RRQMException("内容实际长度与设置长度不相等");
-                }
-                byteBlock.Write(this.Content);
-            }
-        }
-
-        /// <summary>
         /// 构建响应数据
         /// </summary>
         /// <param name="byteBlock"></param>
@@ -107,6 +69,15 @@ namespace RRQMSocket.Http
         {
             this.BuildHeader(byteBlock);
             this.BuildContent(byteBlock);
+        }
+
+        /// <summary>
+        /// 获取内容
+        /// </summary>
+        /// <returns></returns>
+        public override byte[] GetContent()
+        {
+            return this.content;
         }
 
         /// <summary>
@@ -119,17 +90,61 @@ namespace RRQMSocket.Http
             return this.GetHeaderByKey(fieldName);
         }
 
+        byte[] content;
+
+        /// <summary>
+        /// 设置内容
+        /// </summary>
+        /// <param name="content"></param>
+        public override void SetContent(byte[] content)
+        {
+            this.content = content;
+            this.ContentLength = content.Length;
+        }
+
+        /// <summary>
+        /// 设置头值
+        /// </summary>
+        /// <param name="header"></param>
+        /// <param name="value"></param>
+        public void SetHeader(HttpHeaders header, string value)
+        {
+            this.SetHeaderByKey(header, value);
+        }
+
+        /// <summary>
+        /// 设置头值
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <param name="value"></param>
+        public void SetHeader(string fieldName, string value)
+        {
+            this.SetHeaderByKey(fieldName, value);
+        }
+
+        /// <summary>
+        /// 输出
+        /// </summary>
+        public override string ToString()
+        {
+            using (ByteBlock byteBlock=new ByteBlock())
+            {
+                this.Build(byteBlock);
+                return byteBlock.ToString();
+            }
+        }
+
         /// <summary>
         /// 从内存中读取
         /// </summary>
-        public override void ReadFromBase()
+        protected override void LoadHeaderProterties()
         {
             var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
             if (first.Length > 0) this.Method = first[0];
             if (first.Length > 1)
             {
                 this.URL = Uri.UnescapeDataString(first[1]);
-                this.RelativeURL = first[1].Split('?')[0];
+                this.RelativeURL = this.URL.Split('?')[0];
             }
             if (first.Length > 2)
             {
@@ -140,10 +155,6 @@ namespace RRQMSocket.Http
                     this.ProtocolVersion = ps[1];
                 }
             }
-
-            string contentLength = this.GetHeader(HttpHeaders.ContentLength);
-            int.TryParse(contentLength, out int content_Length);
-            this.BodyLength = content_Length;
 
             if (this.Method == "GET")
             {
@@ -168,32 +179,52 @@ namespace RRQMSocket.Http
 
             if (this.Method == "POST")
             {
-                this.Content_Type = this.GetHeader(HttpHeaders.ContentType);
-                if (this.Content_Type == @"application/x-www-form-urlencoded")
+                this.ContentType = this.GetHeader(HttpHeaders.ContentType);
+                if (this.ContentType == @"application/x-www-form-urlencoded")
                 {
-                    this.Params = this.GetRequestParameters(this.Body);
+                    this.Params = this.GetRequestParameters(this.GetBody());
                 }
+            }
+        }
+        private void BuildContent(ByteBlock byteBlock)
+        {
+            if (this.ContentLength > 0)
+            {
+                if (this.ContentLength != this.GetContent().Length)
+                {
+                    throw new RRQMException("内容实际长度与设置长度不相等");
+                }
+                byteBlock.Write(this.GetContent());
             }
         }
 
         /// <summary>
-        /// 设置头值
+        /// 构建响应头部
         /// </summary>
-        /// <param name="header"></param>
-        /// <param name="value"></param>
-        public void SetHeader(HttpHeaders header, string value)
+        /// <returns></returns>
+        private void BuildHeader(ByteBlock byteBlock)
         {
-            this.SetHeaderByKey(header, value);
-        }
+            StringBuilder stringBuilder = new StringBuilder();
+            if (string.IsNullOrEmpty(this.URL))
+            {
+                stringBuilder.AppendLine($"{this.Method} / HTTP/{this.ProtocolVersion}");
+            }
+            else
+            {
+                stringBuilder.AppendLine($"{this.Method} {this.URL} HTTP/{this.ProtocolVersion}");
+            }
+            if (this.ContentLength > 0)
+            {
+                this.SetHeaderByKey(HttpHeaders.ContentLength, this.ContentLength.ToString());
+            }
+            foreach (var headerkey in this.Headers.Keys)
+            {
+                stringBuilder.Append($"{headerkey}: ");
+                stringBuilder.AppendLine(this.Headers[headerkey]);
+            }
 
-        /// <summary>
-        /// 设置头值
-        /// </summary>
-        /// <param name="fieldName"></param>
-        /// <param name="value"></param>
-        public void SetHeader(string fieldName, string value)
-        {
-            this.SetHeaderByKey(fieldName, value);
+            stringBuilder.AppendLine();
+            byteBlock.Write(this.Encoding.GetBytes(stringBuilder.ToString()));
         }
 
         private Dictionary<string, string> GetRequestParameters(string row)
