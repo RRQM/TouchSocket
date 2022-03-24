@@ -72,8 +72,8 @@ RRQMSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的�
 - [源代码仓库主页](https://gitee.com/RRQM_Home) 
 - 交流QQ群：234762506
 
-## 🌟使用说明文档
-- [ 说明文档首页 ](https://www.yuque.com/eo2w71/rrqm/2c5dab34026d2b45ada6e51ae9e51a5a)
+## 🌟说明文档
+- [ 文档首页 ](https://www.yuque.com/eo2w71/rrqm/2c5dab34026d2b45ada6e51ae9e51a5a)
 
 ## ✨简单示例
 
@@ -267,7 +267,7 @@ public class XUnitTestServer : ControllerBase
 
 ## 致谢
 
-谢谢大家对我的支持，如果还有其他问题，请加群QQ：234762506讨论。
+谢谢大家对RRQM的支持，如果还有其他问题，请加群QQ：234762506讨论。
 
 ## 支持作者
 
