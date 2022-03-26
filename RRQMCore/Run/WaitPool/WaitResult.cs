@@ -28,7 +28,7 @@ namespace RRQMCore.Run
         /// <summary>
         /// 标记号
         /// </summary>
-        protected int sign;
+        protected long sign;
 
         /// <summary>
         /// 状态
@@ -47,7 +47,7 @@ namespace RRQMCore.Run
         /// <summary>
         /// 标记号
         /// </summary>
-        public int Sign
+        public long Sign
         {
             get => this.sign;
             set => this.sign = value;

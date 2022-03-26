@@ -22,21 +22,21 @@ namespace RRQMCore.Run
     /// 等待处理数据
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class RRQMWaitHandlePool<T> : IDisposable where T : IWaitResult
+    public class WaitHandlePool<T> : IDisposable where T : IWaitResult
     {
-        private int signCount;
-
-        private ConcurrentDictionary<int, WaitData<T>> waitDic;
+        SnowflakeIDGenerator idGenerator;
+        private ConcurrentDictionary<long, WaitData<T>> waitDic;
 
         private ConcurrentQueue<WaitData<T>> waitQueue;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMWaitHandlePool()
+        public WaitHandlePool()
         {
-            this.waitDic = new ConcurrentDictionary<int, WaitData<T>>();
+            this.waitDic = new ConcurrentDictionary<long, WaitData<T>>();
             this.waitQueue = new ConcurrentQueue<WaitData<T>>();
+            this.idGenerator = new SnowflakeIDGenerator(4);
         }
 
         /// <summary>
@@ -75,25 +75,30 @@ namespace RRQMCore.Run
         }
 
         /// <summary>
-        /// 获取一个可等待对象
+        ///  获取一个可等待对象
         /// </summary>
-        public WaitData<T> GetWaitData(T result)
+        /// <param name="result"></param>
+        /// <param name="autoSign">设置为false时，不会生成sign</param>
+        /// <returns></returns>
+        public WaitData<T> GetWaitData(T result,bool autoSign=true)
         {
-            if (this.signCount == int.MaxValue)
-            {
-                this.signCount = 0;
-            }
             WaitData<T> waitData;
             if (this.waitQueue.TryDequeue(out waitData))
             {
-                result.Sign = Interlocked.Increment(ref this.signCount);
+                if (autoSign)
+                {
+                    result.Sign = this.idGenerator.NextID();
+                }
                 waitData.SetResult(result);
                 this.waitDic.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitData<T>();
-            result.Sign = Interlocked.Increment(ref this.signCount);
+            if (autoSign)
+            {
+                result.Sign = this.idGenerator.NextID();
+            }
             waitData.SetResult(result);
             this.waitDic.TryAdd(result.Sign, waitData);
             return waitData;
@@ -103,7 +108,7 @@ namespace RRQMCore.Run
         /// 让等待对象恢复运行
         /// </summary>
         /// <param name="sign"></param>
-        public void SetRun(int sign)
+        public void SetRun(long sign)
         {
             WaitData<T> waitData;
             if (this.waitDic.TryGetValue(sign, out waitData))
@@ -117,7 +122,7 @@ namespace RRQMCore.Run
         /// </summary>
         /// <param name="sign"></param>
         /// <param name="waitResult"></param>
-        public void SetRun(int sign, T waitResult)
+        public void SetRun(long sign, T waitResult)
         {
             WaitData<T> waitData;
             if (this.waitDic.TryGetValue(sign, out waitData))

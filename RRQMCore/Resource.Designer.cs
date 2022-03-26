@@ -196,6 +196,15 @@ namespace RRQMCore {
         }
         
         /// <summary>
+        ///   查找类似 客户端没有连接。 的本地化字符串。
+        /// </summary>
+        public static string NotConnected {
+            get {
+                return ResourceManager.GetString("NotConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 数据处理适配器为空，可能客户端已掉线。 的本地化字符串。
         /// </summary>
         public static string NullDataAdapter {
