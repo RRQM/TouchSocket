@@ -31,7 +31,7 @@ namespace RRQMSocket.RPC.JsonRpc
     {
         private JRPT jrpt;
 
-        private RRQMWaitHandlePool<IWaitResult> waitHandle;
+        private WaitHandlePool<IWaitResult> waitHandle;
 
         /// <summary>
         /// 构造函数
@@ -39,7 +39,7 @@ namespace RRQMSocket.RPC.JsonRpc
         public JsonRpcClient(JRPT pt)
         {
             this.jrpt = pt;
-            this.waitHandle = new RRQMWaitHandlePool<IWaitResult>();
+            this.waitHandle = new WaitHandlePool<IWaitResult>();
         }
 
         /// <summary>
@@ -319,7 +319,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         {
                             JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
                             waitContext.Status = 1;
-                            waitContext.Sign = int.Parse(responseContext.id);
+                            waitContext.Sign = long.Parse(responseContext.id);
                             waitContext.error = responseContext.error;
                             waitContext.Return = responseContext.result;
                             this.waitHandle.SetRun(waitContext);
@@ -335,7 +335,7 @@ namespace RRQMSocket.RPC.JsonRpc
                         {
                             JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
                             waitContext.Status = 1;
-                            waitContext.Sign = int.Parse(responseContext.id);
+                            waitContext.Sign = long.Parse(responseContext.id);
                             waitContext.error = responseContext.error;
                             waitContext.Return = responseContext.result;
                             this.waitHandle.SetRun(waitContext);
