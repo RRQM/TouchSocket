@@ -162,6 +162,9 @@
   <data name="NoResponse" xml:space="preserve">
     <value>长时间没有响应。</value>
   </data>
+  <data name="NotConnected" xml:space="preserve">
+    <value>客户端没有连接。</value>
+  </data>
   <data name="NullDataAdapter" xml:space="preserve">
     <value>数据处理适配器为空，可能客户端已掉线。</value>
   </data>

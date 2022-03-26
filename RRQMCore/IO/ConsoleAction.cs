@@ -30,18 +30,23 @@ namespace RRQMCore.IO
         {
             this.helpOrder = helpOrder;
 
-            this.Add(helpOrder, "帮助信息", () =>
+            this.Add(helpOrder, "帮助信息", ShowAll);
+        }
+
+        /// <summary>
+        /// 显示所有注册指令
+        /// </summary>
+        public void ShowAll()
+        {
+            List<string> s = new List<string>();
+            foreach (var item in this.actions)
             {
-                List<string> s = new List<string>();
-                foreach (var item in this.actions)
+                if (!s.Contains(item.Value.FullOrder.ToLower()))
                 {
-                    if (!s.Contains(item.Value.FullOrder.ToLower()))
-                    {
-                        s.Add(item.Value.FullOrder.ToLower());
-                        Console.WriteLine($"[{item.Value.FullOrder}]-------->{item.Value.Description}");
-                    }
+                    s.Add(item.Value.FullOrder.ToLower());
+                    Console.WriteLine($"[{item.Value.FullOrder}]-------->{item.Value.Description}");
                 }
-            });
+            }
         }
 
         /// <summary>

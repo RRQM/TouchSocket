@@ -111,7 +111,7 @@ namespace RRQMCore.Run
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
-                tokenInstance.MethodInfo = action.Method;
+                tokenInstance.Method = new Reflection.Method(action.Method);
                 var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
@@ -161,7 +161,7 @@ namespace RRQMCore.Run
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
-                tokenInstance.MethodInfo = methodInfo;
+                tokenInstance.Method = new Reflection.Method(methodInfo);
                 var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
@@ -196,7 +196,7 @@ namespace RRQMCore.Run
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
-                tokenInstance.MethodInfo = action.Method;
+                tokenInstance.Method = new Reflection.Method(action.Method);
                 var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
@@ -220,7 +220,7 @@ namespace RRQMCore.Run
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
-                tokenInstance.MethodInfo = action.Method;
+                tokenInstance.Method = new Reflection.Method(action.Method);
                 var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
@@ -243,7 +243,7 @@ namespace RRQMCore.Run
             {
                 TokenInstance tokenInstance = new TokenInstance();
                 tokenInstance.MessageObject = messageObject;
-                tokenInstance.MethodInfo = action.Method;
+                tokenInstance.Method = new Reflection.Method(action.Method);
                 var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
                 list.Add(tokenInstance);
             }
@@ -265,7 +265,7 @@ namespace RRQMCore.Run
             {
                 foreach (var item in list)
                 {
-                    item.MethodInfo.Invoke(item.MessageObject, parameters);
+                    item.Method.Invoke(item.MessageObject, parameters);
                 }
             }
             else
@@ -291,11 +291,11 @@ namespace RRQMCore.Run
                     var item = list[i];
                     if (i == list.Count - 1)
                     {
-                        return (T)item.MethodInfo.Invoke(item.MessageObject, parameters);
+                        return (T)item.Method.Invoke(item.MessageObject, parameters);
                     }
                     else
                     {
-                        item.MethodInfo.Invoke(item.MessageObject, parameters);
+                        item.Method.Invoke(item.MessageObject, parameters);
                     }
                 }
                 return default;

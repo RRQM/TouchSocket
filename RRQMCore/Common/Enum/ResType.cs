@@ -136,6 +136,11 @@ namespace RRQMCore
         /// <summary>
         /// 名称为“{0}”的事件不存在
         /// </summary>
-        EventNotExist
+        EventNotExist,
+
+        /// <summary>
+        /// 客户端没有连接
+        /// </summary>
+        NotConnected
     }
 }

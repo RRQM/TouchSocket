@@ -22,7 +22,7 @@ namespace RRQMCore
         //机器ID
         private static long workerId;
 
-        private static long twepoch = 687888001020L; //唯一时间，这是一个避免重复的随机量，自行设定不要大于当前时间戳
+        private long twepoch = 687888001020L; //唯一时间，这是一个避免重复的随机量，自行设定不要大于当前时间戳
         private static long sequence = 0L;
         private static int workerIdBits = 4; //机器码字节数。4个字节用来保存机器码(定义为Long类型会出现，最大偏移64位，所以左移64位没有意义)
 
@@ -51,6 +51,7 @@ namespace RRQMCore
             if (workerId > maxWorkerId || workerId < 0)
                 throw new Exception(string.Format("worker Id can't be greater than {0} or less than 0 ", workerId));
             SnowflakeIDGenerator.workerId = workerId;
+            twepoch = DateTime.Now.Ticks-10000;
         }
 
         /// <summary>

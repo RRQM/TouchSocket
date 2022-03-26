@@ -26,7 +26,7 @@ namespace RRQMCore.Run
         /// <summary>
         /// 标记
         /// </summary>
-        int Sign { get; set; }
+        long Sign { get; set; }
 
         /// <summary>
         /// 状态

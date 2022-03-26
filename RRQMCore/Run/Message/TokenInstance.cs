@@ -10,13 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Reflection;
 using System.Reflection;
 
 namespace RRQMCore.Run
 {
     internal class TokenInstance
     {
-        internal IMessage MessageObject { get; set; }
-        internal MethodInfo MethodInfo { get; set; }
+        public IMessage MessageObject;
+        public Method Method;
     }
 }
