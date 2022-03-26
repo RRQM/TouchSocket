@@ -203,6 +203,11 @@ namespace RRQMSocket.RPC
             serverCellCode.Name = serverType.Name;
             List<MethodInstance> instances = new List<MethodInstance>();
 
+            foreach (var item in proxyType.Keys)
+            {
+                classCodeGenerator.AddTypeString(item);
+            }
+
             foreach (MethodInstance methodInstance in methodInstances)
             {
                 foreach (RpcAttribute att in methodInstance.RpcAttributes)

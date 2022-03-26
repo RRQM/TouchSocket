@@ -30,7 +30,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// TcpRpcParser泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public class TcpRpcParser<TClient> : ProtocolService<TClient>, IRpcParser, IIDInvoke, IRRQMRPCParser where TClient : RpcSocketClient
+    public class TcpRpcParser<TClient> : ProtocolService<TClient>, IRpcParser,  IIDInvoke, IRRQMRPCParser where TClient : RpcSocketClient
     {
         private MethodStore methodStore;
         private string publisherID;

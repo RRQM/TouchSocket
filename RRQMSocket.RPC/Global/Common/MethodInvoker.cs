@@ -34,11 +34,6 @@ namespace RRQMSocket.RPC
         public InvokeStatus Status;
 
         /// <summary>
-        /// 异步执行
-        /// </summary>
-        public bool AsyncRun;
-
-        /// <summary>
         /// 状态消息
         /// </summary>
         public string StatusMessage;

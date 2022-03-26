@@ -42,6 +42,20 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
+        /// 当<see cref="TokenSource"/>不为空时，调用<see cref="CancellationTokenSource.Cancel()"/>
+        /// </summary>
+        /// <returns></returns>
+        public bool TryCancel()
+        {
+            if (this.tokenSource!=null)
+            {
+                this.tokenSource.Cancel();
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public object Caller => this.caller;
