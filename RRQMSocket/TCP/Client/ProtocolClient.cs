@@ -630,7 +630,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
-        protected override void OnConnected(MesEventArgs e)
+        protected override void OnHandshaked(MesEventArgs e)
         {
             int heartbeatFrequency = this.Config.GetValue<int>(RRQMConfigExtensions.HeartbeatFrequencyProperty);
 
@@ -641,20 +641,19 @@ namespace RRQMSocket
                     this.heartbeatLoopAction.Dispose();
                 }
                 this.heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency, (loop) =>
-                 {
-                     try
-                     {
-                         this.SocketSend(-7);
-                     }
-                     catch (Exception)
-                     {
-                         this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
-                     }
-                 });
+                {
+                    try
+                    {
+                        this.SocketSend(-7);
+                    }
+                    catch (Exception)
+                    {
+                        this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
+                    }
+                });
                 this.heartbeatLoopAction.RunAsync();
             }
-
-            base.OnConnected(e);
+            base.OnHandshaked(e);
         }
 
         /// <summary>

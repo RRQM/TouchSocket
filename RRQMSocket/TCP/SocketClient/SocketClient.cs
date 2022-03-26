@@ -175,11 +175,11 @@ namespace RRQMSocket
         {
             Task.Run(() =>
             {
-                this.BreakOut(msg,true);
+                this.BreakOut(msg, true);
             });
         }
 
-        private void BreakOut(string msg,bool manual)
+        private void BreakOut(string msg, bool manual)
         {
             lock (this)
             {
@@ -259,7 +259,7 @@ namespace RRQMSocket
         {
             if (nowTick - (this.lastTick / 10000000.0) > time)
             {
-                Task.Run(()=> 
+                Task.Run(() =>
                 {
                     this.BreakOut($"超时无数据交互，被主动清理", false);
                 });
@@ -413,7 +413,7 @@ namespace RRQMSocket
             {
                 this.service.OnInternalConnecting(this, e);
             }
-            
+
             if (e.Operation.HasFlag(Operation.Permit))
             {
                 if (this.CanSetDataHandlingAdapter && this.dataHandlingAdapter == null)
@@ -526,7 +526,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.BreakOut(ex.Message,false);
+                this.BreakOut(ex.Message, false);
                 this.logger.Debug(LogType.Error, this, $"在{nameof(BeginReceive)}发生错误", ex);
             }
         }
@@ -544,7 +544,7 @@ namespace RRQMSocket
             catch (Exception ex)
             {
                 byteBlock.Dispose();
-                this.BreakOut(ex.Message,false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
@@ -556,7 +556,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.BreakOut(ex.Message,false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
@@ -619,12 +619,12 @@ namespace RRQMSocket
                     }
                     catch (Exception ex)
                     {
-                        this.BreakOut(ex.Message,false);
+                        this.BreakOut(ex.Message, false);
                     }
                 }
                 else
                 {
-                    this.BreakOut("远程主机主动断开连接",false);
+                    this.BreakOut("远程主机主动断开连接", false);
                 }
             }
         }
@@ -641,6 +641,10 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         protected void SocketSend(byte[] buffer, int offset, int length, bool isAsync)
         {
+            if (!this.online)
+            {
+                throw new RRQMNotConnectedException(ResType.NotConnected.GetResString());
+            }
             if (this.HandleSendingData(buffer, offset, length))
             {
                 if (this.useSsl)
@@ -724,7 +728,7 @@ namespace RRQMSocket
             catch (Exception ex)
             {
                 byteBlock.Dispose();
-                this.BreakOut(ex.Message,false);
+                this.BreakOut(ex.Message, false);
             }
 
         }

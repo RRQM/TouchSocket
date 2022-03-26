@@ -47,21 +47,21 @@ namespace RRQMSocket
     /// </summary>
     public class TokenClientBase : TcpClientBase, ITokenClient
     {
-        private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
+        private WaitHandlePool<IWaitResult> waitHandlePool;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public TokenClientBase()
         {
-            this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
+            this.waitHandlePool = new WaitHandlePool<IWaitResult>();
             this.Protocol = Protocol.RRQMToken;
         }
 
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
+        public WaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
 
         private string id;
 
