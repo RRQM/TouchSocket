@@ -63,7 +63,6 @@ namespace RRQMSocket
         private ServerState serverState;
         private RRQMConfig serviceConfig;
         private bool study;
-        
         /// <summary>
         /// <inheritdoc/>
         /// </summary>

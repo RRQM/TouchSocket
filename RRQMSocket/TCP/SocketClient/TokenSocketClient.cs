@@ -28,14 +28,14 @@ namespace RRQMSocket
         internal Action<TokenSocketClient, ReceivedDataEventArgs> internalOnAbnormalVerify;
         internal Action<TokenSocketClient, ByteBlock, IRequestInfo> internalHandleTokenData;
         private bool isHandshaked;
-        private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
+        private WaitHandlePool<IWaitResult> waitHandlePool;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public TokenSocketClient()
         {
-            this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
+            this.waitHandlePool = new WaitHandlePool<IWaitResult>();
             this.Protocol = Protocol.RRQMToken;
         }
 
@@ -60,7 +60,7 @@ namespace RRQMSocket
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
+        public WaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
 
         /// <summary>
         /// <inheritdoc/>

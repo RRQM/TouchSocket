@@ -248,7 +248,7 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public int MaxPackageSize =>this.maxPackageSize;
+        public int MaxPackageSize => this.maxPackageSize;
 
         /// <summary>
         /// <inheritdoc/>
@@ -273,13 +273,13 @@ namespace RRQMSocket
         /// <param name="msg"></param>
         public virtual void Close(string msg)
         {
-            Task.Run(()=> 
+            Task.Run(() =>
             {
-                this.BreakOut(msg,true);
+                this.BreakOut(msg, true);
             });
         }
 
-        private void BreakOut(string msg,bool manual)
+        private void BreakOut(string msg, bool manual)
         {
             lock (this)
             {
@@ -507,7 +507,7 @@ namespace RRQMSocket
                 }
             }
 
-            this.HandleReceivedData(byteBlock,requestInfo);
+            this.HandleReceivedData(byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -667,7 +667,7 @@ namespace RRQMSocket
             catch (Exception ex)
             {
                 byteBlock.Dispose();
-                this.BreakOut(ex.Message,false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
@@ -684,7 +684,7 @@ namespace RRQMSocket
             catch (Exception ex)
             {
                 byteBlock.Dispose();
-                this.BreakOut(ex.Message,false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
@@ -709,7 +709,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.BreakOut(ex.Message,false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
@@ -1003,12 +1003,12 @@ namespace RRQMSocket
                 }
                 catch (Exception ex)
                 {
-                    this.BreakOut(ex.Message,false);
+                    this.BreakOut(ex.Message, false);
                 }
             }
             else
             {
-                this.BreakOut("远程终端主动关闭",false);
+                this.BreakOut("远程终端主动关闭", false);
             }
         }
 
@@ -1024,6 +1024,10 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         protected void SocketSend(byte[] buffer, int offset, int length, bool isAsync)
         {
+            if (!this.online)
+            {
+                throw new RRQMNotConnectedException(ResType.NotConnected.GetResString());
+            }
             if (this.HandleSendingData(buffer, offset, length))
             {
                 if (this.useSsl)

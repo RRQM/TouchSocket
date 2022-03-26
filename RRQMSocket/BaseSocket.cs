@@ -28,16 +28,16 @@ namespace RRQMSocket
         private int bufferLength;
 
         /// <summary>
-        /// 数据交互缓存池限制，min=1024 byte，Max=10Mb byte
+        /// 数据交互缓存池限制，min=1024 byte
         /// </summary>
         public int BufferLength
         {
             get => this.bufferLength;
             set
             {
-                if (value < 1024 || value > 1024 * 1024 * 10)
+                if (value < 1024)
                 {
-                    value = 1024 * 64;
+                    value = 1024 * 10;
                 }
                 this.bufferLength = value;
             }
