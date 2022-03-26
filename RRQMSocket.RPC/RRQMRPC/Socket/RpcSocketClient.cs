@@ -30,16 +30,40 @@ namespace RRQMSocket.RPC.RRQMRPC
         internal Action<MethodInvoker, MethodInstance> executeMethod;
         internal MethodMap methodMap;
         internal SerializationSelector serializationSelector;
-        private ConcurrentDictionary<int, RpcCallContext> contextDic;
+        private ConcurrentDictionary<long, RpcCallContext> contextDic;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public RpcSocketClient()
         {
-            this.contextDic = new ConcurrentDictionary<int, RpcCallContext>();
+            this.contextDic = new ConcurrentDictionary<long, RpcCallContext>();
         }
 
+        internal void EndInvoke(RpcContext context)
+        {
+            this.contextDic.TryRemove(context.Sign, out _);
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+            try
+            {
+                context.Serialize(byteBlock);
+                if (this.Online)
+                {
+                    lock (this)
+                    {
+                        this.InternalSend(101, byteBlock);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Debug(LogType.Error, this, ex.Message);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -59,35 +83,12 @@ namespace RRQMSocket.RPC.RRQMRPC
             base.Dispose(disposing);
         }
 
-        internal void EndInvoke(RpcContext context)
-        {
-            this.contextDic.TryRemove(context.Sign, out _);
-            ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-            try
-            {
-                context.Serialize(byteBlock);
-                if (this.Online)
-                {
-                    this.InternalSend(101, byteBlock);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Debug(LogType.Error, this, ex.Message);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-
         /// <summary>
         /// 处理协议数据
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected sealed override void HandleProtocolData(short protocol, ByteBlock byteBlock)
+        protected override sealed void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
             switch (protocol)
             {
@@ -149,8 +150,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            int sign = RRQMBitConverter.Default.ToInt32(byteBlock.Buffer, 2);
-                            if (this.contextDic.TryGetValue(sign, out RpcCallContext context))
+                            if (this.contextDic.TryGetValue(RRQMBitConverter.Default.ToInt64(byteBlock.Buffer, 2), out RpcCallContext context))
                             {
                                 context.TokenSource.Cancel();
                             }
@@ -175,6 +175,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     }
                 case 109:/*触发事件*/
                     {
+                       
                         break;
                     }
                 case 111:/*获取所有事件*/
@@ -186,56 +187,29 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         break;
                     }
+                case 113:/*取消ID调用*/
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            string id = byteBlock.ReadString();
+                            long sign = byteBlock.ReadInt64();
+
+                            if (this.Service.SocketClients.TryGetSocketClient(id, out RpcSocketClient socketClient))
+                            {
+                                socketClient.CanceledInvoke(sign);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
+                        }
+                        break;
+                    }
                 default:
                     this.RpcHandleDefaultData(protocol, byteBlock);
                     break;
             }
-        }
-
-        private void P103_OnInvokeClientByID(string id, RpcContext context)
-        {
-            Task.Run(() =>
-            {
-                using (ByteBlock retuenByteBlock = BytePool.GetByteBlock(this.BufferLength))
-                {
-                    if (this.Service.SocketClients.TryGetSocketClient(id, out RpcSocketClient socketClient))
-                    {
-                        InvokeOption invokeOption = new InvokeOption();
-                        invokeOption.FeedbackType = (FeedbackType)context.Feedback;
-                        invokeOption.SerializationType = context.SerializationType;
-                        invokeOption.Timeout = context.Timeout;
-
-                        try
-                        {
-                            var resultContext = this.Invoke(context, invokeOption);
-                            context.Status = 1;
-                            if (resultContext == null)
-                            {
-                                context.parametersBytes = null;
-                            }
-                            else
-                            {
-                                context.returnParameterBytes = resultContext.returnParameterBytes;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            context.parametersBytes = null;
-                            context.Status = 6;
-                            context.Message = ex.Message;
-                        }
-                        context.Serialize(retuenByteBlock);
-                        this.InternalSend(103, retuenByteBlock.Buffer, 0, retuenByteBlock.Len);
-                    }
-                    else
-                    {
-                        context.parametersBytes = null;
-                        context.Status = 7;
-                        context.Serialize(retuenByteBlock);
-                        this.InternalSend(103, retuenByteBlock.Buffer, 0, retuenByteBlock.Len);
-                    }
-                }
-            });
         }
 
         /// <summary>
@@ -258,7 +232,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.OnHandleDefaultData(protocol, byteBlock);
         }
 
-        private void CanceledInvoke(int sign)
+        private void CanceledInvoke(long sign)
         {
             this.InternalSend(113, RRQMBitConverter.Default.GetBytes(sign));
         }
@@ -277,8 +251,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         object[] ps;
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
-                            methodInvoker.AsyncRun = true;
-
                             ps = new object[methodInstance.ParameterTypes.Length];
 
                             RpcCallContext callContext = new RpcCallContext(this, context, methodInstance, methodInvoker);
@@ -345,48 +317,53 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.ExecuteContext(context);
         }
 
+        private void P103_OnInvokeClientByID(string id, RpcContext context)
+        {
+            Task.Run(() =>
+            {
+                using (ByteBlock retuenByteBlock = BytePool.GetByteBlock(this.BufferLength))
+                {
+                    if (this.Service.SocketClients.TryGetSocketClient(id, out RpcSocketClient socketClient))
+                    {
+                        InvokeOption invokeOption = new InvokeOption();
+                        invokeOption.FeedbackType = (FeedbackType)context.Feedback;
+                        invokeOption.SerializationType = context.SerializationType;
+                        invokeOption.Timeout = context.Timeout;
+
+                        try
+                        {
+                            var resultContext = socketClient.Invoke(context, invokeOption,false);
+                            context.Status = 1;
+                            if (resultContext == null)
+                            {
+                                context.parametersBytes = null;
+                            }
+                            else
+                            {
+                                context.returnParameterBytes = resultContext.returnParameterBytes;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            context.parametersBytes = null;
+                            context.Status = 6;
+                            context.Message = ex.Message;
+                        }
+                        context.Serialize(retuenByteBlock);
+                        this.InternalSend(103, retuenByteBlock.Buffer, 0, retuenByteBlock.Len);
+                    }
+                    else
+                    {
+                        context.parametersBytes = null;
+                        context.Status = 7;
+                        context.Serialize(retuenByteBlock);
+                        this.InternalSend(103, retuenByteBlock.Buffer, 0, retuenByteBlock.Len);
+                    }
+                }
+            });
+        }
+
         #region Rpc
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="method">方法名</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">Rpc异常</exception>
-        /// <exception cref="RRQMException">其他异常</exception>
-        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return Task.Run(() =>
-            {
-                this.Invoke(method, invokeOption, parameters);
-            });
-        }
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="method">方法名</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">Rpc异常</exception>
-        /// <exception cref="RRQMException">其他异常</exception>
-        /// <returns>服务器返回结果</returns>
-        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return Task.Run(() =>
-            {
-                return this.Invoke<T>(method, invokeOption, parameters);
-            });
-        }
 
         /// <summary>
         /// Rpc调用
@@ -790,6 +767,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <exception cref="RRQMException">其他异常</exception>
         public void Invoke(string id, string method, IInvokeOption invokeOption, params object[] parameters)
         {
+            if (!this.Service.SocketClients.TryGetSocketClient(id, out RpcSocketClient socketClient))
+            {
+                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(id));
+            }
             RpcContext context = new RpcContext();
             context.methodName = method;
             if (invokeOption == default)
@@ -803,7 +784,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
             }
             context.parametersBytes = datas;
-            this.Invoke(context, invokeOption);
+            socketClient.Invoke(context, invokeOption,true);
         }
 
         /// <summary>
@@ -821,6 +802,10 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <returns>返回值</returns>
         public T Invoke<T>(string id, string method, IInvokeOption invokeOption, params object[] parameters)
         {
+            if (!this.Service.SocketClients.TryGetSocketClient(id, out RpcSocketClient socketClient))
+            {
+                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(id));
+            }
             RpcContext context = new RpcContext();
             context.methodName = method;
             if (invokeOption == default)
@@ -834,7 +819,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                 datas.Add(this.serializationSelector.SerializeParameter(context.SerializationType, parameter));
             }
             context.parametersBytes = datas;
-            var resultContext = this.Invoke(context, invokeOption);
+            var resultContext = socketClient.Invoke(context, invokeOption,true);
             if (resultContext == null)
             {
                 return default;
@@ -842,8 +827,48 @@ namespace RRQMSocket.RPC.RRQMRPC
             else
             {
                 return (T)this.serializationSelector.DeserializeParameter(context.SerializationType, resultContext.ReturnParameterBytes, typeof(T));
-
             }
+        }
+
+        /// <summary>
+        /// Rpc调用
+        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
+        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
+        /// <exception cref="TimeoutException">调用超时</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">Rpc异常</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+            {
+                this.Invoke(method, invokeOption, parameters);
+            });
+        }
+
+        /// <summary>
+        /// Rpc调用
+        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
+        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
+        /// </summary>
+        /// <param name="method">方法名</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
+        /// <exception cref="TimeoutException">调用超时</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RRQMRpcInvokeException">Rpc异常</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        /// <returns>服务器返回结果</returns>
+        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return Task.Run(() =>
+            {
+                return this.Invoke<T>(method, invokeOption, parameters);
+            });
         }
 
         /// <summary>
@@ -887,18 +912,22 @@ namespace RRQMSocket.RPC.RRQMRPC
             });
         }
 
-        private RpcContext Invoke(RpcContext invokeContext, IInvokeOption invokeOption)
+        private RpcContext Invoke(RpcContext sourceContext, IInvokeOption invokeOption,bool autoSign)
         {
-            RpcContext context = new RpcContext();
-            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(context);
-            context.methodName = invokeContext.methodName;
+            RpcContext thisContext = new RpcContext();
+            if (!autoSign)
+            {
+                thisContext.Sign = sourceContext.Sign;
+            }
+            WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(thisContext,autoSign);
+            thisContext.methodName = sourceContext.methodName;
             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
 
             try
             {
-                context.LoadInvokeOption(invokeOption);
-                context.parametersBytes = invokeContext.parametersBytes;
-                context.Serialize(byteBlock);
+                thisContext.LoadInvokeOption(invokeOption);
+                thisContext.parametersBytes = sourceContext.parametersBytes;
+                thisContext.Serialize(byteBlock);
 
                 switch (invokeOption.FeedbackType)
                 {

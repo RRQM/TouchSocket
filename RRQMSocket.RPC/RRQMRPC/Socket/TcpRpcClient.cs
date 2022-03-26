@@ -18,6 +18,7 @@ using RRQMCore.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RRQMSocket.RPC.RRQMRPC
@@ -28,7 +29,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     public class TcpRpcClient : ProtocolClientBase, ITcpRpcClient, IRRQMRPCClient
     {
         private ConcurrentDictionary<string, MethodInstance> callbackMap;
-        private ConcurrentDictionary<int, RpcCallContext> contextDic;
+        private ConcurrentDictionary<long, RpcCallContext> contextDic;
         private Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod;
         private MethodMap methodMap;
         private MethodStore methodStore;
@@ -53,7 +54,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.AddUsedProtocol(110, "分发触发");
             this.AddUsedProtocol(111, "获取所有事件");
             this.AddUsedProtocol(112, "请求取消订阅");
-            this.AddUsedProtocol(113, "取消Rpc回调");
+            this.AddUsedProtocol(113, "取消Rpc ID回调");
 
             for (short i = 114; i < 200; i++)
             {
@@ -61,7 +62,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
 
             this.callbackMap = new ConcurrentDictionary<string, MethodInstance>();
-            this.contextDic = new ConcurrentDictionary<int, RpcCallContext>();
+            this.contextDic = new ConcurrentDictionary<long, RpcCallContext>();
             this.methodMap = new MethodMap();
             this.serverProviders = new ServerProviderCollection();
             this.methodStore = new MethodStore();
@@ -203,10 +204,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (invokeOption.Token.CanBeCanceled)
             {
                 waitData.SetCancellationToken(invokeOption.Token);
-                invokeOption.Token.Register(() =>
-                {
-                    this.CanceledInvoke(context.Sign);
-                });
+                invokeOption.Token.Register(this.CanceledServiceInvoke, context.Sign);
             }
 
             try
@@ -229,7 +227,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitSend:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -246,7 +247,11 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
+                            
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -321,10 +326,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (invokeOption.Token.CanBeCanceled)
             {
                 waitData.SetCancellationToken(invokeOption.Token);
-                invokeOption.Token.Register(() =>
-                {
-                    this.CanceledInvoke(context.Sign);
-                });
+                invokeOption.Token.Register(this.CanceledServiceInvoke, context.Sign);
             }
 
             try
@@ -348,7 +350,11 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     case FeedbackType.WaitSend:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
+                            
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -365,7 +371,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -432,10 +441,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (invokeOption.Token.CanBeCanceled)
             {
                 waitData.SetCancellationToken(invokeOption.Token);
-                invokeOption.Token.Register(() =>
-                {
-                    this.CanceledInvoke(context.Sign);
-                });
+                invokeOption.Token.Register(this.CanceledServiceInvoke, context.Sign);
             }
 
             try
@@ -459,7 +465,10 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     case FeedbackType.WaitSend:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -474,7 +483,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -531,10 +543,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (invokeOption.Token.CanBeCanceled)
             {
                 waitData.SetCancellationToken(invokeOption.Token);
-                invokeOption.Token.Register(() =>
-                {
-                    this.CanceledInvoke(context.Sign);
-                });
+                invokeOption.Token.Register(this.CanceledServiceInvoke, context.Sign);
             }
 
             try
@@ -557,7 +566,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitSend:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.Overtime:
@@ -569,7 +581,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(101, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -634,10 +649,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (invokeOption.Token.CanBeCanceled)
             {
                 waitData.SetCancellationToken(invokeOption.Token);
-                invokeOption.Token.Register(() =>
-                {
-                    this.CanceledInvoke(context.Sign);
-                });
+                invokeOption.Token.Register(this.CanceledIDInvoke, new CanceledID() { id = id, sign = context.Sign });
             }
 
             try
@@ -661,7 +673,10 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                     case FeedbackType.WaitSend:
                         {
-                            this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -676,7 +691,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -741,10 +759,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             if (invokeOption.Token.CanBeCanceled)
             {
                 waitData.SetCancellationToken(invokeOption.Token);
-                invokeOption.Token.Register(() =>
-                {
-                    this.CanceledInvoke(context.Sign);
-                });
+                invokeOption.Token.Register(this.CanceledIDInvoke, new CanceledID() { id = id, sign = context.Sign });
             }
 
             try
@@ -767,7 +782,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitSend:
                         {
-                            this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.Overtime:
@@ -779,7 +797,10 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            lock (this)
+                            {
+                                this.InternalSend(103, byteBlock.Buffer, 0, byteBlock.Len);
+                            }
                             switch (waitData.Wait(invokeOption.Timeout))
                             {
                                 case WaitDataStatus.SetRunning:
@@ -1144,7 +1165,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            int sign = RRQMBitConverter.Default.ToInt32(byteBlock.Buffer, 2);
+                            long sign = RRQMBitConverter.Default.ToInt64(byteBlock.Buffer, 2);
                             if (this.contextDic.TryGetValue(sign, out RpcCallContext context))
                             {
                                 context.TokenSource.Cancel();
@@ -1211,9 +1232,40 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.OnHandleDefaultData(protocol, byteBlock);
         }
 
-        private void CanceledInvoke(int sign)
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
         {
-            this.InternalSend(105, RRQMBitConverter.Default.GetBytes(sign));
+           var keys= contextDic.Keys.ToArray();
+            foreach (var item in keys)
+            {
+                if (contextDic.TryRemove(item, out RpcCallContext rpcCallContext))
+                {
+                    rpcCallContext.TryCancel();
+                }
+            }
+            base.OnDisconnected(e);
+        }
+
+        private void CanceledIDInvoke(object obj)
+        {
+            if (obj is CanceledID canceled)
+            {
+                using (ByteBlock byteBlock = new ByteBlock())
+                {
+                    this.InternalSend(113, byteBlock.Write(canceled.id).Write(canceled.sign));
+                }
+            }
+        }
+
+        private void CanceledServiceInvoke(object obj)
+        {
+            if (obj is int sign)
+            {
+                this.InternalSend(105, RRQMBitConverter.Default.GetBytes(sign));
+            }
         }
 
         private void ExecuteContext(RpcContext context)
@@ -1230,8 +1282,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         object[] ps;
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
-                            methodInvoker.AsyncRun = true;
-
                             ps = new object[methodInstance.ParameterTypes.Length];
                             RpcCallContext callContext = new RpcCallContext(this, context, methodInstance, methodInvoker);
                             this.contextDic.TryAdd(context.Sign, callContext);
@@ -1271,56 +1321,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                 methodInvoker.Status = InvokeStatus.UnFound;
                 this.executeMethod.Invoke(this, methodInvoker, null);
             }
-        }
-
-        private RpcContext OnExecuteCallBack(RpcContext rpcContext)
-        {
-            if (this.methodMap != null)
-            {
-                if (this.methodMap.TryGet(rpcContext.MethodToken, out MethodInstance methodInstance))
-                {
-                    try
-                    {
-                        object[] ps = new object[rpcContext.parametersBytes.Count];
-                        for (int i = 0; i < rpcContext.parametersBytes.Count; i++)
-                        {
-                            ps[i] = this.serializationSelector.DeserializeParameter(rpcContext.SerializationType, rpcContext.ParametersBytes[i], methodInstance.ParameterTypes[i]);
-                        }
-
-                        object result;
-                        if (methodInstance.HasReturn)
-                        {
-                            result = methodInstance.Invoke(methodInstance.Provider, ps);
-                        }
-                        else
-                        {
-                            result= methodInstance.Invoke(methodInstance.Provider, ps);
-                        }
-                        
-                        if (methodInstance.HasReturn)
-                        {
-                            rpcContext.returnParameterBytes = this.serializationSelector.SerializeParameter(rpcContext.SerializationType, result);
-                        }
-                        rpcContext.Status = 1;
-                    }
-                    catch (Exception ex)
-                    {
-                        rpcContext.Status = 4;
-                        rpcContext.Message = ex.Message;
-                    }
-                }
-                else
-                {
-                    rpcContext.Status = 2;
-                }
-            }
-            else
-            {
-                rpcContext.Status = 3;
-            }
-
-            rpcContext.parametersBytes = null;
-            return rpcContext;
         }
 
         private void P104_Execute(RpcContext context)

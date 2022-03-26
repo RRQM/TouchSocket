@@ -29,20 +29,20 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class UdpRpc : UdpSessionBase, IRpcParser, IRRQMRPCParser, IRRQMRPCClient
     {
-        private ConcurrentDictionary<int, RpcCallContext> contextDic;
+        private ConcurrentDictionary<long, RpcCallContext> contextDic;
         private Action<IRpcParser, MethodInvoker, MethodInstance> executeMethod;
         private MethodMap methodMap;
         private MethodStore methodStore;
         private SerializationSelector serializationSelector;
-        private RRQMWaitHandlePool<IWaitResult> waitHandlePool;
+        private WaitHandlePool<IWaitResult> waitHandlePool;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public UdpRpc()
         {
-            this.contextDic = new ConcurrentDictionary<int, RpcCallContext>();
-            this.waitHandlePool = new RRQMWaitHandlePool<IWaitResult>();
+            this.contextDic = new ConcurrentDictionary<long, RpcCallContext>();
+            this.waitHandlePool = new WaitHandlePool<IWaitResult>();
             this.methodStore = new MethodStore();
         }
 
@@ -89,7 +89,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <summary>
         /// 等待返回池
         /// </summary>
-        public RRQMWaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
+        public WaitHandlePool<IWaitResult> WaitHandlePool => this.waitHandlePool;
 
         /// <summary>
         /// 发现服务
@@ -1072,7 +1072,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             }
         }
 
-        private void CanceledInvoke(int sign)
+        private void CanceledInvoke(long sign)
         {
             this.UDPSend(103, RRQMBitConverter.Default.GetBytes(sign));
         }
@@ -1091,8 +1091,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         object[] ps;
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
-                            methodInvoker.AsyncRun = true;
-
                             ps = new object[methodInstance.ParameterTypes.Length];
                             RpcCallContext callContext = new RpcCallContext(new UdpCaller(this, endPoint), context, methodInstance, methodInvoker);
                             this.contextDic.TryAdd(context.Sign, callContext);

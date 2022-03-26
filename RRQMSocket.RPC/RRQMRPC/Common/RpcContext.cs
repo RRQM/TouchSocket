@@ -81,7 +81,7 @@ namespace RRQMSocket.RPC.RRQMRPC
         {
             RpcContext context = new RpcContext();
             context.timeout = byteBlock.ReadInt32();
-            context.sign = byteBlock.ReadInt32();
+            context.sign = byteBlock.ReadInt64();
             context.status = byteBlock.ReadByte();
             context.feedback = byteBlock.ReadByte();
             context.serializationType = byteBlock.ReadByte();
