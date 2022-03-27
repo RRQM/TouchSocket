@@ -70,39 +70,39 @@ namespace RRQMSocket.RPC.WebApi
 
             HttpRequest request = new HttpRequest();
 
-            if (parameters.Length > 0)
+            switch (strs[0])
             {
-                switch (strs[0])
-                {
-                    case "GET":
-                        {
-                            request.InitHeaders()
-                                .SetHost(this.RemoteIPHost.Host)
-                                .SetUrl(strs[1].Format(parameters))
-                                .AsGet();
-                            break;
-                        }
-                    case "POST":
-                        {
-                            request.InitHeaders()
-                                .SetHost(this.RemoteIPHost.Host)
-                                .SetUrl(strs[1])
-                                .FromJson(parameters[0].ToJsonString())
-                                .AsPost();
-                            break;
-                        }
-                    default:
+                case "GET":
+                    {
+                        request.InitHeaders()
+                            .SetHost(this.RemoteIPHost.Host)
+                            .SetUrl(strs[1].Format(parameters))
+                            .AsGet();
                         break;
-                }
+                    }
+                case "POST":
+                    {
+                        request.InitHeaders()
+                            .SetHost(this.RemoteIPHost.Host)
+                            .SetUrl(strs[1])
+                            .AsPost();
+                        if (parameters.Length > 0)
+                        {
+                            request.FromJson(parameters[0].ToJsonString());
+                        }
+                        break;
+                    }
+                default:
+                    break;
             }
 
             HttpResponse response = this.Request(request, false, invokeOption.Timeout, invokeOption.Token);
-            
-            if (invokeOption.FeedbackType!= FeedbackType.WaitInvoke)
+
+            if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
             {
                 return default;
             }
-            
+
             if (response.StatusCode == "200")
             {
                 return (T)this.stringConverter.ConvertFrom(response.GetBody(), typeof(T));
@@ -137,30 +137,30 @@ namespace RRQMSocket.RPC.WebApi
 
             HttpRequest request = new HttpRequest();
 
-            if (parameters.Length > 0)
+            switch (strs[0])
             {
-                switch (strs[0])
-                {
-                    case "GET":
-                        {
-                            request.InitHeaders()
-                                .SetHost(this.RemoteIPHost.Host)
-                                .SetUrl(strs[1].Format(parameters))
-                                .AsGet();
-                            break;
-                        }
-                    case "POST":
-                        {
-                            request.InitHeaders()
-                                .SetHost(this.RemoteIPHost.Host)
-                                .SetUrl(strs[1])
-                                .FromJson(parameters[0].ToJsonString())
-                                .AsPost();
-                            break;
-                        }
-                    default:
+                case "GET":
+                    {
+                        request.InitHeaders()
+                            .SetHost(this.RemoteIPHost.Host)
+                            .SetUrl(strs[1].Format(parameters))
+                            .AsGet();
                         break;
-                }
+                    }
+                case "POST":
+                    {
+                        request.InitHeaders()
+                        .SetHost(this.RemoteIPHost.Host)
+                        .SetUrl(strs[1])
+                        .AsPost();
+                        if (parameters.Length > 0)
+                        {
+                            request.FromJson(parameters[0].ToJsonString());
+                        }
+                        break;
+                    }
+                default:
+                    break;
             }
             HttpResponse response = this.Request(request, false, invokeOption.Timeout, invokeOption.Token);
             if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
