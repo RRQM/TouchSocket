@@ -739,7 +739,7 @@ namespace RRQMSocket
                     }
                     else
                     {
-                        client.Close("拒绝连接");
+                        client.MainSocket?.Dispose();
                     }
                 }
                 catch (Exception ex)
