@@ -14,6 +14,7 @@ using RRQMCore;
 using RRQMCore.ByteManager;
 
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ namespace RRQMSocket
     /// <summary>
     /// 客户端发送接口
     /// </summary>
-    public interface IClientSender : ISenderBase
+    public interface IClientSender : ISend
     {
         /// <summary>
         /// 同步组合发送数据。
@@ -50,9 +51,129 @@ namespace RRQMSocket
     }
 
     /// <summary>
+    /// 具有Udp终结点的发送
+    /// </summary>
+    public interface IUdpClientSender : ISend
+    {
+        /// <summary>
+        /// 同步组合发送数据。
+        /// <para>内部已经封装Ssl和发送长度检测，即：调用完成即表示数据全部发送完毕。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
+        /// </summary>
+        /// <param name="endPoint">远程终结点</param>
+        /// <param name="transferBytes">组合数据</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void Send(EndPoint endPoint, IList<TransferByte> transferBytes);
+
+        /// <summary>
+        /// 异步组合发送数据。
+        /// <para>在<see cref="ITcpClient"/>时，如果使用独立线程发送，则不会触发异常。</para>
+        /// <para>在<see cref="ITcpClientBase"/>时，相当于<see cref="Socket.BeginSend(byte[], int, int, SocketFlags, out SocketError, System.AsyncCallback, object)"/>。</para>
+        /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
+        /// </summary>
+        /// <param name="endPoint">远程终结点</param>
+        /// <param name="transferBytes">组合数据</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void SendAsync(EndPoint endPoint, IList<TransferByte> transferBytes);
+    }
+
+    /// <summary>
+    /// 具有直接发送功能
+    /// </summary>
+    public interface IDefaultSender:ISendBase
+    {
+        #region 默认发送
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">数据长度</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(byte[] buffer);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="byteBlock">数据块载体</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(ByteBlock byteBlock);
+        #endregion
+    }
+
+    /// <summary>
+    /// 具有直接发送功能
+    /// </summary>
+    public interface IUdpDefaultSender:ISendBase
+    {
+        #region 默认发送
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="endPoint">目的终结点</param>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">数据长度</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(EndPoint endPoint, byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="endPoint">目的终结点</param>
+        /// <param name="buffer">数据缓存区</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(EndPoint endPoint, byte[] buffer);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="endPoint">目的终结点</param>
+        /// <param name="byteBlock">数据块载体</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSend(EndPoint endPoint, ByteBlock byteBlock);
+        #endregion
+    }
+
+    /// <summary>
+    /// 具有发送动作的基类。
+    /// </summary>
+    public interface ISendBase
+    {
+        /// <summary>
+        /// 表示对象能否顺利执行发送操作。
+        /// <para>不一定完全能执行。</para>
+        /// </summary>
+        bool CanSend { get; }
+    }
+
+    /// <summary>
     /// 具有发送功能的接口
     /// </summary>
-    public interface ISenderBase
+    public interface ISend:ISendBase
     {
         /// <summary>
         /// 同步发送数据。
@@ -202,7 +323,7 @@ namespace RRQMSocket
     /// <summary>
     /// 发送等待接口
     /// </summary>
-    public interface IWaitSender
+    public interface IWaitSender: ISendBase
     {
         /// <summary>
         /// 发送字节流

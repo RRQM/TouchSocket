@@ -96,5 +96,6 @@ public delegate void RRQMStreamStatusEventHandler<TClient>(TClient socketClient,
 /// UDP接收
 /// </summary>
 /// <param name="endpoint"></param>
-/// <param name="e"></param>
-public delegate void RRQMUDPByteBlockEventHandler(EndPoint endpoint, ByteBlock e);
+/// <param name="byteBlock"></param>
+/// <param name="requestInfo"></param>
+public delegate void RRQMUDPByteBlockEventHandler(EndPoint endpoint, ByteBlock byteBlock, IRequestInfo requestInfo);

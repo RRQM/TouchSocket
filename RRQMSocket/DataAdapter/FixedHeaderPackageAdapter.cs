@@ -250,6 +250,7 @@ namespace RRQMSocket
         {
             this.agreementTempBytes = null;
             this.surPlusLength = default;
+            this.tempByteBlock?.Dispose();
             this.tempByteBlock = null;
         }
 

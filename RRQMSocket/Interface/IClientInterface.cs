@@ -14,6 +14,7 @@ using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Dependency;
 using RRQMCore.Log;
+using RRQMCore.Run;
 using System;
 using System.IO;
 using System.Net.Security;
@@ -262,7 +263,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP终端基础接口
     /// </summary>
-    public interface ITcpClientBase : IClient, ISenderBase
+    public interface ITcpClientBase : IClient, ISend, IDefaultSender
     {
         /// <summary>
         /// 断开连接
@@ -353,37 +354,6 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="how"></param>
         void Shutdown(SocketShutdown how);
-
-        #region 默认发送
-        /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移量</param>
-        /// <param name="length">数据长度</param>
-        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
-        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
-        /// <exception cref="RRQMException">其他异常</exception>
-        void DefaultSend(byte[] buffer, int offset, int length);
-
-        /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
-        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
-        /// <exception cref="RRQMException">其他异常</exception>
-        void DefaultSend(byte[] buffer);
-
-        /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="byteBlock">数据块载体</param>
-        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
-        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
-        /// <exception cref="RRQMException">其他异常</exception>
-        void DefaultSend(ByteBlock byteBlock);
-        #endregion
     }
 
     /// <summary>
@@ -405,6 +375,11 @@ namespace RRQMSocket
     /// </summary>
     public interface ITokenClientBase : ITcpClientBase
     {
+        /// <summary>
+        /// 等待返回池
+        /// </summary>
+        WaitHandlePool<IWaitResult> WaitHandlePool { get; }
+
         /// <summary>
         /// 是否已完成握手
         /// </summary>

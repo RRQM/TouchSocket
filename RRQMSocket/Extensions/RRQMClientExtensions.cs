@@ -29,131 +29,131 @@ namespace RRQMSocket
         /// 使用断线重连。
         /// <para>注意，使用断线重连时，如果是自定义适配器，应当在<see cref="ITcpClient.Connecting"/>事件中设置。</para>
         /// </summary>
-        /// <param name="tcpClient">客户端</param>
+        /// <param name="client">客户端</param>
         /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
         /// <param name="printLog">是否输出日志。</param>
-        public static T UseReconnection<T>(this T tcpClient, int tryCount = 10, bool printLog = false) where T : ITcpClient
+        public static T UseReconnection<T>(this T client, int tryCount = 10, bool printLog = false) where T : ITcpClient
         {
-            if (tcpClient is null)
+            if (client is null)
             {
-                throw new ArgumentNullException(nameof(tcpClient));
+                throw new ArgumentNullException(nameof(client));
             }
 
-            tcpClient.Disconnected += (client, e) =>
+            client.Disconnected += (c, e) =>
             {
                 if (e.Manual)
                 {
                     return;
                 }
-                Task.Run(() =>
+                Task.Run((Action)(() =>
                 {
                     int tryT = tryCount;
                     while (tryCount < 0 || tryT-- > 0)
                     {
                         try
                         {
-                            tcpClient.Connect();
+                            client.Connect();
                             break;
                         }
                         catch (Exception ex)
                         {
                             if (printLog)
                             {
-                                tcpClient.Logger.Debug(RRQMCore.Log.LogType.Error, tcpClient, "断线重连失败。", ex);
+                                client.Logger.Debug(RRQMCore.Log.LogType.Error, client, "断线重连失败。", ex);
                             }
                         }
                     }
-                });
+                }));
             };
 
-            return tcpClient;
+            return client;
         }
 
         /// <summary>
         /// 使用断线重连。
         /// <para>注意，使用断线重连时，如果是自定义适配器，应当在<see cref="ITcpClient.Connecting"/>事件中设置。</para>
         /// </summary>
-        /// <param name="tcpClient">客户端</param>
+        /// <param name="client">客户端</param>
         /// <param name="verifyToken">验证Token</param>
         /// <param name="successCallback">成功回调函数</param>
         /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
         /// <param name="printLog">是否输出日志。</param>
-        public static T UseReconnection<T>(this T tcpClient, string verifyToken, int tryCount = 10, bool printLog = false, Action<T> successCallback = null) where T : ITokenClient
+        public static T UseReconnection<T>(this T client, string verifyToken, int tryCount = 10, bool printLog = false, Action<T> successCallback = null) where T : ITokenClient
         {
-            if (tcpClient is null)
+            if (client is null)
             {
-                throw new ArgumentNullException(nameof(tcpClient));
+                throw new ArgumentNullException(nameof(client));
             }
 
-            tcpClient.Disconnected += (client, e) =>
+            client.Disconnected += (c, e) =>
             {
                 if (e.Manual)
                 {
                     return;
                 }
-                Task.Run(() =>
+                Task.Run((Action)(() =>
                 {
                     int tryT = tryCount;
                     while (tryCount < 0 || tryT-- > 0)
                     {
                         try
                         {
-                            tcpClient.Connect(verifyToken);
-                            successCallback?.Invoke(tcpClient);
+                            client.Connect(verifyToken);
+                            successCallback?.Invoke((T)client);
                             break;
                         }
                         catch (Exception ex)
                         {
                             if (printLog)
                             {
-                                tcpClient.Logger.Debug(RRQMCore.Log.LogType.Error, tcpClient, "断线重连失败。", ex);
+                                client.Logger.Debug(RRQMCore.Log.LogType.Error, client, "断线重连失败。", ex);
                             }
                         }
                     }
-                });
+                }));
             };
 
-            return tcpClient;
+            return client;
         }
 
         #region 发送
         /// <summary>
         /// 发送字符串
         /// </summary>
-        /// <param name="sender"></param>
+        /// <param name="client"></param>
         /// <param name="msg"></param>
-        public static void Send(this ISenderBase sender, string msg)
+        public static void Send<T>(this T client, string msg)where T:ISend
         {
             if (string.IsNullOrEmpty(msg))
             {
                 throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
             }
 
-            sender.Send(Encoding.UTF8.GetBytes(msg));
+            client.Send(Encoding.UTF8.GetBytes(msg));
         }
 
         /// <summary>
         /// 发送字符串
         /// </summary>
-        /// <param name="sender"></param>
+        /// <param name="client"></param>
         /// <param name="msg"></param>
-        public static void SendAsync(this ISenderBase sender, string msg)
+        public static void SendAsync<T>(this T client, string msg) where T : ISend
         {
             if (string.IsNullOrEmpty(msg))
             {
                 throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
             }
 
-            sender.SendAsync(Encoding.UTF8.GetBytes(msg));
+            client.SendAsync(Encoding.UTF8.GetBytes(msg));
         }
 
         /// <summary>
         /// 发送字符串
         /// </summary>
-        /// <param name="sender"></param>
+        /// <param name="client"></param>
         /// <param name="id"></param>
         /// <param name="msg"></param>
-        public static void Send(this IIDSender sender, string id, string msg)
+        public static void Send<T>(this T client, string id, string msg) where T : IIDSender
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -165,16 +165,16 @@ namespace RRQMSocket
                 throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
             }
 
-            sender.Send(id, Encoding.UTF8.GetBytes(msg));
+            client.Send(id, Encoding.UTF8.GetBytes(msg));
         }
 
         /// <summary>
         /// 发送字符串
         /// </summary>
-        /// <param name="sender"></param>
+        /// <param name="client"></param>
         /// <param name="id"></param>
         /// <param name="msg"></param>
-        public static void SendAsync(this IIDSender sender, string id, string msg)
+        public static void SendAsync<T>(this T client, string id, string msg) where T : IIDSender
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -186,7 +186,7 @@ namespace RRQMSocket
                 throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
             }
 
-            sender.SendAsync(id, Encoding.UTF8.GetBytes(msg));
+            client.SendAsync(id, Encoding.UTF8.GetBytes(msg));
         }
 
         /// <summary>
@@ -199,9 +199,9 @@ namespace RRQMSocket
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
         /// <returns>是否完成发送</returns>
-        public static bool TrySendAsync<T>(this T client, byte[] buffer, int offset, int length) where T : ITcpClientBase
+        public static bool TrySendAsync<T>(this T client, byte[] buffer, int offset, int length) where T : ISend
         {
-            if (client.Online)
+            if (client.CanSend)
             {
                 try
                 {
@@ -222,7 +222,7 @@ namespace RRQMSocket
         /// <param name="client">客户端</param>
         /// <param name="buffer">数据</param>
         /// <returns>是否完成发送</returns>
-        public static bool TrySendAsync<T>(this T client, byte[] buffer) where T : ITcpClientBase
+        public static bool TrySendAsync<T>(this T client, byte[] buffer) where T : ISend
         {
             return TrySendAsync(client, buffer, 0, buffer.Length);
         }
@@ -234,7 +234,7 @@ namespace RRQMSocket
         /// <param name="client">客户端</param>
         /// <param name="byteBlock">数据</param>
         /// <returns>是否完成发送</returns>
-        public static bool TrySendAsync<T>(this T client, ByteBlock byteBlock) where T : ITcpClientBase
+        public static bool TrySendAsync<T>(this T client, ByteBlock byteBlock) where T : ISend
         {
             return TrySendAsync(client, byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -248,9 +248,9 @@ namespace RRQMSocket
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
         /// <returns>是否完成发送</returns>
-        public static bool TrySend<T>(this T client, byte[] buffer, int offset, int length) where T : ITcpClientBase
+        public static bool TrySend<T>(this T client, byte[] buffer, int offset, int length) where T : ISend
         {
-            if (client.Online)
+            if (client.CanSend)
             {
                 try
                 {
@@ -271,7 +271,7 @@ namespace RRQMSocket
         /// <param name="client">客户端</param>
         /// <param name="buffer">数据</param>
         /// <returns>是否完成发送</returns>
-        public static bool TrySend<T>(this T client, byte[] buffer) where T : ITcpClientBase
+        public static bool TrySend<T>(this T client, byte[] buffer) where T : ISend
         {
             return TrySend(client, buffer, 0, buffer.Length);
         }
@@ -283,7 +283,7 @@ namespace RRQMSocket
         /// <param name="client">客户端</param>
         /// <param name="byteBlock">数据</param>
         /// <returns>是否完成发送</returns>
-        public static bool TrySend<T>(this T client, ByteBlock byteBlock) where T : ITcpClientBase
+        public static bool TrySend<T>(this T client, ByteBlock byteBlock) where T : ISend
         {
             return TrySend(client, byteBlock.Buffer, 0, byteBlock.Len);
         }

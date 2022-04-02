@@ -28,8 +28,10 @@ namespace RRQMSocket
     ///</listheader>
     ///</list>
     /// </summary>
-    public class WaitSenderSubscriber : SubscriberBase, ISenderBase, IWaitSender
+    public class WaitSenderSubscriber : SubscriberBase, ISend, IWaitSender
     {
+        private RRQMCore.Run.WaitData<byte[]> waitData;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -39,18 +41,10 @@ namespace RRQMSocket
             this.waitData = new RRQMCore.Run.WaitData<byte[]>();
         }
 
-        private RRQMCore.Run.WaitData<byte[]> waitData;
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="e"></param>
-        protected override void OnReceived(ProtocolSubscriberEventArgs e)
-        {
-            e.AddOperation(RRQMCore.Operation.Handled);
-            byte[] data = e.ByteBlock.ToArray(2);
-            this.waitData.Set(data);
-        }
+        public bool CanSend => (bool)(this.client?.Online);
 
         /// <summary>
         /// <inheritdoc/>
@@ -224,6 +218,17 @@ namespace RRQMSocket
         public Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, int timeout = 5000, CancellationToken token = default)
         {
             return this.SendThenReturnAsync(byteBlock.Buffer, 0, byteBlock.Len, timeout, token);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnReceived(ProtocolSubscriberEventArgs e)
+        {
+            e.AddOperation(RRQMCore.Operation.Handled);
+            byte[] data = e.ByteBlock.ToArray(2);
+            this.waitData.Set(data);
         }
     }
 }

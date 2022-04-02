@@ -22,6 +22,8 @@ namespace RRQMSocket
     /// </summary>
     public class ProtocolService<TClient> : TokenService<TClient> where TClient : ProtocolSocketClient
     {
+        private readonly Dictionary<short, string> usedProtocol;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -31,27 +33,41 @@ namespace RRQMSocket
         }
 
         #region 事件
-        /// <summary>
-        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
-        /// </summary>
-        public event RRQMStreamOperationEventHandler<ProtocolSocketClient> StreamTransfering;
 
         /// <summary>
         /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
         /// </summary>
-        public event RRQMStreamStatusEventHandler<ProtocolSocketClient> StreamTransfered;
-        #endregion 事件
-
-        private readonly Dictionary<short, string> usedProtocol;
+        public event RRQMStreamStatusEventHandler<TClient> StreamTransfered;
 
         /// <summary>
-        /// 添加已被使用的协议
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
+        /// </summary>
+        public event RRQMStreamOperationEventHandler<TClient> StreamTransfering;
+
+        /// <summary>
+        /// 处理协议数据
+        /// </summary>
+        public event RRQMProtocolReceivedEventHandler<TClient> Received;
+
+        #endregion 事件
+
+        /// <summary>
+        /// 判断协议是否能被使用
         /// </summary>
         /// <param name="protocol"></param>
-        /// <param name="describe"></param>
-        protected void AddUsedProtocol(short protocol, string describe)
+        public void ProtocolCanUse(short protocol)
         {
-            this.usedProtocol.Add(protocol, describe);
+            if (protocol > 0)
+            {
+                if (this.usedProtocol.ContainsKey(protocol))
+                {
+                    throw new ProtocolException($"该协议已被类协议使用，描述为：{this.usedProtocol[protocol]}");
+                }
+            }
+            else
+            {
+                throw new ProtocolException($"用户协议必须大于0");
+            }
         }
 
         /// <summary>
@@ -75,6 +91,16 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 添加已被使用的协议
+        /// </summary>
+        /// <param name="protocol"></param>
+        /// <param name="describe"></param>
+        protected void AddUsedProtocol(short protocol, string describe)
+        {
+            this.usedProtocol.Add(protocol, describe);
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
@@ -83,45 +109,9 @@ namespace RRQMSocket
         {
             socketClient.streamTransfered = this.PrivateStreamTransfered;
             socketClient.streamTransfering = this.PrivateStreamTransfering;
-            socketClient.handleProtocolData = this.HandleProtocolData;
+            socketClient.onReceived = this.OnReceived;
             socketClient.protocolCanUse = this.ProtocolCanUse;
             base.OnConnecting(socketClient, e);
-        }
-
-        private void HandleProtocolData(ProtocolSocketClient client, short protocol, ByteBlock byteBlock)
-        {
-            this.OnHandleProtocolData((TClient)client, protocol, byteBlock);
-        }
-
-        private void PrivateStreamTransfering(ProtocolSocketClient client, StreamOperationEventArgs e)
-        {
-            this.OnStreamTransfering((TClient)client, e);
-        }
-
-        private void PrivateStreamTransfered(ProtocolSocketClient client, StreamStatusEventArgs e)
-        {
-            this.OnStreamTransfered((TClient)client, e);
-        }
-
-        /// <summary>
-        /// 处理协议数据，父类方法为空。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        protected virtual void OnHandleProtocolData(TClient client, short protocol, ByteBlock byteBlock)
-        {
-
-        }
-
-        /// <summary>
-        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。覆盖父类方法将不会触发事件和插件。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        protected virtual void OnStreamTransfering(TClient client, StreamOperationEventArgs e)
-        {
-            this.StreamTransfering?.Invoke(client, e);
         }
 
         /// <summary>
@@ -135,22 +125,28 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 判断协议是否能被使用
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。覆盖父类方法将不会触发事件和插件。
         /// </summary>
-        /// <param name="protocol"></param>
-        public void ProtocolCanUse(short protocol)
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnStreamTransfering(TClient client, StreamOperationEventArgs e)
         {
-            if (protocol > 0)
-            {
-                if (this.usedProtocol.ContainsKey(protocol))
-                {
-                    throw new ProtocolException($"该协议已被类协议使用，描述为：{this.usedProtocol[protocol]}");
-                }
-            }
-            else
-            {
-                throw new ProtocolException($"用户协议必须大于0");
-            }
+            this.StreamTransfering?.Invoke(client, e);
+        }
+
+        private void OnReceived(ProtocolSocketClient client, short protocol, ByteBlock byteBlock)
+        {
+            this.Received?.Invoke((TClient)client, protocol, byteBlock);
+        }
+
+        private void PrivateStreamTransfered(ProtocolSocketClient client, StreamStatusEventArgs e)
+        {
+            this.OnStreamTransfered((TClient)client, e);
+        }
+
+        private void PrivateStreamTransfering(ProtocolSocketClient client, StreamOperationEventArgs e)
+        {
+            this.OnStreamTransfering((TClient)client, e);
         }
     }
 
@@ -159,20 +155,6 @@ namespace RRQMSocket
     /// </summary>
     public class ProtocolService : ProtocolService<ProtocolSocketClient>
     {
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        public event RRQMProtocolReceivedEventHandler<ProtocolSocketClient> Received;
 
-        /// <summary>
-        /// <inheritdoc/>重写：覆盖父类方法将不会触发事件。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        protected override void OnHandleProtocolData(ProtocolSocketClient client, short protocol, ByteBlock byteBlock)
-        {
-            this.Received?.Invoke(client, protocol, byteBlock);
-        }
     }
 }

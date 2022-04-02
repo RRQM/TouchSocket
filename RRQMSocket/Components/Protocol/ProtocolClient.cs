@@ -37,16 +37,24 @@ namespace RRQMSocket
         /// </summary>
         public event RRQMProtocolReceivedEventHandler<ProtocolClient> Received;
 
-
         /// <summary>
-        /// 处理协议数据
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
         protected override void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
-            this.Received.Invoke(this, protocol, byteBlock);
-            base.HandleProtocolData(protocol, byteBlock);
+            this.OnReceived(protocol, byteBlock);
+        }
+
+        /// <summary>
+        /// 触发Received事件
+        /// </summary>
+        /// <param name="protocol"></param>
+        /// <param name="byteBlock"></param>
+        protected void OnReceived(short protocol, ByteBlock byteBlock)
+        {
+            this.Received?.Invoke(this, protocol, byteBlock);
         }
     }
 
@@ -72,15 +80,17 @@ namespace RRQMSocket
         }
 
         #region 事件
-        /// <summary>
-        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
-        /// </summary>
-        public event RRQMStreamOperationEventHandler<ProtocolClientBase> StreamTransfering;
 
         /// <summary>
         /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
         /// </summary>
         public event RRQMStreamStatusEventHandler<ProtocolClientBase> StreamTransfered;
+
+        /// <summary>
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
+        /// </summary>
+        public event RRQMStreamOperationEventHandler<ProtocolClientBase> StreamTransfering;
+
         #endregion 事件
 
         /// <summary>
@@ -403,44 +413,6 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         protected virtual void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
-            if (this.UsePlugin)
-            {
-                this.PluginsManager.Raise<IProtocolPlugin>("OnHandleProtocolData", this, new ProtocolDataEventArgs(protocol, byteBlock));
-            }
-        }
-
-        /// <summary>
-        /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnStreamTransfered(StreamStatusEventArgs e)
-        {
-            if (this.UsePlugin)
-            {
-                this.PluginsManager.Raise<IProtocolPlugin>("OnStreamTransfered", this, e);
-                if (e.Handled)
-                {
-                    return;
-                }
-            }
-            this.StreamTransfered?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnStreamTransfering(StreamOperationEventArgs e)
-        {
-            if (this.UsePlugin)
-            {
-                this.PluginsManager.Raise<IProtocolPlugin>("OnStreamTransfering", this, e);
-                if (e.Handled)
-                {
-                    return;
-                }
-            }
-            this.StreamTransfering?.Invoke(this, e);
         }
 
         /// <summary>
@@ -448,7 +420,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void HandleTokenReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             short protocol = RRQMBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
             switch (protocol)
@@ -604,7 +576,7 @@ namespace RRQMSocket
                                     try
                                     {
                                         protocolSubscriber.OnInternalReceived(args);
-                                        if (args.Operation.HasFlag(Operation.Handled))
+                                        if (args.Handled)
                                         {
                                             return;
                                         }
@@ -613,6 +585,16 @@ namespace RRQMSocket
                                     {
                                         this.Logger.Debug(LogType.Error, this, "处理订阅协议数据异常", ex);
                                     }
+                                }
+                            }
+
+                            if (this.UsePlugin)
+                            {
+                                ProtocolDataEventArgs args = new ProtocolDataEventArgs(protocol, byteBlock);
+                                this.PluginsManager.Raise<IProtocolPlugin>("OnHandleProtocolData", this, args);
+                                if (args.Handled)
+                                {
+                                    return;
                                 }
                             }
                             this.HandleProtocolData(protocol, byteBlock);
@@ -624,36 +606,6 @@ namespace RRQMSocket
                         break;
                     }
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnHandshaked(MesEventArgs e)
-        {
-            int heartbeatFrequency = this.Config.GetValue<int>(RRQMConfigExtensions.HeartbeatFrequencyProperty);
-
-            if (heartbeatFrequency > 0)
-            {
-                if (this.heartbeatLoopAction != null)
-                {
-                    this.heartbeatLoopAction.Dispose();
-                }
-                this.heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency, (loop) =>
-                {
-                    try
-                    {
-                        this.SocketSend(-7);
-                    }
-                    catch (Exception)
-                    {
-                        this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
-                    }
-                });
-                this.heartbeatLoopAction.RunAsync();
-            }
-            base.OnHandshaked(e);
         }
 
         /// <summary>
@@ -688,10 +640,74 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnHandshaked(MesEventArgs e)
+        {
+            int heartbeatFrequency = this.Config.GetValue<int>(RRQMConfigExtensions.HeartbeatFrequencyProperty);
+
+            if (heartbeatFrequency > 0)
+            {
+                if (this.heartbeatLoopAction != null)
+                {
+                    this.heartbeatLoopAction.Dispose();
+                }
+                this.heartbeatLoopAction = LoopAction.CreateLoopAction(-1, heartbeatFrequency, (loop) =>
+                {
+                    try
+                    {
+                        this.SocketSend(-7);
+                    }
+                    catch (Exception)
+                    {
+                        this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
+                    }
+                });
+                this.heartbeatLoopAction.RunAsync();
+            }
+            base.OnHandshaked(e);
+        }
+
+        /// <summary>
         /// 收到服务器回应
         /// </summary>
         protected virtual void OnPong()
         {
+        }
+
+        /// <summary>
+        /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnStreamTransfered(StreamStatusEventArgs e)
+        {
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<IProtocolPlugin>("OnStreamTransfered", this, e);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+            this.StreamTransfered?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnStreamTransfering(StreamOperationEventArgs e)
+        {
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<IProtocolPlugin>("OnStreamTransfering", this, e);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+            this.StreamTransfering?.Invoke(this, e);
         }
 
         private void P_9_RequestStreamToThis(WaitStream waitStream)
@@ -773,7 +789,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void Send(byte[] buffer, int offset, int length)
+        public override sealed void Send(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -782,7 +798,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"><inheritdoc/></param>
-        public sealed override void Send(byte[] buffer)
+        public override sealed void Send(byte[] buffer)
         {
             this.Send(buffer, 0, buffer.Length);
         }
@@ -791,7 +807,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public sealed override void Send(ByteBlock byteBlock)
+        public override sealed void Send(ByteBlock byteBlock)
         {
             this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -800,7 +816,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void Send(IList<TransferByte> transferBytes)
+        public override sealed void Send(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.Send(transferBytes);
@@ -814,7 +830,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
-        public sealed override void SendAsync(byte[] buffer)
+        public override sealed void SendAsync(byte[] buffer)
         {
             this.SendAsync(buffer, 0, buffer.Length);
         }
@@ -834,7 +850,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public sealed override void SendAsync(byte[] buffer, int offset, int length)
+        public override sealed void SendAsync(byte[] buffer, int offset, int length)
         {
             this.SocketSend(-1, buffer, offset, length);
         }
@@ -843,7 +859,7 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public sealed override void SendAsync(IList<TransferByte> transferBytes)
+        public override sealed void SendAsync(IList<TransferByte> transferBytes)
         {
             transferBytes.Insert(0, new TransferByte(RRQMBitConverter.Default.GetBytes(-1)));
             base.SendAsync(transferBytes);

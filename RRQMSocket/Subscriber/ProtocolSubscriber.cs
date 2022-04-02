@@ -18,8 +18,10 @@ namespace RRQMSocket
     /// <summary>
     /// 协议订阅
     /// </summary>
-    public class ProtocolSubscriber : SubscriberBase, ISenderBase, IDisposable
+    public class ProtocolSubscriber : SubscriberBase, ISend, IDisposable
     {
+        private Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> Received;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -30,16 +32,10 @@ namespace RRQMSocket
             this.Received = receivedAction;
         }
 
-        private Action<ProtocolSubscriber, ProtocolSubscriberEventArgs> Received;
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="e"></param>
-        protected override void OnReceived(ProtocolSubscriberEventArgs e)
-        {
-            this.Received?.Invoke(this, e);
-        }
+        public bool CanSend => (bool)(this.client?.Online);
 
         /// <summary>
         /// <inheritdoc/>
@@ -97,6 +93,15 @@ namespace RRQMSocket
         public void SendAsync(ByteBlock byteBlock)
         {
             this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnReceived(ProtocolSubscriberEventArgs e)
+        {
+            this.Received?.Invoke(this, e);
         }
     }
 }

@@ -17,36 +17,38 @@ namespace RRQMSocket
     /// <summary>
     /// UDP会话
     /// </summary>
-    public interface IUdpSession : IClient
+    public interface IUdpSession : IService, IClient,IClientSender,IUdpClientSender, IDefaultSender,IUdpDefaultSender
     {
         /// <summary>
-        /// IP地址
+        /// 插件管理器
         /// </summary>
-        string IP { get; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        int Port { get; }
-
-        /// <summary>
-        /// 主通信器
-        /// </summary>
-        Socket MainSocket { get; }
-
-        /// <summary>
-        /// IP及端口号
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// 判断是否在线
-        /// </summary>
-        bool Online { get; }
+        IPluginsManager PluginsManager { get; }
 
         /// <summary>
         /// 缓存池大小
         /// </summary>
         int BufferLength { get; }
+
+        /// <summary>
+        /// 适配器能接收的最大数据包长度。
+        /// </summary>
+        int MaxPackageSize { get; }
+
+        /// <summary>
+        /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
+        /// </summary>
+        bool CanSetDataHandlingAdapter { get; }
+
+        /// <summary>
+        /// 数据处理适配器
+        /// </summary>
+        UdpDataHandlingAdapter DataHandlingAdapter { get; }
+
+
+        /// <summary>
+        /// 设置数据处理适配器
+        /// </summary>
+        /// <param name="adapter"></param>
+        void SetDataHandlingAdapter(UdpDataHandlingAdapter adapter);
     }
 }

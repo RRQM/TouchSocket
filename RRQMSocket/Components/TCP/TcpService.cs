@@ -16,6 +16,7 @@ using RRQMCore.Dependency;
 using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -324,7 +325,7 @@ namespace RRQMSocket
         /// <returns></returns>
         public TClient[] GetClients()
         {
-            var clients = this.socketClients.GetClients();
+            var clients = this.socketClients.GetClients().ToArray();
 
             TClient[] clients1 = new TClient[clients.Length];
             for (int i = 0; i < clients.Length; i++)
@@ -610,6 +611,8 @@ namespace RRQMSocket
                 try
                 {
                     Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    socket.ReceiveBufferSize = this.BufferLength;
+                    socket.SendBufferSize = this.BufferLength;
                     this.PreviewBind(socket);
                     socket.Bind(iPHost.EndPoint);
                     socket.Listen(this.backlog);
@@ -674,14 +677,16 @@ namespace RRQMSocket
             {
                 if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
                 {
-                    Socket newSocket = e.AcceptSocket;
+                    Socket socket = e.AcceptSocket;
+                    socket.ReceiveBufferSize = this.BufferLength;
+                    socket.SendBufferSize = this.BufferLength;
                     if (this.SocketClients.Count > this.maxCount)
                     {
                         this.Logger.Debug(LogType.Warning, this, "连接客户端数量已达到设定最大值");
-                        newSocket.Close();
-                        newSocket.Dispose();
+                        socket.Close();
+                        socket.Dispose();
                     }
-                    this.OnTask(newSocket);
+                    this.OnTask(socket);
                 }
                 e.AcceptSocket = null;
 
@@ -739,7 +744,7 @@ namespace RRQMSocket
                     }
                     else
                     {
-                        client.MainSocket?.Dispose();
+                        client.MainSocket?.Dispose() ;
                     }
                 }
                 catch (Exception ex)

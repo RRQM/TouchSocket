@@ -16,6 +16,76 @@ using System;
 
 namespace RRQMSocket
 {
+
+    /// <summary>
+    /// 事件名称异常
+    /// </summary>
+    [Serializable]
+    public class EventNameException : RRQMException
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public EventNameException()
+        { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        public EventNameException(string message) : base(message) { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        public EventNameException(string message, Exception inner) : base(message, inner) { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected EventNameException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
+    /// 事件访问异常
+    /// </summary>
+    [Serializable]
+    public class EventAccessException : RRQMException
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public EventAccessException() { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        public EventAccessException(string message) : base(message) { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        public EventAccessException(string message, Exception inner) : base(message, inner) { }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected EventAccessException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// 未连接异常
     /// </summary>
