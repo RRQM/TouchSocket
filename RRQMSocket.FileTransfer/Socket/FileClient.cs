@@ -614,7 +614,7 @@ namespace RRQMSocket.FileTransfer
         /// <param name="byteBlock"></param>
         protected virtual void FileTransferHandleDefaultData(short protocol, ByteBlock byteBlock)
         {
-            this.OnHandleDefaultData(protocol, byteBlock);
+            this.OnReceived(protocol, byteBlock);
         }
 
         /// <summary>
@@ -676,12 +676,12 @@ namespace RRQMSocket.FileTransfer
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        protected override sealed void RpcHandleDefaultData(short protocol, ByteBlock byteBlock)
+      /// <summary>
+      /// <inheritdoc/>
+      /// </summary>
+      /// <param name="protocol"></param>
+      /// <param name="byteBlock"></param>
+        protected override void HandleRpcDefaultData(short protocol, ByteBlock byteBlock)
         {
             switch (protocol)
             {
