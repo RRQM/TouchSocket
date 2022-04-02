@@ -27,11 +27,12 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// </summary>
     public class RpcSocketClient : ProtocolSocketClient, ITcpRpcClientBase
     {
+       
         internal Action<MethodInvoker, MethodInstance> executeMethod;
         internal MethodMap methodMap;
         internal SerializationSelector serializationSelector;
         private ConcurrentDictionary<long, RpcCallContext> contextDic;
-
+        
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -84,11 +85,11 @@ namespace RRQMSocket.RPC.RRQMRPC
         }
 
         /// <summary>
-        /// 处理协议数据
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected override sealed void HandleProtocolData(short protocol, ByteBlock byteBlock)
+        protected override void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
             switch (protocol)
             {
@@ -161,32 +162,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 106:/*发布事件*/
-                    {
-                        break;
-                    }
-                case 107:/*取消发布事件*/
-                    {
-                        break;
-                    }
-                case 108:/*订阅事件*/
-                    {
-                        break;
-                    }
-                case 109:/*触发事件*/
-                    {
-                       
-                        break;
-                    }
-                case 111:/*获取所有事件*/
-                    {
-                        break;
-                    }
-
-                case 112:/*取消订阅*/
-                    {
-                        break;
-                    }
                 case 113:/*取消ID调用*/
                     {
                         try
@@ -207,19 +182,9 @@ namespace RRQMSocket.RPC.RRQMRPC
                         break;
                     }
                 default:
-                    this.RpcHandleDefaultData(protocol, byteBlock);
+                    this.HandleRpcDefaultData(protocol, byteBlock);
                     break;
             }
-        }
-
-        /// <summary>
-        /// 处理其余协议的事件触发
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        protected void OnHandleDefaultData(short protocol, ByteBlock byteBlock)
-        {
-            base.HandleProtocolData(protocol, byteBlock);
         }
 
         /// <summary>
@@ -227,9 +192,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void RpcHandleDefaultData(short protocol, ByteBlock byteBlock)
+        protected virtual void HandleRpcDefaultData(short protocol, ByteBlock byteBlock)
         {
-            this.OnHandleDefaultData(protocol, byteBlock);
+            this.OnReceived(protocol, byteBlock);
         }
 
         private void CanceledInvoke(long sign)

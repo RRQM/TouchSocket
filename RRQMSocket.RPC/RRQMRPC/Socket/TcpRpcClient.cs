@@ -26,7 +26,7 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// <summary>
     /// TcpRpcClient
     /// </summary>
-    public class TcpRpcClient : ProtocolClientBase, ITcpRpcClient, IRRQMRPCClient
+    public class TcpRpcClient : ProtocolClient, ITcpRpcClient, IRRQMRPCClient
     {
         private ConcurrentDictionary<string, MethodInstance> callbackMap;
         private ConcurrentDictionary<long, RpcCallContext> contextDic;
@@ -47,13 +47,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.AddUsedProtocol(103, "ID调用客户端");
             this.AddUsedProtocol(104, "Rpc回调");
             this.AddUsedProtocol(105, "取消Rpc调用");
-            this.AddUsedProtocol(106, "发布事件");
-            this.AddUsedProtocol(107, "取消发布事件");
-            this.AddUsedProtocol(108, "订阅事件");
-            this.AddUsedProtocol(109, "请求触发事件");
-            this.AddUsedProtocol(110, "分发触发");
-            this.AddUsedProtocol(111, "获取所有事件");
-            this.AddUsedProtocol(112, "请求取消订阅");
             this.AddUsedProtocol(113, "取消Rpc ID回调");
 
             for (short i = 114; i < 200; i++)
@@ -71,11 +64,6 @@ namespace RRQMSocket.RPC.RRQMRPC
         #region 事件
 
         /// <summary>
-        /// 收到协议数据
-        /// </summary>
-        public event RRQMProtocolReceivedEventHandler<TcpRpcClient> Received;
-
-        /// <summary>
         /// Rpc初始化后
         /// </summary>
         public event RRQMMessageEventHandler<TcpRpcClient> ServiceDiscovered;
@@ -88,6 +76,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// 获取反向Rpc映射图
         /// </summary>
         public MethodMap MethodMap => this.methodMap;
+
+       
 
         /// <summary>
         /// <inheritdoc/>
@@ -1078,14 +1068,12 @@ namespace RRQMSocket.RPC.RRQMRPC
         #endregion RPC解析器
 
         /// <summary>
-        /// 协议数据
+        /// 
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected override sealed void HandleProtocolData(short protocol, ByteBlock byteBlock)
+        protected sealed override void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
-            byte[] buffer = byteBlock.Buffer;
-            int r = byteBlock.Len;
             switch (protocol)
             {
                 case 100:/* 100表示获取Rpc引用文件上传状态返回*/
@@ -1111,7 +1099,7 @@ namespace RRQMSocket.RPC.RRQMRPC
                     {
                         try
                         {
-                            DiscoveryServiceWaitResult result = SerializeConvert.RRQMBinaryDeserialize<DiscoveryServiceWaitResult>(buffer, 2);
+                            DiscoveryServiceWaitResult result = SerializeConvert.RRQMBinaryDeserialize<DiscoveryServiceWaitResult>(byteBlock.Buffer, 2);
                             this.WaitHandlePool.SetRun(result);
                         }
                         catch (Exception e)
@@ -1148,19 +1136,6 @@ namespace RRQMSocket.RPC.RRQMRPC
                         }
                         break;
                     }
-                case 106:
-                case 107:
-                case 108:
-                case 109:
-                case 111:
-                    {
-                        break;
-                    }
-
-                case 110:
-                    {
-                        break;
-                    }
                 case 113:
                     {
                         try
@@ -1180,7 +1155,7 @@ namespace RRQMSocket.RPC.RRQMRPC
 
                 default:
                     {
-                        this.RpcHandleDefaultData(protocol, byteBlock);
+                        this.HandleRpcDefaultData(protocol, byteBlock);
                         break;
                     }
             }
@@ -1201,9 +1176,9 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
-        protected void OnHandleDefaultData(short protocol, ByteBlock byteBlock)
+        protected virtual void HandleRpcDefaultData(short protocol, ByteBlock byteBlock)
         {
-            Received?.Invoke(this, protocol, byteBlock);
+            OnReceived(protocol,byteBlock);
         }
 
         /// <summary>
@@ -1220,16 +1195,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             {
                 this.Logger.Debug(LogType.Error, this, $"在事件{nameof(ServiceDiscovered)}中发生异常", ex);
             }
-        }
-
-        /// <summary>
-        /// Rpc处理其余协议
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        protected virtual void RpcHandleDefaultData(short protocol, ByteBlock byteBlock)
-        {
-            this.OnHandleDefaultData(protocol, byteBlock);
         }
 
         /// <summary>
