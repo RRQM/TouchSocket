@@ -30,10 +30,9 @@ namespace RRQMSocket.RPC.RRQMRPC
     /// TcpRpcParser泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public class TcpRpcParser<TClient> : ProtocolService<TClient>, IRpcParser,  IIDInvoke, IRRQMRPCParser where TClient : RpcSocketClient
+    public class TcpRpcParser<TClient> : ProtocolService<TClient>, IRpcParser, IIDInvoke, IRRQMRPCParser where TClient : RpcSocketClient
     {
         private MethodStore methodStore;
-        private string publisherID;
         private SerializationSelector serializationSelector;
 
         /// <summary>
@@ -47,27 +46,16 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.AddUsedProtocol(103, "ID调用客户端");
             this.AddUsedProtocol(104, "Rpc回调");
             this.AddUsedProtocol(105, "取消Rpc调用");
-            this.AddUsedProtocol(106, "发布事件");
-            this.AddUsedProtocol(107, "取消发布事件");
-            this.AddUsedProtocol(108, "订阅事件");
-            this.AddUsedProtocol(109, "请求触发事件");
-            this.AddUsedProtocol(110, "分发触发");
-            this.AddUsedProtocol(111, "获取所有事件");
-            this.AddUsedProtocol(112, "请求取消订阅");
             this.AddUsedProtocol(113, "取消Rpc回调");
 
             for (short i = 114; i < 200; i++)
             {
                 this.AddUsedProtocol(i, "保留协议");
             }
+
             this.methodStore = new MethodStore();
-            this.publisherID = this.GetDefaultNewID();
         }
 
-        /// <summary>
-        /// 收到协议数据
-        /// </summary>
-        public event RRQMProtocolReceivedEventHandler<TClient> Received;
 
         /// <summary>
         /// <inheritdoc/>
@@ -98,6 +86,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// <inheritdoc/>
         /// </summary>
         public SerializationSelector SerializationSelector => this.serializationSelector;
+
+        
 
         /// <summary>
         /// <inheritdoc/>
@@ -405,18 +395,6 @@ namespace RRQMSocket.RPC.RRQMRPC
             socketClient.executeMethod = this.Execute;
             socketClient.serializationSelector = this.serializationSelector;
             base.OnConnecting(socketClient, e);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        protected override void OnHandleProtocolData(TClient client, short protocol, ByteBlock byteBlock)
-        {
-            this.Received?.Invoke(client, protocol, byteBlock);
-            base.OnHandleProtocolData(client, protocol, byteBlock);
         }
 
         private void Execute(MethodInvoker methodInvoker, MethodInstance methodInstance)

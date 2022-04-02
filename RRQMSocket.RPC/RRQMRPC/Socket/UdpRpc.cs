@@ -44,6 +44,7 @@ namespace RRQMSocket.RPC.RRQMRPC
             this.contextDic = new ConcurrentDictionary<long, RpcCallContext>();
             this.waitHandlePool = new WaitHandlePool<IWaitResult>();
             this.methodStore = new MethodStore();
+            this.SetAdapter(new UdpPackageAdapter());
         }
 
         /// <summary>
@@ -961,7 +962,8 @@ namespace RRQMSocket.RPC.RRQMRPC
         /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
-        protected override sealed void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        /// <param name="requestInfo"></param>
+        protected override sealed void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock,IRequestInfo requestInfo)
         {
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
