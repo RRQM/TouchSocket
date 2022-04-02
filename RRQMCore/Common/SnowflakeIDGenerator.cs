@@ -65,8 +65,8 @@ namespace RRQMCore
                 long timestamp = this.timeGen();
                 if (this.lastTimestamp == timestamp)
                 { //同一微妙中生成ID
-                    SnowflakeIDGenerator.sequence = (SnowflakeIDGenerator.sequence + 1) & SnowflakeIDGenerator.sequenceMask; //用&运算计算该微秒内产生的计数是否已经到达上限
-                    if (SnowflakeIDGenerator.sequence == 0)
+                    sequence = (sequence + 1) & sequenceMask; //用&运算计算该微秒内产生的计数是否已经到达上限
+                    if (sequence == 0)
                     {
                         //一微妙内产生的ID计数已达上限，等待下一微妙
                         timestamp = this.tillNextMillis(this.lastTimestamp);
@@ -74,7 +74,7 @@ namespace RRQMCore
                 }
                 else
                 { //不同微秒生成ID
-                    SnowflakeIDGenerator.sequence = 0; //计数清0
+                    sequence = 0; //计数清0
                 }
                 if (timestamp < this.lastTimestamp)
                 { //如果当前时间戳比上一次生成ID时时间戳还小，抛出异常，因为不能保证现在生成的ID之前没有生成过
@@ -82,7 +82,7 @@ namespace RRQMCore
                         this.lastTimestamp - timestamp));
                 }
                 this.lastTimestamp = timestamp; //把当前时间戳保存为最后生成ID的时间戳
-                long nextId = (timestamp - twepoch << timestampLeftShift) | SnowflakeIDGenerator.workerId << SnowflakeIDGenerator.workerIdShift | SnowflakeIDGenerator.sequence;
+                long nextId = (timestamp - twepoch << timestampLeftShift) | workerId << workerIdShift | sequence;
                 return nextId;
             }
         }

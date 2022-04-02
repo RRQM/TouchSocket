@@ -172,9 +172,10 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 回收资源
+        /// <inheritdoc/>
         /// </summary>
-        public new void Dispose()
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
             if (this.holding)
             {
@@ -192,6 +193,7 @@ namespace RRQMCore.ByteManager
                     }
                 }
             }
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -237,7 +239,7 @@ namespace RRQMCore.ByteManager
         /// <param name="buffer"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public int Read(out byte[] buffer,int length)
+        public int Read(out byte[] buffer, int length)
         {
             buffer = new byte[length];
             return this.Read(buffer, 0, buffer.Length);
@@ -378,6 +380,10 @@ namespace RRQMCore.ByteManager
         /// <exception cref="ByteBlockDisposedException"></exception>
         public override void Write(byte[] buffer, int offset, int count)
         {
+            if (count == 0)
+            {
+                return;
+            }
             if (!this.@using)
             {
                 throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
@@ -394,11 +400,7 @@ namespace RRQMCore.ByteManager
             }
             Array.Copy(buffer, offset, this._buffer, this.position, count);
             this.position += count;
-            this.length += count;
-            if (this.length < this.position)
-            {
-                this.length = this.position;
-            }
+            this.length = Math.Max(this.position,this.length);
         }
 
         /// <summary>
