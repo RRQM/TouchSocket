@@ -136,7 +136,7 @@ namespace RRQMSocket
                 this.PluginsManager.Raise<ITcpPlugin>("OnConnecting", this, e);
             }
 
-            if (this.CanSetDataHandlingAdapter && this.dataHandlingAdapter == null)
+            if (this.CanSetDataHandlingAdapter)
             {
                 if (e.DataHandlingAdapter == null)
                 {
@@ -204,6 +204,10 @@ namespace RRQMSocket
         /// </summary>
         public Socket MainSocket => this.mainSocket;
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool CanSend => this.online;
 
         /// <summary>
         /// <inheritdoc/>
@@ -285,20 +289,9 @@ namespace RRQMSocket
             {
                 if (this.online)
                 {
-                    if (this.mainSocket != null)
-                    {
-                        this.mainSocket.Dispose();
-                    }
-                    if (this.asyncSender != null)
-                    {
-                        this.asyncSender.Dispose();
-                        this.asyncSender = null;
-                    }
-                    if (this.workStream != null)
-                    {
-                        this.workStream.Dispose();
-                        this.workStream = null;
-                    }
+                    this.mainSocket?.Dispose();
+                    this.asyncSender?.Dispose();
+                    this.workStream?.Dispose();
                     this.online = false;
                     this.OnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
                 }
@@ -313,8 +306,6 @@ namespace RRQMSocket
         {
             this.mainSocket.Shutdown(how);
         }
-
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -512,17 +503,12 @@ namespace RRQMSocket
 
         /// <summary>
         /// 处理已接收到的数据。覆盖父类方法，将不会触发插件。
-        /// <para>根据不同的数据处理适配器，会传递不同的数据</para>
         /// </summary>
         /// <param name="byteBlock">以二进制流形式传递</param>
         /// <param name="requestInfo">以解析的数据对象传递</param>
         protected virtual void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.usePlugin)
-            {
-                ReceivedDataEventArgs args = new ReceivedDataEventArgs(byteBlock, requestInfo);
-                this.PluginsManager.Raise<ITcpPlugin>("OnReceivedData", this, args);
-            }
+           
         }
 
         /// <summary>
@@ -691,7 +677,8 @@ namespace RRQMSocket
         private Socket CreateSocket(IPHost iPHost)
         {
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
+            socket.ReceiveBufferSize = this.BufferLength;
+            socket.SendBufferSize = this.BufferLength;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, this.config.GetValue<bool>(RRQMConfigExtensions.KeepAliveProperty));
             socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty));
             if (this.config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) != null)
@@ -804,7 +791,7 @@ namespace RRQMSocket
 
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.Send(transferBytes, false);
+                this.dataHandlingAdapter.SendInput(transferBytes, false);
             }
             else
             {
@@ -893,7 +880,7 @@ namespace RRQMSocket
             }
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.Send(transferBytes, true);
+                this.dataHandlingAdapter.SendInput(transferBytes, true);
             }
             else
             {
@@ -1030,34 +1017,37 @@ namespace RRQMSocket
             }
             if (this.HandleSendingData(buffer, offset, length))
             {
-                if (this.useSsl)
+                lock (this)
                 {
-                    this.workStream.Write(buffer, offset, length);
-                }
-                else
-                {
-                    if (isAsync)
+                    if (this.useSsl)
                     {
-                        if (this.separateThreadSend)
-                        {
-                            this.asyncSender.AsyncSend(buffer, offset, length);
-                        }
-                        else
-                        {
-                            this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
-                        }
+                        this.workStream.Write(buffer, offset, length);
                     }
                     else
                     {
-                        while (length > 0)
+                        if (isAsync)
                         {
-                            int r = this.MainSocket.Send(buffer, offset, length, SocketFlags.None);
-                            if (r == 0 && length > 0)
+                            if (this.separateThreadSend)
                             {
-                                throw new RRQMException("发送数据不完全");
+                                this.asyncSender.AsyncSend(buffer, offset, length);
                             }
-                            offset += r;
-                            length -= r;
+                            else
+                            {
+                                this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
+                            }
+                        }
+                        else
+                        {
+                            while (length > 0)
+                            {
+                                int r = this.MainSocket.Send(buffer, offset, length, SocketFlags.None);
+                                if (r == 0 && length > 0)
+                                {
+                                    throw new RRQMException("发送数据不完全");
+                                }
+                                offset += r;
+                                length -= r;
+                            }
                         }
                     }
                 }

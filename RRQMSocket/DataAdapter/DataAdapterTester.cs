@@ -11,9 +11,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using RRQMCore.Collections.Concurrent;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,24 +26,20 @@ namespace RRQMSocket
     /// </summary>
     public class DataAdapterTester : IDisposable
     {
-        private readonly RRQMCore.Collections.Concurrent.IntelligentDataQueue<TransferByte> asyncBytes;
+        private readonly IntelligentDataQueue<TransferByte> asyncBytes;
         private readonly Thread sendThread;
-        private readonly EventWaitHandle waitHandle;
         private DataHandlingAdapter adapter;
         private int bufferLength;
         private int count;
         private bool dispose;
         private int expectedCount;
         private Action<ByteBlock, IRequestInfo> receivedCallBack;
-        private EventWaitHandle runWaitHandle;
-        private bool sending;
         private Stopwatch stopwatch;
         private int timeout;
 
         private DataAdapterTester()
         {
-            this.asyncBytes = new RRQMCore.Collections.Concurrent.IntelligentDataQueue<TransferByte>(1024 * 1024 * 10);
-            this.waitHandle = new AutoResetEvent(false);
+            this.asyncBytes = new IntelligentDataQueue<TransferByte>(1024 * 1024 * 10);
             this.sendThread = new Thread(this.BeginSend);
             this.sendThread.IsBackground = true;
             this.sendThread.Name = "DataAdapterTesterThread";
@@ -72,8 +70,6 @@ namespace RRQMSocket
         public void Dispose()
         {
             this.dispose = true;
-            this.waitHandle.Set();
-            this.waitHandle.Dispose();
         }
 
         /// <summary>
@@ -91,7 +87,6 @@ namespace RRQMSocket
             this.count = 0;
             this.expectedCount = expectedCount;
             this.timeout = timeout;
-            this.runWaitHandle = new AutoResetEvent(false);
             this.stopwatch = new Stopwatch();
             this.stopwatch.Start();
             Task.Run(() =>
@@ -101,12 +96,12 @@ namespace RRQMSocket
                     this.adapter.SendInput(buffer, offset, length, false);
                 }
             });
-            if (this.runWaitHandle.WaitOne(this.timeout))
+
+            if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.timeout))
             {
                 this.stopwatch.Stop();
                 return this.stopwatch.Elapsed;
             }
-
             throw new TimeoutException();
         }
 
@@ -128,8 +123,6 @@ namespace RRQMSocket
             {
                 if (this.tryGet(out List<ByteBlock> byteBlocks))
                 {
-                    this.sending = true;
-
                     foreach (var block in byteBlocks)
                     {
                         try
@@ -144,8 +137,7 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    this.sending = false;
-                    this.waitHandle.WaitOne();
+                    Thread.Sleep(1);
                 }
             }
         }
@@ -154,10 +146,6 @@ namespace RRQMSocket
         {
             this.count++;
             this.receivedCallBack?.Invoke(byteBlock, requestInfo);
-            if (this.count == this.expectedCount)
-            {
-                this.runWaitHandle.Set();
-            }
         }
 
         private void SendCallback(byte[] buffer, int offset, int length, bool isAsync)
@@ -165,10 +153,6 @@ namespace RRQMSocket
             TransferByte asyncByte = new TransferByte(new byte[length], 0, length);
             Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
             this.asyncBytes.Enqueue(asyncByte);
-            if (!this.sending)
-            {
-                this.waitHandle.Set();
-            }
         }
 
         private bool tryGet(out List<ByteBlock> byteBlocks)
@@ -232,6 +216,155 @@ namespace RRQMSocket
             offset += len;
 
             return block;
+        }
+    }
+
+    /// <summary>
+    /// Udp数据处理适配器测试
+    /// </summary>
+    public class UdpDataAdapterTester : IDisposable
+    {
+        private readonly IntelligentDataQueue<TransferByte> asyncBytes;
+        private UdpDataHandlingAdapter adapter;
+        private int count;
+        private bool dispose;
+        private int expectedCount;
+        private Action<ByteBlock, IRequestInfo> receivedCallBack;
+        private Stopwatch stopwatch;
+        private int timeout;
+
+        private UdpDataAdapterTester(int multiThread)
+        {
+            this.asyncBytes = new IntelligentDataQueue<TransferByte>(1024 * 1024 * 10);
+            for (int i = 0; i < multiThread; i++)
+            {
+                Task.Run(this.BeginSend);
+            }
+        }
+
+        /// <summary>
+        /// 获取测试器
+        /// </summary>
+        /// <param name="adapter">待测试适配器</param>
+        /// <param name="multiThread">并发多线程数量</param>
+        /// <param name="receivedCallBack">收到数据回调</param>
+        /// <returns></returns>
+        public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter,int multiThread, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
+        {
+            UdpDataAdapterTester tester = new UdpDataAdapterTester(multiThread);
+            tester.adapter = adapter;
+            adapter.SendCallBack = tester.SendCallback;
+            adapter.ReceivedCallBack = tester.OnReceived;
+            tester.receivedCallBack = receivedCallBack;
+            return tester;
+        }
+
+        /// <summary>
+        /// 释放
+        /// </summary>
+        public void Dispose()
+        {
+            this.dispose = true;
+        }
+
+        /// <summary>
+        /// 模拟测试运行发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="testCount">测试次数</param>
+        /// <param name="expectedCount">期待测试次数</param>
+        /// <param name="timeout">超时</param>
+        /// <returns></returns>
+        public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int timeout)
+        {
+            this.count = 0;
+            this.expectedCount = expectedCount;
+            this.timeout = timeout;
+            this.stopwatch = new Stopwatch();
+            this.stopwatch.Start();
+            Task.Run(() =>
+            {
+                for (int i = 0; i < testCount; i++)
+                {
+                    this.adapter.SendInput(null,buffer, offset, length, false);
+                }
+            });
+            if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.timeout))
+            {
+                this.stopwatch.Stop();
+                return this.stopwatch.Elapsed;
+            }
+
+            throw new TimeoutException();
+        }
+
+        /// <summary>
+        /// 模拟发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="testCount">测试次数</param>
+        /// <param name="expectedCount">期待测试次数</param>
+        /// <param name="timeout">超时</param>
+        public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int timeout)
+        {
+            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
+        }
+
+        private void BeginSend()
+        {
+            while (!this.dispose)
+            {
+                if (this.tryGet(out List<ByteBlock> byteBlocks))
+                {
+                    foreach (var block in byteBlocks)
+                    {
+                        try
+                        {
+                            this.adapter.ReceivedInput(null,block);
+                        }
+                        finally
+                        {
+                            block.Dispose();
+                        }
+                    }
+                }
+                else
+                {
+                    Thread.Sleep(1);
+                }
+            }
+        }
+
+        private void OnReceived(EndPoint endPoint,ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            this.receivedCallBack?.Invoke(byteBlock, requestInfo);
+            Interlocked.Increment(ref this.count);
+        }
+
+        private void SendCallback(EndPoint endPoint,byte[] buffer, int offset, int length, bool isAsync)
+        {
+            TransferByte asyncByte = new TransferByte(new byte[length], 0, length);
+            Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
+            this.asyncBytes.Enqueue(asyncByte);
+        }
+
+        private bool tryGet(out List<ByteBlock> byteBlocks)
+        {
+            byteBlocks = new List<ByteBlock>();
+            
+            while (this.asyncBytes.TryDequeue(out TransferByte asyncByte))
+            {
+                ByteBlock block = new ByteBlock(asyncByte.Length);
+                block.Write(asyncByte.Buffer,asyncByte.Offset,asyncByte.Length);
+                byteBlocks.Add(block);
+            }
+            if (byteBlocks.Count>0)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

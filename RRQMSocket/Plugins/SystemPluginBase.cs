@@ -161,6 +161,89 @@ namespace RRQMSocket.Plugins
     }
 
     /// <summary>
+    /// Udp插件实现类
+    /// </summary>
+    public class UdpSessionPluginBase : IUdpSessionPlugin
+    {
+        /// <summary>
+        /// 判断是否已释放
+        /// </summary>
+        protected bool disposedValue;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public byte Order { get; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ILog Logger { get; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public IPluginsManager PluginsManager { get ; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        void IUdpSessionPlugin.OnReceivedData(IUdpSession client, UdpReceivedDataEventArgs e)
+        {
+            this.OnReceivedData(client,e);
+        }
+
+        /// <summary>
+        /// 收到数据
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnReceivedData(IUdpSession client, UdpReceivedDataEventArgs e)
+        {
+
+        }
+
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: 释放托管状态(托管对象)
+                }
+
+                // TODO: 释放未托管的资源(未托管的对象)并重写终结器
+                // TODO: 将大型字段设置为 null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: 仅当“Dispose(bool disposing)”拥有用于释放未托管资源的代码时才替代终结器
+        // ~UdpSessionPluginBase()
+        // {
+        //     // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        //     Dispose(disposing: false);
+        // }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+            Dispose(disposing: true);
+            System.GC.SuppressFinalize(this);
+        }
+    }
+
+    /// <summary>
     /// Token系插件接口
     /// </summary>
     public class TokenPluginBase: TcpPluginBase,ITokenPlugin

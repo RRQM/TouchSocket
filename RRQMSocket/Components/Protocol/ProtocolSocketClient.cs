@@ -31,7 +31,7 @@ namespace RRQMSocket
     public class ProtocolSocketClient : TokenSocketClient, IProtocolClientBase
     {
         internal Action<short> protocolCanUse;
-        internal Action<ProtocolSocketClient, short, ByteBlock> handleProtocolData;
+        internal Action<ProtocolSocketClient, short, ByteBlock> onReceived;
         internal Action<ProtocolSocketClient, StreamOperationEventArgs> streamTransfering;
         internal Action<ProtocolSocketClient, StreamStatusEventArgs> streamTransfered;
         private readonly ConcurrentDictionary<short, ProtocolSubscriberCollection> protocolSubscriberCollection;
@@ -842,6 +842,17 @@ namespace RRQMSocket
                                     }
                                 }
                             }
+
+                            if (this.UsePlugin)
+                            {
+                                ProtocolDataEventArgs args = new ProtocolDataEventArgs(protocol, byteBlock);
+                                this.PluginsManager.Raise<IProtocolPlugin>("OnHandleProtocolData", this, args);
+                                if (args.Handled)
+                                {
+                                    return;
+                                }
+                            }
+                           
                             this.HandleProtocolData(protocol, byteBlock);
                         }
                         catch (Exception ex)
@@ -856,20 +867,26 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 触发Received事件
+        /// </summary>
+        /// <param name="protocol"></param>
+        /// <param name="byteBlock"></param>
+        protected void OnReceived(short protocol, ByteBlock byteBlock)
+        {
+            this.onReceived?.Invoke(this, protocol, byteBlock);
+        }
+
+        /// <summary>
         /// 收到协议数据，由于性能考虑，
         /// byteBlock数据源并未剔除协议数据，
         /// 所以真实数据起点为2，
-        /// 长度为Length-2。覆盖父类方法将不会触发事件和插件。
+        /// 长度为Length-2。
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="byteBlock"></param>
         protected virtual void HandleProtocolData(short protocol, ByteBlock byteBlock)
         {
-            this.handleProtocolData?.Invoke(this, protocol, byteBlock);
-            if (this.UsePlugin)
-            {
-                this.PluginsManager.Raise<IProtocolPlugin>("OnHandleProtocolData", this, new ProtocolDataEventArgs(protocol, byteBlock));
-            }
+            this.OnReceived(protocol,byteBlock);
         }
 
         /// <summary>

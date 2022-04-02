@@ -97,7 +97,9 @@ namespace RRQMSocket
             DependencyProperty.Register("ServerName", typeof(string), typeof(RRQMConfigExtensions), "RRQMServer");
 
         /// <summary>
-        /// 多线程数量，默认为10。该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/>
+        /// 多线程数量，默认为10。
+        /// <para>TCP模式中，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/></para>
+        /// <para>UDP模式中，该值为重叠IO并发数</para>
         /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty ThreadCountProperty =
@@ -116,7 +118,9 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 设置多线程数量，默认为10。该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/>
+        /// 多线程数量，默认为10。
+        /// <para>TCP模式中，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/></para>
+        /// <para>UDP模式中，该值为重叠IO并发数</para>
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
@@ -415,5 +419,9 @@ namespace RRQMSocket
         }
 
         #endregion TokenService
+
+        #region UDP
+        
+        #endregion UDP
     }
 }

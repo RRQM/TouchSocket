@@ -150,6 +150,11 @@ namespace RRQMSocket
         /// <inheritdoc/>
         /// </summary>
         public bool UseSsl => this.useSsl;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool CanSend => this.online;
         #endregion 属性
 
         #region 事件&委托
@@ -416,7 +421,7 @@ namespace RRQMSocket
 
             if (e.Operation.HasFlag(Operation.Permit))
             {
-                if (this.CanSetDataHandlingAdapter && this.dataHandlingAdapter == null)
+                if (this.CanSetDataHandlingAdapter)
                 {
                     if (e.DataHandlingAdapter == null)
                     {
@@ -647,27 +652,30 @@ namespace RRQMSocket
             }
             if (this.HandleSendingData(buffer, offset, length))
             {
-                if (this.useSsl)
+                lock (this)
                 {
-                    this.workStream.Write(buffer, offset, length);
-                }
-                else
-                {
-                    if (isAsync)
+                    if (this.useSsl)
                     {
-                        this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
+                        this.workStream.Write(buffer, offset, length);
                     }
                     else
                     {
-                        while (length > 0)
+                        if (isAsync)
                         {
-                            int r = this.mainSocket.Send(buffer, offset, length, SocketFlags.None);
-                            if (r == 0 && length > 0)
+                            this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
+                        }
+                        else
+                        {
+                            while (length > 0)
                             {
-                                throw new RRQMException("发送数据不完全");
+                                int r = this.mainSocket.Send(buffer, offset, length, SocketFlags.None);
+                                if (r == 0 && length > 0)
+                                {
+                                    throw new RRQMException("发送数据不完全");
+                                }
+                                offset += r;
+                                length -= r;
                             }
-                            offset += r;
-                            length -= r;
                         }
                     }
                 }
@@ -797,7 +805,7 @@ namespace RRQMSocket
             }
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.Send(transferBytes, false);
+                this.dataHandlingAdapter.SendInput(transferBytes, false);
             }
             else
             {
@@ -883,7 +891,7 @@ namespace RRQMSocket
             }
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.Send(transferBytes, true);
+                this.dataHandlingAdapter.SendInput(transferBytes, true);
             }
             else
             {

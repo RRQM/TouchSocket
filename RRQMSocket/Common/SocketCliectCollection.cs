@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -47,9 +48,9 @@ namespace RRQMSocket
         /// 获取所有的客户端
         /// </summary>
         /// <returns></returns>
-        public ISocketClient[] GetClients()
+        public IEnumerable<ISocketClient> GetClients()
         {
-            return this.tokenDic.Values.ToArray();
+            return this.tokenDic.Values;
         }
 
         internal bool TryRemove(string id, out ISocketClient socketClient)

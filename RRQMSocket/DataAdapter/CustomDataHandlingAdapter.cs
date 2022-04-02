@@ -112,8 +112,8 @@ namespace RRQMSocket
                     {
                         case FilterResult.Success:
                             this.GoReceived(null, this.tempRequest);
-                            this.tempRequest = default;
                             this.OnReceivedSuccess(this.tempRequest);
+                            this.tempRequest = default;
                             break;
 
                         case FilterResult.Cache:

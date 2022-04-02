@@ -13,7 +13,6 @@
 using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Collections.Concurrent;
-
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -26,11 +25,12 @@ namespace RRQMSocket
     /// </summary>
     public class Channel : IDisposable
     {
-        private ByteBlock currentByteBlock;
-
+        internal bool @using;
         internal int id = 0;
-
+        private int bufferLength;
         private int cacheCapacity;
+        private short cancelOrder;
+        private bool canFree;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private ProtocolClientBase client1;
@@ -38,25 +38,26 @@ namespace RRQMSocket
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private ProtocolSocketClient client2;
 
+        private short completeOrder;
+        private ByteBlock currentByteBlock;
+        private short dataOrder;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private IntelligentDataQueue<ChannelData> dataQueue;
+
+        private short disposeOrder;
+
+        private short holdOnOrder;
+
+        private string lastOperationMes;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private AutoResetEvent moveWaitHandle;
 
-        private int bufferLength;
-        private bool canFree;
-        private string lastOperationMes;
         private bool moving;
-        private ChannelStatus status;
-        internal bool @using;
-        private string targetClientID;
-        private short dataOrder;
-        private short completeOrder;
-        private short cancelOrder;
-        private short disposeOrder;
-        private short holdOnOrder;
         private short queueChangedOrder;
+        private ChannelStatus status;
+        private string targetClientID;
 
         internal Channel(ProtocolClientBase client, string targetClientID)
         {
@@ -72,41 +73,6 @@ namespace RRQMSocket
             this.OnCreate(targetClientID);
         }
 
-        private void OnCreate(string targetClientID)
-        {
-            if (targetClientID == null)
-            {
-                this.dataOrder = -3;
-                this.completeOrder = -4;
-                this.cancelOrder = -5;
-                this.disposeOrder = -6;
-                this.holdOnOrder = -11;
-                this.queueChangedOrder = -10;
-            }
-            else
-            {
-                this.dataOrder = -14;
-                this.completeOrder = -15;
-                this.cancelOrder = -16;
-                this.disposeOrder = -17;
-                this.holdOnOrder = -18;
-                this.queueChangedOrder = -19;
-
-                this.targetClientID = targetClientID;
-            }
-
-            this.status = ChannelStatus.Moving;
-            this.cacheCapacity = 1024 * 1024 * 20;
-            this.dataQueue = new IntelligentDataQueue<ChannelData>(this.cacheCapacity)
-            {
-                OverflowWait = false,
-
-                OnQueueChanged = OnQueueChanged
-            };
-            this.moveWaitHandle = new AutoResetEvent(false);
-            this.canFree = true;
-        }
-
         /// <summary>
         /// 析构函数
         /// </summary>
@@ -116,9 +82,9 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 目的ID地址。
+        /// 是否具有数据可读
         /// </summary>
-        public string TargetClientID => this.targetClientID;
+        public bool Available => this.dataQueue.Count > 0 ? true : false;
 
         /// <summary>
         /// 缓存容量
@@ -138,9 +104,19 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 是否具有数据可读
+        /// 判断当前通道能否调用<see cref="MoveNext(int)"/>
         /// </summary>
-        public bool Available => this.dataQueue.Count > 0 ? true : false;
+        public bool CanMoveNext
+        {
+            get
+            {
+                if ((byte)this.status > 4)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
 
         /// <summary>
         /// 能否写入
@@ -165,6 +141,11 @@ namespace RRQMSocket
         /// 状态
         /// </summary>
         public ChannelStatus Status => this.status;
+
+        /// <summary>
+        /// 目的ID地址。
+        /// </summary>
+        public string TargetClientID => this.targetClientID;
 
         /// <summary>
         /// 取消
@@ -246,55 +227,6 @@ namespace RRQMSocket
             {
                 byteBlock.Dispose();
             }
-        }
-
-        /// <summary>
-        /// 继续。
-        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext(int)"/></para>
-        /// </summary>
-        /// <param name="operationMes"></param>
-        public void HoldOn(string operationMes = null)
-        {
-            if ((byte)this.status > 3)
-            {
-                return;
-            }
-
-            ByteBlock byteBlock = BytePool.GetByteBlock(this.bufferLength);
-            try
-            {
-                if (this.targetClientID != null)
-                {
-                    byteBlock.Write(this.targetClientID);
-                }
-                byteBlock.Write(this.id);
-                byteBlock.Write(operationMes);
-                if (this.client1 != null)
-                {
-                    this.client1.SocketSend(this.holdOnOrder, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-                else
-                {
-                    this.client2.SocketSend(this.holdOnOrder, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 异步调用继续
-        /// </summary>
-        /// <param name="operationMes"></param>
-        /// <returns></returns>
-        public Task HoldOnAsync(string operationMes = null)
-        {
-            return Task.Run(() =>
-            {
-                this.HoldOn(operationMes);
-            });
         }
 
         /// <summary>
@@ -381,7 +313,7 @@ namespace RRQMSocket
 
         /// <summary>
         /// 获取当前数据的存储块，设置pos=6，调用ReadBytesPackage获取数据。
-        /// 使用完成后的数据必须手动释放，且必须调用SetHolding(false)进行释放。
+        /// 使用完成后的数据必须调用SetHolding(false)进行释放。
         /// </summary>
         /// <returns></returns>
         public ByteBlock GetCurrentByteBlock()
@@ -390,18 +322,52 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 判断当前通道能否调用<see cref="MoveNext(int)"/>
+        /// 继续。
+        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext(int)"/></para>
         /// </summary>
-        public bool CanMoveNext
+        /// <param name="operationMes"></param>
+        public void HoldOn(string operationMes = null)
         {
-            get
+            if ((byte)this.status > 3)
             {
-                if ((byte)this.status > 4)
-                {
-                    return false;
-                }
-                return true;
+                return;
             }
+
+            ByteBlock byteBlock = BytePool.GetByteBlock(this.bufferLength);
+            try
+            {
+                if (this.targetClientID != null)
+                {
+                    byteBlock.Write(this.targetClientID);
+                }
+                byteBlock.Write(this.id);
+                byteBlock.Write(operationMes);
+                if (this.client1 != null)
+                {
+                    this.client1.SocketSend(this.holdOnOrder, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+                else
+                {
+                    this.client2.SocketSend(this.holdOnOrder, byteBlock.Buffer, 0, byteBlock.Len);
+                }
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 异步调用继续
+        /// </summary>
+        /// <param name="operationMes"></param>
+        /// <returns></returns>
+        public Task HoldOnAsync(string operationMes = null)
+        {
+            return Task.Run(() =>
+            {
+                this.HoldOn(operationMes);
+            });
         }
 
         /// <summary>
@@ -474,6 +440,23 @@ namespace RRQMSocket
                 this.moving = false;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 阻塞读取数据，直到有数据，或者超时。
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Task<byte[]> ReadAsync(int timeout = 60 * 1000)
+        {
+            return Task.Run(() =>
+             {
+                 if (this.MoveNext(timeout))
+                 {
+                     return this.GetCurrent();
+                 }
+                 return null;
+             });
         }
 
         /// <summary>
@@ -725,6 +708,41 @@ namespace RRQMSocket
             catch
             {
             }
+        }
+
+        private void OnCreate(string targetClientID)
+        {
+            if (targetClientID == null)
+            {
+                this.dataOrder = -3;
+                this.completeOrder = -4;
+                this.cancelOrder = -5;
+                this.disposeOrder = -6;
+                this.holdOnOrder = -11;
+                this.queueChangedOrder = -10;
+            }
+            else
+            {
+                this.dataOrder = -14;
+                this.completeOrder = -15;
+                this.cancelOrder = -16;
+                this.disposeOrder = -17;
+                this.holdOnOrder = -18;
+                this.queueChangedOrder = -19;
+
+                this.targetClientID = targetClientID;
+            }
+
+            this.status = ChannelStatus.Moving;
+            this.cacheCapacity = 1024 * 1024 * 20;
+            this.dataQueue = new IntelligentDataQueue<ChannelData>(this.cacheCapacity)
+            {
+                OverflowWait = false,
+
+                OnQueueChanged = OnQueueChanged
+            };
+            this.moveWaitHandle = new AutoResetEvent(false);
+            this.canFree = true;
         }
 
         private void OnQueueChanged(bool free)

@@ -30,6 +30,7 @@ namespace RRQMSocket
         /// </summary>
         protected float progress;
 
+
         private int packageSize = 1024 * 512;
 
         /// <summary>
