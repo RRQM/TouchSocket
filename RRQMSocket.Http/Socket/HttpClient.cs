@@ -90,7 +90,7 @@ namespace RRQMSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.waitData.Dispose();
+            this.waitData?.Dispose();
             base.Dispose(disposing);
         }
 
