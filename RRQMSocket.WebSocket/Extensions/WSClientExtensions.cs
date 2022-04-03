@@ -58,7 +58,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
-        public static bool Ping(this HttpClient client)
+        public static bool Ping(this HttpClientBase client)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
-        public static bool Pong(this HttpClient client)
+        public static bool Pong(this HttpClientBase client)
         {
             try
             {
@@ -98,7 +98,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public static void SendWithWS(this HttpClient client, byte[] buffer, int offset, int length)
+        public static void SendWithWS(this HttpClientBase client, byte[] buffer, int offset, int length)
         {
             using (ByteBlock byteBlock = new ByteBlock(length + 1024))
             {
@@ -113,7 +113,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
-        public static void SendWithWS(this HttpClient client, ByteBlock byteBlock)
+        public static void SendWithWS(this HttpClientBase client, ByteBlock byteBlock)
         {
             SendWithWS(client, byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -123,7 +123,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        public static void SendWithWS(this HttpClient client, byte[] buffer)
+        public static void SendWithWS(this HttpClientBase client, byte[] buffer)
         {
             SendWithWS(client, buffer, 0, buffer.Length);
         }
@@ -133,7 +133,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="text"></param>
-        public static void SendWithWS(this HttpClient client, string text)
+        public static void SendWithWS(this HttpClientBase client, string text)
         {
             using (ByteBlock byteBlock = new ByteBlock(text.Length + 1024))
             {
@@ -148,7 +148,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="dataFrame"></param>
-        public static void SendWithWS(this HttpClient client, WSDataFrame dataFrame)
+        public static void SendWithWS(this HttpClientBase client, WSDataFrame dataFrame)
         {
             using (ByteBlock byteBlock = new ByteBlock(dataFrame.PayloadLength + 1024))
             {
@@ -168,7 +168,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public static void SendWithWSAsync(this HttpClient client, byte[] buffer, int offset, int length)
+        public static void SendWithWSAsync(this HttpClientBase client, byte[] buffer, int offset, int length)
         {
             using (ByteBlock byteBlock = new ByteBlock(length + 1024))
             {
@@ -183,7 +183,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
-        public static void SendWithWSAsync(this HttpClient client, ByteBlock byteBlock)
+        public static void SendWithWSAsync(this HttpClientBase client, ByteBlock byteBlock)
         {
             SendWithWSAsync(client, byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -193,7 +193,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        public static void SendWithWSAsync(this HttpClient client, byte[] buffer)
+        public static void SendWithWSAsync(this HttpClientBase client, byte[] buffer)
         {
             SendWithWSAsync(client, buffer, 0, buffer.Length);
         }
@@ -203,7 +203,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="text"></param>
-        public static void SendWithWSAsync(this HttpClient client, string text)
+        public static void SendWithWSAsync(this HttpClientBase client, string text)
         {
             using (ByteBlock byteBlock = new ByteBlock(text.Length + 1024))
             {
@@ -218,7 +218,7 @@ namespace RRQMSocket.WebSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="dataFrame"></param>
-        public static void SendWithWSAsync(this HttpClient client, WSDataFrame dataFrame)
+        public static void SendWithWSAsync(this HttpClientBase client, WSDataFrame dataFrame)
         {
             using (ByteBlock byteBlock = new ByteBlock(dataFrame.PayloadLength + 1024))
             {
@@ -242,7 +242,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <param name="packageSize"></param>
-        public static void SubSendWithWS(this HttpClient client, byte[] buffer, int offset, int length, int packageSize)
+        public static void SubSendWithWS(this HttpClientBase client, byte[] buffer, int offset, int length, int packageSize)
         {
             lock (client)
             {
@@ -299,7 +299,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="client"></param>
         /// <param name="buffer"></param>
         /// <param name="packageSize"></param>
-        public static void SubSendWithWS(this HttpClient client, byte[] buffer, int packageSize)
+        public static void SubSendWithWS(this HttpClientBase client, byte[] buffer, int packageSize)
         {
             SubSendWithWS(client, buffer, 0, buffer.Length, packageSize);
         }
@@ -313,7 +313,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
         /// <param name="packageSize"></param>
-        public static void SubSendWithWS(this HttpClient client, ByteBlock byteBlock, int packageSize)
+        public static void SubSendWithWS(this HttpClientBase client, ByteBlock byteBlock, int packageSize)
         {
             SubSendWithWS(client, byteBlock.Buffer, 0, byteBlock.Len, packageSize);
         }
@@ -333,7 +333,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <param name="packageSize"></param>
-        public static void SubSendWithWSAsync(this HttpClient client, byte[] buffer, int offset, int length, int packageSize)
+        public static void SubSendWithWSAsync(this HttpClientBase client, byte[] buffer, int offset, int length, int packageSize)
         {
             lock (client)
             {
@@ -390,7 +390,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="client"></param>
         /// <param name="buffer"></param>
         /// <param name="packageSize"></param>
-        public static void SubSendWithWSAsync(this HttpClient client, byte[] buffer, int packageSize)
+        public static void SubSendWithWSAsync(this HttpClientBase client, byte[] buffer, int packageSize)
         {
             SubSendWithWSAsync(client,buffer, 0, buffer.Length, packageSize);
         }
@@ -404,7 +404,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
         /// <param name="packageSize"></param>
-        public static void SubSendWithWSAsync(this HttpClient client, ByteBlock byteBlock, int packageSize)
+        public static void SubSendWithWSAsync(this HttpClientBase client, ByteBlock byteBlock, int packageSize)
         {
             SubSendWithWSAsync(client,byteBlock.Buffer, 0, byteBlock.Len, packageSize);
         }
