@@ -44,7 +44,7 @@ namespace RRQMSocket.WebSocket
     /// <summary>
     /// WebSocket用户终端。
     /// </summary>
-    public class WSClientBase : HttpClient
+    public class WSClientBase : HttpClientBase
     {
        
 
