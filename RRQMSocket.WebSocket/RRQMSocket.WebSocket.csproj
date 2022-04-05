@@ -5,7 +5,7 @@
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
 		<Version>8.0.1</Version>
-		<LangVersion>9.0</LangVersion>
+		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
 		<PackageTags>IOCP,TCP,UDP,Socket,WebSocket</PackageTags>
