@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
+using RRQMCore.Data.Security;
 using System.Threading;
 
 namespace RRQMSocket
@@ -29,7 +30,6 @@ namespace RRQMSocket
         /// 进度
         /// </summary>
         protected float progress;
-
 
         private int packageSize = 1024 * 512;
 
@@ -88,6 +88,7 @@ namespace RRQMSocket
         /// </summary>
         public CancellationToken Token { get; set; }
 
+
         /// <summary>
         /// 从上次获取到此次获得的速度
         /// </summary>
@@ -105,6 +106,7 @@ namespace RRQMSocket
             this.completedLength += flow;
             this.progress = (float)((double)this.completedLength / length);
         }
+
 
         /// <summary>
         /// 设置状态

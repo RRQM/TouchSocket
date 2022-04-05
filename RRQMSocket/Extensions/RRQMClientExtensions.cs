@@ -10,12 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.ByteManager;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RRQMSocket
@@ -27,58 +25,13 @@ namespace RRQMSocket
     {
         /// <summary>
         /// 使用断线重连。
-        /// <para>注意，使用断线重连时，如果是自定义适配器，应当在<see cref="ITcpClient.Connecting"/>事件中设置。</para>
         /// </summary>
         /// <param name="client">客户端</param>
-        /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
-        /// <param name="printLog">是否输出日志。</param>
-        public static T UseReconnection<T>(this T client, int tryCount = 10, bool printLog = false) where T : ITcpClient
-        {
-            if (client is null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
-
-            client.Disconnected += (c, e) =>
-            {
-                if (e.Manual)
-                {
-                    return;
-                }
-                Task.Run((Action)(() =>
-                {
-                    int tryT = tryCount;
-                    while (tryCount < 0 || tryT-- > 0)
-                    {
-                        try
-                        {
-                            client.Connect();
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            if (printLog)
-                            {
-                                client.Logger.Debug(RRQMCore.Log.LogType.Error, client, "断线重连失败。", ex);
-                            }
-                        }
-                    }
-                }));
-            };
-
-            return client;
-        }
-
-        /// <summary>
-        /// 使用断线重连。
-        /// <para>注意，使用断线重连时，如果是自定义适配器，应当在<see cref="ITcpClient.Connecting"/>事件中设置。</para>
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="verifyToken">验证Token</param>
         /// <param name="successCallback">成功回调函数</param>
         /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
         /// <param name="printLog">是否输出日志。</param>
-        public static T UseReconnection<T>(this T client, string verifyToken, int tryCount = 10, bool printLog = false, Action<T> successCallback = null) where T : ITokenClient
+        /// <param name="sleepTime">失败时，停留时间</param>
+        public static T UseReconnection<T>(this T client,int tryCount = 10, bool printLog = false,int sleepTime=1000, Action<T> successCallback = null) where T : ITcpClient
         {
             if (client is null)
             {
@@ -91,15 +44,27 @@ namespace RRQMSocket
                 {
                     return;
                 }
-                Task.Run((Action)(() =>
+                Task.Run(() =>
                 {
                     int tryT = tryCount;
                     while (tryCount < 0 || tryT-- > 0)
                     {
                         try
                         {
-                            client.Connect(verifyToken);
-                            successCallback?.Invoke((T)client);
+                            if (client.Online)
+                            {
+                                return;
+                            }
+                            if (client is ITokenClient tokenClient)
+                            {
+                                tokenClient.Connect(tokenClient.GetValue<string>(RRQMConfigExtensions.VerifyTokenProperty));
+                            }
+                            else
+                            {
+                                client.Connect();
+                            }
+                           
+                            successCallback?.Invoke(client);
                             break;
                         }
                         catch (Exception ex)
@@ -108,9 +73,10 @@ namespace RRQMSocket
                             {
                                 client.Logger.Debug(RRQMCore.Log.LogType.Error, client, "断线重连失败。", ex);
                             }
+                            Thread.Sleep(sleepTime);
                         }
                     }
-                }));
+                });
             };
 
             return client;
