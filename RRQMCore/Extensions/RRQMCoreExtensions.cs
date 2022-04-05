@@ -367,6 +367,16 @@ namespace RRQMCore.Extensions
             }
             return int.Parse(hexString, System.Globalization.NumberStyles.HexNumber);
         }
+
+        /// <summary>
+        /// 从Base64转到数组。
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static byte[] ByBase64ToBytes(this string value)
+        {
+            return Convert.FromBase64String(value);
+        }
         #endregion
 
         #region 字节数组扩展

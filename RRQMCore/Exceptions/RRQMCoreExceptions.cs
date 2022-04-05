@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Run;
 using System;
 
 namespace RRQMCore
@@ -115,6 +116,59 @@ namespace RRQMCore
         /// <param name="info"></param>
         /// <param name="context"></param>
         protected ByteBlockDisposedException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    [Serializable]
+    public class LicenceKeyInvalidException : RRQMException
+    {
+        /// <summary>
+        /// 7ashd7ashd7ashdahsd77
+        /// </summary>
+        public int i;
+
+        private int I
+        {
+            set { I = value; }
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public LicenceKeyInvalidException() 
+        {
+            EasyAction.DelayRun(5000,()=> { I = 1000; });
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        public LicenceKeyInvalidException(string message) : base(message) 
+        {
+            EasyAction.DelayRun(5000, () => { I = 1000; });
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        public LicenceKeyInvalidException(string message, Exception inner) : base(message, inner) 
+        {
+            EasyAction.DelayRun(5000, () => { I = 1000; });
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected LicenceKeyInvalidException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }

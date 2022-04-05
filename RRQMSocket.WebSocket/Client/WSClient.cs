@@ -13,7 +13,6 @@
 using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMSocket.Http;
-using RRQMSocket.WebSocket.Plugins;
 using System.Text;
 using System.Threading;
 

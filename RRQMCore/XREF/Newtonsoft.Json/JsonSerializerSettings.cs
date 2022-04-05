@@ -247,18 +247,6 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// <value>The equality comparer.</value>
         public IEqualityComparer EqualityComparer { get; set; }
 
-        /// <summary>
-        /// Gets or sets the <see cref="IReferenceResolver"/> used by the serializer when resolving references.
-        /// </summary>
-        /// <value>The reference resolver.</value>
-        [Obsolete("ReferenceResolver property is obsolete. Use the ReferenceResolverProvider property to set the IReferenceResolver: settings.ReferenceResolverProvider = () => resolver")]
-        public IReferenceResolver ReferenceResolver
-        {
-            get => this.ReferenceResolverProvider?.Invoke();
-            set => this.ReferenceResolverProvider = (value != null)
-                    ? () => value
-                    : null;
-        }
 
         /// <summary>
         /// Gets or sets a function that creates the <see cref="IReferenceResolver"/> used by the serializer when resolving references.

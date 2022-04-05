@@ -576,8 +576,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return Convert.ToBoolean((int)integer);
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToBoolean(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToBoolean(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -627,8 +633,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return offset.DateTime;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToDateTime(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToDateTime(v.Value, CultureInfo.InvariantCulture);
+            }
+            return null;
         }
 
 #if HAVE_DATE_TIME_OFFSET
@@ -692,8 +701,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (decimal?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToDecimal(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToDecimal(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
+       
         }
 
         /// <summary>
@@ -720,8 +736,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (double?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToDouble(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToDouble(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -748,8 +770,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (char?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToChar(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToChar(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -917,8 +945,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (int?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToInt32(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToInt32(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -945,8 +979,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (short?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToInt16(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToInt16(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -974,8 +1014,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (ushort?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToUInt16(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToUInt16(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -1002,8 +1048,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (byte?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToByte(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToByte(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -1031,8 +1083,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (sbyte?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToSByte(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToSByte(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -1082,8 +1140,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (long?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToInt64(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToInt64(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -1110,8 +1174,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (float?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToSingle(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToSingle(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -1162,8 +1232,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (uint?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToUInt32(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToUInt32(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -1191,8 +1267,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
                 return (ulong?)integer;
             }
 #endif
-
-            return (v.Value != null) ? Convert.ToUInt64(v.Value, CultureInfo.InvariantCulture) : null;
+            if (v.Value != null)
+            {
+                return Convert.ToUInt64(v.Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
