@@ -49,18 +49,10 @@ namespace RRQMSocket
     public abstract class UdpSessionBase : BaseSocket, IUdpSession
     {
         private RRQMConfig config;
-
         private UdpDataHandlingAdapter dataHandlingAdapter;
-
         private NetworkMonitor monitor;
-
-        private long recivedCount;
-
         private IPHost remoteIPHost;
-
         private ServerState serverState;
-        private bool study;
-
         private bool usePlugin;
 
         /// <summary>
@@ -84,6 +76,11 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public bool CanSend => this.serverState == ServerState.Running;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public virtual bool CanSetDataHandlingAdapter => true;
 
         /// <summary>
@@ -94,18 +91,17 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool CanSend => this.serverState== ServerState.Running;
-
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public IContainer Container { get; set; }
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
         public UdpDataHandlingAdapter DataHandlingAdapter => this.dataHandlingAdapter;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public int MaxPackageSize => this.config != null ? this.config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty) : 0;
 
         /// <summary>
         /// 监听器
@@ -143,9 +139,60 @@ namespace RRQMSocket
         public bool UsePlugin => this.usePlugin;
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 退出组播
         /// </summary>
-        public int MaxPackageSize => this.config != null ? this.config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty) : 0;
+        /// <param name="multicastAddr"></param>
+        public void DropMulticastGroup(IPAddress multicastAddr)
+        {
+            if (this.disposedValue)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
+            if (multicastAddr is null)
+            {
+                throw new ArgumentNullException(nameof(multicastAddr));
+            }
+
+            if (this.monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
+            {
+                MulticastOption optionValue = new MulticastOption(multicastAddr);
+                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, optionValue);
+            }
+            else
+            {
+                IPv6MulticastOption optionValue2 = new IPv6MulticastOption(multicastAddr);
+                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.DropMembership, optionValue2);
+            }
+        }
+
+        /// <summary>
+        /// 加入组播。
+        /// <para>组播地址为 224.0.0.0 ~ 239.255.255.255，其中 224.0.0.0~224.255.255.255 不建议在用户程序中使用，因为它们一般都有特殊用途。</para>
+        /// </summary>
+        /// <param name="multicastAddr"></param>
+        public void JoinMulticastGroup(IPAddress multicastAddr)
+        {
+            if (multicastAddr is null)
+            {
+                throw new ArgumentNullException(nameof(multicastAddr));
+            }
+            if (this.disposedValue)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+
+            if (this.monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
+            {
+                MulticastOption optionValue = new MulticastOption(multicastAddr);
+                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, optionValue);
+            }
+            else
+            {
+                IPv6MulticastOption optionValue2 = new IPv6MulticastOption(multicastAddr);
+                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, optionValue2);
+            }
+        }
 
         /// <summary>
         /// 设置数据处理适配器
@@ -355,62 +402,6 @@ namespace RRQMSocket
             }
         }
 
-        /// <summary>
-        /// 加入组播。
-        /// <para>组播地址为 224.0.0.0 ~ 239.255.255.255，其中 224.0.0.0~224.255.255.255 不建议在用户程序中使用，因为它们一般都有特殊用途。</para>
-        /// </summary>
-        /// <param name="multicastAddr"></param>
-        public void JoinMulticastGroup(IPAddress multicastAddr)
-        {
-            if (multicastAddr is null)
-            {
-                throw new ArgumentNullException(nameof(multicastAddr));
-            }
-            if (this.disposedValue)
-            {
-                throw new ObjectDisposedException(this.GetType().FullName);
-            }
-
-            if (this.monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
-            {
-                MulticastOption optionValue = new MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, optionValue);
-            }
-            else
-            {
-                IPv6MulticastOption optionValue2 = new IPv6MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, optionValue2);
-            }
-        }
-
-        /// <summary>
-        /// 退出组播
-        /// </summary>
-        /// <param name="multicastAddr"></param>
-        public void DropMulticastGroup(IPAddress multicastAddr)
-        {
-            if (this.disposedValue)
-            {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
-
-            if (multicastAddr is null)
-            {
-                throw new ArgumentNullException(nameof(multicastAddr));
-            }
-
-            if (this.monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
-            {
-                MulticastOption optionValue = new MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, optionValue);
-            }
-            else
-            {
-                IPv6MulticastOption optionValue2 = new IPv6MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.DropMembership, optionValue2);
-            }
-        }
-
         private void BeginReceive(IPHost iPHost)
         {
             int threadCount = this.Config.GetValue<int>(RRQMConfigExtensions.ThreadCountProperty);
@@ -456,11 +447,6 @@ namespace RRQMSocket
         {
             try
             {
-                if (this.study && this.recivedCount++ > 100000)
-                {
-                    this.Logger.Debug(LogType.Error, this, $"试用版结束");
-                    return;
-                }
                 this.dataHandlingAdapter.ReceivedInput(endPoint, byteBlock);
             }
             catch (Exception e)
@@ -691,7 +677,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
-            this.SocketSend(this.remoteIPHost.EndPoint,buffer,offset,length,false);
+            this.SocketSend(this.remoteIPHost.EndPoint, buffer, offset, length, false);
         }
 
         /// <summary>
@@ -700,7 +686,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         public void DefaultSend(byte[] buffer)
         {
-            this.DefaultSend(buffer,0,buffer.Length);
+            this.DefaultSend(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -709,7 +695,7 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         public void DefaultSend(ByteBlock byteBlock)
         {
-            this.DefaultSend(byteBlock.Buffer,0,byteBlock.Len);
+            this.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         /// <summary>
@@ -721,7 +707,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void DefaultSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            this.SocketSend(endPoint,buffer,offset,length,false);
+            this.SocketSend(endPoint, buffer, offset, length, false);
         }
 
         /// <summary>
@@ -731,7 +717,7 @@ namespace RRQMSocket
         /// <param name="buffer"></param>
         public void DefaultSend(EndPoint endPoint, byte[] buffer)
         {
-            this.DefaultSend(endPoint,buffer,0,buffer.Length);
+            this.DefaultSend(endPoint, buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -741,9 +727,10 @@ namespace RRQMSocket
         /// <param name="byteBlock"></param>
         public void DefaultSend(EndPoint endPoint, ByteBlock byteBlock)
         {
-            this.DefaultSend(endPoint,byteBlock.Buffer,0,byteBlock.Len);
+            this.DefaultSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
         }
-        #endregion
+
+        #endregion DefaultSend
 
         #region 组合发送
 
@@ -760,7 +747,7 @@ namespace RRQMSocket
 
             if (this.dataHandlingAdapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.SendInput(this.remoteIPHost.EndPoint,transferBytes, false);
+                this.dataHandlingAdapter.SendInput(this.remoteIPHost.EndPoint, transferBytes, false);
             }
             else
             {
@@ -772,6 +759,40 @@ namespace RRQMSocket
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
                     this.dataHandlingAdapter.SendInput(this.remoteIPHost.EndPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="transferBytes"></param>
+        public void Send(EndPoint endPoint, IList<TransferByte> transferBytes)
+        {
+            if (this.dataHandlingAdapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
+            }
+
+            if (this.dataHandlingAdapter.CanSplicingSend)
+            {
+                this.dataHandlingAdapter.SendInput(endPoint, transferBytes, false);
+            }
+            else
+            {
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                try
+                {
+                    foreach (var item in transferBytes)
+                    {
+                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                    }
+                    this.dataHandlingAdapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
                 finally
                 {
@@ -818,40 +839,6 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="transferBytes"></param>
-        public void Send(EndPoint endPoint, IList<TransferByte> transferBytes)
-        {
-            if (this.dataHandlingAdapter == null)
-            {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
-            }
-
-            if (this.dataHandlingAdapter.CanSplicingSend)
-            {
-                this.dataHandlingAdapter.SendInput(endPoint, transferBytes, false);
-            }
-            else
-            {
-                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                try
-                {
-                    foreach (var item in transferBytes)
-                    {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
-                    }
-                    this.dataHandlingAdapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="transferBytes"></param>
         public void SendAsync(EndPoint endPoint, IList<TransferByte> transferBytes)
         {
             if (this.dataHandlingAdapter == null)
@@ -880,6 +867,7 @@ namespace RRQMSocket
                 }
             }
         }
-        #endregion
+
+        #endregion 组合发送
     }
 }

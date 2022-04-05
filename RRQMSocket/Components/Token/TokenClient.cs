@@ -165,6 +165,7 @@ namespace RRQMSocket
                             WaitVerify verifyResult = (WaitVerify)waitData.WaitResult;
                             if (verifyResult.Status == 1)
                             {
+                                this.SetValue(RRQMConfigExtensions.VerifyTokenProperty, verifyToken);
                                 this.id = verifyResult.ID;
                                 this.isHandshaked = true;
                                 this.OnHandshaked(new MesEventArgs("Token客户端成功连接"));

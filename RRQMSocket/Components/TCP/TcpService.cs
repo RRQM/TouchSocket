@@ -41,27 +41,24 @@ namespace RRQMSocket
         }
 
         #region 变量
+
         private readonly SnowflakeIDGenerator iDGenerator;
-        private bool usePlugin;
         private int backlog;
         private int clearInterval;
         private ClearType clearType;
         private int maxCount;
+        private int maxPackageSize;
         private NetworkMonitor[] monitors;
         private ReceiveType receiveType;
         private ServerState serverState;
         private RRQMConfig serviceConfig;
         private SocketClientCollection socketClients;
+        private bool usePlugin;
         private bool useSsl;
-        private int maxPackageSize;
+
         #endregion 变量
 
         #region 属性
-
-        /// <summary>
-        /// 是否已启动插件
-        /// </summary>
-        public bool UsePlugin => this.usePlugin;
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
@@ -74,9 +71,24 @@ namespace RRQMSocket
         public ClearType ClearType => this.clearType;
 
         /// <summary>
+        /// 获取服务器配置
+        /// </summary>
+        public override RRQMConfig Config => this.serviceConfig;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override IContainer Container { get; set; }
+
+        /// <summary>
         /// 最大可连接数
         /// </summary>
         public int MaxCount => this.maxCount;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override int MaxPackageSize => maxPackageSize;
 
         /// <summary>
         /// <inheritdoc/>
@@ -99,29 +111,19 @@ namespace RRQMSocket
         public override ServerState ServerState => this.serverState;
 
         /// <summary>
-        /// 获取服务器配置
-        /// </summary>
-        public override RRQMConfig Config => this.serviceConfig;
-
-        /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
         public override SocketClientCollection SocketClients => this.socketClients;
 
         /// <summary>
+        /// 是否已启动插件
+        /// </summary>
+        public bool UsePlugin => this.usePlugin;
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public override bool UseSsl => this.useSsl;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override IContainer Container { get; set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override int MaxPackageSize => maxPackageSize;
 
         #endregion 属性
 
@@ -152,7 +154,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientConnected(ISocketClient socketClient, RRQMEventArgs e)
+        protected override sealed void OnClientConnected(ISocketClient socketClient, RRQMEventArgs e)
         {
             this.OnConnected((TClient)socketClient, e);
         }
@@ -162,7 +164,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
             this.OnConnecting((TClient)socketClient, e);
         }
@@ -172,7 +174,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
+        protected override sealed void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
         {
             this.OnDisconnected((TClient)socketClient, e);
         }
@@ -183,19 +185,9 @@ namespace RRQMSocket
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.OnReceived((TClient)socketClient, byteBlock, requestInfo);
-        }
-
-        /// <summary>
-        /// 当收到适配器数据，父类方法为空。
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected virtual void OnReceived(TClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
         }
 
         /// <summary>
@@ -244,6 +236,16 @@ namespace RRQMSocket
                 }
             }
             this.IDChanged?.Invoke(socketClient, e);
+        }
+
+        /// <summary>
+        /// 当收到适配器数据，父类方法为空。
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected virtual void OnReceived(TClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
         }
 
         #endregion 事件
@@ -744,7 +746,7 @@ namespace RRQMSocket
                     }
                     else
                     {
-                        client.MainSocket?.Dispose() ;
+                        client.MainSocket?.Dispose();
                     }
                 }
                 catch (Exception ex)
