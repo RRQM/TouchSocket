@@ -68,11 +68,6 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-		<Compile Update="Resource.Designer.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>Resource.resx</DependentUpon>
-		</Compile>
 		<Compile Update="RRQMCore\Resource.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -80,11 +75,6 @@
 		</Compile>
 	</ItemGroup>
 	<ItemGroup>
-		<EmbeddedResource Update="Resource.resx">
-		  <Generator>PublicResXFileCodeGenerator</Generator>
-		  <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-		  <CustomToolNamespace>RRQMCore</CustomToolNamespace>
-		</EmbeddedResource>
 		<EmbeddedResource Update="RRQMCore\Resource.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>Resource.Designer.cs</LastGenOutput>
