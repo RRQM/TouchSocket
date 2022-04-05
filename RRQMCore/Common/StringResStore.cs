@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using RRQMCore.Extensions;
 using System;
+using System.ComponentModel;
 
 namespace RRQMCore
 {
@@ -24,31 +25,20 @@ namespace RRQMCore
         /// 获取资源字符
         /// </summary>
         /// <param name="enum"></param>
-        /// <returns></returns>
-        public static string GetResString(this Enum @enum)
-        {
-            string res = Resource.ResourceManager.GetString(@enum.ToString());
-            if (res == null)
-            {
-                return @enum.ToString();
-            }
-            return res;
-        }
-
-        /// <summary>
-        /// 获取资源字符
-        /// </summary>
-        /// <param name="enum"></param>
         /// <param name="objs"></param>
         /// <returns></returns>
         public static string GetResString(this Enum @enum, params object[] objs)
         {
-            string res = Resource.ResourceManager.GetString(@enum.ToString());
-            if (res == null)
+            if (@enum.GetAttribute<DescriptionAttribute>() is DescriptionAttribute description)
             {
-                return @enum.ToString();
+                string res = description.Description;
+                if (!string.IsNullOrEmpty(res))
+                {
+                    return res.Format(objs);
+                }
             }
-            return res.Format(objs);
+            return @enum.ToString();
+
         }
     }
 }
