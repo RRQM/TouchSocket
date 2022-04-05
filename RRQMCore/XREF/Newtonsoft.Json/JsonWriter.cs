@@ -243,7 +243,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                                         && this._currentState != State.ConstructorStart
                                         && this._currentState != State.ObjectStart);
 
-                JsonPosition? current = insideContainer ? this._currentPosition : null;
+                JsonPosition? current;
+                if (insideContainer)
+                {
+                    current = this._currentPosition;
+                }
+                else
+                {
+                    current = null;
+                }
 
                 return JsonPosition.BuildPath(this._stack, current);
             }
@@ -1548,7 +1556,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.CharNullable:
-                        writer.WriteValue((value == null) ? null : (char)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((char?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((char)value);
+                        }
+
                         return;
 
                     case PrimitiveTypeCode.Boolean:
@@ -1556,7 +1572,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.BooleanNullable:
-                        writer.WriteValue((value == null) ? null : (bool)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((bool?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((bool)value);
+                        }
+
                         return;
 
                     case PrimitiveTypeCode.SByte:
@@ -1564,7 +1588,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.SByteNullable:
-                        writer.WriteValue((value == null) ? null : (sbyte)value);
+                        if ((value == null))
+                        {
+                            writer.WriteValue((sbyte?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((sbyte)value);
+                        }
+
                         return;
 
                     case PrimitiveTypeCode.Int16:
@@ -1572,7 +1604,15 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.Int16Nullable:
-                        writer.WriteValue((value == null) ? null : (short)value);
+                        if ((value == null))
+                        {
+                            writer.WriteValue((short?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((short)value);
+                        }
+
                         return;
 
                     case PrimitiveTypeCode.UInt16:
@@ -1580,7 +1620,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.UInt16Nullable:
-                        writer.WriteValue((value == null) ? null : (ushort)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue( (ushort?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((ushort)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.Int32:
@@ -1588,7 +1635,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.Int32Nullable:
-                        writer.WriteValue((value == null) ? null : (int)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((int?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((int)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.Byte:
@@ -1596,7 +1650,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.ByteNullable:
-                        writer.WriteValue((value == null) ? null : (byte)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((byte?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((byte)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.UInt32:
@@ -1604,7 +1665,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.UInt32Nullable:
-                        writer.WriteValue((value == null) ? null : (uint)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((uint?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((uint)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.Int64:
@@ -1612,7 +1680,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.Int64Nullable:
-                        writer.WriteValue((value == null) ? null : (long)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((long?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((long)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.UInt64:
@@ -1620,7 +1695,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.UInt64Nullable:
-                        writer.WriteValue((value == null) ? null : (ulong)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((ulong?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((ulong)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.Single:
@@ -1628,7 +1710,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.SingleNullable:
-                        writer.WriteValue((value == null) ? null : (float)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((float?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((float)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.Double:
@@ -1636,7 +1725,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.DoubleNullable:
-                        writer.WriteValue((value == null) ? null : (double)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((double?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((double)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.DateTime:
@@ -1644,7 +1740,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.DateTimeNullable:
-                        writer.WriteValue((value == null) ? null : (DateTime)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((DateTime?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((DateTime)value);
+                        }
                         return;
 
 #if HAVE_DATE_TIME_OFFSET
@@ -1661,7 +1764,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.DecimalNullable:
-                        writer.WriteValue((value == null) ? null : (decimal)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((decimal?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((decimal)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.Guid:
@@ -1669,7 +1779,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.GuidNullable:
-                        writer.WriteValue((value == null) ? null : (Guid)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((Guid?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((Guid)value);
+                        }
                         return;
 
                     case PrimitiveTypeCode.TimeSpan:
@@ -1677,7 +1794,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                         return;
 
                     case PrimitiveTypeCode.TimeSpanNullable:
-                        writer.WriteValue((value == null) ? null : (TimeSpan)value);
+                        if (value == null)
+                        {
+                            writer.WriteValue((TimeSpan?)value);
+                        }
+                        else
+                        {
+                            writer.WriteValue((TimeSpan)value);
+                        }
                         return;
 
 #if HAVE_BIG_INTEGER

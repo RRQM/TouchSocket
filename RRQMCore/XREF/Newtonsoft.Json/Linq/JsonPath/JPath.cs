@@ -217,8 +217,11 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
 
         private static PathFilter CreatePathFilter(string member, bool scan)
         {
-            PathFilter filter = (scan) ? new ScanFilter { Name = member } : new FieldFilter { Name = member };
-            return filter;
+            if (scan)
+            {
+                return new ScanFilter { Name = member };
+            }
+            return new FieldFilter { Name = member };
         }
 
         private PathFilter ParseIndexer(char indexerOpenChar, bool scan)
@@ -861,9 +864,14 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq.JsonPath
                     if (fields != null)
                     {
                         fields.Add(field);
-                        return (scan)
-                            ? new ScanMultipleFilter { Names = fields }
-                            : new FieldMultipleFilter { Names = fields };
+                        if (scan)
+                        {
+                            return new ScanMultipleFilter { Names = fields };
+                        }
+                        else
+                        {
+                            return new FieldMultipleFilter { Names = fields };
+                        }
                     }
                     else
                     {

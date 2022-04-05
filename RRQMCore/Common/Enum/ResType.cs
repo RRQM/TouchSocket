@@ -141,6 +141,11 @@ namespace RRQMCore
         /// <summary>
         /// 客户端没有连接
         /// </summary>
-        NotConnected
+        NotConnected,
+
+        /// <summary>
+        /// 授权密钥无效
+        /// </summary>
+        LicenceKeyInvalid
     }
 }

@@ -520,9 +520,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     BsonBinaryType binaryType;
                     byte[] data = this.ReadBinary(out binaryType);
 
-                    object value = (binaryType != BsonBinaryType.Uuid)
-                        ? data
-                        : new Guid(data);
+                    object value;
+                    if (binaryType != BsonBinaryType.Uuid)
+                    {
+                        value = data;
+                    }
+                    else
+                    {
+                        value = new Guid(data);
+                    }
+                   
 
                     this.SetToken(JsonToken.Bytes, value);
                     break;

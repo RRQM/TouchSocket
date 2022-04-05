@@ -308,10 +308,16 @@ namespace RRQMCore.XREF.Newtonsoft.Json
 
                 bool insideContainer = (this._currentState != State.ArrayStart
                                         && this._currentState != State.ConstructorStart
-                                        && this._currentState != State.ObjectStart);
-
-                JsonPosition? current = insideContainer ? this._currentPosition : null;
-
+                                       && this._currentState != State.ObjectStart);
+                JsonPosition? current;
+                if (insideContainer)
+                {
+                    current = this._currentPosition;
+                }
+                else
+                {
+                    current = null;
+                }
                 return JsonPosition.BuildPath(this._stack, current);
             }
         }
