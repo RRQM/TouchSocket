@@ -34,7 +34,14 @@ namespace RRQMCore
                 string res = description.Description;
                 if (!string.IsNullOrEmpty(res))
                 {
-                    return res.Format(objs);
+                    if (objs.Length > 0)
+                    {
+                        return res.Format(objs);
+                    }
+                    else
+                    {
+                        return res;
+                    }
                 }
             }
             return @enum.ToString();

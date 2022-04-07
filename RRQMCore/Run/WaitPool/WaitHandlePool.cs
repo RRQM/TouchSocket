@@ -14,7 +14,6 @@
 using RRQMCore.Extensions;
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace RRQMCore.Run
 {
@@ -26,7 +25,6 @@ namespace RRQMCore.Run
     {
         SnowflakeIDGenerator idGenerator;
         private ConcurrentDictionary<long, WaitData<T>> waitDic;
-
         private ConcurrentQueue<WaitData<T>> waitQueue;
 
         /// <summary>
