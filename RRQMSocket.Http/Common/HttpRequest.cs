@@ -119,7 +119,7 @@ namespace RRQMSocket.Http
         /// <param name="value"></param>
         public void SetHeader(string fieldName, string value)
         {
-            this.SetHeaderByKey(fieldName, value);
+            this.SetHeaderByKey(fieldName.ToLower(), value);
         }
 
         /// <summary>
