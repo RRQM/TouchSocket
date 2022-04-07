@@ -22,11 +22,6 @@ namespace RRQMSocket
     public interface ITcpServiceBase : IService
     {
         /// <summary>
-        /// 插件管理器
-        /// </summary>
-        IPluginsManager PluginsManager { get; set; }
-
-        /// <summary>
         /// 内置IOC容器
         /// </summary>
         IContainer Container { get; set; }

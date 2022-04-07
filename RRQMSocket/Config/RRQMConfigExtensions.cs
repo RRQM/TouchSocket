@@ -421,7 +421,22 @@ namespace RRQMSocket
         #endregion TokenService
 
         #region UDP
-        
+        /// <summary>
+        /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
+        /// </summary>
+        public static readonly DependencyProperty EnableBroadcastProperty =
+            DependencyProperty.Register("EnableBroadcast", typeof(bool), typeof(RRQMConfigExtensions), false);
+
+        /// <summary>
+        /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static RRQMConfig UseBroadcast(this RRQMConfig config)
+        {
+            config.SetValue(EnableBroadcastProperty, true);
+            return config;
+        }
         #endregion UDP
     }
 }

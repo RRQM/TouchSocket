@@ -784,7 +784,7 @@ namespace RRQMSocket
         #region 普通同步发送
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
@@ -795,7 +795,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="buffer"><inheritdoc/></param>
         public override sealed void Send(byte[] buffer)
@@ -804,7 +804,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
         public override sealed void Send(ByteBlock byteBlock)
@@ -813,7 +813,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
         public override sealed void Send(IList<TransferByte> transferBytes)
@@ -827,7 +827,7 @@ namespace RRQMSocket
         #region 普通异步发送
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
         public override sealed void SendAsync(byte[] buffer)
@@ -836,7 +836,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
         public override void SendAsync(ByteBlock byteBlock)
@@ -845,7 +845,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
@@ -856,7 +856,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 以-1协议，<inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
         public override sealed void SendAsync(IList<TransferByte> transferBytes)
@@ -916,10 +916,10 @@ namespace RRQMSocket
         /// 发送协议流
         /// </summary>
         /// <param name="protocol"></param>
-        /// <param name="dataByteBlock"></param>
-        public void Send(short protocol, ByteBlock dataByteBlock)
+        /// <param name="byteBlock"></param>
+        public void Send(short protocol, ByteBlock byteBlock)
         {
-            this.Send(protocol, dataByteBlock.Buffer, 0, (int)dataByteBlock.Length);
+            this.Send(protocol, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion 协议同步发送

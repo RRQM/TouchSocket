@@ -107,7 +107,6 @@ namespace RRQMSocket
             this.progress = (float)((double)this.completedLength / length);
         }
 
-
         /// <summary>
         /// 设置状态
         /// </summary>

@@ -271,11 +271,6 @@ namespace RRQMSocket
         event RRQMTcpClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
 
         /// <summary>
-        /// 插件管理器
-        /// </summary>
-        IPluginsManager PluginsManager { get; }
-
-        /// <summary>
         /// 缓存池大小
         /// </summary>
         int BufferLength { get; }
