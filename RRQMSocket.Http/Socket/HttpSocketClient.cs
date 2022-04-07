@@ -44,11 +44,11 @@ namespace RRQMSocket.Http
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
+            base.HandleReceivedData(byteBlock, requestInfo);
             if (requestInfo is HttpRequest request)
             {
                 this.OnReceivedHttpRequest(request);
             }
-            base.HandleReceivedData(byteBlock, requestInfo);
         }
 
         /// <summary>

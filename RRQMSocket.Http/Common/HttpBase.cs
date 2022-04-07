@@ -285,7 +285,7 @@ namespace RRQMSocket.Http
                 {
                     if (!this.headers.ContainsKey(kv[0]))
                     {
-                        this.headers.Add(kv[0], kv[1]);
+                        this.headers.Add(kv[0].ToLower(), kv[1]);
                     }
                 }
             }

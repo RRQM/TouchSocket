@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>8.0.1</Version>
+		<Version>8.0.2</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -13,6 +13,7 @@
 更新说明：
 增加：HttpService，很快速的搭建http服务器，目前支持静态网页、xmlRpc、webApi、WebSocket、jsonRpc扩展插件。
 增加：HttpClient，同步请求响应。
+修改：所有的Http头，均采用小写。
 
 API：https://www.yuque.com/eo2w71/rrqm
 DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
@@ -81,6 +82,6 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="RRQMSocket" Version="8.0.1" />
+	  <PackageReference Include="RRQMSocket" Version="8.0.2" />
 	</ItemGroup>
 </Project>

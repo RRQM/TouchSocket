@@ -101,11 +101,12 @@ namespace RRQMSocket.Http
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
+            base.HandleReceivedData(byteBlock, requestInfo);
+
             if (requestInfo is HttpResponse response)
             {
                 this.waitData.Set(response);
-            }
-            base.HandleReceivedData(byteBlock, requestInfo);
+            } 
         }
 
         /// <summary>
