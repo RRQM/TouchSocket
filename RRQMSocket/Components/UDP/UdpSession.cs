@@ -46,7 +46,7 @@ namespace RRQMSocket
     /// <summary>
     /// UDP基类服务器。
     /// </summary>
-    public abstract class UdpSessionBase : BaseSocket, IUdpSession
+    public abstract class UdpSessionBase : BaseSocket, IUdpSession, IPlguinObject
     {
         private RRQMConfig config;
         private UdpDataHandlingAdapter dataHandlingAdapter;
@@ -69,7 +69,6 @@ namespace RRQMSocket
             socket.SendBufferSize = this.BufferLength;
             this.monitor = new NetworkMonitor(null, socket);
             this.PluginsManager = new PluginsManager(this.Container);
-
             this.SetAdapter(new NormalUdpDataHandlingAdapter());
         }
 
@@ -273,6 +272,62 @@ namespace RRQMSocket
             return this;
         }
 
+        #region 插件
+
+        /// <summary>
+        /// 添加插件
+        /// </summary>
+        /// <typeparam name="TPlugin">插件类型</typeparam>
+        /// <returns>插件类型实例</returns>
+        public TPlugin AddPlugin<TPlugin>() where TPlugin : IPlugin
+        {
+            var plugin = this.Container.Resolve<TPlugin>();
+            this.AddPlugin(plugin);
+            return plugin;
+        }
+
+        /// <summary>
+        /// 添加插件
+        /// </summary>
+        /// <param name="plugin">插件</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public void AddPlugin(IPlugin plugin)
+        {
+            if (plugin.Logger == default)
+            {
+                plugin.Logger = this.Container.Resolve<ILog>();
+            }
+            this.PluginsManager.Add(plugin);
+        }
+
+        /// <summary>
+        /// 清空插件
+        /// </summary>
+        public void ClearPlugins()
+        {
+            this.PluginsManager.Clear();
+        }
+
+        /// <summary>
+        /// 移除插件
+        /// </summary>
+        /// <param name="plugin"></param>
+        public void RemovePlugin(IPlugin plugin)
+        {
+            this.PluginsManager.Remove(plugin);
+        }
+
+        /// <summary>
+        /// 移除插件
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void RemovePlugin<T>() where T : IPlugin
+        {
+            this.PluginsManager.Remove(typeof(T));
+        }
+
+        #endregion 插件
+
         /// <summary>
         /// 停止服务器
         /// </summary>
@@ -412,7 +467,7 @@ namespace RRQMSocket
             {
                 socket.UseOnlyOverlappedIO = true;
             }
-
+            socket.EnableBroadcast = this.config.GetValue<bool>(RRQMConfigExtensions.EnableBroadcastProperty);
             this.PreviewBind(socket);
             socket.Bind(iPHost.EndPoint);
 

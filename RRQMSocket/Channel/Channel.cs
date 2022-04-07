@@ -137,6 +137,7 @@ namespace RRQMSocket
             set => this.lastOperationMes = value;
         }
 
+
         /// <summary>
         /// 状态
         /// </summary>

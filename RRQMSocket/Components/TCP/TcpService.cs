@@ -26,7 +26,7 @@ namespace RRQMSocket
     /// <summary>
     /// TCP泛型服务器，由客户自己指定<see cref="SocketClient"/>类型。
     /// </summary>
-    public class TcpService<TClient> : TcpServiceBase, ITcpService<TClient> where TClient : SocketClient
+    public class TcpService<TClient> : TcpServiceBase, ITcpService<TClient>, IPlguinObject where TClient : SocketClient
     {
         /// <summary>
         /// 构造函数

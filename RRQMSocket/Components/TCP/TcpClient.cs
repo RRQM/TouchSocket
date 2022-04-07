@@ -49,7 +49,7 @@ namespace RRQMSocket
     /// TCP客户端
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{IP}:{Port}")]
-    public class TcpClientBase : BaseSocket, ITcpClient
+    public class TcpClientBase : BaseSocket, ITcpClient, IPlguinObject
     {
 
         /// <summary>

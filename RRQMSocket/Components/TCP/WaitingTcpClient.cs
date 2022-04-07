@@ -167,7 +167,10 @@ namespace RRQMSocket
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.waitData.Set(byteBlock.ToArray());
+            if (byteBlock!=null)
+            {
+                this.waitData.Set(byteBlock.ToArray());
+            }
             base.HandleReceivedData(byteBlock, requestInfo);
         }
     }
