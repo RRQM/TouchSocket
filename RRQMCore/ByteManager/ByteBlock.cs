@@ -37,6 +37,9 @@ namespace RRQMCore.ByteManager
 
         private long position;
 
+        /// 字符串编码
+        public static Encoding Encoder = Encoding.UTF8;
+
         /// <summary>
         ///  构造函数
         /// </summary>
@@ -628,7 +631,7 @@ namespace RRQMCore.ByteManager
             else
             {
                 ushort len = this.ReadUInt16();
-                string str = Encoding.UTF8.GetString(this._buffer, (int)this.position, len);
+                string str = Encoder.GetString(this._buffer, (int)this.position, len);
                 this.position += len;
                 return str;
             }
@@ -652,7 +655,7 @@ namespace RRQMCore.ByteManager
             else
             {
                 this.Write((byte)2);
-                byte[] buffer = Encoding.UTF8.GetBytes(value);
+                byte[] buffer = Encoder.GetBytes(value);
                 if (buffer.Length > ushort.MaxValue)
                 {
                     throw new RRQMException("传输长度超长");
@@ -914,7 +917,7 @@ namespace RRQMCore.ByteManager
         #endregion Object
 
         /// <summary>
-        /// 转换为UTF-8字符
+        /// 转换为Encoder字符
         /// </summary>
         /// <returns></returns>
         public override string ToString()
@@ -923,7 +926,7 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 转换为UTF-8字符
+        /// 转换为Encoder字符
         /// </summary>
         /// <param name="offset">偏移量</param>
         /// <param name="length">长度</param>
@@ -934,11 +937,11 @@ namespace RRQMCore.ByteManager
             {
                 throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
-            return Encoding.UTF8.GetString(this._buffer, offset, length);
+            return Encoder.GetString(this._buffer, offset, length);
         }
 
         /// <summary>
-        /// 转换为UTF-8字符
+        /// 转换为Encoder字符
         /// </summary>
         /// <param name="offset">偏移量</param>
         /// <returns></returns>
@@ -948,7 +951,7 @@ namespace RRQMCore.ByteManager
             {
                 throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
             }
-            return Encoding.UTF8.GetString(this._buffer, offset, this.Len - offset);
+            return Encoder.GetString(this._buffer, offset, this.Len - offset);
         }
     }
 }
