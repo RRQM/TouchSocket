@@ -80,7 +80,10 @@ namespace RRQMCore
         /// <param name="operation"></param>
         public void RemoveOperation(Operation operation)
         {
-            this.operation ^= operation;
+            if (this.operation.HasFlag(operation))
+            {
+                this.operation ^= operation;
+            }
         }
     }
 }
