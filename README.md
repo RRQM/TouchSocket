@@ -56,8 +56,18 @@
 - Blazor
 - Xamarin
 - Mono
-- Unity（在IL2cpp编译时，需要导入源码，Mono则直接加载dll即可）
+- Unity（在IL2cpp编译时，需要导入源码或添加link.xml，Mono则直接加载dll即可）
 - 其他（即所有C#系）
+
+### unity内link.xml设置(放置在Assets文件夹内)
+[unity官方文档 托管代码剥离](https://docs.unity3d.com/cn/current/Manual/ManagedCodeStripping.html#LinkXML)
+```
+<linker>
+	<assembly fullname="RRQMCore" />
+	<assembly fullname="RRQMSocket" />
+</linker>
+```
+
 
 ## 🌴RRQMSocket特点速览
 
