@@ -61,10 +61,10 @@ namespace RRQMSocket.WebSocket
             request.SetHeader(HttpHeaders.UserAgent, "RRQMSocket.WebSocket");
             request.SetHeader(HttpHeaders.Upgrade, "websocket");
             request.SetHeader(HttpHeaders.Origin, "RRQM");
-            request.SetHeader("Sec-WebSocket-Version", $"{version}");
+            request.SetHeader("sec-websocket-version", $"{version}");
             request.SetHeader(HttpHeaders.AcceptEncoding, "deflate, br");
             base64Key = WSTools.CreateBase64Key();
-            request.SetHeader("Sec-WebSocket-Key", $"{base64Key}");
+            request.SetHeader("sec-websocket-key", $"{base64Key}");
 
             return request;
         }
@@ -88,19 +88,19 @@ namespace RRQMSocket.WebSocket
         /// <returns></returns>
         public static bool TryGetResponse(HttpRequest request, out HttpResponse response)
         {
-            string upgrade = request.GetHeader("Upgrade");
+            string upgrade = request.GetHeader(HttpHeaders.Upgrade);
             if (string.IsNullOrEmpty(upgrade))
             {
                 response = null;
                 return false;
             }
-            string connection = request.GetHeader("Connection");
+            string connection = request.GetHeader(HttpHeaders.Connection);
             if (string.IsNullOrEmpty(connection))
             {
                 response = null;
                 return false;
             }
-            string secWebSocketKey = request.GetHeader("Sec-WebSocket-Key");
+            string secWebSocketKey = request.GetHeader("sec-websocket-key");
             if (string.IsNullOrEmpty(secWebSocketKey))
             {
                 response = null;
@@ -109,10 +109,10 @@ namespace RRQMSocket.WebSocket
 
             response = new HttpResponse();
             response.StatusCode = "101";
-            response.StatusMessage = "Switching Protocols";
-            response.SetHeader(HttpHeaders.Connection, "Upgrade");
+            response.StatusMessage = "switching protocols";
+            response.SetHeader(HttpHeaders.Connection, "upgrade");
             response.SetHeader(HttpHeaders.Upgrade, "websocket");
-            response.SetHeader("Sec-WebSocket-Accept", CalculateBase64Key(secWebSocketKey, request.Encoding));
+            response.SetHeader("sec-websocket-accept", CalculateBase64Key(secWebSocketKey, request.Encoding));
             return true;
         }
 

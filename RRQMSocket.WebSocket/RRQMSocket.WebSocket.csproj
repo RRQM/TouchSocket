@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>8.0.1</Version>
+		<Version>8.0.2</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2021 若汝棋茗</Copyright>
@@ -14,6 +14,7 @@
 更新说明
 修改：取消WSService，由插件WebSocketServerPlugin替代其功能。
 新增：支持WSCommandLinePlugin，让快捷执行成为可能。
+修复：ws连接问题。
 
 API：https://www.yuque.com/eo2w71/rrqm
 DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
@@ -78,8 +79,9 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RRQMSocket" Version="8.0.1" />
-		<PackageReference Include="RRQMSocket.Http" Version="8.0.1" />
+		<PackageReference Include="RRQMCore" Version="8.0.3" />
+		<PackageReference Include="RRQMSocket" Version="8.0.2" />
+		<PackageReference Include="RRQMSocket.Http" Version="8.0.2" />
 	</ItemGroup>
 
 </Project>
