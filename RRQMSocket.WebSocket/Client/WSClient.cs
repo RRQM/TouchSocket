@@ -13,6 +13,7 @@
 using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMSocket.Http;
+using RRQMSocket.WebSocket.Plugins;
 using System.Text;
 using System.Threading;
 
@@ -78,7 +79,7 @@ namespace RRQMSocket.WebSocket
                 this.OnHandshaking(new HttpContextEventArgs(request));   
 
                 var response = this.Request(request, token: token);
-                if (response.GetHeader("Sec-WebSocket-Accept") != WSTools.CalculateBase64Key(base64Key, Encoding.UTF8))
+                if (response.GetHeader("sec-websocket-accept") != WSTools.CalculateBase64Key(base64Key, Encoding.UTF8))
                 {
                     this.MainSocket.Dispose();
                     throw new RRQMException("返回的应答码不正确。");
