@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>8.0.2</Version>
+		<Version>8.0.3</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -12,6 +12,7 @@
 
 更新说明：
 优化：调用效率。
+修复：RPC代理文件异常bug。
 
 API：https://www.yuque.com/eo2w71/rrqm
 DEMO：https://gitee.com/RRQM_Home/RRQMBox	</Description>
@@ -76,6 +77,6 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox	</Description>
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="RRQMSocket" Version="*" />
-		<PackageReference Include="RRQMCore" Version="*" />
+		<PackageReference Include="RRQMCore" Version="8.0.4" />
 	</ItemGroup>
 </Project>
