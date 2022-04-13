@@ -77,6 +77,20 @@ namespace RRQMCore.Reflection
                 if (item.ParameterType.IsByRef)
                 {
                     this.isByRef = true;
+
+                    if (method.ReturnType != typeof(void) && method.ReturnType != typeof(Task))
+                    {
+                        this.HasReturn = true;
+                        if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                        {
+                            this.task = true;
+                            this.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                        }
+                        else
+                        {
+                            this.ReturnType = method.ReturnType;
+                        }
+                    }
                     return;
                 }
             }
