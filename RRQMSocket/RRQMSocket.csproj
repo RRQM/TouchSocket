@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>8.0.3</Version>
+		<Version>8.0.4</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -18,6 +18,7 @@
 增加：Udp组播。
 修改：RRQMConfig，修改所有的配置均通过注入的形式作用。
 修改：大部分事件参数，重新订阅（或重写）即可。
+修改：Keepalive相关设定。
 删除：所有Simple组件，由其父类代替。
 
 API：https://www.yuque.com/eo2w71/rrqm

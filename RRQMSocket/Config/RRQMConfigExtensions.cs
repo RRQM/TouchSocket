@@ -146,8 +146,8 @@ namespace RRQMSocket
         /// 在Socket配置KeepAlive属性，
         /// 所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty KeepAliveProperty =
-            DependencyProperty.Register("KeepAlive", typeof(bool), typeof(RRQMConfigExtensions), true);
+        public static readonly DependencyProperty KeepAliveValueProperty =
+            DependencyProperty.Register("KeepAliveValue", typeof(KeepAliveValue), typeof(RRQMConfigExtensions), new KeepAliveValue());
 
         /// <summary>
         /// 数据包最大值。该值会在适当时间，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
@@ -182,13 +182,14 @@ namespace RRQMSocket
             DependencyProperty.Register("SslOption", typeof(SslOption), typeof(RRQMConfigExtensions), null);
 
         /// <summary>
-        /// 在Socket的KeepAlive属性，默认为true。
+        /// 在Socket的KeepAlive属性。
         /// </summary>
         /// <param name="config"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        public static RRQMConfig NoKeepAlive(this RRQMConfig config)
+        public static RRQMConfig SetKeepAliveValue(this RRQMConfig config, KeepAliveValue value)
         {
-            config.SetValue(KeepAliveProperty, false);
+            config.SetValue(KeepAliveValueProperty, value);
             return config;
         }
 

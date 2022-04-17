@@ -64,18 +64,18 @@ namespace RRQMSocket
         }
 
         #region 变量
-        private AsyncSender asyncSender;
-        private RRQMConfig config;
-        private DataHandlingAdapter dataHandlingAdapter;
-        private Socket mainSocket;
-        private bool online;
-        private ReceiveType receiveType;
-        private bool separateThreadSend;
-        private bool usePlugin;
-        private bool useSsl;
-        private Stream workStream;
-        private int maxPackageSize;
-        private IPHost remoteIPHost;
+        private AsyncSender m_asyncSender;
+        private RRQMConfig m_config;
+        private DataHandlingAdapter m_adapter;
+        private Socket m_mainSocket;
+        private bool m_online;
+        private ReceiveType m_receiveType;
+        private bool m_separateThreadSend;
+        private bool m_usePlugin;
+        private bool m_useSsl;
+        private Stream m_workStream;
+        private int m_maxPackageSize;
+        private IPHost m_remoteIPHost;
         #endregion 变量
 
         #region 事件
@@ -107,9 +107,9 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
+                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
-            if (this.usePlugin)
+            if (this.m_usePlugin)
             {
                 this.PluginsManager.Raise<ITcpPlugin>("OnConnected", this, e);
             }
@@ -128,10 +128,10 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
+                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
             }
 
-            if (this.usePlugin)
+            if (this.m_usePlugin)
             {
                 this.PluginsManager.Raise<ITcpPlugin>("OnConnecting", this, e);
             }
@@ -161,10 +161,10 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                this.logger.Debug(LogType.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
+                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
             }
 
-            if (this.usePlugin)
+            if (this.m_usePlugin)
             {
                 this.PluginsManager.Raise<ITcpPlugin>("OnDisconnected", this, e);
             }
@@ -187,12 +187,12 @@ namespace RRQMSocket
         /// <summary>
         /// 客户端配置
         /// </summary>
-        public RRQMConfig Config => this.config;
+        public RRQMConfig Config => this.m_config;
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter => this.dataHandlingAdapter;
+        public DataHandlingAdapter DataHandlingAdapter => this.m_adapter;
 
         /// <summary>
         /// IP地址
@@ -202,17 +202,17 @@ namespace RRQMSocket
         /// <summary>
         /// 主通信器
         /// </summary>
-        public Socket MainSocket => this.mainSocket;
+        public Socket MainSocket => this.m_mainSocket;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool CanSend => this.online;
+        public bool CanSend => this.m_online;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool Online => this.online;
+        public bool Online => this.m_online;
 
         /// <summary>
         /// <inheritdoc/>
@@ -227,22 +227,22 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public ReceiveType ReceiveType => this.receiveType;
+        public ReceiveType ReceiveType => this.m_receiveType;
 
         /// <summary>
         /// 在异步发送时，使用独立线程发送
         /// </summary>
-        public bool SeparateThreadSend => this.separateThreadSend;
+        public bool SeparateThreadSend => this.m_separateThreadSend;
 
         /// <summary>
         /// 是否已启用插件
         /// </summary>
-        public bool UsePlugin => this.usePlugin;
+        public bool UsePlugin => this.m_usePlugin;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool UseSsl => this.useSsl;
+        public bool UseSsl => this.m_useSsl;
 
         /// <summary>
         /// <inheritdoc/>
@@ -252,12 +252,12 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public int MaxPackageSize => this.maxPackageSize;
+        public int MaxPackageSize => this.m_maxPackageSize;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public IPHost RemoteIPHost => remoteIPHost;
+        public IPHost RemoteIPHost => m_remoteIPHost;
 
         #endregion 属性
 
@@ -287,12 +287,12 @@ namespace RRQMSocket
         {
             lock (this)
             {
-                if (this.online)
+                if (this.m_online)
                 {
-                    this.mainSocket?.Dispose();
-                    this.asyncSender?.Dispose();
-                    this.workStream?.Dispose();
-                    this.online = false;
+                    this.m_mainSocket?.Dispose();
+                    this.m_asyncSender?.Dispose();
+                    this.m_workStream?.Dispose();
+                    this.m_online = false;
                     this.OnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
                 }
             }
@@ -304,7 +304,7 @@ namespace RRQMSocket
         /// <param name="how"></param>
         public void Shutdown(SocketShutdown how)
         {
-            this.mainSocket.Shutdown(how);
+            this.m_mainSocket.Shutdown(how);
         }
 
         /// <summary>
@@ -380,7 +380,7 @@ namespace RRQMSocket
         /// </summary>
         public virtual ITcpClient Connect()
         {
-            if (this.online)
+            if (this.m_online)
             {
                 return this;
             }
@@ -388,35 +388,35 @@ namespace RRQMSocket
             {
                 throw new RRQMException("无法利用已释放对象");
             }
-            if (this.config == null)
+            if (this.m_config == null)
             {
                 throw new ArgumentNullException("配置文件不能为空。");
             }
-            IPHost iPHost = this.config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
+            IPHost iPHost = this.m_config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
             if (iPHost == null)
             {
                 throw new ArgumentNullException("iPHost不能为空。");
             }
-            if (this.mainSocket != null)
+            if (this.m_mainSocket != null)
             {
-                this.mainSocket.Dispose();
+                this.m_mainSocket.Dispose();
             }
-            this.mainSocket = this.CreateSocket(iPHost);
+            this.m_mainSocket = this.CreateSocket(iPHost);
 
-            ClientConnectingEventArgs args = new ClientConnectingEventArgs(this.mainSocket);
+            ClientConnectingEventArgs args = new ClientConnectingEventArgs(this.m_mainSocket);
             this.OnConnecting(args);
-            this.mainSocket.Connect(iPHost.EndPoint);
+            this.m_mainSocket.Connect(iPHost.EndPoint);
             this.LoadSocketAndReadIpPort();
 
-            if (this.separateThreadSend)
+            if (this.m_separateThreadSend)
             {
-                if (this.asyncSender == null)
+                if (this.m_asyncSender == null)
                 {
-                    this.asyncSender = new AsyncSender(this.mainSocket, this.mainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
+                    this.m_asyncSender = new AsyncSender(this.m_mainSocket, this.m_mainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
                 }
             }
             this.BeginReceive();
-            this.online = true;
+            this.m_online = true;
             Task.Run(() =>
             {
                 this.OnConnected(new MesEventArgs("连接成功"));
@@ -441,11 +441,11 @@ namespace RRQMSocket
         /// <returns></returns>
         public Stream GetStream()
         {
-            if (this.workStream == null)
+            if (this.m_workStream == null)
             {
-                this.workStream = new NetworkStream(this.mainSocket, true);
+                this.m_workStream = new NetworkStream(this.m_mainSocket, true);
             }
-            return this.workStream;
+            return this.m_workStream;
         }
 
         /// <summary>
@@ -481,14 +481,14 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public ITcpClient Setup(RRQMConfig clientConfig)
         {
-            this.config = clientConfig;
-            this.LoadConfig(this.config);
+            this.m_config = clientConfig;
+            this.LoadConfig(this.m_config);
             return this;
         }
 
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.usePlugin)
+            if (this.m_usePlugin)
             {
                 ReceivedDataEventArgs args = new ReceivedDataEventArgs(byteBlock, requestInfo);
                 this.PluginsManager.Raise<ITcpPlugin>("OnReceivedData", this, args);
@@ -508,7 +508,7 @@ namespace RRQMSocket
         /// <param name="requestInfo">以解析的数据对象传递</param>
         protected virtual void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-           
+
         }
 
         /// <summary>
@@ -520,7 +520,7 @@ namespace RRQMSocket
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual bool HandleSendingData(byte[] buffer, int offset, int length)
         {
-            if (this.usePlugin)
+            if (this.m_usePlugin)
             {
                 SendingEventArgs args = new SendingEventArgs(buffer, offset, length);
                 this.PluginsManager.Raise<ITcpPlugin>("OnSendingData", this, args);
@@ -543,20 +543,24 @@ namespace RRQMSocket
             {
                 throw new RRQMException("配置文件为空");
             }
-            this.remoteIPHost = config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
-            this.maxPackageSize = config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty);
-            this.logger = this.Container.Resolve<ILog>();
+            this.m_remoteIPHost = config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
+            this.m_maxPackageSize = config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty);
             this.BufferLength = config.BufferLength;
-            this.separateThreadSend = config.GetValue<bool>(RRQMConfigExtensions.SeparateThreadSendProperty);
-            this.receiveType = config.ReceiveType;
-            this.usePlugin = config.IsUsePlugin;
+            this.m_separateThreadSend = config.GetValue<bool>(RRQMConfigExtensions.SeparateThreadSendProperty);
+            this.m_receiveType = config.ReceiveType;
+            this.m_usePlugin = config.IsUsePlugin;
+            if (this.Logger == null)
+            {
+                this.Logger = this.Container.Resolve<ILog>();
+            }
+
             if (config.GetValue(RRQMConfigExtensions.SslOptionProperty) != null)
             {
-                if (this.separateThreadSend)
+                if (this.m_separateThreadSend)
                 {
                     throw new RRQMException("Ssl配置下，不允许独立线程发送。");
                 }
-                this.useSsl = true;
+                this.m_useSsl = true;
             }
         }
 
@@ -576,7 +580,7 @@ namespace RRQMSocket
         /// <param name="ex"></param>
         protected virtual void OnSeparateThreadSendError(Exception ex)
         {
-            this.logger.Debug(LogType.Error, this, "独立线程发送错误", ex);
+            this.Logger.Debug(LogType.Error, this, "独立线程发送错误", ex);
         }
 
         /// <summary>
@@ -597,20 +601,24 @@ namespace RRQMSocket
             adapter.owner = this;
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
-            this.dataHandlingAdapter = adapter;
+            if (this.Config != null)
+            {
+                adapter.MaxPackageSize = Math.Max(adapter.MaxPackageSize, this.Config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty));
+            }
+            this.m_adapter = adapter;
         }
 
         private void BeginReceive()
         {
-            if (this.workStream != null)
+            if (this.m_workStream != null)
             {
-                this.workStream.Dispose();
+                this.m_workStream.Dispose();
             }
 
-            if (this.useSsl)
+            if (this.m_useSsl)
             {
-                ClientSslOption sslOption = this.config.GetValue<ClientSslOption>(RRQMConfigExtensions.SslOptionProperty);
-                SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.mainSocket, false), false);
+                ClientSslOption sslOption = this.m_config.GetValue<ClientSslOption>(RRQMConfigExtensions.SslOptionProperty);
+                SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_mainSocket, false), false);
                 if (sslOption.ClientCertificates == null)
                 {
                     sslStream.AuthenticateAsClient(sslOption.TargetHost);
@@ -619,15 +627,15 @@ namespace RRQMSocket
                 {
                     sslStream.AuthenticateAsClient(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
                 }
-                this.workStream = sslStream;
-                if (this.receiveType != ReceiveType.None)
+                this.m_workStream = sslStream;
+                if (this.m_receiveType != ReceiveType.None)
                 {
                     this.BeginSsl();
                 }
             }
             else
             {
-                if (this.receiveType == ReceiveType.Auto)
+                if (this.m_receiveType == ReceiveType.Auto)
                 {
                     SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
                     eventArgs.Completed += this.EventArgs_Completed;
@@ -635,7 +643,7 @@ namespace RRQMSocket
                     ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
                     eventArgs.UserToken = byteBlock;
                     eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    if (!this.mainSocket.ReceiveAsync(eventArgs))
+                    if (!this.m_mainSocket.ReceiveAsync(eventArgs))
                     {
                         this.ProcessReceived(eventArgs);
                     }
@@ -648,7 +656,7 @@ namespace RRQMSocket
             ByteBlock byteBlock = new ByteBlock(this.BufferLength);
             try
             {
-                this.workStream.BeginRead(byteBlock.Buffer, 0, byteBlock.Capacity, this.EndSsl, byteBlock);
+                this.m_workStream.BeginRead(byteBlock.Buffer, 0, byteBlock.Capacity, this.EndSsl, byteBlock);
             }
             catch (Exception ex)
             {
@@ -662,7 +670,7 @@ namespace RRQMSocket
             ByteBlock byteBlock = (ByteBlock)result.AsyncState;
             try
             {
-                int r = this.workStream.EndRead(result);
+                int r = this.m_workStream.EndRead(result);
                 byteBlock.SetLength(r);
                 this.HandleBuffer(byteBlock);
                 this.BeginSsl();
@@ -679,11 +687,16 @@ namespace RRQMSocket
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.ReceiveBufferSize = this.BufferLength;
             socket.SendBufferSize = this.BufferLength;
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, this.config.GetValue<bool>(RRQMConfigExtensions.KeepAliveProperty));
-            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty));
-            if (this.config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) != null)
+            KeepAliveValue keepAliveValue = this.m_config.GetValue<KeepAliveValue>(RRQMConfigExtensions.KeepAliveValueProperty);
+            if (keepAliveValue.Enable)
             {
-                socket.Bind(this.config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty).EndPoint);
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                socket.IOControl(IOControlCode.KeepAliveValues, keepAliveValue.KeepAliveTime, null);
+            }
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.m_config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty));
+            if (this.m_config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) != null)
+            {
+                socket.Bind(this.m_config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty).EndPoint);
             }
             return socket;
         }
@@ -713,12 +726,12 @@ namespace RRQMSocket
                     {
                         return;
                     }
-                    if (this.dataHandlingAdapter == null)
+                    if (this.m_adapter == null)
                     {
-                        this.logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetResString());
+                        this.Logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetResString());
                         return;
                     }
-                    this.dataHandlingAdapter.ReceivedInput(byteBlock);
+                    this.m_adapter.ReceivedInput(byteBlock);
                 }
             }
             catch (Exception ex)
@@ -768,11 +781,11 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"><inheritdoc/></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
-            this.dataHandlingAdapter.SendInput(buffer, offset, length, false);
+            this.m_adapter.SendInput(buffer, offset, length, false);
         }
 
         /// <summary>
@@ -784,14 +797,14 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"><inheritdoc/></exception>
         public virtual void Send(IList<TransferByte> transferBytes)
         {
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
 
-            if (this.dataHandlingAdapter.CanSplicingSend)
+            if (this.m_adapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.SendInput(transferBytes, false);
+                this.m_adapter.SendInput(transferBytes, false);
             }
             else
             {
@@ -802,7 +815,7 @@ namespace RRQMSocket
                     {
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
-                    this.dataHandlingAdapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, false);
+                    this.m_adapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
                 finally
                 {
@@ -830,11 +843,11 @@ namespace RRQMSocket
             {
                 return;
             }
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
-            this.dataHandlingAdapter.SendInput(buffer, offset, length, true);
+            this.m_adapter.SendInput(buffer, offset, length, true);
         }
 
         /// <summary>
@@ -874,13 +887,13 @@ namespace RRQMSocket
             {
                 return;
             }
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
             }
-            if (this.dataHandlingAdapter.CanSplicingSend)
+            if (this.m_adapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.SendInput(transferBytes, true);
+                this.m_adapter.SendInput(transferBytes, true);
             }
             else
             {
@@ -891,7 +904,7 @@ namespace RRQMSocket
                     {
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
-                    this.dataHandlingAdapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, true);
+                    this.m_adapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, true);
                 }
                 finally
                 {
@@ -944,7 +957,7 @@ namespace RRQMSocket
 
         private void LoadSocketAndReadIpPort()
         {
-            if (this.mainSocket == null)
+            if (this.m_mainSocket == null)
             {
                 this.IP = null;
                 this.Port = -1;
@@ -952,13 +965,13 @@ namespace RRQMSocket
             }
 
             string ipport;
-            if (this.mainSocket.Connected && this.mainSocket.RemoteEndPoint != null)
+            if (this.m_mainSocket.Connected && this.m_mainSocket.RemoteEndPoint != null)
             {
-                ipport = this.mainSocket.RemoteEndPoint.ToString();
+                ipport = this.m_mainSocket.RemoteEndPoint.ToString();
             }
-            else if (this.mainSocket.IsBound && this.mainSocket.LocalEndPoint != null)
+            else if (this.m_mainSocket.IsBound && this.m_mainSocket.LocalEndPoint != null)
             {
-                ipport = this.mainSocket.LocalEndPoint.ToString();
+                ipport = this.m_mainSocket.LocalEndPoint.ToString();
             }
             else
             {
@@ -1011,7 +1024,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         protected void SocketSend(byte[] buffer, int offset, int length, bool isAsync)
         {
-            if (!this.online)
+            if (!this.m_online)
             {
                 throw new RRQMNotConnectedException(ResType.NotConnected.GetResString());
             }
@@ -1019,21 +1032,21 @@ namespace RRQMSocket
             {
                 lock (this)
                 {
-                    if (this.useSsl)
+                    if (this.m_useSsl)
                     {
-                        this.workStream.Write(buffer, offset, length);
+                        this.m_workStream.Write(buffer, offset, length);
                     }
                     else
                     {
                         if (isAsync)
                         {
-                            if (this.separateThreadSend)
+                            if (this.m_separateThreadSend)
                             {
-                                this.asyncSender.AsyncSend(buffer, offset, length);
+                                this.m_asyncSender.AsyncSend(buffer, offset, length);
                             }
                             else
                             {
-                                this.mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
+                                this.m_mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
                             }
                         }
                         else
