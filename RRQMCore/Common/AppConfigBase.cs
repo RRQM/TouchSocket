@@ -24,7 +24,7 @@ namespace RRQMCore
     /// </summary>
     public abstract class AppConfigBase
     {
-        private readonly string fullPath;
+        private readonly string m_fullPath;
 
         /// <summary>
         /// 构造函数
@@ -37,7 +37,7 @@ namespace RRQMCore
                 throw new ArgumentException($"“{nameof(fullPath)}”不能为 null 或空。", nameof(fullPath));
             }
 
-            this.fullPath = fullPath;
+            this.m_fullPath = fullPath;
         }
 
         /// <summary>
@@ -48,14 +48,14 @@ namespace RRQMCore
         /// <returns></returns>
         public bool Save(bool overwrite, out string msg)
         {
-            if (overwrite == false && File.Exists(this.fullPath))
+            if (overwrite == false && File.Exists(this.m_fullPath))
             {
                 msg = null;
                 return true;
             }
             try
             {
-                File.WriteAllBytes(this.fullPath, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this, Formatting.Indented)));
+                File.WriteAllBytes(this.m_fullPath, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this, Formatting.Indented)));
                 msg = null;
                 return true;
             }
@@ -75,11 +75,11 @@ namespace RRQMCore
         {
             try
             {
-                if (!File.Exists(this.fullPath))
+                if (!File.Exists(this.m_fullPath))
                 {
                     this.Save(false, out _);
                 }
-                var obj = File.ReadAllText(this.fullPath).ToJsonObject(this.GetType());
+                var obj = File.ReadAllText(this.m_fullPath).ToJsonObject(this.GetType());
                 var ps = this.GetType().GetProperties();
 
                 foreach (var item in ps)

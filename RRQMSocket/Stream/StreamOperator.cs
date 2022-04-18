@@ -88,7 +88,6 @@ namespace RRQMSocket
         /// </summary>
         public CancellationToken Token { get; set; }
 
-
         /// <summary>
         /// 从上次获取到此次获得的速度
         /// </summary>

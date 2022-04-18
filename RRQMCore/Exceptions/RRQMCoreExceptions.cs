@@ -86,41 +86,6 @@ namespace RRQMCore
     }
 
     /// <summary>
-    /// 内存块已释放
-    /// </summary>
-    [Serializable]
-    public class ByteBlockDisposedException : RRQMException
-    {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public ByteBlockDisposedException()
-        { }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="message"></param>
-        public ByteBlockDisposedException(string message) : base(message) { }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="inner"></param>
-        public ByteBlockDisposedException(string message, Exception inner) : base(message, inner) { }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="info"></param>
-        /// <param name="context"></param>
-        protected ByteBlockDisposedException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
-    }
-
-    /// <summary>
     /// 构造函数
     /// </summary>
     [Serializable]

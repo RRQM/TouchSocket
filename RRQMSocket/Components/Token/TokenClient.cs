@@ -91,9 +91,9 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTokenVerifyException"></exception>
         /// <exception cref="TimeoutException"></exception>
-        public override ITcpClient Connect()
+        public override ITcpClient Connect(int timeout = 5000)
         {
-            return this.Connect("rrqm");
+            return this.Connect("rrqm",timeout:timeout);
         }
 
         private bool isHandshaked;
@@ -140,11 +140,11 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTokenVerifyException"></exception>
         /// <exception cref="TimeoutException"></exception>
-        public virtual ITcpClient Connect(string verifyToken, CancellationToken token = default)
+        public virtual ITcpClient Connect(string verifyToken, CancellationToken token = default, int timeout = 5000)
         {
             if (!this.Online)
             {
-                base.Connect();
+                base.Connect(timeout);
             }
 
             WaitVerify waitVerify = new WaitVerify()
@@ -158,7 +158,7 @@ namespace RRQMSocket
             base.Send(data, 0, data.Length);
             try
             {
-                switch (waitData.Wait(1000 * 10))
+                switch (waitData.Wait(timeout))
                 {
                     case WaitDataStatus.SetRunning:
                         {

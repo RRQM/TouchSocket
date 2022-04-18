@@ -21,9 +21,9 @@ namespace RRQMCore.Collections.Concurrent
     /// <typeparam name="T"></typeparam>
     public class IntelligentConcurrentQueue<T> : ConcurrentQueue<T>
     {
-        private int count;
+        private int m_count;
 
-        private int maxCount;
+        private int m_maxCount;
 
         /// <summary>
         /// 构造函数
@@ -31,18 +31,18 @@ namespace RRQMCore.Collections.Concurrent
         /// <param name="maxCount"></param>
         public IntelligentConcurrentQueue(int maxCount)
         {
-            this.maxCount = maxCount;
+            this.m_maxCount = maxCount;
         }
 
         /// <summary>
         /// 允许的最大长度
         /// </summary>
-        public int MaxCount => this.maxCount;
+        public int MaxCount => this.m_maxCount;
 
         /// <summary>
         /// 长度
         /// </summary>
-        public new int Count => this.count;
+        public new int Count => this.m_count;
 
         /// <summary>
         /// 入队
@@ -51,7 +51,7 @@ namespace RRQMCore.Collections.Concurrent
         public new void Enqueue(T item)
         {
             SpinWait.SpinUntil(this.Check);
-            Interlocked.Increment(ref this.count);
+            Interlocked.Increment(ref this.m_count);
             base.Enqueue(item);
         }
 
@@ -64,7 +64,7 @@ namespace RRQMCore.Collections.Concurrent
         {
             if (base.TryDequeue(out result))
             {
-                Interlocked.Decrement(ref this.count);
+                Interlocked.Decrement(ref this.m_count);
                 return true;
             }
             return false;
@@ -72,7 +72,7 @@ namespace RRQMCore.Collections.Concurrent
 
         private bool Check()
         {
-            return this.count < this.maxCount;
+            return this.m_count < this.m_maxCount;
         }
     }
 }

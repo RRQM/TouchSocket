@@ -24,10 +24,10 @@ namespace RRQMCore.Collections.Concurrent
     /// <typeparam name="T"></typeparam>
     public class ConcurrentList<T> : IList<T>
     {
-        private readonly List<T> list;
+        private readonly List<T> m_list;
 
         [NonSerialized]
-        private readonly ReaderWriterLockSlim locker;
+        private readonly ReaderWriterLockSlim m_locker;
 
         /// <summary>
         /// 构造函数
@@ -35,8 +35,8 @@ namespace RRQMCore.Collections.Concurrent
         /// <param name="collection"></param>
         public ConcurrentList(IEnumerable<T> collection)
         {
-            this.list = new List<T>(collection);
-            this.locker = new ReaderWriterLockSlim();
+            this.m_list = new List<T>(collection);
+            this.m_locker = new ReaderWriterLockSlim();
         }
 
         /// <summary>
@@ -44,8 +44,8 @@ namespace RRQMCore.Collections.Concurrent
         /// </summary>
         public ConcurrentList()
         {
-            this.list = new List<T>();
-            this.locker = new ReaderWriterLockSlim();
+            this.m_list = new List<T>();
+            this.m_locker = new ReaderWriterLockSlim();
         }
 
         /// <summary>
@@ -54,8 +54,8 @@ namespace RRQMCore.Collections.Concurrent
         /// <param name="capacity"></param>
         public ConcurrentList(int capacity)
         {
-            this.list = new List<T>(capacity);
-            this.locker = new ReaderWriterLockSlim();
+            this.m_list = new List<T>(capacity);
+            this.m_locker = new ReaderWriterLockSlim();
         }
 
         /// <summary>
@@ -67,12 +67,12 @@ namespace RRQMCore.Collections.Concurrent
             {
                 try
                 {
-                    this.locker.EnterReadLock();
-                    return this.list.Count;
+                    this.m_locker.EnterReadLock();
+                    return this.m_list.Count;
                 }
                 finally
                 {
-                    this.locker.ExitReadLock();
+                    this.m_locker.ExitReadLock();
                 }
             }
         }
@@ -93,24 +93,24 @@ namespace RRQMCore.Collections.Concurrent
             {
                 try
                 {
-                    this.locker.EnterReadLock();
-                    return this.list[index];
+                    this.m_locker.EnterReadLock();
+                    return this.m_list[index];
                 }
                 finally
                 {
-                    this.locker.ExitReadLock();
+                    this.m_locker.ExitReadLock();
                 }
             }
             set
             {
                 try
                 {
-                    this.locker.EnterWriteLock();
-                    this.list[index] = value;
+                    this.m_locker.EnterWriteLock();
+                    this.m_list[index] = value;
                 }
                 finally
                 {
-                    this.locker.ExitWriteLock();
+                    this.m_locker.ExitWriteLock();
                 }
             }
         }
@@ -123,12 +123,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Add(item);
+                this.m_locker.EnterWriteLock();
+                this.m_list.Add(item);
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -139,12 +139,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Clear();
+                this.m_locker.EnterWriteLock();
+                this.m_list.Clear();
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -157,12 +157,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.Contains(item);
+                this.m_locker.EnterReadLock();
+                return this.m_list.Contains(item);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -175,12 +175,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                this.list.CopyTo(array, arrayIndex);
+                this.m_locker.EnterReadLock();
+                this.m_list.CopyTo(array, arrayIndex);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -192,15 +192,15 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                foreach (var item in this.list)
+                this.m_locker.EnterReadLock();
+                foreach (var item in this.m_list)
                 {
                     yield return item;
                 }
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -222,12 +222,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.IndexOf(item);
+                this.m_locker.EnterReadLock();
+                return this.m_list.IndexOf(item);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -240,12 +240,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Insert(index, item);
+                this.m_locker.EnterWriteLock();
+                this.m_list.Insert(index, item);
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -258,12 +258,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                return this.list.Remove(item);
+                this.m_locker.EnterWriteLock();
+                return this.m_list.Remove(item);
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -275,15 +275,15 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                if (index < this.list.Count)
+                this.m_locker.EnterWriteLock();
+                if (index < this.m_list.Count)
                 {
-                    this.list.RemoveAt(index);
+                    this.m_list.RemoveAt(index);
                 }
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -296,24 +296,24 @@ namespace RRQMCore.Collections.Concurrent
             {
                 try
                 {
-                    this.locker.EnterReadLock();
-                    return this.list.Capacity;
+                    this.m_locker.EnterReadLock();
+                    return this.m_list.Capacity;
                 }
                 finally
                 {
-                    this.locker.ExitReadLock();
+                    this.m_locker.ExitReadLock();
                 }
             }
             set
             {
                 try
                 {
-                    this.locker.EnterWriteLock();
-                    this.list.Capacity = value;
+                    this.m_locker.EnterWriteLock();
+                    this.m_list.Capacity = value;
                 }
                 finally
                 {
-                    this.locker.ExitWriteLock();
+                    this.m_locker.ExitWriteLock();
                 }
             }
         }
@@ -326,12 +326,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.AddRange(collection);
+                this.m_locker.EnterWriteLock();
+                this.m_list.AddRange(collection);
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -344,12 +344,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.BinarySearch(item);
+                this.m_locker.EnterReadLock();
+                return this.m_list.BinarySearch(item);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -363,12 +363,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.BinarySearch(item, comparer);
+                this.m_locker.EnterReadLock();
+                return this.m_list.BinarySearch(item, comparer);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -384,12 +384,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.BinarySearch(index, count, item, comparer);
+                this.m_locker.EnterReadLock();
+                return this.m_list.BinarySearch(index, count, item, comparer);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -403,12 +403,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.ConvertAll(converter);
+                this.m_locker.EnterReadLock();
+                return this.m_list.ConvertAll(converter);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -421,12 +421,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.Find(match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.Find(match);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -439,12 +439,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindAll(match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindAll(match);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -459,12 +459,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindIndex(startIndex, count, match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindIndex(startIndex, count, match);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -478,10 +478,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindIndex(startIndex, match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindIndex(startIndex, match);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -493,10 +493,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindIndex(match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindIndex(match);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -508,10 +508,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindLast(match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindLast(match);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -525,10 +525,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindLastIndex(startIndex, count, match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindLastIndex(startIndex, count, match);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -541,10 +541,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindLastIndex(startIndex, match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindLastIndex(startIndex, match);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -556,10 +556,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.FindLastIndex(match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.FindLastIndex(match);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -570,12 +570,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                this.list.ForEach(action);
+                this.m_locker.EnterReadLock();
+                this.m_list.ForEach(action);
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -589,10 +589,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.GetRange(index, count);
+                this.m_locker.EnterReadLock();
+                return this.m_list.GetRange(index, count);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -605,10 +605,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.IndexOf(item, index);
+                this.m_locker.EnterReadLock();
+                return this.m_list.IndexOf(item, index);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -622,10 +622,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.IndexOf(item, index, count);
+                this.m_locker.EnterReadLock();
+                return this.m_list.IndexOf(item, index, count);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -637,12 +637,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.InsertRange(index, collection);
+                this.m_locker.EnterWriteLock();
+                this.m_list.InsertRange(index, collection);
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -655,10 +655,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.IndexOf(item);
+                this.m_locker.EnterReadLock();
+                return this.m_list.IndexOf(item);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -671,10 +671,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.LastIndexOf(item, index);
+                this.m_locker.EnterReadLock();
+                return this.m_list.LastIndexOf(item, index);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -688,10 +688,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.LastIndexOf(item, index, count);
+                this.m_locker.EnterReadLock();
+                return this.m_list.LastIndexOf(item, index, count);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -702,12 +702,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.RemoveAll(match);
+                this.m_locker.EnterWriteLock();
+                this.m_list.RemoveAll(match);
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -720,12 +720,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.RemoveRange(index, count);
+                this.m_locker.EnterWriteLock();
+                this.m_list.RemoveRange(index, count);
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -736,12 +736,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Reverse();
+                this.m_locker.EnterWriteLock();
+                this.m_list.Reverse();
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -754,10 +754,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Reverse(index, count);
+                this.m_locker.EnterWriteLock();
+                this.m_list.Reverse(index, count);
             }
-            finally { this.locker.ExitWriteLock(); }
+            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -767,12 +767,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Sort();
+                this.m_locker.EnterWriteLock();
+                this.m_list.Sort();
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -784,10 +784,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Sort(comparison);
+                this.m_locker.EnterWriteLock();
+                this.m_list.Sort(comparison);
             }
-            finally { this.locker.ExitWriteLock(); }
+            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -798,10 +798,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Sort(comparer);
+                this.m_locker.EnterWriteLock();
+                this.m_list.Sort(comparer);
             }
-            finally { this.locker.ExitWriteLock(); }
+            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -814,10 +814,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.Sort(index, count, comparer);
+                this.m_locker.EnterWriteLock();
+                this.m_list.Sort(index, count, comparer);
             }
-            finally { this.locker.ExitWriteLock(); }
+            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -828,12 +828,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.ToArray();
+                this.m_locker.EnterReadLock();
+                return this.m_list.ToArray();
             }
             finally
             {
-                this.locker.ExitReadLock();
+                this.m_locker.ExitReadLock();
             }
         }
 
@@ -844,12 +844,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterWriteLock();
-                this.list.TrimExcess();
+                this.m_locker.EnterWriteLock();
+                this.m_list.TrimExcess();
             }
             finally
             {
-                this.locker.ExitWriteLock();
+                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -862,10 +862,10 @@ namespace RRQMCore.Collections.Concurrent
         {
             try
             {
-                this.locker.EnterReadLock();
-                return this.list.TrueForAll(match);
+                this.m_locker.EnterReadLock();
+                return this.m_list.TrueForAll(match);
             }
-            finally { this.locker.ExitReadLock(); }
+            finally { this.m_locker.ExitReadLock(); }
         }
     }
 }

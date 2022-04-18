@@ -237,13 +237,13 @@ namespace RRQMSocket
         /// 连接服务器
         /// </summary>
         /// <exception cref="RRQMException"></exception>
-        ITcpClient Connect();
+        ITcpClient Connect(int timeout = 5000);
 
         /// <summary>
         /// 异步连接服务器
         /// </summary>
         /// <exception cref="RRQMException"></exception>
-        Task<ITcpClient> ConnectAsync();
+        Task<ITcpClient> ConnectAsync(int timeout = 5000);
 
         /// <summary>
         /// 配置服务器
@@ -362,7 +362,11 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         /// <exception cref="RRQMTokenVerifyException"></exception>
         /// <exception cref="TimeoutException"></exception>
-        ITcpClient Connect(string verifyToken, CancellationToken token = default);
+        /// <param name="verifyToken"></param>
+        /// <param name="token"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        ITcpClient Connect(string verifyToken, CancellationToken token = default, int timeout = 5000);
     }
 
     /// <summary>

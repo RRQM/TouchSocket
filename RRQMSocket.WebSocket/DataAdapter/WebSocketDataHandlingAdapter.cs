@@ -238,7 +238,7 @@ namespace RRQMSocket.WebSocket
         {
             while (offset < length)
             {
-                if (length - offset <= 4)
+                if (length - offset < 2)
                 {
                     if (this.tempByteBlock == null)
                     {

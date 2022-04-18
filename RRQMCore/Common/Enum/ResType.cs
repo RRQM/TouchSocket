@@ -135,12 +135,6 @@ namespace RRQMCore
         MessageNotFound,
 
         /// <summary>
-        /// 内存块已释放
-        /// </summary>
-        [Description("内存块已释放。")]
-        ByteBlockDisposed,
-
-        /// <summary>
         /// 数据处理适配器为空
         /// </summary>
         [Description("数据处理适配器为空，可能客户端已掉线。")]

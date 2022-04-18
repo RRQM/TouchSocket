@@ -116,6 +116,37 @@ namespace RRQMSocket
         /// <exception cref="RRQMException">其他异常</exception>
         void DefaultSend(ByteBlock byteBlock);
         #endregion
+
+        #region 默认发送
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">数据长度</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSendAsync(byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSendAsync(byte[] buffer);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="byteBlock">数据块载体</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSendAsync(ByteBlock byteBlock);
+        #endregion
     }
 
     /// <summary>
@@ -155,6 +186,40 @@ namespace RRQMSocket
         /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
         /// <exception cref="RRQMException">其他异常</exception>
         void DefaultSend(EndPoint endPoint, ByteBlock byteBlock);
+        #endregion
+
+        #region 默认发送
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="endPoint">目的终结点</param>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">数据长度</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="endPoint">目的终结点</param>
+        /// <param name="buffer">数据缓存区</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSendAsync(EndPoint endPoint, byte[] buffer);
+
+        /// <summary>
+        /// 绕过适配器，直接发送字节流
+        /// </summary>
+        /// <param name="endPoint">目的终结点</param>
+        /// <param name="byteBlock">数据块载体</param>
+        /// <exception cref="RRQMNotConnectedException">客户端没有连接</exception>
+        /// <exception cref="RRQMOverlengthException">发送数据超长</exception>
+        /// <exception cref="RRQMException">其他异常</exception>
+        void DefaultSendAsync(EndPoint endPoint, ByteBlock byteBlock);
         #endregion
     }
 
