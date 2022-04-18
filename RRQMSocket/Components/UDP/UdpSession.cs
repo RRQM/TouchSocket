@@ -386,7 +386,10 @@ namespace RRQMSocket
             {
                 throw new RRQMException("配置文件为空");
             }
-            this.logger = this.Container.Resolve<ILog>();
+            if (this.Logger == null)
+            {
+                this.Logger = this.Container.Resolve<ILog>();
+            }
             this.remoteIPHost = config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
             this.BufferLength = config.BufferLength;
             this.usePlugin = config.IsUsePlugin;
@@ -717,7 +720,7 @@ namespace RRQMSocket
                 }
                 catch (Exception ex)
                 {
-                    this.logger.Debug(LogType.Error, this, ex.Message, ex);
+                    this.Logger.Debug(LogType.Error, this, ex.Message, ex);
                 }
             }
         }
@@ -786,6 +789,72 @@ namespace RRQMSocket
         }
 
         #endregion DefaultSend
+
+        #region DefaultSendAsync
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void DefaultSendAsync(byte[] buffer, int offset, int length)
+        {
+            this.SocketSend(this.remoteIPHost.EndPoint, buffer, offset, length, true);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        public void DefaultSendAsync(byte[] buffer)
+        {
+            this.DefaultSendAsync(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public void DefaultSendAsync(ByteBlock byteBlock)
+        {
+            this.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
+        {
+            this.SocketSend(endPoint, buffer, offset, length, true);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="buffer"></param>
+        public void DefaultSendAsync(EndPoint endPoint, byte[] buffer)
+        {
+            this.DefaultSendAsync(endPoint, buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="byteBlock"></param>
+        public void DefaultSendAsync(EndPoint endPoint, ByteBlock byteBlock)
+        {
+            this.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+        }
+
+        #endregion DefaultSend
+
 
         #region 组合发送
 

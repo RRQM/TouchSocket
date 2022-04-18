@@ -19,27 +19,27 @@ namespace RRQMCore.Collections.Concurrent
     /// </summary>
     public class ConcurrentDoublyDictionary<TKey, TValue>
     {
-        private ConcurrentDictionary<TKey, TValue> keyToValue;
-        private ConcurrentDictionary<TValue, TKey> valueToKey;
+        private ConcurrentDictionary<TKey, TValue> m_keyToValue;
+        private ConcurrentDictionary<TValue, TKey> m_valueToKey;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public ConcurrentDoublyDictionary()
         {
-            this.keyToValue = new ConcurrentDictionary<TKey, TValue>();
-            this.valueToKey = new ConcurrentDictionary<TValue, TKey>();
+            this.m_keyToValue = new ConcurrentDictionary<TKey, TValue>();
+            this.m_valueToKey = new ConcurrentDictionary<TValue, TKey>();
         }
 
         /// <summary>
         /// 由键指向值得集合
         /// </summary>
-        public ConcurrentDictionary<TKey, TValue> KeyToValue => this.keyToValue;
+        public ConcurrentDictionary<TKey, TValue> KeyToValue => this.m_keyToValue;
 
         /// <summary>
         /// 由值指向键的集合
         /// </summary>
-        public ConcurrentDictionary<TValue, TKey> ValueToKey => this.valueToKey;
+        public ConcurrentDictionary<TValue, TKey> ValueToKey => this.m_valueToKey;
 
         /// <summary>
         ///  尝试将指定的键和值添加到字典中。
@@ -49,15 +49,15 @@ namespace RRQMCore.Collections.Concurrent
         /// <returns></returns>
         public bool TryAdd(TKey key, TValue value)
         {
-            if (this.keyToValue.TryAdd(key, value))
+            if (this.m_keyToValue.TryAdd(key, value))
             {
-                if (this.valueToKey.TryAdd(value, key))
+                if (this.m_valueToKey.TryAdd(value, key))
                 {
                     return true;
                 }
                 else
                 {
-                    this.keyToValue.TryRemove(key, out _);
+                    this.m_keyToValue.TryRemove(key, out _);
                     return false;
                 }
             }
@@ -72,9 +72,9 @@ namespace RRQMCore.Collections.Concurrent
         /// <returns></returns>
         public bool TryRemoveFromKey(TKey key, out TValue value)
         {
-            if (this.keyToValue.TryRemove(key, out value))
+            if (this.m_keyToValue.TryRemove(key, out value))
             {
-                if (this.valueToKey.TryRemove(value, out _))
+                if (this.m_valueToKey.TryRemove(value, out _))
                 {
                     return true;
                 }
@@ -90,9 +90,9 @@ namespace RRQMCore.Collections.Concurrent
         /// <returns></returns>
         public bool TryRemoveFromValue(TValue value, out TKey key)
         {
-            if (this.valueToKey.TryRemove(value, out key))
+            if (this.m_valueToKey.TryRemove(value, out key))
             {
-                if (this.keyToValue.TryRemove(key, out _))
+                if (this.m_keyToValue.TryRemove(key, out _))
                 {
                     return true;
                 }
@@ -108,7 +108,7 @@ namespace RRQMCore.Collections.Concurrent
         /// <returns></returns>
         public bool TryGetFromKey(TKey key, out TValue value)
         {
-            return this.keyToValue.TryGetValue(key, out value);
+            return this.m_keyToValue.TryGetValue(key, out value);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace RRQMCore.Collections.Concurrent
         /// <returns></returns>
         public bool TryGetFromValue(TValue value, out TKey key)
         {
-            return this.valueToKey.TryGetValue(value, out key);
+            return this.m_valueToKey.TryGetValue(value, out key);
         }
     }
 }

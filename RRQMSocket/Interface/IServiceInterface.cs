@@ -42,11 +42,6 @@ namespace RRQMSocket
         NetworkMonitor[] Monitors { get; }
 
         /// <summary>
-        /// 适配器能接收的最大数据包长度。
-        /// </summary>
-        int MaxPackageSize { get; }
-
-        /// <summary>
         /// 重新设置ID
         /// </summary>
         /// <param name="waitSetID"></param>

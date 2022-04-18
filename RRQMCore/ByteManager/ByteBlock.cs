@@ -25,26 +25,63 @@ namespace RRQMCore.ByteManager
     [System.Diagnostics.DebuggerDisplay("Len={Len}")]
     public sealed class ByteBlock : Stream, IDisposable
     {
-        internal bool @using;
-
-        internal long length;
-
-        private static float ratio = 1.5f;
-
-        private byte[] _buffer;
-
-        private bool holding;
-
-        private long position;
+        internal long m_length;
+        internal bool m_using;
+        private static float m_ratio = 1.5f;
+        private byte[] m_buffer;
+        private bool m_holding;
+        private bool m_needDis;
+        private long m_position;
 
         /// <summary>
         ///  构造函数
         /// </summary>
         /// <param name="byteSize"></param>
         /// <param name="equalSize"></param>
-        public ByteBlock(int byteSize = 1024 * 10, bool equalSize = false) : this(BytePool.GetByteCore(byteSize, equalSize))
+        public ByteBlock(int byteSize = 1024 * 64, bool equalSize = false)
         {
+            this.m_needDis = true;
+            this.m_buffer = BytePool.GetByteCore(byteSize, equalSize);
+            this.m_using = true;
         }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="bytes"></param>
+        public ByteBlock(byte[] bytes)
+        {
+            this.m_buffer = bytes ?? throw new ArgumentNullException(nameof(bytes));
+            this.m_length = bytes.Length;
+            this.m_using = true;
+        }
+
+        /// <summary>
+        /// 扩容增长比，默认为1.5，
+        /// min：1.5
+        /// </summary>
+        public static float Ratio
+        {
+            get => m_ratio;
+            set
+            {
+                if (value < 1.5)
+                {
+                    value = 1.5f;
+                }
+                m_ratio = value;
+            }
+        }
+
+        /// <summary>
+        /// 字节实例
+        /// </summary>
+        public byte[] Buffer => this.m_buffer;
+
+        /// <summary>
+        /// 仅当内存块可用，且<see cref="CanReadLen"/>>0时为True。
+        /// </summary>
+        public override bool CanRead => this.m_using&&this.CanReadLen>0;
 
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
@@ -54,82 +91,45 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
         /// </summary>
-        public long CanReadLength => this.length - this.position;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="bytes"></param>
-        internal ByteBlock(byte[] bytes)
-        {
-            this.@using = true;
-            this._buffer = bytes;
-        }
-
-        /// <summary>
-        /// 扩容增长比，默认为1.5，
-        /// min：1.5
-        /// </summary>
-        public static float Ratio
-        {
-            get => ratio;
-            set
-            {
-                if (value < 1.5)
-                {
-                    value = 1.5f;
-                }
-                ratio = value;
-            }
-        }
-
-        /// <summary>
-        /// 字节实例
-        /// </summary>
-        public byte[] Buffer => this._buffer;
-
-        /// <summary>
-        /// 可读取
-        /// </summary>
-        public override bool CanRead => this.@using;
+        public long CanReadLength => this.m_length - this.m_position;
 
         /// <summary>
         /// 支持查找
         /// </summary>
-        public override bool CanSeek => this.@using;
+        public override bool CanSeek => this.m_using;
 
         /// <summary>
         /// 可写入
         /// </summary>
-        public override bool CanWrite => this.@using;
+        public override bool CanWrite => this.m_using;
 
         /// <summary>
         /// 容量
         /// </summary>
-        public int Capacity => this._buffer.Length;
+        public int Capacity => this.m_buffer.Length;
 
         /// <summary>
         /// 表示持续性持有，为True时，Dispose将调用无效。
         /// </summary>
-        public bool Holding => this.holding;
+        public bool Holding => this.m_holding;
 
         /// <summary>
         /// Int真实长度
         /// </summary>
-        public int Len => (int)this.length;
+        public int Len => (int)this.m_length;
 
         /// <summary>
         /// 真实长度
         /// </summary>
-        public override long Length => this.length;
+        public override long Length => this.m_length;
 
         /// <summary>
         /// int型流位置
         /// </summary>
         public int Pos
         {
-            get => (int)this.position;
-            set => this.position = value;
+            get => (int)this.m_position;
+            set => this.m_position = value;
         }
 
         /// <summary>
@@ -137,63 +137,53 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public override long Position
         {
-            get => this.position;
-            set => this.position = value;
+            get => this.m_position;
+            set => this.m_position = value;
         }
 
         /// <summary>
         /// 使用状态
         /// </summary>
-        public bool Using => this.@using;
+        public bool Using => this.m_using;
 
         /// <summary>
         /// 直接完全释放，游离该对象，然后等待GC
         /// </summary>
         public void AbsoluteDispose()
         {
-            this.holding = false;
-            this.@using = false;
-            this.position = 0;
-            this.length = 0;
-            this._buffer = default;
+            this.m_holding = false;
+            this.m_using = false;
+            this.m_position = 0;
+            this.m_length = 0;
+            this.m_buffer = null;
         }
 
         /// <summary>
-        /// 清空数据
+        /// 清空所有内存数据
         /// </summary>
-        /// <exception cref="ByteBlockDisposedException">内存块已释放</exception>
+        /// <exception cref="ObjectDisposedException">内存块已释放</exception>
         public void Clear()
         {
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
-            Array.Clear(this._buffer, 0, this._buffer.Length);
+            Array.Clear(this.m_buffer, 0, this.m_buffer.Length);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 将内存块初始化到刚申请的状态。
+        /// <para>仅仅重置<see cref="Position"/>和<see cref="Length"/>属性。</para>
         /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        /// <exception cref="ObjectDisposedException">内存块已释放</exception>
+        public void Reset()
         {
-            if (this.holding)
+            if (!this.m_using)
             {
-                return;
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
-            if (this.@using)
-            {
-                lock (this)
-                {
-                    if (this.@using)
-                    {
-                        GC.SuppressFinalize(this);
-                        BytePool.Recycle(this._buffer);
-                        this.AbsoluteDispose();
-                    }
-                }
-            }
-            base.Dispose(disposing);
+            this.m_position = 0;
+            this.m_length = 0;
         }
 
         /// <summary>
@@ -210,16 +200,16 @@ namespace RRQMCore.ByteManager
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        /// <exception cref="ByteBlockDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
         public override int Read(byte[] buffer, int offset, int length)
         {
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
-            int len = this._buffer.Length - this.position > length ? length : this._buffer.Length - (int)this.position;
-            Array.Copy(this._buffer, this.position, buffer, offset, len);
-            this.position += len;
+            int len = this.m_length - this.m_position > length ? length : this.CanReadLen;
+            Array.Copy(this.m_buffer, this.m_position, buffer, offset, len);
+            this.m_position += len;
             return len;
         }
 
@@ -251,28 +241,28 @@ namespace RRQMCore.ByteManager
         /// <param name="offset"></param>
         /// <param name="origin"></param>
         /// <returns></returns>
-        /// <exception cref="ByteBlockDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
         public override long Seek(long offset, SeekOrigin origin)
         {
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
             switch (origin)
             {
                 case SeekOrigin.Begin:
-                    this.position = offset;
+                    this.m_position = offset;
                     break;
 
                 case SeekOrigin.Current:
-                    this.position += offset;
+                    this.m_position += offset;
                     break;
 
                 case SeekOrigin.End:
-                    this.position = this.length + offset;
+                    this.m_position = this.m_length + offset;
                     break;
             }
-            return this.position;
+            return this.m_position;
         }
 
         /// <summary>
@@ -280,21 +270,21 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="size">新尺寸</param>
         /// <param name="retainedData">是否保留元数据</param>
-        /// <exception cref="ByteBlockDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
         public void SetCapacity(int size, bool retainedData = false)
         {
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
             byte[] bytes = new byte[size];
 
             if (retainedData)
             {
-                Array.Copy(this._buffer, 0, bytes, 0, this._buffer.Length);
+                Array.Copy(this.m_buffer, 0, bytes, 0, this.m_buffer.Length);
             }
-            BytePool.Recycle(this._buffer);
-            this._buffer = bytes;
+            BytePool.Recycle(this.m_buffer);
+            this.m_buffer = bytes;
         }
 
         /// <summary>
@@ -302,14 +292,14 @@ namespace RRQMCore.ByteManager
         /// 当为False时，会自动调用Dispose。
         /// </summary>
         /// <param name="holding"></param>
-        /// <exception cref="ByteBlockDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
         public void SetHolding(bool holding)
         {
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
-            this.holding = holding;
+            this.m_holding = holding;
             if (!holding)
             {
                 this.Dispose();
@@ -320,18 +310,18 @@ namespace RRQMCore.ByteManager
         /// 设置实际长度
         /// </summary>
         /// <param name="value"></param>
-        /// <exception cref="ByteBlockDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
         public override void SetLength(long value)
         {
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
-            if (value > this._buffer.Length)
+            if (value > this.m_buffer.Length)
             {
                 throw new RRQMException("设置值超出容量");
             }
-            this.length = value;
+            this.m_length = value;
         }
 
         /// <summary>
@@ -348,10 +338,10 @@ namespace RRQMCore.ByteManager
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        /// <exception cref="ByteBlockDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
         public byte[] ToArray(int offset)
         {
-            return this.ToArray(offset, (int)(this.length - offset));
+            return this.ToArray(offset, (int)(this.m_length - offset));
         }
 
         /// <summary>
@@ -362,13 +352,51 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public byte[] ToArray(int offset, int length)
         {
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
             byte[] buffer = new byte[length];
-            Array.Copy(this._buffer, offset, buffer, 0, buffer.Length);
+            Array.Copy(this.m_buffer, offset, buffer, 0, buffer.Length);
             return buffer;
+        }
+
+        /// <summary>
+        /// 转换为UTF-8字符
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return this.ToString(0, this.Len);
+        }
+
+        /// <summary>
+        /// 转换为UTF-8字符
+        /// </summary>
+        /// <param name="offset">偏移量</param>
+        /// <param name="length">长度</param>
+        /// <returns></returns>
+        public string ToString(int offset, int length)
+        {
+            if (!this.m_using)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+            return Encoding.UTF8.GetString(this.m_buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 转换为UTF-8字符
+        /// </summary>
+        /// <param name="offset">偏移量</param>
+        /// <returns></returns>
+        public string ToString(int offset)
+        {
+            if (!this.m_using)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+            return Encoding.UTF8.GetString(this.m_buffer, offset, this.Len - offset);
         }
 
         /// <summary>
@@ -377,30 +405,30 @@ namespace RRQMCore.ByteManager
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="count"></param>
-        /// <exception cref="ByteBlockDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (count == 0)
             {
                 return;
             }
-            if (!this.@using)
+            if (!this.m_using)
             {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
-            if (this._buffer.Length - this.position < count)
+            if (this.m_buffer.Length - this.m_position < count)
             {
-                int need = this._buffer.Length + count - ((int)(this._buffer.Length - this.position));
-                int lend = this._buffer.Length;
+                int need = this.m_buffer.Length + count - ((int)(this.m_buffer.Length - this.m_position));
+                int lend = this.m_buffer.Length;
                 while (need > lend)
                 {
-                    lend = (int)(lend * ratio);
+                    lend = (int)(lend * m_ratio);
                 }
                 this.SetCapacity(lend, true);
             }
-            Array.Copy(buffer, offset, this._buffer, this.position, count);
-            this.position += count;
-            this.length = Math.Max(this.position,this.length);
+            Array.Copy(buffer, offset, this.m_buffer, this.m_position, count);
+            this.m_position += count;
+            this.m_length = Math.Max(this.m_position, this.m_length);
         }
 
         /// <summary>
@@ -411,6 +439,33 @@ namespace RRQMCore.ByteManager
         public void Write(byte[] buffer)
         {
             this.Write(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (this.m_holding)
+            {
+                return;
+            }
+
+            if (this.m_needDis)
+            {
+                lock (this)
+                {
+                    if (this.m_using)
+                    {
+                        GC.SuppressFinalize(this);
+                        BytePool.Recycle(this.m_buffer);
+                        this.AbsoluteDispose();
+                    }
+                }
+            }
+
+            base.Dispose(disposing);
         }
 
         #region BytesPackage
@@ -427,8 +482,8 @@ namespace RRQMCore.ByteManager
             }
             int length = this.ReadInt32();
             byte[] data = new byte[length];
-            Array.Copy(this._buffer, this.position, data, 0, length);
-            this.position += length;
+            Array.Copy(this.m_buffer, this.m_position, data, 0, length);
+            this.m_position += length;
             return data;
         }
 
@@ -448,7 +503,7 @@ namespace RRQMCore.ByteManager
                 return false;
             }
             len = this.ReadInt32();
-            pos = (int)this.position;
+            pos = (int)this.m_position;
             return true;
         }
 
@@ -495,8 +550,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public int ReadInt32()
         {
-            int value = RRQMBitConverter.Default.ToInt32(this._buffer, (int)this.position);
-            this.position += 4;
+            int value = RRQMBitConverter.Default.ToInt32(this.m_buffer, (int)this.m_position);
+            this.m_position += 4;
             return value;
         }
 
@@ -519,8 +574,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public short ReadInt16()
         {
-            short value = RRQMBitConverter.Default.ToInt16(this._buffer, (int)this.position);
-            this.position += 2;
+            short value = RRQMBitConverter.Default.ToInt16(this.m_buffer, (int)this.m_position);
+            this.m_position += 2;
             return value;
         }
 
@@ -543,8 +598,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public long ReadInt64()
         {
-            long value = RRQMBitConverter.Default.ToInt64(this._buffer, (int)this.position);
-            this.position += 8;
+            long value = RRQMBitConverter.Default.ToInt64(this.m_buffer, (int)this.m_position);
+            this.m_position += 8;
             return value;
         }
 
@@ -567,8 +622,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public bool ReadBoolean()
         {
-            bool value = RRQMBitConverter.Default.ToBoolean(this._buffer, (int)this.position);
-            this.position += 1;
+            bool value = RRQMBitConverter.Default.ToBoolean(this.m_buffer, (int)this.m_position);
+            this.m_position += 1;
             return value;
         }
 
@@ -591,8 +646,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public new byte ReadByte()
         {
-            byte value = this._buffer[this.position];
-            this.position++;
+            byte value = this.m_buffer[this.m_position];
+            this.m_position++;
             return value;
         }
 
@@ -628,8 +683,8 @@ namespace RRQMCore.ByteManager
             else
             {
                 ushort len = this.ReadUInt16();
-                string str = Encoding.UTF8.GetString(this._buffer, (int)this.position, len);
-                this.position += len;
+                string str = Encoding.UTF8.GetString(this.m_buffer, (int)this.m_position, len);
+                this.m_position += len;
                 return str;
             }
         }
@@ -672,8 +727,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public char ReadChar()
         {
-            char value = RRQMBitConverter.Default.ToChar(this._buffer, (int)this.position);
-            this.position += 2;
+            char value = RRQMBitConverter.Default.ToChar(this.m_buffer, (int)this.m_position);
+            this.m_position += 2;
             return value;
         }
 
@@ -696,8 +751,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public double ReadDouble()
         {
-            double value = RRQMBitConverter.Default.ToDouble(this._buffer, (int)this.position);
-            this.position += 8;
+            double value = RRQMBitConverter.Default.ToDouble(this.m_buffer, (int)this.m_position);
+            this.m_position += 8;
             return value;
         }
 
@@ -720,8 +775,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public float ReadFloat()
         {
-            float value = RRQMBitConverter.Default.ToSingle(this._buffer, (int)this.position);
-            this.position += 4;
+            float value = RRQMBitConverter.Default.ToSingle(this.m_buffer, (int)this.m_position);
+            this.m_position += 4;
             return value;
         }
 
@@ -744,8 +799,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public ushort ReadUInt16()
         {
-            ushort value = RRQMBitConverter.Default.ToUInt16(this._buffer, (int)this.position);
-            this.position += 2;
+            ushort value = RRQMBitConverter.Default.ToUInt16(this.m_buffer, (int)this.m_position);
+            this.m_position += 2;
             return value;
         }
 
@@ -768,8 +823,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public uint ReadUInt32()
         {
-            uint value = RRQMBitConverter.Default.ToUInt32(this._buffer, (int)this.position);
-            this.position += 4;
+            uint value = RRQMBitConverter.Default.ToUInt32(this.m_buffer, (int)this.m_position);
+            this.m_position += 4;
             return value;
         }
 
@@ -792,8 +847,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public ulong ReadUInt64()
         {
-            ulong value = RRQMBitConverter.Default.ToUInt64(this._buffer, (int)this.position);
-            this.position += 8;
+            ulong value = RRQMBitConverter.Default.ToUInt64(this.m_buffer, (int)this.m_position);
+            this.m_position += 8;
             return value;
         }
 
@@ -816,8 +871,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public DateTime ReadDateTime()
         {
-            long value = RRQMBitConverter.Default.ToInt64(this._buffer, (int)this.position);
-            this.position += 8;
+            long value = RRQMBitConverter.Default.ToInt64(this.m_buffer, (int)this.m_position);
+            this.m_position += 8;
             return DateTime.FromBinary(value);
         }
 
@@ -856,13 +911,13 @@ namespace RRQMCore.ByteManager
             {
                 case SerializationType.RRQMBinary:
                     {
-                        obj = SerializeConvert.RRQMBinaryDeserialize<T>(this._buffer, (int)this.position);
+                        obj = SerializeConvert.RRQMBinaryDeserialize<T>(this.m_buffer, (int)this.m_position);
                     }
                     break;
 
                 case SerializationType.Json:
                     {
-                        string jsonString = Encoding.UTF8.GetString(this._buffer, (int)this.position, length);
+                        string jsonString = Encoding.UTF8.GetString(this.m_buffer, (int)this.m_position, length);
                         obj = JsonConvert.DeserializeObject<T>(jsonString);
                     }
                     break;
@@ -871,7 +926,7 @@ namespace RRQMCore.ByteManager
                     throw new RRQMException("未定义的序列化类型");
             }
 
-            this.position += length;
+            this.m_position += length;
             return obj;
         }
 
@@ -912,43 +967,5 @@ namespace RRQMCore.ByteManager
         }
 
         #endregion Object
-
-        /// <summary>
-        /// 转换为UTF-8字符
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return this.ToString(0, this.Len);
-        }
-
-        /// <summary>
-        /// 转换为UTF-8字符
-        /// </summary>
-        /// <param name="offset">偏移量</param>
-        /// <param name="length">长度</param>
-        /// <returns></returns>
-        public string ToString(int offset, int length)
-        {
-            if (!this.@using)
-            {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
-            }
-            return Encoding.UTF8.GetString(this._buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 转换为UTF-8字符
-        /// </summary>
-        /// <param name="offset">偏移量</param>
-        /// <returns></returns>
-        public string ToString(int offset)
-        {
-            if (!this.@using)
-            {
-                throw new ByteBlockDisposedException(ResType.ByteBlockDisposed.GetResString());
-            }
-            return Encoding.UTF8.GetString(this._buffer, offset, this.Len - offset);
-        }
     }
 }

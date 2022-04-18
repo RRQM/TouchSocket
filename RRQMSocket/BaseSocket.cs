@@ -20,36 +20,27 @@ namespace RRQMSocket
     /// </summary>
     public abstract class BaseSocket : RRQMDependencyObject, ISocket
     {
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        protected ILog logger;
-
-        private int bufferLength;
+        private int m_bufferLength;
 
         /// <summary>
         /// 数据交互缓存池限制，min=1024 byte
         /// </summary>
         public int BufferLength
         {
-            get => this.bufferLength;
+            get => this.m_bufferLength;
             set
             {
                 if (value < 1024)
                 {
                     value = 1024 * 10;
                 }
-                this.bufferLength = value;
+                this.m_bufferLength = value;
             }
         }
 
         /// <summary>
         /// 日志记录器
         /// </summary>
-        public ILog Logger
-        {
-            get => this.logger;
-            set => this.logger = value;
-        }
+        public ILog Logger { get; set; }
     }
 }

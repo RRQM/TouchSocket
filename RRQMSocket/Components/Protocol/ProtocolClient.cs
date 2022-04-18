@@ -517,7 +517,7 @@ namespace RRQMSocket
                         }
                         catch (Exception ex)
                         {
-                            this.logger.Debug(LogType.Error, this, "在StreamStatusToThis中发生错误。", ex);
+                            this.Logger.Debug(LogType.Error, this, "在StreamStatusToThis中发生错误。", ex);
                         }
                         break;
                     }
@@ -530,7 +530,7 @@ namespace RRQMSocket
                         }
                         catch (Exception ex)
                         {
-                            this.logger.Debug(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
+                            this.Logger.Debug(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
                         }
                     }
                     break;
@@ -544,7 +544,7 @@ namespace RRQMSocket
                         }
                         catch (Exception ex)
                         {
-                            this.logger.Debug(LogType.Error, this, $"在{protocol}中发生错误。", ex);
+                            this.Logger.Debug(LogType.Error, this, $"在{protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -661,7 +661,7 @@ namespace RRQMSocket
                     }
                     catch (Exception)
                     {
-                        this.logger.Debug(LogType.Warning, this, "心跳包发送失败。");
+                        this.Logger.Debug(LogType.Warning, this, "心跳包发送失败。");
                     }
                 });
                 this.heartbeatLoopAction.RunAsync();
@@ -773,7 +773,7 @@ namespace RRQMSocket
                 waitStream.Status = 3;
                 waitStream.Message = ex.Message;
 
-                this.logger.Debug(LogType.Error, this, $"在{nameof(P_9_RequestStreamToThis)}中发生错误。", ex);
+                this.Logger.Debug(LogType.Error, this, $"在{nameof(P_9_RequestStreamToThis)}中发生错误。", ex);
             }
 
             waitStream.Metadata = null;

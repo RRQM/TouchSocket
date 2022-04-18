@@ -23,7 +23,7 @@ namespace RRQMSocket
         /// <summary>
         /// 默认
         /// </summary>
-        Default,
+        Default=0,
 
         /// <summary>
         /// 继续下移

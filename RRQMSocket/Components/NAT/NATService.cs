@@ -64,12 +64,12 @@ namespace RRQMSocket
                 }
                 catch (Exception ex)
                 {
-                    this.logger.Debug(RRQMCore.Log.LogType.Error, this, ex.Message, ex);
+                    this.Logger.Debug(RRQMCore.Log.LogType.Error, this, ex.Message, ex);
                 }
             }
             if (sockets.Count == 0)
             {
-                this.logger.Debug(RRQMCore.Log.LogType.Error, this, "转发地址均无法建立，已拒绝本次连接。", null);
+                this.Logger.Debug(RRQMCore.Log.LogType.Error, this, "转发地址均无法建立，已拒绝本次连接。", null);
                 e.RemoveOperation(Operation.Permit);
                 return;
             }

@@ -66,11 +66,6 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract int MaxPackageSize { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public abstract void Clear();
 
         /// <summary>

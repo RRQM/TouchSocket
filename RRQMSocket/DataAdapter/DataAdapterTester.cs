@@ -26,7 +26,7 @@ namespace RRQMSocket
     /// </summary>
     public class DataAdapterTester : IDisposable
     {
-        private readonly IntelligentDataQueue<TransferByte> asyncBytes;
+        private readonly IntelligentDataQueue<QueueDataBytes> asyncBytes;
         private readonly Thread sendThread;
         private DataHandlingAdapter adapter;
         private int bufferLength;
@@ -39,7 +39,7 @@ namespace RRQMSocket
 
         private DataAdapterTester()
         {
-            this.asyncBytes = new IntelligentDataQueue<TransferByte>(1024 * 1024 * 10);
+            this.asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
             this.sendThread = new Thread(this.BeginSend);
             this.sendThread.IsBackground = true;
             this.sendThread.Name = "DataAdapterTesterThread";
@@ -150,7 +150,7 @@ namespace RRQMSocket
 
         private void SendCallback(byte[] buffer, int offset, int length, bool isAsync)
         {
-            TransferByte asyncByte = new TransferByte(new byte[length], 0, length);
+            QueueDataBytes asyncByte = new QueueDataBytes(new byte[length], 0, length);
             Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
             this.asyncBytes.Enqueue(asyncByte);
         }
@@ -161,7 +161,7 @@ namespace RRQMSocket
             ByteBlock block = null;
             while (true)
             {
-                if (this.asyncBytes.TryDequeue(out TransferByte asyncByte))
+                if (this.asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
                 {
                     if (block == null)
                     {
@@ -208,7 +208,7 @@ namespace RRQMSocket
             return true;
         }
 
-        private ByteBlock Write(TransferByte transferByte, ref int offset)
+        private ByteBlock Write(QueueDataBytes transferByte, ref int offset)
         {
             ByteBlock block = BytePool.GetByteBlock(this.bufferLength, true);
             int len = Math.Min(transferByte.Length - offset, this.bufferLength);
@@ -224,7 +224,7 @@ namespace RRQMSocket
     /// </summary>
     public class UdpDataAdapterTester : IDisposable
     {
-        private readonly IntelligentDataQueue<TransferByte> asyncBytes;
+        private readonly IntelligentDataQueue<QueueDataBytes> asyncBytes;
         private UdpDataHandlingAdapter adapter;
         private int count;
         private bool dispose;
@@ -235,7 +235,7 @@ namespace RRQMSocket
 
         private UdpDataAdapterTester(int multiThread)
         {
-            this.asyncBytes = new IntelligentDataQueue<TransferByte>(1024 * 1024 * 10);
+            this.asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
             for (int i = 0; i < multiThread; i++)
             {
                 Task.Run(this.BeginSend);
@@ -345,7 +345,7 @@ namespace RRQMSocket
 
         private void SendCallback(EndPoint endPoint,byte[] buffer, int offset, int length, bool isAsync)
         {
-            TransferByte asyncByte = new TransferByte(new byte[length], 0, length);
+            QueueDataBytes asyncByte = new QueueDataBytes(new byte[length], 0, length);
             Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
             this.asyncBytes.Enqueue(asyncByte);
         }
@@ -354,7 +354,7 @@ namespace RRQMSocket
         {
             byteBlocks = new List<ByteBlock>();
             
-            while (this.asyncBytes.TryDequeue(out TransferByte asyncByte))
+            while (this.asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
             {
                 ByteBlock block = new ByteBlock(asyncByte.Length);
                 block.Write(asyncByte.Buffer,asyncByte.Offset,asyncByte.Length);

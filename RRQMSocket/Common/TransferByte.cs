@@ -17,7 +17,7 @@ namespace RRQMSocket
     /// <summary>
     /// 传输字节
     /// </summary>
-    public struct TransferByte : IQueueData
+    public readonly struct TransferByte
     {
         /// <summary>
         /// 构造函数
@@ -27,9 +27,9 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public TransferByte(byte[] buffer, int offset, int length)
         {
-            this.offset = offset;
-            this.length = length;
-            this.buffer = buffer;
+            this.Offset = offset;
+            this.Length = length;
+            this.Buffer = buffer;
         }
 
         /// <summary>
@@ -40,28 +40,19 @@ namespace RRQMSocket
         {
         }
 
-        private int offset;
-        private int length;
-        private byte[] buffer;
-
         /// <summary>
         /// 数据内存
         /// </summary>
-        public byte[] Buffer => this.buffer;
+        public byte[] Buffer { get; }
 
         /// <summary>
         /// 偏移
         /// </summary>
-        public int Offset => this.offset;
+        public int Offset { get; }
 
         /// <summary>
         /// 长度
         /// </summary>
-        public int Length => this.length;
-
-        /// <summary>
-        /// 尺寸
-        /// </summary>
-        public int Size => this.length;
+        public int Length { get; }
     }
 }

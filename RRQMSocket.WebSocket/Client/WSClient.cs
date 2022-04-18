@@ -46,49 +46,50 @@ namespace RRQMSocket.WebSocket
     /// </summary>
     public class WSClientBase : HttpClientBase
     {
-       
+
 
         /// <summary>
         /// 请求连接到WebSocket。
         /// </summary>
         /// <returns></returns>
-        public override ITcpClient Connect()
+        public override ITcpClient Connect(int timeout = 5000)
         {
-            return this.Connect(default);
+            return this.Connect(default, timeout);
         }
 
         /// <summary>
         /// 请求连接到WebSocket。
         /// </summary>
+        /// <param name="timeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public virtual ITcpClient Connect(CancellationToken token)
+        public virtual ITcpClient Connect(CancellationToken token, int timeout = 5000)
         {
             lock (this)
             {
                 if (!this.Online)
                 {
-                    base.Connect();
+                    base.Connect(timeout);
                 }
 
                 string base64Key;
                 IPHost iPHost = this.Config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
                 string url = iPHost.IsUri ? iPHost.Uri.PathAndQuery : string.Empty;
                 HttpRequest request = WSTools.GetWSRequest(this.RemoteIPHost.ToString(), url, this.GetWebSocketVersion(), out base64Key);
-                  
-                this.OnHandshaking(new HttpContextEventArgs(request));   
 
-                var response = this.Request(request, token: token);
+                this.OnHandshaking(new HttpContextEventArgs(request));
+
+                var response = this.Request(request, timeout: timeout, token: token);
                 if (response.GetHeader("sec-websocket-accept") != WSTools.CalculateBase64Key(base64Key, Encoding.UTF8))
                 {
                     this.MainSocket.Dispose();
                     throw new RRQMException("返回的应答码不正确。");
                 }
 
-                this.SetAdapter(new WebSocketDataHandlingAdapter() { MaxPackageSize=this.MaxPackageSize});
-                this.SetValue(WebSocketServerPlugin.HandshakedProperty,true);
+                this.SetAdapter(new WebSocketDataHandlingAdapter());
+                this.SetValue(WebSocketServerPlugin.HandshakedProperty, true);
                 response.Flag = true;
-                this.OnHandshaked(new HttpContextEventArgs(request) { Response=response});
+                this.OnHandshaked(new HttpContextEventArgs(request) { Response = response });
                 return this;
             }
         }
@@ -119,7 +120,7 @@ namespace RRQMSocket.WebSocket
                     return;
                 }
             }
-            this.Handshaking?.Invoke(this,e);
+            this.Handshaking?.Invoke(this, e);
         }
 
         /// <summary>
@@ -136,7 +137,7 @@ namespace RRQMSocket.WebSocket
                     return;
                 }
             }
-            this.Handshaked?.Invoke(this,e);
+            this.Handshaked?.Invoke(this, e);
         }
 
         #endregion 事件
@@ -149,7 +150,7 @@ namespace RRQMSocket.WebSocket
         {
             if (this.UsePlugin)
             {
-                this.PluginsManager.Raise<IWebSocketPlugin>("OnHandleWSDataFrame",this,new WSDataFrameEventArgs(dataFrame));
+                this.PluginsManager.Raise<IWebSocketPlugin>("OnHandleWSDataFrame", this, new WSDataFrameEventArgs(dataFrame));
             }
         }
 
@@ -185,7 +186,7 @@ namespace RRQMSocket.WebSocket
         /// <param name="e"></param>
         protected override void OnDisconnected(ClientDisconnectedEventArgs e)
         {
-            this.SetValue(WebSocketServerPlugin.HandshakedProperty,false);
+            this.SetValue(WebSocketServerPlugin.HandshakedProperty, false);
             base.OnDisconnected(e);
         }
     }

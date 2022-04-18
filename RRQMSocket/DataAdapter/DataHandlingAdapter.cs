@@ -23,9 +23,9 @@ namespace RRQMSocket
     /// </summary>
     public abstract class DataHandlingAdapter
     {
-        internal ITcpClientBase owner;
+        internal ITcpClientBase client;
 
-        private int maxPackageSize = 1024 * 1024;
+        private int m_maxPackageSize = 1024 * 1024;
 
         /// <summary>
         /// 拼接发送
@@ -37,14 +37,14 @@ namespace RRQMSocket
         /// </summary>
         public int MaxPackageSize
         {
-            get { return maxPackageSize; }
-            set { maxPackageSize = value; }
+            get { return m_maxPackageSize; }
+            set { m_maxPackageSize = value; }
         }
 
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public ITcpClientBase Owner => this.owner;
+        public ITcpClientBase Client => this.client;
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -128,9 +128,9 @@ namespace RRQMSocket
             {
                 this.Reset();
             }
-            if (log && this.owner != null && this.owner.Logger != null)
+            if (log && this.client != null && this.client.Logger != null)
             {
-                this.owner.Logger.Error(error);
+                this.client.Logger.Error(error);
             }
         }
 

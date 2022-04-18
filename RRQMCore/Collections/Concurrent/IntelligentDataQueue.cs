@@ -22,38 +22,38 @@ namespace RRQMCore.Collections.Concurrent
     /// <typeparam name="T"></typeparam>
     public class IntelligentDataQueue<T> : ConcurrentQueue<T> where T : IQueueData
     {
-        private bool overflowWait;
+        private bool m_overflowWait;
 
         /// <summary>
         /// 溢出等待
         /// </summary>
         public bool OverflowWait
         {
-            get => this.overflowWait;
-            set => this.overflowWait = value;
+            get => this.m_overflowWait;
+            set => this.m_overflowWait = value;
         }
 
-        private Action<bool> onQueueChanged;
+        private Action<bool> m_onQueueChanged;
 
         /// <summary>
         /// 在队列修改时
         /// </summary>
         public Action<bool> OnQueueChanged
         {
-            get => this.onQueueChanged;
-            set => this.onQueueChanged = value;
+            get => this.m_onQueueChanged;
+            set => this.m_onQueueChanged = value;
         }
 
-        private bool free;
+        private bool m_free;
 
         /// <summary>
         /// 是否有空位允许入队
         /// </summary>
-        public bool Free => this.free;
+        public bool Free => this.m_free;
 
-        private long actualSize;
+        private long m_actualSize;
 
-        private long maxSize;
+        private long m_maxSize;
 
         /// <summary>
         /// 构造函数
@@ -61,8 +61,8 @@ namespace RRQMCore.Collections.Concurrent
         /// <param name="maxSize"></param>
         public IntelligentDataQueue(long maxSize)
         {
-            this.free = true;
-            this.overflowWait = true;
+            this.m_free = true;
+            this.m_overflowWait = true;
             this.MaxSize = maxSize;
         }
 
@@ -78,21 +78,21 @@ namespace RRQMCore.Collections.Concurrent
         /// </summary>
         public long MaxSize
         {
-            get => this.maxSize;
+            get => this.m_maxSize;
             set
             {
                 if (value < 1)
                 {
                     value = 1;
                 }
-                this.maxSize = value;
+                this.m_maxSize = value;
             }
         }
 
         /// <summary>
         /// 实际尺寸
         /// </summary>
-        public long ActualSize => this.actualSize;
+        public long ActualSize => this.m_actualSize;
 
         /// <summary>
         /// 清空队列
@@ -111,20 +111,24 @@ namespace RRQMCore.Collections.Concurrent
         /// <param name="item"></param>
         public new void Enqueue(T item)
         {
-            bool free = this.actualSize < this.maxSize;
-            if (this.free != free)
+            lock (this)
             {
-                this.free = free;
-                this.onQueueChanged?.Invoke(this.free);
-            }
+                bool free = this.m_actualSize < this.m_maxSize;
+                if (this.m_free != free)
+                {
+                    this.m_free = free;
+                    this.m_onQueueChanged?.Invoke(this.m_free);
+                }
 
-            if (this.overflowWait)
-            {
-                SpinWait.SpinUntil(this.Check);
-            }
+                if (this.m_overflowWait)
+                {
+                    SpinWait.SpinUntil(this.Check);
+                }
 
-            Interlocked.Add(ref this.actualSize, item.Size);
-            base.Enqueue(item);
+                Interlocked.Add(ref this.m_actualSize, item.Size);
+                base.Enqueue(item);
+            }
+           
         }
 
         /// <summary>
@@ -136,12 +140,12 @@ namespace RRQMCore.Collections.Concurrent
         {
             if (base.TryDequeue(out result))
             {
-                Interlocked.Add(ref this.actualSize, -result.Size);
-                bool free = this.actualSize < this.maxSize;
-                if (this.free != free)
+                Interlocked.Add(ref this.m_actualSize, -result.Size);
+                bool free = this.m_actualSize < this.m_maxSize;
+                if (this.m_free != free)
                 {
-                    this.free = free;
-                    this.onQueueChanged?.Invoke(this.free);
+                    this.m_free = free;
+                    this.m_onQueueChanged?.Invoke(this.m_free);
                 }
                 return true;
             }
@@ -150,7 +154,7 @@ namespace RRQMCore.Collections.Concurrent
 
         private bool Check()
         {
-            return this.actualSize < this.maxSize;
+            return this.m_actualSize < this.m_maxSize;
         }
     }
 
@@ -163,5 +167,53 @@ namespace RRQMCore.Collections.Concurrent
         /// 数据长度
         /// </summary>
         int Size { get; }
+    }
+
+    /// <summary>
+    /// 传输字节
+    /// </summary>
+    public readonly struct QueueDataBytes : IQueueData
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public QueueDataBytes(byte[] buffer, int offset, int length)
+        {
+            this.Offset = offset;
+            this.Length = length;
+            this.Buffer = buffer;
+            this.Size = length;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="buffer"></param>
+        public QueueDataBytes(byte[] buffer) : this(buffer, 0, buffer.Length)
+        {
+        }
+
+        /// <summary>
+        /// 数据内存
+        /// </summary>
+        public byte[] Buffer { get; }
+
+        /// <summary>
+        /// 偏移
+        /// </summary>
+        public int Offset { get; }
+
+        /// <summary>
+        /// 长度
+        /// </summary>
+        public int Length { get; }
+
+        /// <summary>
+        /// 尺寸
+        /// </summary>
+        public int Size { get; }
     }
 }

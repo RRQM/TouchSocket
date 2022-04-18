@@ -20,7 +20,7 @@ namespace RRQMCore
     /// </summary>
     public struct ReadLock : IDisposable
     {
-        private ReaderWriterLockSlim _locks;
+        private ReaderWriterLockSlim m_locks;
 
         /// <summary>
         /// 构造函数
@@ -28,8 +28,8 @@ namespace RRQMCore
         /// <param name="locks"></param>
         public ReadLock(ReaderWriterLockSlim locks)
         {
-            this._locks = locks;
-            this._locks.EnterReadLock();
+            this.m_locks = locks;
+            this.m_locks.EnterReadLock();
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace RRQMCore
         /// </summary>
         public void Dispose()
         {
-            this._locks.ExitReadLock();
+            this.m_locks.ExitReadLock();
         }
     }
 
@@ -46,7 +46,7 @@ namespace RRQMCore
     /// </summary>
     public struct WriteLock : IDisposable
     {
-        private ReaderWriterLockSlim _locks;
+        private ReaderWriterLockSlim m_locks;
 
         /// <summary>
         /// 构造函数
@@ -54,8 +54,8 @@ namespace RRQMCore
         /// <param name="locks"></param>
         public WriteLock(ReaderWriterLockSlim locks)
         {
-            this._locks = locks;
-            this._locks.EnterWriteLock();
+            this.m_locks = locks;
+            this.m_locks.EnterWriteLock();
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace RRQMCore
         /// </summary>
         public void Dispose()
         {
-            this._locks.ExitWriteLock();
+            this.m_locks.ExitWriteLock();
         }
     }
 }

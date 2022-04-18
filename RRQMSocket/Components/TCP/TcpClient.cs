@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RRQMSocket
@@ -313,6 +314,11 @@ namespace RRQMSocket
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                this.m_config = default;
+                this.m_adapter = default;
+            }
             this.Close($"{nameof(Dispose)}主动断开");
             base.Dispose(disposing);
         }
@@ -378,7 +384,7 @@ namespace RRQMSocket
         /// <summary>
         /// 请求连接到服务器。
         /// </summary>
-        public virtual ITcpClient Connect()
+        public virtual ITcpClient Connect(int timeout=5000)
         {
             if (this.m_online)
             {
@@ -386,7 +392,7 @@ namespace RRQMSocket
             }
             if (this.disposedValue)
             {
-                throw new RRQMException("无法利用已释放对象");
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (this.m_config == null)
             {
@@ -405,33 +411,44 @@ namespace RRQMSocket
 
             ClientConnectingEventArgs args = new ClientConnectingEventArgs(this.m_mainSocket);
             this.OnConnecting(args);
-            this.m_mainSocket.Connect(iPHost.EndPoint);
-            this.LoadSocketAndReadIpPort();
 
-            if (this.m_separateThreadSend)
+
+            var result = this.m_mainSocket.BeginConnect(iPHost.EndPoint, null, null);
+            if (result.AsyncWaitHandle.WaitOne(timeout))
             {
-                if (this.m_asyncSender == null)
+                if (this.m_mainSocket.Connected)
                 {
-                    this.m_asyncSender = new AsyncSender(this.m_mainSocket, this.m_mainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
+                    this.m_mainSocket.EndConnect(result);
+                    this.LoadSocketAndReadIpPort();
+
+                    if (this.m_separateThreadSend)
+                    {
+                        if (this.m_asyncSender == null)
+                        {
+                            this.m_asyncSender = new AsyncSender(this.m_mainSocket, this.m_mainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
+                        }
+                    }
+                    this.BeginReceive();
+                    this.m_online = true;
+                    Task.Run(() =>
+                    {
+                        this.OnConnected(new MesEventArgs("连接成功"));
+                    });
+                    return this;
                 }
             }
-            this.BeginReceive();
-            this.m_online = true;
-            Task.Run(() =>
-            {
-                this.OnConnected(new MesEventArgs("连接成功"));
-            });
-            return this;
+            this.m_mainSocket.Dispose();
+            throw new TimeoutException();
         }
 
         /// <summary>
         /// 异步连接服务器
         /// </summary>
-        public Task<ITcpClient> ConnectAsync()
+        public Task<ITcpClient> ConnectAsync(int timeout = 5000)
         {
             return Task.Run(() =>
             {
-                return this.Connect();
+                return this.Connect(timeout);
             });
         }
 
@@ -594,11 +611,11 @@ namespace RRQMSocket
                 throw new ArgumentNullException(nameof(adapter));
             }
 
-            if (adapter.owner != null)
+            if (adapter.client != null)
             {
                 throw new RRQMException("此适配器已被其他终端使用，请重新创建对象。");
             }
-            adapter.owner = this;
+            adapter.client = this;
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
             if (this.Config != null)
@@ -709,6 +726,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
+                e.Dispose();
                 this.BreakOut(ex.Message, false);
             }
         }
@@ -955,6 +973,46 @@ namespace RRQMSocket
         }
         #endregion
 
+        #region 异步默认发送
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"><inheritdoc/></param>
+        /// <param name="offset"><inheritdoc/></param>
+        /// <param name="length"><inheritdoc/></param>
+        /// <exception cref="RRQMNotConnectedException"><inheritdoc/></exception>
+        /// <exception cref="RRQMOverlengthException"><inheritdoc/></exception>
+        /// <exception cref="RRQMException"><inheritdoc/></exception>
+        public void DefaultSendAsync(byte[] buffer, int offset, int length)
+        {
+            this.SocketSend(buffer, offset, length, true);
+        }
+
+        /// <summary>
+        ///<inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"><inheritdoc/></param>
+        /// <exception cref="RRQMNotConnectedException"><inheritdoc/></exception>
+        /// <exception cref="RRQMOverlengthException"><inheritdoc/></exception>
+        /// <exception cref="RRQMException"><inheritdoc/></exception>
+        public void DefaultSendAsync(byte[] buffer)
+        {
+            this.DefaultSendAsync(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="byteBlock"><inheritdoc/></param>
+        /// <exception cref="RRQMNotConnectedException"><inheritdoc/></exception>
+        /// <exception cref="RRQMOverlengthException"><inheritdoc/></exception>
+        /// <exception cref="RRQMException"><inheritdoc/></exception>
+        public void DefaultSendAsync(ByteBlock byteBlock)
+        {
+            this.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+        }
+        #endregion
+
         private void LoadSocketAndReadIpPort()
         {
             if (this.m_mainSocket == null)
@@ -985,6 +1043,11 @@ namespace RRQMSocket
 
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
+            if (!this.m_online)
+            {
+                e.Dispose();
+                return;
+            }
             if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
             {
                 ByteBlock byteBlock = (ByteBlock)e.UserToken;
@@ -1003,11 +1066,13 @@ namespace RRQMSocket
                 }
                 catch (Exception ex)
                 {
+                    e.Dispose();
                     this.BreakOut(ex.Message, false);
                 }
             }
             else
             {
+                e.Dispose();
                 this.BreakOut("远程终端主动关闭", false);
             }
         }

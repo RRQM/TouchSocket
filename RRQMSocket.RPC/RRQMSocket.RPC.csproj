@@ -76,7 +76,7 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox	</Description>
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="RRQMSocket" Version="*" />
-		<PackageReference Include="RRQMCore" Version="8.0.4" />
+		<PackageReference Include="RRQMSocket" Version="8.0.5" />
+		<PackageReference Include="RRQMCore" Version="8.0.5" />
 	</ItemGroup>
 </Project>

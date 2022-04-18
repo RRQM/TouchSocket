@@ -14,6 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace RRQMCore.ByteManager
 {
@@ -24,18 +25,23 @@ namespace RRQMCore.ByteManager
     {
         private static ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
 
-        private static bool autoZero;
-        private static long fullSize;
-        private static int keyCapacity;
-        private static int maxBlockSize;
-        private static long maxSize;
-        private static int minBlockSize;
+        private static bool m_autoZero;
+        private static long m_fullSize;
+        private static int m_keyCapacity;
+        private static int m_maxBlockSize;
+        private static long m_maxSize;
+        private static int m_minBlockSize;
+        private static Timer m_timer;
 
         static BytePool()
         {
-            keyCapacity = 100;
-            autoZero = false;
-            maxSize = 1024 * 1024 * 512;
+            m_timer = new Timer((o)=> 
+            {
+                BytePool.Clear();
+            },null,1000*60*60, 1000 * 60 * 60);
+             m_keyCapacity = 100;
+            m_autoZero = false;
+            m_maxSize = 1024 * 1024 * 512;
             SetBlockSize(1024, 1024 * 1024 * 20);
             AddSizeKey(10240);
         }
@@ -45,8 +51,8 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public static bool AutoZero
         {
-            get => autoZero;
-            set => autoZero = value;
+            get => m_autoZero;
+            set => m_autoZero = value;
         }
 
         /// <summary>
@@ -54,35 +60,35 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public static int KeyCapacity
         {
-            get => keyCapacity;
-            set => keyCapacity = value;
+            get => m_keyCapacity;
+            set => m_keyCapacity = value;
         }
 
         /// <summary>
         /// 单个块最大值
         /// </summary>
-        public static int MaxBlockSize => maxBlockSize;
+        public static int MaxBlockSize => m_maxBlockSize;
 
         /// <summary>
         /// 允许的内存池最大值
         /// </summary>
         public static long MaxSize
         {
-            get => maxSize;
+            get => m_maxSize;
             set
             {
                 if (value < 1024)
                 {
                     value = 1024;
                 }
-                maxSize = value;
+                m_maxSize = value;
             }
         }
 
         /// <summary>
         /// 单个块最小值
         /// </summary>
-        public static int MinBlockSize => minBlockSize;
+        public static int MinBlockSize => m_minBlockSize;
 
         /// <summary>
         /// 添加尺寸键
@@ -134,7 +140,7 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public static ByteBlock GetByteBlock(int byteSize, bool equalSize)
         {
-            ByteBlock byteBlock = new ByteBlock(GetByteCore(byteSize, equalSize));
+            ByteBlock byteBlock = new ByteBlock(byteSize, equalSize);
             return byteBlock;
         }
 
@@ -145,9 +151,9 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public static ByteBlock GetByteBlock(int byteSize)
         {
-            if (byteSize < minBlockSize)
+            if (byteSize < m_minBlockSize)
             {
-                byteSize = minBlockSize;
+                byteSize = m_minBlockSize;
             }
             return GetByteBlock(byteSize, false);
         }
@@ -158,7 +164,7 @@ namespace RRQMCore.ByteManager
         /// <returns></returns>
         public static ByteBlock GetByteBlock()
         {
-            return GetByteBlock(maxBlockSize, true);
+            return GetByteBlock(m_maxBlockSize, true);
         }
 
         /// <summary>
@@ -197,8 +203,8 @@ namespace RRQMCore.ByteManager
         /// <param name="maxBlockSize"></param>
         public static void SetBlockSize(int minBlockSize, int maxBlockSize)
         {
-            BytePool.maxBlockSize = maxBlockSize;
-            BytePool.minBlockSize = minBlockSize;
+            BytePool.m_maxBlockSize = maxBlockSize;
+            BytePool.m_minBlockSize = minBlockSize;
             bytesDictionary.Clear();
         }
 
@@ -218,7 +224,7 @@ namespace RRQMCore.ByteManager
                 {
                     if (bytesCollection.TryGet(out byte[] bytes))
                     {
-                        fullSize -= byteSize;
+                        m_fullSize -= byteSize;
                         return bytes;
                     }
                 }
@@ -236,7 +242,7 @@ namespace RRQMCore.ByteManager
                 {
                     if (bytesCollection.TryGet(out byte[] bytes))
                     {
-                        fullSize -= byteSize;
+                        m_fullSize -= byteSize;
                         return bytes;
                     }
                 }
@@ -254,15 +260,15 @@ namespace RRQMCore.ByteManager
         /// <param name="bytes"></param>
         public static void Recycle(byte[] bytes)
         {
-            if (maxSize > fullSize)
+            if (m_maxSize > m_fullSize)
             {
                 if (bytesDictionary.TryGetValue(bytes.Length, out BytesQueue bytesQueue))
                 {
-                    if (autoZero)
+                    if (m_autoZero)
                     {
                         Array.Clear(bytes, 0, bytes.Length);
                     }
-                    fullSize += bytes.Length;
+                    m_fullSize += bytes.Length;
                     bytesQueue.Add(bytes);
                 }
             }
@@ -273,17 +279,17 @@ namespace RRQMCore.ByteManager
                 {
                     size += collection.FullSize;
                 }
-                fullSize = size;
+                m_fullSize = size;
             }
         }
 
         private static void CheckKeyCapacity(int byteSize)
         {
-            if (byteSize < minBlockSize || byteSize > maxBlockSize)
+            if (byteSize < m_minBlockSize || byteSize > m_maxBlockSize)
             {
                 return;
             }
-            if (bytesDictionary.Count < keyCapacity)
+            if (bytesDictionary.Count < m_keyCapacity)
             {
                 bytesDictionary.TryAdd(byteSize, new BytesQueue(byteSize));
             }
@@ -387,81 +393,53 @@ namespace RRQMCore.ByteManager
 
             //U3D无法编译时替换。
 
-            if (num <= 1024)
-            {
-                return 1024;
-            }
-            else if (num <= 2048)
-            {
-                return 2048;
-            }
-            else if (num <= 4096)
-            {
-                return 4096;
-            }
-            else if (num <= 8192)
-            {
-                return 8192;
-            }
-            else if (num <= 10240)
+            if (num <= 10240)//10k
             {
                 return 10240;
             }
-            else if (num <= 16384)
-            {
-                return 16384;
-            }
-            else if (num <= 32768)
-            {
-                return 32768;
-            }
-            else if (num <= 65536)
+            else if (num <= 65536)//64k
             {
                 return 65536;
             }
-            else if (num <= 131072)
+            else if (num <= 102400)//100k
             {
-                return 131072;
+                return 102400;
             }
-            else if (num <= 262144)
-            {
-                return 262144;
-            }
-            else if (num <= 524288)
+            else if (num <= 524288) //512k
             {
                 return 524288;
             }
-            else if (num <= 1048576)
+            else if (num <= 1048576)//1Mb
             {
                 return 1048576;
             }
-            else if (num <= 2097152)
+            else if (num <= 5242880)//5Mb
             {
-                return 2097152;
+                return 5242880;
             }
-            else if (num <= 4194304)
+            else if (num <= 10485760)//10Mb
             {
-                return 4194304;
+                return 10485760;
             }
-            else if (num <= 8388608)
+            else if (num <= 1024*1024*20)//20Mb
             {
-                return 8388608;
+                return 1024 * 1024 * 20;
             }
-            else if (num <= 16777216)
+            else if (num <= 1024 * 1024 * 50)//50Mb
             {
-                return 16777216;
+                return 1024 * 1024 * 50;
             }
-            else if (num <= 33554432)
+            else if (num <= 1024 * 1024 * 100)//100Mb
             {
-                return 33554432;
+                return 1024 * 1024 * 100;
             }
-            else if (num <= 67108864)
+            else if (num <= 1024 * 1024 * 500)//500Mb
             {
-                return 67108864;
+                return 1024 * 1024 * 500;
             }
-            else if (num <= 134217728)
+            else if (num <= 1024 * 1024 * 1024)//1Gb
             {
-                return 134217728;
+                return 1024 * 1024 * 1024;
             }
             else
             {

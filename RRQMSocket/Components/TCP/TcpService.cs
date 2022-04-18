@@ -33,8 +33,8 @@ namespace RRQMSocket
         /// </summary>
         public TcpService()
         {
-            this.iDGenerator = new SnowflakeIDGenerator(4);
-            this.socketClients = new SocketClientCollection();
+            this.m_iDGenerator = new SnowflakeIDGenerator(4);
+            this.m_socketClients = new SocketClientCollection();
             this.Container = new Container();
             this.PluginsManager = new PluginsManager(this.Container);
             this.Container.RegisterTransient<ILog, ConsoleLogger>();
@@ -42,19 +42,18 @@ namespace RRQMSocket
 
         #region 变量
 
-        private readonly SnowflakeIDGenerator iDGenerator;
-        private int backlog;
-        private int clearInterval;
-        private ClearType clearType;
-        private int maxCount;
-        private int maxPackageSize;
-        private NetworkMonitor[] monitors;
-        private ReceiveType receiveType;
-        private ServerState serverState;
-        private RRQMConfig serviceConfig;
-        private SocketClientCollection socketClients;
-        private bool usePlugin;
-        private bool useSsl;
+        private readonly SnowflakeIDGenerator m_iDGenerator;
+        private int m_backlog;
+        private int m_clearInterval;
+        private ClearType m_clearType;
+        private int m_maxCount;
+        private NetworkMonitor[] m_monitors;
+        private ReceiveType m_receiveType;
+        private ServerState m_serverState;
+        private RRQMConfig m_serviceConfig;
+        private SocketClientCollection m_socketClients;
+        private bool m_usePlugin;
+        private bool m_useSsl;
 
         #endregion 变量
 
@@ -63,17 +62,17 @@ namespace RRQMSocket
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
-        public int ClearInterval => this.clearInterval;
+        public int ClearInterval => this.m_clearInterval;
 
         /// <summary>
         /// 清理类型
         /// </summary>
-        public ClearType ClearType => this.clearType;
+        public ClearType ClearType => this.m_clearType;
 
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        public override RRQMConfig Config => this.serviceConfig;
+        public override RRQMConfig Config => this.m_serviceConfig;
 
         /// <summary>
         /// <inheritdoc/>
@@ -83,17 +82,12 @@ namespace RRQMSocket
         /// <summary>
         /// 最大可连接数
         /// </summary>
-        public int MaxCount => this.maxCount;
+        public int MaxCount => this.m_maxCount;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override int MaxPackageSize => maxPackageSize;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public override NetworkMonitor[] Monitors => this.monitors;
+        public override NetworkMonitor[] Monitors => this.m_monitors;
 
         /// <summary>
         /// <inheritdoc/>
@@ -108,22 +102,22 @@ namespace RRQMSocket
         /// <summary>
         /// 服务器状态
         /// </summary>
-        public override ServerState ServerState => this.serverState;
+        public override ServerState ServerState => this.m_serverState;
 
         /// <summary>
         /// 获取当前连接的所有客户端
         /// </summary>
-        public override SocketClientCollection SocketClients => this.socketClients;
+        public override SocketClientCollection SocketClients => this.m_socketClients;
 
         /// <summary>
         /// 是否已启动插件
         /// </summary>
-        public bool UsePlugin => this.usePlugin;
+        public bool UsePlugin => this.m_usePlugin;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool UseSsl => this.useSsl;
+        public override bool UseSsl => this.m_useSsl;
 
         #endregion 属性
 
@@ -227,7 +221,7 @@ namespace RRQMSocket
         /// <param name="e"></param>
         protected virtual void OnIDChanged(TClient socketClient, RRQMEventArgs e)
         {
-            if (this.usePlugin)
+            if (this.m_usePlugin)
             {
                 this.PluginsManager.Raise<ITcpPlugin>("OnIDChanged", socketClient, e);
                 if (e.Handled)
@@ -327,7 +321,7 @@ namespace RRQMSocket
         /// <returns></returns>
         public TClient[] GetClients()
         {
-            var clients = this.socketClients.GetClients().ToArray();
+            var clients = this.m_socketClients.GetClients().ToArray();
 
             TClient[] clients1 = new TClient[clients.Length];
             for (int i = 0; i < clients.Length; i++)
@@ -343,7 +337,7 @@ namespace RRQMSocket
         /// <returns></returns>
         public string GetDefaultNewID()
         {
-            return this.iDGenerator.NextID().ToString();
+            return this.m_iDGenerator.NextID().ToString();
         }
 
         /// <summary>
@@ -368,10 +362,10 @@ namespace RRQMSocket
             {
                 return;
             }
-            if (this.socketClients.TryRemove(waitSetID.OldID, out TClient socketClient))
+            if (this.m_socketClients.TryRemove(waitSetID.OldID, out TClient socketClient))
             {
                 socketClient.id = waitSetID.NewID;
-                if (this.socketClients.TryAdd(socketClient))
+                if (this.m_socketClients.TryAdd(socketClient))
                 {
                     this.OnIDChanged(socketClient, new RRQMEventArgs());
                     return;
@@ -379,7 +373,7 @@ namespace RRQMSocket
                 else
                 {
                     socketClient.id = waitSetID.OldID;
-                    this.socketClients.TryAdd(socketClient);
+                    this.m_socketClients.TryAdd(socketClient);
                     throw new RRQMException("ID重复");
                 }
             }
@@ -408,7 +402,7 @@ namespace RRQMSocket
         /// <param name="serviceConfig"></param>
         public override IService Setup(RRQMConfig serviceConfig)
         {
-            this.serviceConfig = serviceConfig;
+            this.m_serviceConfig = serviceConfig;
             this.LoadConfig(serviceConfig);
             return this;
         }
@@ -447,7 +441,7 @@ namespace RRQMSocket
             {
                 throw new RRQMException("IPHosts为空，无法绑定");
             }
-            switch (this.serverState)
+            switch (this.m_serverState)
             {
                 case ServerState.None:
                     {
@@ -469,7 +463,7 @@ namespace RRQMSocket
                         throw new RRQMException("无法重新利用已释放对象");
                     }
             }
-            this.serverState = ServerState.Running;
+            this.m_serverState = ServerState.Running;
             return this;
         }
 
@@ -478,9 +472,9 @@ namespace RRQMSocket
         /// </summary>
         public override IService Stop()
         {
-            if (this.monitors != null)
+            if (this.m_monitors != null)
             {
-                foreach (var item in this.monitors)
+                foreach (var item in this.m_monitors)
                 {
                     if (item.Socket != null)
                     {
@@ -488,11 +482,11 @@ namespace RRQMSocket
                     }
                 }
             }
-            this.monitors = null;
+            this.m_monitors = null;
 
             this.Clear();
 
-            this.serverState = ServerState.Stopped;
+            this.m_serverState = ServerState.Stopped;
 
             return this;
         }
@@ -505,7 +499,7 @@ namespace RRQMSocket
         /// <returns></returns>
         public bool TryGetSocketClient(string id, out TClient socketClient)
         {
-            return this.socketClients.TryGetSocketClient(id, out socketClient);
+            return this.m_socketClients.TryGetSocketClient(id, out socketClient);
         }
 
         /// <summary>
@@ -518,19 +512,19 @@ namespace RRQMSocket
             {
                 if (disposing)
                 {
-                    if (this.monitors != null)
+                    if (this.m_monitors != null)
                     {
-                        foreach (var item in this.monitors)
+                        foreach (var item in this.m_monitors)
                         {
                             if (item.Socket != null)
                             {
                                 item.Socket.Dispose();
                             }
                         }
-                        this.monitors = null;
+                        this.m_monitors = null;
                     }
                     this.Clear();
-                    this.serverState = ServerState.Disposed;
+                    this.m_serverState = ServerState.Disposed;
                     this.PluginsManager.Clear();
                 }
                 this.disposedValue = true;
@@ -562,18 +556,21 @@ namespace RRQMSocket
             {
                 throw new RRQMException("线程数量必须大于0");
             }
-            this.maxPackageSize = config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty);
-            this.usePlugin = config.IsUsePlugin;
-            this.maxCount = config.GetValue<int>(RRQMConfigExtensions.MaxCountProperty);
-            this.clearInterval = config.GetValue<int>(RRQMConfigExtensions.ClearIntervalProperty);
-            this.backlog = config.GetValue<int>(RRQMConfigExtensions.BacklogProperty);
-            this.logger = this.Container.Resolve<ILog>();
+            this.m_usePlugin = config.IsUsePlugin;
+            this.m_maxCount = config.GetValue<int>(RRQMConfigExtensions.MaxCountProperty);
+            this.m_clearInterval = config.GetValue<int>(RRQMConfigExtensions.ClearIntervalProperty);
+            this.m_backlog = config.GetValue<int>(RRQMConfigExtensions.BacklogProperty);
             this.BufferLength = config.GetValue<int>(RRQMConfig.BufferLengthProperty);
-            this.clearType = config.GetValue<ClearType>(RRQMConfigExtensions.ClearTypeProperty);
-            this.receiveType = config.ReceiveType;
+            this.m_clearType = config.GetValue<ClearType>(RRQMConfigExtensions.ClearTypeProperty);
+            this.m_receiveType = config.ReceiveType;
+
+            if (this.Logger==null)
+            {
+                this.Logger = this.Container.Resolve<ILog>();
+            }
             if (config.GetValue(RRQMConfigExtensions.SslOptionProperty) != null)
             {
-                this.useSsl = true;
+                this.m_useSsl = true;
             }
         }
 
@@ -617,26 +614,26 @@ namespace RRQMSocket
                     socket.SendBufferSize = this.BufferLength;
                     this.PreviewBind(socket);
                     socket.Bind(iPHost.EndPoint);
-                    socket.Listen(this.backlog);
+                    socket.Listen(this.m_backlog);
 
                     networkMonitors.Add(new NetworkMonitor(iPHost, socket));
                 }
                 catch (Exception ex)
                 {
-                    this.logger.Debug(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
+                    this.Logger.Debug(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
                 }
             }
 
             if (networkMonitors.Count > 0)
             {
-                this.monitors = networkMonitors.ToArray();
+                this.m_monitors = networkMonitors.ToArray();
             }
             else
             {
                 throw new RRQMException("监听地址全都不可用。");
             }
 
-            foreach (var networkMonitor in this.monitors)
+            foreach (var networkMonitor in this.m_monitors)
             {
                 SocketAsyncEventArgs e = new SocketAsyncEventArgs();
                 e.UserToken = networkMonitor.Socket;
@@ -664,9 +661,9 @@ namespace RRQMSocket
                 {
                     if (this.SocketClients.TryGetSocketClient(token, out TClient client))
                     {
-                        if (this.clearInterval > 0)
+                        if (this.m_clearInterval > 0)
                         {
-                            client.GetTimeout((int)(this.clearInterval / 1000.0), tick);
+                            client.GetTimeout((int)(this.m_clearInterval / 1000.0), tick);
                         }
                     }
                 }
@@ -682,7 +679,7 @@ namespace RRQMSocket
                     Socket socket = e.AcceptSocket;
                     socket.ReceiveBufferSize = this.BufferLength;
                     socket.SendBufferSize = this.BufferLength;
-                    if (this.SocketClients.Count > this.maxCount)
+                    if (this.SocketClients.Count > this.m_maxCount)
                     {
                         this.Logger.Debug(LogType.Warning, this, "连接客户端数量已达到设定最大值");
                         socket.Close();
@@ -713,21 +710,21 @@ namespace RRQMSocket
             {
                 try
                 {
+                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty));
                     TClient client = this.GetClientInstence();
-                    client.maxPackageSize = this.maxPackageSize;
-                    client.usePlugin = this.usePlugin;
+                    client.usePlugin = this.m_usePlugin;
                     client.pluginsManager = this.PluginsManager;
                     client.lastTick = DateTime.Now.Ticks;
-                    client.serviceConfig = this.serviceConfig;
+                    client.config = this.m_serviceConfig;
                     client.service = this;
                     if (client.Logger == null)
                     {
-                        client.Logger = this.Logger;
+                        client.Logger = this.Container.Resolve<ILog>();
                     }
-                    client.ClearType = this.clearType;
-                    client.receiveType = this.receiveType;
+                    client.ClearType = this.m_clearType;
+                    client.receiveType = this.m_receiveType;
                     client.BufferLength = this.BufferLength;
-                    client.useSsl = this.useSsl;
+                    client.useSsl = this.m_useSsl;
                     client.LoadSocketAndReadIpPort(socket);
                     ClientOperationEventArgs args = new ClientOperationEventArgs();
                     args.ID = this.GetDefaultNewID();
