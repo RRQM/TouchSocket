@@ -39,11 +39,10 @@
 | [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?label=RRQMSocket.FileTransfer)](https://www.nuget.org/packages/rrqmsocket.filetransfer)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |  这是一个高性能的C/S架构的文件传输框架，您可以用它传输<br>**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、<br>**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。<br>在实际测试中，它的传输速率可达1000Mb/s。 |
 
 ## 🎫企业版描述
+ **_以下Nuget包，并未开源，其源代码需要付费购买。但是其Nuget包可以免费商用。_** 
 | 名称|地址 |描述|
 |---|---|---|
 |[![NuGet version](https://img.shields.io/nuget/v/RRQMSocketFramework.svg?label=RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |RRQMSocketFramework是RRQMSocket系列的增强企业版。<br>也是合集版本。这意味着您只需要安装RRQMSocketFramework，<br>即可使用所有组件功能，但是RRQMSocketFramework中也包含了<br>未开源的企业版功能，这需要密钥才能使用，当然也可以试用。<br>所以两者在**基础功能**没有区别，只是在扩展功能上有一定差异性。<br>具体差异请看[企业版相关](https://www.yuque.com/eo2w71/rrqm/80696720a95e415d94c87fa03642513d)|
-
-
 
 ## 🖥支持环境
 - .NET Framework4.5及以上。
