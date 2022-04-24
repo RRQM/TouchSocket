@@ -95,18 +95,6 @@ namespace RRQMSocket.WebSocket
 
         /// <summary>
         /// <inheritdoc/>
-        /// <para>WS设置连接计时器</para>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        protected override void OnConnected(ITcpClientBase client, RRQMEventArgs e)
-        {
-            this.CheckHandshaked(client);
-            base.OnConnected(client, e);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
@@ -117,6 +105,7 @@ namespace RRQMSocket.WebSocket
                 if (client.Protocol == Protocol.Http)
                 {
                     e.Handled = true;
+                    this.CheckHandshaked(client);
                     if (WSTools.TryGetResponse(e.Request, out HttpResponse response))
                     {
                         HttpContextEventArgs args = new HttpContextEventArgs(e.Request)
