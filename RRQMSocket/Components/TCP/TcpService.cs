@@ -564,7 +564,7 @@ namespace RRQMSocket
             this.m_clearType = config.GetValue<ClearType>(RRQMConfigExtensions.ClearTypeProperty);
             this.m_receiveType = config.ReceiveType;
 
-            if (this.Logger==null)
+            if (this.Logger == null)
             {
                 this.Logger = this.Container.Resolve<ILog>();
             }
@@ -710,7 +710,12 @@ namespace RRQMSocket
             {
                 try
                 {
-                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty));
+                    bool noDelay = this.Config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty);
+                    if (noDelay)
+                    {
+                        socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, noDelay);
+                    }
+
                     TClient client = this.GetClientInstence();
                     client.usePlugin = this.m_usePlugin;
                     client.pluginsManager = this.PluginsManager;
