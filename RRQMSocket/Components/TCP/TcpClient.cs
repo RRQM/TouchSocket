@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -704,12 +705,25 @@ namespace RRQMSocket
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.ReceiveBufferSize = this.BufferLength;
             socket.SendBufferSize = this.BufferLength;
+#if NET45_OR_GREATER
             KeepAliveValue keepAliveValue = this.m_config.GetValue<KeepAliveValue>(RRQMConfigExtensions.KeepAliveValueProperty);
             if (keepAliveValue.Enable)
             {
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
                 socket.IOControl(IOControlCode.KeepAliveValues, keepAliveValue.KeepAliveTime, null);
             }
+#else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                KeepAliveValue keepAliveValue = this.m_config.GetValue<KeepAliveValue>(RRQMConfigExtensions.KeepAliveValueProperty);
+                if (keepAliveValue.Enable)
+                {
+                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                    socket.IOControl(IOControlCode.KeepAliveValues, keepAliveValue.KeepAliveTime, null);
+                }
+            }
+#endif
+
             socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.m_config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty));
             if (this.m_config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) != null)
             {
