@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace RRQMSocket
 {
@@ -480,6 +482,7 @@ namespace RRQMSocket
             {
                 case ReceiveType.Auto:
                     {
+#if NET45_OR_GREATER
                         for (int i = 0; i < threadCount; i++)
                         {
                             SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
@@ -493,11 +496,56 @@ namespace RRQMSocket
                                 this.ProcessReceive(socket, eventArg);
                             }
                         }
+#else
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        {
+                            for (int i = 0; i < threadCount; i++)
+                            {
+                                SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
+                                eventArg.Completed += this.IO_Completed;
+                                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                                eventArg.UserToken = byteBlock;
+                                eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
+                                eventArg.RemoteEndPoint = iPHost.EndPoint;
+                                if (!socket.ReceiveFromAsync(eventArg))
+                                {
+                                    this.ProcessReceive(socket, eventArg);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Thread thread = new Thread(this.Received);
+                            thread.IsBackground = true;
+                            thread.Start();
+                        }
+#endif
+
 
                         break;
                     }
                 default:
                     throw new RRQMException("UDP中只支持Auto模式");
+            }
+        }
+
+        private void Received()
+        {
+            while (true)
+            {
+                try
+                {
+                    EndPoint endPoint = this.monitor.IPHost.EndPoint;
+                    ByteBlock byteBlock = new ByteBlock();
+                    int r = this.monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
+                    byteBlock.SetLength(r);
+                    this.HandleBuffer(endPoint, byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                    break;
+                }
             }
         }
 
