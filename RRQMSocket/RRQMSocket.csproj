@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>8.0.7</Version>
+		<Version>8.0.8</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -16,10 +16,12 @@
 增加：插件系统，在RRQM全系，支持插件，可以很简单的横向扩展业务。
 增加：Udp大数据发送与接收。
 增加：Udp组播。
+增加：TokenClient在异步连接。
 修改：RRQMConfig，修改所有的配置均通过注入的形式作用。
 修改：大部分事件参数，重新订阅（或重写）即可。
 修改：Keepalive相关设定。
 修复：TcpClient在Linux平台异常情况。
+修复：Udp在Linux平台异常情况。
 删除：所有Simple组件，由其父类代替。
 
 API：https://www.yuque.com/eo2w71/rrqm
