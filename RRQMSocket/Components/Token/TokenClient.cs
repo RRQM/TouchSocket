@@ -16,6 +16,7 @@ using RRQMCore.Extensions;
 using RRQMCore.Run;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -135,6 +136,21 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 异步连接
+        /// </summary>
+        /// <param name="verifyToken"></param>
+        /// <param name="token"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Task<ITcpClient> ConnectAsync(string verifyToken, CancellationToken token = default, int timeout = 5000)
+        {
+            return Task.Run(() =>
+            {
+                return this.Connect(verifyToken,token,timeout);
+            });
+        }
+
+        /// <summary>
         /// 连接到服务器
         /// </summary>
         /// <exception cref="RRQMException"></exception>
@@ -206,6 +222,8 @@ namespace RRQMSocket
                 this.WaitHandlePool.Destroy(waitData);
             }
         }
+
+       
 
         #region 事件
 
