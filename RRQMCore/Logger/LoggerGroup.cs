@@ -94,7 +94,7 @@ namespace RRQMCore.Log
         /// <param name="message"></param>
         public void Debug<T>(LogType logType, object source, string message) where T : ILog
         {
-            this.Debug(logType, source, message, null);
+            this.Debug<T>(logType, source, message, null);
         }
     }
 }
