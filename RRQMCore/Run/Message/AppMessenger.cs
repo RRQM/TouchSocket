@@ -117,7 +117,7 @@ namespace RRQMCore.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
             }
         }
 
@@ -167,7 +167,7 @@ namespace RRQMCore.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
             }
         }
 
@@ -202,7 +202,7 @@ namespace RRQMCore.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
             }
         }
 
@@ -226,7 +226,7 @@ namespace RRQMCore.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
             }
         }
 
@@ -249,7 +249,7 @@ namespace RRQMCore.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetResString(token));
+                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
             }
         }
 
@@ -270,7 +270,7 @@ namespace RRQMCore.Run
             }
             else
             {
-                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
+                throw new MessageNotFoundException(ResType.MessageNotFound.GetDescription(token));
             }
         }
 
@@ -302,7 +302,7 @@ namespace RRQMCore.Run
             }
             else
             {
-                throw new MessageNotFoundException(ResType.MessageNotFound.GetResString(token));
+                throw new MessageNotFoundException(ResType.MessageNotFound.GetDescription(token));
             }
         }
 

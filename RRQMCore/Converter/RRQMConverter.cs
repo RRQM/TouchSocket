@@ -35,7 +35,7 @@ namespace RRQMCore.Converter
             }
             foreach (var item in this.converters)
             {
-                if (item.GetType()==converter.GetType())
+                if (item.GetType() == converter.GetType())
                 {
                     return;
                 }
@@ -52,7 +52,7 @@ namespace RRQMCore.Converter
         }
 
         /// <summary>
-        /// 清除所有插件
+        /// 清除所有转化器
         /// </summary>
         public void Clear()
         {
@@ -88,7 +88,7 @@ namespace RRQMCore.Converter
         {
             foreach (var item in this.converters)
             {
-                if (item.TryConvertTo(target,out TSource source))
+                if (item.TryConvertTo(target, out TSource source))
                 {
                     return source;
                 }

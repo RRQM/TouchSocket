@@ -529,7 +529,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Bson
                     {
                         value = new Guid(data);
                     }
-                   
+
 
                     this.SetToken(JsonToken.Bytes, value);
                     break;

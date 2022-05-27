@@ -35,11 +35,11 @@ namespace RRQMCore.ByteManager
 
         static BytePool()
         {
-            m_timer = new Timer((o)=> 
+            m_timer = new Timer((o) =>
             {
                 BytePool.Clear();
-            },null,1000*60*60, 1000 * 60 * 60);
-             m_keyCapacity = 100;
+            }, null, 1000 * 60 * 60, 1000 * 60 * 60);
+            m_keyCapacity = 100;
             m_autoZero = false;
             m_maxSize = 1024 * 1024 * 512;
             SetBlockSize(1024, 1024 * 1024 * 20);
@@ -159,15 +159,6 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 获取最大长度的ByteBlock
-        /// </summary>
-        /// <returns></returns>
-        public static ByteBlock GetByteBlock()
-        {
-            return GetByteBlock(m_maxBlockSize, true);
-        }
-
-        /// <summary>
         /// 获取内存池容量
         /// </summary>
         /// <returns></returns>
@@ -209,12 +200,12 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 获取内存核心
+        /// 获取内存核心。获取的核心可以不用归还。
         /// </summary>
         /// <param name="byteSize"></param>
         /// <param name="equalSize"></param>
         /// <returns></returns>
-        public static byte[] GetByteCore(int byteSize, bool equalSize)
+        public static byte[] GetByteCore(int byteSize, bool equalSize = false)
         {
             BytesQueue bytesCollection;
             if (equalSize)
@@ -260,6 +251,10 @@ namespace RRQMCore.ByteManager
         /// <param name="bytes"></param>
         public static void Recycle(byte[] bytes)
         {
+            if (bytes == null)
+            {
+                return;
+            }
             if (m_maxSize > m_fullSize)
             {
                 if (bytesDictionary.TryGetValue(bytes.Length, out BytesQueue bytesQueue))
@@ -421,7 +416,7 @@ namespace RRQMCore.ByteManager
             {
                 return 10485760;
             }
-            else if (num <= 1024*1024*20)//20Mb
+            else if (num <= 1024 * 1024 * 20)//20Mb
             {
                 return 1024 * 1024 * 20;
             }

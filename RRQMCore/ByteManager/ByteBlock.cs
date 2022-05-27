@@ -11,11 +11,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using RRQMCore.Serialization;
-using RRQMCore.XREF.Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace RRQMCore.ByteManager
 {
@@ -23,7 +22,7 @@ namespace RRQMCore.ByteManager
     /// 字节块流
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("Len={Len}")]
-    public sealed class ByteBlock : Stream, IDisposable
+    public sealed class ByteBlock : Stream, IByteBlock
     {
         internal long m_length;
         internal bool m_using;
@@ -32,6 +31,7 @@ namespace RRQMCore.ByteManager
         private bool m_holding;
         private bool m_needDis;
         private long m_position;
+        private int dis = 1;
 
         /// <summary>
         ///  构造函数
@@ -74,6 +74,11 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
+        /// 空闲长度，准确掌握该值，可以避免内存扩展，计算为<see cref="Capacity"/>与<see cref="Pos"/>的差值。
+        /// </summary>
+        public int FreeLength => this.Capacity - this.Pos;
+
+        /// <summary>
         /// 字节实例
         /// </summary>
         public byte[] Buffer => this.m_buffer;
@@ -81,7 +86,7 @@ namespace RRQMCore.ByteManager
         /// <summary>
         /// 仅当内存块可用，且<see cref="CanReadLen"/>>0时为True。
         /// </summary>
-        public override bool CanRead => this.m_using&&this.CanReadLen>0;
+        public override bool CanRead => this.m_using && this.CanReadLen > 0;
 
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
@@ -151,6 +156,14 @@ namespace RRQMCore.ByteManager
         /// </summary>
         public void AbsoluteDispose()
         {
+            if (Interlocked.Decrement(ref this.dis) == 0)
+            {
+                this.Dis();
+            }
+        }
+
+        private void Dis()
+        {
             this.m_holding = false;
             this.m_using = false;
             this.m_position = 0;
@@ -169,21 +182,6 @@ namespace RRQMCore.ByteManager
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             Array.Clear(this.m_buffer, 0, this.m_buffer.Length);
-        }
-
-        /// <summary>
-        /// 将内存块初始化到刚申请的状态。
-        /// <para>仅仅重置<see cref="Position"/>和<see cref="Length"/>属性。</para>
-        /// </summary>
-        /// <exception cref="ObjectDisposedException">内存块已释放</exception>
-        public void Reset()
-        {
-            if (!this.m_using)
-            {
-                throw new ObjectDisposedException(this.GetType().FullName);
-            }
-            this.m_position = 0;
-            this.m_length = 0;
         }
 
         /// <summary>
@@ -214,25 +212,28 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 读取数据，然后递增Pos
+        /// 从当前流位置读取一个<see cref="byte"/>值
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public int Read(byte[] buffer)
+        public override int ReadByte()
         {
-            return this.Read(buffer, 0, buffer.Length);
+            byte value = this.m_buffer[this.m_position];
+            this.m_position++;
+            return value;
         }
 
         /// <summary>
-        /// 读取数据，然后递增Pos
+        /// 将内存块初始化到刚申请的状态。
+        /// <para>仅仅重置<see cref="Position"/>和<see cref="Length"/>属性。</para>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public int Read(out byte[] buffer, int length)
+        /// <exception cref="ObjectDisposedException">内存块已释放</exception>
+        public void Reset()
         {
-            buffer = new byte[length];
-            return this.Read(buffer, 0, buffer.Length);
+            if (!this.m_using)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+            this.m_position = 0;
+            this.m_length = 0;
         }
 
         /// <summary>
@@ -325,26 +326,6 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 转换为有效内存
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ToArray()
-        {
-            return this.ToArray(0);
-        }
-
-        /// <summary>
-        /// 从指定位置转化到有效内存
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        /// <exception cref="ObjectDisposedException"></exception>
-        public byte[] ToArray(int offset)
-        {
-            return this.ToArray(offset, (int)(this.m_length - offset));
-        }
-
-        /// <summary>
         /// 从指定位置转化到指定长度的有效内存
         /// </summary>
         /// <param name="offset"></param>
@@ -432,20 +413,10 @@ namespace RRQMCore.ByteManager
         }
 
         /// <summary>
-        /// 写入
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public void Write(byte[] buffer)
-        {
-            this.Write(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        protected sealed override void Dispose(bool disposing)
         {
             if (this.m_holding)
             {
@@ -454,518 +425,15 @@ namespace RRQMCore.ByteManager
 
             if (this.m_needDis)
             {
-                lock (this)
+                if (Interlocked.Decrement(ref this.dis) == 0)
                 {
-                    if (this.m_using)
-                    {
-                        GC.SuppressFinalize(this);
-                        BytePool.Recycle(this.m_buffer);
-                        this.AbsoluteDispose();
-                    }
+                    GC.SuppressFinalize(this);
+                    BytePool.Recycle(this.m_buffer);
+                    this.Dis();
                 }
             }
 
             base.Dispose(disposing);
         }
-
-        #region BytesPackage
-
-        /// <summary>
-        /// 从当前流位置读取一个独立的<see cref="byte"/>数组包
-        /// </summary>
-        public byte[] ReadBytesPackage()
-        {
-            byte status = this.ReadByte();
-            if (status == 0)
-            {
-                return null;
-            }
-            int length = this.ReadInt32();
-            byte[] data = new byte[length];
-            Array.Copy(this.m_buffer, this.m_position, data, 0, length);
-            this.m_position += length;
-            return data;
-        }
-
-        /// <summary>
-        /// 尝试获取数据包信息，方便从Buffer操作数据
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <param name="len"></param>
-        /// <returns></returns>
-        public bool TryReadBytesPackageInfo(out int pos, out int len)
-        {
-            byte status = this.ReadByte();
-            if (status == 0)
-            {
-                pos = 0;
-                len = 0;
-                return false;
-            }
-            len = this.ReadInt32();
-            pos = (int)this.m_position;
-            return true;
-        }
-
-        /// <summary>
-        /// 写入一个独立的<see cref="byte"/>数组包
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public ByteBlock WriteBytesPackage(byte[] value, int offset, int length)
-        {
-            if (value == null)
-            {
-                this.Write((byte)0);
-            }
-            else
-            {
-                this.Write((byte)1);
-                this.Write(length);
-                this.Write(value, offset, length);
-            }
-            return this;
-        }
-
-        /// <summary>
-        /// 写入一个独立的<see cref="byte"/>数组包
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock WriteBytesPackage(byte[] value)
-        {
-            if (value == null)
-            {
-                return this.WriteBytesPackage(value, 0, 0);
-            }
-            return this.WriteBytesPackage(value, 0, value.Length);
-        }
-
-        #endregion BytesPackage
-
-        #region Int32
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="int"/>值
-        /// </summary>
-        public int ReadInt32()
-        {
-            int value = RRQMBitConverter.Default.ToInt32(this.m_buffer, (int)this.m_position);
-            this.m_position += 4;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="int"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(int value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion Int32
-
-        #region Int16
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="short"/>值
-        /// </summary>
-        public short ReadInt16()
-        {
-            short value = RRQMBitConverter.Default.ToInt16(this.m_buffer, (int)this.m_position);
-            this.m_position += 2;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="short"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(short value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion Int16
-
-        #region Int64
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="long"/>值
-        /// </summary>
-        public long ReadInt64()
-        {
-            long value = RRQMBitConverter.Default.ToInt64(this.m_buffer, (int)this.m_position);
-            this.m_position += 8;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="long"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(long value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion Int64
-
-        #region Boolean
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="bool"/>值
-        /// </summary>
-        public bool ReadBoolean()
-        {
-            bool value = RRQMBitConverter.Default.ToBoolean(this.m_buffer, (int)this.m_position);
-            this.m_position += 1;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="bool"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(bool value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion Boolean
-
-        #region Byte
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="byte"/>值
-        /// </summary>
-        public new byte ReadByte()
-        {
-            byte value = this.m_buffer[this.m_position];
-            this.m_position++;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="byte"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public ByteBlock Write(byte value)
-        {
-            this.Write(new byte[] { value }, 0, 1);
-            return this;
-        }
-
-        #endregion Byte
-
-        #region String
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="string"/>值
-        /// </summary>
-        public string ReadString()
-        {
-            byte value = this.ReadByte();
-            if (value == 0)
-            {
-                return null;
-            }
-            else if (value == 1)
-            {
-                return string.Empty;
-            }
-            else
-            {
-                ushort len = this.ReadUInt16();
-                string str = Encoding.UTF8.GetString(this.m_buffer, (int)this.m_position, len);
-                this.m_position += len;
-                return str;
-            }
-        }
-
-        /// <summary>
-        /// 写入<see cref="string"/>值。
-        /// <para>读取时必须使用ReadString</para>
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(string value)
-        {
-            if (value == null)
-            {
-                this.Write((byte)0);
-            }
-            else if (value == string.Empty)
-            {
-                this.Write((byte)1);
-            }
-            else
-            {
-                this.Write((byte)2);
-                byte[] buffer = Encoding.UTF8.GetBytes(value);
-                if (buffer.Length > ushort.MaxValue)
-                {
-                    throw new RRQMException("传输长度超长");
-                }
-                this.Write((ushort)buffer.Length);
-                this.Write(buffer);
-            }
-            return this;
-        }
-
-        #endregion String
-
-        #region Char
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="char"/>值
-        /// </summary>
-        public char ReadChar()
-        {
-            char value = RRQMBitConverter.Default.ToChar(this.m_buffer, (int)this.m_position);
-            this.m_position += 2;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="char"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(char value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion Char
-
-        #region Double
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="double"/>值
-        /// </summary>
-        public double ReadDouble()
-        {
-            double value = RRQMBitConverter.Default.ToDouble(this.m_buffer, (int)this.m_position);
-            this.m_position += 8;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="double"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(double value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion Double
-
-        #region Float
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="float"/>值
-        /// </summary>
-        public float ReadFloat()
-        {
-            float value = RRQMBitConverter.Default.ToSingle(this.m_buffer, (int)this.m_position);
-            this.m_position += 4;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="float"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(float value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion Float
-
-        #region UInt16
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="ushort"/>值
-        /// </summary>
-        public ushort ReadUInt16()
-        {
-            ushort value = RRQMBitConverter.Default.ToUInt16(this.m_buffer, (int)this.m_position);
-            this.m_position += 2;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="ushort"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(ushort value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion UInt16
-
-        #region UInt32
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="uint"/>值
-        /// </summary>
-        public uint ReadUInt32()
-        {
-            uint value = RRQMBitConverter.Default.ToUInt32(this.m_buffer, (int)this.m_position);
-            this.m_position += 4;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="uint"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(uint value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion UInt32
-
-        #region UInt64
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="ulong"/>值
-        /// </summary>
-        public ulong ReadUInt64()
-        {
-            ulong value = RRQMBitConverter.Default.ToUInt64(this.m_buffer, (int)this.m_position);
-            this.m_position += 8;
-            return value;
-        }
-
-        /// <summary>
-        /// 写入<see cref="ulong"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(ulong value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value));
-            return this;
-        }
-
-        #endregion UInt64
-
-        #region DateTime
-
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="DateTime"/>值
-        /// </summary>
-        public DateTime ReadDateTime()
-        {
-            long value = RRQMBitConverter.Default.ToInt64(this.m_buffer, (int)this.m_position);
-            this.m_position += 8;
-            return DateTime.FromBinary(value);
-        }
-
-        /// <summary>
-        /// 写入<see cref="DateTime"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        public ByteBlock Write(DateTime value)
-        {
-            this.Write(RRQMBitConverter.Default.GetBytes(value.ToBinary()));
-            return this;
-        }
-
-        #endregion DateTime
-
-        #region Object
-
-        /// <summary>
-        ///  从当前流位置读取一个泛型值
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="serializationType"></param>
-        /// <returns></returns>
-        public T ReadObject<T>(SerializationType serializationType = SerializationType.RRQMBinary)
-        {
-            int length = this.ReadInt32();
-
-            if (length == 0)
-            {
-                return default;
-            }
-
-            T obj;
-
-            switch (serializationType)
-            {
-                case SerializationType.RRQMBinary:
-                    {
-                        obj = SerializeConvert.RRQMBinaryDeserialize<T>(this.m_buffer, (int)this.m_position);
-                    }
-                    break;
-
-                case SerializationType.Json:
-                    {
-                        string jsonString = Encoding.UTF8.GetString(this.m_buffer, (int)this.m_position, length);
-                        obj = JsonConvert.DeserializeObject<T>(jsonString);
-                    }
-                    break;
-
-                default:
-                    throw new RRQMException("未定义的序列化类型");
-            }
-
-            this.m_position += length;
-            return obj;
-        }
-
-        /// <summary>
-        /// 写入<see cref="object"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="serializationType"></param>
-        public ByteBlock WriteObject(object value, SerializationType serializationType = SerializationType.RRQMBinary)
-        {
-            if (value == null)
-            {
-                this.Write(0);
-                return this;
-            }
-            byte[] data;
-            switch (serializationType)
-            {
-                case SerializationType.RRQMBinary:
-                    {
-                        data = SerializeConvert.RRQMBinarySerialize(value);
-                    }
-                    break;
-
-                case SerializationType.Json:
-                    {
-                        data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
-                    }
-                    break;
-
-                default:
-                    throw new RRQMException("未定义的序列化类型");
-            }
-
-            this.Write(data.Length);
-            this.Write(data);
-            return this;
-        }
-
-        #endregion Object
     }
 }

@@ -26,11 +26,11 @@ namespace RRQMCore.IO
         /// 构造函数
         /// </summary>
         /// <param name="helpOrder">帮助信息指令，如："h|help|?"</param>
-        public ConsoleAction(string helpOrder)
+        public ConsoleAction(string helpOrder = "h|help|?")
         {
             this.helpOrder = helpOrder;
 
-            this.Add(helpOrder, "帮助信息", ShowAll);
+            this.Add(helpOrder, "帮助信息", this.ShowAll);
         }
 
         /// <summary>

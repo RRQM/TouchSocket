@@ -31,7 +31,7 @@ namespace RRQMCore
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RRQMException(ResType resType, params object[] fms) : base(resType.GetResString(fms)) { }
+        public RRQMException(ResType resType, params object[] fms) : base(resType.GetDescription(fms)) { }
 
         /// <summary>
         /// 构造函数
@@ -98,24 +98,24 @@ namespace RRQMCore
 
         private int I
         {
-            set { I = value; }
+            set => this.I = value;
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public LicenceKeyInvalidException() 
+        public LicenceKeyInvalidException()
         {
-            EasyAction.DelayRun(5000,()=> { I = 1000; });
+            EasyAction.DelayRun(5000, () => { this.I = 1000; });
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="message"></param>
-        public LicenceKeyInvalidException(string message) : base(message) 
+        public LicenceKeyInvalidException(string message) : base(message)
         {
-            EasyAction.DelayRun(5000, () => { I = 1000; });
+            EasyAction.DelayRun(5000, () => { this.I = 1000; });
         }
 
         /// <summary>
@@ -123,9 +123,9 @@ namespace RRQMCore
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inner"></param>
-        public LicenceKeyInvalidException(string message, Exception inner) : base(message, inner) 
+        public LicenceKeyInvalidException(string message, Exception inner) : base(message, inner)
         {
-            EasyAction.DelayRun(5000, () => { I = 1000; });
+            EasyAction.DelayRun(5000, () => { this.I = 1000; });
         }
 
         /// <summary>

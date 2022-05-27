@@ -1622,7 +1622,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
                     case PrimitiveTypeCode.UInt16Nullable:
                         if (value == null)
                         {
-                            writer.WriteValue( (ushort?)value);
+                            writer.WriteValue((ushort?)value);
                         }
                         else
                         {

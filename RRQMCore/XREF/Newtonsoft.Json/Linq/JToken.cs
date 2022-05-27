@@ -709,7 +709,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Linq
             {
                 return null;
             }
-       
+
         }
 
         /// <summary>

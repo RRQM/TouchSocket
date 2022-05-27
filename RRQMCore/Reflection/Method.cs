@@ -23,45 +23,16 @@ namespace RRQMCore.Reflection
     /// </summary>
     public class Method
     {
-
-        /// <summary>
-        /// 返回值类型。
-        /// <para>当方法为void或task时，为null</para>
-        /// <para>当方法为task泛型时，为泛型元素类型</para>
-        /// </summary>
-        public Type ReturnType { get; private set; }
-
-        private bool task;
-
-        /// <summary>
-        /// 是否具有返回值
-        /// </summary>
-        public bool HasReturn { get; private set; }
-
         /// <summary>
         /// 方法执行委托
         /// </summary>
-        private readonly Func<object, object[], object> invoker;
+        private readonly Func<object, object[], object> m_invoker;
 
-        /// <summary>
-        /// 获取方法名
-        /// </summary>
-        public string Name { get; protected set; }
+        private MethodInfo m_info;
 
+        private bool m_isByRef;
 
-        private MethodInfo info;
-
-        /// <summary>
-        /// 方法信息
-        /// </summary>
-        public MethodInfo Info => this.info;
-
-        private bool isByRef;
-
-        /// <summary>
-        /// 是否有引用类型
-        /// </summary>
-        public bool IsByRef => this.isByRef;
+        private bool m_wait;
 
         /// <summary>
         /// 方法
@@ -69,21 +40,21 @@ namespace RRQMCore.Reflection
         /// <param name="method">方法信息</param>
         public Method(MethodInfo method)
         {
+            this.m_info = method ?? throw new ArgumentNullException(nameof(method));
             this.Name = method.Name;
-            this.info = method;
 
             foreach (var item in method.GetParameters())
             {
                 if (item.ParameterType.IsByRef)
                 {
-                    this.isByRef = true;
+                    this.m_isByRef = true;
 
                     if (method.ReturnType != typeof(void) && method.ReturnType != typeof(Task))
                     {
                         this.HasReturn = true;
                         if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                         {
-                            this.task = true;
+                            this.m_wait = true;
                             this.ReturnType = method.ReturnType.GetGenericArguments()[0];
                         }
                         else
@@ -94,13 +65,46 @@ namespace RRQMCore.Reflection
                     return;
                 }
             }
-            this.invoker = CreateInvoker(method);
+            this.m_invoker = this.CreateInvoker(method);
         }
+
+        /// <summary>
+        /// 是否具有返回值
+        /// </summary>
+        public bool HasReturn { get; private set; }
+
+        /// <summary>
+        /// 方法信息
+        /// </summary>
+        public MethodInfo Info => this.m_info;
+
+        /// <summary>
+        /// 是否有引用类型
+        /// </summary>
+        public bool IsByRef => this.m_isByRef;
+
+        /// <summary>
+        /// 获取方法名
+        /// </summary>
+        public string Name { get; protected set; }
+
+        /// <summary>
+        /// 返回值类型。
+        /// <para>当方法为void或task时，为null</para>
+        /// <para>当方法为task泛型时，为泛型元素类型</para>
+        /// </summary>
+        public Type ReturnType { get; private set; }
+
+        /// <summary>
+        /// 应当等待
+        /// </summary>
+        public bool ShouldWait => this.m_wait;
 
         /// <summary>
         /// 执行方法。
         /// <para>当方法为void或task时，会返回null</para>
         /// <para>当方法为task泛型时，会wait后的值</para>
+        /// <para>注意：当调用方为UI主线程时，调用异步方法，则极有可能发生死锁。</para>
         /// </summary>
         /// <param name="instance">实例</param>
         /// <param name="parameters">参数</param>
@@ -108,15 +112,15 @@ namespace RRQMCore.Reflection
         public object Invoke(object instance, params object[] parameters)
         {
             object re;
-            if (this.isByRef)
+            if (this.m_isByRef)
             {
-                re = this.info.Invoke(instance, parameters);
+                re = this.m_info.Invoke(instance, parameters);
             }
             else
             {
-                re = this.invoker.Invoke(instance, parameters);
+                re = this.m_invoker.Invoke(instance, parameters);
             }
-            if (this.task)
+            if (this.m_wait)
             {
                 Task task = (Task)re;
                 task.Wait();
@@ -126,6 +130,36 @@ namespace RRQMCore.Reflection
             {
                 return re;
             }
+        }
+
+        /// <summary>
+        /// 调用异步结果
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public async Task<object> InvokeAsync(object instance, params object[] parameters)
+        {
+            if (this.m_wait)
+            {
+                if (this.m_isByRef)
+                {
+                    Task task = (Task)this.m_info.Invoke(instance, parameters);
+                    await task;
+                    return task.GetType().GetProperty("Result").GetValue(task);
+                }
+                else
+                {
+                    Task task = (Task)this.m_invoker.Invoke(instance, parameters);
+                    await task;
+                    return task.GetType().GetProperty("Result").GetValue(task);
+                }
+            }
+            else
+            {
+                return Task.FromResult(this.Invoke(instance, parameters));
+            }
+
         }
 
         /// <summary>
@@ -162,7 +196,7 @@ namespace RRQMCore.Reflection
                 this.HasReturn = true;
                 if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
                 {
-                    this.task = true;
+                    this.m_wait = true;
                     this.ReturnType = method.ReturnType.GetGenericArguments()[0];
                 }
                 else
