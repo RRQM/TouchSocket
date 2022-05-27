@@ -10,52 +10,46 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 
 namespace RRQMCore
 {
     /// <summary>
-    /// 结果返回
+    /// 具有释放的对象。
     /// </summary>
-    public struct Result : IResult
+    public class DisposableObject : IDisposable
     {
         /// <summary>
-        /// 构造函数
+        /// 判断是否已释放。
         /// </summary>
-        /// <param name="resultCode"></param>
-        /// <param name="message"></param>
-        public Result(ResultCode resultCode, string message)
+        protected volatile bool disposedValue;
+
+        /// <summary>
+        /// 释放
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
         {
-            this.ResultCode = resultCode;
-            this.Message = message;
+            if (!this.disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: 释放托管状态(托管对象)
+                }
+                // TODO: 释放未托管的资源(未托管的对象)并重写终结器
+                // TODO: 将大型字段设置为 null
+                this.disposedValue = true;
+            }
         }
 
         /// <summary>
-        /// 构造函数
+        /// 释放资源
         /// </summary>
-        /// <param name="resultCode"></param>
-        public Result(ResultCode resultCode)
+        public void Dispose()
         {
-            this.ResultCode = resultCode;
-            this.Message = resultCode.GetDescription();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public ResultCode ResultCode { get; private set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public string Message { get; private set; }
-
-        /// <summary>
-        /// ToString
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return $"类型：{this.ResultCode}，信息：{this.Message}";
+            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+            this.Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

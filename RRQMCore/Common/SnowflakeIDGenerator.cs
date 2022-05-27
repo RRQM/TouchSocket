@@ -51,7 +51,7 @@ namespace RRQMCore
             if (workerId > maxWorkerId || workerId < 0)
                 throw new Exception(string.Format("worker Id can't be greater than {0} or less than 0 ", workerId));
             SnowflakeIDGenerator.workerId = workerId;
-            twepoch = DateTime.Now.Ticks-10000;
+            this.twepoch = DateTime.Now.Ticks - 10000;
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace RRQMCore
                         this.lastTimestamp - timestamp));
                 }
                 this.lastTimestamp = timestamp; //把当前时间戳保存为最后生成ID的时间戳
-                long nextId = (timestamp - twepoch << timestampLeftShift) | workerId << workerIdShift | sequence;
+                long nextId = (timestamp - this.twepoch << timestampLeftShift) | workerId << workerIdShift | sequence;
                 return nextId;
             }
         }

@@ -69,6 +69,12 @@ namespace RRQMCore
         FileExists,
 
         /// <summary>
+        /// 文件不存在
+        /// </summary>
+        [Description("文件‘{0}’不存在。")]
+        FileNotExists,
+
+        /// <summary>
         /// 远程文件不存在
         /// </summary>
         [Description("远程文件‘{0}’不存在。")]

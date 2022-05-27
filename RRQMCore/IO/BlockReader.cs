@@ -11,15 +11,14 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.IO;
 using System.Threading;
 
 namespace RRQMCore.IO
 {
     /// <summary>
-    /// 阻塞式单项读取流。
+    /// 阻塞式读取。
     /// </summary>
-    public abstract class BlockReadStream : Stream
+    public abstract class BlockReader : DisposableObject
     {
         private byte[] m_buffer;
         private AutoResetEvent m_inputEvent;
@@ -30,7 +29,7 @@ namespace RRQMCore.IO
         /// <summary>
         /// 构造函数
         /// </summary>
-        public BlockReadStream()
+        public BlockReader()
         {
             this.m_readEvent = new AutoResetEvent(false);
             this.m_inputEvent = new AutoResetEvent(false);
@@ -40,27 +39,18 @@ namespace RRQMCore.IO
         /// <summary>
         /// 可读
         /// </summary>
-        public override bool CanRead => true;
+        public abstract bool CanRead { get; }
 
         /// <summary>
-        /// 不可使用
+        /// 可写
         /// </summary>
-        public override bool CanSeek => throw new NotImplementedException();
+        public abstract bool CanWrite { get; }
 
-        /// <summary>
-        /// 不可使用
-        /// </summary>
-        public override long Length => throw new NotImplementedException();
-
-        /// <summary>
-        ///  不可使用
-        /// </summary>
-        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override int ReadTimeout { get; set; }
+        public int ReadTimeout { get; set; }
 
         /// <summary>
         /// 阻塞读取。
@@ -69,7 +59,7 @@ namespace RRQMCore.IO
         /// <param name="offset"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public override int Read(byte[] buffer, int offset, int count)
+        public virtual int Read(byte[] buffer, int offset, int count)
         {
             if (!this.CanRead)
             {
@@ -128,25 +118,6 @@ namespace RRQMCore.IO
             return r;
         }
 
-        /// <summary>
-        /// 不可使用
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="origin"></param>
-        /// <returns></returns>
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// 不可使用
-        /// </summary>
-        /// <param name="value"></param>
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
 
         /// <summary>
         /// 传输输入.
@@ -158,6 +129,10 @@ namespace RRQMCore.IO
         /// <returns></returns>
         protected bool Input(byte[] buffer, int offset, int length)
         {
+            //if (this.disposedValue)
+            //{
+            //    return false;
+            //}
             this.m_inputEvent.Reset();
             this.m_buffer = buffer;
             this.m_offset = offset;
@@ -182,9 +157,17 @@ namespace RRQMCore.IO
         protected override void Dispose(bool disposing)
         {
             this.Reset();
-            this.m_readEvent.Dispose();
-            this.m_inputEvent.Dispose();
+            this.m_readEvent.SafeDispose();
+            this.m_inputEvent.SafeDispose();
             base.Dispose(disposing);
+        }
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~BlockReader()
+        {
+            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+            this.Dispose(disposing: false);
         }
     }
 }

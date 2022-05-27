@@ -11,10 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMCore.Converter
 {
@@ -38,7 +34,7 @@ namespace RRQMCore.Converter
         /// <param name="targetType"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        bool TryConvertFrom(TSource source,Type targetType,out object target);
+        bool TryConvertFrom(TSource source, Type targetType, out object target);
 
         /// <summary>
         /// 尝试将目标类型对象转换源数据
@@ -46,6 +42,6 @@ namespace RRQMCore.Converter
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        bool TryConvertTo(object target,out TSource source);
+        bool TryConvertTo(object target, out TSource source);
     }
 }

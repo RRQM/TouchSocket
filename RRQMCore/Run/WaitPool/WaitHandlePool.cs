@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using RRQMCore.Extensions;
 using System;
 using System.Collections.Concurrent;
 
@@ -23,7 +22,7 @@ namespace RRQMCore.Run
     /// <typeparam name="T"></typeparam>
     public class WaitHandlePool<T> : IDisposable where T : IWaitResult
     {
-        SnowflakeIDGenerator idGenerator;
+        private SnowflakeIDGenerator idGenerator;
         private ConcurrentDictionary<long, WaitData<T>> waitDic;
         private ConcurrentQueue<WaitData<T>> waitQueue;
 
@@ -78,7 +77,7 @@ namespace RRQMCore.Run
         /// <param name="result"></param>
         /// <param name="autoSign">设置为false时，不会生成sign</param>
         /// <returns></returns>
-        public WaitData<T> GetWaitData(T result,bool autoSign=true)
+        public WaitData<T> GetWaitData(T result, bool autoSign = true)
         {
             WaitData<T> waitData;
             if (this.waitQueue.TryDequeue(out waitData))

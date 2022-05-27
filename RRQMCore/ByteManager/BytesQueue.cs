@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore.Extensions;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 

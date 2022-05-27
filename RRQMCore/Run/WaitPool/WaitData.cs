@@ -92,21 +92,21 @@ namespace RRQMCore.Run
         /// <summary>
         /// 使等待的线程继续执行
         /// </summary>
-        public void Set()
+        public bool Set()
         {
             this.status = WaitDataStatus.SetRunning;
-            this.waitHandle.Set();
+            return this.waitHandle.Set();
         }
 
         /// <summary>
         /// 使等待的线程继续执行
         /// </summary>
         /// <param name="waitResult">等待结果</param>
-        public void Set(T waitResult)
+        public bool Set(T waitResult)
         {
             this.waitResult = waitResult;
             this.status = WaitDataStatus.SetRunning;
-            this.waitHandle.Set();
+            return this.waitHandle.Set();
         }
 
         /// <summary>

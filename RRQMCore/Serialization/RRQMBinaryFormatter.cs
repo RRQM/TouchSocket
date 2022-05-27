@@ -16,7 +16,6 @@ using RRQMCore.Reflection;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -493,14 +492,14 @@ namespace RRQMCore.Serialization
             }
             if (type.IsArray)//数组
             {
-                SerializObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (Func<string, SerializObject>)((v) =>
+                SerializObject typeInfo = InstanceCache.GetOrAdd(type.FullName, (v) =>
                 {
                     SerializObject instanceObject = new SerializObject();
                     instanceObject.Type = type;
                     instanceObject.ArrayType = type.GetElementType();
                     instanceObject.instanceType = InstanceType.Array;
                     return instanceObject;
-                }));
+                });
                 return typeInfo;
             }
             else if (type.IsClass || type.IsStruct())
@@ -554,7 +553,7 @@ namespace RRQMCore.Serialization
                     }
                     else
                     {
-                        instanceObject.Properties = GetProperties(type).ToDictionary(a=>a.Name);
+                        instanceObject.Properties = GetProperties(type).ToDictionary(a => a.Name);
                         instanceObject.instanceType = InstanceType.Class;
                     }
                     return instanceObject;

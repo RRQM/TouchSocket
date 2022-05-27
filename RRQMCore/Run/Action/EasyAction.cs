@@ -22,7 +22,7 @@ namespace RRQMCore.Run
     /// </summary>
     public class EasyAction
     {
-        static ConcurrentDictionary<object, Timer> timers = new ConcurrentDictionary<object, Timer>();
+        private static ConcurrentDictionary<object, Timer> timers = new ConcurrentDictionary<object, Timer>();
         /// <summary>
         /// 延迟执行
         /// </summary>
@@ -31,6 +31,17 @@ namespace RRQMCore.Run
         public static void DelayRun(TimeSpan delayTimeSpan, Action action)
         {
             DelayRun(delayTimeSpan.Milliseconds, action);
+        }
+
+        /// <summary>
+        /// 延迟执行
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="delayTimeSpan"></param>
+        /// <param name="status"></param>
+        public static void DelayRun<T>(TimeSpan delayTimeSpan, T status, Action<T> action)
+        {
+            DelayRun(delayTimeSpan.Milliseconds, status, action);
         }
 
         /// <summary>
@@ -53,14 +64,34 @@ namespace RRQMCore.Run
         }
 
         /// <summary>
+        /// 延迟执行
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="delay"></param>
+        /// <param name="status"></param>
+        public static void DelayRun<T>(int delay, T status, Action<T> action)
+        {
+            object obj = new object();
+            Timer timer = new Timer((o) =>
+            {
+                if (timers.TryRemove(o, out Timer timer1))
+                {
+                    timer1.Dispose();
+                }
+                action?.Invoke(status);
+            }, obj, delay, Timeout.Infinite);
+            timers.TryAdd(obj, timer);
+        }
+
+        /// <summary>
         /// Task异步
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="statu"></param>
         /// <param name="action"></param>
-        public static void TaskRun<T>(T statu, Action<T> action)
+        public static Task TaskRun<T>(T statu, Action<T> action)
         {
-            Task.Run(() =>
+            return Task.Run(() =>
             {
                 action.Invoke(statu);
             });

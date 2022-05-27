@@ -16,8 +16,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,94 +27,6 @@ namespace RRQMCore.Extensions
     /// </summary>
     public static class RRQMCoreExtensions
     {
-        #region 日志
-
-        /// <summary>
-        /// 输出消息日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="msg"></param>
-        public static void Message(this ILog logger, string msg)
-        {
-            logger.Debug(LogType.Message, null, msg);
-        }
-
-        /// <summary>
-        /// 输出警示日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="msg"></param>
-        public static void Warning(this ILog logger, string msg)
-        {
-            logger.Debug(LogType.Warning, null, msg);
-        }
-
-        /// <summary>
-        /// 输出错误日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="msg"></param>
-        public static void Error(this ILog logger, string msg)
-        {
-            logger.Debug(LogType.Error, null, msg);
-        }
-
-        /// <summary>
-        /// 输出异常日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="ex"></param>
-        public static void Exception(this ILog logger, Exception ex)
-        {
-            logger.Debug(LogType.Error, null, ex.Message, ex);
-        }
-
-        /// <summary>
-        /// 输出消息日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="source"></param>
-        /// <param name="msg"></param>
-        public static void Message(this ILog logger, object source, string msg)
-        {
-            logger.Debug(LogType.Message, source, msg);
-        }
-
-        /// <summary>
-        /// 输出警示日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="source"></param>
-        /// <param name="msg"></param>
-        public static void Warning(this ILog logger, object source, string msg)
-        {
-            logger.Debug(LogType.Warning, source, msg);
-        }
-
-        /// <summary>
-        /// 输出错误日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="source"></param>
-        /// <param name="msg"></param>
-        public static void Error(this ILog logger, object source, string msg)
-        {
-            logger.Debug(LogType.Error, source, msg);
-        }
-
-        /// <summary>
-        /// 输出异常日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="source"></param>
-        /// <param name="ex"></param>
-        public static void Exception(this ILog logger, object source, Exception ex)
-        {
-            logger.Debug(LogType.Error, source, ex.Message, ex);
-        }
-
-        #endregion 日志
-
         #region Json转换
 
         /// <summary>
@@ -221,7 +131,7 @@ namespace RRQMCore.Extensions
             {
                 return value;
             }
-            string str = value as string;
+            string str = value;
             if ((str != null) && (str.Length == 0))
             {
                 return null;
@@ -304,6 +214,10 @@ namespace RRQMCore.Extensions
         /// <returns></returns>
         public static string Format(this string str, params object[] ps)
         {
+            if (ps==null||ps.Length==0)
+            {
+                return str;
+            }
             return string.Format(str, ps);
         }
 
@@ -392,7 +306,10 @@ namespace RRQMCore.Extensions
 
 
         /// <summary>
-        /// 索引包含数组
+        /// 索引包含数组。
+        /// <para>
+        /// 例如：在{0,1,2,3,1,2,3}中搜索{1,2}，则会返回list:[2,5]，均为最后索引的位置。
+        /// </para>
         /// </summary>
         /// <param name="srcByteArray"></param>
         /// <param name="offset"></param>
@@ -431,6 +348,7 @@ namespace RRQMCore.Extensions
 
         /// <summary>
         /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
+        /// <para>如果目标数组为null或长度为0，则直接返回offset的值</para>
         /// </summary>
         /// <param name="srcByteArray"></param>
         /// <param name="offset"></param>
@@ -442,6 +360,10 @@ namespace RRQMCore.Extensions
             if (length < subByteArray.Length)
             {
                 return -1;
+            }
+            if (subByteArray == null || subByteArray.Length == 0)
+            {
+                return offset;
             }
             int hitLength = 0;
             for (int i = offset; i < length + offset; i++)
@@ -483,115 +405,6 @@ namespace RRQMCore.Extensions
             }
         }
         #endregion
-
-        /// <summary>
-        /// 获取自定义attribute
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumObj"></param>
-        /// <returns></returns>
-        public static T GetAttribute<T>(this Enum enumObj) where T : Attribute
-        {
-            Type type = enumObj.GetType();
-            Attribute attr = null;
-            string enumName = Enum.GetName(type, enumObj);  //获取对应的枚举名
-            FieldInfo field = type.GetField(enumName);
-            attr = field.GetCustomAttribute(typeof(T), false);
-            return (T)attr;
-        }
-
-        /// <summary>
-        /// 格林尼治标准时间
-        /// </summary>
-        /// <param name="dt"></param>
-        /// <param name="v"></param>
-        /// <returns></returns>
-        public static string ToGMTString(this DateTime dt, string v)
-        {
-            return dt.ToString("r", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// 清除所有成员
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="queue"></param>
-        public static void Clear<T>(this ConcurrentQueue<T> queue)
-        {
-#if NETCOREAPP3_1_OR_GREATER
-            queue.Clear();
-#else
-            while (queue.TryDequeue(out _))
-            {
-            }
-#endif
-        }
-
-        /// <summary>
-        /// 获取字节中的指定Bit的值
-        /// </summary>
-        /// <param name="this">字节</param>
-        /// <param name="index">Bit的索引值(0-7)</param>
-        /// <returns></returns>
-        public static int GetBit(this byte @this, short index)
-        {
-            byte x = 1;
-            switch (index)
-            {
-                case 0: { x = 0x01; } break;
-                case 1: { x = 0x02; } break;
-                case 2: { x = 0x04; } break;
-                case 3: { x = 0x08; } break;
-                case 4: { x = 0x10; } break;
-                case 5: { x = 0x20; } break;
-                case 6: { x = 0x40; } break;
-                case 7: { x = 0x80; } break;
-                default: { return 0; }
-            }
-            return (@this & x) == x ? 1 : 0;
-        }
-
-        /// <summary>
-        /// 设置字节中的指定Bit的值
-        /// </summary>
-        /// <param name="this">字节</param>
-        /// <param name="index">Bit的索引值(0-7)</param>
-        /// <param name="bitvalue">Bit值(0,1)</param>
-        /// <returns></returns>
-        public static byte SetBit(this byte @this, short index, int bitvalue)
-        {
-            var _byte = @this;
-            if (bitvalue == 1)
-            {
-                switch (index)
-                {
-                    case 0: { return _byte |= 0x01; }
-                    case 1: { return _byte |= 0x02; }
-                    case 2: { return _byte |= 0x04; }
-                    case 3: { return _byte |= 0x08; }
-                    case 4: { return _byte |= 0x10; }
-                    case 5: { return _byte |= 0x20; }
-                    case 6: { return _byte |= 0x40; }
-                    case 7: { return _byte |= 0x80; }
-                    default: { return _byte; }
-                }
-            }
-            else
-            {
-                switch (index)
-                {
-                    case 0: { return _byte &= 0xFE; }
-                    case 1: { return _byte &= 0xFD; }
-                    case 2: { return _byte &= 0xFB; }
-                    case 3: { return _byte &= 0xF7; }
-                    case 4: { return _byte &= 0xEF; }
-                    case 5: { return _byte &= 0xDF; }
-                    case 6: { return _byte &= 0xBF; }
-                    case 7: { return _byte &= 0x7F; }
-                    default: { return _byte; }
-                }
-            }
-        }
 
         #region Type扩展
         /// <summary>
@@ -740,6 +553,61 @@ namespace RRQMCore.Extensions
             }
             return true;
         }
+        #endregion
+
+        #region 字典扩展
+
+        /// <summary>
+        /// 移除满足条件的项目。
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="pairs"></param>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static int Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> pairs, Func<KeyValuePair<TKey, TValue>, bool> func)
+        {
+            List<TKey> list = new List<TKey>();
+            foreach (var item in pairs)
+            {
+                if (func?.Invoke(item) == true)
+                {
+                    list.Add(item.Key);
+                }
+            }
+
+            int count = 0;
+            foreach (var item in list)
+            {
+                if (pairs.TryRemove(item, out _))
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+#if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+
+        /// <summary>
+        /// 尝试添加
+        /// </summary>
+        /// <typeparam name="Tkey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="dictionary"></param>
+        /// <param name="tkey"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool TryAdd<Tkey, TValue>(this Dictionary<Tkey, TValue> dictionary, Tkey tkey, TValue value)
+        {
+            if (dictionary.ContainsKey(tkey))
+            {
+                return false;
+            }
+            dictionary.Add(tkey, value);
+            return true;
+        }
+#endif
         #endregion
     }
 }

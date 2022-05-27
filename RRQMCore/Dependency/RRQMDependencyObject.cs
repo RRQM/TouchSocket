@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace RRQMCore.Dependency
 {
@@ -43,25 +43,21 @@ namespace RRQMCore.Dependency
     }
 
     /// <summary>
-    /// 依赖项对象
+    /// 依赖项对象.
+    /// 非线程安全。
     /// </summary>
-    public class RRQMDependencyObject : IRRQMDependencyObject, System.IDisposable
+    public class RRQMDependencyObject : DisposableObject, IRRQMDependencyObject, System.IDisposable
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         public RRQMDependencyObject()
         {
-            this.dp = new ConcurrentDictionary<DependencyProperty, object>();
+            this.dp = new Dictionary<DependencyProperty, object>();
         }
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        private ConcurrentDictionary<DependencyProperty, object> dp;
-
-        /// <summary>
-        /// 判断是否已释放。
-        /// </summary>
-        protected volatile bool disposedValue;
+        private Dictionary<DependencyProperty, object> dp;
 
         /// <summary>
         /// 获取依赖注入的值
@@ -106,10 +102,14 @@ namespace RRQMCore.Dependency
         public RRQMDependencyObject SetValue(DependencyProperty dependencyProperty, object value)
         {
             dependencyProperty.DataValidation(value);
-            this.dp.AddOrUpdate(dependencyProperty, value, (DependencyProperty dp, object v) =>
+            if (this.dp.ContainsKey(dependencyProperty))
             {
-                return value;
-            });
+                this.dp[dependencyProperty] = value;
+            }
+            else
+            {
+                this.dp.Add(dependencyProperty, value);
+            }
             return this;
         }
 
@@ -117,7 +117,7 @@ namespace RRQMCore.Dependency
         /// 释放
         /// </summary>
         /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!this.disposedValue)
             {
@@ -130,23 +130,6 @@ namespace RRQMCore.Dependency
                 // TODO: 将大型字段设置为 null
                 this.disposedValue = true;
             }
-        }
-
-        // // TODO: 仅当“Dispose(bool disposing)”拥有用于释放未托管资源的代码时才替代终结器
-        // ~RRQMDependencyObject()
-        // {
-        //     // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-        //     Dispose(disposing: false);
-        // }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
-            System.GC.SuppressFinalize(this);
         }
     }
 }

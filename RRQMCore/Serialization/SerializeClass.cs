@@ -17,7 +17,7 @@ using System.Reflection;
 
 namespace RRQMCore.Serialization
 {
-    class SerializObject
+    internal class SerializObject
     {
         public InstanceType instanceType;
         public Type Type;
@@ -29,7 +29,7 @@ namespace RRQMCore.Serialization
 
         public Type[] ArgTypes;
         public Type ArrayType;
-        public Dictionary<string,PropertyInfo>Properties;
+        public Dictionary<string, PropertyInfo> Properties;
         public Method AddMethod;
     }
 }

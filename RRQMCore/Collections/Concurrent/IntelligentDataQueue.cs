@@ -128,7 +128,7 @@ namespace RRQMCore.Collections.Concurrent
                 Interlocked.Add(ref this.m_actualSize, item.Size);
                 base.Enqueue(item);
             }
-           
+
         }
 
         /// <summary>
