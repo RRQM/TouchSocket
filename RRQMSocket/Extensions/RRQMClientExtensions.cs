@@ -31,7 +31,7 @@ namespace RRQMSocket
         /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
         /// <param name="printLog">是否输出日志。</param>
         /// <param name="sleepTime">失败时，停留时间</param>
-        public static T UseReconnection<T>(this T client,int tryCount = 10, bool printLog = false,int sleepTime=1000, Action<T> successCallback = null) where T : ITcpClient
+        public static T UseReconnection<T>(this T client, int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<T> successCallback = null) where T : ITcpClient
         {
             if (client is null)
             {
@@ -55,15 +55,11 @@ namespace RRQMSocket
                             {
                                 return;
                             }
-                            if (client is ITokenClient tokenClient)
-                            {
-                                tokenClient.Connect(tokenClient.GetValue<string>(RRQMConfigExtensions.VerifyTokenProperty));
-                            }
                             else
                             {
                                 client.Connect();
                             }
-                           
+
                             successCallback?.Invoke(client);
                             break;
                         }
@@ -88,7 +84,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="client"></param>
         /// <param name="msg"></param>
-        public static void Send<T>(this T client, string msg)where T:ISend
+        public static void Send<T>(this T client, string msg) where T : ISend
         {
             if (string.IsNullOrEmpty(msg))
             {

@@ -175,7 +175,7 @@ namespace RRQMSocket
         /// </summary>
         protected override void Reset()
         {
-            if (this.tempByteBlock!=null)
+            if (this.tempByteBlock != null)
             {
                 this.tempByteBlock.Dispose();
                 this.tempByteBlock = null;

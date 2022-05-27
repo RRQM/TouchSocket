@@ -84,7 +84,7 @@ namespace RRQMSocket
     /// <summary>
     /// 具有直接发送功能
     /// </summary>
-    public interface IDefaultSender:ISendBase
+    public interface IDefaultSender : ISendBase
     {
         #region 默认发送
         /// <summary>
@@ -152,7 +152,7 @@ namespace RRQMSocket
     /// <summary>
     /// 具有直接发送功能
     /// </summary>
-    public interface IUdpDefaultSender:ISendBase
+    public interface IUdpDefaultSender : ISendBase
     {
         #region 默认发送
         /// <summary>
@@ -230,7 +230,7 @@ namespace RRQMSocket
     {
         /// <summary>
         /// 表示对象能否顺利执行发送操作。
-        /// <para>不一定完全能执行。</para>
+        /// <para>由于高并发，当改值为Tru时，也不一定完全能执行。</para>
         /// </summary>
         bool CanSend { get; }
     }
@@ -238,7 +238,7 @@ namespace RRQMSocket
     /// <summary>
     /// 具有发送功能的接口
     /// </summary>
-    public interface ISend:ISendBase
+    public interface ISend : ISendBase
     {
         /// <summary>
         /// 同步发送数据。
@@ -388,7 +388,7 @@ namespace RRQMSocket
     /// <summary>
     /// 发送等待接口
     /// </summary>
-    public interface IWaitSender: ISendBase
+    public interface IWaitSender : ISendBase
     {
         /// <summary>
         /// 发送字节流

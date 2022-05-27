@@ -20,7 +20,7 @@ namespace RRQMSocket
     /// 同时<see cref="IRequestInfo"/>将实现为TRequest，发送数据直接发送。
     /// <para>此处设计思路借鉴SuperSocket。</para>
     /// </summary>
-    public abstract class CustomDataHandlingAdapter<TRequest> : DataHandlingAdapter where TRequest : IRequestInfo
+    public abstract class CustomDataHandlingAdapter<TRequest> : DataHandlingAdapter where TRequest : class, IRequestInfo
     {
         /// <summary>
         /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="ByteBlock.Dispose"/>后，再置空；
@@ -39,21 +39,22 @@ namespace RRQMSocket
         /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
         /// </summary>
         /// <param name="byteBlock">字节块</param>
-        /// <param name="length">剩余有效数据长度，计算实质为:ByteBlock.Len和ByteBlock.Pos的差值。</param>
         /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
         /// <param name="request">对象。</param>
+        /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
         /// <returns></returns>
-        protected abstract FilterResult Filter(ByteBlock byteBlock, int length, bool beCached, ref TRequest request);
+        protected abstract FilterResult Filter(ByteBlock byteBlock, bool beCached, ref TRequest request, ref int tempCapacity);
 
+        private int a;
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
+            this.a += byteBlock.Len;
             if (this.tempByteBlock == null)
             {
-                byteBlock.Pos = 0;
                 this.Single(byteBlock, false);
             }
             else
@@ -61,7 +62,6 @@ namespace RRQMSocket
                 this.tempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
                 ByteBlock block = this.tempByteBlock;
                 this.tempByteBlock = null;
-                block.Pos = 0;
                 this.Single(block, true);
             }
         }
@@ -101,43 +101,56 @@ namespace RRQMSocket
         {
         }
 
-        private void Single(ByteBlock byteBlock, bool dis)
+        private void Single(ByteBlock byteBlock, bool temp)
         {
-            try
+            int position = byteBlock.Pos;
+            byteBlock.Pos = 0;
+            bool neverSucceed = true;
+            while (byteBlock.Pos < byteBlock.Len)
             {
-                while (byteBlock.Pos < byteBlock.Len)
+                int tempCapacity = 1024 * 64;
+                FilterResult filterResult = this.Filter(byteBlock, this.tempRequest != null, ref this.tempRequest, ref tempCapacity);
+                switch (filterResult)
                 {
-                    FilterResult filterResult = this.Filter(byteBlock, byteBlock.Len - byteBlock.Pos, (IRequestInfo)this.tempRequest == default ? false : true, ref this.tempRequest);
-                    switch (filterResult)
-                    {
-                        case FilterResult.Success:
-                            this.GoReceived(null, this.tempRequest);
-                            this.OnReceivedSuccess(this.tempRequest);
-                            this.tempRequest = default;
-                            break;
+                    case FilterResult.Success:
+                        this.GoReceived(null, this.tempRequest);
+                        this.OnReceivedSuccess(this.tempRequest);
+                        this.tempRequest = default;
+                        neverSucceed = false;
+                        break;
 
-                        case FilterResult.Cache:
-                            if (byteBlock.CanReadLen> 0)
+                    case FilterResult.Cache:
+                        if (byteBlock.CanReadLen > 0)
+                        {
+                            if (temp)
                             {
-                                this.tempByteBlock = new ByteBlock();
-                                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
-                                if (this.tempByteBlock.Len > this.MaxPackageSize)
+                                if (neverSucceed)
                                 {
-                                    this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                                    byteBlock.Pos = position;
+                                    this.tempByteBlock = byteBlock;
+                                }
+                                else
+                                {
+                                    this.tempByteBlock = new ByteBlock(tempCapacity);
+                                    this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                    byteBlock.Dispose();
                                 }
                             }
-                            return;
+                            else
+                            {
+                                this.tempByteBlock = new ByteBlock(tempCapacity);
+                                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                            }
 
-                        case FilterResult.GoOn:
-                            break;
-                    }
-                }
-            }
-            finally
-            {
-                if (dis)
-                {
-                    byteBlock.Dispose();
+                            if (this.tempByteBlock.Len > this.MaxPackageSize)
+                            {
+                                this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                            }
+                        }
+                        return;
+
+                    case FilterResult.GoOn:
+                        break;
                 }
             }
         }

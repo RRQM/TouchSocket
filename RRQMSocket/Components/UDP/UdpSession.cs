@@ -50,12 +50,12 @@ namespace RRQMSocket
     /// </summary>
     public abstract class UdpSessionBase : BaseSocket, IUdpSession, IPlguinObject
     {
-        private RRQMConfig config;
-        private UdpDataHandlingAdapter dataHandlingAdapter;
-        private NetworkMonitor monitor;
-        private IPHost remoteIPHost;
-        private ServerState serverState;
-        private bool usePlugin;
+        private RRQMConfig m_config;
+        private UdpDataHandlingAdapter m_adapter;
+        private NetworkMonitor m_monitor;
+        private IPHost m_remoteIPHost;
+        private ServerState m_serverState;
+        private bool m_usePlugin;
 
         /// <summary>
         /// 构造函数
@@ -63,21 +63,29 @@ namespace RRQMSocket
         public UdpSessionBase()
         {
             this.Protocol = Protocol.UDP;
-            this.Container = new Container();
-            this.Container.RegisterTransient<ILog, ConsoleLogger>();
-            this.Container.RegisterTransient<UdpDataHandlingAdapter, NormalUdpDataHandlingAdapter>();
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.ReceiveBufferSize = this.BufferLength;
             socket.SendBufferSize = this.BufferLength;
-            this.monitor = new NetworkMonitor(null, socket);
-            this.PluginsManager = new PluginsManager(this.Container);
+            this.m_monitor = new NetworkMonitor(null, socket);
             this.SetAdapter(new NormalUdpDataHandlingAdapter());
         }
+
+
+        /// <summary>
+        /// 处理未经过适配器的数据。返回值表示是否继续向下传递。
+        /// </summary>
+        public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
+
+        /// <summary>
+        /// 处理经过适配器后的数据。返回值表示是否继续向下传递。
+        /// </summary>
+        public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
+
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool CanSend => this.serverState == ServerState.Running;
+        public bool CanSend => this.m_serverState == ServerState.Running;
 
         /// <summary>
         /// <inheritdoc/>
@@ -87,32 +95,32 @@ namespace RRQMSocket
         /// <summary>
         /// 获取配置
         /// </summary>
-        public RRQMConfig Config => this.config;
+        public RRQMConfig Config => this.m_config;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public IContainer Container { get; set; }
+        public IContainer Container => this.m_config?.Container;
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public UdpDataHandlingAdapter DataHandlingAdapter => this.dataHandlingAdapter;
+        public UdpDataHandlingAdapter DataHandlingAdapter => this.m_adapter;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public int MaxPackageSize => this.config != null ? this.config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty) : 0;
+        public int MaxPackageSize => this.m_config != null ? this.m_config.GetValue<int>(RRQMConfigExtensions.MaxPackageSizeProperty) : 0;
 
         /// <summary>
         /// 监听器
         /// </summary>
-        public NetworkMonitor Monitor => this.monitor;
+        public NetworkMonitor Monitor => this.m_monitor;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public IPluginsManager PluginsManager { get; set; }
+        public IPluginsManager PluginsManager => this.m_config?.PluginsManager;
 
         /// <summary>
         /// <inheritdoc/>
@@ -122,7 +130,7 @@ namespace RRQMSocket
         /// <summary>
         /// 默认远程节点
         /// </summary>
-        public IPHost RemoteIPHost => this.remoteIPHost;
+        public IPHost RemoteIPHost => this.m_remoteIPHost;
 
         /// <summary>
         /// 服务器名称
@@ -132,12 +140,12 @@ namespace RRQMSocket
         /// <summary>
         /// 获取服务器状态
         /// </summary>
-        public ServerState ServerState => this.serverState;
+        public ServerState ServerState => this.m_serverState;
 
         /// <summary>
         /// 是否已启用插件
         /// </summary>
-        public bool UsePlugin => this.usePlugin;
+        public bool UsePlugin => this.m_usePlugin;
 
         /// <summary>
         /// 退出组播
@@ -147,7 +155,7 @@ namespace RRQMSocket
         {
             if (this.disposedValue)
             {
-                throw new ObjectDisposedException(GetType().FullName);
+                throw new ObjectDisposedException(this.GetType().FullName);
             }
 
             if (multicastAddr is null)
@@ -155,15 +163,15 @@ namespace RRQMSocket
                 throw new ArgumentNullException(nameof(multicastAddr));
             }
 
-            if (this.monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
+            if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
             {
                 MulticastOption optionValue = new MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, optionValue);
+                this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, optionValue);
             }
             else
             {
                 IPv6MulticastOption optionValue2 = new IPv6MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.DropMembership, optionValue2);
+                this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.DropMembership, optionValue2);
             }
         }
 
@@ -183,15 +191,15 @@ namespace RRQMSocket
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
 
-            if (this.monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
+            if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
             {
                 MulticastOption optionValue = new MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, optionValue);
+                this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, optionValue);
             }
             else
             {
                 IPv6MulticastOption optionValue2 = new IPv6MulticastOption(multicastAddr);
-                this.monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, optionValue2);
+                this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, optionValue2);
             }
         }
 
@@ -216,8 +224,8 @@ namespace RRQMSocket
         /// <returns></returns>
         public IService Setup(RRQMConfig serverConfig)
         {
-            this.config = serverConfig;
-            this.LoadConfig(this.config);
+            this.m_config = serverConfig;
+            this.LoadConfig(this.m_config);
             return this;
         }
 
@@ -237,16 +245,16 @@ namespace RRQMSocket
         /// </summary>
         public IService Start()
         {
-            if (this.serverState == ServerState.Disposed)
+            if (this.m_serverState == ServerState.Disposed)
             {
                 throw new RRQMException("无法重新利用已释放对象");
             }
 
-            switch (this.serverState)
+            switch (this.m_serverState)
             {
                 case ServerState.None:
                     {
-                        if (this.config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) is IPHost iPHost)
+                        if (this.m_config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) is IPHost iPHost)
                         {
                             this.BeginReceive(iPHost);
                         }
@@ -258,7 +266,7 @@ namespace RRQMSocket
 
                 case ServerState.Stopped:
                     {
-                        if (this.config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) is IPHost iPHost)
+                        if (this.m_config.GetValue<IPHost>(RRQMConfigExtensions.BindIPHostProperty) is IPHost iPHost)
                         {
                             this.BeginReceive(iPHost);
                         }
@@ -270,7 +278,7 @@ namespace RRQMSocket
                     }
             }
 
-            this.serverState = ServerState.Running;
+            this.m_serverState = ServerState.Running;
             return this;
         }
 
@@ -283,6 +291,10 @@ namespace RRQMSocket
         /// <returns>插件类型实例</returns>
         public TPlugin AddPlugin<TPlugin>() where TPlugin : IPlugin
         {
+            if (this.m_config == null)
+            {
+                throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
+            }
             var plugin = this.Container.Resolve<TPlugin>();
             this.AddPlugin(plugin);
             return plugin;
@@ -295,6 +307,10 @@ namespace RRQMSocket
         /// <exception cref="ArgumentNullException"></exception>
         public void AddPlugin(IPlugin plugin)
         {
+            if (this.m_config == null)
+            {
+                throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
+            }
             if (plugin.Logger == default)
             {
                 plugin.Logger = this.Container.Resolve<ILog>();
@@ -335,12 +351,12 @@ namespace RRQMSocket
         /// </summary>
         public IService Stop()
         {
-            if (this.monitor != null)
+            if (this.m_monitor != null)
             {
-                this.monitor.Socket.Dispose();
+                this.m_monitor.Socket.Dispose();
             }
-            this.monitor = null;
-            this.serverState = ServerState.Stopped;
+            this.m_monitor = null;
+            this.m_serverState = ServerState.Stopped;
             return this;
         }
 
@@ -351,7 +367,7 @@ namespace RRQMSocket
         protected override void Dispose(bool disposing)
         {
             this.Stop();
-            this.serverState = ServerState.Disposed;
+            this.m_serverState = ServerState.Disposed;
             base.Dispose(disposing);
         }
 
@@ -392,9 +408,9 @@ namespace RRQMSocket
             {
                 this.Logger = this.Container.Resolve<ILog>();
             }
-            this.remoteIPHost = config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
+            this.m_remoteIPHost = config.GetValue<IPHost>(RRQMConfigExtensions.RemoteIPHostProperty);
             this.BufferLength = config.BufferLength;
-            this.usePlugin = config.IsUsePlugin;
+            this.m_usePlugin = config.IsUsePlugin;
 
             if (config.GetValue<int>(RRQMConfigExtensions.ThreadCountProperty) <= 0)
             {
@@ -430,7 +446,7 @@ namespace RRQMSocket
             adapter.owner = this;
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
-            this.dataHandlingAdapter = adapter;
+            this.m_adapter = adapter;
         }
 
         /// <summary>
@@ -452,11 +468,11 @@ namespace RRQMSocket
                 {
                     if (isAsync)
                     {
-                        this.monitor.Socket.BeginSendTo(buffer, offset, length, SocketFlags.None, endPoint, null, null);
+                        this.m_monitor.Socket.BeginSendTo(buffer, offset, length, SocketFlags.None, endPoint, null, null);
                     }
                     else
                     {
-                        this.monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, endPoint);
+                        this.m_monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, endPoint);
                     }
                 }
             }
@@ -472,17 +488,17 @@ namespace RRQMSocket
             {
                 socket.UseOnlyOverlappedIO = true;
             }
-            socket.EnableBroadcast = this.config.GetValue<bool>(RRQMConfigExtensions.EnableBroadcastProperty);
+            socket.EnableBroadcast = this.m_config.GetValue<bool>(RRQMConfigExtensions.EnableBroadcastProperty);
             this.PreviewBind(socket);
             socket.Bind(iPHost.EndPoint);
 
-            this.monitor = new NetworkMonitor(iPHost, socket);
+            this.m_monitor = new NetworkMonitor(iPHost, socket);
 
-            switch (this.config.ReceiveType)
+            switch (this.m_config.ReceiveType)
             {
                 case ReceiveType.Auto:
                     {
-#if NET45_OR_GREATER
+#if NET45_OR_GREATER||NET5_0_OR_GREATER
                         for (int i = 0; i < threadCount; i++)
                         {
                             SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
@@ -520,8 +536,6 @@ namespace RRQMSocket
                             thread.Start();
                         }
 #endif
-
-
                         break;
                     }
                 default:
@@ -535,9 +549,9 @@ namespace RRQMSocket
             {
                 try
                 {
-                    EndPoint endPoint = this.monitor.IPHost.EndPoint;
+                    EndPoint endPoint = this.m_monitor.IPHost.EndPoint;
                     ByteBlock byteBlock = new ByteBlock();
-                    int r = this.monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
+                    int r = this.m_monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
                     byteBlock.SetLength(r);
                     this.HandleBuffer(endPoint, byteBlock);
                 }
@@ -553,11 +567,24 @@ namespace RRQMSocket
         {
             try
             {
-                this.dataHandlingAdapter.ReceivedInput(endPoint, byteBlock);
+                if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
+                {
+                    return;
+                }
+                if (this.disposedValue)
+                {
+                    return;
+                }
+                if (this.m_adapter == null)
+                {
+                    this.Logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetDescription());
+                    return;
+                }
+                this.m_adapter.ReceivedInput(endPoint, byteBlock);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在处理数据时发生错误，信息：{e.Message}");
+                this.Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
             }
             finally
             {
@@ -572,7 +599,12 @@ namespace RRQMSocket
 
         private void PrivateHandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.usePlugin)
+            if (this.OnHandleReceivedData?.Invoke(byteBlock, requestInfo) == false)
+            {
+                return;
+            }
+
+            if (this.m_usePlugin)
             {
                 UdpReceivedDataEventArgs args = new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo);
                 this.PluginsManager.Raise<IUdpSessionPlugin>("OnReceivedData", this, args);
@@ -595,11 +627,11 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void Send(byte[] buffer, int offset, int length)
         {
-            if (this.remoteIPHost == null)
+            if (this.m_remoteIPHost == null)
             {
                 throw new RRQMException("默认终结点为空");
             }
-            this.Send(this.remoteIPHost.EndPoint, buffer, offset, length);
+            this.Send(this.m_remoteIPHost.EndPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -635,11 +667,11 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public void SendAsync(byte[] buffer, int offset, int length)
         {
-            if (this.remoteIPHost == null)
+            if (this.m_remoteIPHost == null)
             {
                 throw new RRQMException("默认终结点为空");
             }
-            this.SendAsync(this.remoteIPHost.EndPoint, buffer, offset, length);
+            this.SendAsync(this.m_remoteIPHost.EndPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -682,7 +714,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void Send(EndPoint remoteEP, byte[] buffer, int offset, int length)
         {
-            this.dataHandlingAdapter.SendInput(remoteEP, buffer, offset, length, false);
+            this.m_adapter.SendInput(remoteEP, buffer, offset, length, false);
         }
 
         /// <summary>
@@ -721,7 +753,7 @@ namespace RRQMSocket
         /// <exception cref="RRQMException"></exception>
         public virtual void SendAsync(EndPoint remoteEP, byte[] buffer, int offset, int length)
         {
-            this.dataHandlingAdapter.SendInput(remoteEP, buffer, offset, length, true);
+            this.m_adapter.SendInput(remoteEP, buffer, offset, length, true);
         }
 
         /// <summary>
@@ -748,7 +780,7 @@ namespace RRQMSocket
 
         private void ProcessReceive(Socket socket, SocketAsyncEventArgs e)
         {
-            if (this.serverState == ServerState.Running && e.SocketError == SocketError.Success)
+            if (this.m_serverState == ServerState.Running && e.SocketError == SocketError.Success)
             {
                 ByteBlock byteBlock = (ByteBlock)e.UserToken;
                 byteBlock.SetLength(e.BytesTransferred);
@@ -783,7 +815,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
-            this.SocketSend(this.remoteIPHost.EndPoint, buffer, offset, length, false);
+            this.SocketSend(this.m_remoteIPHost.EndPoint, buffer, offset, length, false);
         }
 
         /// <summary>
@@ -848,7 +880,7 @@ namespace RRQMSocket
         /// <param name="length"></param>
         public void DefaultSendAsync(byte[] buffer, int offset, int length)
         {
-            this.SocketSend(this.remoteIPHost.EndPoint, buffer, offset, length, true);
+            this.SocketSend(this.m_remoteIPHost.EndPoint, buffer, offset, length, true);
         }
 
         /// <summary>
@@ -901,8 +933,7 @@ namespace RRQMSocket
             this.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
-        #endregion DefaultSend
-
+        #endregion DefaultSendAsync
 
         #region 组合发送
 
@@ -912,14 +943,14 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public void Send(IList<TransferByte> transferBytes)
         {
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
             }
 
-            if (this.dataHandlingAdapter.CanSplicingSend)
+            if (this.m_adapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.SendInput(this.remoteIPHost.EndPoint, transferBytes, false);
+                this.m_adapter.SendInput(this.m_remoteIPHost.EndPoint, transferBytes, false);
             }
             else
             {
@@ -930,7 +961,7 @@ namespace RRQMSocket
                     {
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
-                    this.dataHandlingAdapter.SendInput(this.remoteIPHost.EndPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
+                    this.m_adapter.SendInput(this.m_remoteIPHost.EndPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
                 finally
                 {
@@ -946,14 +977,14 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public void Send(EndPoint endPoint, IList<TransferByte> transferBytes)
         {
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
             }
 
-            if (this.dataHandlingAdapter.CanSplicingSend)
+            if (this.m_adapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.SendInput(endPoint, transferBytes, false);
+                this.m_adapter.SendInput(endPoint, transferBytes, false);
             }
             else
             {
@@ -964,7 +995,7 @@ namespace RRQMSocket
                     {
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
-                    this.dataHandlingAdapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
+                    this.m_adapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
                 finally
                 {
@@ -979,14 +1010,14 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public void SendAsync(IList<TransferByte> transferBytes)
         {
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
             }
 
-            if (this.dataHandlingAdapter.CanSplicingSend)
+            if (this.m_adapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.SendInput(this.remoteIPHost.EndPoint, transferBytes, true);
+                this.m_adapter.SendInput(this.m_remoteIPHost.EndPoint, transferBytes, true);
             }
             else
             {
@@ -997,7 +1028,7 @@ namespace RRQMSocket
                     {
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
-                    this.dataHandlingAdapter.SendInput(this.remoteIPHost.EndPoint, byteBlock.Buffer, 0, byteBlock.Len, true);
+                    this.m_adapter.SendInput(this.m_remoteIPHost.EndPoint, byteBlock.Buffer, 0, byteBlock.Len, true);
                 }
                 finally
                 {
@@ -1013,14 +1044,14 @@ namespace RRQMSocket
         /// <param name="transferBytes"></param>
         public void SendAsync(EndPoint endPoint, IList<TransferByte> transferBytes)
         {
-            if (this.dataHandlingAdapter == null)
+            if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetResString());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
             }
 
-            if (this.dataHandlingAdapter.CanSplicingSend)
+            if (this.m_adapter.CanSplicingSend)
             {
-                this.dataHandlingAdapter.SendInput(endPoint, transferBytes, true);
+                this.m_adapter.SendInput(endPoint, transferBytes, true);
             }
             else
             {
@@ -1031,7 +1062,7 @@ namespace RRQMSocket
                     {
                         byteBlock.Write(item.Buffer, item.Offset, item.Length);
                     }
-                    this.dataHandlingAdapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, true);
+                    this.m_adapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, true);
                 }
                 finally
                 {

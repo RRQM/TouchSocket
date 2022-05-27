@@ -249,7 +249,7 @@ namespace RRQMSocket
         /// <param name="multiThread">并发多线程数量</param>
         /// <param name="receivedCallBack">收到数据回调</param>
         /// <returns></returns>
-        public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter,int multiThread, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
+        public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
         {
             UdpDataAdapterTester tester = new UdpDataAdapterTester(multiThread);
             tester.adapter = adapter;
@@ -288,7 +288,7 @@ namespace RRQMSocket
             {
                 for (int i = 0; i < testCount; i++)
                 {
-                    this.adapter.SendInput(null,buffer, offset, length, false);
+                    this.adapter.SendInput(null, buffer, offset, length, false);
                 }
             });
             if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.timeout))
@@ -322,7 +322,7 @@ namespace RRQMSocket
                     {
                         try
                         {
-                            this.adapter.ReceivedInput(null,block);
+                            this.adapter.ReceivedInput(null, block);
                         }
                         finally
                         {
@@ -337,13 +337,13 @@ namespace RRQMSocket
             }
         }
 
-        private void OnReceived(EndPoint endPoint,ByteBlock byteBlock, IRequestInfo requestInfo)
+        private void OnReceived(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.receivedCallBack?.Invoke(byteBlock, requestInfo);
             Interlocked.Increment(ref this.count);
         }
 
-        private void SendCallback(EndPoint endPoint,byte[] buffer, int offset, int length, bool isAsync)
+        private void SendCallback(EndPoint endPoint, byte[] buffer, int offset, int length, bool isAsync)
         {
             QueueDataBytes asyncByte = new QueueDataBytes(new byte[length], 0, length);
             Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
@@ -353,14 +353,14 @@ namespace RRQMSocket
         private bool tryGet(out List<ByteBlock> byteBlocks)
         {
             byteBlocks = new List<ByteBlock>();
-            
+
             while (this.asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
             {
                 ByteBlock block = new ByteBlock(asyncByte.Length);
-                block.Write(asyncByte.Buffer,asyncByte.Offset,asyncByte.Length);
+                block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
                 byteBlocks.Add(block);
             }
-            if (byteBlocks.Count>0)
+            if (byteBlocks.Count > 0)
             {
                 return true;
             }

@@ -28,11 +28,6 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 数据处理适配器
-        /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter { get; set; }
-
-        /// <summary>
         /// 客户端ID
         /// </summary>
         public string ID { get; set; }

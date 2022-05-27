@@ -11,13 +11,14 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.ByteManager;
+using System;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 用户自定义固定包头解析器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，同时<see cref="IRequestInfo"/>将实现为TFixedHeaderRequestInfo。
+    /// 大数据用户自定义固定包头解析器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，同时<see cref="IRequestInfo"/>将实现为TFixedHeaderRequestInfo。
     /// </summary>
-    public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestInfo> : CustomDataHandlingAdapter<TFixedHeaderRequestInfo> where TFixedHeaderRequestInfo : class, IFixedHeaderRequestInfo
+    public abstract class CustomBigFixedHeaderDataHandlingAdapter<TFixedHeaderRequestInfo> : CustomDataHandlingAdapter<TFixedHeaderRequestInfo> where TFixedHeaderRequestInfo : class, IBigFixedHeaderRequestInfo
     {
         /// <summary>
         /// 固定包头的长度。
@@ -39,21 +40,30 @@ namespace RRQMSocket
         {
             if (beCached)
             {
-                if (request.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
+                while (this.surLen > 0 && byteBlock.CanRead)
                 {
-                    return FilterResult.Cache;
+                    int r = (int)Math.Min(this.surLen, byteBlock.CanReadLength);
+                    try
+                    {
+                        request.OnAppendBody(byteBlock.Buffer, byteBlock.Pos, r);
+                        this.surLen -= r;
+                        byteBlock.Pos += r;
+                        if (this.surLen == 0)
+                        {
+                            if (request.OnFinished())
+                            {
+                                return FilterResult.Success;
+                            }
+                            request = null;
+                            return FilterResult.GoOn;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.OnError(ex.Message, false, true);
+                    }
                 }
-
-                byteBlock.Read(out byte[] body, request.BodyLength);
-                if (request.OnParsingBody(body))
-                {
-                    return FilterResult.Success;
-                }
-                else
-                {
-                    request = default;//放弃所有解析
-                    return FilterResult.GoOn;
-                }
+                return FilterResult.GoOn;
             }
             else
             {
@@ -67,21 +77,41 @@ namespace RRQMSocket
                 if (requestInfo.OnParsingHeader(header))
                 {
                     request = requestInfo;
-                    if (requestInfo.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
+                    if (requestInfo.BodyLength == 0)
                     {
-                        return FilterResult.Cache;
-                    }
-
-                    byteBlock.Read(out byte[] body, requestInfo.BodyLength);
-                    if (requestInfo.OnParsingBody(body))
-                    {
-                        return FilterResult.Success;
-                    }
-                    else
-                    {
-                        request = default;//放弃所有解析
+                        if (requestInfo.OnFinished())
+                        {
+                            return FilterResult.Success;
+                        }
+                        request = null;
                         return FilterResult.GoOn;
                     }
+                    this.surLen = request.BodyLength;
+
+                    while (this.surLen > 0 && byteBlock.CanRead)
+                    {
+                        int r = (int)Math.Min(this.surLen, byteBlock.CanReadLength);
+                        try
+                        {
+                            request.OnAppendBody(byteBlock.Buffer, byteBlock.Pos, r);
+                            this.surLen -= r;
+                            byteBlock.Pos += r;
+                            if (this.surLen == 0)
+                            {
+                                if (request.OnFinished())
+                                {
+                                    return FilterResult.Success;
+                                }
+                                request = null;
+                                return FilterResult.GoOn;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            this.OnError(ex.Message, false, true);
+                        }
+                    }
+                    return FilterResult.GoOn;
                 }
                 else
                 {
@@ -89,6 +119,8 @@ namespace RRQMSocket
                 }
             }
         }
+
+        private long surLen;
 
         /// <summary>
         /// 获取泛型实例。
@@ -100,12 +132,12 @@ namespace RRQMSocket
     /// <summary>
     /// 用户自定义固定包头请求
     /// </summary>
-    public interface IFixedHeaderRequestInfo : IRequestInfo
+    public interface IBigFixedHeaderRequestInfo : IRequestInfo
     {
         /// <summary>
         /// 数据体长度
         /// </summary>
-        int BodyLength { get; }
+        long BodyLength { get; }
 
         /// <summary>
         /// 当收到数据，由框架封送固定协议头。
@@ -117,11 +149,20 @@ namespace RRQMSocket
         bool OnParsingHeader(byte[] header);
 
         /// <summary>
-        /// 当收到数据，由框架封送有效载荷数据。
-        /// <para>如果返回false，意味着放弃本次解析的所有数据，包括已经解析完成的Header</para>
+        /// 当收到数据，由框架封送数据。
+        /// <para>您需要将有效数据自行保存。该方法可能会多次调用。</para>
         /// </summary>
-        /// <param name="body">载荷数据</param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
         /// <returns>是否成功有效</returns>
-        bool OnParsingBody(byte[] body);
+        void OnAppendBody(byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 当完成数据接收时调用。
+        /// <para>当返回False时，将不会把该对象向Received传递。</para>
+        /// </summary>
+        /// <returns>是否成功有效</returns>
+        bool OnFinished();
     }
 }

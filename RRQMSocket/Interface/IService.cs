@@ -10,52 +10,62 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.Dependency;
 using System;
-using System.Collections.Generic;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 插件管理器接口
+    /// 服务器接口
     /// </summary>
-    public interface IPluginsManager: IEnumerable<IPlugin>
+    public interface IService : IDisposable
     {
         /// <summary>
-        /// 注入容器
+        /// 服务器状态
         /// </summary>
-        public IContainer  Container { get; }
+        ServerState ServerState { get; }
 
         /// <summary>
-        /// 添加插件
+        /// 获取服务器配置
         /// </summary>
-        /// <param name="plugin">插件</param>
+        RRQMConfig Config { get; }
+
+        /// <summary>
+        /// 名称
+        /// </summary>
+        string ServerName { get; }
+
+        /// <summary>
+        /// 配置服务器
+        /// </summary>
+        /// <param name="serverConfig">配置</param>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns>设置的服务实例</returns>
+        IService Setup(RRQMConfig serverConfig);
+
+        /// <summary>
+        /// 配置服务器
+        /// </summary>
+        /// <param name="port"></param>
+        /// <exception cref="RRQMException"></exception>
+        /// <returns>设置的服务实例</returns>
+        IService Setup(int port);
+
+        /// <summary>
+        /// 启动
+        /// </summary>
+        /// <exception cref="RRQMException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
-        void Add(IPlugin plugin);
+        /// <exception cref="Exception"></exception>
+        /// <returns>设置的服务实例</returns>
+        IService Start();
 
         /// <summary>
-        /// 移除插件
+        /// 停止
         /// </summary>
-        /// <param name="plugin"></param>
-        void Remove(IPlugin plugin);
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <param name="type"></param>
-        void Remove(Type type);
-
-        /// <summary>
-        /// 清除所有插件
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// 触发对应方法
-        /// </summary>
-        /// <typeparam name="TPlugin">接口类型</typeparam>
-        /// <param name="name">触发名称</param>
-        /// <param name="params">参数</param>
-        void Raise<TPlugin>(string name, params object[] @params) where TPlugin : IPlugin;
+        /// <exception cref="RRQMException"></exception>
+        /// <returns>设置的服务实例</returns>
+        IService Stop();
     }
 }

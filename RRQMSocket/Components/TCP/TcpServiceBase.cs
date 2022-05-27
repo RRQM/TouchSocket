@@ -20,7 +20,7 @@ namespace RRQMSocket
     /// <summary>
     /// Tcp服务器基类
     /// </summary>
-    public abstract class TcpServiceBase : BaseSocket, ITcpServiceBase, IIDSender
+    public abstract class TcpServiceBase : BaseSocket, ITcpService, IIDSender
     {
 
         /// <summary>
@@ -56,12 +56,12 @@ namespace RRQMSocket
         /// <summary>
         /// 插件管理器
         /// </summary>
-        public abstract IPluginsManager PluginsManager { get; set; }
+        public abstract IPluginsManager PluginsManager { get; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract IContainer Container { get; set; }
+        public abstract IContainer Container { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -80,8 +80,9 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="waitSetID"></param>
-        public abstract void ResetID(WaitSetID waitSetID);
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
+        public abstract void ResetID(string oldID, string newID);
 
         /// <summary>
         /// <inheritdoc/>
@@ -193,7 +194,7 @@ namespace RRQMSocket
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(id));
+                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -244,7 +245,7 @@ namespace RRQMSocket
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(id));
+                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
             }
         }
 

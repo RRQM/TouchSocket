@@ -13,12 +13,9 @@
 using RRQMCore.Converter;
 using RRQMCore.Reflection;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket.Plugins
 {
@@ -27,7 +24,7 @@ namespace RRQMSocket.Plugins
     /// </summary>
     public abstract class TcpCommandLinePlugin : TcpPluginBase
     {
-        Dictionary<string, Method> pairs = new Dictionary<string, RRQMCore.Reflection.Method>();
+        private Dictionary<string, Method> pairs = new Dictionary<string, RRQMCore.Reflection.Method>();
 
         /// <summary>
         /// 字符串转换器，默认支持基础类型和Json。可以自定义。
@@ -58,7 +55,7 @@ namespace RRQMSocket.Plugins
             var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
             foreach (var item in ms)
             {
-                pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
+                this.pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
             }
         }
 
@@ -80,7 +77,7 @@ namespace RRQMSocket.Plugins
                         object[] os = new object[ps.Length];
                         for (int i = 0; i < ps.Length; i++)
                         {
-                            os[i] = this.Converter.ConvertFrom(strs[i+1], ps[i].ParameterType);
+                            os[i] = this.Converter.ConvertFrom(strs[i + 1], ps[i].ParameterType);
                         }
                         e.Handled = true;
 

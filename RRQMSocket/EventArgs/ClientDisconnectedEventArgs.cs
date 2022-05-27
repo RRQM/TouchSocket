@@ -10,18 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// 断开连接事件参数
     /// </summary>
-    public class ClientDisconnectedEventArgs:MesEventArgs
+    public class ClientDisconnectedEventArgs : MesEventArgs
     {
         private bool manual;
 
@@ -30,7 +25,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="manual"></param>
         /// <param name="mes"></param>
-        public ClientDisconnectedEventArgs(bool manual,string mes):base(mes)
+        public ClientDisconnectedEventArgs(bool manual, string mes) : base(mes)
         {
             this.manual = manual;
         }
@@ -38,10 +33,7 @@ namespace RRQMSocket
         /// <summary>
         /// 是否为主动行为。
         /// </summary>
-        public bool Manual
-        {
-            get { return manual; }
-        }
+        public bool Manual => this.manual;
 
     }
 }

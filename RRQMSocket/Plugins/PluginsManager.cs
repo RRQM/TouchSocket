@@ -84,7 +84,7 @@ namespace RRQMSocket
             this.plugins.Sort(delegate (IPlugin x, IPlugin y)
             {
                 if (x.Order == y.Order) return 0;
-                else if (x.Order > y.Order) return 1;
+                else if (x.Order < y.Order) return 1;
                 else return -1;
             });
         }
@@ -103,7 +103,7 @@ namespace RRQMSocket
 
         IEnumerator<IPlugin> IEnumerable<IPlugin>.GetEnumerator()
         {
-           return this.plugins.GetEnumerator();
+            return this.plugins.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -117,7 +117,7 @@ namespace RRQMSocket
         /// <typeparam name="TPlugin">接口类型，此处也必须是接口类型</typeparam>
         /// <param name="name">触发名称</param>
         /// <param name="params">参数</param>
-        void IPluginsManager.Raise<TPlugin>(string name, params object[] @params)
+        bool IPluginsManager.Raise<TPlugin>(string name, params object[] @params)
         {
             if (pluginInfoes.TryGetValue(typeof(TPlugin), out var value) && (@params.Length == 2) && (@params[1] is RRQMEventArgs args))
             {
@@ -125,17 +125,24 @@ namespace RRQMSocket
                 {
                     foreach (var item in this.plugins)
                     {
-                        if (args.Operation.HasFlag(Operation.Handled))
+                        if (args.Handled)
                         {
-                            return;
+                            return true;
                         }
                         if (pluginMethod.type.IsAssignableFrom(item.GetType()))
                         {
-                            pluginMethod.Invoke(item, @params);
+                            try
+                            {
+                                pluginMethod.Invoke(item, @params);
+                            }
+                            catch
+                            {
+                            }
                         }
                     }
                 }
             }
+            return false;
         }
 
         /// <summary>

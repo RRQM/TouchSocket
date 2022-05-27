@@ -14,10 +14,10 @@ using RRQMCore.Extensions;
 using System;
 using System.Text.RegularExpressions;
 
-namespace RRQMSocket.Common
+namespace RRQMSocket
 {
     /// <summary>
-    /// RRQMSocketTools
+    /// RRQMSocketUtility
     /// </summary>
     public class RRQMSocketUtility
     {
