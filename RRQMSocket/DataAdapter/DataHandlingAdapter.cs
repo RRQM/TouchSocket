@@ -10,9 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Extensions;
+using RRQMCore.Log;
 using System;
 using System.Collections.Generic;
 
@@ -37,8 +37,8 @@ namespace RRQMSocket
         /// </summary>
         public int MaxPackageSize
         {
-            get { return m_maxPackageSize; }
-            set { m_maxPackageSize = value; }
+            get => this.m_maxPackageSize;
+            set => this.m_maxPackageSize = value;
         }
 
         /// <summary>

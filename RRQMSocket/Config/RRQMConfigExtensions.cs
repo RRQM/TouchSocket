@@ -11,6 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore.Dependency;
+using RRQMCore.Log;
+using System;
+using System.Security.Authentication;
 using System.Threading;
 
 namespace RRQMSocket
@@ -63,30 +66,6 @@ namespace RRQMSocket
         }
 
         #endregion NAT
-
-        #region ProtocolClient
-
-        /// <summary>
-        /// 心跳频率，默认为-1。（设置为-1时禁止心跳），
-        ///  所需类型<see cref="string"/>
-        /// </summary>
-        public static readonly DependencyProperty HeartbeatFrequencyProperty =
-            DependencyProperty.Register("HeartbeatFrequency", typeof(int), typeof(RRQMConfigExtensions), -1);
-
-        /// <summary>
-        /// 心跳频率，默认为-1。（设置为-1时禁止心跳）
-        /// <para>仅适用于<see cref="ProtocolClientBase"/>及派生类</para>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static RRQMConfig SetHeartbeatFrequency(this RRQMConfig config, int value)
-        {
-            config.SetValue(HeartbeatFrequencyProperty, value);
-            return config;
-        }
-
-        #endregion ProtocolClient
 
         #region ServiceBase
 
@@ -208,6 +187,34 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 固定端口绑定。
+        /// <para>在<see cref="UdpSessionBase"/>中表示本地监听地址</para>
+        /// <para>在<see cref="TcpClientBase"/>中表示固定客户端端口号。</para>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static RRQMConfig SetBindIPHost(this RRQMConfig config, int value)
+        {
+            config.SetValue(BindIPHostProperty, new IPHost(value));
+            return config;
+        }
+
+        /// <summary>
+        /// 固定端口绑定。
+        /// <para>在<see cref="UdpSessionBase"/>中表示本地监听地址</para>
+        /// <para>在<see cref="TcpClientBase"/>中表示固定客户端端口号。</para>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static RRQMConfig SetBindIPHost(this RRQMConfig config, string value)
+        {
+            config.SetValue(BindIPHostProperty, new IPHost(value));
+            return config;
+        }
+
+        /// <summary>
         /// 设置客户端Ssl配置，为Null时则不启用。
         /// </summary>
         /// <param name="config"></param>
@@ -240,8 +247,28 @@ namespace RRQMSocket
         public static RRQMConfig SetRemoteIPHost(this RRQMConfig config, IPHost value)
         {
             config.SetValue(RemoteIPHostProperty, value);
+            if (value.IsUri)
+            {
+                if (value.Uri.Scheme.Equals("https", StringComparison.CurrentCultureIgnoreCase)
+                    || value.Uri.Scheme.Equals("wss", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    config.SetClientSslOption(new ClientSslOption() { TargetHost = value.Host, SslProtocols = SslProtocols.Tls12 });
+                }
+            }
             return config;
         }
+
+        /// <summary>
+        /// 设置远程目标地址。在<see cref="UdpSessionBase"/>中，表示默认发送时的目标地址。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static RRQMConfig SetRemoteIPHost(this RRQMConfig config, string value)
+        {
+            return SetRemoteIPHost(config, new IPHost(value));
+        }
+
 
         /// <summary>
         /// 设置Socket的NoDelay属性，默认false。
@@ -317,6 +344,24 @@ namespace RRQMSocket
         }
 
         /// <summary>
+        /// 设置默认ID的获取方式，所需类型<see cref="Func{T, TResult}"/>
+        /// </summary>
+        public static readonly DependencyProperty GetDefaultNewIDProperty =
+            DependencyProperty.Register("GetDefaultNewID", typeof(Func<string>), typeof(RRQMConfigExtensions), null);
+
+        /// <summary>
+        /// 设置默认ID的获取方式。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static RRQMConfig SetGetDefaultNewID(this RRQMConfig config, Func<string> value)
+        {
+            config.SetValue(GetDefaultNewIDProperty, value);
+            return config;
+        }
+
+        /// <summary>
         /// 设置清理无数据交互的SocketClient，默认60*1000 ms。如果不想清除，可使用-1
         /// </summary>
         /// <param name="config"></param>
@@ -381,46 +426,6 @@ namespace RRQMSocket
 
         #endregion TcpService
 
-        #region TokenService
-
-        /// <summary>
-        /// 验证超时时间,默认为3000ms, 所需类型<see cref="int"/>
-        /// </summary>
-        public static readonly DependencyProperty VerifyTimeoutProperty =
-            DependencyProperty.Register("VerifyTimeout", typeof(int), typeof(RRQMConfigExtensions), 3000);
-
-        /// <summary>
-        /// 连接令箭,当为null或空时，重置为默认值“rrqm”, 所需类型<see cref="string"/>
-        /// </summary>
-        public static readonly DependencyProperty VerifyTokenProperty =
-            DependencyProperty.Register("VerifyToken", typeof(string), typeof(RRQMConfigExtensions), "rrqm");
-
-        /// <summary>
-        /// 验证超时时间,默认为3000ms
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static RRQMConfig SetVerifyTimeout(this RRQMConfig config, int value)
-        {
-            config.SetValue(VerifyTimeoutProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 连接令箭，当为null或空时，重置为默认值“rrqm”
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static RRQMConfig SetVerifyToken(this RRQMConfig config, string value)
-        {
-            config.SetValue(VerifyTokenProperty, value);
-            return config;
-        }
-
-        #endregion TokenService
-
         #region UDP
         /// <summary>
         /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
@@ -439,5 +444,145 @@ namespace RRQMSocket
             return config;
         }
         #endregion UDP
+
+        #region 插件
+        /// <summary>
+        /// 添加插件。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="plugin"></param>
+        /// <returns></returns>
+        public static RRQMConfig AddPlugin(this RRQMConfig config, IPlugin plugin)
+        {
+            config.PluginsManager.Add(plugin);
+            return config;
+        }
+
+        /// <summary>
+        /// 添加插件
+        /// </summary>
+        /// <typeparam name="TPlugin"></typeparam>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static RRQMConfig AddPlugin<TPlugin>(this RRQMConfig config) where TPlugin : IPlugin
+        {
+            config.PluginsManager.Add(config.Container.Resolve<TPlugin>());
+            return config;
+        }
+        #endregion
+
+        #region 日志
+
+        /// <summary>
+        /// 设置日志。
+        /// </summary>
+        /// <typeparam name="TLogger"></typeparam>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static RRQMConfig SetLogger<TLogger>(this RRQMConfig config) where TLogger : ILog, new()
+        {
+            config.Container.RegisterTransient<ILog, TLogger>();
+            return config;
+        }
+
+        /// <summary>
+        /// 设置单例日志。
+        /// </summary>
+        /// <typeparam name="TLogger"></typeparam>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static RRQMConfig SetSingletonLogger<TLogger>(this RRQMConfig config) where TLogger : ILog, new()
+        {
+            config.Container.RegisterSingleton<ILog, TLogger>();
+            return config;
+        }
+
+        /// <summary>
+        /// 设置实例日志。
+        /// </summary>
+        /// <typeparam name="TLogger"></typeparam>
+        /// <param name="config"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public static RRQMConfig SetSingletonLogger<TLogger>(this RRQMConfig config, TLogger logger) where TLogger : ILog
+        {
+            config.Container.RegisterSingleton<ILog, TLogger>(logger);
+            return config;
+        }
+        #endregion
+
+        #region 创建
+        /// <summary>
+        /// 构建Tcp类服务器，并启动。
+        /// </summary>
+        /// <typeparam name="TService"></typeparam>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static TService BuildWithTcpService<TService>(this RRQMConfig config) where TService : ITcpService
+        {
+            TService service = config.Container.Resolve<TService>();
+            service.Setup(config);
+            service.Start();
+            return service;
+        }
+
+        /// <summary>
+        /// 构建Tcp类服务器，并启动。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static TcpService BuildWithTcpService(this RRQMConfig config)
+        {
+            return BuildWithTcpService<TcpService>(config);
+        }
+
+        /// <summary>
+        /// 构建Tcp类客户端，并连接
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static TClient BuildWithTcpClient<TClient>(this RRQMConfig config) where TClient : ITcpClient
+        {
+            TClient service = config.Container.Resolve<TClient>();
+            service.Setup(config);
+            service.Connect();
+            return service;
+        }
+
+        /// <summary>
+        /// 构建Tcp类客户端，并连接
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static TcpClient BuildWithTcpClient(this RRQMConfig config)
+        {
+            return BuildWithTcpClient<TcpClient>(config);
+        }
+
+        /// <summary>
+        /// 构建UDP类，并启动。
+        /// </summary>
+        /// <typeparam name="TSession"></typeparam>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static TSession BuildWithUdpSession<TSession>(this RRQMConfig config) where TSession : IUdpSession
+        {
+            TSession service = config.Container.Resolve<TSession>();
+            service.Setup(config);
+            service.Start();
+            return service;
+        }
+
+        /// <summary>
+        /// 构建UDP类，并启动。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static UdpSession BuildWithUdpSession(this RRQMConfig config)
+        {
+            return BuildWithUdpSession<UdpSession>(config);
+        }
+        #endregion
     }
 }

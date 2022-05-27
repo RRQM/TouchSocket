@@ -25,7 +25,7 @@ namespace RRQMSocket
         /// <summary>
         /// 数据交互缓存池限制，min=1024 byte
         /// </summary>
-        public int BufferLength
+        public virtual int BufferLength
         {
             get => this.m_bufferLength;
             set

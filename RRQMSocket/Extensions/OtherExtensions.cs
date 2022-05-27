@@ -12,13 +12,9 @@
 //------------------------------------------------------------------------------
 using RRQMCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace RRQMSocket.Extensions
+namespace RRQMSocket
 {
     /// <summary>
     /// 其他扩展
@@ -62,8 +58,8 @@ namespace RRQMSocket.Extensions
         {
             int r = endPoint.ToString().LastIndexOf(":");
             return endPoint.ToString().Substring(0, r);
-        } 
-        
+        }
+
         /// <summary>
         /// 从<see cref="EndPoint"/>中获得Port。
         /// </summary>

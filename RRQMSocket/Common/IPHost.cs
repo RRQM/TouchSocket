@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 
 using RRQMCore;
-using RRQMSocket.Common;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -87,7 +86,7 @@ namespace RRQMSocket
         /// <summary>
         /// 具有端口信息的host
         /// </summary>
-        public string Host { get;private set; }
+        public string Host { get; private set; }
 
         /// <summary>
         /// 寻址方案

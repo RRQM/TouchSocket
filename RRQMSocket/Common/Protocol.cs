@@ -45,16 +45,6 @@ namespace RRQMSocket
         public static readonly Protocol UDP = new Protocol("udp");
 
         /// <summary>
-        /// RRQM验证协议
-        /// </summary>
-        public static readonly Protocol RRQMToken = new Protocol("rrqmtoken");
-
-        /// <summary>
-        /// RRQM自定义协议
-        /// </summary>
-        public static readonly Protocol RRQMProtocol = new Protocol("rrqmprotocol");
-
-        /// <summary>
         /// 获取WebSocket协议
         /// </summary>
         public static readonly Protocol WebSocket = new Protocol("ws");

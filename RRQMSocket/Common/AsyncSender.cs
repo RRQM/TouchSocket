@@ -21,7 +21,7 @@ namespace RRQMSocket
     /// <summary>
     /// 异步独立线程发送器
     /// </summary>
-    public class AsyncSender
+    internal class AsyncSender : RRQMCore.DisposableObject
     {
         private readonly IntelligentDataQueue<QueueDataBytes> asyncBytes;
 
@@ -32,8 +32,6 @@ namespace RRQMSocket
         private readonly EventWaitHandle waitHandle;
 
         private byte[] buffer = new byte[1024 * 1024];
-
-        private volatile bool dispose;
 
         private Action<Exception> onError;
 
@@ -79,17 +77,17 @@ namespace RRQMSocket
             }
         }
 
-        internal void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            this.dispose = true;
             this.waitHandle.Set();
-            this.waitHandle.Dispose();
-            this.sendEventArgs.Dispose();
+            this.waitHandle.SafeDispose();
+            this.sendEventArgs.SafeDispose();
+            base.Dispose(disposing);
         }
 
         private void BeginSend()
         {
-            while (!this.dispose)
+            while (!this.disposedValue)
             {
                 try
                 {
@@ -137,7 +135,7 @@ namespace RRQMSocket
             if (e.LastOperation == SocketAsyncOperation.Send)
             {
                 this.ProcessSend(e);
-                if (!this.dispose)
+                if (!this.disposedValue)
                 {
                     this.waitHandle.Set();
                 }

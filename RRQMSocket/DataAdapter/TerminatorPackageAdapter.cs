@@ -34,32 +34,28 @@ namespace RRQMSocket
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="maxSize"></param>
         /// <param name="terminator"></param>
-        public TerminatorPackageAdapter(int maxSize, string terminator) : this(maxSize, 0, Encoding.UTF8.GetBytes(terminator))
+        public TerminatorPackageAdapter(string terminator) : this(0, Encoding.UTF8.GetBytes(terminator))
         {
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="maxSize"></param>
         /// <param name="terminator"></param>
         /// <param name="encoding"></param>
-        public TerminatorPackageAdapter(int maxSize, string terminator, Encoding encoding)
-            : this(maxSize, 0, encoding.GetBytes(terminator))
+        public TerminatorPackageAdapter(string terminator, Encoding encoding)
+            : this(0, encoding.GetBytes(terminator))
         {
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="maxSize"></param>
         /// <param name="minSize"></param>
         /// <param name="terminatorCode"></param>
-        public TerminatorPackageAdapter(int maxSize, int minSize, byte[] terminatorCode)
+        public TerminatorPackageAdapter(int minSize, byte[] terminatorCode)
         {
-            this.MaxPackageSize = maxSize;
             this.minSize = minSize;
             this.terminatorCode = terminatorCode;
         }

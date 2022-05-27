@@ -55,13 +55,6 @@ public delegate void RRQMTcpClientDisconnectedEventHandler<TClient>(TClient clie
 /// <param name="e"></param>
 public delegate void RRQMClientOperationEventHandler<TClient>(TClient client, ClientOperationEventArgs e) where TClient : IClient;
 
-/// <summary>
-/// 协议数据
-/// </summary>
-/// <param name="socketClient"></param>
-/// <param name="protocol"></param>
-/// <param name="byteBlock"></param>
-public delegate void RRQMProtocolReceivedEventHandler<TClient>(TClient socketClient, short protocol, ByteBlock byteBlock) where TClient : IProtocolClientBase;
 
 /// <summary>
 /// 插件数据
@@ -78,19 +71,6 @@ public delegate void RRQMPluginReceivedEventHandler<TClient>(TClient client, Rec
 /// <param name="requestInfo"></param>
 public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, IRequestInfo requestInfo) where TClient : IClient;
 
-/// <summary>
-/// 收到流操作
-/// </summary>
-/// <param name="socketClient"></param>
-/// <param name="e"></param>
-public delegate void RRQMStreamOperationEventHandler<TClient>(TClient socketClient, StreamOperationEventArgs e) where TClient : IProtocolClientBase;
-
-/// <summary>
-/// 流状态
-/// </summary>
-/// <param name="socketClient"></param>
-/// <param name="e"></param>
-public delegate void RRQMStreamStatusEventHandler<TClient>(TClient socketClient, StreamStatusEventArgs e) where TClient : IProtocolClientBase;
 
 /// <summary>
 /// UDP接收

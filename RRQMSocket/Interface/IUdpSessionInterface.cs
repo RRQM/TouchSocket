@@ -10,14 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Net.Sockets;
 
 namespace RRQMSocket
 {
     /// <summary>
     /// UDP会话
     /// </summary>
-    public interface IUdpSession : IService, IClient,IClientSender,IUdpClientSender, IDefaultSender,IUdpDefaultSender
+    public interface IUdpSession : IService, IClient, IClientSender, IUdpClientSender, IDefaultSender, IUdpDefaultSender
     {
         /// <summary>
         /// 插件管理器

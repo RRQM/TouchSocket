@@ -35,9 +35,7 @@ namespace RRQMSocket
         {
             this.m_iDGenerator = new SnowflakeIDGenerator(4);
             this.m_socketClients = new SocketClientCollection();
-            this.Container = new Container();
-            this.PluginsManager = new PluginsManager(this.Container);
-            this.Container.RegisterTransient<ILog, ConsoleLogger>();
+            this.GetDefaultNewID = () => { return this.m_iDGenerator.NextID().ToString(); };
         }
 
         #region 变量
@@ -50,14 +48,18 @@ namespace RRQMSocket
         private NetworkMonitor[] m_monitors;
         private ReceiveType m_receiveType;
         private ServerState m_serverState;
-        private RRQMConfig m_serviceConfig;
+        private RRQMConfig m_config;
         private SocketClientCollection m_socketClients;
         private bool m_usePlugin;
         private bool m_useSsl;
-
         #endregion 变量
 
         #region 属性
+
+        /// <summary>
+        /// 获取默认新ID。
+        /// </summary>
+        public Func<string> GetDefaultNewID { get;private set; }
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
@@ -72,12 +74,12 @@ namespace RRQMSocket
         /// <summary>
         /// 获取服务器配置
         /// </summary>
-        public override RRQMConfig Config => this.m_serviceConfig;
+        public override RRQMConfig Config => this.m_config;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override IContainer Container { get; set; }
+        public override IContainer Container => this.Config?.Container;
 
         /// <summary>
         /// 最大可连接数
@@ -92,7 +94,7 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override IPluginsManager PluginsManager { get; set; }
+        public override IPluginsManager PluginsManager => this.Config?.PluginsManager;
 
         /// <summary>
         /// 服务器名称
@@ -148,7 +150,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnected(ISocketClient socketClient, RRQMEventArgs e)
+        protected sealed override void OnClientConnected(ISocketClient socketClient, RRQMEventArgs e)
         {
             this.OnConnected((TClient)socketClient, e);
         }
@@ -158,7 +160,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected sealed override void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
             this.OnConnecting((TClient)socketClient, e);
         }
@@ -168,7 +170,7 @@ namespace RRQMSocket
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
+        protected sealed override void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
         {
             this.OnDisconnected((TClient)socketClient, e);
         }
@@ -179,7 +181,7 @@ namespace RRQMSocket
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.OnReceived((TClient)socketClient, byteBlock, requestInfo);
         }
@@ -253,6 +255,10 @@ namespace RRQMSocket
         /// <returns>插件类型实例</returns>
         public TPlugin AddPlugin<TPlugin>() where TPlugin : IPlugin
         {
+            if (this.m_config == null)
+            {
+                throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
+            }
             var plugin = this.Container.Resolve<TPlugin>();
             this.AddPlugin(plugin);
             return plugin;
@@ -265,6 +271,11 @@ namespace RRQMSocket
         /// <exception cref="ArgumentNullException"></exception>
         public void AddPlugin(IPlugin plugin)
         {
+            if (this.m_config == null)
+            {
+                throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
+            }
+
             if (plugin.Logger == default)
             {
                 plugin.Logger = this.Container.Resolve<ILog>();
@@ -332,39 +343,31 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 获取默认的新ID
+        /// 重置ID
         /// </summary>
-        /// <returns></returns>
-        public string GetDefaultNewID()
-        {
-            return this.m_iDGenerator.NextID().ToString();
-        }
-
-        /// <summary>
-        ///  重新设置ID
-        /// </summary>
-        /// <param name="waitSetID"></param>
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
         /// <exception cref="ClientNotFindException"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="RRQMException"></exception>
-        public override void ResetID(WaitSetID waitSetID)
+        public override void ResetID(string oldID, string newID)
         {
-            if (waitSetID is null)
+            if (string.IsNullOrEmpty(oldID))
             {
-                throw new ArgumentNullException(nameof(waitSetID));
+                throw new ArgumentException($"“{nameof(oldID)}”不能为 null 或空。", nameof(oldID));
             }
 
-            if (string.IsNullOrEmpty(waitSetID.NewID))
+            if (string.IsNullOrEmpty(newID))
             {
-                throw new ArgumentNullException(nameof(waitSetID.NewID));
+                throw new ArgumentException($"“{nameof(newID)}”不能为 null 或空。", nameof(newID));
             }
-            if (waitSetID.OldID == waitSetID.NewID)
+
+            if (oldID == newID)
             {
                 return;
             }
-            if (this.m_socketClients.TryRemove(waitSetID.OldID, out TClient socketClient))
+            if (this.m_socketClients.TryRemove(oldID, out TClient socketClient))
             {
-                socketClient.id = waitSetID.NewID;
+                socketClient.m_id = newID;
                 if (this.m_socketClients.TryAdd(socketClient))
                 {
                     this.OnIDChanged(socketClient, new RRQMEventArgs());
@@ -372,38 +375,25 @@ namespace RRQMSocket
                 }
                 else
                 {
-                    socketClient.id = waitSetID.OldID;
+                    socketClient.m_id = oldID;
                     this.m_socketClients.TryAdd(socketClient);
                     throw new RRQMException("ID重复");
                 }
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetResString(waitSetID.OldID));
+                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(oldID));
             }
-        }
-
-        /// <summary>
-        /// 重置ID
-        /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
-        /// <exception cref="ClientNotFindException"></exception>
-        /// <exception cref="RRQMException"></exception>
-        public void ResetID(string oldID, string newID)
-        {
-            WaitSetID waitSetID = new WaitSetID() { OldID = oldID, NewID = newID, Sign = -1 };
-            this.ResetID(waitSetID);
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="serviceConfig"></param>
-        public override IService Setup(RRQMConfig serviceConfig)
+        /// <param name="config"></param>
+        public override IService Setup(RRQMConfig config)
         {
-            this.m_serviceConfig = serviceConfig;
-            this.LoadConfig(serviceConfig);
+            this.m_config = config;
+            this.LoadConfig(config);
             return this;
         }
 
@@ -556,6 +546,10 @@ namespace RRQMSocket
             {
                 throw new RRQMException("线程数量必须大于0");
             }
+            if (config.GetValue<Func<string>>(RRQMConfigExtensions.GetDefaultNewIDProperty) is Func<string> fun)
+            {
+                this.GetDefaultNewID = fun;
+            }
             this.m_usePlugin = config.IsUsePlugin;
             this.m_maxCount = config.GetValue<int>(RRQMConfigExtensions.MaxCountProperty);
             this.m_clearInterval = config.GetValue<int>(RRQMConfigExtensions.ClearIntervalProperty);
@@ -599,7 +593,10 @@ namespace RRQMSocket
             thread.Name = "CheckClient";
             thread.Start();
             int threadCount = this.Config.GetValue<int>(RRQMConfigExtensions.ThreadCountProperty);
-            ThreadPool.SetMinThreads(threadCount, threadCount);
+            while (!ThreadPool.SetMinThreads(threadCount, threadCount))
+            {
+                threadCount--;
+            }
         }
 
         private void BeginListen(IPHost[] iPHosts)
@@ -704,56 +701,80 @@ namespace RRQMSocket
             }
         }
 
+        private void SetClientConfiguration(SocketClient client)
+        {
+            client.m_usePlugin = this.m_usePlugin;
+            client.m_lastTick = DateTime.Now.Ticks;
+            client.m_config = this.m_config;
+            client.m_service = this;
+            if (client.Logger == null)
+            {
+                client.Logger = this.Container.Resolve<ILog>();
+            }
+            client.ClearType = this.m_clearType;
+            client.m_receiveType = this.m_receiveType;
+            client.BufferLength = this.BufferLength;
+        }
+
+        /// <summary>
+        /// 在验证Ssl发送错误时。
+        /// </summary>
+        /// <param name="ex"></param>
+        protected virtual void OnAuthenticatingError(Exception ex)
+        {
+
+        }
+
         private void OnTask(Socket socket)
         {
             Task.Run(() =>
             {
                 try
                 {
-                    bool noDelay = this.Config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty);
-                    if (noDelay)
-                    {
-                        socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, noDelay);
-                    }
-
+                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(RRQMConfigExtensions.NoDelayProperty));
                     TClient client = this.GetClientInstence();
-                    client.usePlugin = this.m_usePlugin;
-                    client.pluginsManager = this.PluginsManager;
-                    client.lastTick = DateTime.Now.Ticks;
-                    client.config = this.m_serviceConfig;
-                    client.service = this;
-                    if (client.Logger == null)
-                    {
-                        client.Logger = this.Container.Resolve<ILog>();
-                    }
-                    client.ClearType = this.m_clearType;
-                    client.receiveType = this.m_receiveType;
-                    client.BufferLength = this.BufferLength;
-                    client.useSsl = this.m_useSsl;
-                    client.LoadSocketAndReadIpPort(socket);
+                    this.SetClientConfiguration(client);
+                    client.SetSocket(socket);
+
                     ClientOperationEventArgs args = new ClientOperationEventArgs();
                     args.ID = this.GetDefaultNewID();
-                    client.OnEvent(1, args);//Connecting
+                    client.InternalConnecting(args);//Connecting
                     if (args.Operation.HasFlag(Operation.Permit))
                     {
-                        client.id = args.ID;
+                        client.m_id = args.ID;
                         if (this.SocketClients.TryAdd(client))
                         {
-                            client.OnEvent(2, new MesEventArgs("客户端连接"));
+                            client.InternalConnected(new MesEventArgs("客户端成功连接"));
+                            if (this.m_useSsl)
+                            {
+                                try
+                                {
+                                    client.BeginReceiveSsl(this.m_receiveType, this.m_config.GetValue<ServiceSslOption>(RRQMConfigExtensions.SslOptionProperty));
+                                }
+                                catch (Exception ex)
+                                {
+                                    this.OnAuthenticatingError(ex);
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                client.BeginReceive(this.m_receiveType);
+                            }
                         }
                         else
                         {
-                            throw new RRQMException($"ID={client.id}重复");
+                            throw new RRQMException($"ID={client.m_id}重复");
                         }
                     }
                     else
                     {
-                        client.MainSocket?.Dispose();
+                        socket.SafeDisposeWithNull();
                     }
                 }
                 catch (Exception ex)
                 {
-                    socket.Dispose();
+                    socket.SafeDisposeWithNull();
                     this.Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
                 }
             });

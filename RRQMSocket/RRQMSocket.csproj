@@ -4,25 +4,18 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>8.0.8</Version>
+		<Version>8.1.0</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
         <PackageTags>IOCP,TCP,UDP,Socket,BIO,Ssl,Channel</PackageTags>
-		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的、支持插件的网络通信框架。包含了TCP、UDP、Ssl、Channel、Protocol、Token、租户模式等一系列的通信模块。更加的灵活、便捷。让使用者能够更加简单的、快速的搭建网络框架。
+		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的、支持插件的网络通信框架。包含了TCP、UDP、Ssl等一系列的通信模块。更加的灵活、便捷。让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-增加：WaitingTcpClient，支持在TCP长连接时，发送数据，然后同步等待响应。
-增加：插件系统，在RRQM全系，支持插件，可以很简单的横向扩展业务。
-增加：Udp大数据发送与接收。
-增加：Udp组播。
-增加：TokenClient在异步连接。
-修改：RRQMConfig，修改所有的配置均通过注入的形式作用。
-修改：大部分事件参数，重新订阅（或重写）即可。
-修改：Keepalive相关设定。
-修复：TcpClient在Linux平台异常情况。
-修复：Udp在Linux平台异常情况。
-删除：所有Simple组件，由其父类代替。
+增加：CustomBigFixedHeaderDataHandlingAdapter，支持超大数据的固定包头解析。
+增加：CustomBetweenAndPackageAdapter，支持“##123**”类似的数据解析。
+修改：WaitingClient使用扩展完成。
+移除：Token、Protocol全系组件，使用TouchRpc全部替代。
 
 API：https://www.yuque.com/eo2w71/rrqm
 DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
@@ -33,6 +26,8 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 		<Authors>若汝棋茗</Authors>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<RepositoryUrl>https://gitee.com/dotnetchina/RRQMSocket</RepositoryUrl>
+		<RepositoryType>Gitee</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -87,7 +82,7 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="8.0.5" />
+	  <PackageReference Include="RRQMCore" Version="8.1.0" />
 	</ItemGroup>
 
 </Project>

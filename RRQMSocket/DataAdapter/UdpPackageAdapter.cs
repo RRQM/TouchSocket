@@ -1,7 +1,20 @@
-﻿using RRQMCore;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在RRQMCore.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Data;
 using RRQMCore.Extensions;
+using RRQMCore.Log;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -54,7 +67,7 @@ namespace RRQMSocket
                 this.ID = RRQMBitConverter.Default.ToInt64(buffer, offset);
                 this.SN = RRQMBitConverter.Default.ToUInt16(buffer, 8 + offset);
                 this.FIN = buffer[10 + offset].GetBit(7) == 1;
-                if (FIN)
+                if (this.FIN)
                 {
                     if (length > 13)
                     {
@@ -71,7 +84,7 @@ namespace RRQMSocket
                     this.Data = new byte[length - 11];
                 }
 
-                Array.Copy(buffer, 11, Data, 0, Data.Length);
+                Array.Copy(buffer, 11, this.Data, 0, this.Data.Length);
                 return true;
             }
             return false;
@@ -108,15 +121,12 @@ namespace RRQMSocket
             }, null, timeout, Timeout.Infinite);
         }
 
-        readonly Timer timer;
+        private readonly Timer timer;
 
         /// <summary>
         /// 当前长度
         /// </summary>
-        public int Count
-        {
-            get { return count; }
-        }
+        public int Count => this.count;
 
         /// <summary>
         /// 包唯一标识
@@ -126,15 +136,12 @@ namespace RRQMSocket
         /// <summary>
         /// 是否已完成
         /// </summary>
-        public bool IsComplated { get => totalCount > 0 ? (totalCount == count ? true : false) : false; }
+        public bool IsComplated => this.totalCount > 0 ? (this.totalCount == this.count ? true : false) : false;
 
         /// <summary>
         /// 总长度，在收到最后一帧之前，为-1。
         /// </summary>
-        public int TotalCount
-        {
-            get { return totalCount; }
-        }
+        public int TotalCount => this.totalCount;
 
         /// <summary>
         /// Crc
@@ -146,19 +153,13 @@ namespace RRQMSocket
         /// <summary>
         /// MTU
         /// </summary>
-        public int MTU
-        {
-            get { return mtu + 11; }
-        }
+        public int MTU => this.mtu + 11;
 
         private int length;
         /// <summary>
         /// 当前数据长度
         /// </summary>
-        public int Length
-        {
-            get { return length; }
-        }
+        public int Length => this.length;
 
 
         /// <summary>
@@ -167,14 +168,14 @@ namespace RRQMSocket
         /// <param name="frame"></param>
         public void Add(UdpFrame frame)
         {
-            Interlocked.Increment(ref count);
+            Interlocked.Increment(ref this.count);
 
             if (frame.FIN)
             {
                 this.totalCount = frame.SN + 1;
                 this.Crc = frame.Crc;
             }
-            Interlocked.Add(ref length, frame.Data.Length);
+            Interlocked.Add(ref this.length, frame.Data.Length);
             if (frame.SN == 0)
             {
                 this.mtu = frame.Data.Length;
@@ -259,7 +260,7 @@ namespace RRQMSocket
             UdpFrame udpFrame = new UdpFrame();
             if (udpFrame.Parse(byteBlock.Buffer, 0, byteBlock.Len))
             {
-                UdpPackage udpPackage = revStore.GetOrAdd(udpFrame.ID, (i) => new UdpPackage(i, this.Timeout, this.revStore));
+                UdpPackage udpPackage = this.revStore.GetOrAdd(udpFrame.ID, (i) => new UdpPackage(i, this.Timeout, this.revStore));
                 udpPackage.Add(udpFrame);
                 if (udpPackage.Length > this.MaxPackageSize)
                 {
@@ -297,59 +298,54 @@ namespace RRQMSocket
             {
                 throw new RRQMOverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            lock (this)
+            long id = this.iDGenerator.NextID();
+            int off = 0;
+            int surLen = length;
+            int freeRoom = this.mtu - 11;
+            ushort sn = 0;
+            /*|********|**|*|n|*/
+            /*|********|**|*|**|*/
+            while (surLen > 0)
             {
-                long id = iDGenerator.NextID();
-                int off = 0;
-                int surLen = length;
-                int freeRoom = this.mtu - 11;
-                ushort sn = 0;
-                /*|********|**|*|n|*/
-                /*|********|**|*|**|*/
-                while (surLen > 0)
+                byte[] data = new byte[this.mtu];
+                Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(id), 0, data, 0, 8);
+                Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(sn++), 0, data, 8, 2);
+                if (surLen > freeRoom)//有余
                 {
-                    byte[] data = new byte[this.mtu];
-                    Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(id), 0, data, 0, 8);
-                    Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(sn++), 0, data, 8, 2);
-                    if (surLen > freeRoom)//有余
-                    {
-                        Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
-                        off += freeRoom;
-                        surLen -= freeRoom;
-                        this.GoSend(endPoint, data, 0, this.mtu, isAsync);
-                    }
-                    else if (surLen + 2 <= freeRoom)//结束且能容纳Crc
-                    {
-                        byte flag = 0;
-                        data[10] = flag.SetBit(7, 1);//设置终结帧
-
-                        Buffer.BlockCopy(buffer, off, data, 11, surLen);
-                        Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, data, 11 + surLen, 2);
-
-                        this.GoSend(endPoint, data, 0, surLen + 11 + 2, isAsync);
-
-                        off += surLen;
-                        surLen -= surLen;
-
-                    }
-                    else//结束但不能容纳Crc
-                    {
-                        Buffer.BlockCopy(buffer, off, data, 11, surLen);
-                        this.GoSend(endPoint, data, 0, surLen + 11, isAsync);
-                        off += surLen;
-                        surLen -= surLen;
-
-                        byte[] finData = new byte[13];
-                        Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(id), 0, finData, 0, 8);
-                        Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(sn++), 0, finData, 8, 2);
-                        byte flag = 0;
-                        finData[10] = flag.SetBit(7, 1);
-                        Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, finData, 11, 2);
-                        this.GoSend(endPoint, finData, 0, finData.Length, isAsync);
-                    }
+                    Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
+                    off += freeRoom;
+                    surLen -= freeRoom;
+                    this.GoSend(endPoint, data, 0, this.mtu, isAsync);
                 }
+                else if (surLen + 2 <= freeRoom)//结束且能容纳Crc
+                {
+                    byte flag = 0;
+                    data[10] = flag.SetBit(7, 1);//设置终结帧
 
+                    Buffer.BlockCopy(buffer, off, data, 11, surLen);
+                    Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, data, 11 + surLen, 2);
 
+                    this.GoSend(endPoint, data, 0, surLen + 11 + 2, isAsync);
+
+                    off += surLen;
+                    surLen -= surLen;
+
+                }
+                else//结束但不能容纳Crc
+                {
+                    Buffer.BlockCopy(buffer, off, data, 11, surLen);
+                    this.GoSend(endPoint, data, 0, surLen + 11, isAsync);
+                    off += surLen;
+                    surLen -= surLen;
+
+                    byte[] finData = new byte[13];
+                    Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(id), 0, finData, 0, 8);
+                    Buffer.BlockCopy(RRQMBitConverter.Default.GetBytes(sn++), 0, finData, 8, 2);
+                    byte flag = 0;
+                    finData[10] = flag.SetBit(7, 1);
+                    Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, finData, 11, 2);
+                    this.GoSend(endPoint, finData, 0, finData.Length, isAsync);
+                }
             }
         }
 

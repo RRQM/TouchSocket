@@ -10,34 +10,52 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using RRQMCore;
-using RRQMCore.Run;
+using RRQMCore.Dependency;
+using System;
+using System.Collections.Generic;
 
 namespace RRQMSocket
 {
     /// <summary>
-    /// 等待流状态返回
+    /// 插件管理器接口
     /// </summary>
-    public class WaitStream : WaitResult
+    public interface IPluginsManager : IEnumerable<IPlugin>
     {
         /// <summary>
-        /// 流长度
+        /// 注入容器
         /// </summary>
-        public long Size { get; set; }
+        public IContainer Container { get; }
 
         /// <summary>
-        /// 流类型
+        /// 添加插件
         /// </summary>
-        public string StreamType { get; set; }
+        /// <param name="plugin">插件</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        void Add(IPlugin plugin);
 
         /// <summary>
-        /// 元数据
+        /// 移除插件
         /// </summary>
-        public Metadata Metadata { get; set; }
+        /// <param name="plugin"></param>
+        void Remove(IPlugin plugin);
 
         /// <summary>
-        /// 开启的通道标识
+        /// 移除插件
         /// </summary>
-        public int ChannelID { get; set; }
+        /// <param name="type"></param>
+        void Remove(Type type);
+
+        /// <summary>
+        /// 清除所有插件
+        /// </summary>
+        void Clear();
+
+        /// <summary>
+        /// 触发对应方法
+        /// </summary>
+        /// <typeparam name="TPlugin">接口类型</typeparam>
+        /// <param name="name">触发名称</param>
+        /// <param name="params">参数</param>
+        bool Raise<TPlugin>(string name, params object[] @params) where TPlugin : IPlugin;
     }
 }
