@@ -24,19 +24,12 @@
 
 ## 🎀描述
 
- **_以下Nuget包，均已在此仓开源。使用Apache License 2.0开源协议。_** 
+ **_以下Nuget包，均已在此仓使用Apache License 2.0开源协议开源。_** 
 
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?label=RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| RRQMSocket是一个高性能的、超轻量级的网络通信框架。<br>包含了TCP、UDP、Ssl、Channel、Protocol、Token、<br>租户模式等一系列的通信模块。其扩展组件包含：WebSocket、<br>大文件传输、RPC、WebApi、XmlRpc、JsonRpc等内容|
+|[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?label=RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| RRQMSocket是一个高性能的、超轻量级的网络通信框架。<br>包含了TCP、UDP、Ssl等一系列的通信模块。|
 | [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?label=RRQMCore)](https://www.nuget.org/packages/RRQMCore)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：<br>**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、<br>**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、<br>**高性能序列化器**、**规范日志接口**等。 |
-| [![NuGet version (RRQMSocket.WebSocket)](https://img.shields.io/nuget/v/RRQMSocket.WebSocket.svg?label=RRQMSocket.WebSocket)](https://www.nuget.org/packages/rrqmsocket.websocket)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |  RRQMSocket.WebSocket是一个高效，超轻量级的WebSocket框架。<br>它包含了Service和Client两大组件，支持Ssl，同时定义了文本、二进制或<br>其他类型数据的快捷发送、分片发送接口，可与js等任意WebSocket组件交互|
-| [![NuGet version (RRQMSocket.Http)](https://img.shields.io/nuget/v/RRQMSocket.Http.svg?label=RRQMSocket.Http)](https://www.nuget.org/packages/rrqmsocket.http)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)  |  RRQMSocket.Http是一个能够简单解析Http的服务组件，<br>能够快速响应Http服务请求。|
-|[![NuGet version (RRQMSocket.RPC)](https://img.shields.io/nuget/v/RRQMSocket.RPC.svg?label=RRQMSocket.RPC)](https://www.nuget.org/packages/rrqmsocket.rpc)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |RPC是一个超轻量、高性能、可扩展的微服务管理平台框架，<br>目前已完成开发**RRQMRPC**、**XmlRpc**、**JsonRpc**、**WebApi**部分。<br> **RRQMRPC**部分使用RRQM专属协议，支持客户端**异步调用**，<br>服务端**异步触发**、以及**out**和**ref**关键字，**函数回调**等。<br>在调用效率上也是非常强悍，在调用空载函数，且返回状态时，<br>**10w**次调用仅用时**3.8**秒，不返回状态用时**0.9**秒。<br>其他协议调用性能详看性能评测。
-|[![NuGet version (RRQMSocket.RPC.XmlRpc)](https://img.shields.io/nuget/v/RRQMSocket.RPC.XmlRpc.svg?label=RRQMSocket.RPC.XmlRpc)](https://www.nuget.org/packages/rrqmsocket.rpc.xmlrpc)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| XmlRpc是一个扩展于RRQMSocket.RPC的XmlRpc组件，可以通过<br>该组件创建XmlRpc服务解析器，完美支持XmlRpc数据类型，类型嵌套，<br>Array等，也能与CookComputing.XmlRpcV2完美对接。<br>不限Web，Android等平台。|
-| [![NuGet version (RRQMSocket.RPC.JsonRpc)](https://img.shields.io/nuget/v/RRQMSocket.RPC.JsonRpc.svg?label=RRQMSocket.RPC.JsonRpc)](https://www.nuget.org/packages/rrqmsocket.rpc.jsonrpc)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| JsonRpc是一个扩展于RRQMSocket.RPC的JsonRpc组件，<br>可以通过该组件创建JsonRpc服务解析器，支持JsonRpc全部功能，可与Web，Android等平台无缝对接。|
-|[![NuGet version (RRQMSocket.RPC.WebApi)](https://img.shields.io/nuget/v/RRQMSocket.RPC.WebApi.svg?label=RRQMSocket.RPC.WebApi)](https://www.nuget.org/packages/rrqmsocket.rpc.webapi)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| WebApi是一个扩展于RRQMSocket.RPC的WebApi组件，可以通过<br>该组件创建WebApi服务解析器，让桌面端、Web端、移动端可以<br>跨语言调用RPC函数。功能支持路由、Get传参、Post传参等。|
-| [![NuGet version (RRQMSocket.FileTransfer)](https://img.shields.io/nuget/v/RRQMSocket.FileTransfer.svg?label=RRQMSocket.FileTransfer)](https://www.nuget.org/packages/rrqmsocket.filetransfer)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |  这是一个高性能的C/S架构的文件传输框架，您可以用它传输<br>**任意大小**的文件，它可以完美支持**上传下载混合式队列传输**、<br>**断点续传**、 **快速上传** 、**传输限速**、**获取文件信息**、**删除文件**等。<br>在实际测试中，它的传输速率可达1000Mb/s。 |
 
 ## 🎫企业版描述
  **_以下Nuget包，并未开源，其源代码需要付费购买。但是其Nuget包可以免费商用。_** 
@@ -207,75 +200,6 @@ config.SetClientSslOption(new ClientSslOption()
     CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
 });
 ```
-
- **【Http服务器】** 
-
-HttpService支持**Https协议**、**静态页面**、**WebSocket**、**JsonRpc**、**XmlRpc**、**WebApi**插件的挂载。
-
-```
-var service = new HttpService();
-
-service.AddPlugin<MyHttpPlug>();
-service.AddPlugin<HttpStaticPagePlugin>().
-   AddFolder("../../../../../api");//添加静态页面
-
-service.AddPlugin<WebSocketServerPlugin>().//添加WebSocket功能
-   SetTimeout(10 * 1000).
-   SetWSUrl("/ws").
-   SetCallback(WSCallback);
-
-service.AddPlugin<MyWebSocketPlugin>();//添加WS事务触发。
-
-service.AddPlugin<MyWSCommandLinePlugin>();//添加WS命令行事务。
-
-var config = new RRQMConfig();
-config.UsePlugin()
-    .SetReceiveType(ReceiveType.Auto)
-    .SetListenIPHosts(new IPHost[] { new IPHost(7789) });
-
-service.Setup(config).Start();
-Console.WriteLine("Http服务器已启动");
-Console.WriteLine("浏览器访问：http://127.0.0.1:7789/index.html");
-Console.WriteLine("WS访问：ws://127.0.0.1:7789/ws");
-```
-
- **【WebSocket客户端】** 
-```csharp
-WSClient myWSClient = new WSClient();
-myWSClient.Setup("ws://127.0.0.1:7789/ws");
-myWSClient.Connect();
-Console.WriteLine("连接成功");
-
-Console.WriteLine("连接成功");
-while (true)
-{
-    myWSClient.SendWithWS(Console.ReadLine());
-}
-```
-
- **【RPC调用】** 
-
-- WebApi：下列服务，可让浏览器通过`url/XUnitTestServer/Sum?a=10&b=20`来调用，结果可选xml或json。
-- JsonRpc：下列服务，可让普通TCP使用`{"jsonrpc":"2.0","method":"Sum","params":[10，20],"id":1}`来调用，也能让web通过http/https来调用。
-- xmlRpc：下列服务，可通过http+xml的形式调用。
-- RRQMRPC：使用专有协议调用。
-
-```
-[Route("/[controller]/[action]")]
-public class XUnitTestServer : ControllerBase
-{
-
-    [XmlRpc]
-    [JsonRpc]
-    [Route]
-    [RRQMRPC]
-    public int Sum(int a, int b)
-    {
-        return a + b;
-    }
-}
-```
-
 
 ## 🧲应用场景模拟
 [场景入口](https://www.yuque.com/eo2w71/rrqm/b138b52168853afb65369ca8171f14b9)
