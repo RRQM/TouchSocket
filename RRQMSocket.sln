@@ -15,12 +15,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceApp", "examples\Serv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientApp", "examples\ClientApp\ClientApp.csproj", "{0B7591F5-37C8-4570-ACEF-782CE3F12957}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net45", "net45", "{FB46E926-0EEC-488C-B950-A16D2E7F694B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "simple tcp demo", "simple tcp demo", "{FB46E926-0EEC-488C-B950-A16D2E7F694B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{5F888345-EC9C-4AC3-B4D5-D9510A32C9DC}"
 	ProjectSection(SolutionItems) = preProject
 		源码编译相关问题.txt = 源码编译相关问题.txt
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "simple udp demo", "simple udp demo", "{F4D798A3-8D65-4750-9552-B02BCE081508}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UdpDemoApp", "UdpDemoApp\UdpDemoApp.csproj", "{ED98D0B8-9CED-4304-93EE-7844AA296E78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +48,10 @@ Global
 		{0B7591F5-37C8-4570-ACEF-782CE3F12957}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B7591F5-37C8-4570-ACEF-782CE3F12957}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B7591F5-37C8-4570-ACEF-782CE3F12957}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED98D0B8-9CED-4304-93EE-7844AA296E78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED98D0B8-9CED-4304-93EE-7844AA296E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED98D0B8-9CED-4304-93EE-7844AA296E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED98D0B8-9CED-4304-93EE-7844AA296E78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +62,8 @@ Global
 		{6BEF15C2-29A2-4E57-8879-1B4AD0B4935E} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
 		{0B7591F5-37C8-4570-ACEF-782CE3F12957} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
 		{FB46E926-0EEC-488C-B950-A16D2E7F694B} = {517CF381-4C15-4519-9BC4-92DC4C412C8D}
+		{F4D798A3-8D65-4750-9552-B02BCE081508} = {517CF381-4C15-4519-9BC4-92DC4C412C8D}
+		{ED98D0B8-9CED-4304-93EE-7844AA296E78} = {F4D798A3-8D65-4750-9552-B02BCE081508}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
