@@ -22,7 +22,7 @@ namespace ServiceApp
             Load += this.Form1_Load;
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs args)
         {
             m_service.Connecting += (client, e) => { };//有客户端正在连接
             m_service.Connected += this.M_service_Connected;//有客户端连接
