@@ -35,47 +35,54 @@
             this.button2 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.textBox4 = new System.Windows.Forms.TextBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.button3 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(325, 67);
+            this.button1.Location = new System.Drawing.Point(258, 38);
+            this.button1.Margin = new System.Windows.Forms.Padding(2);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(150, 46);
+            this.button1.Size = new System.Drawing.Size(75, 25);
             this.button1.TabIndex = 0;
-            this.button1.Text = "启动";
+            this.button1.Text = "监听";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(15, 355);
+            this.textBox1.Location = new System.Drawing.Point(8, 195);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(2);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(1131, 274);
+            this.textBox1.Size = new System.Drawing.Size(568, 152);
             this.textBox1.TabIndex = 1;
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(23, 72);
+            this.textBox2.Location = new System.Drawing.Point(12, 39);
+            this.textBox2.Margin = new System.Windows.Forms.Padding(2);
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(296, 38);
+            this.textBox2.Size = new System.Drawing.Size(150, 23);
             this.textBox2.TabIndex = 2;
             this.textBox2.Text = "127.0.0.1:7789";
             // 
             // textBox3
             // 
-            this.textBox3.Location = new System.Drawing.Point(23, 152);
+            this.textBox3.Location = new System.Drawing.Point(12, 83);
+            this.textBox3.Margin = new System.Windows.Forms.Padding(2);
             this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(296, 38);
+            this.textBox3.Size = new System.Drawing.Size(150, 23);
             this.textBox3.TabIndex = 3;
             this.textBox3.Text = "127.0.0.1:7789";
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(325, 152);
+            this.button2.Location = new System.Drawing.Point(166, 82);
+            this.button2.Margin = new System.Windows.Forms.Padding(2);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(150, 46);
+            this.button2.Size = new System.Drawing.Size(75, 25);
             this.button2.TabIndex = 4;
             this.button2.Text = "发送";
             this.button2.UseVisualStyleBackColor = true;
@@ -84,25 +91,51 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(635, 107);
+            this.label1.Location = new System.Drawing.Point(370, 58);
+            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label1.MaximumSize = new System.Drawing.Size(200, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(254, 31);
+            this.label1.Size = new System.Drawing.Size(200, 51);
             this.label1.TabIndex = 5;
-            this.label1.Text = "可以启动两个程序测试";
+            this.label1.Text = "可以启动两个程序测试，当选择大数据包时，发送端和接收端必须均为RRQM，或者自己实现对应算法。";
             // 
             // textBox4
             // 
-            this.textBox4.Location = new System.Drawing.Point(25, 210);
+            this.textBox4.Location = new System.Drawing.Point(12, 115);
+            this.textBox4.Margin = new System.Windows.Forms.Padding(2);
             this.textBox4.Multiline = true;
             this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(294, 139);
+            this.textBox4.Size = new System.Drawing.Size(149, 78);
             this.textBox4.TabIndex = 6;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(178, 40);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(75, 21);
+            this.checkBox1.TabIndex = 7;
+            this.checkBox1.Text = "大数据包";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(258, 82);
+            this.button3.Margin = new System.Windows.Forms.Padding(2);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(75, 25);
+            this.button3.TabIndex = 8;
+            this.button3.Text = "发送1Mb数据";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1158, 641);
+            this.ClientSize = new System.Drawing.Size(579, 352);
+            this.Controls.Add(this.button3);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.textBox4);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button2);
@@ -110,6 +143,7 @@
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.button1);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Form1";
             this.ResumeLayout(false);
@@ -126,5 +160,7 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.Button button3;
     }
 }
