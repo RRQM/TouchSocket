@@ -8,4 +8,10 @@
 	<ItemGroup>
 		<PackageReference Include="RRQMSocket" Version="8.1.0" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="SGCC测试数据.txt">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 </Project>

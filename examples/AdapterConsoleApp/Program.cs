@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using RRQMCore.ByteManager;
 using RRQMCore.IO;
 using RRQMSocket;
+using RRQMCore.Extensions;
 
 namespace AdapterConsoleApp
 {
@@ -23,6 +25,7 @@ namespace AdapterConsoleApp
             ConsoleAction consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
             consoleAction.Add("1", "原始适配器实现demo", TestRawDataHandlingAdapter);
+            consoleAction.Add("2", "SGCC适配器实现demo", TestSGCCCustomDataHandlingAdapter);
 
 
             consoleAction.ShowAll();
@@ -53,6 +56,22 @@ namespace AdapterConsoleApp
                 block.Write(buffer);//写入数据
                 byte[] data = block.ToArray();
 
+                // 输出测试时间，用于衡量适配性能.
+                // 测试100次，限时2秒完成
+                Console.WriteLine(tester.Run(data, 100, 100, 1000 * 2).ToString());
+            }
+
+        }
+
+        static void TestSGCCCustomDataHandlingAdapter()
+        {
+            string[] lines = File.ReadAllLines("SGCC测试数据.txt");
+            foreach (var item in lines)
+            {
+                DataAdapterTester tester = DataAdapterTester.CreateTester(new SGCCCustomDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
+                using ByteBlock block = new ByteBlock();
+
+                byte[] data = item.ByHexStringToBytes(" ");
                 // 输出测试时间，用于衡量适配性能.
                 // 测试100次，限时2秒完成
                 Console.WriteLine(tester.Run(data, 100, 100, 1000 * 2).ToString());
