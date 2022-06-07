@@ -1,4 +1,5 @@
-﻿using RRQMCore.ByteManager;
+﻿using RRQMCore;
+using RRQMCore.ByteManager;
 using RRQMSocket;
 using System;
 using System.Collections.Generic;
@@ -102,7 +103,11 @@ namespace AdapterConsoleApp
                 {
                     byteBlock.Pos = 0;
                     byteBlock.Read(out m_sync, 2);
-                    this.m_bodyLength = byteBlock.ReadInt16() + 3 - 6;//先把crc校验和end都获取。
+
+                    byte[] lenBuffer;
+                    byteBlock.Read(out lenBuffer,2);
+
+                    this.m_bodyLength = RRQMBitConverter.LittleEndian.ToUInt16(lenBuffer,0) + 3 - 6;//先把crc校验和end都获取。
                     byteBlock.Read(out m_cMDID, 17);
                     this.FrameType = (byte)byteBlock.ReadByte();
                     this.PacketType = (byte)byteBlock.ReadByte();
