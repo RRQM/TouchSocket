@@ -4,6 +4,7 @@ using RRQMCore.ByteManager;
 using RRQMCore.IO;
 using RRQMSocket;
 using RRQMCore.Extensions;
+using System.Text;
 
 namespace AdapterConsoleApp
 {
@@ -24,6 +25,7 @@ namespace AdapterConsoleApp
 
             ConsoleAction consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
+            consoleAction.Add("0", "启动服务器测试适配器", StartTcpService);
             consoleAction.Add("1", "原始适配器实现demo", TestRawDataHandlingAdapter);
             consoleAction.Add("2", "SGCC适配器实现demo", TestSGCCCustomDataHandlingAdapter);
 
@@ -36,6 +38,33 @@ namespace AdapterConsoleApp
                     Console.WriteLine("指令不正确。");
                 }
             }
+        }
+
+        static void StartTcpService()
+        {
+            TcpService service = new TcpService();
+            service.Connecting += (client, e) =>
+            {
+                //有客户端正在连接
+                client.SetDataHandlingAdapter(new MyCustomBetweenAndDataHandlingAdapter());
+            };
+            service.Connected += (client, e) => { };//有客户端连接
+            service.Disconnected += (client, e) => { };//有客户端断开连接
+            service.Received += (client, byteBlock, requestInfo) =>
+            {
+                //从客户端收到信息
+                if (requestInfo is MyBetweenAndRequestInfo info)
+                {
+                    Console.WriteLine(Encoding.UTF8.GetString(info.Body));
+                }
+            };
+
+            service.Setup(new RRQMConfig()//载入配置     
+                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+                .SetMaxCount(10000)
+                .SetThreadCount(10))
+                .Start();//启动
+
         }
 
         private static void ConsoleAction_OnException(Exception obj)

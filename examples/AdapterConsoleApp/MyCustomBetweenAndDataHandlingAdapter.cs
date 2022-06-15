@@ -18,7 +18,7 @@ namespace AdapterConsoleApp
 
         protected override MyBetweenAndRequestInfo GetInstance()
         {
-            throw new NotImplementedException();
+            return new MyBetweenAndRequestInfo();
         }
     }
 
@@ -27,8 +27,10 @@ namespace AdapterConsoleApp
     /// </summary>
     class MyBetweenAndRequestInfo : IBetweenAndRequestInfo
     {
+        public byte[] Body { get;private set; }
         public void OnParsingBody(byte[] body)
         {
+            this.Body = body;
             //这里的Body应该为12##12
         }
 
