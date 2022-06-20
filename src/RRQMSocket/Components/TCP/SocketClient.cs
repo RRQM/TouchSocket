@@ -166,7 +166,7 @@ namespace RRQMSocket
         /// <summary>
         /// 断开连接
         /// </summary>
-        public event RRQMTcpClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
+        public event ClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
 
         #endregion 事件&委托
 
@@ -570,7 +570,7 @@ namespace RRQMSocket
             }
             catch (Exception ex)
             {
-                e.SafeDisposeWithNull();
+                e.SafeDispose();
                 this.BreakOut(ex.Message, false);
             }
         }

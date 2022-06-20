@@ -56,9 +56,7 @@ namespace RRQMSocket
         /// </summary>
         public RRQMConfig()
         {
-            this.m_container = new Container();
-            this.m_container.RegisterTransient<ILog, ConsoleLogger>();
-            this.m_pluginsManager = new PluginsManager(this.m_container);
+            this.SetContainer(new Container());
         }
 
         /// <summary>
@@ -127,6 +125,8 @@ namespace RRQMSocket
         public RRQMConfig SetContainer(IContainer value)
         {
             this.m_container = value;
+            this.m_container.RegisterTransient<ILog, ConsoleLogger>();
+            this.m_pluginsManager = new PluginsManager(this.m_container);
             return this;
         }
 

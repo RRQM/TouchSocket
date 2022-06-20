@@ -20,7 +20,7 @@ namespace RRQMSocket
         /// <summary>
         /// 用于索引的ID
         /// </summary>
-        string ID { get; }
+        string ID { get;}
 
         /// <summary>
         /// 包含此辅助类的主服务器类

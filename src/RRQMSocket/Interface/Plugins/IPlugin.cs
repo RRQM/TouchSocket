@@ -26,13 +26,13 @@ namespace RRQMSocket
         /// <para>该属性值越大，越靠前执行。值相等时，按添加先后顺序</para>
         /// <para>该属性效果，仅在<see cref="IPluginsManager.Add(IPlugin)"/>之前设置有效。</para>
         /// </summary>
-        public int Order { get; set; }
+        int Order { get; set; }
 
         /// <summary>
         /// 日志记录器。
-        /// <para>在<see cref="IPluginsManager.Add(IPlugin)"/>之前如果没有赋值的话，随后会用<see cref="IContainer.Resolve{T}"/>填值</para>
+        /// <para>在<see cref="IPluginsManager.Add(IPlugin)"/>之前如果没有赋值的话，随后会用<see cref="IContainer.Resolve(Type, object[], string)"/>填值</para>
         /// </summary>
-        public ILog Logger { get; set; }
+        ILog Logger { get; set; }
 
         /// <summary>
         /// 包含此插件的插件管理器

@@ -23,12 +23,12 @@ namespace RRQMSocket
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
-        event RRQMMessageEventHandler<ITcpClient> Connected;
+        event MessageEventHandler<ITcpClient> Connected;
 
         /// <summary>
         /// 准备连接的时候
         /// </summary>
-        event RRQMTcpClientConnectingEventHandler<ITcpClient> Connecting;
+        event ClientConnectingEventHandler<ITcpClient> Connecting;
 
         /// <summary>
         /// 远程IPHost。

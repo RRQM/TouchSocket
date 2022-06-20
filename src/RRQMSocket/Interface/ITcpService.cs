@@ -27,17 +27,17 @@ namespace RRQMSocket
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        event RRQMEventHandler<TClient> Connected;
+        event EventHandler<TClient> Connected;
 
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        event RRQMClientOperationEventHandler<TClient> Connecting;
+        event ClientOperationEventHandler<TClient> Connecting;
 
         /// <summary>
         /// 有用户断开连接
         /// </summary>
-        event RRQMTcpClientDisconnectedEventHandler<TClient> Disconnected;
+        event ClientDisconnectedEventHandler<TClient> Disconnected;
 
         /// <summary>
         /// 获取最大可连接数
@@ -79,6 +79,11 @@ namespace RRQMSocket
         /// 使用Ssl加密
         /// </summary>
         bool UseSsl { get; }
+
+        /// <summary>
+        /// 当前在线客户端数量
+        /// </summary>
+        int Count { get; }
 
         /// <summary>
         /// 获取当前连接的所有客户端

@@ -21,7 +21,7 @@ using System.Net;
 /// </summary>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMMessageEventHandler<TClient>(TClient client, MesEventArgs e) where TClient : IClient;
+public delegate void MessageEventHandler<TClient>(TClient client, MesEventArgs e);
 
 /// <summary>
 /// 普通通知
@@ -29,15 +29,15 @@ public delegate void RRQMMessageEventHandler<TClient>(TClient client, MesEventAr
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMEventHandler<TClient>(TClient client, RRQMEventArgs e) where TClient : IClient;
+public delegate void EventHandler<TClient>(TClient client, RRQMEventArgs e);
 
 /// <summary>
-/// 客户端连接
+/// Connecting
 /// </summary>
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMTcpClientConnectingEventHandler<TClient>(TClient client, ClientConnectingEventArgs e) where TClient : ITcpClientBase;
+public delegate void ClientConnectingEventHandler<TClient>(TClient client, ClientConnectingEventArgs e);
 
 /// <summary>
 /// 客户端断开连接
@@ -45,7 +45,7 @@ public delegate void RRQMTcpClientConnectingEventHandler<TClient>(TClient client
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMTcpClientDisconnectedEventHandler<TClient>(TClient client, ClientDisconnectedEventArgs e) where TClient : ITcpClientBase;
+public delegate void ClientDisconnectedEventHandler<TClient>(TClient client, ClientDisconnectedEventArgs e);
 
 /// <summary>
 /// 正在连接事件
@@ -53,7 +53,7 @@ public delegate void RRQMTcpClientDisconnectedEventHandler<TClient>(TClient clie
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMClientOperationEventHandler<TClient>(TClient client, ClientOperationEventArgs e) where TClient : IClient;
+public delegate void ClientOperationEventHandler<TClient>(TClient client, ClientOperationEventArgs e);
 
 
 /// <summary>
@@ -61,7 +61,7 @@ public delegate void RRQMClientOperationEventHandler<TClient>(TClient client, Cl
 /// </summary>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void RRQMPluginReceivedEventHandler<TClient>(TClient client, ReceivedDataEventArgs e) where TClient : IClient;
+public delegate void PluginReceivedEventHandler<TClient>(TClient client, ReceivedDataEventArgs e);
 
 /// <summary>
 /// 普通数据
@@ -69,7 +69,7 @@ public delegate void RRQMPluginReceivedEventHandler<TClient>(TClient client, Rec
 /// <param name="client"></param>
 /// <param name="byteBlock"></param>
 /// <param name="requestInfo"></param>
-public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, IRequestInfo requestInfo) where TClient : IClient;
+public delegate void ReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, IRequestInfo requestInfo);
 
 
 /// <summary>
@@ -78,4 +78,4 @@ public delegate void RRQMReceivedEventHandler<TClient>(TClient client, ByteBlock
 /// <param name="endpoint"></param>
 /// <param name="byteBlock"></param>
 /// <param name="requestInfo"></param>
-public delegate void RRQMUDPByteBlockEventHandler(EndPoint endpoint, ByteBlock byteBlock, IRequestInfo requestInfo);
+public delegate void UdpReceivedEventHandler(EndPoint endpoint, ByteBlock byteBlock, IRequestInfo requestInfo);

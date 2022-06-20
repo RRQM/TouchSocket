@@ -32,7 +32,7 @@ namespace RRQMSocket
         /// <summary>
         /// 接收到数据
         /// </summary>
-        public event RRQMReceivedEventHandler<TcpClient> Received;
+        public event ReceivedEventHandler<TcpClient> Received;
 
         /// <summary>
         /// 接收数据
@@ -87,17 +87,17 @@ namespace RRQMSocket
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
-        public event RRQMMessageEventHandler<ITcpClient> Connected;
+        public event MessageEventHandler<ITcpClient> Connected;
 
         /// <summary>
         /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
         /// </summary>
-        public event RRQMTcpClientConnectingEventHandler<ITcpClient> Connecting;
+        public event ClientConnectingEventHandler<ITcpClient> Connecting;
 
         /// <summary>
         /// 断开连接。在客户端未设置连接状态时，不会触发
         /// </summary>
-        public event RRQMTcpClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
+        public event ClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
 
         /// <summary>
         /// 已经建立Tcp连接
