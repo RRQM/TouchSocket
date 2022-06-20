@@ -128,22 +128,22 @@ namespace RRQMSocket
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        public event RRQMEventHandler<TClient> Connected;
+        public event EventHandler<TClient> Connected;
 
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        public event RRQMClientOperationEventHandler<TClient> Connecting;
+        public event ClientOperationEventHandler<TClient> Connecting;
 
         /// <summary>
         /// 有用户断开连接
         /// </summary>
-        public event RRQMTcpClientDisconnectedEventHandler<TClient> Disconnected;
+        public event ClientDisconnectedEventHandler<TClient> Disconnected;
 
         /// <summary>
         /// 当客户端ID被修改时触发。
         /// </summary>
-        public event RRQMEventHandler<TClient> IDChanged;
+        public event EventHandler<TClient> IDChanged;
 
         /// <summary>
         /// <inheritdoc/>
@@ -386,6 +386,7 @@ namespace RRQMSocket
             }
         }
 
+       
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -524,7 +525,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 初始化客户端实例，默认实现为<see cref="Container.Resolve{T}"/>
+        /// 初始化客户端实例，默认实现为<see cref="Container.Resolve(Type, object[], string)"/>
         /// </summary>
         /// <returns></returns>
         protected virtual TClient GetClientInstence()
@@ -769,12 +770,12 @@ namespace RRQMSocket
                     }
                     else
                     {
-                        socket.SafeDisposeWithNull();
+                        socket.SafeDispose();
                     }
                 }
                 catch (Exception ex)
                 {
-                    socket.SafeDisposeWithNull();
+                    socket.SafeDispose();
                     this.Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
                 }
             });
@@ -789,7 +790,7 @@ namespace RRQMSocket
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event RRQMReceivedEventHandler<SocketClient> Received;
+        public event ReceivedEventHandler<SocketClient> Received;
 
         /// <summary>
         /// <inheritdoc/>

@@ -26,7 +26,7 @@ namespace RRQMSocket
         /// <summary>
         /// 断开连接
         /// </summary>
-        event RRQMTcpClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
+        event ClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
 
         /// <summary>
         /// 缓存池大小

@@ -66,6 +66,11 @@ namespace RRQMSocket
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public int Count => this.SocketClients.Count;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public abstract void Clear();
 
         /// <summary>
@@ -83,6 +88,8 @@ namespace RRQMSocket
         /// <param name="oldID"></param>
         /// <param name="newID"></param>
         public abstract void ResetID(string oldID, string newID);
+
+    
 
         /// <summary>
         /// <inheritdoc/>

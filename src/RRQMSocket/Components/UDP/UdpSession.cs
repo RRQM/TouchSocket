@@ -31,7 +31,7 @@ namespace RRQMSocket
         /// <summary>
         /// 当收到数据时
         /// </summary>
-        public event RRQMUDPByteBlockEventHandler Received;
+        public event UdpReceivedEventHandler Received;
 
         /// <summary>
         /// <inheritdoc/>

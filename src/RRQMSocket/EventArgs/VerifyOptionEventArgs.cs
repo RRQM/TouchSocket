@@ -11,10 +11,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using RRQMCore;
+
 namespace RRQMSocket
 {
     /// <summary>
-    /// Token连接验证
+    /// 连接验证
     /// </summary>
     public class VerifyOptionEventArgs : MesEventArgs
     {
@@ -24,12 +26,19 @@ namespace RRQMSocket
         public string Token { get; private set; }
 
         /// <summary>
+        /// 元数据
+        /// </summary>
+        public Metadata Metadata { get;private set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="token"></param>
-        public VerifyOptionEventArgs(string token)
+        /// <param name="metadata"></param>
+        public VerifyOptionEventArgs(string token, Metadata metadata)
         {
             this.Token = token;
+            this.Metadata = metadata;
         }
     }
 }

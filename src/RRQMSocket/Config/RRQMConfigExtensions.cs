@@ -479,7 +479,7 @@ namespace RRQMSocket
         /// <typeparam name="TLogger"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static RRQMConfig SetLogger<TLogger>(this RRQMConfig config) where TLogger : ILog, new()
+        public static RRQMConfig SetLogger<TLogger>(this RRQMConfig config) where TLogger :class, ILog, new()
         {
             config.Container.RegisterTransient<ILog, TLogger>();
             return config;
@@ -491,7 +491,7 @@ namespace RRQMSocket
         /// <typeparam name="TLogger"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static RRQMConfig SetSingletonLogger<TLogger>(this RRQMConfig config) where TLogger : ILog, new()
+        public static RRQMConfig SetSingletonLogger<TLogger>(this RRQMConfig config) where TLogger : class, ILog, new()
         {
             config.Container.RegisterSingleton<ILog, TLogger>();
             return config;
@@ -504,7 +504,7 @@ namespace RRQMSocket
         /// <param name="config"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public static RRQMConfig SetSingletonLogger<TLogger>(this RRQMConfig config, TLogger logger) where TLogger : ILog
+        public static RRQMConfig SetSingletonLogger<TLogger>(this RRQMConfig config, TLogger logger) where TLogger :class, ILog
         {
             config.Container.RegisterSingleton<ILog, TLogger>(logger);
             return config;

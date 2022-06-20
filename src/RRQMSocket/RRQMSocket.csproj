@@ -4,7 +4,7 @@
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>8.1.0</Version>
+		<Version>8.2.0</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -12,10 +12,7 @@
 		<Description>介绍：RRQMSocket是一个整合性的、超轻量级的、支持插件的网络通信框架。包含了TCP、UDP、Ssl等一系列的通信模块。更加的灵活、便捷。让使用者能够更加简单的、快速的搭建网络框架。
 
 更新说明：
-增加：CustomBigFixedHeaderDataHandlingAdapter，支持超大数据的固定包头解析。
-增加：CustomBetweenAndPackageAdapter，支持“##123**”类似的数据解析。
-修改：WaitingClient使用扩展完成。
-移除：Token、Protocol全系组件，使用TouchRpc全部替代。
+无其他更新。
 
 API：https://www.yuque.com/eo2w71/rrqm
 DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
@@ -27,7 +24,7 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<RepositoryUrl>https://gitee.com/dotnetchina/RRQMSocket</RepositoryUrl>
-		<RepositoryType>Gitee</RepositoryType>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -82,7 +79,7 @@ DEMO：https://gitee.com/RRQM_Home/RRQMBox</Description>
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="RRQMCore" Version="8.1.0" />
+	  <PackageReference Include="RRQMCore" Version="8.2.0" />
 	</ItemGroup>
 
 </Project>
