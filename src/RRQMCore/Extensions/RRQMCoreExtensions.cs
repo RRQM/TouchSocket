@@ -608,6 +608,27 @@ namespace RRQMCore.Extensions
             return true;
         }
 #endif
+
+        /// <summary>
+        /// 尝试添加
+        /// </summary>
+        /// <typeparam name="Tkey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="dictionary"></param>
+        /// <param name="tkey"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static void AddOrUpdate<Tkey, TValue>(this Dictionary<Tkey, TValue> dictionary, Tkey tkey, TValue value)
+        {
+            if (dictionary.ContainsKey(tkey))
+            {
+                dictionary[tkey] = value;
+            }
+            else
+            {
+                dictionary.Add(tkey, value);
+            }
+        }
         #endregion
     }
 }

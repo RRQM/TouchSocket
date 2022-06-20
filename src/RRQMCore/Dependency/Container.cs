@@ -10,177 +10,178 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore.Extensions;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace RRQMCore.Dependency
 {
-    /// <summary>
-    /// 注入容器接口
-    /// </summary>
-    public interface IContainer
-    {
-        /// <summary>
-        /// 注册临时映射
-        /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TImplementation"></typeparam>
-        public void RegisterTransient<TInterface, TImplementation>() where TImplementation : TInterface;
 
-        /// <summary>
-        /// 注册单例
-        /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TImplementation"></typeparam>
-        /// <param name="singleton"></param>
-        public void RegisterSingleton<TInterface, TImplementation>(TImplementation singleton) where TImplementation : TInterface;
-
-        /// <summary>
-        /// 注册单例
-        /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TImplementation"></typeparam>
-        public void RegisterSingleton<TInterface, TImplementation>() where TImplementation : TInterface;
-
-
-        /// <summary>
-        /// 创建类型对应的实例
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T Resolve<T>();
-
-        /// <summary>
-        /// 创建类型对应的实例
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public object Resolve(Type type);
-    }
     /// <summary>
     /// IOC容器
     /// </summary>
     public class Container : IContainer
     {
-        private readonly Hashtable registrations;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public Container()
-        {
-            this.registrations = new Hashtable();
-        }
+        private readonly Dictionary<string, DependencyDescriptor> registrations = new Dictionary<string, DependencyDescriptor>();
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TImplementation"></typeparam>
-        public void RegisterTransient<TInterface, TImplementation>() where TImplementation : TInterface
+        /// <param name="descriptor"></param>
+        /// <param name="key"></param>
+        public void Register(DependencyDescriptor descriptor, string key = "")
         {
-            if (this.registrations.ContainsKey(typeof(TInterface)))
-            {
-                this.registrations[typeof(TInterface)] = typeof(TImplementation);
-            }
-            else
-            {
-                this.registrations.Add(typeof(TInterface), typeof(TImplementation));
-            }
+            string k = $"{descriptor.FromType.FullName}{key}";
+            registrations.AddOrUpdate(k, descriptor);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TImplementation"></typeparam>
-        /// <param name="singleton"></param>
-        public void RegisterSingleton<TInterface, TImplementation>(TImplementation singleton) where TImplementation : TInterface
+        private IScopedContainer GetScopedContainer()
         {
-            if (this.registrations.ContainsKey(typeof(TInterface)))
+            Container container = new Container();
+            foreach (var item in this.registrations)
             {
-                this.registrations[typeof(TInterface)] = singleton;
-            }
-            else
-            {
-                this.registrations.Add(typeof(TInterface), singleton);
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <typeparam name="TImplementation"></typeparam>
-        public void RegisterSingleton<TInterface, TImplementation>() where TImplementation : TInterface
-        {
-            if (this.registrations.ContainsKey(typeof(TInterface)))
-            {
-                this.registrations[typeof(TInterface)] = this.Resolve<TImplementation>();
-            }
-            else
-            {
-                this.registrations.Add(typeof(TInterface), this.Resolve<TImplementation>());
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="interfaceType"></param>
-        /// <returns></returns>
-        private object Create(Type interfaceType)
-        {
-            object value = this.registrations[interfaceType];
-
-            if (value == null)
-            {
-                if (interfaceType.IsPrimitive || interfaceType == typeof(string))
+                if (item.Value.Lifetime == Lifetime.Scoped)
                 {
-                    return default;
+                    container.registrations.AddOrUpdate(item.Key, new DependencyDescriptor(item.Value.FromType, item.Value.ToType, Lifetime.Singleton));
                 }
                 else
                 {
-                    var constructors = interfaceType.GetConstructors();
-                    if (constructors.Length > 0)
+                    container.registrations.AddOrUpdate(item.Key, item.Value);
+                }
+
+            }
+            return new ScopedContainer(container);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="fromType"></param>
+        /// <param name="ps"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public object Resolve(Type fromType, object[] ps = null, string key = "")
+        {
+            if (fromType == typeof(IScopedContainer))
+            {
+                return GetScopedContainer();
+            }
+
+            if (fromType.IsGenericType)
+            {
+                Type type = fromType.GetGenericTypeDefinition();
+                string k = $"{type.FullName}{key}";
+                if (registrations.TryGetValue(k, out DependencyDescriptor descriptor))
+                {
+                    if (descriptor.Lifetime == Lifetime.Singleton)
                     {
-                        var parameters = constructors[0].GetParameters();
-                        object[] ps = new object[parameters.Length];
-                        for (int i = 0; i < parameters.Length; i++)
+                        if (descriptor.ToInstance != null)
                         {
-                            if (parameters[i].ParameterType.IsPrimitive || parameters[i].ParameterType == typeof(string))
-                            {
-                                if (parameters[i].HasDefaultValue)
-                                {
-                                    ps[i] = parameters[i].DefaultValue;
-                                }
-                                else
-                                {
-                                    ps[i] = default;
-                                }
-                            }
-                            else
-                            {
-                                ps[i] = this.Create(parameters[i].ParameterType);
-                            }
+                            return descriptor.ToInstance;
+                        }
+                        if (descriptor.ToType.IsGenericType)
+                        {
+                            return descriptor.ToInstance = this.Create(descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()), ps);
+                        }
+                        else
+                        {
+                            return descriptor.ToInstance = this.Create(descriptor.ToType, ps);
                         }
 
-                        return Activator.CreateInstance(interfaceType, ps);
+                    }
+                    if (descriptor.ToType.IsGenericType)
+                    {
+                        return this.Create(descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()), ps);
                     }
                     else
                     {
-                        throw new RRQMException($"没有找到类型{interfaceType.Name}的公共构造函数。");
+                        return this.Create(descriptor.ToType, ps);
                     }
                 }
-            }
-            else if (value is Type type)
-            {
-                var constructors = type.GetConstructors();
-                if (constructors.Length > 0)
+                else
                 {
-                    var parameters = constructors[0].GetParameters();
-                    object[] ps = new object[parameters.Length];
-                    for (int i = 0; i < parameters.Length; i++)
+                    return default;
+                }
+            }
+            else
+            {
+                string k = $"{fromType.FullName}{key}";
+                if (registrations.TryGetValue(k, out DependencyDescriptor descriptor))
+                {
+                    if (descriptor.Lifetime == Lifetime.Singleton)
+                    {
+                        if (descriptor.ToInstance != null)
+                        {
+                            return descriptor.ToInstance;
+                        }
+                        return descriptor.ToInstance = this.Create(descriptor.ToType, ps);
+                    }
+                    return this.Create(descriptor.ToType, ps);
+                }
+                else if (fromType.IsPrimitive || fromType == typeof(string))
+                {
+                    return default;
+                }
+                else if (fromType.IsClass && !fromType.IsAbstract)
+                {
+                    return this.Create(fromType, ps);
+                }
+                else
+                {
+                    return default;
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="toType"></param>
+        /// <param name="ops"></param>
+        /// <returns></returns>
+        private object Create(Type toType, object[] ops)
+        {
+            ConstructorInfo ctor = toType.GetConstructors().FirstOrDefault(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
+            if (ctor is null)
+            {
+                //如果没有被特性标记，那就取构造函数参数最多的作为注入目标
+                ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
+                if (ctor is null)
+                {
+                    throw new RRQMException($"没有找到类型{toType.FullName}的公共构造函数。");
+                }
+            }
+            else
+            {
+                if (ops == null)
+                {
+                    ops = ctor.GetCustomAttribute<DependencyInjectAttribute>().Ps;
+                }
+            }
+
+            DependencyTypeAttribute dependencyTypeAttribute = null;
+            if (toType.IsDefined(typeof(DependencyTypeAttribute), true))
+            {
+                dependencyTypeAttribute = toType.GetCustomAttribute<DependencyTypeAttribute>();
+            }
+
+
+            var parameters = ctor.GetParameters();
+            object[] ps = new object[parameters.Length];
+
+            if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Constructor))
+            {
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    if (ops != null && ops.Length - 1 >= i)
+                    {
+                        ps[i] = ops[i];
+                    }
+                    else
                     {
                         if (parameters[i].ParameterType.IsPrimitive || parameters[i].ParameterType == typeof(string))
                         {
@@ -195,41 +196,91 @@ namespace RRQMCore.Dependency
                         }
                         else
                         {
-                            ps[i] = this.Create(parameters[i].ParameterType);
+                            if (parameters[i].IsDefined(typeof(DependencyParamterInjectAttribute), true))
+                            {
+                                DependencyParamterInjectAttribute attribute = parameters[i].GetCustomAttribute<DependencyParamterInjectAttribute>();
+                                ps[i] = this.Resolve(parameters[i].ParameterType, attribute.Ps, attribute.Key);
+                            }
+                            else
+                            {
+                                ps[i] = this.Resolve(parameters[i].ParameterType, null);
+                            }
+
                         }
                     }
 
-                    return Activator.CreateInstance(type, ps);
-                }
-                else
-                {
-                    throw new RRQMException($"没有找到类型{interfaceType.Name}的公共构造函数。");
                 }
             }
-            else
+            object instance = Activator.CreateInstance(toType, ps);
+
+            if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Property))
             {
-                return value;
+                var propetys = toType.GetProperties().Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
+                foreach (var item in propetys)
+                {
+                    if (item.CanWrite)
+                    {
+                        object obj;
+                        if (item.IsDefined(typeof(DependencyParamterInjectAttribute), true))
+                        {
+                            DependencyParamterInjectAttribute attribute = item.GetCustomAttribute<DependencyParamterInjectAttribute>();
+                            obj = this.Resolve(item.PropertyType, attribute.Ps, attribute.Key);
+                        }
+                        else
+                        {
+                            obj = this.Resolve(item.PropertyType, null);
+                        }
+                        item.SetValue(instance, obj);
+                    }
+                }
             }
-        }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T Resolve<T>()
-        {
-            return (T)this.Create(typeof(T));
-        }
+            if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Method))
+            {
+                var methods = toType.GetMethods().Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true)).ToList();
+                foreach (var item in methods)
+                {
+                    parameters = item.GetParameters();
+                    ops = item.GetCustomAttribute<DependencyInjectAttribute>().Ps;
+                    ps = new object[parameters.Length];
+                    for (int i = 0; i < ps.Length; i++)
+                    {
+                        if (ops != null && ops.Length - 1 >= i)
+                        {
+                            ps[i] = ops[i];
+                        }
+                        else
+                        {
+                            if (parameters[i].ParameterType.IsPrimitive || parameters[i].ParameterType == typeof(string))
+                            {
+                                if (parameters[i].HasDefaultValue)
+                                {
+                                    ps[i] = parameters[i].DefaultValue;
+                                }
+                                else
+                                {
+                                    ps[i] = default;
+                                }
+                            }
+                            else
+                            {
+                                if (parameters[i].IsDefined(typeof(DependencyParamterInjectAttribute), true))
+                                {
+                                    DependencyParamterInjectAttribute attribute = parameters[i].GetCustomAttribute<DependencyParamterInjectAttribute>();
+                                    ps[i] = this.Resolve(parameters[i].ParameterType, attribute.Ps, attribute.Key);
+                                }
+                                else
+                                {
+                                    ps[i] = this.Resolve(parameters[i].ParameterType, null);
+                                }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public object Resolve(Type type)
-        {
-            return this.Create(type);
+                            }
+                        }
+                    }
+                    item.Invoke(instance, ps);
+                }
+            }
+            return instance;
         }
     }
 }

@@ -53,7 +53,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json.Serialization
         private readonly JsonSerializerInternalWriter _serializerWriter;
         private readonly JsonSerializer _serializer;
 
-        public override event EventHandler<ErrorEventArgs> Error
+        public override event System.EventHandler<ErrorEventArgs> Error
         {
             add => this._serializer.Error += value;
             remove => this._serializer.Error -= value;

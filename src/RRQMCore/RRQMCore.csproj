@@ -5,14 +5,13 @@
 		<Authors>若汝棋茗</Authors>
 		<PackageIcon>RRQM.png</PackageIcon>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
-		<Version>8.1.0</Version>
+		<Version>8.2.0</Version>
 		<LangVersion>8.0</LangVersion>
 		<SignAssembly>true</SignAssembly>
 		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
 
 更新内容：
-增加：FilePool，更加方便管理文件的读写。
-修改：ByteBlock，使用扩展方法替代实例方法。
+优化：Container注入容器，支持基本的所有使用场景。
 
 特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
 特此感谢其作者！！！
@@ -24,7 +23,7 @@
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageTags>MemoryPool,ObjectPool,Serialize,Tool</PackageTags>
 		<RepositoryUrl>https://gitee.com/dotnetchina/RRQMSocket</RepositoryUrl>
-		<RepositoryType>Gitee</RepositoryType>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
