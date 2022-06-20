@@ -294,7 +294,7 @@ namespace RRQMCore.XREF.Newtonsoft.Json
         /// Gets or sets the error handler called during serialization and deserialization.
         /// </summary>
         /// <value>The error handler called during serialization and deserialization.</value>
-        public EventHandler<ErrorEventArgs> Error { get; set; }
+        public System.EventHandler<ErrorEventArgs> Error { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="StreamingContext"/> used by the serializer when invoking serialization callback methods.

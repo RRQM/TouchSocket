@@ -69,9 +69,20 @@ namespace RRQMCore.Run
         /// </summary>
         public void RegistAll()
         {
-            var types = AppDomain.CurrentDomain.GetAssemblies()
-                            .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(TMessage))))
-                            .ToArray();
+            List<Type> types = new List<Type>();
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    Type[] t1 = assembly.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(TMessage))).ToArray();
+                    types.AddRange(t1);
+                }
+                catch
+                {
+
+                }
+            }
             foreach (var v in types)
             {
                 TMessage message = (TMessage)Activator.CreateInstance(v);

@@ -42,27 +42,6 @@ namespace System
             {
             }
         }
-
-        /// <summary>
-        /// 安全性释放（不用判断对象是否为空），然后置空。
-        /// </summary>
-        /// <param name="dis"></param>
-        /// <returns></returns>
-        public static void SafeDisposeWithNull<T>(this T dis) where T : class, IDisposable
-        {
-            if (dis == null)
-            {
-                return;
-            }
-            try
-            {
-                dis.Dispose();
-                dis = null;
-            }
-            catch
-            {
-            }
-        }
         #endregion
 
         /// <summary>
