@@ -30,7 +30,7 @@ namespace RRQMSocket
 
         /// <summary>
         /// 日志记录器。
-        /// <para>在<see cref="IPluginsManager.Add(IPlugin)"/>之前如果没有赋值的话，随后会用<see cref="IContainer.Resolve(Type, object[], string)"/>填值</para>
+        /// <para>在<see cref="IPluginsManager.Add(IPlugin)"/>之前如果没有赋值的话，随后会用<see cref="IContainer.Register(DependencyDescriptor, string)"/>填值</para>
         /// </summary>
         ILog Logger { get; set; }
 

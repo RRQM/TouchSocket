@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.2.32505.173
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32428.217
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{06A5E4BC-4AE9-4F5F-BF8E-C6651413442B}"
 EndProject
@@ -37,12 +37,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Consul集群示例", "Consul集群示例", "{B405B0AE-6ECD-4586-B3D6-9D875073DFAF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsulConsoleApp", "examples\ConsulConsoleApp\ConsulConsoleApp.csproj", "{657BDC94-A1A5-44B3-8FA1-41531C6F7321}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Net Winform", "Net Winform", "{3B7BBC13-9E85-4E16-B858-FAD6499633FE}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinForms_Core6_Client_Dome", "examples\WinForms_Core6_Client_Dome\WinForms_Core6_Client_Dome.csproj", "{72EA72F9-EDF5-4BC5-B53A-AD16CD168D07}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinForms_Core6_Server_Dome", "examples\WinForms_Core6_Server_Dome\WinForms_Core6_Server_Dome.csproj", "{32BE94A2-19A7-4ED0-8E13-9F32B428F575}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -82,14 +76,6 @@ Global
 		{657BDC94-A1A5-44B3-8FA1-41531C6F7321}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{657BDC94-A1A5-44B3-8FA1-41531C6F7321}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{657BDC94-A1A5-44B3-8FA1-41531C6F7321}.Release|Any CPU.Build.0 = Release|Any CPU
-		{72EA72F9-EDF5-4BC5-B53A-AD16CD168D07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{72EA72F9-EDF5-4BC5-B53A-AD16CD168D07}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{72EA72F9-EDF5-4BC5-B53A-AD16CD168D07}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{72EA72F9-EDF5-4BC5-B53A-AD16CD168D07}.Release|Any CPU.Build.0 = Release|Any CPU
-		{32BE94A2-19A7-4ED0-8E13-9F32B428F575}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{32BE94A2-19A7-4ED0-8E13-9F32B428F575}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{32BE94A2-19A7-4ED0-8E13-9F32B428F575}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{32BE94A2-19A7-4ED0-8E13-9F32B428F575}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -108,9 +94,6 @@ Global
 		{2DA72D0E-DAAC-4272-A10E-1EF89439636B} = {397AE2E0-1FB6-4B71-A888-328FF7FA05B4}
 		{B405B0AE-6ECD-4586-B3D6-9D875073DFAF} = {517CF381-4C15-4519-9BC4-92DC4C412C8D}
 		{657BDC94-A1A5-44B3-8FA1-41531C6F7321} = {B405B0AE-6ECD-4586-B3D6-9D875073DFAF}
-		{3B7BBC13-9E85-4E16-B858-FAD6499633FE} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
-		{72EA72F9-EDF5-4BC5-B53A-AD16CD168D07} = {3B7BBC13-9E85-4E16-B858-FAD6499633FE}
-		{32BE94A2-19A7-4ED0-8E13-9F32B428F575} = {3B7BBC13-9E85-4E16-B858-FAD6499633FE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
