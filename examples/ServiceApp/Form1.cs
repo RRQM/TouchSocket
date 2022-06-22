@@ -24,7 +24,10 @@ namespace ServiceApp
 
         private void Form1_Load(object sender, EventArgs args)
         {
-            m_service.Connecting += (client, e) => { };//有客户端正在连接
+            m_service.Connecting += (client, e) => 
+            {
+                e.ID = $"{client.IP}:{client.Port}";
+            };//有客户端正在连接
             m_service.Connected += this.M_service_Connected;//有客户端连接
             m_service.Disconnected += this.M_service_Disconnected; ;//有客户端断开连接
             m_service.Received += this.Service_Received;
