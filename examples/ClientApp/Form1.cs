@@ -24,9 +24,7 @@ namespace ClientApp
 
         private void Form1_Load(object sender, EventArgs args)
         {
-            m_tcpClient.Connected += (client, e) => { };//成功连接到服务器
-            m_tcpClient.Disconnected += (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-            m_tcpClient.Received += this.TcpClient_Received;
+            
         }
 
         private void ShowMsg(string msg)
@@ -40,10 +38,17 @@ namespace ClientApp
             client.Logger.Message($"从服务器收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
         }
 
-        TcpClient m_tcpClient = new TcpClient();
+        TcpClient m_tcpClient;
 
         private void button1_Click(object sender, EventArgs args)
         {
+            m_tcpClient = new TcpClient();
+
+            if (checkBox1.Checked)
+            {
+                m_tcpClient.UseReconnection(5,true,1000);
+            }
+
             //声明配置
             RRQMConfig config = new RRQMConfig();
             config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
@@ -51,10 +56,20 @@ namespace ClientApp
                 .SetBufferLength(1024 * 10)
                 .SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
 
+            m_tcpClient.Connected += (client, e) => 
+            {
+                client.Logger.Message("成功连接");
+            };//成功连接到服务器
+            m_tcpClient.Disconnected += (client, e) => 
+            {
+                client.Logger.Message($"断开连接，信息：{e.Message}");
+            };//从服务器断开连接，当连接不成功时不会触发。
+            m_tcpClient.Received += this.TcpClient_Received;
+
             //载入配置
             m_tcpClient.Setup(config);
             m_tcpClient.Connect();
-            m_tcpClient.Logger.Message("成功连接");
+           
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -88,6 +103,12 @@ namespace ClientApp
             {
                 this.m_tcpClient.Logger.Exception(ex);
             }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            m_tcpClient.Close();
+            m_tcpClient.SafeDispose();
         }
     }
 }
