@@ -199,7 +199,14 @@ namespace RRQMCore.Dependency
                             if (parameters[i].IsDefined(typeof(DependencyParamterInjectAttribute), true))
                             {
                                 DependencyParamterInjectAttribute attribute = parameters[i].GetCustomAttribute<DependencyParamterInjectAttribute>();
-                                ps[i] = this.Resolve(parameters[i].ParameterType, attribute.Ps, attribute.Key);
+                                if (attribute.Type == null)
+                                {
+                                    ps[i] = this.Resolve(parameters[i].ParameterType, attribute.Ps, attribute.Key);
+                                }
+                                else
+                                {
+                                    ps[i] = this.Resolve(attribute.Type, attribute.Ps, attribute.Key);
+                                }
                             }
                             else
                             {
@@ -224,7 +231,14 @@ namespace RRQMCore.Dependency
                         if (item.IsDefined(typeof(DependencyParamterInjectAttribute), true))
                         {
                             DependencyParamterInjectAttribute attribute = item.GetCustomAttribute<DependencyParamterInjectAttribute>();
-                            obj = this.Resolve(item.PropertyType, attribute.Ps, attribute.Key);
+                            if (attribute.Type == null)
+                            {
+                                obj = this.Resolve(item.PropertyType, attribute.Ps, attribute.Key);
+                            }
+                            else
+                            {
+                                obj = this.Resolve(attribute.Type, attribute.Ps, attribute.Key);
+                            }
                         }
                         else
                         {
@@ -267,7 +281,14 @@ namespace RRQMCore.Dependency
                                 if (parameters[i].IsDefined(typeof(DependencyParamterInjectAttribute), true))
                                 {
                                     DependencyParamterInjectAttribute attribute = parameters[i].GetCustomAttribute<DependencyParamterInjectAttribute>();
-                                    ps[i] = this.Resolve(parameters[i].ParameterType, attribute.Ps, attribute.Key);
+                                    if (attribute.Type == null)
+                                    {
+                                        ps[i] = this.Resolve(parameters[i].ParameterType, attribute.Ps, attribute.Key);
+                                    }
+                                    else
+                                    {
+                                        ps[i] = this.Resolve(attribute.Type, attribute.Ps, attribute.Key);
+                                    }
                                 }
                                 else
                                 {
