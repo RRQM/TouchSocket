@@ -10,10 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using RRQMCore;
 using RRQMCore.ByteManager;
 using RRQMCore.Log;
 using System;
-using System.Net.Sockets;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RRQMSocket
 {
@@ -22,99 +24,119 @@ namespace RRQMSocket
     /// </summary>
     public class NATSocketClient : SocketClient
     {
+        private readonly System.Threading.ReaderWriterLockSlim m_lockSlim = new System.Threading.ReaderWriterLockSlim();
+
+        private readonly List<ITcpClient> m_targetClients;
+
+        internal Action<NATSocketClient, ITcpClient, ClientDisconnectedEventArgs> internalDis;
+        internal Func<NATSocketClient, ITcpClient, ByteBlock, IRequestInfo, byte[]> internalTargetClientRev;
+
         /// <summary>
-        /// <inheritdoc/>
+        /// 获取所有目标客户端
         /// </summary>
-        public sealed override bool CanSetDataHandlingAdapter => false;
+        /// <returns></returns>
+        public ITcpClient[] GetTargetClients()
+        {
+            return this.m_targetClients.ToArray();
+        }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public NATSocketClient()
         {
-            this.SetAdapter(new NormalDataHandlingAdapter());
-        }
-
-        private Socket[] targetSockets;
-
-        internal void BeginRunTargetSocket(NATMode mode, Socket[] sockets)
-        {
-            this.targetSockets = sockets;
-
-            if (mode == NATMode.OneWay)
-            {
-                return;
-            }
-            foreach (var socket in sockets)
-            {
-                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
-                eventArgs.Completed += this.EventArgs_Completed;
-                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                eventArgs.UserToken = new NATModel(socket, byteBlock);
-                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                if (!socket.ReceiveAsync(eventArgs))
-                {
-                    this.ProcessReceived(eventArgs);
-                }
-            }
-        }
-
-        private void EventArgs_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            try
-            {
-                this.ProcessReceived(e);
-            }
-            catch (Exception ex)
-            {
-                this.Close(ex.Message);
-            }
-        }
-
-        private void ProcessReceived(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
-            {
-                NATModel model = (NATModel)e.UserToken;
-                ByteBlock byteBlock = model.ByteBlock;
-                byteBlock.SetLength(e.BytesTransferred);
-                this.HandleReceivedDataFromTarget(byteBlock);
-
-                try
-                {
-                    ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                    model.ByteBlock = newByteBlock;
-                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
-
-                    if (!model.Socket.ReceiveAsync(e))
-                    {
-                        this.ProcessReceived(e);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this.Close(ex.Message);
-                }
-            }
-            else
-            {
-                this.Close("远程终端主动断开");
-            }
+            this.m_targetClients = new List<ITcpClient>();
         }
 
         /// <summary>
-        /// 处理从目标服务器接收的数据。
+        /// 添加转发客户端。
         /// </summary>
-        /// <param name="byteBlock"></param>
-        protected virtual void HandleReceivedDataFromTarget(ByteBlock byteBlock)
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public ITcpClient AddTargetClient(RRQMConfig config)
+        {
+            using WriteLock writeLock = new WriteLock(this.m_lockSlim);
+            TcpClient tcpClient = new TcpClient();
+            tcpClient.Disconnected += this.TcpClient_Disconnected;
+            tcpClient.Received += this.TcpClient_Received;
+            tcpClient.Setup(config);
+            tcpClient.Connect();
+
+            this.m_targetClients.Add(tcpClient);
+            return tcpClient;
+        }
+
+        /// <summary>
+        /// 添加转发客户端。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public Task<ITcpClient> AddTargetClientAsync(RRQMConfig config)
+        {
+            return Task.Run(() =>
+             {
+                 return this.AddTargetClient(config);
+             });
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (this.m_targetClients != null)
+            {
+                foreach (var socket in this.m_targetClients)
+                {
+                    socket.SafeDispose();
+                }
+            }
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// 发送数据到全部转发端。
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void SendToTargetClient(byte[] buffer, int offset, int length)
+        {
+            using WriteLock writeLock = new WriteLock(this.m_lockSlim);
+            foreach (var socket in this.m_targetClients)
+            {
+                try
+                {
+                    socket.Send(buffer, offset, length);
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        private void TcpClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        {
+            using WriteLock writeLock = new WriteLock(this.m_lockSlim);
+            this.m_targetClients.Remove((ITcpClient)client);
+            this.internalDis?.Invoke(this, (ITcpClient)client, e);
+        }
+
+        private void TcpClient_Received(TcpClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.disposedValue)
             {
                 return;
             }
+
             try
             {
-                this.Send(byteBlock);
+                var data = this.internalTargetClientRev?.Invoke(this, client, byteBlock, requestInfo);
+                if (data != null)
+                {
+                    this.Send(data);
+                }
             }
             catch (Exception ex)
             {
@@ -124,46 +146,6 @@ namespace RRQMSocket
             {
                 byteBlock.Dispose();
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            if (this.disposedValue || this.targetSockets == null)
-            {
-                return;
-            }
-
-            foreach (var socket in this.targetSockets)
-            {
-                try
-                {
-                    socket.Send(byteBlock.Buffer, 0, byteBlock.Len, SocketFlags.None);
-                }
-                catch
-                {
-                }
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            if (this.targetSockets != null)
-            {
-                foreach (var socket in this.targetSockets)
-                {
-                    socket.Dispose();
-                }
-            }
-            base.Dispose(disposing);
         }
     }
 }

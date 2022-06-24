@@ -25,46 +25,6 @@ namespace RRQMSocket
     {
         #region NAT
 
-        /// <summary>
-        /// 转发的类型，
-        /// 所需类型<see cref="RRQMSocket.NATMode"/>
-        /// </summary>
-        public static readonly DependencyProperty NATModeProperty =
-            DependencyProperty.Register("NATMode", typeof(NATMode), typeof(RRQMConfigExtensions), NATMode.TwoWay);
-
-        /// <summary>
-        /// 转发的目标地址集合，
-        /// 所需类型<see cref="IPHost"/>数组
-        /// </summary>
-        public static readonly DependencyProperty TargetIPHostsProperty =
-            DependencyProperty.Register("TargetIPHosts", typeof(IPHost[]), typeof(RRQMConfigExtensions), null);
-
-        /// <summary>
-        ///  转发的类型
-        ///  <para>仅适用于<see cref="NATService"/>及派生类</para>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static RRQMConfig SetNATMode(this RRQMConfig config, NATMode value)
-        {
-            config.SetValue(NATModeProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 转发的目标地址集合。
-        /// <para>仅适用于<see cref="NATService"/>及派生类</para>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static RRQMConfig SetTargetIPHosts(this RRQMConfig config, IPHost[] value)
-        {
-            config.SetValue(TargetIPHostsProperty, value);
-            return config;
-        }
-
         #endregion NAT
 
         #region ServiceBase
