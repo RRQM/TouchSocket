@@ -362,10 +362,6 @@ namespace RRQMSocket
         /// <exception cref="ArgumentNullException"></exception>
         public void AddPlugin(IPlugin plugin)
         {
-            if (plugin.Logger == default)
-            {
-                plugin.Logger = this.Container.Resolve<ILog>();
-            }
             this.PluginsManager.Add(plugin);
         }
 

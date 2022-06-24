@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RRQMCore;
+using RRQMCore.Dependency;
 using RRQMCore.Log;
 
 namespace RRQMSocket.Plugins
@@ -18,11 +19,12 @@ namespace RRQMSocket.Plugins
     /// <summary>
     /// 插件实现基类
     /// </summary>
-    public class TcpPluginBase : DisposableObject, ITcpPlugin
+    public abstract class TcpPluginBase : DisposableObject, ITcpPlugin
     {
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        [DependencyInject()]
         public ILog Logger { get; set; }
 
         /// <summary>
@@ -34,6 +36,7 @@ namespace RRQMSocket.Plugins
         /// <inheritdoc/>
         /// </summary>
         public IPluginsManager PluginsManager { get; set; }
+
         void ITcpPlugin.OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
             this.OnConnecting(client, e);

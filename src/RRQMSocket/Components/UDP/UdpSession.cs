@@ -311,10 +311,6 @@ namespace RRQMSocket
             {
                 throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
             }
-            if (plugin.Logger == default)
-            {
-                plugin.Logger = this.Container.Resolve<ILog>();
-            }
             this.PluginsManager.Add(plugin);
         }
 

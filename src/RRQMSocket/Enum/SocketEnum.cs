@@ -158,25 +158,4 @@ namespace RRQMSocket
         /// </summary>
         Disposed
     }
-
-    /// <summary>
-    /// 转发工作模式
-    /// </summary>
-    public enum NATMode
-    {
-        /// <summary>
-        /// 双向转发
-        /// </summary>
-        TwoWay,
-
-        /// <summary>
-        /// 仅由监听地址向目标地址单向转发
-        /// </summary>
-        OneWay,
-
-        /// <summary>
-        /// 仅由目标地址向监听地址单向转发
-        /// </summary>
-        OneWayToListen
-    }
 }

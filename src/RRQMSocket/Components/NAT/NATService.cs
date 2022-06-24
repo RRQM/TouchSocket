@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 
 using RRQMCore;
+using RRQMCore.ByteManager;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
@@ -23,60 +24,67 @@ namespace RRQMSocket
     /// </summary>
     public class NATService : TcpService<NATSocketClient>
     {
-        private IPHost[] iPHosts;
-
-        private NATMode mode;
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="serviceConfig"></param>
-        protected override void LoadConfig(RRQMConfig serviceConfig)
+        /// <returns></returns>
+        protected override NATSocketClient GetClientInstence()
         {
-            this.iPHosts = this.Config.GetValue<IPHost[]>(RRQMConfigExtensions.TargetIPHostsProperty);
-            if (this.iPHosts == null || this.iPHosts.Length == 0)
-            {
-                throw new RRQMException("目标地址未设置");
-            }
-            this.mode = this.Config.GetValue<NATMode>(RRQMConfigExtensions.NATModeProperty);
-            if (this.mode == NATMode.OneWayToListen)
-            {
-                serviceConfig.ReceiveType = ReceiveType.None;
-            }
-            base.LoadConfig(serviceConfig);
+            var client = base.GetClientInstence();
+            client.internalDis = this.OnTargetClientDisconnected;
+            client.internalTargetClientRev = this.OnTargetClientReceived;
+            return client;
+        }
+
+        /// <summary>
+        /// 在NAT服务器收到数据时。
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns>需要转发的数据。</returns>
+        protected virtual byte[] OnNATReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            return byteBlock.ToArray();
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected sealed override void OnConnecting(NATSocketClient socketClient, ClientOperationEventArgs e)
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected sealed override void OnReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            List<Socket> sockets = new List<Socket>();
-            foreach (var iPHost in this.iPHosts)
+            var data = this.OnNATReceived(socketClient, byteBlock, requestInfo);
+            if (data != null)
             {
-                try
-                {
-                    Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    socket.Connect(iPHost.EndPoint);
-                    sockets.Add(socket);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.Debug(RRQMCore.Log.LogType.Error, this, ex.Message, ex);
-                }
+                socketClient.SendToTargetClient(data, 0, data.Length);
             }
-            if (sockets.Count == 0)
-            {
-                this.Logger.Debug(RRQMCore.Log.LogType.Error, this, "转发地址均无法建立，已拒绝本次连接。", null);
-                e.RemoveOperation(Operation.Permit);
-                return;
-            }
+        }
 
-            socketClient.BeginRunTargetSocket(this.mode, sockets.ToArray());
+        /// <summary>
+        /// 当目标客户端断开。
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="tcpClient"></param>
+        /// <param name="e"></param>
+        protected virtual void OnTargetClientDisconnected(NATSocketClient socketClient, ITcpClient tcpClient, ClientDisconnectedEventArgs e)
+        {
 
-            base.OnConnecting(socketClient, e);
+        }
+
+        /// <summary>
+        /// 在目标客户端收到数据时。
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="tcpClient"></param>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        protected virtual byte[] OnTargetClientReceived(NATSocketClient socketClient, ITcpClient tcpClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            return byteBlock.ToArray();
         }
     }
 }

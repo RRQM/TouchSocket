@@ -282,14 +282,14 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 处理已接收到的数据。如果覆盖父类方法，则不会触发服务器方法。
+        /// 处理已接收到的数据。
         /// <para>根据不同的数据处理适配器，会传递不同的数据</para>
         /// </summary>
         /// <param name="byteBlock">以二进制流形式传递</param>
         /// <param name="requestInfo">以解析的数据对象传递</param>
         protected virtual void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.m_service.OnInternalReceivedData(this, byteBlock, requestInfo);
+          
         }
 
         /// <summary>
@@ -663,6 +663,7 @@ namespace RRQMSocket
             {
                 return;
             }
+
             if (this.m_usePlugin)
             {
                 ReceivedDataEventArgs args = new ReceivedDataEventArgs(byteBlock, requestInfo);
@@ -672,7 +673,10 @@ namespace RRQMSocket
                     return;
                 }
             }
+
             this.HandleReceivedData(byteBlock, requestInfo);
+
+            this.m_service.OnInternalReceivedData(this, byteBlock, requestInfo);
         }
         #region 默认发送
 

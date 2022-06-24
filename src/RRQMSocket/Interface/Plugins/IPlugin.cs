@@ -29,12 +29,6 @@ namespace RRQMSocket
         int Order { get; set; }
 
         /// <summary>
-        /// 日志记录器。
-        /// <para>在<see cref="IPluginsManager.Add(IPlugin)"/>之前如果没有赋值的话，随后会用<see cref="IContainer.Register(DependencyDescriptor, string)"/>填值</para>
-        /// </summary>
-        ILog Logger { get; set; }
-
-        /// <summary>
         /// 包含此插件的插件管理器
         /// </summary>
         IPluginsManager PluginsManager { get; set; }

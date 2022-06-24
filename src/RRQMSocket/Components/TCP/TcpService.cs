@@ -235,7 +235,7 @@ namespace RRQMSocket
         }
 
         /// <summary>
-        /// 当收到适配器数据，父类方法为空。
+        /// 当收到适配器数据。
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
@@ -276,10 +276,6 @@ namespace RRQMSocket
                 throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
             }
 
-            if (plugin.Logger == default)
-            {
-                plugin.Logger = this.Container.Resolve<ILog>();
-            }
             this.PluginsManager.Add(plugin);
         }
 
