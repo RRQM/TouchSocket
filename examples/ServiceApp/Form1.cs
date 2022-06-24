@@ -104,5 +104,18 @@ namespace ServiceApp
                 this.m_service.Logger.Warning("请先选择一个客户端。");
             }
         }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            //先找到与远程TcpClient对应的SocketClient
+            if (this.listBox1.SelectedItem is string id && this.m_service.TryGetSocketClient(id, out SocketClient client))
+            {
+                client.SafeDispose();
+            }
+            else
+            {
+                this.m_service.Logger.Warning("请先选择一个客户端。");
+            }
+        }
     }
 }
