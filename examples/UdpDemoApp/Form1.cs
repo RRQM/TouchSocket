@@ -63,6 +63,11 @@ namespace UdpDemoApp
 
         private void button3_Click(object sender, EventArgs e)
         {
+            if (!checkBox1.Checked)
+            {
+                m_udpSession.Logger.Warning("发送大数据时，请使用UdpPackageAdapter适配器");
+            }
+
             try
             {
                 m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint,new byte[1024 * 1024]);
