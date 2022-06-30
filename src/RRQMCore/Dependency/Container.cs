@@ -13,6 +13,7 @@
 using RRQMCore.Extensions;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,7 +26,7 @@ namespace RRQMCore.Dependency
     /// </summary>
     public class Container : IContainer
     {
-        private readonly Dictionary<string, DependencyDescriptor> registrations = new Dictionary<string, DependencyDescriptor>();
+        private readonly ConcurrentDictionary<string, DependencyDescriptor> registrations = new ConcurrentDictionary<string, DependencyDescriptor>();
 
         /// <summary>
         /// <inheritdoc/>
@@ -35,7 +36,7 @@ namespace RRQMCore.Dependency
         public void Register(DependencyDescriptor descriptor, string key = "")
         {
             string k = $"{descriptor.FromType.FullName}{key}";
-            registrations.AddOrUpdate(k, descriptor);
+            registrations.AddOrUpdate(k, descriptor,(k,v)=> { return v; });
         }
 
         private IScopedContainer GetScopedContainer()
@@ -45,11 +46,11 @@ namespace RRQMCore.Dependency
             {
                 if (item.Value.Lifetime == Lifetime.Scoped)
                 {
-                    container.registrations.AddOrUpdate(item.Key, new DependencyDescriptor(item.Value.FromType, item.Value.ToType, Lifetime.Singleton));
+                    container.registrations.AddOrUpdate(item.Key, new DependencyDescriptor(item.Value.FromType, item.Value.ToType, Lifetime.Singleton), (k, v) => { return v; });
                 }
                 else
                 {
-                    container.registrations.AddOrUpdate(item.Key, item.Value);
+                    container.registrations.AddOrUpdate(item.Key, item.Value, (k, v) => { return v; });
                 }
 
             }
@@ -149,11 +150,11 @@ namespace RRQMCore.Dependency
             if (ctor is null)
             {
                 //如果没有被特性标记，那就取构造函数参数最多的作为注入目标
-                ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
-                if (ctor is null)
+                if (toType.GetConstructors().Length==0)
                 {
                     throw new RRQMException($"没有找到类型{toType.FullName}的公共构造函数。");
                 }
+                ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
             }
             else
             {
