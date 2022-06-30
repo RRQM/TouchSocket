@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RRQMCore.IO
 {
@@ -53,13 +54,20 @@ namespace RRQMCore.IO
         /// </summary>
         public void ShowAll()
         {
+            int max = this.actions.Values.Max(a=>a.FullOrder.Length)+8;
+
             List<string> s = new List<string>();
             foreach (var item in this.actions)
             {
                 if (!s.Contains(item.Value.FullOrder.ToLower()))
                 {
                     s.Add(item.Value.FullOrder.ToLower());
-                    Console.WriteLine($"[{item.Value.FullOrder}]-------->{item.Value.Description}");
+                    Console.Write($"[{item.Value.FullOrder}]");
+                    for (int i = 0; i < max- item.Value.FullOrder.Length; i++)
+                    {
+                        Console.Write("-");
+                    }
+                    Console.WriteLine(item.Value.Description);
                 }
             }
         }

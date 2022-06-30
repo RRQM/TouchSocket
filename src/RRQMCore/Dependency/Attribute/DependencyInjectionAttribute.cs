@@ -112,6 +112,17 @@ namespace RRQMCore.Dependency
         }
 
         /// <summary>
+        /// 类型，参数，属性指定性注入。
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="ps"></param>
+        public DependencyParamterInjectAttribute(Type type, params object[] ps) : base(ps)
+        {
+            Key = string.Empty;
+            this.Type = type;
+        }
+
+        /// <summary>
         /// 注入类型
         /// </summary>
         public Type Type { get; }
