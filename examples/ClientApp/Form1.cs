@@ -107,6 +107,7 @@ namespace ClientApp
 
         private void button4_Click(object sender, EventArgs e)
         {
+            m_tcpClient.Shutdown( System.Net.Sockets.SocketShutdown.Both);
             m_tcpClient.Close();
             m_tcpClient.SafeDispose();
         }
