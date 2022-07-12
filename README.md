@@ -5,10 +5,9 @@
 </p>
 
  <div align="center"> 
-  
-[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?style=flat-square)](https://www.nuget.org/packages/RRQMSocket/)
+
+[![NuGet(RRQMSocket)](https://buildstats.info/nuget/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-[![Download](https://img.shields.io/nuget/dt/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)
 [![star](https://gitee.com/dotnetchina/RRQMSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/stargazers) 
 [![fork](https://gitee.com/dotnetchina/RRQMSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/members)
 <a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw">
@@ -28,14 +27,14 @@
 
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version (RRQMSocket)](https://img.shields.io/nuget/v/RRQMSocket.svg?label=RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| RRQMSocket是一个高性能的、超轻量级的网络通信框架。<br>包含了TCP、UDP、Ssl等一系列的通信模块。|
-| [![NuGet version (RRQMCore)](https://img.shields.io/nuget/v/RRQMCore.svg?label=RRQMCore)](https://www.nuget.org/packages/RRQMCore)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：<br>**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、<br>**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、<br>**高性能序列化器**、**规范日志接口**等。 |
+|[![NuGet version (RRQMSocket)](https://buildstats.info/nuget/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| RRQMSocket是一个高性能的、超轻量级的网络通信框架。<br>包含了TCP、UDP、Ssl等一系列的通信模块。|
+| [![NuGet version (RRQMCore)](https://buildstats.info/nuget/RRQMCore)](https://www.nuget.org/packages/RRQMCore)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：<br>**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、<br>**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、<br>**高性能序列化器**、**规范日志接口**等。 |
 
 ## 🎫企业版描述
  **_以下Nuget包，并未开源，其源代码需要付费购买。但是其Nuget包可以免费商用。_** 
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version](https://img.shields.io/nuget/v/RRQMSocketFramework.svg?label=RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |RRQMSocketFramework是RRQMSocket系列的增强企业版。<br>也是合集版本。这意味着您只需要安装RRQMSocketFramework，<br>即可使用所有组件功能，但是RRQMSocketFramework中也包含了<br>未开源的企业版功能，这需要密钥才能使用，当然也可以试用。<br>所以两者在**基础功能**没有区别，只是在扩展功能上有一定差异性。<br>具体差异请看[企业版相关](https://www.yuque.com/eo2w71/rrqm/80696720a95e415d94c87fa03642513d)|
+|[![NuGet version](https://buildstats.info/nuget/RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |RRQMSocketFramework是RRQMSocket系列的增强企业版。<br>也是合集版本。这意味着您只需要安装RRQMSocketFramework，<br>即可使用所有组件功能，但是RRQMSocketFramework中也包含了<br>未开源的企业版功能，这需要密钥才能使用，当然也可以试用。<br>所以两者在**基础功能**没有区别，只是在扩展功能上有一定差异性。<br>具体差异请看[企业版相关](https://www.yuque.com/eo2w71/rrqm/80696720a95e415d94c87fa03642513d)|
 
 ## 🖥支持环境
 - .NET Framework4.5及以上。
