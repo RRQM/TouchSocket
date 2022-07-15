@@ -5,18 +5,14 @@
 		<Authors>若汝棋茗</Authors>
 		<PackageIcon>RRQM.png</PackageIcon>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
-		<Version>8.2.2</Version>
+		<Version>8.2.3</Version>
 		<LangVersion>8.0</LangVersion>
 		<SignAssembly>true</SignAssembly>
-		<Description>此程序集是RRQM的核心开源库，其中包含了内存池、高性能序列化、日志接口在内的很多基本内容。
+		<Description>此程序集已被更名作废。请搜索TouchSocket安装新版。
 
-更新内容：
-优化：Container注入容器，支持基本的所有使用场景。
-优化：Container的注入方式。
+如果是旧项目，请在https://www.yuque.com/rrqm/touchsocket/731868ac242c91ba5d67a99869af2caa的指引下，修改项目。
 
-特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
-特此感谢其作者！！！
-附带其Github：https://github.com/JamesNK/Newtonsoft.Json</Description>
+如果想继续使用旧版，可以继续使用。说明文档可以加QQ群（234762506）获得pdf文件。亦或者发送“RRQMSocket v8.2说明文档”到邮箱505554090@qq.com</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/RRQMSocket</PackageProjectUrl>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
 		<ApplicationIcon>RRQM.ico</ApplicationIcon>
