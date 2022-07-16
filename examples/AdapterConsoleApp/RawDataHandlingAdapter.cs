@@ -1,6 +1,6 @@
-﻿using RRQMCore.ByteManager;
-using RRQMSocket;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using TouchSocket.Core.ByteManager;
+using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
@@ -72,7 +72,7 @@ namespace AdapterConsoleApp
             int dataLen = length - offset;//先获取需要发送的实际数据长度
             if (dataLen > byte.MaxValue)//超长判断
             {
-                throw new RRQMOverlengthException("发送数据太长。");
+                throw new OverlengthException("发送数据太长。");
             }
             ByteBlock byteBlock = BytePool.GetByteBlock(64 * 1024);//从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请64K
                                                                    //ByteBlock byteBlock = BytePool.GetByteBlock(dataLen+1);//实际写法。

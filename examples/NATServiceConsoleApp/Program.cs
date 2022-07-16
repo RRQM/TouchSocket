@@ -1,17 +1,18 @@
-﻿using RRQMCore;
-using RRQMCore.ByteManager;
-using RRQMCore.Log;
-using RRQMSocket;
-using System;
+﻿using System;
+using TouchSocket.Core;
+using TouchSocket.Core.ByteManager;
+using TouchSocket.Core.Config;
+using TouchSocket.Core.Log;
+using TouchSocket.Sockets;
 
 namespace NATServiceConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             MyNATService service = new MyNATService();
-            var config = new RRQMConfig();
+            var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7788) });
 
             service.Setup(config);
@@ -21,9 +22,9 @@ namespace NATServiceConsoleApp
         }
     }
 
-    class MyNATService : NATService
+    internal class MyNATService : NATService
     {
-        protected override void OnConnected(NATSocketClient socketClient, RRQMEventArgs e)
+        protected override void OnConnected(NATSocketClient socketClient, TouchSocketEventAgrs e)
         {
             base.OnConnected(socketClient, e);
 
@@ -31,8 +32,8 @@ namespace NATServiceConsoleApp
             {
                 //此处模拟的是只要连接到NAT服务器，就转发。
                 //实际上，这个方法可以随时调用。
-                socketClient.AddTargetClient(new RRQMConfig().SetRemoteIPHost("127.0.0.1:7789"));
-                socketClient.AddTargetClient(new RRQMConfig().SetRemoteIPHost("127.0.0.1:7790"));
+                socketClient.AddTargetClient(new TouchSocketConfig().SetRemoteIPHost("127.0.0.1:7789"));
+                socketClient.AddTargetClient(new TouchSocketConfig().SetRemoteIPHost("127.0.0.1:7790"));
             }
             catch (Exception ex)
             {

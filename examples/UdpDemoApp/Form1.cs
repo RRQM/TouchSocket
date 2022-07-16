@@ -1,14 +1,11 @@
-﻿using RRQMCore.Log;
-using RRQMSocket;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System;
 using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using TouchSocket.Core.Config;
+using TouchSocket.Core.Dependency;
+using TouchSocket.Core.Log;
+using TouchSocket.Sockets;
 
 namespace UdpDemoApp
 {
@@ -20,7 +17,8 @@ namespace UdpDemoApp
             Control.CheckForIllegalCrossThreadCalls = false;
         }
 
-        UdpSession m_udpSession = new UdpSession();
+        private UdpSession m_udpSession = new UdpSession();
+
         private void button1_Click(object sender, EventArgs e)
         {
             m_udpSession.Received += (remote, byteBlock, requestInfo) =>
@@ -43,9 +41,12 @@ namespace UdpDemoApp
             {
                 m_udpSession.SetDataHandlingAdapter(new NormalUdpDataHandlingAdapter());
             }
-            m_udpSession.Setup(new RRQMConfig()
+            m_udpSession.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(this.textBox2.Text))
-                 .SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger())))
+                 .ConfigureContainer(a=> 
+                 {
+                     a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+                 }))
                  .Start();
             m_udpSession.Logger.Message("等待接收");
         }
@@ -58,7 +59,7 @@ namespace UdpDemoApp
 
         private void button2_Click(object sender, EventArgs e)
         {
-            m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint,Encoding.UTF8.GetBytes(this.textBox4.Text));
+            m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, Encoding.UTF8.GetBytes(this.textBox4.Text));
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -70,7 +71,7 @@ namespace UdpDemoApp
 
             try
             {
-                m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint,new byte[1024 * 1024]);
+                m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, new byte[1024 * 1024]);
             }
             catch (Exception ex)
             {

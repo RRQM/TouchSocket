@@ -1,7 +1,4 @@
-﻿using RRQMSocket;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
@@ -33,6 +30,7 @@ namespace AdapterConsoleApp
     public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
     {
         private int bodyLength;
+
         /// <summary>
         /// 接口实现，标识数据长度
         /// </summary>
@@ -42,6 +40,7 @@ namespace AdapterConsoleApp
         }
 
         private byte dataType;
+
         /// <summary>
         /// 自定义属性，标识数据类型
         /// </summary>
@@ -51,6 +50,7 @@ namespace AdapterConsoleApp
         }
 
         private byte orderType;
+
         /// <summary>
         /// 自定义属性，标识指令类型
         /// </summary>
@@ -60,6 +60,7 @@ namespace AdapterConsoleApp
         }
 
         private byte[] body;
+
         /// <summary>
         /// 自定义属性，标识实际数据
         /// </summary>
@@ -67,7 +68,6 @@ namespace AdapterConsoleApp
         {
             get { return body; }
         }
-
 
         public bool OnParsingBody(byte[] body)
         {
@@ -78,7 +78,6 @@ namespace AdapterConsoleApp
             }
             return false;
         }
-
 
         public bool OnParsingHeader(byte[] header)
         {

@@ -1,20 +1,21 @@
 ﻿using System;
 using System.IO;
-using RRQMCore.ByteManager;
-using RRQMCore.IO;
-using RRQMSocket;
-using RRQMCore.Extensions;
 using System.Text;
+using TouchSocket.Core.ByteManager;
+using TouchSocket.Core.Config;
+using TouchSocket.Core.Extensions;
+using TouchSocket.Core.IO;
+using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
-    class Program
+    internal class Program
     {
         /// <summary>
         /// Tcp内置适配器介绍，请看说明文档<see href="https://www.yuque.com/eo2w71/rrqm/dd2d6d011491561c2c0d6f9b904aad98"/>
         /// </summary>
         /// <param name="args"></param>
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             // 1.黏、分包问题使用内置适配器即可解决。
             //● 正常数据处理适配器(NormalDataHandlingAdapter)
@@ -22,13 +23,11 @@ namespace AdapterConsoleApp
             //● 固定长度数据处理适配器(FixedSizePackageAdapter)
             //● 终止因子分割数据处理适配器(TerminatorPackageAdapter)
 
-
             ConsoleAction consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
             consoleAction.Add("0", "启动服务器测试适配器", StartTcpService);
             consoleAction.Add("1", "原始适配器实现demo", TestRawDataHandlingAdapter);
             consoleAction.Add("2", "SGCC适配器实现demo", TestSGCCCustomDataHandlingAdapter);
-
 
             consoleAction.ShowAll();
             while (true)
@@ -40,7 +39,7 @@ namespace AdapterConsoleApp
             }
         }
 
-        static void StartTcpService()
+        private static void StartTcpService()
         {
             TcpService service = new TcpService();
             service.Connecting += (client, e) =>
@@ -59,12 +58,11 @@ namespace AdapterConsoleApp
                 }
             };
 
-            service.Setup(new RRQMConfig()//载入配置     
+            service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .SetMaxCount(10000)
                 .SetThreadCount(10))
                 .Start();//启动
-
         }
 
         private static void ConsoleAction_OnException(Exception obj)
@@ -72,7 +70,7 @@ namespace AdapterConsoleApp
             Console.WriteLine(obj.Message);
         }
 
-        static void TestRawDataHandlingAdapter()
+        private static void TestRawDataHandlingAdapter()
         {
             for (int i = 0; i < 10; i++)
             {
@@ -89,10 +87,9 @@ namespace AdapterConsoleApp
                 // 测试100次，限时2秒完成
                 Console.WriteLine(tester.Run(data, 100, 100, 1000 * 2).ToString());
             }
-
         }
 
-        static void TestSGCCCustomDataHandlingAdapter()
+        private static void TestSGCCCustomDataHandlingAdapter()
         {
             string[] lines = File.ReadAllLines("SGCC测试数据.txt");
             foreach (var item in lines)
@@ -105,7 +102,6 @@ namespace AdapterConsoleApp
                 // 测试100次，限时2秒完成
                 Console.WriteLine(tester.Run(data, 100, 100, 1000 * 2).ToString());
             }
-
         }
     }
 }

@@ -1,11 +1,9 @@
-﻿using RRQMSocket;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
-    class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
+    internal class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
     {
         public MyCustomBetweenAndDataHandlingAdapter()
         {
@@ -25,9 +23,10 @@ namespace AdapterConsoleApp
     /// <summary>
     /// 以**12##12##，Min=5为例。
     /// </summary>
-    class MyBetweenAndRequestInfo : IBetweenAndRequestInfo
+    internal class MyBetweenAndRequestInfo : IBetweenAndRequestInfo
     {
-        public byte[] Body { get;private set; }
+        public byte[] Body { get; private set; }
+
         public void OnParsingBody(byte[] body)
         {
             this.Body = body;

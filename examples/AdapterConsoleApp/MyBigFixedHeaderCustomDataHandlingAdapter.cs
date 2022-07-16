@@ -1,17 +1,15 @@
-﻿using RRQMSocket;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
     /// <summary>
     /// 模板解析“大数据固定包头”数据适配器
     /// </summary>
-    class MyBigFixedHeaderCustomDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyBigFixedHeaderRequestInfo>
+    internal class MyBigFixedHeaderCustomDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyBigFixedHeaderRequestInfo>
     {
         public override int HeaderLength => throw new NotImplementedException();
-        
+
         protected override MyBigFixedHeaderRequestInfo GetInstance()
         {
             return new MyBigFixedHeaderRequestInfo();
@@ -21,13 +19,13 @@ namespace AdapterConsoleApp
     /// <summary>
     /// 下列吗，没有实现逻辑，仅解释思路。
     /// </summary>
-    class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
+    internal class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
     {
         public long BodyLength => throw new NotImplementedException();
 
         public void OnAppendBody(byte[] buffer, int offset, int length)
         {
-           //在这里会一直追加数据体，用户自行实现数据的保存。
+            //在这里会一直追加数据体，用户自行实现数据的保存。
         }
 
         public bool OnFinished()

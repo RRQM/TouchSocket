@@ -1,12 +1,13 @@
-﻿using RRQMSocket;
-using RRQMSocket.Plugins;
-using System;
+﻿using System;
+using TouchSocket.Core.Config;
+using TouchSocket.Sockets;
+using TouchSocket.Sockets.Plugins;
 
 namespace PluginConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             TcpService service = new TcpService();
 
@@ -17,7 +18,7 @@ namespace PluginConsoleApp
             };
 
             //声明配置
-            var config = new RRQMConfig();
+            var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }) //同时监听两个地址
                 .UsePlugin();
 
@@ -35,7 +36,7 @@ namespace PluginConsoleApp
         }
     }
 
-    class MyCommandLinePlugin : TcpCommandLinePlugin
+    internal class MyCommandLinePlugin : TcpCommandLinePlugin
     {
         public int AddCommand(int a, int b)
         {

@@ -1,15 +1,13 @@
-﻿using RRQMCore.ByteManager;
-using RRQMCore.Log;
-using RRQMSocket;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+﻿using System;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using TouchSocket.Core;
+using TouchSocket.Core.ByteManager;
+using TouchSocket.Core.Config;
+using TouchSocket.Core.Dependency;
+using TouchSocket.Core.Log;
+using TouchSocket.Sockets;
 
 namespace ServiceApp
 {
@@ -24,7 +22,7 @@ namespace ServiceApp
 
         private void Form1_Load(object sender, EventArgs args)
         {
-            m_service.Connecting += (client, e) => 
+            m_service.Connecting += (client, e) =>
             {
                 e.ID = $"{client.IP}:{client.Port}";
             };//有客户端正在连接
@@ -39,15 +37,18 @@ namespace ServiceApp
             this.textBox1.AppendText("\r\n");
         }
 
-        TcpService m_service = new TcpService();
+        private TcpService m_service = new TcpService();
 
         private void button1_Click(object sender, EventArgs ergs)
         {
-            m_service.Setup(new RRQMConfig()//载入配置     
+            m_service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .SetMaxCount(10000)
                 .SetThreadCount(10)
-                .SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger())))
+                .ConfigureContainer(a=> 
+                {
+                    a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+                }))
                 .Start();//启动
             m_service.Logger.Message("服务器成功启动");
         }
@@ -57,7 +58,7 @@ namespace ServiceApp
             this.listBox1.Items.Remove(client.ID);
         }
 
-        private void M_service_Connected(SocketClient client, RRQMCore.RRQMEventArgs e)
+        private void M_service_Connected(SocketClient client, TouchSocketEventAgrs e)
         {
             this.listBox1.Items.Add(client.ID);
         }
@@ -94,7 +95,7 @@ namespace ServiceApp
                 {
                     this.m_service.Logger.Error("等待超时");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     this.m_service.Logger.Exception(ex);
                 }
