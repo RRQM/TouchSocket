@@ -1,7 +1,7 @@
 <p></p>
 <p></p>
 <p align="center">
-<img src="https://ftp.bmp.ovh/imgs/2021/06/351eeccfadc07014.png" width = "100" height = "100" alt="图片名称" align=center />
+<img src="logo.png" width = "100" height = "100" alt="图片名称" align=center />
 </p>
 
  <div align="center"> 
