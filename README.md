@@ -6,10 +6,10 @@
 
  <div align="center"> 
 
-[![NuGet(RRQMSocket)](https://buildstats.info/nuget/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)
+[![NuGet(TouchSocket)](https://buildstats.info/nuget/TouchSocket)](https://www.nuget.org/packages/TouchSocket/)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-[![star](https://gitee.com/dotnetchina/RRQMSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/stargazers) 
-[![fork](https://gitee.com/dotnetchina/RRQMSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/RRQMSocket/members)
+[![star](https://gitee.com/dotnetchina/TouchSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/stargazers) 
+[![fork](https://gitee.com/dotnetchina/TouchSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/members)
 <a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw">
 <img src="https://img.shields.io/badge/QQ群-234762506-red" alt="QQ">
 </a>
@@ -17,7 +17,7 @@
 
 <div align="center">
 
-合抱之木，生于毫末；九层之台，起于垒土。
+雄关漫道真如铁，而今迈步从头越。从头越，苍山如海，残阳如血。
 
 </div>
 
@@ -27,14 +27,16 @@
 
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version (RRQMSocket)](https://buildstats.info/nuget/RRQMSocket)](https://www.nuget.org/packages/RRQMSocket/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket)| RRQMSocket是一个高性能的、超轻量级的网络通信框架。<br>包含了TCP、UDP、Ssl等一系列的通信模块。|
-| [![NuGet version (RRQMCore)](https://buildstats.info/nuget/RRQMCore)](https://www.nuget.org/packages/RRQMCore)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) | RRQMCore是为RRQM系提供基础服务功能的库，其中包含：<br>**内存池**、**对象池**、**等待逻辑池**、**AppMessenger**、**3DES加密**、<br>**Xml快速存储**、**运行时间测量器**、**文件快捷操作**、<br>**高性能序列化器**、**规范日志接口**等。 |
+|[![NuGet version (TouchSocket)](https://img.shields.io/nuget/v/TouchSocket.svg?label=TouchSocket)](https://www.nuget.org/packages/TouchSocket)|[Gitee](https://gitee.com/dotnetchina/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| TouchSocket这是一个轻量级的、支持插件的综合网络通信库。<br>基础通信功能包含Tcp、Udp、Ssl、Rpc、Http等。其中http<br>服务器支持WebSocket、静态网页、XmlRpc、WebApi、JsonRpc<br>等扩展插件。和自定义协议的TouchRpc，支持Ssl加密、异步调用、<br>权限管理、错误状态返回、服务回调、分布式调用等。在空载函数<br>执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。|
+| [![NuGet version (TouchSocket.AspNetCore)](https://img.shields.io/nuget/v/TouchSocket.AspNetCore.svg?label=TouchSocket.AspNetCore)](https://www.nuget.org/packages/TouchSocket.AspNetCore)|[Gitee](https://gitee.com/dotnetchina/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket) | TouchSocket.AspNetCore是适用于AspNetCore的专属版本。|
 
 ## 🎫企业版描述
- **_以下Nuget包，并未开源，其源代码需要付费购买。但是其Nuget包可以免费商用。_** 
+ **_以下Nuget包，并未开源，其源代码需要付费购买。_** 
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version](https://buildstats.info/nuget/RRQMSocketFramework)](https://www.nuget.org/packages/RRQMSocketFramework/)|[Gitee](https://gitee.com/dotnetchina/RRQMSocket)<br>[Github](https://github.com/RRQM/RRQMSocket) |RRQMSocketFramework是RRQMSocket系列的增强企业版。<br>也是合集版本。这意味着您只需要安装RRQMSocketFramework，<br>即可使用所有组件功能，但是RRQMSocketFramework中也包含了<br>未开源的企业版功能，这需要密钥才能使用，当然也可以试用。<br>所以两者在**基础功能**没有区别，只是在扩展功能上有一定差异性。<br>具体差异请看[企业版相关](https://www.yuque.com/rrqm/touchsocket/80696720a95e415d94c87fa03642513d)|
+|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[Gitee](https://gitee.com/dotnetchina/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| TouchSocketPro是TouchSocket的增强企业版。其中<br>未开源的企业版功能，这需要密钥才能使用，可以先试<br>用。所以两者在**基础功能**没有区别，只是在扩展功能上<br>有一定差异性。具体差异请看[企业版相关](https://www.yuque.com/rrqm/touchsocket/80696720a95e415d94c87fa03642513d)|
+| [![NuGet version (TouchSocket.AspNetCore)](https://img.shields.io/nuget/v/TouchSocket.AspNetCore.svg?label=TouchSocket.AspNetCore)](https://www.nuget.org/packages/TouchSocket.AspNetCore)|[Gitee](https://gitee.com/dotnetchina/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket) | TouchSocket.AspNetCore是适用于AspNetCore的专属版本。|
+
 
 ## 🖥支持环境
 - .NET Framework4.5及以上。
