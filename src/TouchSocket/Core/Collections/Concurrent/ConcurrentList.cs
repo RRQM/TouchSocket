@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -13,21 +13,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace TouchSocket.Core.Collections.Concurrent
 {
     /// <summary>
     /// 线程安全的List，其基本操作和List一致。
-    /// <para>该集合虽然是线程安全，但是不支持在foreach时修改集合，仅可以遍历成员。</para>
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ConcurrentList<T> : IList<T>
     {
         private readonly List<T> m_list;
-
-        [NonSerialized]
-        private readonly ReaderWriterLockSlim m_locker;
 
         /// <summary>
         /// 构造函数
@@ -36,7 +33,6 @@ namespace TouchSocket.Core.Collections.Concurrent
         public ConcurrentList(IEnumerable<T> collection)
         {
             this.m_list = new List<T>(collection);
-            this.m_locker = new ReaderWriterLockSlim();
         }
 
         /// <summary>
@@ -45,7 +41,6 @@ namespace TouchSocket.Core.Collections.Concurrent
         public ConcurrentList()
         {
             this.m_list = new List<T>();
-            this.m_locker = new ReaderWriterLockSlim();
         }
 
         /// <summary>
@@ -55,7 +50,6 @@ namespace TouchSocket.Core.Collections.Concurrent
         public ConcurrentList(int capacity)
         {
             this.m_list = new List<T>(capacity);
-            this.m_locker = new ReaderWriterLockSlim();
         }
 
         /// <summary>
@@ -65,14 +59,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         {
             get
             {
-                try
+                lock (((ICollection)this.m_list).SyncRoot)
                 {
-                    this.m_locker.EnterReadLock();
                     return this.m_list.Count;
-                }
-                finally
-                {
-                    this.m_locker.ExitReadLock();
                 }
             }
         }
@@ -91,26 +80,16 @@ namespace TouchSocket.Core.Collections.Concurrent
         {
             get
             {
-                try
+                lock (((ICollection)this.m_list).SyncRoot)
                 {
-                    this.m_locker.EnterReadLock();
                     return this.m_list[index];
-                }
-                finally
-                {
-                    this.m_locker.ExitReadLock();
                 }
             }
             set
             {
-                try
+                lock (((ICollection)this.m_list).SyncRoot)
                 {
-                    this.m_locker.EnterWriteLock();
                     this.m_list[index] = value;
-                }
-                finally
-                {
-                    this.m_locker.ExitWriteLock();
                 }
             }
         }
@@ -121,14 +100,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="item"></param>
         public void Add(T item)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Add(item);
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -137,14 +111,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// </summary>
         public void Clear()
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Clear();
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -155,14 +124,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool Contains(T item)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.Contains(item);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -173,14 +137,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="arrayIndex"></param>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 this.m_list.CopyTo(array, arrayIndex);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -190,17 +149,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator()
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
-                foreach (var item in this.m_list)
-                {
-                    yield return item;
-                }
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
+                return this.m_list.ToList().GetEnumerator();
             }
         }
 
@@ -210,7 +161,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            lock (((ICollection)this.m_list).SyncRoot)
+            {
+                return this.GetEnumerator();
+            }
         }
 
         /// <summary>
@@ -220,14 +174,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int IndexOf(T item)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.IndexOf(item);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -238,14 +187,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="item"></param>
         public void Insert(int index, T item)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Insert(index, item);
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -256,14 +200,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool Remove(T item)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 return this.m_list.Remove(item);
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -273,17 +212,12 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="index"></param>
         public void RemoveAt(int index)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 if (index < this.m_list.Count)
                 {
                     this.m_list.RemoveAt(index);
                 }
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -294,26 +228,16 @@ namespace TouchSocket.Core.Collections.Concurrent
         {
             get
             {
-                try
+                lock (((ICollection)this.m_list).SyncRoot)
                 {
-                    this.m_locker.EnterReadLock();
                     return this.m_list.Capacity;
-                }
-                finally
-                {
-                    this.m_locker.ExitReadLock();
                 }
             }
             set
             {
-                try
+                lock (((ICollection)this.m_list).SyncRoot)
                 {
-                    this.m_locker.EnterWriteLock();
                     this.m_list.Capacity = value;
-                }
-                finally
-                {
-                    this.m_locker.ExitWriteLock();
                 }
             }
         }
@@ -324,14 +248,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="collection"></param>
         public void AddRange(IEnumerable<T> collection)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.AddRange(collection);
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -342,14 +261,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int BinarySearch(T item)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.BinarySearch(item);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -361,14 +275,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int BinarySearch(T item, IComparer<T> comparer)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.BinarySearch(item, comparer);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -382,14 +291,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int BinarySearch(int index, int count, T item, IComparer<T> comparer)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.BinarySearch(index, count, item, comparer);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -401,14 +305,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public List<TOutput> ConvertAll<TOutput>(Converter<T, TOutput> converter)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.ConvertAll(converter);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -419,14 +318,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public T Find(Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.Find(match);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -437,14 +331,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public List<T> FindAll(Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindAll(match);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -457,14 +346,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int FindIndex(int startIndex, int count, Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindIndex(startIndex, count, match);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -476,12 +360,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int FindIndex(int startIndex, Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindIndex(startIndex, match);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -491,12 +373,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int FindIndex(Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindIndex(match);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -506,12 +386,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public T FindLast(Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindLast(match);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -523,12 +401,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int FindLastIndex(int startIndex, int count, Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindLastIndex(startIndex, count, match);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -539,12 +415,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int FindLastIndex(int startIndex, Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindLastIndex(startIndex, match);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -554,12 +428,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int FindLastIndex(Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.FindLastIndex(match);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -568,14 +440,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="action"></param>
         public void ForEach(Action<T> action)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 this.m_list.ForEach(action);
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -587,12 +454,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public List<T> GetRange(int index, int count)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.GetRange(index, count);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -603,12 +468,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int IndexOf(T item, int index)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.IndexOf(item, index);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -620,12 +483,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int IndexOf(T item, int index, int count)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.IndexOf(item, index, count);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -635,14 +496,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="collection"></param>
         public void InsertRange(int index, IEnumerable<T> collection)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.InsertRange(index, collection);
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -653,12 +509,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int LastIndexOf(T item)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.IndexOf(item);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -669,12 +523,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int LastIndexOf(T item, int index)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.LastIndexOf(item, index);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -686,12 +538,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public int LastIndexOf(T item, int index, int count)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.LastIndexOf(item, index, count);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
 
         /// <summary>
@@ -700,14 +550,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="match"></param>
         public void RemoveAll(Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.RemoveAll(match);
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -718,14 +563,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="count"></param>
         public void RemoveRange(int index, int count)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.RemoveRange(index, count);
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -734,14 +574,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// </summary>
         public void Reverse()
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Reverse();
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -752,12 +587,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="count"></param>
         public void Reverse(int index, int count)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Reverse(index, count);
             }
-            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -765,14 +598,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// </summary>
         public void Sort()
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Sort();
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -782,12 +610,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="comparison"></param>
         public void Sort(Comparison<T> comparison)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Sort(comparison);
             }
-            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -796,12 +622,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="comparer"></param>
         public void Sort(IComparer<T> comparer)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Sort(comparer);
             }
-            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -812,12 +636,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="comparer"></param>
         public void Sort(int index, int count, IComparer<T> comparer)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.Sort(index, count, comparer);
             }
-            finally { this.m_locker.ExitWriteLock(); }
         }
 
         /// <summary>
@@ -826,14 +648,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public T[] ToArray()
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.ToArray();
-            }
-            finally
-            {
-                this.m_locker.ExitReadLock();
             }
         }
 
@@ -842,14 +659,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// </summary>
         public void TrimExcess()
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterWriteLock();
                 this.m_list.TrimExcess();
-            }
-            finally
-            {
-                this.m_locker.ExitWriteLock();
             }
         }
 
@@ -860,12 +672,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool TrueForAll(Predicate<T> match)
         {
-            try
+            lock (((ICollection)this.m_list).SyncRoot)
             {
-                this.m_locker.EnterReadLock();
                 return this.m_list.TrueForAll(match);
             }
-            finally { this.m_locker.ExitReadLock(); }
         }
     }
 }
