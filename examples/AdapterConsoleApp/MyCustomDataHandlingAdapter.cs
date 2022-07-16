@@ -1,8 +1,5 @@
-﻿using RRQMCore.ByteManager;
-using RRQMSocket;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using TouchSocket.Core.ByteManager;
+using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {

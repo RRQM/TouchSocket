@@ -1,9 +1,6 @@
-﻿using RRQMCore;
-using RRQMCore.ByteManager;
-using RRQMSocket;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using TouchSocket.Core;
+using TouchSocket.Core.ByteManager;
+using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
@@ -88,7 +85,7 @@ namespace AdapterConsoleApp
         /// <summary>
         /// 校验位
         /// </summary>
-        public byte[] CRC16 { get => m_cRC16;}
+        public byte[] CRC16 { get => m_cRC16; }
 
         /// <summary>
         /// 报文尾:0x96
@@ -105,9 +102,9 @@ namespace AdapterConsoleApp
                     byteBlock.Read(out m_sync, 2);
 
                     byte[] lenBuffer;
-                    byteBlock.Read(out lenBuffer,2);
+                    byteBlock.Read(out lenBuffer, 2);
 
-                    this.m_bodyLength = RRQMBitConverter.LittleEndian.ToUInt16(lenBuffer,0) + 3 - 6;//先把crc校验和end都获取。
+                    this.m_bodyLength = TouchSocketBitConverter.LittleEndian.ToUInt16(lenBuffer, 0) + 3 - 6;//先把crc校验和end都获取。
                     byteBlock.Read(out m_cMDID, 17);
                     this.FrameType = (byte)byteBlock.ReadByte();
                     this.PacketType = (byte)byteBlock.ReadByte();
@@ -116,7 +113,6 @@ namespace AdapterConsoleApp
                     this.PresettingNo = (byte)byteBlock.ReadByte();
                     this.PacketNo = byteBlock.ReadUInt16();
                     this.SubpacketNo = byteBlock.ReadUInt16();
-
 
                     return true;
                 }
@@ -130,7 +126,7 @@ namespace AdapterConsoleApp
             {
                 using (ByteBlock byteBlock = new ByteBlock(body))
                 {
-                    byteBlock.Read(out this.m_sample, this.m_bodyLength-3);
+                    byteBlock.Read(out this.m_sample, this.m_bodyLength - 3);
                     byteBlock.Read(out this.m_cRC16, 2);
                     this.End = (byte)byteBlock.ReadByte();
                 }

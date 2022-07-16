@@ -34,14 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="RRQMCore, Version=8.2.0.0, Culture=neutral, PublicKeyToken=83a466fd8c19d6a7, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\RRQMCore.8.2.0\lib\net45\RRQMCore.dll</HintPath>
-    </Reference>
-    <Reference Include="RRQMSocket, Version=8.2.0.0, Culture=neutral, PublicKeyToken=83a466fd8c19d6a7, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\RRQMSocket.8.2.0\lib\net45\RRQMSocket.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -51,6 +46,9 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="TouchSocket, Version=0.1.1.0, Culture=neutral, PublicKeyToken=aab106fd42dbd097, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\TouchSocket.0.1.1\lib\net45\TouchSocket.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Form1.cs">

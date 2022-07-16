@@ -5,11 +5,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="RRQMCore" Version="8.2.0" />
-		<PackageReference Include="RRQMSocket" Version="8.2.0" />
-	</ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="TouchSocket" Version="0.1.1" />
+  </ItemGroup>
 	<ItemGroup>
 	  <None Update="SGCC测试数据.txt">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
