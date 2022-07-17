@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -31,23 +31,27 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
     public class WSTouchRpcClient : DisposableObject, IWSTouchRpcClient, IRpcActor
     {
         private readonly byte[] m_buffer = new byte[1024 * 64];
+        private readonly ActionMap m_actionMap;
         private ClientWebSocket m_client;
         private TouchSocketConfig m_config;
         private int m_failCount;
         private IPHost m_remoteIPHost;
         private RpcActor m_rpcActor;
         private Timer m_timer;
+        private RpcStore m_rpcStore;
 
         /// <summary>
         /// 创建一个WSTouchRpcClient实例。
         /// </summary>
         public WSTouchRpcClient()
         {
+            this.m_actionMap = new ActionMap();
             this.m_rpcActor = new RpcActor(false)
             {
                 OutputSend = this.RpcActorSend,
                 OnHandshaked = this.OnRpcActorHandshaked,
                 OnReceived = this.OnRpcActorReceived,
+                GetInvokeMethod = this.GetInvokeMethod,
                 OnClose = this.OnRpcServiceClose,
                 OnStreamTransfering = this.OnRpcActorStreamTransfering,
                 OnStreamTransfered = this.OnRpcActorStreamTransfered,
@@ -76,6 +80,11 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         public string ID => this.m_rpcActor.ID;
+
+        /// <summary>
+        /// 方法映射表
+        /// </summary>
+        public ActionMap ActionMap { get => m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -115,7 +124,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// RpcStore
         /// </summary>
-        public RpcStore RpcStore { get; private set; }
+        public RpcStore RpcStore { get => m_rpcStore;}
 
         /// <summary>
         /// <inheritdoc/>
@@ -131,58 +140,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         public bool UsePlugin { get; private set; }
-
-        #region 插件
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <typeparam name="TPlugin">插件类型</typeparam>
-        /// <returns>插件类型实例</returns>
-        public TPlugin AddPlugin<TPlugin>() where TPlugin : IPlugin
-        {
-            var plugin = this.Container.Resolve<TPlugin>();
-            this.AddPlugin(plugin);
-            return plugin;
-        }
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <param name="plugin">插件</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public void AddPlugin(IPlugin plugin)
-        {
-            this.PluginsManager.Add(plugin);
-        }
-
-        /// <summary>
-        /// 清空插件
-        /// </summary>
-        public void ClearPlugins()
-        {
-            this.PluginsManager.Clear();
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <param name="plugin"></param>
-        public void RemovePlugin(IPlugin plugin)
-        {
-            this.PluginsManager.Remove(plugin);
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void RemovePlugin<T>() where T : IPlugin
-        {
-            this.PluginsManager.Remove(typeof(T));
-        }
-
-        #endregion 插件
 
         /// <summary>
         /// <inheritdoc/>
@@ -795,7 +752,10 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         #endregion RPC
 
         #region 内部委托绑定
-
+        private MethodInstance GetInvokeMethod(string arg)
+        {
+            return this.m_actionMap.GetMethodInstance(arg);
+        }
         private void OnRpcActorFileTransfered(RpcActor actor, FileTransferStatusEventArgs e)
         {
             if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnFileTransfered", this, e))
@@ -1025,15 +985,30 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
         }
 
         void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                }
+            }
         }
 
         void IRpcParser.SetRpcStore(RpcStore rpcStore)
         {
-            this.RpcStore = rpcStore;
+            this.m_rpcActor.RpcStore = rpcStore;
+            this.m_rpcStore = rpcStore;
         }
 
         #endregion RPC解析器
