@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -247,67 +247,6 @@ namespace TouchSocket.Sockets
         }
 
         #endregion 事件
-
-        #region 插件
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <typeparam name="TPlugin">插件类型</typeparam>
-        /// <returns>插件类型实例</returns>
-        public TPlugin AddPlugin<TPlugin>() where TPlugin : IPlugin
-        {
-            if (this.m_config == null)
-            {
-                throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
-            }
-            var plugin = this.Container.Resolve<TPlugin>();
-            this.AddPlugin(plugin);
-            return plugin;
-        }
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <param name="plugin">插件</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public void AddPlugin(IPlugin plugin)
-        {
-            if (this.m_config == null)
-            {
-                throw new ArgumentNullException(nameof(this.Config), "请在SetUp后添加插件。");
-            }
-
-            this.PluginsManager.Add(plugin);
-        }
-
-        /// <summary>
-        /// 清空插件
-        /// </summary>
-        public void ClearPlugins()
-        {
-            this.PluginsManager.Clear();
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <param name="plugin"></param>
-        public void RemovePlugin(IPlugin plugin)
-        {
-            this.PluginsManager.Remove(plugin);
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void RemovePlugin<T>() where T : IPlugin
-        {
-            this.PluginsManager.Remove(typeof(T));
-        }
-
-        #endregion 插件
 
         /// <summary>
         /// <inheritdoc/>
@@ -710,6 +649,10 @@ namespace TouchSocket.Sockets
             client.ClearType = this.m_clearType;
             client.m_receiveType = this.m_receiveType;
             client.BufferLength = this.BufferLength;
+            if (client.CanSetDataHandlingAdapter)
+            {
+                client.SetDataHandlingAdapter(this.Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
+            }
         }
 
         /// <summary>

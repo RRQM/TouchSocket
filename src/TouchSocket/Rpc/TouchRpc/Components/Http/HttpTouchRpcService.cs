@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -39,8 +39,10 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public HttpTouchRpcService()
         {
+            this.m_actionMap = new ActionMap();
             this.m_rpcActorGroup = new RpcActorGroup();
             this.m_rpcActorGroup.OnClose = this.OnRpcServiceClose;
+            this.m_rpcActorGroup.GetInvokeMethod = this.GetInvokeMethod;
             this.m_rpcActorGroup.OnFileTransfered = this.OnRpcServiceFileTransfered;
             this.m_rpcActorGroup.OnFileTransfering = this.OnRpcServiceFileTransfering;
             this.m_rpcActorGroup.OnFindRpcActor = this.OnRpcServiceFindRpcActor;
@@ -53,12 +55,20 @@ namespace TouchSocket.Rpc.TouchRpc
             this.m_rpcActorGroup.OutputSend = this.RpcServiceOutputSend;
         }
 
+        
+
         #region 字段
 
         private RpcActorGroup m_rpcActorGroup;
         private RpcStore m_rpcStore;
+        private readonly ActionMap m_actionMap;
 
         #endregion 字段
+
+        /// <summary>
+        /// 方法映射表
+        /// </summary>
+        public ActionMap ActionMap { get => m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -278,7 +288,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         public void Invoke(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
@@ -302,7 +312,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
@@ -327,7 +337,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         public Task InvokeAsync(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
@@ -351,7 +361,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
@@ -494,6 +504,11 @@ namespace TouchSocket.Rpc.TouchRpc
 
         #region 内部委托绑定
 
+        private MethodInstance GetInvokeMethod(string arg)
+        {
+            return this.m_actionMap.GetMethodInstance(arg);
+        }
+
         private void OnRpcServiceClose(RpcActor actor, string arg2)
         {
             TClient client = (TClient)actor.Caller;
@@ -605,10 +620,24 @@ namespace TouchSocket.Rpc.TouchRpc
 
         void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
         }
 
         void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                }
+            }
         }
 
         void IRpcParser.SetRpcStore(RpcStore rpcStore)

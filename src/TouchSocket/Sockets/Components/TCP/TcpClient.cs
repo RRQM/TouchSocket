@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -54,7 +54,6 @@ namespace TouchSocket.Sockets
     [System.Diagnostics.DebuggerDisplay("{IP}:{Port}")]
     public class TcpClientBase : BaseSocket, ITcpClient, IPlguinObject
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -65,6 +64,7 @@ namespace TouchSocket.Sockets
         }
 
         #region 变量
+
         private AsyncSender m_asyncSender;
         private TouchSocketConfig m_config;
         private DataHandlingAdapter m_adapter;
@@ -82,6 +82,7 @@ namespace TouchSocket.Sockets
         /// 发送锁对象
         /// </summary>
         protected readonly object sendLocker;
+
         #endregion 变量
 
         #region 事件
@@ -101,11 +102,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public event ClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
 
-        /// <summary>
-        /// 已经建立Tcp连接
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnConnected(MsgEventArgs e)
+        private void PrivateOnConnected(MsgEventArgs e)
         {
             if (this.m_usePlugin)
             {
@@ -115,7 +112,15 @@ namespace TouchSocket.Sockets
                     return;
                 }
             }
+            this.OnConnected(e);
+        }
 
+        /// <summary>
+        /// 已经建立Tcp连接
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnConnected(MsgEventArgs e)
+        {
             try
             {
                 this.Connected?.Invoke(this, e);
@@ -126,12 +131,12 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
-        /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnConnecting(ClientConnectingEventArgs e)
+        private void PrivateOnConnecting(ClientConnectingEventArgs e)
         {
+            if (this.CanSetDataHandlingAdapter)
+            {
+                this.SetDataHandlingAdapter(this.Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
+            }
             if (this.m_usePlugin)
             {
                 this.PluginsManager.Raise<ITcpPlugin>("OnConnecting", this, e);
@@ -140,27 +145,26 @@ namespace TouchSocket.Sockets
                     return;
                 }
             }
+            this.OnConnecting(e);
+        }
 
+        /// <summary>
+        /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnConnecting(ClientConnectingEventArgs e)
+        {
             try
             {
                 this.Connecting?.Invoke(this, e);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
             }
-
-            if (this.m_adapter == null)
-            {
-                this.SetAdapter(new NormalDataHandlingAdapter());
-            }
         }
 
-        /// <summary>
-        /// 断开连接。在客户端未设置连接状态时，不会触发
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
+        private void PrivateOnDisconnected(ClientDisconnectedEventArgs e)
         {
             if (this.m_usePlugin)
             {
@@ -170,12 +174,20 @@ namespace TouchSocket.Sockets
                     return;
                 }
             }
+            this.OnDisconnected(e);
+        }
 
+        /// <summary>
+        /// 断开连接。在客户端未设置连接状态时，不会触发
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
+        {
             try
             {
                 this.Disconnected?.Invoke(this, e);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
             }
@@ -194,7 +206,6 @@ namespace TouchSocket.Sockets
         /// 处理经过适配器后的数据。返回值表示是否继续向下传递。
         /// </summary>
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -299,6 +310,7 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         public virtual void Close(string msg)
         {
+            this.SafeShutdown();
             this.BreakOut(msg, true);
         }
 
@@ -308,18 +320,11 @@ namespace TouchSocket.Sockets
             {
                 if (this.m_online)
                 {
-                    try
-                    {
-                        this.m_mainSocket.Close();
-                    }
-                    catch
-                    {
-                    }
                     this.m_mainSocket.SafeDispose();
                     this.m_asyncSender.SafeDispose();
                     this.m_workStream.SafeDispose();
                     this.m_online = false;
-                    this.OnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
+                    this.PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
                 }
             }
         }
@@ -350,58 +355,6 @@ namespace TouchSocket.Sockets
 
         #endregion 断开操作
 
-        #region 插件
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <typeparam name="TPlugin">插件类型</typeparam>
-        /// <returns>插件类型实例</returns>
-        public TPlugin AddPlugin<TPlugin>() where TPlugin : IPlugin
-        {
-            var plugin = this.Container.Resolve<TPlugin>();
-            this.AddPlugin(plugin);
-            return plugin;
-        }
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <param name="plugin">插件</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public void AddPlugin(IPlugin plugin)
-        {
-            this.PluginsManager.Add(plugin);
-        }
-
-        /// <summary>
-        /// 清空插件
-        /// </summary>
-        public void ClearPlugins()
-        {
-            this.PluginsManager.Clear();
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <param name="plugin"></param>
-        public void RemovePlugin(IPlugin plugin)
-        {
-            this.PluginsManager.Remove(plugin);
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void RemovePlugin<T>() where T : IPlugin
-        {
-            this.PluginsManager.Remove(typeof(T));
-        }
-
-        #endregion 插件
-
         /// <summary>
         /// 请求连接到服务器。
         /// </summary>
@@ -431,8 +384,7 @@ namespace TouchSocket.Sockets
             this.m_mainSocket = this.CreateSocket(iPHost);
 
             ClientConnectingEventArgs args = new ClientConnectingEventArgs(this.m_mainSocket);
-            this.OnConnecting(args);
-
+            this.PrivateOnConnecting(args);
 
             var result = this.m_mainSocket.BeginConnect(iPHost.EndPoint, null, null);
             if (result.AsyncWaitHandle.WaitOne(timeout))
@@ -451,7 +403,7 @@ namespace TouchSocket.Sockets
                     }
                     this.BeginReceive();
                     this.m_online = true;
-                    this.OnConnected(new MsgEventArgs("连接成功"));
+                    this.PrivateOnConnected(new MsgEventArgs("连接成功"));
                     return this;
                 }
             }
@@ -547,7 +499,6 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo">以解析的数据对象传递</param>
         protected virtual void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-
         }
 
         /// <summary>
@@ -955,6 +906,7 @@ namespace TouchSocket.Sockets
         #endregion 异步发送
 
         #region 默认发送
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -992,9 +944,11 @@ namespace TouchSocket.Sockets
         {
             this.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
         }
-        #endregion
+
+        #endregion 默认发送
 
         #region 异步默认发送
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -1032,7 +986,8 @@ namespace TouchSocket.Sockets
         {
             this.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
         }
-        #endregion
+
+        #endregion 异步默认发送
 
         private void LoadSocketAndReadIpPort()
         {

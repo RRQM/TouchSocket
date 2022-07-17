@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -33,6 +33,7 @@ namespace TouchSocket.Rpc.TouchRpc
     {
         private readonly Timer m_timer;
         private readonly ConcurrentDictionary<EndPoint, UdpRpcActor> m_udpRpcActors;
+        private readonly ActionMap m_actionMap;
         private RpcStore m_rpcStore;
         private SerializationSelector m_serializationSelector;
         /// <summary>
@@ -51,8 +52,8 @@ namespace TouchSocket.Rpc.TouchRpc
                     return false;
                 });
             }, null, 1000 * 30, 1000 * 30);
+            this.m_actionMap = new ActionMap();
             this.m_udpRpcActors = new ConcurrentDictionary<EndPoint, UdpRpcActor>();
-            this.SetAdapter(new UdpPackageAdapter());
         }
 
         /// <summary>
@@ -76,6 +77,11 @@ namespace TouchSocket.Rpc.TouchRpc
         ResponseType IRpcActor.ResponseType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         RpcActor ITouchRpc.RpcActor => throw new NotImplementedException();
+
+        /// <summary>
+        /// 方法映射表
+        /// </summary>
+        public ActionMap ActionMap { get => m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -154,10 +160,24 @@ namespace TouchSocket.Rpc.TouchRpc
 
         void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
         }
 
         void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                }
+            }
         }
 
         /// <summary>
@@ -294,12 +314,18 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 udpRpcActor = new UdpRpcActor(this, endPoint, this.Container.Resolve<ILog>());
                 udpRpcActor.Caller = new UdpCaller(this, endPoint);
-                udpRpcActor.RpcStore = (this.m_rpcStore);
+                udpRpcActor.RpcStore = this.m_rpcStore;
+                udpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
                 udpRpcActor.SerializationSelector = this.m_serializationSelector;
                 this.m_udpRpcActors.TryAdd(endPoint, udpRpcActor);
             }
             udpRpcActor.Tick++;
             return udpRpcActor;
+        }
+
+        private MethodInstance GetInvokeMethod(string arg)
+        {
+            return this.m_actionMap.GetMethodInstance(arg);
         }
 
         private UdpRpcActor GetUdpRpcActor()

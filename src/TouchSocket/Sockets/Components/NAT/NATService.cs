@@ -10,52 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-在此之后:
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-在此之后:
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-在此之后:
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-*/
 using TouchSocket.Core.ByteManager;
 
 namespace TouchSocket.Sockets
@@ -72,8 +26,8 @@ namespace TouchSocket.Sockets
         protected override NATSocketClient GetClientInstence()
         {
             var client = base.GetClientInstence();
-            client.internalDis = this.OnTargetClientDisconnected;
-            client.internalTargetClientRev = this.OnTargetClientReceived;
+            client.m_internalDis = this.OnTargetClientDisconnected;
+            client.m_internalTargetClientRev = this.OnTargetClientReceived;
             return client;
         }
 
@@ -86,7 +40,7 @@ namespace TouchSocket.Sockets
         /// <returns>需要转发的数据。</returns>
         protected virtual byte[] OnNATReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            return byteBlock.ToArray();
+            return byteBlock?.ToArray();
         }
 
         /// <summary>
@@ -125,7 +79,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         protected virtual byte[] OnTargetClientReceived(NATSocketClient socketClient, ITcpClient tcpClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            return byteBlock.ToArray();
+            return byteBlock?.ToArray();
         }
     }
 }
