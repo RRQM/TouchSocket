@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -17,17 +17,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
-
-/* 项目“TouchSocketPro.AspNetCore (netcoreapp3.1)”的未合并的更改
-在此之前:
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-在此之后:
-using System.Core.Config;
-using TouchSocket.Core.Dependency;
-using System.Threading.Log;
-*/
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Plugins;
@@ -138,8 +127,9 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private readonly SnowflakeIDGenerator m_iDGenerator;
 
-        private RpcActorGroup m_rpcActorGroup;
+        private readonly RpcActorGroup m_rpcActorGroup;
         private RpcStore m_rpcStore;
+        private readonly ActionMap m_actionMap;
 
         /// <summary>
         /// 创建一个基于WS的Touch服务器。
@@ -147,6 +137,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="config"></param>
         public WSTouchRpcService(TouchSocketConfig config)
         {
+            this.m_actionMap = new ActionMap();
             this.m_iDGenerator = new SnowflakeIDGenerator(4);
             this.Config = config;
             this.UsePlugin = config.IsUsePlugin;
@@ -166,6 +157,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             this.m_rpcActorGroup.Config = this.Config;
             this.m_rpcActorGroup.OnClose = this.OnRpcServiceClose;
             this.m_rpcActorGroup.OnFileTransfered = this.OnRpcServiceFileTransfered;
+            this.m_rpcActorGroup.GetInvokeMethod = this.GetInvokeMethod;
             this.m_rpcActorGroup.OnFileTransfering = this.OnRpcServiceFileTransfering;
             this.m_rpcActorGroup.OnFindRpcActor = this.OnRpcServiceFindRpcActor;
             this.m_rpcActorGroup.OnHandshaked = this.OnRpcServiceHandshaked;
@@ -220,57 +212,11 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         public string VerifyToken { get; private set; }
-        #region 插件
 
         /// <summary>
-        /// 添加插件
+        /// 方法映射表
         /// </summary>
-        /// <typeparam name="TPlugin">插件类型</typeparam>
-        /// <returns>插件类型实例</returns>
-        public TPlugin AddPlugin<TPlugin>() where TPlugin : IPlugin
-        {
-            var plugin = this.Container.Resolve<TPlugin>();
-            this.AddPlugin(plugin);
-            return plugin;
-        }
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <param name="plugin">插件</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public void AddPlugin(IPlugin plugin)
-        {
-            this.PluginsManager.Add(plugin);
-        }
-
-        /// <summary>
-        /// 清空插件
-        /// </summary>
-        public void ClearPlugins()
-        {
-            this.PluginsManager.Clear();
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <param name="plugin"></param>
-        public void RemovePlugin(IPlugin plugin)
-        {
-            this.PluginsManager.Remove(plugin);
-        }
-
-        /// <summary>
-        /// 移除插件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void RemovePlugin<T>() where T : IPlugin
-        {
-            this.PluginsManager.Remove(typeof(T));
-        }
-
-        #endregion 插件
+        public ActionMap ActionMap { get => m_actionMap; }
 
         #region 通道
 
@@ -364,7 +310,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         public void Invoke(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
@@ -388,7 +334,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
@@ -413,7 +359,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         public Task InvokeAsync(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
@@ -437,7 +383,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RRQMRpcInvokeException">调用内部异常</exception>
+        /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
@@ -459,10 +405,24 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
         }
 
         void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                }
+            }
         }
 
         void IRpcParser.SetRpcStore(RpcStore rpcStore)
@@ -617,6 +577,10 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             this.OnFileTransfered(client, e);
         }
 
+        private MethodInstance GetInvokeMethod(string arg)
+        {
+            return this.m_actionMap.GetMethodInstance(arg);
+        }
         private void OnRpcServiceFileTransfering(RpcActor actor, FileOperationEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
@@ -721,8 +685,8 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             {
                 throw new Exception("ID重复");
             }
-            client.service = this;
-
+            client.m_service = this;
+            client.m_usePlugin = this.UsePlugin;
             this.CheckService();
 
             client.m_rpcActor = this.m_rpcActorGroup.CreateRpcActor(client);
