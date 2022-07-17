@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -34,6 +34,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public TcpTouchRpcClient()
         {
+            this.m_actionMap = new ActionMap();
             this.SwitchProtocolToTouchRpc();
             this.m_rpcActor = new RpcActor(false)
             {
@@ -41,6 +42,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 OnHandshaked = this.OnRpcActorHandshaked,
                 OnReceived = this.OnRpcActorReceived,
                 OnClose = this.OnRpcServiceClose,
+                GetInvokeMethod = this.GetInvokeMethod,
                 OnStreamTransfering = this.OnRpcActorStreamTransfering,
                 OnStreamTransfered = this.OnRpcActorStreamTransfered,
                 OnFileTransfering = this.OnRpcActorFileTransfering,
@@ -50,9 +52,15 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         private readonly RpcActor m_rpcActor;
+        private readonly ActionMap m_actionMap;
         private Timer m_timer;
         private int m_failCount = 0;
         private RpcStore m_rpcStore;
+
+        /// <summary>
+        /// 方法映射表
+        /// </summary>
+        public ActionMap ActionMap { get => m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -703,6 +711,10 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         #region 内部委托绑定
+        private MethodInstance GetInvokeMethod(string arg)
+        {
+            return this.m_actionMap.GetMethodInstance(arg);
+        }
 
         private void OnRpcServiceClose(RpcActor actor, string arg2)
         {
@@ -780,18 +792,33 @@ namespace TouchSocket.Rpc.TouchRpc
 
         #region RPC解析器
 
-        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
-        {
-        }
-
+       
         void IRpcParser.SetRpcStore(RpcStore rpcStore)
         {
             this.m_rpcActor.RpcStore = rpcStore;
             this.m_rpcStore = rpcStore;
         }
 
+        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
+        }
+
         void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
         {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                }
+            }
         }
 
         #endregion RPC解析器

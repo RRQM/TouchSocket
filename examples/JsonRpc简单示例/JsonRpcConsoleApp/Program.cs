@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;

@@ -1,60 +1,16 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Log;
-using System;
-using System.Collections.Generic;
-在此之后:
-using System;
-using System.Collections.Generic;
-using TouchSocket.Net;
-using TouchSocket.Core.ByteManager;
-using System.Collections.Extensions;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Log;
-using System;
-using System.Collections.Generic;
-在此之后:
-using System;
-using System.Collections.Generic;
-using TouchSocket.Net;
-using TouchSocket.Core.ByteManager;
-using System.Collections.Extensions;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Log;
-using System;
-using System.Collections.Generic;
-在此之后:
-using System;
-using System.Collections.Generic;
-using TouchSocket.Net;
-using TouchSocket.Core.ByteManager;
-using System.Collections.Extensions;
-*/
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -68,7 +24,7 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class UdpDataHandlingAdapter
     {
-        internal IUdpSession owner;
+        internal IUdpSession m_owner;
 
         private int maxPackageSize = 1024 * 1024;
 
@@ -89,7 +45,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public IUdpSession Owner => this.owner;
+        public IUdpSession Owner => this.m_owner;
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -178,9 +134,9 @@ namespace TouchSocket.Sockets
             {
                 this.Reset();
             }
-            if (log && this.owner != null && this.owner.Logger != null)
+            if (log && this.m_owner != null && this.m_owner.Logger != null)
             {
-                this.owner.Logger.Error(error);
+                this.m_owner.Logger.Error(error);
             }
         }
 

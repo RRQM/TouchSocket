@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ namespace TouchSocket.Sockets
     /// 服务器辅助类
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("ID={ID},IPAdress={IP}:{Port}")]
-    public class SocketClient : BaseSocket, ISocketClient
+    public class SocketClient : BaseSocket, ISocketClient,IPlguinObject
     {
         /// <summary>
         /// 构造函数
@@ -56,10 +56,11 @@ namespace TouchSocket.Sockets
 
         private DataHandlingAdapter m_adapter;
         private ClearType m_clearType;
+        private Socket m_mainSocket;
         private int m_maxPackageSize;
         private bool m_online;
-        private Socket m_mainSocket;
         private Stream m_workStream;
+
         #endregion 变量
 
         #region 属性
@@ -173,6 +174,16 @@ namespace TouchSocket.Sockets
         #endregion 事件&委托
 
         /// <summary>
+        /// 处理未经过适配器的数据。返回值表示是否继续向下传递。
+        /// </summary>
+        public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
+
+        /// <summary>
+        /// 处理经过适配器后的数据。返回值表示是否继续向下传递。
+        /// </summary>
+        public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public virtual void Close()
@@ -186,6 +197,7 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         public virtual void Close(string msg)
         {
+            this.SafeShutdown();
             this.BreakOut(msg, true);
         }
 
@@ -243,6 +255,34 @@ namespace TouchSocket.Sockets
             this.MainSocket.Shutdown(how);
         }
 
+        internal void BeginReceive(ReceiveType receiveType)
+        {
+            if (receiveType == ReceiveType.Auto)
+            {
+                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
+                eventArgs.Completed += this.EventArgs_Completed;
+                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
+                eventArgs.UserToken = byteBlock;
+                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
+                if (!this.m_mainSocket.ReceiveAsync(eventArgs))
+                {
+                    this.ProcessReceived(eventArgs);
+                }
+            }
+        }
+
+        internal void BeginReceiveSsl(ReceiveType receiveType, ServiceSslOption sslOption)
+        {
+            SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_mainSocket, false), false);
+            sslStream.AuthenticateAsServer(sslOption.Certificate, sslOption.ClientCertificateRequired, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
+            this.m_workStream = sslStream;
+            this.UseSsl = true;
+            if (receiveType == ReceiveType.Auto)
+            {
+                this.BeginSsl();
+            }
+        }
+
         internal void GetTimeout(int time, long nowTick)
         {
             if (nowTick - (this.m_lastTick / 10000000.0) > time)
@@ -254,19 +294,53 @@ namespace TouchSocket.Sockets
             }
         }
 
-        internal void InternalConnecting(ClientOperationEventArgs e)
-        {
-            this.OnConnecting(e);
-            if (this.m_adapter == null)
-            {
-                this.SetAdapter(new NormalDataHandlingAdapter());
-            }
-        }
-
         internal void InternalConnected(TouchSocketEventAgrs e)
         {
             this.m_online = true;
+            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnConnected", this, e))
+            {
+                return;
+            }
+
             this.OnConnected(e);
+        }
+
+        internal void InternalConnecting(ClientOperationEventArgs e)
+        {
+            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnConnecting", this, e))
+            {
+                return;
+            }
+            this.OnConnecting(e);
+        }
+
+        internal void SetSocket(Socket mainSocket)
+        {
+            this.m_mainSocket = mainSocket ?? throw new ArgumentNullException(nameof(mainSocket));
+            if (this.m_mainSocket == null)
+            {
+                this.IP = null;
+                this.Port = -1;
+                return;
+            }
+
+            string ipport;
+            if (this.m_mainSocket.Connected && this.m_mainSocket.RemoteEndPoint != null)
+            {
+                ipport = this.m_mainSocket.RemoteEndPoint.ToString();
+            }
+            else if (this.m_mainSocket.IsBound && this.m_mainSocket.LocalEndPoint != null)
+            {
+                ipport = this.m_mainSocket.LocalEndPoint.ToString();
+            }
+            else
+            {
+                return;
+            }
+
+            int r = ipport.LastIndexOf(":");
+            this.IP = ipport.Substring(0, r);
+            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
         }
 
         /// <summary>
@@ -291,7 +365,6 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo">以解析的数据对象传递</param>
         protected virtual void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-
         }
 
         /// <summary>
@@ -317,27 +390,11 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 一旦断开TCP连接，该方法则必被调用。
-        /// </summary>
-        protected virtual void OnClose()
-        {
-        }
-
-        /// <summary>
         /// 当客户端完整建立TCP连接，如果覆盖父类方法，则不会触发插件。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnConnected(TouchSocketEventAgrs e)
         {
-            if (this.m_usePlugin)
-            {
-                this.PluginsManager.Raise<ITcpPlugin>("OnConnected", this, e);
-                if (e.Handled)
-                {
-                    return;
-                }
-            }
-
             this.m_service.OnInternalConnected(this, e);
         }
 
@@ -346,14 +403,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected virtual void OnConnecting(ClientOperationEventArgs e)
         {
-            if (this.m_usePlugin)
-            {
-                this.PluginsManager.Raise<ITcpPlugin>("OnConnecting", this, e);
-            }
-            if (!e.Handled)
-            {
-                this.m_service.OnInternalConnecting(this, e);
-            }
+            this.m_service.OnInternalConnecting(this, e);
         }
 
         /// <summary>
@@ -362,19 +412,7 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
         {
-            if (this.m_usePlugin)
-            {
-                this.PluginsManager.Raise<ITcpPlugin>("OnDisconnected", this, e);
-                if (e.Handled)
-                {
-                    return;
-                }
-            }
             this.Disconnected?.Invoke(this, e);
-            if (!e.Operation.HasFlag(Operation.Handled))
-            {
-                this.m_service.OnInternalDisconnected(this, e);
-            }
         }
 
         /// <summary>
@@ -456,79 +494,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void BreakOut(string msg, bool manual)
-        {
-            lock (this)
-            {
-                if (this.m_online)
-                {
-                    this.m_online = false;
-                    this.MainSocket.SafeDispose();
-                    this.m_service?.SocketClients.TryRemove(this.m_id, out _);
-                    this.OnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
-                    this.OnClose();
-                    this.Disconnected = null;
-                }
-            }
-        }
-
-        internal void SetSocket(Socket mainSocket)
-        {
-            this.m_mainSocket = mainSocket ?? throw new ArgumentNullException(nameof(mainSocket));
-            if (this.m_mainSocket == null)
-            {
-                this.IP = null;
-                this.Port = -1;
-                return;
-            }
-
-            string ipport;
-            if (this.m_mainSocket.Connected && this.m_mainSocket.RemoteEndPoint != null)
-            {
-                ipport = this.m_mainSocket.RemoteEndPoint.ToString();
-            }
-            else if (this.m_mainSocket.IsBound && this.m_mainSocket.LocalEndPoint != null)
-            {
-                ipport = this.m_mainSocket.LocalEndPoint.ToString();
-            }
-            else
-            {
-                return;
-            }
-
-            int r = ipport.LastIndexOf(":");
-            this.IP = ipport.Substring(0, r);
-            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
-        }
-
-        internal void BeginReceive(ReceiveType receiveType)
-        {
-            if (receiveType == ReceiveType.Auto)
-            {
-                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
-                eventArgs.Completed += this.EventArgs_Completed;
-                ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
-                eventArgs.UserToken = byteBlock;
-                eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-                if (!this.m_mainSocket.ReceiveAsync(eventArgs))
-                {
-                    this.ProcessReceived(eventArgs);
-                }
-            }
-        }
-
-        internal void BeginReceiveSsl(ReceiveType receiveType, ServiceSslOption sslOption)
-        {
-            SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_mainSocket, false), false);
-            sslStream.AuthenticateAsServer(sslOption.Certificate, sslOption.ClientCertificateRequired, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
-            this.m_workStream = sslStream;
-            this.UseSsl = true;
-            if (receiveType == ReceiveType.Auto)
-            {
-                this.BeginSsl();
-            }
-        }
-
         private void BeginSsl()
         {
             if (!this.m_disposedValue)
@@ -546,6 +511,21 @@ namespace TouchSocket.Sockets
             }
         }
 
+        private void BreakOut(string msg, bool manual)
+        {
+            lock (this)
+            {
+                if (this.m_online)
+                {
+                    this.m_online = false;
+                    this.m_mainSocket.SafeDispose();
+                    this.m_service?.SocketClients.TryRemove(this.m_id, out _);
+                    this.PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
+                    this.Disconnected = null;
+                }
+            }
+        }
+
         private void EndSsl(IAsyncResult result)
         {
             ByteBlock byteBlock = (ByteBlock)result.AsyncState;
@@ -557,7 +537,7 @@ namespace TouchSocket.Sockets
                 this.HandleBuffer(byteBlock);
                 this.BeginSsl();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 byteBlock.Dispose();
                 this.BreakOut(ex.Message, false);
@@ -570,59 +550,12 @@ namespace TouchSocket.Sockets
             {
                 this.ProcessReceived(e);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 e.SafeDispose();
                 this.BreakOut(ex.Message, false);
             }
         }
-
-        private void ProcessReceived(SocketAsyncEventArgs e)
-        {
-            if (this.m_disposedValue)
-            {
-                e.SafeDispose();
-            }
-            else
-            {
-                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
-                {
-                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.SetLength(e.BytesTransferred);
-                    this.HandleBuffer(byteBlock);
-                    try
-                    {
-                        ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
-                        e.UserToken = newByteBlock;
-                        e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Capacity);
-
-                        if (!this.m_mainSocket.ReceiveAsync(e))
-                        {
-                            this.ProcessReceived(e);
-                        }
-                    }
-                    catch (System.Exception ex)
-                    {
-                        this.BreakOut(ex.Message, false);
-                    }
-                }
-                else
-                {
-                    e.SafeDispose();
-                    this.BreakOut("远程主机主动断开连接", false);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 处理未经过适配器的数据。返回值表示是否继续向下传递。
-        /// </summary>
-        public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
-
-        /// <summary>
-        /// 处理经过适配器后的数据。返回值表示是否继续向下传递。
-        /// </summary>
-        public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
 
         private void HandleBuffer(ByteBlock byteBlock)
         {
@@ -680,6 +613,57 @@ namespace TouchSocket.Sockets
 
             this.m_service.OnInternalReceivedData(this, byteBlock, requestInfo);
         }
+
+        private void PrivateOnDisconnected(ClientDisconnectedEventArgs e)
+        {
+            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnDisconnected", this, e))
+            {
+                return;
+            }
+            this.OnDisconnected(e);
+            if (!e.Handled)
+            {
+                this.m_service.OnInternalDisconnected(this, e);
+            }
+        }
+
+        private void ProcessReceived(SocketAsyncEventArgs e)
+        {
+            if (this.m_disposedValue)
+            {
+                e.SafeDispose();
+            }
+            else
+            {
+                if (e.SocketError == SocketError.Success && e.BytesTransferred > 0)
+                {
+                    ByteBlock byteBlock = (ByteBlock)e.UserToken;
+                    byteBlock.SetLength(e.BytesTransferred);
+                    this.HandleBuffer(byteBlock);
+                    try
+                    {
+                        ByteBlock newByteBlock = BytePool.GetByteBlock(this.BufferLength);
+                        e.UserToken = newByteBlock;
+                        e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Capacity);
+
+                        if (!this.m_mainSocket.ReceiveAsync(e))
+                        {
+                            this.ProcessReceived(e);
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        this.BreakOut(ex.Message, false);
+                    }
+                }
+                else
+                {
+                    e.SafeDispose();
+                    this.BreakOut("远程主机主动断开连接", false);
+                }
+            }
+        }
+
         #region 默认发送
 
         /// <summary>
