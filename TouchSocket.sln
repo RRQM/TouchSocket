@@ -59,7 +59,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JsonRpc简单示例", "Json
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonRpcConsoleApp", "examples\JsonRpc简单示例\JsonRpcConsoleApp\JsonRpcConsoleApp.csproj", "{F9E0154E-2DFC-480F-9B3A-B30548C41DFD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Http简单示例", "Http简单示例", "{EFB33E23-9E98-4B85-99E4-865705D5ACD2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Http、WebSocket简单示例", "Http、WebSocket简单示例", "{EFB33E23-9E98-4B85-99E4-865705D5ACD2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WSClientApp", "examples\Http简单示例\WSClientApp\WSClientApp.csproj", "{4BE7BFA9-AC13-4DFC-982E-5F7D4694C807}"
 EndProject

@@ -21,25 +21,23 @@ namespace ConsoleApp
             //最后客户端需要先安装证书。
 
             var service = new HttpService();
-
-            var config = new TouchSocketConfig();
-            //config .SetContainer(new Container());//此配置可以替换注入容器。例如用AutoMap自己实现IContainer接口即可。
-
-            config.UsePlugin()
-                .SetListenIPHosts(new IPHost[] { new IPHost(7789) });
-
-            service.Setup(config).Start();
-
-            service.AddPlugin<MyHttpPlug>();
-            service.AddPlugin<WebSocketServerPlugin>()//添加WebSocket功能
-                   .SetWSUrl("/ws")
-                   .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
-            service.AddPlugin<MyWebSocketPlugin>();
-            service.AddPlugin<MyWSCommandLinePlugin>();
-
-            //注入日志。下列两个方法效果一致。
-            config.Container.RegisterTransient<ILog, ConsoleLogger>();
-            //service.Container.RegisterTransient<ILog, ConsoleLogger>();
+            service.Setup(new TouchSocketConfig()//加载配置
+                .UsePlugin()
+                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                .ConfigureContainer(a =>
+                {
+                    a.SetSingletonLogger<ConsoleLogger>();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<MyHttpPlug>();
+                    a.Add<WebSocketServerPlugin>()//添加WebSocket功能
+                           .SetWSUrl("/ws")
+                           .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
+                    a.Add<MyWebSocketPlugin>();
+                    a.Add<MyWSCommandLinePlugin>();
+                }))
+                .Start();
 
             Console.WriteLine("Http服务器已启动");
             Console.WriteLine("访问 http://127.0.0.1:7789/success 返回响应");
