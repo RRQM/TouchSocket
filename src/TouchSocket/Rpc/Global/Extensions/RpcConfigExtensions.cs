@@ -32,21 +32,15 @@ namespace TouchSocket.Core.Config
         /// 配置RpcStore的创建。
         /// </summary>
         /// <param name="config"></param>
-        /// <param name="action"></param>
-        public static TouchSocketConfig ConfigureRpcStore(this TouchSocketConfig config, Action<RpcStore> action)
+        /// <param name="action">当RpcStore完成配置时回调</param>
+        /// <param name="value">可以使用现有的值，如果赋值为null，则会重新创建。</param>
+        public static TouchSocketConfig ConfigureRpcStore(this TouchSocketConfig config, Action<RpcStore> action, RpcStore value = default)
         {
-            var rpcstore = new RpcStore(config.Container);
-            action?.Invoke(rpcstore);
-            return SetRpcStore(config, rpcstore);
-        }
-
-        /// <summary>
-        /// 设置现有RpcStore。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        public static TouchSocketConfig SetRpcStore(this TouchSocketConfig config, RpcStore value)
-        {
+            if (value == default)
+            {
+                value = new RpcStore(config.Container);
+            }
+            action?.Invoke(value);
             config.SetValue(RpcStoreProperty, value);
             return config;
         }
