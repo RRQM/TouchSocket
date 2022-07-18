@@ -103,6 +103,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WSTouchRpcClientConsoleApp"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProtocolServerConsoleApp", "examples\TouchRpc简单示例\ProtocolServerConsoleApp\ProtocolServerConsoleApp.csproj", "{571F2732-7E54-42A8-BEC6-B97B0A651059}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "控制台", "控制台", "{DB89FCB6-E4F9-4BD4-93F3-4E857741D749}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "examples\Tcp简单示例\ConsoleApp\ConsoleApp.csproj", "{71D8B6B2-09F3-4060-B073-A3F5D944C304}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -217,6 +221,10 @@ Global
 		{571F2732-7E54-42A8-BEC6-B97B0A651059}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{571F2732-7E54-42A8-BEC6-B97B0A651059}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{571F2732-7E54-42A8-BEC6-B97B0A651059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71D8B6B2-09F3-4060-B073-A3F5D944C304}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71D8B6B2-09F3-4060-B073-A3F5D944C304}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71D8B6B2-09F3-4060-B073-A3F5D944C304}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71D8B6B2-09F3-4060-B073-A3F5D944C304}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -266,6 +274,8 @@ Global
 		{35C3CCAE-2C39-4756-82CD-1E2AFE1FB527} = {5C17B127-95DD-480C-BDCC-7FDF5E645B0C}
 		{5FF19798-AD4B-4B45-BD0C-DE5271BEF63A} = {5C17B127-95DD-480C-BDCC-7FDF5E645B0C}
 		{571F2732-7E54-42A8-BEC6-B97B0A651059} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
+		{DB89FCB6-E4F9-4BD4-93F3-4E857741D749} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
+		{71D8B6B2-09F3-4060-B073-A3F5D944C304} = {DB89FCB6-E4F9-4BD4-93F3-4E857741D749}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
