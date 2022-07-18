@@ -1,5 +1,6 @@
 ﻿using System;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Http;
 using TouchSocket.Http.Plugins;
 using TouchSocket.Rpc;
