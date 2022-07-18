@@ -70,7 +70,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        event EventHandler<TClient> Connected;
+        event TouchSocketEventHandler<TClient> Connected;
 
         /// <summary>
         /// 有用户连接的时候

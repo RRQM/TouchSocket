@@ -294,7 +294,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        internal void InternalConnected(TouchSocketEventAgrs e)
+        internal void InternalConnected(TouchSocketEventArgs e)
         {
             this.m_online = true;
             if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnConnected", this, e))
@@ -393,7 +393,7 @@ namespace TouchSocket.Sockets
         /// 当客户端完整建立TCP连接，如果覆盖父类方法，则不会触发插件。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnConnected(TouchSocketEventAgrs e)
+        protected virtual void OnConnected(TouchSocketEventArgs e)
         {
             this.m_service.OnInternalConnected(this, e);
         }

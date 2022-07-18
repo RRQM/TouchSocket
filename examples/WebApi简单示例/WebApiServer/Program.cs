@@ -39,7 +39,6 @@ namespace WebApiServerApp
 
     public class Server : RpcServer
     {
-        [Router(,)]
         [WebApi(HttpMethodType.GET)]
         public int Sum(int a, int b)
         {

@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 字节事件
     /// </summary>
-    public class BytesEventArgs : TouchSocketEventAgrs
+    public class BytesEventArgs : TouchSocketEventArgs
     {
         /// <summary>
         /// 构造函数

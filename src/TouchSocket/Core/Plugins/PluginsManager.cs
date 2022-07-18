@@ -109,7 +109,7 @@ namespace TouchSocket.Core.Plugins
                     var ms = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
                     foreach (var item in ms)
                     {
-                        if (item.GetParameters().Length == 2 && typeof(TouchSocketEventAgrs).IsAssignableFrom(item.GetParameters()[1].ParameterType))
+                        if (item.GetParameters().Length == 2 && typeof(TouchSocketEventArgs).IsAssignableFrom(item.GetParameters()[1].ParameterType))
                         {
                             try
                             {
@@ -163,7 +163,7 @@ namespace TouchSocket.Core.Plugins
         /// <param name="params">参数</param>
         bool IPluginsManager.Raise<TPlugin>(string name, params object[] @params)
         {
-            if (m_pluginInfoes.TryGetValue(typeof(TPlugin), out var value) && (@params.Length == 2) && (@params[1] is TouchSocketEventAgrs args))
+            if (m_pluginInfoes.TryGetValue(typeof(TPlugin), out var value) && (@params.Length == 2) && (@params[1] is TouchSocketEventArgs args))
             {
                 if (value.TryGetValue(name, out PluginMethod pluginMethod))
                 {

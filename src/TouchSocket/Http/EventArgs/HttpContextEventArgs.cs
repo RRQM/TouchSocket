@@ -17,7 +17,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http请求事件类
     /// </summary>
-    public class HttpContextEventArgs : TouchSocketEventAgrs
+    public class HttpContextEventArgs : TouchSocketEventArgs
     {
         /// <summary>
         /// Http上下文

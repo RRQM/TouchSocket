@@ -630,7 +630,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
-        protected override void OnConnected(TouchSocketEventAgrs e)
+        protected override void OnConnected(TouchSocketEventArgs e)
         {
             EasyAction.DelayRun(this.VerifyTimeout, this, (client) =>
              {

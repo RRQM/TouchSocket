@@ -25,7 +25,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
-        void OnConnected(ITcpClientBase client, TouchSocketEventAgrs e);
+        void OnConnected(ITcpClientBase client, TouchSocketEventArgs e);
 
         /// <summary>
         ///在即将完成连接时触发。
@@ -60,6 +60,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnIDChanged(ITcpClientBase client, TouchSocketEventAgrs e);
+        void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e);
     }
 }

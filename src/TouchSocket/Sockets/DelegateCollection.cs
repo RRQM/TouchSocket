@@ -28,7 +28,7 @@ public delegate void MessageEventHandler<TClient>(TClient client, MsgEventArgs e
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void EventHandler<TClient>(TClient client, TouchSocketEventAgrs e);
+public delegate void TouchSocketEventHandler<TClient>(TClient client, TouchSocketEventArgs e);
 
 /// <summary>
 /// Connecting

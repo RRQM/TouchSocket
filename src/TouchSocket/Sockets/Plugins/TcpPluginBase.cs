@@ -49,7 +49,7 @@ namespace TouchSocket.Sockets.Plugins
             this.OnDisconnected(client, e);
         }
 
-        void ITcpPlugin.OnIDChanged(ITcpClientBase client, TouchSocketEventAgrs e)
+        void ITcpPlugin.OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
         {
             this.OnIDChanged(client, e);
         }
@@ -64,7 +64,7 @@ namespace TouchSocket.Sockets.Plugins
             this.OnSending(client, e);
         }
 
-        void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventAgrs e)
+        void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
             this.OnConnected(client, e);
         }
@@ -74,7 +74,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnected(ITcpClientBase client, TouchSocketEventAgrs e)
+        protected virtual void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
 
         }
@@ -104,7 +104,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnIDChanged(ITcpClientBase client, TouchSocketEventAgrs e)
+        protected virtual void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
         {
 
         }

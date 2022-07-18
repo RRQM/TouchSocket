@@ -17,7 +17,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WS数据事件类
     /// </summary>
-    public class WSDataFrameEventArgs : TouchSocketEventAgrs
+    public class WSDataFrameEventArgs : TouchSocketEventArgs
     {
         /// <summary>
         /// 构造函数

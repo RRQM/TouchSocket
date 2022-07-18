@@ -130,7 +130,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        public event EventHandler<TClient> Connected;
+        public event TouchSocketEventHandler<TClient> Connected;
 
         /// <summary>
         /// 有用户连接的时候
@@ -145,14 +145,14 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当客户端ID被修改时触发。
         /// </summary>
-        public event EventHandler<TClient> IDChanged;
+        public event TouchSocketEventHandler<TClient> IDChanged;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientConnected(ISocketClient socketClient, TouchSocketEventAgrs e)
+        protected sealed override void OnClientConnected(ISocketClient socketClient, TouchSocketEventArgs e)
         {
             this.OnConnected((TClient)socketClient, e);
         }
@@ -193,7 +193,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnected(TClient socketClient, TouchSocketEventAgrs e)
+        protected virtual void OnConnected(TClient socketClient, TouchSocketEventArgs e)
         {
             this.Connected?.Invoke(socketClient, e);
         }
@@ -223,7 +223,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnIDChanged(TClient socketClient, TouchSocketEventAgrs e)
+        protected virtual void OnIDChanged(TClient socketClient, TouchSocketEventArgs e)
         {
             if (this.m_usePlugin)
             {
@@ -307,7 +307,7 @@ namespace TouchSocket.Sockets
                 socketClient.m_id = newID;
                 if (this.m_socketClients.TryAdd(socketClient))
                 {
-                    this.OnIDChanged(socketClient, new TouchSocketEventAgrs());
+                    this.OnIDChanged(socketClient, new TouchSocketEventArgs());
                     return;
                 }
                 else
