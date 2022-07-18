@@ -13,39 +13,33 @@ namespace WebApiServerApp
     {
         private static void Main(string[] args)
         {
-            RpcStore rpcStore = new RpcStore(new TouchSocket.Core.Dependency.Container());
-            rpcStore.AddRpcParser("webApiParser", CreateWebApiParser());
-            rpcStore.RegisterServer<Server>();//注册服务
+            HttpService service = new HttpService();
+            service.Setup(new TouchSocketConfig()
+               .UsePlugin()
+               .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+               .ConfigureRpcStore(a =>
+               {
+                   a.RegisterServer<Server>();//注册服务
+               }))
+               .Start();
+
+            var webApiParser = service.AddPlugin<WebApiParserPlugin>();
 
             Console.WriteLine("以下连接用于测试webApi");
             Console.WriteLine($"使用：http://127.0.0.1:7789/Server/Sum?a=10&b=20");
 
-            RpcStore.ProxyAttributeMap.TryAdd("webapi", typeof(WebApiAttribute));
+            //RpcStore.ProxyAttributeMap.TryAdd("webapi", typeof(WebApiAttribute));
             //生成的WebApi的本地代理文件。
             //ServerCellCode[] cellCodes = rpcStore.GetProxyInfo(RpcStore.ProxyAttributeMap.Values.ToArray());
             //当想导出全部时，RpcStore.ProxyAttributeMap.Values.ToArray()
             //string codeString = CodeGenerator.ConvertToCode("RRQMProxy", cellCodes);
-
-            rpcStore.ShareProxy(new IPHost(8848));//分享远程代理
-
             Console.ReadKey();
-        }
-
-        private static IRpcParser CreateWebApiParser()
-        {
-            HttpService service = new HttpService();
-
-            service.Setup(new TouchSocketConfig()
-                .UsePlugin()
-                .SetListenIPHosts(new IPHost[] { new IPHost(7789) }))
-                .Start();
-
-            return service.AddPlugin<WebApiParserPlugin>();
         }
     }
 
     public class Server : RpcServer
     {
+        [Router(,)]
         [WebApi(HttpMethodType.GET)]
         public int Sum(int a, int b)
         {
