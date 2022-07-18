@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 插件处理事件
     /// </summary>
-    public class ReceivedDataEventArgs : TouchSocketEventAgrs
+    public class ReceivedDataEventArgs : TouchSocketEventArgs
     {
         /// <summary>
         /// 构造函数

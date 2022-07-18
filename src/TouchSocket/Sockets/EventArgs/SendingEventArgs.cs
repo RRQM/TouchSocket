@@ -17,7 +17,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 发送事件
     /// </summary>
-    public class SendingEventArgs : TouchSocketEventAgrs
+    public class SendingEventArgs : TouchSocketEventArgs
     {
         /// <summary>
         /// 构造函数

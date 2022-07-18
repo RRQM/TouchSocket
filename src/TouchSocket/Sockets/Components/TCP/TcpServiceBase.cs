@@ -120,7 +120,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public abstract IService Stop();
 
-        internal void OnInternalConnected(ISocketClient socketClient, TouchSocketEventAgrs e)
+        internal void OnInternalConnected(ISocketClient socketClient, TouchSocketEventArgs e)
         {
             this.OnClientConnected(socketClient, e);
         }
@@ -145,7 +145,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract void OnClientConnected(ISocketClient socketClient, TouchSocketEventAgrs e);
+        protected abstract void OnClientConnected(ISocketClient socketClient, TouchSocketEventArgs e);
 
         /// <summary>
         /// 客户端请求连接

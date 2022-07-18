@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// 协议数据事件
     /// </summary>
-    public class ProtocolDataEventArgs : TouchSocketEventAgrs
+    public class ProtocolDataEventArgs : TouchSocketEventArgs
     {
         /// <summary>
         /// 构造函数
