@@ -6,7 +6,8 @@
 
  <div align="center"> 
 
-[![NuGet(TouchSocket)](https://buildstats.info/nuget/TouchSocket)](https://www.nuget.org/packages/TouchSocket/)
+[![NuGet(TouchSocket)](https://img.shields.io/nuget/v/TouchSocket.svg?label=TouchSocket)](https://www.nuget.org/packages/TouchSocket/)
+[![NuGet(TouchSocket)](https://img.shields.io/nuget/dt/TouchSocket.svg)](https://www.nuget.org/packages/TouchSocket/)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![star](https://gitee.com/dotnetchina/TouchSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/stargazers) 
 [![fork](https://gitee.com/dotnetchina/TouchSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/members)
