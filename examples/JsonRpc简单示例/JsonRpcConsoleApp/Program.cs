@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Plugins;
@@ -122,7 +123,7 @@ namespace JsonRpcConsoleApp
                 client.SetDataHandlingAdapter(new TerminatorPackageAdapter("\r\n"));
                 Console.WriteLine(client.ID);
             };
-            service.Connected += (SocketClient client, TouchSocket.Core.TouchSocketEventAgrs e) =>
+            service.Connected += (SocketClient client, TouchSocketEventArgs e) =>
             {
                 Clients.Add(client);
                 Console.WriteLine(client.ID);

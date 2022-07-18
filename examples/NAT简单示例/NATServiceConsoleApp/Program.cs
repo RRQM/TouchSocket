@@ -24,7 +24,7 @@ namespace NATServiceConsoleApp
 
     internal class MyNATService : NATService
     {
-        protected override void OnConnected(NATSocketClient socketClient, TouchSocketEventAgrs e)
+        protected override void OnConnected(NATSocketClient socketClient, TouchSocketEventArgs e)
         {
             base.OnConnected(socketClient, e);
 
