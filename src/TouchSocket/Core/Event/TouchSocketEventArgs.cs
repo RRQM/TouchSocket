@@ -16,7 +16,7 @@ using System;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// TouchSocket所有事件基类
+    /// 若汝棋茗所有事件基类
     /// </summary>
     public class TouchSocketEventArgs : EventArgs
     {

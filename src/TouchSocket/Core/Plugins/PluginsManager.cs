@@ -15,40 +15,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Reflection;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Reflection;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Reflection;
-*/
-
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Reflection;
 
