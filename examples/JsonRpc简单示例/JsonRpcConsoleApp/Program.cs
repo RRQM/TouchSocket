@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Core.XREF.Newtonsoft.Json.Linq;
 using TouchSocket.Http;
 using TouchSocket.Rpc;

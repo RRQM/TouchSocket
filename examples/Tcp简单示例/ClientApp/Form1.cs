@@ -6,6 +6,7 @@ using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
 
 namespace ClientApp
@@ -40,10 +41,10 @@ namespace ClientApp
         {
             m_tcpClient = new TcpClient();
 
-            if (checkBox1.Checked)
-            {
-                m_tcpClient.UseReconnection(5, true, 1000);
-            }
+            //if (checkBox1.Checked)
+            //{
+            //    m_tcpClient.UseReconnection(5, true, 1000);
+            //}
 
             //声明配置
             TouchSocketConfig config = new TouchSocketConfig();
@@ -53,6 +54,13 @@ namespace ClientApp
                 .ConfigureContainer(a =>
                 {
                     a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+                })
+                .ConfigurePlugins(a=> 
+                {
+                    if (checkBox1.Checked)
+                    {
+                        a.UseReconnection(5, true, 1000);
+                    }
                 });
 
             m_tcpClient.Connected += (client, e) =>
