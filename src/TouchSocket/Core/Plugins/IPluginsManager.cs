@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using TouchSocket.Core.Dependency;
 
 namespace TouchSocket.Core.Plugins
 {
@@ -20,6 +21,11 @@ namespace TouchSocket.Core.Plugins
     /// </summary>
     public interface IPluginsManager : IEnumerable<IPlugin>
     {
+        /// <summary>
+        /// 内置IOC容器
+        /// </summary>
+        IContainer Container { get; }
+
         /// <summary>
         /// 添加插件
         /// </summary>
