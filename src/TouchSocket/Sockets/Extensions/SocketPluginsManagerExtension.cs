@@ -19,7 +19,7 @@ namespace TouchSocket.Core.Plugins
     /// <summary>
     /// IPluginsManagerExtension
     /// </summary>
-    public static class PluginsManagerExtension
+    public static class SocketPluginsManagerExtension
     {
         /// <summary>
         /// 使用断线重连。
