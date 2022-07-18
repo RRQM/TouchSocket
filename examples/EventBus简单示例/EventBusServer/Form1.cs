@@ -58,12 +58,12 @@ namespace EERPCServiceDemo
             Debug.WriteLine("Handshaking");
         }
 
-        private void TcpRpcParser_Connected(TcpTouchRpcSocketClient client, TouchSocketEventAgrs e)
+        private void TcpRpcParser_Connected(TcpTouchRpcSocketClient client, TouchSocketEventArgs e)
         {
             Debug.WriteLine("Connected");
         }
 
-        private void TcpRpcParser_Disconnected(TcpTouchRpcSocketClient client, TouchSocketEventAgrs e)
+        private void TcpRpcParser_Disconnected(TcpTouchRpcSocketClient client, TouchSocketEventArgs e)
         {
             lock (this)
             {
@@ -71,7 +71,7 @@ namespace EERPCServiceDemo
             }
         }
 
-        private void TcpRpcParser_Handshaked(TcpTouchRpcSocketClient client, TouchSocketEventAgrs e)
+        private void TcpRpcParser_Handshaked(TcpTouchRpcSocketClient client, TouchSocketEventArgs e)
         {
             Debug.WriteLine("Handshaked");
             this.listBox2.Items.Add(client.ID);

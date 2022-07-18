@@ -117,7 +117,7 @@ namespace ConsoleApp
 
     internal class MyWebSocketPlugin : WebSocketPluginBase
     {
-        protected override void OnConnected(ITcpClientBase client, TouchSocketEventAgrs e)
+        protected override void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
             Console.WriteLine("TCP连接");
             base.OnConnected(client, e);

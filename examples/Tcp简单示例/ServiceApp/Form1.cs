@@ -58,7 +58,7 @@ namespace ServiceApp
             this.listBox1.Items.Remove(client.ID);
         }
 
-        private void M_service_Connected(SocketClient client, TouchSocketEventAgrs e)
+        private void M_service_Connected(SocketClient client, TouchSocketEventArgs e)
         {
             this.listBox1.Items.Add(client.ID);
         }
