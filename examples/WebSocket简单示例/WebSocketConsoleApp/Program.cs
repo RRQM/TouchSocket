@@ -43,6 +43,7 @@ namespace WebSocketConsoleApp
             Console.WriteLine("服务器已启动，可使用下列地址连接");
             Console.WriteLine("ws://127.0.0.1:7789/ws");
             Console.WriteLine("ws://127.0.0.1:7789/MyServer/ConnectWS");
+            Console.WriteLine("ws://127.0.0.1:7789/MyServer/ws");
 
             Console.ReadKey();
         }
@@ -100,6 +101,7 @@ namespace WebSocketConsoleApp
             this.m_logger = logger;
         }
 
+        [Router("/[api]/ws")]
         [Router("/[api]/[action]")]
         [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
         public void ConnectWS(WebApiServerCallContext callContext)
