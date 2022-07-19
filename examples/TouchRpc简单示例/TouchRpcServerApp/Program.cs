@@ -127,6 +127,25 @@ namespace TouchRpcServerApp
         }
     }
 
+    public class MyTouchRpcAttribute : TouchRpcAttribute
+    {
+        private readonly string m_route;
+
+        public MyTouchRpcAttribute(string route = default)
+        {
+            this.m_route = route;
+        }
+
+        public override string GetInvokenKey(MethodInstance methodInstance)
+        {
+            if (m_route.IsNullOrEmpty())
+            {
+                return base.GetInvokenKey(methodInstance);
+            }
+            return m_route;
+        }
+    }
+
     internal class MyRpcActionFilterAttribute : Attribute, IRpcActionFilter
     {
         /// <summary>
