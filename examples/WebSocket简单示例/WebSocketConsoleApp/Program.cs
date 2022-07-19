@@ -8,6 +8,9 @@ using TouchSocket.Http.WebSockets;
 using TouchSocket.Http.WebSockets.Plugins;
 using TouchSocket.Sockets;
 using TouchSocket.Core.Plugins;
+using TouchSocket.Rpc;
+using TouchSocket.Rpc.WebApi;
+
 namespace WebSocketConsoleApp
 {
     class Program
@@ -22,17 +25,24 @@ namespace WebSocketConsoleApp
                 {
                     a.SetSingletonLogger<ConsoleLogger>();
                 })
+                .ConfigureRpcStore(a=> 
+                {
+                    a.RegisterServer<MyServer>();
+                })
                 .ConfigurePlugins(a =>
                 {
                     a.Add<WebSocketServerPlugin>()//添加WebSocket功能
                            .SetWSUrl("/ws")
                            .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
                     a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
+                    a.Add<MyWSCommandLinePlugin>();
+                    a.Add<WebApiParserPlugin>();
                 }))
                 .Start();
 
-            Console.WriteLine("服务器已启动");
+            Console.WriteLine("服务器已启动，可使用下列地址连接");
             Console.WriteLine("ws://127.0.0.1:7789/ws");
+            Console.WriteLine("ws://127.0.0.1:7789/MyServer/ConnectWS");
 
             Console.ReadKey();
         }
@@ -81,7 +91,29 @@ namespace WebSocketConsoleApp
         }
     }
 
-    internal class MyWebSocketPlugin : WebSocketPluginBase
+    public class MyServer : RpcServer
+    {
+        private readonly ILog m_logger;
+
+        public MyServer(ILog logger)
+        {
+            this.m_logger = logger;
+        }
+
+        [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
+        public void ConnectWS(WebApiServerCallContext callContext)
+        {
+            if (callContext.Caller is HttpSocketClient socketClient)
+            {
+                if (socketClient.SwitchProtocolToWebSocket(callContext.Context))
+                {
+                    m_logger.Message("WS通过WebApi连接");
+                }
+            }
+        }
+    }
+
+    public class MyWebSocketPlugin : WebSocketPluginBase
     {
         protected override void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
@@ -113,7 +145,7 @@ namespace WebSocketConsoleApp
     /// 命令行插件。
     /// 声明的方法必须以"Command"结尾，支持json字符串，参数之间空格隔开。
     /// </summary>
-    internal class MyWSCommandLinePlugin : WSCommandLinePlugin
+    public class MyWSCommandLinePlugin : WSCommandLinePlugin
     {
         public int AddCommand(int a, int b)
         {
@@ -127,7 +159,7 @@ namespace WebSocketConsoleApp
         }
     }
 
-    internal class SumClass
+    public class SumClass
     {
         public int A { get; set; }
         public int B { get; set; }

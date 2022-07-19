@@ -15,13 +15,6 @@ namespace WSClientApp
         {
             InitializeComponent();
             Control.CheckForIllegalCrossThreadCalls = false;
-            Load += this.Form1_Load;
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            myWSClient.Received += this.MyWSClient_Received;
-            myWSClient.Handshaked += this.MyWSClient_Handshaked;
         }
 
         private void MyWSClient_Handshaked(WebSocketClientBase client, HttpContextEventArgs e)
@@ -29,19 +22,23 @@ namespace WSClientApp
             client.Logger.Message("成功连接");
         }
 
-        private WebSocketClient myWSClient = new WebSocketClient();
+        private WebSocketClient myWSClient;
 
         private void button1_Click(object sender, EventArgs e)
         {
+            myWSClient.SafeDispose();
+
+            myWSClient = new WebSocketClient();
+            myWSClient.Received += this.MyWSClient_Received;
+            myWSClient.Handshaked += this.MyWSClient_Handshaked;
+
             myWSClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
+                .SetRemoteIPHost(this.textBox3.Text)
                 .ConfigureContainer(a =>
                 {
                     a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
                 }));
             myWSClient.Connect();
-
-            myWSClient.Logger.Message("连接成功");
         }
 
         private void MyWSClient_Received(WebSocketClient client, WSDataFrame dataFrame)
