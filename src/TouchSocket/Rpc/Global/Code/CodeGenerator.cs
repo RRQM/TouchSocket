@@ -97,6 +97,21 @@ namespace TouchSocket.Rpc
             {
                 if (serverCellCodes.ContainsKey(serverCellCode.Name))
                 {
+                    if (serverCellCode.IncludeExtension)
+                    {
+                        serverCellCodes[serverCellCode.Name].IncludeExtension = true;
+                    }
+
+                    if (serverCellCode.IncludeInstance)
+                    {
+                        serverCellCodes[serverCellCode.Name].IncludeInstance = true;
+                    }
+
+                    if (serverCellCode.IncludeInterface)
+                    {
+                        serverCellCodes[serverCellCode.Name].IncludeInterface = true;
+                    }
+
                     var ccm = serverCellCodes[serverCellCode.Name].Methods;
                     foreach (var item in serverCellCode.Methods.Keys)
                     {
