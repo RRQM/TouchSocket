@@ -100,6 +100,7 @@ namespace WebSocketConsoleApp
             this.m_logger = logger;
         }
 
+        [Router("/[api]/[action]")]
         [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
         public void ConnectWS(WebApiServerCallContext callContext)
         {
