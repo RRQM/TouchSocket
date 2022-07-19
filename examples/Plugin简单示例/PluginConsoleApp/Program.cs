@@ -44,4 +44,13 @@ namespace PluginConsoleApp
             return a + b;
         }
     }
+
+    class MyPlugin : TcpPluginBase
+    {
+        protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+        {
+            client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+            base.OnConnecting(client, e);
+        }
+    }
 }
