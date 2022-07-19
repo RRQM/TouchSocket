@@ -34,16 +34,20 @@ namespace TouchSocket.Core.IO
             this.Add(helpOrder, "帮助信息", this.ShowAll);
 
             string title = $@"
-  _____   _____    ____   __  __   _____               _          _
- |  __ \ |  __ \  / __ \ |  \/  | / ____|             | |        | |
- | |__) || |__) || |  | || \  / || (___    ___    ___ | | __ ___ | |_
- |  _  / |  _  / | |  | || |\/| | \___ \  / _ \  / __|| |/ // _ \| __|
- | | \ \ | | \ \ | |__| || |  | | ____) || (_) || (__ |   <|  __/| |_
- |_|  \_\|_|  \_\ \___\_\|_|  |_||_____/  \___/  \___||_|\_\\___| \__|
 
+  _______                   _       _____               _          _   
+ |__   __|                 | |     / ____|             | |        | |  
+    | |  ___   _   _   ___ | |__  | (___    ___    ___ | | __ ___ | |_ 
+    | | / _ \ | | | | / __|| '_ \  \___ \  / _ \  / __|| |/ // _ \| __|
+    | || (_) || |_| || (__ | | | | ____) || (_) || (__ |   <|  __/| |_ 
+    |_| \___/  \__,_| \___||_| |_||_____/  \___/  \___||_|\_\\___| \__|
+                                                                       
  -------------------------------------------------------------------
-     Author     :  若汝棋茗
-     Version    :  {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()}
+     Author     :   若汝棋茗
+     Version    :   {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()}
+     Gitee      :   https://gitee.com/rrqm_home
+     Github     :   https://github.com/rrqm
+     API        :   https://www.yuque.com/rrqm/touchsocket/index
  -------------------------------------------------------------------
 ";
             Console.WriteLine(title);
