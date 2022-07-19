@@ -17,11 +17,13 @@ namespace TouchSocket.Rpc.WebApi
     /// <summary>
     /// 表示WebApi路由。
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public class RouterAttribute : Attribute
     {
         /// <summary>
         /// 表示WebApi路由。
-        /// 该模板在用于方法时，会覆盖类的使用。模板必须由“/”开始，如果没有设置，会自动补齐。
+        /// 该模板在用于方法时，会覆盖类的使用。
+        /// 模板必须由“/”开始，如果没有设置，会自动补齐。
         /// 模板不支持参数约定，仅支持方法路由。
         /// <para>模板有以下约定：
         /// <list type="number">
