@@ -14,7 +14,7 @@ using Microsoft.Win32;
 using System.Windows;
 using TouchSocket.Rpc.TouchRpc;
 
-namespace FileClientGUI.Win
+namespace FileServiceGUI.Win
 {
     /// <summary>
     /// PushWindow.xaml 的交互逻辑
@@ -23,30 +23,27 @@ namespace FileClientGUI.Win
     {
         public PushWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
-        public bool SelectRequest(out FileRequest fileRequest, out string clientID)
+        public bool SelectRequest(out FileRequest fileRequest)
         {
             this.ShowDialog();
             fileRequest = this.fileRequest;
-            clientID = this.clientID;
             return this.go;
         }
 
         private FileRequest fileRequest;
         private bool go;
-        private string clientID;
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            fileRequest = new FileRequest()
+            this.fileRequest = new FileRequest()
             {
                 Path = this.tb1.Text,
                 SavePath = this.tb2.Text
             };
             this.go = true;
-            this.clientID = this.tb3.Text;
             this.Close();
         }
 

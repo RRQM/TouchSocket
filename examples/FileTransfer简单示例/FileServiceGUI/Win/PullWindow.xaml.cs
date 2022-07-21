@@ -10,55 +10,46 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using Microsoft.Win32;
 using System.Windows;
+using System.Windows.Controls;
 using TouchSocket.Rpc.TouchRpc;
 
-namespace FileClientGUI.Win
+namespace FileServiceGUI.Win
 {
     /// <summary>
-    /// PushWindow.xaml 的交互逻辑
+    /// PullWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class PushWindow : Window
+    public partial class PullWindow : Window
     {
-        public PushWindow()
+        public PullWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
-        public bool SelectRequest(out FileRequest fileRequest, out string clientID)
+        public bool SelectRequest(out FileRequest fileRequest)
         {
             this.ShowDialog();
             fileRequest = this.fileRequest;
-            clientID = this.clientID;
             return this.go;
+        }
+
+        private void tb1_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            this.tb2.Text = System.IO.Path.GetFileName(this.tb1.Text);
         }
 
         private FileRequest fileRequest;
         private bool go;
-        private string clientID;
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            fileRequest = new FileRequest()
+            this.fileRequest = new FileRequest()
             {
                 Path = this.tb1.Text,
                 SavePath = this.tb2.Text
             };
             this.go = true;
-            this.clientID = this.tb3.Text;
             this.Close();
-        }
-
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.ShowDialog();
-            if (!string.IsNullOrEmpty(dialog.FileName))
-            {
-                this.tb1.Text = dialog.FileName;
-                this.tb2.Text = System.IO.Path.GetFileName(dialog.FileName);
-            }
         }
     }
 }

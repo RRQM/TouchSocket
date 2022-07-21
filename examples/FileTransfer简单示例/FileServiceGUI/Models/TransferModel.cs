@@ -19,11 +19,11 @@ using TouchSocket.Core.IO;
 using TouchSocket.Core.Run;
 using TouchSocket.Rpc.TouchRpc;
 
-namespace FileClientGUI.Models
+namespace FileServiceGUI.Models
 {
     public class TransferModel : RRQMSkin.MVVM.ObservableObject
     {
-        public string FileName { get => string.IsNullOrEmpty(FilePath) ? null : Path.GetFileName(FilePath); }
+        public string FileName => string.IsNullOrEmpty(this.FilePath) ? null : Path.GetFileName(this.FilePath);
         public string FilePath { get; set; }
         public string FileLength { get; set; }
 
@@ -31,24 +31,24 @@ namespace FileClientGUI.Models
 
         public string Speed
         {
-            get { return speed; }
-            set { SetProperty(ref speed, value); }
+            get => this.speed;
+            set => this.SetProperty(ref this.speed, value);
         }
 
         private float progress;
 
         public float Progress
         {
-            get { return progress; }
-            set { SetProperty(ref progress, value); }
+            get => this.progress;
+            set => this.SetProperty(ref this.progress, value);
         }
 
         private ImageSource status;
 
         public ImageSource Status
         {
-            get { return status; }
-            set { SetProperty(ref status, value); }
+            get => this.status;
+            set => this.SetProperty(ref this.status, value);
         }
 
         public FileOperator FileOperator { get; set; }
@@ -59,8 +59,8 @@ namespace FileClientGUI.Models
 
         public string Mes
         {
-            get { return mes; }
-            set { SetProperty(ref mes, value); }
+            get => this.mes;
+            set => this.SetProperty(ref this.mes, value);
         }
 
         public void Start()
@@ -74,7 +74,7 @@ namespace FileClientGUI.Models
                   }
                   else if (this.FileOperator.Result.ResultCode == ResultCode.Success)
                   {
-                      UIInvoke(() =>
+                      App.Current.Dispatcher.Invoke(() =>
                       {
                           this.Status = new BitmapImage(new Uri("Resources/Images/完成.png", UriKind.RelativeOrAbsolute));
                       });
@@ -83,7 +83,7 @@ namespace FileClientGUI.Models
                   }
                   else
                   {
-                      UIInvoke(() =>
+                      App.Current.Dispatcher.Invoke(() =>
                       {
                           this.Status = new BitmapImage(new Uri("Resources/Images/未完成.png", UriKind.RelativeOrAbsolute));
                       });
