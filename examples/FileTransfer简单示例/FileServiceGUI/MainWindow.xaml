@@ -1,8 +1,9 @@
-﻿<Window x:Class="FileClientGUI.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window x:Class="FileServiceGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="RRQM_Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:local="clr-namespace:FileClientGUI"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Title="客户端" Width="800"
+        xmlns:local="clr-namespace:FileServiceGUI"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Title="服务器" Width="800"
         Height="600" mc:Ignorable="d">
     <Window.Resources>
         <Style x:Key="ListBox_Transfer" TargetType="ListBox">
@@ -64,7 +65,7 @@
             <RowDefinition Height="100" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="200" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
 
@@ -78,10 +79,9 @@
                     <CheckBox x:Name="cb_resume" VerticalContentAlignment="Center" Content="断点续传" />
                 </StackPanel>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Button Width="70" Height="30" Margin="5,0" Click="ConButton_Click" Content="连接" />
                     <Button Width="70" Height="30" Margin="5,0" Click="Button_Click_1" Content="Push" />
-                    <Button Width="70" Height="30" Margin="5,0" Click="Button_Click_2" Content="Pull" />
-                    <Button Width="70" Height="30" Margin="5,0" Click="Button_Click_4" Content="发送协议" />
+                    <Button Width="70" Height="30" Margin="5,0,5,2" VerticalAlignment="Bottom" Click="Button_Click_2"
+                            Content="Pull" />
                 </StackPanel>
             </Grid>
         </GroupBox>
@@ -91,16 +91,19 @@
                 <controls:InputBox Width="100" VerticalAlignment="Center" InputFilter="Uint" TextChanged="InputBox_TextChanged" />
 
                 <Button Margin="10,0,0,0" VerticalAlignment="Center" Click="Button_Click" Content="取消传输" />
-                <Button Margin="10,0,0,0" VerticalAlignment="Center" Click="PingButton_Click" Content="Ping" />
             </StackPanel>
         </GroupBox>
 
-        <GroupBox Grid.Row="1" Grid.ColumnSpan="2" Margin="5" Header="当前队列">
+        <GroupBox Grid.Row="1" Grid.RowSpan="2" Margin="5" Header="在线客户端">
+            <ListBox x:Name="ListBox_Clients" BorderThickness="0" DisplayMemberPath="ID" />
+        </GroupBox>
+
+        <GroupBox Grid.Row="1" Grid.Column="2" Margin="5" Header="当前队列">
             <ListBox x:Name="ListBox_LocalTransfer" SelectionChanged="ListBox_SelectionChanged"
                      Style="{StaticResource ListBox_Transfer}" />
         </GroupBox>
 
-        <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Margin="5" Header="远程队列">
+        <GroupBox Grid.Row="2" Grid.Column="2" Margin="5" Header="远程队列">
             <ListBox x:Name="ListBox_RemoteTransfer" SelectionChanged="ListBox_SelectionChanged"
                      Style="{StaticResource ListBox_Transfer}" />
         </GroupBox>
