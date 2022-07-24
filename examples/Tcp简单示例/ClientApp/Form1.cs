@@ -41,11 +41,6 @@ namespace ClientApp
         {
             m_tcpClient = new TcpClient();
 
-            //if (checkBox1.Checked)
-            //{
-            //    m_tcpClient.UseReconnection(5, true, 1000);
-            //}
-
             //声明配置
             TouchSocketConfig config = new TouchSocketConfig();
             config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
