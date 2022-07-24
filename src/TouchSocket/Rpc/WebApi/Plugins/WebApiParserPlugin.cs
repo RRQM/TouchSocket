@@ -27,9 +27,10 @@ namespace TouchSocket.Rpc.WebApi
     /// </summary>
     public class WebApiParserPlugin : HttpPluginBase, IRpcParser
     {
-        private readonly StringConverter m_converter;
         private readonly ActionMap m_actionMap;
+        private readonly StringConverter m_converter;
         private RpcStore m_rpcStore;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -326,6 +327,7 @@ namespace TouchSocket.Rpc.WebApi
         {
             this.m_rpcStore = rpcService;
         }
+
         #endregion RPC解析器
     }
 }

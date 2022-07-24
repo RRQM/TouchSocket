@@ -335,6 +335,10 @@ namespace TouchSocket.Sockets
         /// <param name="how"></param>
         public void Shutdown(SocketShutdown how)
         {
+            if (this.m_mainSocket == null)
+            {
+                return;
+            }
             this.m_mainSocket.Shutdown(how);
         }
 

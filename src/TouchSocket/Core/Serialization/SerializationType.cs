@@ -19,9 +19,9 @@ namespace TouchSocket.Core.Serialization
     public enum SerializationType : byte
     {
         /// <summary>
-        /// 若汝棋茗内置
+        /// 内置快速二进制
         /// </summary>
-        RRQMBinary,
+        FastBinary,
 
         /// <summary>
         /// Json

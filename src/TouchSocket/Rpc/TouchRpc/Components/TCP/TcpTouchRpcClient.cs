@@ -119,18 +119,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public override ITcpClient Connect(int timeout = 5000)
         {
-            return this.Connect(null, default, timeout);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="metadata"></param>
-        /// <param name="token"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public virtual ITcpClient Connect(Metadata metadata = null, CancellationToken token = default, int timeout = 5000)
-        {
             if (this.IsHandshaked)
             {
                 return this;
@@ -140,23 +128,9 @@ namespace TouchSocket.Rpc.TouchRpc
                 base.Connect(timeout);
             }
 
-            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), token, timeout, metadata);
+            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default, 
+                timeout, this.Config.GetValue<Metadata>(TouchRpcConfigExtensions.MetadataProperty));
             return this;
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="metadata"></param>
-        /// <param name="token"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public virtual Task<ITcpClient> ConnectAsync(Metadata metadata = null, CancellationToken token = default, int timeout = 5000)
-        {
-            return Task.Run(() =>
-            {
-                return this.Connect(metadata, token, timeout);
-            });
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace TouchSocket.Core.Serialization
     /// <summary>
     /// 该序列化以二进制方式进行，但是不支持接口、抽象类、继承类等成员的序列化。
     /// </summary>
-    public class TouchSocketBinaryFormatter
+    public class FastBinaryFormatter
     {
         #region Serialize
 
@@ -182,7 +182,7 @@ namespace TouchSocket.Core.Serialization
                 PropertyInfo[] propertyInfos = GetProperties(type);
                 foreach (PropertyInfo property in propertyInfos)
                 {
-                    if (property.GetCustomAttribute<TouchSocketNonSerializedAttribute>() != null)
+                    if (property.GetCustomAttribute<FastNonSerializedAttribute>() != null)
                     {
                         continue;
                     }

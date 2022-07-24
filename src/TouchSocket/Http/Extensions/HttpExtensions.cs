@@ -456,7 +456,6 @@ namespace TouchSocket.Http
                     }
                     reader.Position = httpRange.Start;
                     long surLen = httpRange.Length;
-
                     using (ByteBlock block = new ByteBlock(bufferLen))
                     {
                         while (surLen > 0)

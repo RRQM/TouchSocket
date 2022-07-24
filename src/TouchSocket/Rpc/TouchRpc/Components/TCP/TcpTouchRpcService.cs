@@ -54,12 +54,11 @@ namespace TouchSocket.Rpc.TouchRpc
             this.m_rpcActorGroup.OutputSend = this.RpcServiceOutputSend;
         }
 
-
         #region 字段
 
+        private readonly ActionMap m_actionMap;
         private RpcActorGroup m_rpcActorGroup;
         private RpcStore m_rpcStore;
-        private readonly ActionMap m_actionMap;
 
         #endregion 字段
 
@@ -67,7 +66,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 方法映射表
         /// </summary>
         public ActionMap ActionMap { get => m_actionMap; }
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -91,17 +89,6 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <summary>
-        /// 客户端请求连接
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
-        {
-            socketClient.m_rpcActor = this.m_rpcActorGroup.CreateRpcActor(socketClient);
-            base.OnConnecting(socketClient, e);
-        }
-
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="config"></param>
@@ -117,6 +104,17 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 new RpcStore(config.Container).AddRpcParser(this.GetType().Name, this);
             }
+        }
+
+        /// <summary>
+        /// 客户端请求连接
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
+        {
+            socketClient.m_rpcActor = this.m_rpcActorGroup.CreateRpcActor(socketClient);
+            base.OnConnecting(socketClient, e);
         }
 
         #region 事件

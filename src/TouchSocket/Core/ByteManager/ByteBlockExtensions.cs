@@ -548,7 +548,7 @@ namespace TouchSocket.Core.ByteManager
         /// <param name="byteBlock"></param>
         /// <param name="serializationType"></param>
         /// <returns></returns>
-        public static T ReadObject<T>(this IByteBlock byteBlock, SerializationType serializationType = SerializationType.RRQMBinary)
+        public static T ReadObject<T>(this IByteBlock byteBlock, SerializationType serializationType = SerializationType.FastBinary)
         {
             int length = byteBlock.ReadInt32();
 
@@ -561,9 +561,9 @@ namespace TouchSocket.Core.ByteManager
 
             switch (serializationType)
             {
-                case SerializationType.RRQMBinary:
+                case SerializationType.FastBinary:
                     {
-                        obj = SerializeConvert.RRQMBinaryDeserialize<T>(byteBlock.Buffer, byteBlock.Pos);
+                        obj = SerializeConvert.FastBinaryDeserialize<T>(byteBlock.Buffer, byteBlock.Pos);
                     }
                     break;
 
@@ -588,7 +588,7 @@ namespace TouchSocket.Core.ByteManager
         /// <param name="byteBlock"></param>
         /// <param name="value"></param>
         /// <param name="serializationType"></param>
-        public static TByteBlock WriteObject<TByteBlock>(this TByteBlock byteBlock, object value, SerializationType serializationType = SerializationType.RRQMBinary)
+        public static TByteBlock WriteObject<TByteBlock>(this TByteBlock byteBlock, object value, SerializationType serializationType = SerializationType.FastBinary)
             where TByteBlock : IByteBlock
         {
             if (value == null)
@@ -599,9 +599,9 @@ namespace TouchSocket.Core.ByteManager
             byte[] data;
             switch (serializationType)
             {
-                case SerializationType.RRQMBinary:
+                case SerializationType.FastBinary:
                     {
-                        data = SerializeConvert.RRQMBinarySerialize(value);
+                        data = SerializeConvert.FastBinarySerialize(value);
                     }
                     break;
 

@@ -42,7 +42,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="feedbackType"></param>
         /// <param name="serializationType"></param>
         /// <param name="cancellationToken"></param>
-        public InvokeOption(int timeout = 5000, FeedbackType feedbackType = FeedbackType.WaitInvoke, SerializationType serializationType = SerializationType.RRQMBinary,
+        public InvokeOption(int timeout = 5000, FeedbackType feedbackType = FeedbackType.WaitInvoke, SerializationType serializationType = SerializationType.FastBinary,
             CancellationToken cancellationToken = default) : this()
         {
             this.Timeout = timeout;

@@ -44,7 +44,7 @@ public delegate void ClientConnectingEventHandler<TClient>(TClient client, Clien
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void ClientDisconnectedEventHandler<TClient>(TClient client, ClientDisconnectedEventArgs e);
+public delegate void ClientDisconnectedEventHandler<TClient>(TClient client, ClientDisconnectedEventArgs e); 
 
 /// <summary>
 /// 正在连接事件

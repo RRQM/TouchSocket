@@ -133,17 +133,17 @@ namespace TouchSocket.Core.Plugins
             {
                 if (value.TryGetValue(name, out PluginMethod pluginMethod))
                 {
-                    foreach (var item in this.m_plugins)
+                    for (int i = 0; i < this.m_plugins.Count; i++)
                     {
                         if (args.Handled)
                         {
                             return true;
                         }
-                        if (pluginMethod.type.IsAssignableFrom(item.GetType()))
+                        if (pluginMethod.type.IsAssignableFrom(this.m_plugins[i].GetType()))
                         {
                             try
                             {
-                                pluginMethod.Invoke(item, @params);
+                                pluginMethod.Invoke(this.m_plugins[i], @params);
                             }
                             catch
                             {

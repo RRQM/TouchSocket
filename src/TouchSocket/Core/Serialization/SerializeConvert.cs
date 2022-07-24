@@ -178,61 +178,61 @@ namespace TouchSocket.Core.Serialization
 
 #endif
 
-        #region RRQM二进制序列化
+        #region Fast二进制序列化
 
         /// <summary>
-        /// RRQM二进制序列化对象
+        /// Fast二进制序列化对象
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static void RRQMBinarySerialize(ByteBlock stream, object obj)
+        public static void FastBinarySerialize(ByteBlock stream, object obj)
         {
-            TouchSocketBinaryFormatter bf = new TouchSocketBinaryFormatter();
+            FastBinaryFormatter bf = new FastBinaryFormatter();
             bf.Serialize(stream, obj);
         }
 
         /// <summary>
-        /// RRQM二进制序列化对象
+        /// Fast二进制序列化对象
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static byte[] RRQMBinarySerialize(object obj)
+        public static byte[] FastBinarySerialize(object obj)
         {
             using (ByteBlock byteBlock = new ByteBlock())
             {
-                RRQMBinarySerialize(byteBlock, obj);
+                FastBinarySerialize(byteBlock, obj);
                 return byteBlock.ToArray();
             }
         }
 
-        #endregion RRQM二进制序列化
+        #endregion Fast二进制序列化
 
-        #region RRQM二进制反序列化
+        #region Fast二进制反序列化
 
         /// <summary>
-        /// 反序列化
+        /// Fast反序列化
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public static T RRQMBinaryDeserialize<T>(byte[] data, int offset)
+        public static T FastBinaryDeserialize<T>(byte[] data, int offset)
         {
-            TouchSocketBinaryFormatter bf = new TouchSocketBinaryFormatter();
+            FastBinaryFormatter bf = new FastBinaryFormatter();
             return (T)bf.Deserialize(data, offset, typeof(T));
         }
 
         /// <summary>
-        /// 反序列化
+        /// Fast反序列化
         /// </summary>
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static object RRQMBinaryDeserialize(byte[] data, int offset, Type type)
+        public static object FastBinaryDeserialize(byte[] data, int offset, Type type)
         {
-            TouchSocketBinaryFormatter bf = new TouchSocketBinaryFormatter();
+            FastBinaryFormatter bf = new FastBinaryFormatter();
             return bf.Deserialize(data, offset, type);
         }
 
@@ -242,12 +242,12 @@ namespace TouchSocket.Core.Serialization
         /// <typeparam name="T"></typeparam>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static T RRQMBinaryDeserialize<T>(byte[] data)
+        public static T FastBinaryDeserialize<T>(byte[] data)
         {
-            return RRQMBinaryDeserialize<T>(data, 0);
+            return FastBinaryDeserialize<T>(data, 0);
         }
 
-        #endregion RRQM二进制反序列化
+        #endregion Fast二进制反序列化
 
         #region Xml序列化和反序列化
 

@@ -52,7 +52,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 最大传输速度（企业版默认1024*1024字节，开源版不限速，所以此值无效。）
         /// </summary>
-        public int MaxSpeed => int.MaxValue;
+        public int MaxSpeed =>int.MaxValue;
 
         /// <summary>
         /// 超时时间，默认10*1000ms。

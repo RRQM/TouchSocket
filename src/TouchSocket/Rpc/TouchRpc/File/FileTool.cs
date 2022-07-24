@@ -13,6 +13,7 @@
 using System.IO;
 using TouchSocket.Core.IO;
 using TouchSocket.Core.Serialization;
+using TouchSocket.Core.XREF.Newtonsoft.Json;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -60,7 +61,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 try
                 {
                     FileInfo fileInfo = new FileInfo(filePath);
-                    TouchRpcFileInfo tempInfo = SerializeConvert.XmlDeserializeFromFile<TouchRpcFileInfo>(tempPath);
+                    TouchRpcFileInfo tempInfo = JsonConvert.DeserializeObject<TouchRpcFileInfo>(File.ReadAllText(tempPath));
                     if (tempInfo.MD5 == info.MD5 && tempInfo.FileLength == info.FileLength)
                     {
                         info.Position = tempInfo.Position;

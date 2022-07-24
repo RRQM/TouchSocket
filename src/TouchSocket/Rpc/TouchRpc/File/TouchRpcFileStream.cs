@@ -13,44 +13,18 @@
 using System;
 using System.IO;
 using System.Threading;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using System;
-using System.IO;
-在此之后:
 using TouchSocket.Core;
+using TouchSocket.Core.Extensions;
 using TouchSocket.Core.IO;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using System;
-using System.IO;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.IO;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using System;
-using System.IO;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.IO;
-*/
-using TouchSocket.Core.IO;
-using TouchSocket.Core.Serialization;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
     /// 文件流
     /// </summary>
-    internal class TouchRpcFileStream : TouchSocket.Core.DisposableObject
+    internal class TouchRpcFileStream : DisposableObject
     {
-        private static int saveInterval = 1000;
+        private static int m_saveInterval = 1000;
 
         private TouchRpcFileInfo m_fileInfo;
 
@@ -60,11 +34,11 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private bool m_resume;
 
-        private FileStorageWriter fileWriter;
+        private FileStorageWriter m_fileWriter;
 
         protected override void Dispose(bool disposing)
         {
-            this.fileWriter.SafeDispose();
+            this.m_fileWriter.SafeDispose();
             base.Dispose(disposing);
         }
 
@@ -73,25 +47,25 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public static int SaveInterval
         {
-            get => saveInterval;
+            get => m_saveInterval;
             set
             {
                 if (value < 0)
                 {
                     value = 0;
                 }
-                saveInterval = value;
+                m_saveInterval = value;
             }
         }
 
-        public FileStorageWriter FileWriter => this.fileWriter;
+        public FileStorageWriter FileWriter => this.m_fileWriter;
 
         public static TouchRpcFileStream Create(string path, ref TouchRpcFileInfo fileInfo, bool resume)
         {
             TouchRpcFileStream stream = new TouchRpcFileStream();
             FileTool.TryReadTempInfo(path, ref fileInfo);
-            stream.fileWriter = FilePool.GetWriter(path + ".rrqm", true);
-            stream.fileWriter.Position = fileInfo.Position;
+            stream.m_fileWriter = FilePool.GetWriter(path + ".rrqm", true);
+            stream.m_fileWriter.Position = fileInfo.Position;
             stream.m_fileInfo = fileInfo;
             stream.m_path = path;
             stream.m_resume = resume;
@@ -100,13 +74,13 @@ namespace TouchSocket.Rpc.TouchRpc
 
         public void Write(byte[] buffer, int offset, int length)
         {
-            this.fileWriter.Write(buffer, offset, length);
+            this.m_fileWriter.Write(buffer, offset, length);
             this.SaveProgress();
         }
 
         public void FinishStream()
         {
-            if (this.fileWriter.Position != this.m_fileInfo.FileLength)
+            if (this.m_fileWriter.Position != this.m_fileInfo.FileLength)
             {
                 throw new Exception("已完成传输，但是文件长度不对。");
             }
@@ -114,7 +88,7 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 File.Delete(this.m_path);
             }
-            this.fileWriter.SafeDispose();
+            this.m_fileWriter.SafeDispose();
 
             string rrqmPath = this.m_path + ".rrqm";
             string tempPath = this.m_path + ".temp";
@@ -145,11 +119,11 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             if (this.m_resume)
             {
-                if (DateTime.Now.TimeOfDay - this.m_lastTime > TimeSpan.FromMilliseconds(saveInterval))
+                if (DateTime.Now.TimeOfDay - this.m_lastTime > TimeSpan.FromMilliseconds(m_saveInterval))
                 {
                     try
                     {
-                        SerializeConvert.XmlSerializeToFile(this.m_fileInfo, this.m_path + ".temp");
+                        File.WriteAllText(this.m_path + ".temp", this.m_fileInfo.ToJsonString());
                         this.m_lastTime = DateTime.Now.TimeOfDay;
                     }
                     catch

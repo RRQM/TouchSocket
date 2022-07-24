@@ -17,7 +17,7 @@ namespace TouchSocket.Core.IO
     /// <summary>
     /// 文件读取器
     /// </summary>
-    public class FileStorageReader : IDisposable
+    public class FileStorageReader : DisposableObject
     {
         private FileStorage m_fileStorage;
 
@@ -36,7 +36,6 @@ namespace TouchSocket.Core.IO
         public FileStorage FileStorage => this.m_fileStorage;
 
         private long m_position;
-        private bool m_disposedValue;
 
         /// <summary>
         /// 游标位置
@@ -71,22 +70,14 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
-        /// 释放资源
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
-            if (!this.m_disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: 释放托管状态(托管对象)
-                }
-
-                FilePool.TryReleaseFile(this.m_fileStorage?.Path);
-                this.m_fileStorage = null;
-                this.m_disposedValue = true;
-            }
+            FilePool.TryReleaseFile(this.m_fileStorage?.Path);
+            this.m_fileStorage = null;
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -96,27 +87,6 @@ namespace TouchSocket.Core.IO
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
             this.Dispose(disposing: false);
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose(int delayTime)
-        {
-            FilePool.TryReleaseFile(this.m_fileStorage?.Path, delayTime);
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

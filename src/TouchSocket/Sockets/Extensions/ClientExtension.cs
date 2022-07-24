@@ -25,20 +25,6 @@ namespace TouchSocket.Sockets
     public static class ClientExtension
     {
         /// <summary>
-        /// 使用断线重连。
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="successCallback">成功回调函数</param>
-        /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
-        /// <param name="printLog">是否输出日志。</param>
-        /// <param name="sleepTime">失败时，停留时间</param>
-        public static T UseReconnection<T>(this T client, int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<T> successCallback = null) where T : ITcpClient, IPlguinObject
-        {
-            client.PluginsManager.Add(new ReconnectionPlugin<T>(tryCount, printLog, sleepTime, successCallback));
-            return client;
-        }
-
-        /// <summary>
         /// 获取相关信息。格式：
         ///<para>IPPort=IP:Port，ID=id，Protocol=Protocol</para>
         /// </summary>
@@ -60,6 +46,10 @@ namespace TouchSocket.Sockets
         {
             try
             {
+                if (client==null||!client.Online)
+                {
+                    return;
+                }
                 client.Shutdown(how);
             }
             catch
