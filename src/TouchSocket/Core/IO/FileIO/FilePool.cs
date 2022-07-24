@@ -213,9 +213,8 @@ namespace TouchSocket.Core.IO
         /// 减少引用次数，并尝试释放流。
         /// </summary>
         /// <param name="path"></param>
-        /// <param name="delayTime">延迟释放时间，默认5000ms。当设置为0时，立即释放。</param>
         /// <returns></returns>
-        public static Result TryReleaseFile(string path, int delayTime = 5000)
+        public static Result TryReleaseFile(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -227,28 +226,11 @@ namespace TouchSocket.Core.IO
                 Interlocked.Decrement(ref fileStorage.reference);
                 if (fileStorage.reference <= 0)
                 {
-                    if (delayTime > 0)
+                    if (pathStream.TryRemove(path, out fileStorage))
                     {
-                        Run.EasyAction.DelayRun(delayTime, path, (p) =>
-                          {
-                              if (GetReferenceCount(p) == 0)
-                              {
-                                  if (pathStream.TryRemove(p, out fileStorage))
-                                  {
-                                      fileStorage.Dispose();
-                                  }
-                              }
-                          });
-                        return new Result(ResultCode.Success, $"如果在{delayTime}ms后引用仍然为0的话，即被释放。");
+                        fileStorage.Dispose();
                     }
-                    else
-                    {
-                        if (pathStream.TryRemove(path, out fileStorage))
-                        {
-                            fileStorage.Dispose();
-                        }
-                        return new Result(ResultCode.Success, "流成功释放。");
-                    }
+                    return new Result(ResultCode.Success, "流成功释放。");
                 }
                 else
                 {
@@ -257,7 +239,7 @@ namespace TouchSocket.Core.IO
             }
             else
             {
-                return new Result(ResultCode.Error, ResType.StreamNotFind.GetDescription(path));
+                return new Result(ResultCode.Success, ResType.StreamNotFind.GetDescription(path));
             }
         }
     }

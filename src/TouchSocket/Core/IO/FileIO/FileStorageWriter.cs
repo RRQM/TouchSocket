@@ -17,9 +17,8 @@ namespace TouchSocket.Core.IO
     /// <summary>
     /// 文件写入器。
     /// </summary>
-    public class FileStorageWriter : IDisposable
+    public class FileStorageWriter : DisposableObject
     {
-        private bool m_disposedValue;
         private FileStorage m_fileStorage;
         private readonly bool m_singleRef;
         private long m_position;
@@ -45,6 +44,16 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            FilePool.TryReleaseFile(this.m_fileStorage?.Path);
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
         /// 文件存储器
         /// </summary>
         public FileStorage FileStorage => this.m_fileStorage;
@@ -67,16 +76,7 @@ namespace TouchSocket.Core.IO
             set => this.m_position = value;
         }
 
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
+      
         /// <summary>
         /// 读取数据到缓存区
         /// </summary>
@@ -90,23 +90,6 @@ namespace TouchSocket.Core.IO
             this.m_position += length;
         }
 
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this.m_disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: 释放托管状态(托管对象)
-                }
-
-                FilePool.TryReleaseFile(this.m_fileStorage?.Path, this.m_singleRef ? 0 : 5000);
-                this.m_fileStorage = null;
-                this.m_disposedValue = true;
-            }
-        }
+ 
     }
 }

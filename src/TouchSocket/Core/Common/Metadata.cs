@@ -24,7 +24,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public void AddOrUpdate(string key, string value)
+        public Metadata AddOrUpdate(string key, string value)
         {
             if (this.ContainsKey(key))
             {
@@ -34,6 +34,7 @@ namespace TouchSocket.Core
             {
                 this.Add(key, value);
             }
+            return this;
         }
     }
 }

@@ -23,23 +23,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public interface ITcpTouchRpcClient : ITcpRpcClientBase, ITcpClient, IRpcParser
     {
-        /// <summary>
-        /// 连接
-        /// </summary>
-        /// <param name="metadata">元数据</param>
-        /// <param name="token">可取消操作令箭</param>
-        /// <param name="timeout">验证超时时间</param>
-        /// <returns></returns>
-        ITcpClient Connect(Metadata metadata = null, CancellationToken token = default, int timeout = 5000);
-
-        /// <summary>
-        /// 异步连接
-        /// </summary>
-        /// <param name="metadata">元数据</param>
-        /// <param name="token">可取消操作令箭</param>
-        /// <param name="timeout">验证超时时间</param>
-        /// <returns></returns>
-        Task<ITcpClient> ConnectAsync(Metadata metadata = null, CancellationToken token = default, int timeout = 5000);
     }
 
     /// <summary>

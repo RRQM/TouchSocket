@@ -30,11 +30,11 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class HttpTouchRpcClient : HttpClientBase, IHttpTouchRpcClient
     {
+        private readonly ActionMap m_actionMap;
         private int m_failCount = 0;
-        private RpcActor m_rpcActor;
+        private readonly RpcActor m_rpcActor;
         private RpcStore m_rpcStore;
         private Timer m_timer;
-        private ActionMap m_actionMap;
 
         /// <summary>
         /// 创建一个HttpTouchRpcClient实例。
@@ -58,6 +58,11 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <summary>
+        /// 服务器映射
+        /// </summary>
+        public ActionMap ActionMap { get => m_actionMap; }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public string ID => this.m_rpcActor.ID;
@@ -66,11 +71,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <inheritdoc/>
         /// </summary>
         public bool IsHandshaked => this.m_rpcActor != null && this.m_rpcActor.IsHandshaked;
-
-        /// <summary>
-        /// 服务器映射
-        /// </summary>
-        public ActionMap ActionMap { get => m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -119,18 +119,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public override ITcpClient Connect(int timeout = 5000)
         {
-            return this.Connect(null, default, timeout);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="metadata"></param>
-        /// <param name="token"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public virtual ITcpClient Connect(Metadata metadata = null, CancellationToken token = default, int timeout = 5000)
-        {
             if (this.IsHandshaked)
             {
                 return this;
@@ -146,28 +134,14 @@ namespace TouchSocket.Rpc.TouchRpc
             if (response.StatusCode == "200")
             {
                 this.SwitchProtocolToTouchRpc();
-                this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), token, timeout, metadata);
+                this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default, 
+                    timeout, this.Config.GetValue<Metadata>(TouchRpcConfigExtensions.MetadataProperty));
                 return this;
             }
             else
             {
                 throw new Exception(response.StatusMessage);
             }
-        }
-
-        /// <summary>
-        /// 异步连接
-        /// </summary>
-        /// <param name="metadata"></param>
-        /// <param name="token"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public virtual Task<ITcpClient> ConnectAsync(Metadata metadata = null, CancellationToken token = default, int timeout = 5000)
-        {
-            return Task.Run(() =>
-            {
-                return this.Connect(metadata, token, timeout);
-            });
         }
 
         /// <summary>
@@ -513,6 +487,17 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="id"></param>
+        /// <param name="channel"></param>
+        /// <returns></returns>
+        public bool TrySubscribeChannel(int id, out Channel channel)
+        {
+            return this.m_rpcActor.TrySubscribeChannel(id, out channel);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
@@ -692,17 +677,6 @@ namespace TouchSocket.Rpc.TouchRpc
             this.m_timer.SafeDispose();
             this.m_rpcActor?.Close(e.Message);
             base.OnDisconnected(e);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="channel"></param>
-        /// <returns></returns>
-        public bool TrySubscribeChannel(int id, out Channel channel)
-        {
-            return this.m_rpcActor.TrySubscribeChannel(id, out channel);
         }
 
         #region 内部委托绑定

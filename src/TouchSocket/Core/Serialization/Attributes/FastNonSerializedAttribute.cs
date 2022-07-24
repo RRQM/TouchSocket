@@ -18,7 +18,7 @@ namespace TouchSocket.Core.Serialization
     /// 忽略的RRQM序列化
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class TouchSocketNonSerializedAttribute : Attribute
+    public class FastNonSerializedAttribute : Attribute
     {
     }
 }

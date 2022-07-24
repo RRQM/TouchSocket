@@ -38,9 +38,9 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             switch (serializationType)
             {
-                case SerializationType.RRQMBinary:
+                case SerializationType.FastBinary:
                     {
-                        return SerializeConvert.RRQMBinaryDeserialize(parameterBytes, 0, parameterType);
+                        return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
                     }
                 case SerializationType.Json:
                     {
@@ -69,9 +69,9 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             switch (serializationType)
             {
-                case SerializationType.RRQMBinary:
+                case SerializationType.FastBinary:
                     {
-                        return SerializeConvert.RRQMBinarySerialize(parameter);
+                        return SerializeConvert.FastBinarySerialize(parameter);
                     }
                 case SerializationType.Json:
                     {

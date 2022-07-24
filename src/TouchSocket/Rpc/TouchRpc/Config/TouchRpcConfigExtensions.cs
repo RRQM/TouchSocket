@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using TouchSocket.Core;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 
@@ -46,8 +47,14 @@ namespace TouchSocket.Rpc.TouchRpc
             DependencyProperty.Register("VerifyToken", typeof(string), typeof(TouchRpcConfigExtensions), "rrqm");
 
         /// <summary>
+        /// TouchClient连接时的元数据, 所需类型<see cref="Metadata"/>
+        /// </summary>
+        public static readonly DependencyProperty MetadataProperty =
+            DependencyProperty.Register("Metadata", typeof(Metadata), typeof(TouchRpcConfigExtensions), null);
+
+        /// <summary>
         /// 心跳频率，默认为间隔2000ms，3次。（设置为null时禁止心跳）
-        /// <para>仅适用于<see cref="TcpTouchRpcClient"/>及派生类</para>
+        /// <para>仅适用于TouchRpcClient系类</para>
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
@@ -55,6 +62,19 @@ namespace TouchSocket.Rpc.TouchRpc
         public static TouchSocketConfig SetHeartbeatFrequency(this TouchSocketConfig config, HeartbeatValue value)
         {
             config.SetValue(HeartbeatFrequencyProperty, value);
+            return config;
+        }
+
+        /// <summary>
+        /// 设置TouchClient连接时的元数据
+        /// <para>仅适用于TouchRpcClient系类</para>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetMetadata(this TouchSocketConfig config, Metadata value)
+        {
+            config.SetValue(MetadataProperty, value);
             return config;
         }
 
@@ -71,7 +91,8 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <summary>
-        /// 验证超时时间,默认为3000ms
+        /// 验证超时时间,默认为3000ms.
+        /// <para>该配置仅<see cref="TcpTouchRpcService"/>有效</para>
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
