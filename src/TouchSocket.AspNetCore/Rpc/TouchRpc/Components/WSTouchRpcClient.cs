@@ -169,10 +169,8 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="metadata"></param>
-        /// <param name="token"></param>
         /// <param name="timeout"></param>
-        public async Task ConnectAsync(Metadata metadata = null, CancellationToken token = default, int timeout = 5000)
+        public async Task ConnectAsync(int timeout = 5000)
         {
             if (!this.RemoteIPHost.IsUri)
             {
@@ -182,7 +180,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             {
                 this.m_client.SafeDispose();
                 this.m_client = new ClientWebSocket();
-                await this.m_client.ConnectAsync(this.RemoteIPHost.Uri, token);
+                await this.m_client.ConnectAsync(this.RemoteIPHost.Uri, default);
                 this.BeginReceive(null);
             }
 
@@ -191,7 +189,8 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 return;
             }
 
-            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), token, timeout, metadata);
+            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default, 
+                timeout, this.Config.GetValue<Metadata>(TouchRpcConfigExtensions.MetadataProperty));
         }
 
         /// <summary>

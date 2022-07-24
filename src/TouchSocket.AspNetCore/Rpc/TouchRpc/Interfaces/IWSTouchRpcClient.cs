@@ -25,10 +25,8 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// 异步连接
         /// </summary>
-        /// <param name="metadata">元数据</param>
-        /// <param name="token">可取消操作令箭</param>
         /// <param name="timeout">验证超时时间</param>
         /// <returns></returns>
-        Task ConnectAsync(Metadata metadata = null, CancellationToken token = default, int timeout = 5000);
+        Task ConnectAsync(int timeout = 5000);
     }
 }

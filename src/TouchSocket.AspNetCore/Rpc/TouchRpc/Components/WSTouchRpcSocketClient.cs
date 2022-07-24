@@ -533,7 +533,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             return this.m_rpcActor.SendStreamAsync(stream, streamOperator, metadata);
         }
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
