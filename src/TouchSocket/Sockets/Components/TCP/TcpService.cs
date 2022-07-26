@@ -547,6 +547,10 @@ namespace TouchSocket.Sockets
                     Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                     socket.ReceiveBufferSize = this.BufferLength;
                     socket.SendBufferSize = this.BufferLength;
+                    if (this.m_config.GetValue<bool>(TouchSocketConfigExtension.ReuseAddressProperty))
+                    {
+                        socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    }
                     this.PreviewBind(socket);
                     socket.Bind(iPHost.EndPoint);
                     socket.Listen(this.m_backlog);

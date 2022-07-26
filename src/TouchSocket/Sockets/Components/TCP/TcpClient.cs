@@ -688,6 +688,10 @@ namespace TouchSocket.Sockets
             socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.m_config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty));
             if (this.m_config.GetValue<IPHost>(TouchSocketConfigExtension.BindIPHostProperty) != null)
             {
+                if (this.m_config.GetValue<bool>(TouchSocketConfigExtension.ReuseAddressProperty))
+                {
+                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                }
                 socket.Bind(this.m_config.GetValue<IPHost>(TouchSocketConfigExtension.BindIPHostProperty).EndPoint);
             }
             return socket;
