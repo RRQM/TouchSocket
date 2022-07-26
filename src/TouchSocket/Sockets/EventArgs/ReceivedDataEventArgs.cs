@@ -18,25 +18,17 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 插件处理事件
     /// </summary>
-    public class ReceivedDataEventArgs : TouchSocketEventArgs
+    public class ReceivedDataEventArgs : ByteBlockEventArgs
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo)
+        public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo):base(byteBlock)
         {
-            this.ByteBlock = byteBlock;
             this.RequestInfo = requestInfo;
         }
-
-        /// <summary>
-        /// 数据载体
-        /// </summary>
-        public ByteBlock ByteBlock { get; }
-
-
         /// <summary>
         /// 对象载体
         /// </summary>

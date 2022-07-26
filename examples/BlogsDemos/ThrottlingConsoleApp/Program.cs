@@ -11,6 +11,11 @@ namespace ThrottlingConsoleApp
 {
     internal class Program
     {
+        /// <summary>
+        /// 限制单个客户端的访问流量
+        /// 博客连接<see href="https://blog.csdn.net/qq_40374647/article/details/125496769"/>
+        /// </summary>
+        /// <param name="args"></param>
         private static void Main(string[] args)
         {
             TcpService service = new TcpService();

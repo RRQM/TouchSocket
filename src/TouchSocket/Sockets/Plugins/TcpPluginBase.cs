@@ -128,5 +128,19 @@ namespace TouchSocket.Sockets.Plugins
         {
 
         }
+        /// <summary>
+        /// 在刚收到数据时触发，即在适配器之前。
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        protected virtual void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        {
+
+        }
+
+        void ITcpPlugin.OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        {
+            this.OnReceivingData(client,e);
+        }
     }
 }
