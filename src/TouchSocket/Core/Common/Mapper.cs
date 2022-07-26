@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TouchSocket.Core.Reflection;
 
 namespace TouchSocketPro
 {
@@ -11,102 +14,97 @@ namespace TouchSocketPro
     /// </summary>
     public static class Mapper
     {
+        private static readonly ConcurrentDictionary<Type, Dictionary<string, Property>> m_typeToProperty = new ConcurrentDictionary<Type, Dictionary<string, Property>>();
+
         /// <summary>
         /// 简单映射
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="T1"></typeparam>
-        /// <param name="t"></param>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="source"></param>
         /// <returns></returns>
-        public static T1 Map<T, T1>(T t)where T:class where T1:class,new ()
+        public static TTarget Map<TTarget>(object source) where TTarget : class, new()
         {
-            if (t is null)
-            {
-                return default;
-            }
-            var source = Activator.CreateInstance(typeof(T));
-            var result = Activator.CreateInstance(typeof(T1));
-            if (source.GetType().Name == "List`1" || result.GetType().Name == "List`1")
-            {
-                throw new Exception("形参有误！，请使用对象。");
-            }
-            var tpropertyInfos = source.GetType().GetProperties();
-            var t1propertyInfos = result.GetType().GetProperties();
-            foreach (var tinfo in tpropertyInfos)
-            {
-                foreach (var t1info in t1propertyInfos)
-                {
-                    if (t1info.PropertyType.IsValueType || t1info.PropertyType.Name.StartsWith("String"))
-                    {
-                        if (tinfo.Name == t1info.Name)
-                        {
-                            try
-                            {
-                                object value = tinfo.GetValue(t, null);
-                                var property = typeof(T1).GetProperty(tinfo.Name);
-                                if (property != null && property.CanWrite && !(value is DBNull))
-                                {
-                                    property.SetValue(result, value, null);
-                                }
-                            }
-                            catch
-                            {
-                            }
-                        }
-                    }
-                }
-
-            }
-            return (T1)result;
+            return (TTarget)Map(source,typeof(TTarget));
         }
 
         /// <summary>
         /// 简单映射
         /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <param name="t"></param>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="source"></param>
         /// <returns></returns>
-        public static T1 Map<T1>(object t) where T1 : class, new()
+        public static TTarget Map<TSource,TTarget>(TSource source) where TTarget : class, new()
         {
-            if (t is null)
+            return (TTarget)Map(source, typeof(TTarget));
+        }
+
+        /// <summary>
+        /// 简单对象映射
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        public static object Map(object source,Type targetType) 
+        {
+            return Map(source, Activator.CreateInstance(targetType));
+        }
+
+        /// <summary>
+        /// 简单对象映射
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public static object Map(object source, object target)
+        {
+            if (source is null)
             {
                 return default;
             }
-            var result = Activator.CreateInstance(typeof(T1));
-            if (t.GetType().Name == "List`1" || result.GetType().Name == "List`1")
+            var sourceType = source.GetType();
+            if (sourceType.IsPrimitive || sourceType.IsEnum || sourceType == TouchSocket.Core.TouchSocketCoreUtility.stringType)
             {
-                throw new Exception("形参有误！，请使用对象。");
+                return source;
             }
-            var tpropertyInfos = t.GetType().GetProperties();
-            var t1propertyInfos = result.GetType().GetProperties();
-            foreach (var tinfo in tpropertyInfos)
+            var sourcePairs = m_typeToProperty.GetOrAdd(sourceType, (k) =>
+               {
+                   Dictionary<string, Property> pairs = new Dictionary<string, Property>();
+                   var ps = k.GetProperties(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                   foreach (var item in ps)
+                   {
+                       pairs.Add(item.Name, new Property(item));
+                   }
+                   return pairs;
+               });
+
+            var targetPairs = m_typeToProperty.GetOrAdd(target.GetType(), (k) =>
             {
-                foreach (var t1info in t1propertyInfos)
+                Dictionary<string, Property> pairs = new Dictionary<string, Property>();
+                var ps = k.GetProperties(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                foreach (var item in ps)
                 {
-                    if (t1info.PropertyType.IsValueType || t1info.PropertyType.Name.StartsWith("String"))
+                    pairs.Add(item.Name, new Property(item));
+                }
+                return pairs;
+            });
+            foreach (var item in targetPairs)
+            {
+                if (item.Value.CanWrite)
+                {
+                    if (sourcePairs.TryGetValue(item.Key,out Property property))
                     {
-                        if (tinfo.Name == t1info.Name)
+                        if (property.CanRead)
                         {
-                            try
-                            {
-                                object value = tinfo.GetValue(t, null);
-                                var property = typeof(T1).GetProperty(tinfo.Name);
-                                if (property != null && property.CanWrite && !(value is DBNull))
-                                {
-                                    property.SetValue(result, value, null);
-                                }
-                            }
-                            catch
-                            {
-                            }
+                            item.Value.SetValue(target,property.GetValue(source));
                         }
                     }
                 }
-
             }
-            return (T1)result;
+            return target;
         }
 
+     
         /// <summary>
         /// 映射List
         /// </summary>

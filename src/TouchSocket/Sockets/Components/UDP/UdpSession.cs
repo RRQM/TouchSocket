@@ -431,6 +431,10 @@ namespace TouchSocket.Sockets
                 socket.UseOnlyOverlappedIO = true;
             }
             socket.EnableBroadcast = this.m_config.GetValue<bool>(TouchSocketConfigExtension.EnableBroadcastProperty);
+            if (this.m_config.GetValue<bool>(TouchSocketConfigExtension.ReuseAddressProperty))
+            {
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            }
             this.PreviewBind(socket);
             socket.Bind(iPHost.EndPoint);
 

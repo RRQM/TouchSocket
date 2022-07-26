@@ -385,6 +385,24 @@ namespace TouchSocket.Sockets
         /// </summary>
         public static readonly DependencyProperty MaxCountProperty =
             DependencyProperty.Register("MaxCount", typeof(int), typeof(TouchSocketConfigExtension), 10000);
+        
+        /// <summary>
+        /// 端口复用，默认为false，所需类型<see cref="bool"/>
+        /// </summary>
+        public static readonly DependencyProperty ReuseAddressProperty =
+            DependencyProperty.Register("ReuseAddress", typeof(bool), typeof(TouchSocketConfigExtension), false);
+
+        /// <summary>
+        /// 启用端口复用。
+        /// <para>该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题</para>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig UseReuseAddress(this TouchSocketConfig config)
+        {
+            config.SetValue(ReuseAddressProperty, true);
+            return config;
+        }
 
         /// <summary>
         /// 挂起连接队列的最大长度，默认100。

@@ -25,12 +25,12 @@ namespace TouchSocket.Core.Reflection
         /// <summary>
         /// 获取器
         /// </summary>
-        private readonly PropertyGetter geter;
+        private readonly PropertyGetter m_geter;
 
         /// <summary>
         /// 设置器
         /// </summary>
-        private readonly PropertySetter seter;
+        private readonly PropertySetter m_seter;
 
         /// <summary>
         /// 获取属性名称
@@ -53,13 +53,25 @@ namespace TouchSocket.Core.Reflection
 
             if (property.CanRead == true)
             {
-                this.geter = new PropertyGetter(property);
+                this.CanRead = true;
+                this.m_geter = new PropertyGetter(property);
             }
             if (property.CanWrite == true)
             {
-                this.seter = new PropertySetter(property);
+                this.CanWrite = true;
+                this.m_seter = new PropertySetter(property);
             }
         }
+
+        /// <summary>
+        /// 是否可以读取
+        /// </summary>
+        public bool CanRead { get; private set; }
+
+        /// <summary>
+        /// 是否可以写入
+        /// </summary>
+        public bool CanWrite { get; private set; }
 
         /// <summary>
         /// 获取属性的值
@@ -69,11 +81,11 @@ namespace TouchSocket.Core.Reflection
         /// <returns></returns>
         public object GetValue(object instance)
         {
-            if (this.geter == null)
+            if (this.m_geter == null)
             {
                 throw new NotSupportedException();
             }
-            return this.geter.Invoke(instance);
+            return this.m_geter.Invoke(instance);
         }
 
         /// <summary>
@@ -84,11 +96,11 @@ namespace TouchSocket.Core.Reflection
         /// <exception cref="NotSupportedException"></exception>
         public void SetValue(object instance, object value)
         {
-            if (this.seter == null)
+            if (this.m_seter == null)
             {
                 throw new NotSupportedException($"{this.Name}不允许赋值");
             }
-            this.seter.Invoke(instance, value);
+            this.m_seter.Invoke(instance, value);
         }
 
         /// <summary>
