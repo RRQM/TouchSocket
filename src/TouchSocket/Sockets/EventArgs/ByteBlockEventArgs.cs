@@ -26,14 +26,12 @@ namespace TouchSocket.Sockets
         /// </summary>
         public ByteBlockEventArgs(ByteBlock byteBlock)
         {
-            this.byteBlock = byteBlock;
+            this.ByteBlock = byteBlock;
         }
-
-        private ByteBlock byteBlock;
 
         /// <summary>
         /// 数据块
         /// </summary>
-        public ByteBlock ByteBlock => this.byteBlock;
+        public ByteBlock ByteBlock { get; private set; }
     }
 }

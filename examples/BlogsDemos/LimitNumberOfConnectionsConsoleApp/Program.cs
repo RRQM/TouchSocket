@@ -13,6 +13,11 @@ namespace LimitNumberOfConnectionsConsoleApp
 {
     internal class Program
     {
+        /// <summary>
+        /// 限制同一个IP的连接数量
+        /// 博客地址<see href="https://blog.csdn.net/qq_40374647/article/details/125390655"/>
+        /// </summary>
+        /// <param name="args"></param>
         private static void Main(string[] args)
         {
             TcpService service = new TcpService();

@@ -570,7 +570,10 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
-
+                if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnReceivingData", this, new ByteBlockEventArgs(byteBlock)))
+                {
+                    return;
+                }
                 if (this.m_disposedValue)
                 {
                     return;

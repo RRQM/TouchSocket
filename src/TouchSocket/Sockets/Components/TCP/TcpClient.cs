@@ -725,6 +725,10 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
+                if (this.UsePlugin&&this.PluginsManager.Raise<ITcpPlugin>("OnReceivingData",this,new ByteBlockEventArgs(byteBlock)))
+                {
+                    return;
+                }
                 if (this.m_adapter == null)
                 {
                     this.Logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetDescription());

@@ -18,6 +18,11 @@ namespace HeartbeatConsoleApp
         private static TcpService service = new TcpService();
         private static TcpClient tcpClient = new TcpClient();
 
+        /// <summary>
+        /// 示例心跳。
+        /// 博客地址<see href="https://blog.csdn.net/qq_40374647/article/details/125598921"/>
+        /// </summary>
+        /// <param name="args"></param>
         private static void Main(string[] args)
         {
             ConsoleAction consoleAction = new ConsoleAction();

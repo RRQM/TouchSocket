@@ -119,6 +119,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LimitNumberOfConnectionsCon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThrottlingConsoleApp", "examples\BlogsDemos\ThrottlingConsoleApp\ThrottlingConsoleApp.csproj", "{DD7848E5-3489-454E-BF37-49B6FE4C7F01}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrafficCounterConsoleApp", "examples\BlogsDemos\TrafficCounterConsoleApp\TrafficCounterConsoleApp.csproj", "{82A783ED-11AD-407D-990B-A6AE9D557290}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -253,6 +255,10 @@ Global
 		{DD7848E5-3489-454E-BF37-49B6FE4C7F01}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD7848E5-3489-454E-BF37-49B6FE4C7F01}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD7848E5-3489-454E-BF37-49B6FE4C7F01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82A783ED-11AD-407D-990B-A6AE9D557290}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82A783ED-11AD-407D-990B-A6AE9D557290}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82A783ED-11AD-407D-990B-A6AE9D557290}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82A783ED-11AD-407D-990B-A6AE9D557290}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -310,6 +316,7 @@ Global
 		{06B4A342-2E42-4F66-A0FE-CD6110DDF980} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
 		{8452EA31-F7BB-4897-8881-F3EE3F82049A} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
 		{DD7848E5-3489-454E-BF37-49B6FE4C7F01} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
+		{82A783ED-11AD-407D-990B-A6AE9D557290} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
