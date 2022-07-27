@@ -11,65 +11,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core;
-在此之后:
-using System;
-using System.Text;
-using TouchSocket.Core;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core;
-在此之后:
-using System;
-using System.Text;
-using TouchSocket.Core;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core;
-在此之后:
-using System;
-using System.Text;
-using TouchSocket.Core;
-*/
-
 using System;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Http;
-using System;
-using System.Text;
-在此之后:
-using TouchSocket.Http;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Http;
-using System;
-using System.Text;
-在此之后:
-using TouchSocket.Http;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Http;
-using System;
-using System.Text;
-在此之后:
-using TouchSocket.Http;
-*/
-
 using TouchSocket.Core.Extensions;
 
 namespace TouchSocket.Http.WebSockets
@@ -83,108 +28,6 @@ namespace TouchSocket.Http.WebSockets
         /// 应答。
         /// </summary>
         public const string acceptMask = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-
-        /// <summary>
-        /// 获取Base64随即字符串。
-        /// </summary>
-        /// <returns></returns>
-        public static string CreateBase64Key()
-        {
-            var src = new byte[16];
-            new Random().NextBytes(src);
-            return Convert.ToBase64String(src);
-        }
-
-        /// <summary>
-        /// 获取WS的请求头
-        /// </summary>
-        /// <param name="host"></param>
-        /// <param name="url"></param>
-        /// <param name="version"></param>
-        /// <param name="base64Key"></param>
-        /// <returns></returns>
-        public static HttpRequest GetWSRequest(string host, string url, string version, out string base64Key)
-        {
-            HttpRequest request = new HttpRequest
-            {
-                Method = "GET"
-            };
-            request.SetUrl(url);
-            request.Protocols = "HTTP";
-            request.ProtocolVersion = "1.1";
-            request.SetHeader(HttpHeaders.Host, host);
-            request.SetHeader(HttpHeaders.Connection, "Upgrade");
-            request.SetHeader(HttpHeaders.Pragma, "no-cache");
-            request.SetHeader(HttpHeaders.UserAgent, "TouchSocket.Http.WebSockets");
-            request.SetHeader(HttpHeaders.Upgrade, "websocket");
-            request.SetHeader(HttpHeaders.Origin, "RRQM");
-            request.SetHeader("sec-websocket-version", $"{version}");
-            request.SetHeader(HttpHeaders.AcceptEncoding, "deflate, br");
-            base64Key = CreateBase64Key();
-            request.SetHeader("sec-websocket-key", $"{base64Key}");
-
-            return request;
-        }
-
-        /// <summary>
-        /// 计算Base64值
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="encoding"></param>
-        /// <returns></returns>
-        public static string CalculateBase64Key(string str, Encoding encoding)
-        {
-            return (str + acceptMask).ToSha1(encoding).ToBase64();
-        }
-
-        /// <summary>
-        /// 获取响应
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
-        /// <returns></returns>
-        public static bool TryGetResponse(HttpRequest request, HttpResponse response)
-        {
-            string upgrade = request.GetHeader(HttpHeaders.Upgrade);
-            if (string.IsNullOrEmpty(upgrade))
-            {
-                return false;
-            }
-            string connection = request.GetHeader(HttpHeaders.Connection);
-            if (string.IsNullOrEmpty(connection))
-            {
-                return false;
-            }
-            string secWebSocketKey = request.GetHeader("sec-websocket-key");
-            if (string.IsNullOrEmpty(secWebSocketKey))
-            {
-                return false;
-            }
-
-            response.StatusCode = "101";
-            response.StatusMessage = "switching protocols";
-            response.SetHeader(HttpHeaders.Connection, "upgrade");
-            response.SetHeader(HttpHeaders.Upgrade, "websocket");
-            response.SetHeader("sec-websocket-accept", CalculateBase64Key(secWebSocketKey, request.Encoding));
-            return true;
-        }
-
-        /// <summary>
-        /// 掩码运算
-        /// </summary>
-        /// <param name="storeBuf"></param>
-        /// <param name="sOffset"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="masks"></param>
-        public static void DoMask(byte[] storeBuf, int sOffset, byte[] buffer, int offset, int length, byte[] masks)
-        {
-            for (var i = 0; i < length; i++)
-            {
-                storeBuf[sOffset + i] = (byte)(buffer[offset + i] ^ masks[i % 4]);
-            }
-        }
 
         /// <summary>
         /// 构建数据
@@ -262,6 +105,108 @@ namespace TouchSocket.Http.WebSockets
                     byteBlock.Write(buffer, offset, length);
                 }
             }
+            return true;
+        }
+
+        /// <summary>
+        /// 计算Base64值
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static string CalculateBase64Key(string str, Encoding encoding)
+        {
+            return (str + acceptMask).ToSha1(encoding).ToBase64();
+        }
+
+        /// <summary>
+        /// 获取Base64随即字符串。
+        /// </summary>
+        /// <returns></returns>
+        public static string CreateBase64Key()
+        {
+            var src = new byte[16];
+            new Random().NextBytes(src);
+            return Convert.ToBase64String(src);
+        }
+
+        /// <summary>
+        /// 掩码运算
+        /// </summary>
+        /// <param name="storeBuf"></param>
+        /// <param name="sOffset"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="masks"></param>
+        public static void DoMask(byte[] storeBuf, int sOffset, byte[] buffer, int offset, int length, byte[] masks)
+        {
+            for (var i = 0; i < length; i++)
+            {
+                storeBuf[sOffset + i] = (byte)(buffer[offset + i] ^ masks[i % 4]);
+            }
+        }
+
+        /// <summary>
+        /// 获取WS的请求头
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="url"></param>
+        /// <param name="version"></param>
+        /// <param name="base64Key"></param>
+        /// <returns></returns>
+        public static HttpRequest GetWSRequest(string host, string url, string version, out string base64Key)
+        {
+            HttpRequest request = new HttpRequest
+            {
+                Method = "GET",
+                Protocols = "HTTP",
+                ProtocolVersion = "1.1"
+            };
+            request.SetUrl(url);
+            request.SetHeader(HttpHeaders.Host, host);
+            request.SetHeader(HttpHeaders.Pragma, "no-cache");
+            request.SetHeader(HttpHeaders.UserAgent, "TouchSocket.Http.WebSockets");
+            request.SetHeader(HttpHeaders.Origin, "RRQM");
+            request.SetHeader(HttpHeaders.AcceptEncoding, "deflate, br");
+            request.SetHeaderByKey("Connection", "upgrade");
+            request.SetHeaderByKey("Upgrade", "websocket");
+            request.SetHeaderByKey("Sec-WebSocket-Version", $"{version}");
+            base64Key = CreateBase64Key();
+            request.SetHeaderByKey("Sec-WebSocket-Key", base64Key);
+
+            return request;
+        }
+
+        /// <summary>
+        /// 获取响应
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public static bool TryGetResponse(HttpRequest request, HttpResponse response)
+        {
+            string upgrade = request.GetHeader(HttpHeaders.Upgrade);
+            if (string.IsNullOrEmpty(upgrade))
+            {
+                return false;
+            }
+            string connection = request.GetHeader(HttpHeaders.Connection);
+            if (string.IsNullOrEmpty(connection))
+            {
+                return false;
+            }
+            string secWebSocketKey = request.GetHeader("sec-websocket-key");
+            if (string.IsNullOrEmpty(secWebSocketKey))
+            {
+                return false;
+            }
+
+            response.StatusCode = "101";
+            response.StatusMessage = "switching protocols";
+            response.SetHeader(HttpHeaders.Connection, "upgrade");
+            response.SetHeader(HttpHeaders.Upgrade, "websocket");
+            response.SetHeader("sec-websocket-accept", CalculateBase64Key(secWebSocketKey, request.Encoding));
             return true;
         }
     }
