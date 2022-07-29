@@ -42,11 +42,6 @@ namespace AdapterConsoleApp
         private static void StartTcpService()
         {
             TcpService service = new TcpService();
-            service.Connecting += (client, e) =>
-            {
-                //有客户端正在连接
-                client.SetDataHandlingAdapter(new MyCustomBetweenAndDataHandlingAdapter());
-            };
             service.Connected += (client, e) => { };//有客户端连接
             service.Disconnected += (client, e) => { };//有客户端断开连接
             service.Received += (client, byteBlock, requestInfo) =>

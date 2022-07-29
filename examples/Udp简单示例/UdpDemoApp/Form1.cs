@@ -32,16 +32,20 @@ namespace UdpDemoApp
                 }
             };
 
-            if (checkBox1.Checked)
-            {
-                m_udpSession.SetDataHandlingAdapter(new UdpPackageAdapter());
-            }
-            else
-            {
-                m_udpSession.SetDataHandlingAdapter(new NormalUdpDataHandlingAdapter());
-            }
+            
             m_udpSession.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(this.textBox2.Text))
+                 .SetUdpDataHandlingAdapter(()=> 
+                 {
+                     if (checkBox1.Checked)
+                     {
+                        return new UdpPackageAdapter();
+                     }
+                     else
+                     {
+                         return new NormalUdpDataHandlingAdapter();
+                     }
+                 })
                  .ConfigureContainer(a =>
                  {
                      a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
