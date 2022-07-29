@@ -119,7 +119,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LimitNumberOfConnectionsCon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThrottlingConsoleApp", "examples\BlogsDemos\ThrottlingConsoleApp\ThrottlingConsoleApp.csproj", "{DD7848E5-3489-454E-BF37-49B6FE4C7F01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrafficCounterConsoleApp", "examples\BlogsDemos\TrafficCounterConsoleApp\TrafficCounterConsoleApp.csproj", "{82A783ED-11AD-407D-990B-A6AE9D557290}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrafficCounterConsoleApp", "examples\BlogsDemos\TrafficCounterConsoleApp\TrafficCounterConsoleApp.csproj", "{82A783ED-11AD-407D-990B-A6AE9D557290}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UDP屏幕捕捉器", "UDP屏幕捕捉器", "{8B9374B5-42D7-48C9-84C7-A560167F0D47}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenUdpSender", "examples\Udp简单示例\UDP屏幕捕捉器\ScreenUdpSender\ScreenUdpSender.csproj", "{791D316B-41D7-4B19-A25B-A58EBEA4E04A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenUdpReceiver", "examples\Udp简单示例\UDP屏幕捕捉器\ScreenUdpReceiver\ScreenUdpReceiver.csproj", "{EDAA9CD3-1474-4588-9E3B-E970CED20F0F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -259,6 +265,14 @@ Global
 		{82A783ED-11AD-407D-990B-A6AE9D557290}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82A783ED-11AD-407D-990B-A6AE9D557290}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82A783ED-11AD-407D-990B-A6AE9D557290}.Release|Any CPU.Build.0 = Release|Any CPU
+		{791D316B-41D7-4B19-A25B-A58EBEA4E04A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{791D316B-41D7-4B19-A25B-A58EBEA4E04A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{791D316B-41D7-4B19-A25B-A58EBEA4E04A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{791D316B-41D7-4B19-A25B-A58EBEA4E04A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDAA9CD3-1474-4588-9E3B-E970CED20F0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDAA9CD3-1474-4588-9E3B-E970CED20F0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDAA9CD3-1474-4588-9E3B-E970CED20F0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDAA9CD3-1474-4588-9E3B-E970CED20F0F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -317,6 +331,9 @@ Global
 		{8452EA31-F7BB-4897-8881-F3EE3F82049A} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
 		{DD7848E5-3489-454E-BF37-49B6FE4C7F01} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
 		{82A783ED-11AD-407D-990B-A6AE9D557290} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
+		{8B9374B5-42D7-48C9-84C7-A560167F0D47} = {F4D798A3-8D65-4750-9552-B02BCE081508}
+		{791D316B-41D7-4B19-A25B-A58EBEA4E04A} = {8B9374B5-42D7-48C9-84C7-A560167F0D47}
+		{EDAA9CD3-1474-4588-9E3B-E970CED20F0F} = {8B9374B5-42D7-48C9-84C7-A560167F0D47}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

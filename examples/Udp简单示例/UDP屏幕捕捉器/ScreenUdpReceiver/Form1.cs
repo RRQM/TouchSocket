@@ -6,6 +6,9 @@ using TouchSocket.Sockets;
 
 namespace ScreenUdpReceiver
 {
+    /// <summary>
+    /// 本程序源码由网友“木南白水”提供。
+    /// </summary>
     public partial class Form1 : Form
     {
         UdpSession udpSession;
@@ -26,8 +29,8 @@ namespace ScreenUdpReceiver
                 };
                 udpSession.Setup(new TouchSocketConfig()
                .SetBindIPHost(new IPHost("127.0.0.1:7790"))
-               .SetBufferLength(1024 * 1024)
-               .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024 }; })
+               .SetBufferLength(1024 * 64)
+               .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; })
                ).Start();
             }
             catch (Exception ex)

@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
@@ -10,6 +11,9 @@ using TouchSocket.Sockets;
 
 namespace ScreenUdpSender
 {
+    /// <summary>
+    /// 本程序源码由网友“木南白水”提供。
+    /// </summary>
     public partial class Form1 : Form
     {
         UdpSession udpSession;
@@ -18,32 +22,17 @@ namespace ScreenUdpSender
             InitializeComponent();           
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            timer1.Enabled = true;
-            try
-            {
-                udpSession = new UdpSession();
+        Thread m_thread;
 
-                udpSession.Setup(
-                new TouchSocketConfig()
-                .SetBindIPHost(new IPHost(7789))
-                .SetBufferLength(1024 * 1024)
-                .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024 }; })
-                ).Start();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"错误：{ex.Message},程序将退出");
-                Environment.Exit(0);
-            }
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
+        private void Tick()
         {
-            byte[] byteArray = ImageToByte(getScreen());
-            ByteBlock bb = new ByteBlock(byteArray);
-            udpSession.Send(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb);
+            while (true)
+            {
+                byte[] byteArray = ImageToByte(getScreen());
+                ByteBlock bb = new ByteBlock(byteArray);
+                udpSession.Send(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb);
+                Thread.Sleep((int)(1000.0/(int)this.numericUpDown1.Value));
+            }
         }
 
 
@@ -119,5 +108,29 @@ namespace ScreenUdpSender
             return image;
         }
         #endregion
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.button1.Enabled = false;
+            try
+            {
+                udpSession = new UdpSession();
+
+                udpSession.Setup(
+                new TouchSocketConfig()
+                .SetBindIPHost(new IPHost(7789))
+                .SetBufferLength(1024 * 64)
+                .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; })
+                ).Start();
+                m_thread = new Thread(Tick);
+                m_thread.IsBackground = true;
+                m_thread.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"错误：{ex.Message},程序将退出");
+                Environment.Exit(0);
+            }
+        }
     }
 }
