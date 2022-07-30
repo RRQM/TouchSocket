@@ -28,17 +28,15 @@ namespace WebApiServerApp
             Console.WriteLine("以下连接用于测试webApi");
             Console.WriteLine($"使用：http://127.0.0.1:7789/Server/Sum?a=10&b=20");
 
-            //RpcStore.ProxyAttributeMap.TryAdd("webapi", typeof(WebApiAttribute));
-            //生成的WebApi的本地代理文件。
-            //ServerCellCode[] cellCodes = rpcStore.GetProxyInfo(RpcStore.ProxyAttributeMap.Values.ToArray());
-            //当想导出全部时，RpcStore.ProxyAttributeMap.Values.ToArray()
-            //string codeString = CodeGenerator.ConvertToCode("RRQMProxy", cellCodes);
+            //下列代码，会生成客户端的调用代码。
+            string codeString = webApiParser.RpcStore.GetProxyCodes("WebApiProxy");
             Console.ReadKey();
         }
     }
 
     public class Server : RpcServer
     {
+        [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
         [WebApi(HttpMethodType.GET)]
         public int Sum(int a, int b)
         {

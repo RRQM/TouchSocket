@@ -35,8 +35,8 @@ namespace TouchSocket.Rpc.XmlRpc
         /// </summary>
         public XmlRpcParserPlugin([DependencyParamterInject(true)] RpcStore rpcStore)
         {
-            rpcStore?.AddRpcParser(this.GetType().Name, this);
             this.m_actionMap = new ActionMap();
+            rpcStore?.AddRpcParser(this.GetType().Name, this);
         }
 
         /// <summary>

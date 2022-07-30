@@ -186,6 +186,7 @@ namespace JsonRpcConsoleApp
         {
             return "RRQM" + str;
         }
+
         /// <summary>
         /// 当标记为true时直接使用方法名称
         /// </summary>
@@ -194,9 +195,16 @@ namespace JsonRpcConsoleApp
         [JsonRpc(true)]
         public string TestJsonRpc1(string str)
         {
-          
             return "RRQM" + str;
         }
+
+        /// <summary>
+        /// 使用调用上下文。
+        /// 可以从上下文获取调用的SocketClient。从而获得IP和Port等相关信息。
+        /// </summary>
+        /// <param name="callContext"></param>
+        /// <param name="str"></param>
+        /// <returns></returns>
         [JsonRpc]
         [TouchRpc(MethodFlags = MethodFlags.IncludeCallContext)]//使用调用上才文
         public string TestGetContext(ICallContext callContext, string str)
@@ -224,6 +232,7 @@ namespace JsonRpcConsoleApp
             }
             return "RRQM" + str;
         }
+
         [JsonRpc]
         public JObject TestJObject(JObject obj)
         {
