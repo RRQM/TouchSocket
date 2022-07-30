@@ -1,5 +1,7 @@
+using JsonRpcProxy;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
@@ -44,7 +46,11 @@ namespace JsonRpcConsoleApp
             JsonRpcClientInvokeByTcp();
             JsonRpcClientInvokeByHttp();
 
+            File.WriteAllText("../../../JsonRpcProxy.cs", rpcStore.GetProxyCodes("JsonRpcProxy"));
+
+            Console.WriteLine("代理文件已经写入到当前项目。");
             Console.WriteLine("请按任意键退出");
+
             Console.ReadKey();
         }
 
@@ -76,24 +82,6 @@ namespace JsonRpcConsoleApp
                 .SetJRPT(JRPT.Tcp));
             jsonRpcClient.Connect();
 
-            //客户端收到信息处理函数
-            Func<ByteBlock, IRequestInfo, bool> func = (ByteBlock byteBlock, IRequestInfo requestInfo) =>
-            {
-                var str = System.Text.Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                //可以自行拦截做消息处理分发
-
-                if(str== "Hello Word")
-                {
-                    Console.WriteLine("收到服务端通知自定义消息");
-                    //自定义消息不继续传递
-                    return false;
-                }
-                Console.WriteLine(str);
-                //表示是否继续向下传递。 true是 false 否
-                return true;
-            };
-
-            jsonRpcClient.OnHandleReceivedData = func;
             Console.WriteLine("连接成功");
             string result = jsonRpcClient.Invoke<string>("jsonrpcconsoleapp.server.testjsonrpc", InvokeOption.WaitInvoke, "RRQM");
             Console.WriteLine($"Tcp返回结果:{result}");
@@ -113,7 +101,7 @@ namespace JsonRpcConsoleApp
 
             NotifyAll();
         }
-        static List<SocketClient> Clients = new List<SocketClient>();  
+        static List<SocketClient> Clients = new List<SocketClient>();
         private static IRpcParser CreateTcpJsonRpcParser()
         {
             TcpService service = new TcpService();
@@ -147,7 +135,7 @@ namespace JsonRpcConsoleApp
         /// </summary>
         private static void NotifyAll()
         {
-            for(int i = 0; i < Clients.Count; i++)
+            for (int i = 0; i < Clients.Count; i++)
             {
                 //如果在线
                 if (Clients[i].Online)
@@ -161,7 +149,7 @@ namespace JsonRpcConsoleApp
                         //有可能判断的时候在线发送的时候不在线
                         Console.WriteLine(ex.Message);
                     }
-                
+
                 }
             }
         }
