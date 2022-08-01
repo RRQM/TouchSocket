@@ -24,6 +24,8 @@ namespace AdapterConsoleApp
         /// </summary>
         public override bool CanSplicingSend => false;
 
+        public override bool CanSendRequestInfo => false;
+
         /// <summary>
         ///  设计原则:接收时，尽量不抛出异常。
         /// </summary>
@@ -99,6 +101,11 @@ namespace AdapterConsoleApp
         protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
         {
             //暂时不实现。
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
 
         protected override void Reset()

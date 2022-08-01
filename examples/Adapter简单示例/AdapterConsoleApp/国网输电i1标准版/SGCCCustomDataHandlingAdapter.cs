@@ -11,9 +11,16 @@ namespace AdapterConsoleApp
     {
         public override int HeaderLength => 30;
 
+        public override bool CanSendRequestInfo => false;
+
         protected override SGCCRequestInfo GetInstance()
         {
             return new SGCCRequestInfo();
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
     }
 

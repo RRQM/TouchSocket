@@ -8,6 +8,8 @@ namespace AdapterConsoleApp
     /// </summary>
     internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequestInfo>
     {
+        public override bool CanSendRequestInfo => false;
+
         /// <summary>
         /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
         /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
@@ -54,6 +56,11 @@ namespace AdapterConsoleApp
                 request = myRequestInfo;//赋值ref
                 return FilterResult.Success;//返回成功
             }
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
     }
 

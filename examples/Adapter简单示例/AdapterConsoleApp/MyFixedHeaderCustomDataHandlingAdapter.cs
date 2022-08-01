@@ -17,6 +17,8 @@ namespace AdapterConsoleApp
         /// </summary>
         public override int HeaderLength => 3;
 
+        public override bool CanSendRequestInfo => false;
+
         /// <summary>
         /// 获取新实例
         /// </summary>
@@ -24,6 +26,11 @@ namespace AdapterConsoleApp
         protected override MyFixedHeaderRequestInfo GetInstance()
         {
             return new MyFixedHeaderRequestInfo();
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
     }
 

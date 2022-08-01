@@ -85,7 +85,6 @@ namespace FileServiceGUI
             this.fileService.Connected += this.FileService_Connected;
             this.fileService.Disconnected += this.FileService_Disconnected;
             this.fileService.FileTransfering += this.FileService_FileTransfering;
-
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .SetVerifyToken("FileService");

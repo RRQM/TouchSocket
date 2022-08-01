@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Consul" Version="1.6.10.6" />
-    <PackageReference Include="TouchSocket" Version="0.2.2" />
+    <PackageReference Include="TouchSocket" Version="0.3.0" />
   </ItemGroup>
 
 </Project>

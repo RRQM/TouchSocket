@@ -14,9 +14,16 @@ namespace AdapterConsoleApp
 
         public override byte[] EndCode => Encoding.UTF8.GetBytes("##");//必须为有效值。
 
+        public override bool CanSendRequestInfo => false;
+
         protected override MyBetweenAndRequestInfo GetInstance()
         {
             return new MyBetweenAndRequestInfo();
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
     }
 
