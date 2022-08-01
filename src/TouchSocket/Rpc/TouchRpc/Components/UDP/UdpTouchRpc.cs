@@ -81,7 +81,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 方法映射表
         /// </summary>
-        public ActionMap ActionMap { get => m_actionMap; }
+        public ActionMap ActionMap { get => this.m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>

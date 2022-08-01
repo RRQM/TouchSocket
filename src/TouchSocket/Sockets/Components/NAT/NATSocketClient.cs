@@ -1,24 +1,22 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在TouchSocket.Core.XREF命名空间的代码）归作者本人若汝棋茗所有
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/eo2w71/rrqm
+//  API首页：https://www.yuque.com/rrqm/touchsocket/index
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Collections.Concurrent;
 using TouchSocket.Core.Config;
-using TouchSocket.Core.Log;
-using TouchSocket.Rpc;
+using TouchSocket.Sockets.Plugins;
 
 namespace TouchSocket.Sockets
 {
@@ -27,32 +25,9 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class NATSocketClient : SocketClient
     {
-        private readonly ConcurrentList<ITcpClient> m_targetClients=new ConcurrentList<ITcpClient>();
         internal Action<NATSocketClient, ITcpClient, ClientDisconnectedEventArgs> m_internalDis;
         internal Func<NATSocketClient, ITcpClient, ByteBlock, IRequestInfo, byte[]> m_internalTargetClientRev;
-
-        /// <summary>
-        /// 获取所有目标客户端
-        /// </summary>
-        /// <returns></returns>
-        public ITcpClient[] GetTargetClients()
-        {
-            return this.m_targetClients.ToArray();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
-        {
-            foreach (var client in m_targetClients)
-            {
-                client.SafeShutdown();
-                client.SafeDispose();
-            }
-            base.OnDisconnected(e);
-        }
+        private readonly ConcurrentList<ITcpClient> m_targetClients = new ConcurrentList<ITcpClient>();
 
         /// <summary>
         /// 添加转发客户端。
@@ -88,6 +63,15 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// 获取所有目标客户端
+        /// </summary>
+        /// <returns></returns>
+        public ITcpClient[] GetTargetClients()
+        {
+            return this.m_targetClients.ToArray();
+        }
+
+        /// <summary>
         /// 发送数据到全部转发端。
         /// </summary>
         /// <param name="buffer"></param>
@@ -107,8 +91,23 @@ namespace TouchSocket.Sockets
             }
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        {
+            foreach (var client in this.m_targetClients)
+            {
+                client.SafeShutdown();
+                client.SafeDispose();
+            }
+            base.OnDisconnected(e);
+        }
+
         private void TcpClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
+            client.SafeDispose();
             this.m_targetClients.Remove((ITcpClient)client);
             this.m_internalDis?.Invoke(this, (ITcpClient)client, e);
         }
@@ -133,7 +132,6 @@ namespace TouchSocket.Sockets
             }
             catch
             {
-              
             }
         }
     }

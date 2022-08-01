@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 
 namespace TouchSocket.Core.IO
 {
@@ -19,7 +18,7 @@ namespace TouchSocket.Core.IO
     /// </summary>
     public class FileStorageWriter : DisposableObject
     {
-        private FileStorage m_fileStorage;
+        private readonly FileStorage m_fileStorage;
         private readonly bool m_singleRef;
         private long m_position;
 
@@ -76,7 +75,7 @@ namespace TouchSocket.Core.IO
             set => this.m_position = value;
         }
 
-      
+
         /// <summary>
         /// 读取数据到缓存区
         /// </summary>
@@ -90,6 +89,6 @@ namespace TouchSocket.Core.IO
             this.m_position += length;
         }
 
- 
+
     }
 }

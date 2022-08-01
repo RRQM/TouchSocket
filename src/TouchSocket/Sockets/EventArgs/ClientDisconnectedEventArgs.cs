@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class ClientDisconnectedEventArgs : MsgEventArgs
     {
-        private bool manual;
+        private readonly bool manual;
 
         /// <summary>
         /// 构造函数

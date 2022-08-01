@@ -29,9 +29,9 @@ namespace TouchSocket.Rpc.JsonRpc
     /// </summary>
     public class JsonRpcParserPlugin : HttpPluginBase, IRpcParser
     {
+        private readonly ActionMap m_actionMap;
         private string m_jsonRpcUrl = "/jsonrpc";
         private RpcStore m_rpcStore;
-        private readonly ActionMap m_actionMap;
 
         /// <summary>
         /// 构造函数
@@ -41,6 +41,11 @@ namespace TouchSocket.Rpc.JsonRpc
             this.m_actionMap = new ActionMap();
             rpcStore?.AddRpcParser(this.GetType().Name, this);
         }
+
+        /// <summary>
+        /// JsonRpc的调用键。
+        /// </summary>
+        public ActionMap ActionMap => this.m_actionMap;
 
         /// <summary>
         /// 自动转换协议
@@ -60,11 +65,6 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <inheritdoc/>
         /// </summary>
         public RpcStore RpcStore => this.m_rpcStore;
-
-        /// <summary>
-        /// JsonRpc的调用键。
-        /// </summary>
-        public ActionMap ActionMap => this.m_actionMap;
 
         /// <summary>
         /// 不需要自动转化协议。

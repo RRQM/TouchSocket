@@ -221,12 +221,20 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="serverConfig"></param>
+        /// <param name="config"></param>
         /// <returns></returns>
-        public IService Setup(TouchSocketConfig serverConfig)
+        public IService Setup(TouchSocketConfig config)
         {
-            this.m_config = serverConfig;
+            this.m_config = config;
+            if (config.IsUsePlugin)
+            {
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
+            }
             this.LoadConfig(this.m_config);
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
+            }
             return this;
         }
 
@@ -571,7 +579,7 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void Send(byte[] buffer, int offset, int length)
+        public virtual void Send(byte[] buffer, int offset, int length)
         {
             if (this.m_remoteIPHost == null)
             {
@@ -581,21 +589,26 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 向默认终结点发送
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"></param>
-        public void Send(byte[] buffer)
+        /// <param name="requestInfo"></param>
+        /// <exception cref="OverlengthException"></exception>
+        /// <exception cref="Exception"></exception>
+        public virtual void Send(IRequestInfo requestInfo)
         {
-            this.Send(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 向默认终结点发送
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        public void Send(ByteBlock byteBlock)
-        {
-            this.Send(byteBlock.Buffer, 0, byteBlock.Len);
+            if (this.m_disposedValue)
+            {
+                return;
+            }
+            if (this.m_adapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+            }
+            if (!this.m_adapter.CanSendRequestInfo)
+            {
+                throw new NotSupportedException($"当前适配器不支持对象发送。");
+            }
+            this.m_adapter.SendInput(requestInfo, false);
         }
 
         #endregion 向默认远程同步发送
@@ -611,7 +624,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        public void SendAsync(byte[] buffer, int offset, int length)
+        public virtual void SendAsync(byte[] buffer, int offset, int length)
         {
             if (this.m_remoteIPHost == null)
             {
@@ -621,28 +634,28 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// IOCP发送
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <exception cref="NotConnectedException"></exception>
+        /// <param name="requestInfo"></param>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        public void SendAsync(byte[] buffer)
+        public void SendAsync(IRequestInfo requestInfo)
         {
-            this.SendAsync(buffer, 0, buffer.Length);
+            if (this.m_disposedValue)
+            {
+                return;
+            }
+            if (this.m_adapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+            }
+            if (!this.m_adapter.CanSendRequestInfo)
+            {
+                throw new NotSupportedException($"当前适配器不支持对象发送。");
+            }
+            this.m_adapter.SendInput(requestInfo, true);
         }
 
-        /// <summary>
-        /// IOCP发送流中的有效数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void SendAsync(ByteBlock byteBlock)
-        {
-            this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
-        }
 
         #endregion 向默认远程异步发送
 
@@ -662,27 +675,6 @@ namespace TouchSocket.Sockets
         {
             this.m_adapter.SendInput(remoteEP, buffer, offset, length, false);
         }
-
-        /// <summary>
-        /// 向设置的远程同步发送
-        /// </summary>
-        /// <param name="remoteEP"></param>
-        /// <param name="buffer"></param>
-        public void Send(EndPoint remoteEP, byte[] buffer)
-        {
-            this.Send(remoteEP, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 向设置的远程同步发送
-        /// </summary>
-        /// <param name="remoteEP"></param>
-        /// <param name="byteBlock"></param>
-        public void Send(EndPoint remoteEP, ByteBlock byteBlock)
-        {
-            this.Send(remoteEP, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
         #endregion 向设置的远程同步发送
 
         #region 向设置的远程异步发送
@@ -700,26 +692,6 @@ namespace TouchSocket.Sockets
         public virtual void SendAsync(EndPoint remoteEP, byte[] buffer, int offset, int length)
         {
             this.m_adapter.SendInput(remoteEP, buffer, offset, length, true);
-        }
-
-        /// <summary>
-        /// 向设置的远程异步发送
-        /// </summary>
-        /// <param name="remoteEP"></param>
-        /// <param name="buffer"></param>
-        public void SendAsync(EndPoint remoteEP, byte[] buffer)
-        {
-            this.SendAsync(remoteEP, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 向设置的远程异步发送
-        /// </summary>
-        /// <param name="remoteEP"></param>
-        /// <param name="byteBlock"></param>
-        public void SendAsync(EndPoint remoteEP, ByteBlock byteBlock)
-        {
-            this.SendAsync(remoteEP, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion 向设置的远程异步发送
@@ -767,24 +739,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"></param>
-        public void DefaultSend(byte[] buffer)
-        {
-            this.DefaultSend(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        public void DefaultSend(ByteBlock byteBlock)
-        {
-            this.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
@@ -792,26 +746,6 @@ namespace TouchSocket.Sockets
         public void DefaultSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
             this.SocketSend(endPoint, buffer, offset, length, false);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer"></param>
-        public void DefaultSend(EndPoint endPoint, byte[] buffer)
-        {
-            this.DefaultSend(endPoint, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="byteBlock"></param>
-        public void DefaultSend(EndPoint endPoint, ByteBlock byteBlock)
-        {
-            this.DefaultSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion DefaultSend
@@ -832,24 +766,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"></param>
-        public void DefaultSendAsync(byte[] buffer)
-        {
-            this.DefaultSendAsync(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        public void DefaultSendAsync(ByteBlock byteBlock)
-        {
-            this.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
@@ -857,26 +773,6 @@ namespace TouchSocket.Sockets
         public void DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
             this.SocketSend(endPoint, buffer, offset, length, true);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer"></param>
-        public void DefaultSendAsync(EndPoint endPoint, byte[] buffer)
-        {
-            this.DefaultSendAsync(endPoint, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="byteBlock"></param>
-        public void DefaultSendAsync(EndPoint endPoint, ByteBlock byteBlock)
-        {
-            this.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion DefaultSendAsync
@@ -1016,7 +912,6 @@ namespace TouchSocket.Sockets
                 }
             }
         }
-
         #endregion 组合发送
     }
 }

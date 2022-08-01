@@ -23,7 +23,7 @@ namespace TouchSocket.Rpc.WebApi
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class WebApiAttribute : RpcAttribute
     {
-        private HttpMethodType m_method;
+        private readonly HttpMethodType m_method;
 
         /// <summary>
         /// 构造函数。

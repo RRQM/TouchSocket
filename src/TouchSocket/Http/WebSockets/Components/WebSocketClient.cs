@@ -73,7 +73,6 @@ namespace TouchSocket.Http.WebSockets
                 IPHost iPHost = this.Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
                 string url = iPHost.IsUri ? iPHost.Uri.PathAndQuery : string.Empty;
                 HttpRequest request = WSTools.GetWSRequest(this.RemoteIPHost.ToString(), url, this.GetWebSocketVersion(), out base64Key);
-
                 this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
 
                 var response = this.Request(request, timeout: timeout, token: token);
@@ -81,8 +80,8 @@ namespace TouchSocket.Http.WebSockets
                 {
                     throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
                 }
-                string accept = response.GetHeader("sec-websocket-accept");
-                if (string.IsNullOrEmpty(accept) || !accept.Equals(WSTools.CalculateBase64Key(base64Key, Encoding.UTF8), System.StringComparison.OrdinalIgnoreCase))
+                string accept = response.GetHeader("sec-websocket-accept").Trim();
+                if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key, Encoding.UTF8).Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     this.MainSocket.SafeDispose();
                     throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));

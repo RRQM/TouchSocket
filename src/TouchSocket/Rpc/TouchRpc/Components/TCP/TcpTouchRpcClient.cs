@@ -60,7 +60,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 方法映射表
         /// </summary>
-        public ActionMap ActionMap { get => m_actionMap; }
+        public ActionMap ActionMap { get => this.m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -128,7 +128,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 base.Connect(timeout);
             }
 
-            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default, 
+            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default,
                 timeout, this.Config.GetValue<Metadata>(TouchRpcConfigExtensions.MetadataProperty));
             return this;
         }
@@ -766,7 +766,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
         #region RPC解析器
 
-       
+
         void IRpcParser.SetRpcStore(RpcStore rpcStore)
         {
             this.m_rpcActor.RpcStore = rpcStore;

@@ -24,12 +24,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 包剩余长度
         /// </summary>
-        private int surPlusLength = 0;
+        private int m_surPlusLength = 0;
 
         /// <summary>
         /// 临时包
         /// </summary>
-        private ByteBlock tempByteBlock;
+        private ByteBlock m_tempByteBlock;
 
         /// <summary>
         /// 构造函数
@@ -43,13 +43,17 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public override bool CanSendRequestInfo => false;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public override bool CanSplicingSend => true;
 
         /// <summary>
         /// 获取已设置的数据包的长度
         /// </summary>
         public int FixedSize { get; private set; }
-
         /// <summary>
         /// 预处理
         /// </summary>
@@ -58,30 +62,30 @@ namespace TouchSocket.Sockets
         {
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
-            if (this.tempByteBlock == null)
+            if (this.m_tempByteBlock == null)
             {
                 this.SplitPackage(buffer, 0, r);
             }
             else
             {
-                if (this.surPlusLength == r)
+                if (this.m_surPlusLength == r)
                 {
-                    this.tempByteBlock.Write(buffer, 0, this.surPlusLength);
-                    this.PreviewHandle(this.tempByteBlock);
-                    this.tempByteBlock = null;
-                    this.surPlusLength = 0;
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.m_surPlusLength = 0;
                 }
-                else if (this.surPlusLength < r)
+                else if (this.m_surPlusLength < r)
                 {
-                    this.tempByteBlock.Write(buffer, 0, this.surPlusLength);
-                    this.PreviewHandle(this.tempByteBlock);
-                    this.tempByteBlock = null;
-                    this.SplitPackage(buffer, this.surPlusLength, r);
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.SplitPackage(buffer, this.m_surPlusLength, r);
                 }
                 else
                 {
-                    this.tempByteBlock.Write(buffer, 0, r);
-                    this.surPlusLength -= r;
+                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    this.m_surPlusLength -= r;
                 }
             }
         }
@@ -173,14 +177,24 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         protected override void Reset()
         {
-            if (this.tempByteBlock != null)
+            if (this.m_tempByteBlock != null)
             {
-                this.tempByteBlock.Dispose();
-                this.tempByteBlock = null;
+                this.m_tempByteBlock.Dispose();
+                this.m_tempByteBlock = null;
             }
-            this.surPlusLength = 0;
+            this.m_surPlusLength = 0;
         }
 
         private void PreviewHandle(ByteBlock byteBlock)
@@ -204,13 +218,13 @@ namespace TouchSocket.Sockets
                     ByteBlock byteBlock = BytePool.GetByteBlock(this.FixedSize);
                     byteBlock.Write(dataBuffer, index, this.FixedSize);
                     this.PreviewHandle(byteBlock);
-                    this.surPlusLength = 0;
+                    this.m_surPlusLength = 0;
                 }
                 else//半包
                 {
-                    this.tempByteBlock = BytePool.GetByteBlock(this.FixedSize);
-                    this.surPlusLength = this.FixedSize - (r - index);
-                    this.tempByteBlock.Write(dataBuffer, index, r - index);
+                    this.m_tempByteBlock = BytePool.GetByteBlock(this.FixedSize);
+                    this.m_surPlusLength = this.FixedSize - (r - index);
+                    this.m_tempByteBlock.Write(dataBuffer, index, r - index);
                 }
                 index += this.FixedSize;
             }

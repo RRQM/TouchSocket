@@ -58,7 +58,7 @@ namespace TouchSocket.Rpc.TouchRpc
         #region 字段
 
         private readonly ActionMap m_actionMap;
-        private RpcActorGroup m_rpcActorGroup;
+        private readonly RpcActorGroup m_rpcActorGroup;
         private RpcStore m_rpcStore;
 
         #endregion 字段
@@ -66,7 +66,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 方法映射表
         /// </summary>
-        public ActionMap ActionMap { get => m_actionMap; }
+        public ActionMap ActionMap { get => this.m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>

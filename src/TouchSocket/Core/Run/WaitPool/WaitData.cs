@@ -22,7 +22,7 @@ namespace TouchSocket.Core.Run
     {
         private WaitDataStatus m_status;
 
-        private AutoResetEvent m_waitHandle;
+        private readonly AutoResetEvent m_waitHandle;
 
         private T m_waitResult;
 

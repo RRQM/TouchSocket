@@ -58,7 +58,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 实例化一个Rpc仓库。
         /// <para>需要指定<see cref="IContainer"/>容器。一般和对应的服务器、客户端共用一个容器比较好。</para>
-        /// <para>如果，仅仅是只有一个解析器的话，可以考虑从配置<see cref="TouchSocketConfig"/>中，调用<see cref="RpcConfigExtensions.ConfigureRpcStore(TouchSocketConfig, Action{RpcStore})"/></para>
+        /// <para>如果，仅仅是只有一个解析器的话，可以考虑从配置<see cref="TouchSocketConfig"/>中，调用<see cref="RpcConfigExtensions.ConfigureRpcStore(TouchSocketConfig, Action{RpcStore}, RpcStore)"/></para>
         /// </summary>
         public RpcStore(IContainer container)
         {
@@ -374,7 +374,7 @@ namespace TouchSocket.Rpc
             return this.RemoveRpcParser(parserName, out _);
         }
 
-       
+
         /// <summary>
         /// 分享代理。
         /// </summary>

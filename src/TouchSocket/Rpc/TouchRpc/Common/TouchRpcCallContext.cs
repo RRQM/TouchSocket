@@ -20,10 +20,10 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class TouchRpcCallContext : ICallContext
     {
-        private object caller;
+        private readonly object caller;
         private CancellationTokenSource tokenSource;
-        private TouchRpcPackage context;
-        private MethodInstance methodInstance;
+        private readonly TouchRpcPackage context;
+        private readonly MethodInstance methodInstance;
 
         /// <summary>
         /// 构造函数

@@ -23,7 +23,7 @@ namespace TouchSocket.Core.Collections.Concurrent
     {
         private int m_count;
 
-        private int m_maxCount;
+        private readonly int m_maxCount;
 
         /// <summary>
         /// 构造函数

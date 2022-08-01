@@ -74,27 +74,27 @@ namespace TouchSocket.Core.Log
             this.Print(stringBuilder.ToString());
         }
 
-        int m_day=-1;
-        int m_count;
+        private int m_day = -1;
+        private int m_count;
         private void Print(string logString)
         {
             try
             {
                 lock (typeof(FileLogger))
                 {
-                    if (m_day != DateTime.Now.DayOfYear)
+                    if (this.m_day != DateTime.Now.DayOfYear)
                     {
-                        m_day = DateTime.Now.DayOfYear;
-                        m_count = 0;
+                        this.m_day = DateTime.Now.DayOfYear;
+                        this.m_count = 0;
                     }
                     else
                     {
-                        if (new FileInfo(Path.Combine(this.rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{m_count:00}" + ".log")).Length>1024*1024 )
+                        if (new FileInfo(Path.Combine(this.rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{this.m_count:00}" + ".log")).Length > 1024 * 1024)
                         {
-                            m_count++;
+                            this.m_count++;
                         }
                     }
-                    string path = Path.Combine(this.rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{m_count:00}" + ".log");
+                    string path = Path.Combine(this.rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{this.m_count:00}" + ".log");
                     File.AppendAllText(path, logString);
                 }
             }

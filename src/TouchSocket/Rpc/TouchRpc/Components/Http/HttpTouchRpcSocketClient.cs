@@ -14,46 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-在此之后:
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System.Log;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-在此之后:
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System.Log;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-在此之后:
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System.Log;
-*/
-
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;

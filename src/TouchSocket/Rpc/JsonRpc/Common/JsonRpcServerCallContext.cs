@@ -20,10 +20,10 @@ namespace TouchSocket.Rpc.JsonRpc
     /// </summary>
     public class JsonRpcServerCallContext : ICallContext
     {
-        private object m_caller;
-        private JsonRpcContext m_context;
-        private MethodInstance m_methodInstance;
-        private string m_jsonString;
+        private readonly object m_caller;
+        private readonly JsonRpcContext m_context;
+        private readonly MethodInstance m_methodInstance;
+        private readonly string m_jsonString;
         private CancellationTokenSource m_tokenSource;
 
         /// <summary>

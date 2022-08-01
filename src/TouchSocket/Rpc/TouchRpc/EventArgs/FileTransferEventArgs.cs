@@ -20,7 +20,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class FileTransferEventArgs : MsgEventArgs
     {
-        private TransferType transferType;
+        private readonly TransferType transferType;
 
         /// <summary>
         /// 构造函数
@@ -38,7 +38,7 @@ namespace TouchSocket.Rpc.TouchRpc
             this.fileInfo = fileInfo;
         }
 
-        private FileRequest fileRequest;
+        private readonly FileRequest fileRequest;
 
         /// <summary>
         /// 文件请求
@@ -50,14 +50,14 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public TransferType TransferType => this.transferType;
 
-        private Metadata metadata;
+        private readonly Metadata metadata;
 
         /// <summary>
         /// 元数据
         /// </summary>
         public Metadata Metadata => this.metadata;
 
-        private TouchRpcFileInfo fileInfo;
+        private readonly TouchRpcFileInfo fileInfo;
 
         /// <summary>
         /// 文件信息

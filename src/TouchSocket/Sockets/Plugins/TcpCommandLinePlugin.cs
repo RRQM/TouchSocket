@@ -24,7 +24,7 @@ namespace TouchSocket.Sockets.Plugins
     /// </summary>
     public abstract class TcpCommandLinePlugin : TcpPluginBase
     {
-        private Dictionary<string, Method> m_pairs = new Dictionary<string, TouchSocket.Core.Reflection.Method>();
+        private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, TouchSocket.Core.Reflection.Method>();
 
         /// <summary>
         /// 字符串转换器，默认支持基础类型和Json。可以自定义。

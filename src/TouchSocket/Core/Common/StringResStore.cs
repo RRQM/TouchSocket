@@ -22,7 +22,7 @@ namespace TouchSocket.Core
     /// </summary>
     public static class StringResStore
     {
-        private static ConcurrentDictionary<Enum, string> m_cache = new ConcurrentDictionary<Enum, string>();
+        private static readonly ConcurrentDictionary<Enum, string> m_cache = new ConcurrentDictionary<Enum, string>();
 
         /// <summary>
         /// 获取资源字符

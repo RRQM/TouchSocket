@@ -23,33 +23,27 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public class WebSocketDataHandlingAdapter : DataHandlingAdapter
     {
-        private int maxSize = 1024 * 1024;
-
-        private WSDataFrame dataFrameTemp;
+        private WSDataFrame m_dataFrameTemp;
 
         /// <summary>
         /// 数据包剩余长度
         /// </summary>
-        private int surPlusLength = 0;
+        private int m_surPlusLength = 0;
 
         /// <summary>
         /// 临时包
         /// </summary>
-        private ByteBlock tempByteBlock;
-
-        /// <summary>
-        /// 获取或设置数据最大值，默认1024*1024
-        /// </summary>
-        public int MaxSize
-        {
-            get => this.maxSize;
-            set => this.maxSize = value;
-        }
+        private ByteBlock m_tempByteBlock;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public override bool CanSplicingSend => false;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSendRequestInfo => false;
 
         /// <summary>
         /// 解码
@@ -89,11 +83,11 @@ namespace TouchSocket.Http.WebSockets
             {
                 if (length < 12)
                 {
-                    if (this.tempByteBlock == null)
+                    if (this.m_tempByteBlock == null)
                     {
-                        this.tempByteBlock = new ByteBlock();
+                        this.m_tempByteBlock = new ByteBlock();
                     }
-                    this.tempByteBlock.Write(dataBuffer, index, length);
+                    this.m_tempByteBlock.Write(dataBuffer, index, length);
                     offset = index;
                     return FilterResult.GoOn;
                 }
@@ -107,11 +101,11 @@ namespace TouchSocket.Http.WebSockets
             {
                 if (length < (offset - index) + 4)
                 {
-                    if (this.tempByteBlock == null)
+                    if (this.m_tempByteBlock == null)
                     {
-                        this.tempByteBlock = new ByteBlock();
+                        this.m_tempByteBlock = new ByteBlock();
                     }
-                    this.tempByteBlock.Write(dataBuffer, index, length);
+                    this.m_tempByteBlock.Write(dataBuffer, index, length);
                     offset = index;
                     return FilterResult.GoOn;
                 }
@@ -149,39 +143,39 @@ namespace TouchSocket.Http.WebSockets
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
 
-            if (this.tempByteBlock != null)
+            if (this.m_tempByteBlock != null)
             {
-                this.tempByteBlock.Write(buffer, 0, r);
-                buffer = this.tempByteBlock.ToArray();
-                r = this.tempByteBlock.Pos;
-                this.tempByteBlock.Dispose();
-                this.tempByteBlock = null;
+                this.m_tempByteBlock.Write(buffer, 0, r);
+                buffer = this.m_tempByteBlock.ToArray();
+                r = this.m_tempByteBlock.Pos;
+                this.m_tempByteBlock.Dispose();
+                this.m_tempByteBlock = null;
             }
 
-            if (this.dataFrameTemp == null)
+            if (this.m_dataFrameTemp == null)
             {
                 this.SplitPackage(buffer, 0, r);
             }
             else
             {
-                if (this.surPlusLength == r)
+                if (this.m_surPlusLength == r)
                 {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, this.surPlusLength);
-                    this.PreviewHandle(this.dataFrameTemp);
-                    this.dataFrameTemp = null;
-                    this.surPlusLength = 0;
+                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_dataFrameTemp);
+                    this.m_dataFrameTemp = null;
+                    this.m_surPlusLength = 0;
                 }
-                else if (this.surPlusLength < r)
+                else if (this.m_surPlusLength < r)
                 {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, this.surPlusLength);
-                    this.PreviewHandle(this.dataFrameTemp);
-                    this.dataFrameTemp = null;
-                    this.SplitPackage(buffer, this.surPlusLength, r);
+                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_dataFrameTemp);
+                    this.m_dataFrameTemp = null;
+                    this.SplitPackage(buffer, this.m_surPlusLength, r);
                 }
                 else
                 {
-                    this.dataFrameTemp.PayloadData.Write(buffer, 0, r);
-                    this.surPlusLength -= r;
+                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, r);
+                    this.m_surPlusLength -= r;
                 }
             }
         }
@@ -211,11 +205,21 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         protected override void Reset()
         {
-            this.tempByteBlock = null;
-            this.dataFrameTemp = null;
-            this.surPlusLength = 0;
+            this.m_tempByteBlock = null;
+            this.m_dataFrameTemp = null;
+            this.m_surPlusLength = 0;
         }
 
         private void PreviewHandle(WSDataFrame dataFrame)
@@ -246,11 +250,11 @@ namespace TouchSocket.Http.WebSockets
             {
                 if (length - offset < 2)
                 {
-                    if (this.tempByteBlock == null)
+                    if (this.m_tempByteBlock == null)
                     {
-                        this.tempByteBlock = new ByteBlock();
+                        this.m_tempByteBlock = new ByteBlock();
                     }
-                    this.tempByteBlock.Write(dataBuffer, offset, length - offset);
+                    this.m_tempByteBlock.Write(dataBuffer, offset, length - offset);
                     return;
                 }
 
@@ -258,11 +262,11 @@ namespace TouchSocket.Http.WebSockets
                 {
                     case FilterResult.Cache:
                         {
-                            if (this.tempByteBlock == null)
+                            if (this.m_tempByteBlock == null)
                             {
-                                this.tempByteBlock = new ByteBlock();
+                                this.m_tempByteBlock = new ByteBlock();
                             }
-                            this.tempByteBlock.Write(dataBuffer, offset, length - offset);
+                            this.m_tempByteBlock.Write(dataBuffer, offset, length - offset);
                             return;
                         }
                     case FilterResult.Success:
@@ -273,8 +277,8 @@ namespace TouchSocket.Http.WebSockets
                             }
                             else
                             {
-                                this.surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Len;
-                                this.dataFrameTemp = dataFrame;
+                                this.m_surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Len;
+                                this.m_dataFrameTemp = dataFrame;
                             }
                         }
                         break;

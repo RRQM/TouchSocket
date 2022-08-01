@@ -22,9 +22,9 @@ namespace TouchSocket.Core.Run
     /// <typeparam name="T"></typeparam>
     public class WaitHandlePool<T> : IDisposable where T : IWaitResult
     {
-        private SnowflakeIDGenerator idGenerator;
-        private ConcurrentDictionary<long, WaitData<T>> waitDic;
-        private ConcurrentQueue<WaitData<T>> waitQueue;
+        private readonly SnowflakeIDGenerator idGenerator;
+        private readonly ConcurrentDictionary<long, WaitData<T>> waitDic;
+        private readonly ConcurrentQueue<WaitData<T>> waitQueue;
 
         /// <summary>
         /// 构造函数

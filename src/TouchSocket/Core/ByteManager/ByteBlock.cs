@@ -29,7 +29,7 @@ namespace TouchSocket.Core.ByteManager
         private static float m_ratio = 1.5f;
         private byte[] m_buffer;
         private bool m_holding;
-        private bool m_needDis;
+        private readonly bool m_needDis;
         private long m_position;
         private int m_dis = 1;
 
@@ -416,7 +416,7 @@ namespace TouchSocket.Core.ByteManager
         /// <inheritdoc/>
         /// </summary>
         /// <param name="disposing"></param>
-        protected override sealed void Dispose(bool disposing)
+        protected sealed override void Dispose(bool disposing)
         {
             if (this.m_holding)
             {

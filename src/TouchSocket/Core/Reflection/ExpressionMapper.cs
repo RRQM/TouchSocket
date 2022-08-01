@@ -21,7 +21,7 @@ namespace TouchSocket.Core.Reflection
     /// </summary>
     public class ExpressionMapper
     {
-        private static Dictionary<string, object> _Dic = new Dictionary<string, object>();
+        private static readonly Dictionary<string, object> _Dic = new Dictionary<string, object>();
 
         /// <summary>
         /// 字典缓存表达式树

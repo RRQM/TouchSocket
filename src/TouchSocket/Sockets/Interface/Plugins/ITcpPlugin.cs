@@ -47,7 +47,7 @@ namespace TouchSocket.Sockets
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
         void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e);
-        
+
         /// <summary>
         /// 在刚收到数据时触发，即在适配器之前。
         /// </summary>

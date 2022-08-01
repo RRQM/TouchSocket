@@ -44,7 +44,7 @@ namespace TouchSocket.Core.Dependency
 
     /// <summary>
     /// 依赖项对象.
-    /// 非线程安全。
+    /// 线程安全。
     /// </summary>
     public class DependencyObject : DisposableObject, IDependencyObject, System.IDisposable
     {

@@ -19,8 +19,8 @@ namespace TouchSocket.Core.Collections.Concurrent
     /// </summary>
     public class ConcurrentDoublyDictionary<TKey, TValue>
     {
-        private ConcurrentDictionary<TKey, TValue> m_keyToValue;
-        private ConcurrentDictionary<TValue, TKey> m_valueToKey;
+        private readonly ConcurrentDictionary<TKey, TValue> m_keyToValue;
+        private readonly ConcurrentDictionary<TValue, TKey> m_valueToKey;
 
         /// <summary>
         /// 构造函数

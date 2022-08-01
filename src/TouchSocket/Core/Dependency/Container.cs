@@ -67,11 +67,13 @@ namespace TouchSocket.Core.Dependency
             {
                 return this.GetScopedContainer();
             }
+            string k;
+            DependencyDescriptor descriptor;
             if (fromType.IsGenericType)
             {
                 Type type = fromType.GetGenericTypeDefinition();
-                string k = $"{type.FullName}{key}";
-                if (this.registrations.TryGetValue(k, out DependencyDescriptor descriptor))
+                k = $"{type.FullName}{key}";
+                if (this.registrations.TryGetValue(k, out descriptor))
                 {
                     if (descriptor.Lifetime == Lifetime.Singleton)
                     {
@@ -104,52 +106,45 @@ namespace TouchSocket.Core.Dependency
                         return this.Create(descriptor.ToType, ps);
                     }
                 }
-                else
-                {
-                    return default;
-                }
             }
-            else
+            k = $"{fromType.FullName}{key}";
+            if (this.registrations.TryGetValue(k, out descriptor))
             {
-                string k = $"{fromType.FullName}{key}";
-                if (this.registrations.TryGetValue(k, out DependencyDescriptor descriptor))
+                if (descriptor.Lifetime == Lifetime.Singleton)
                 {
-                    if (descriptor.Lifetime == Lifetime.Singleton)
+                    if (descriptor.ToInstance != null)
+                    {
+                        return descriptor.ToInstance;
+                    }
+                    lock (descriptor)
                     {
                         if (descriptor.ToInstance != null)
                         {
                             return descriptor.ToInstance;
                         }
-                        lock (descriptor)
-                        {
-                            if (descriptor.ToInstance != null)
-                            {
-                                return descriptor.ToInstance;
-                            }
-                            return descriptor.ToInstance = this.Create(descriptor.ToType, ps);
-                        }
+                        return descriptor.ToInstance = this.Create(descriptor.ToType, ps);
                     }
-                    return this.Create(descriptor.ToType, ps);
                 }
-                else if (fromType.IsPrimitive || fromType == typeof(string))
+                return this.Create(descriptor.ToType, ps);
+            }
+            else if (fromType.IsPrimitive || fromType == typeof(string))
+            {
+                return default;
+            }
+            else if (fromType.IsClass && !fromType.IsAbstract)
+            {
+                if (fromType.GetCustomAttribute<DependencyParamterInjectAttribute>() is DependencyParamterInjectAttribute attribute)
                 {
-                    return default;
-                }
-                else if (fromType.IsClass && !fromType.IsAbstract)
-                {
-                    if (fromType.GetCustomAttribute<DependencyParamterInjectAttribute>() is DependencyParamterInjectAttribute attribute)
+                    if (attribute.ResolveNullIfNoRegistered && !this.IsRegistered(fromType, key))
                     {
-                        if (attribute.ResolveNullIfNoRegistered && !this.IsRegistered(fromType, key))
-                        {
-                            return default;
-                        }
+                        return default;
                     }
-                    return this.Create(fromType, ps);
                 }
-                else
-                {
-                    return default;
-                }
+                return this.Create(fromType, ps);
+            }
+            else
+            {
+                return default;
             }
         }
 

@@ -21,9 +21,9 @@ namespace TouchSocket.Core.IO
     public abstract class BlockReader : DisposableObject
     {
         private byte[] m_buffer;
-        private AutoResetEvent m_inputEvent;
+        private readonly AutoResetEvent m_inputEvent;
         private volatile int m_offset;
-        private AutoResetEvent m_readEvent;
+        private readonly AutoResetEvent m_readEvent;
         private volatile int m_surLength;
 
         /// <summary>

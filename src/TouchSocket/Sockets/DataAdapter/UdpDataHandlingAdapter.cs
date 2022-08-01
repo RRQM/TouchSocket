@@ -26,7 +26,12 @@ namespace TouchSocket.Sockets
     {
         internal IUdpSession m_owner;
 
-        private int maxPackageSize = 1024 * 1024;
+        private int m_maxPackageSize = 1024 * 1024;
+
+        /// <summary>
+        /// 是否允许发送<see cref="IRequestInfo"/>对象。
+        /// </summary>
+        public abstract bool CanSendRequestInfo { get; }
 
         /// <summary>
         /// 拼接发送
@@ -38,8 +43,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int MaxPackageSize
         {
-            get => this.maxPackageSize;
-            set => this.maxPackageSize = value;
+            get => this.m_maxPackageSize;
+            set => this.m_maxPackageSize = value;
         }
 
         /// <summary>
@@ -72,6 +77,16 @@ namespace TouchSocket.Sockets
             {
                 this.OnError(ex.Message);
             }
+        }
+
+        /// <summary>
+        /// 发送数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        public void SendInput(IRequestInfo requestInfo, bool isAsync)
+        {
+            this.PreviewSend(requestInfo, isAsync);
         }
 
         /// <summary>
@@ -146,6 +161,13 @@ namespace TouchSocket.Sockets
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
         protected abstract void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock);
+
+        /// <summary>
+        /// 当发送数据前预先处理数据
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync">是否使用IOCP发送</param>
+        protected abstract void PreviewSend(IRequestInfo requestInfo, bool isAsync);
 
         /// <summary>
         /// 当发送数据前预先处理数据

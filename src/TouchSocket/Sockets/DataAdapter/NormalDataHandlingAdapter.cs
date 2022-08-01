@@ -26,6 +26,11 @@ namespace TouchSocket.Sockets
         public override bool CanSplicingSend => false;
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSendRequestInfo => false;
+
+        /// <summary>
         /// 当接收到数据时处理数据
         /// </summary>
         /// <param name="byteBlock">数据流</param>
@@ -54,6 +59,16 @@ namespace TouchSocket.Sockets
         protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
         {
             throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
 
         /// <summary>

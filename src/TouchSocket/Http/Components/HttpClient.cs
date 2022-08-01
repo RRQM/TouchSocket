@@ -33,7 +33,7 @@ namespace TouchSocket.Http
     {
         private readonly object m_requestLocker = new object();
         private bool m_getContent;
-        private WaitData<HttpResponse> waitData;
+        private readonly WaitData<HttpResponse> waitData;
 
         /// <summary>
         /// 构造函数

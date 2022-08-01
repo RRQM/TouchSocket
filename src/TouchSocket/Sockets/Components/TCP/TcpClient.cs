@@ -348,13 +348,14 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
+            this.Close($"{nameof(Dispose)}主动断开");
+            base.Dispose(disposing);
             if (disposing)
             {
+                this.PluginsManager.Clear();
                 this.m_config = default;
                 this.m_adapter = default;
             }
-            this.Close($"{nameof(Dispose)}主动断开");
-            base.Dispose(disposing);
         }
 
         #endregion 断开操作
@@ -468,12 +469,20 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 配置服务器
         /// </summary>
-        /// <param name="clientConfig"></param>
+        /// <param name="config"></param>
         /// <exception cref="Exception"></exception>
-        public ITcpClient Setup(TouchSocketConfig clientConfig)
+        public ITcpClient Setup(TouchSocketConfig config)
         {
-            this.m_config = clientConfig;
+            this.m_config = config;
+            if (config.IsUsePlugin)
+            {
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
+            }
             this.LoadConfig(this.m_config);
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
+            }
             return this;
         }
 
@@ -574,11 +583,11 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(adapter));
             }
 
-            if (adapter.client != null)
+            if (adapter.m_client != null)
             {
                 throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
             }
-            adapter.client = this;
+            adapter.m_client = this;
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
             if (this.Config != null)
@@ -725,7 +734,7 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
-                if (this.UsePlugin&&this.PluginsManager.Raise<ITcpPlugin>("OnReceivingData",this,new ByteBlockEventArgs(byteBlock)))
+                if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnReceivingData", this, new ByteBlockEventArgs(byteBlock)))
                 {
                     return;
                 }
@@ -751,25 +760,25 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void Send(byte[] buffer)
+        /// <param name="requestInfo"></param>
+        /// <exception cref="NotConnectedException"></exception>
+        /// <exception cref="OverlengthException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void Send(IRequestInfo requestInfo)
         {
-            this.Send(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void Send(ByteBlock byteBlock)
-        {
-            this.Send(byteBlock.Buffer, 0, byteBlock.Len);
+            if (this.m_disposedValue)
+            {
+                return;
+            }
+            if (this.m_adapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+            }
+            if (!this.m_adapter.CanSendRequestInfo)
+            {
+                throw new NotSupportedException($"当前适配器不支持对象发送。");
+            }
+            this.m_adapter.SendInput(requestInfo, false);
         }
 
         /// <summary>
@@ -855,25 +864,25 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void SendAsync(byte[] buffer)
+        /// <param name="requestInfo"></param>
+        /// <exception cref="NotConnectedException"></exception>
+        /// <exception cref="OverlengthException"></exception>
+        /// <exception cref="Exception"></exception>
+        public void SendAsync(IRequestInfo requestInfo)
         {
-            this.SendAsync(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void SendAsync(ByteBlock byteBlock)
-        {
-            this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+            if (this.m_disposedValue)
+            {
+                return;
+            }
+            if (this.m_adapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+            }
+            if (!this.m_adapter.CanSendRequestInfo)
+            {
+                throw new NotSupportedException($"当前适配器不支持对象发送。");
+            }
+            this.m_adapter.SendInput(requestInfo, true);
         }
 
         /// <summary>
@@ -933,30 +942,6 @@ namespace TouchSocket.Sockets
             this.SocketSend(buffer, offset, length, false);
         }
 
-        /// <summary>
-        ///<inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void DefaultSend(byte[] buffer)
-        {
-            this.DefaultSend(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void DefaultSend(ByteBlock byteBlock)
-        {
-            this.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
         #endregion 默认发送
 
         #region 异步默认发送
@@ -973,30 +958,6 @@ namespace TouchSocket.Sockets
         public void DefaultSendAsync(byte[] buffer, int offset, int length)
         {
             this.SocketSend(buffer, offset, length, true);
-        }
-
-        /// <summary>
-        ///<inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void DefaultSendAsync(byte[] buffer)
-        {
-            this.DefaultSendAsync(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"><inheritdoc/></param>
-        /// <exception cref="NotConnectedException"><inheritdoc/></exception>
-        /// <exception cref="OverlengthException"><inheritdoc/></exception>
-        /// <exception cref="Exception"><inheritdoc/></exception>
-        public void DefaultSendAsync(ByteBlock byteBlock)
-        {
-            this.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion 异步默认发送

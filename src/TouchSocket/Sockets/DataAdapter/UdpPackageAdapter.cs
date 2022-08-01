@@ -18,33 +18,6 @@ using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Data;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using System.Net;
-using System.Threading;
-在此之后:
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Threading;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using System.Net;
-using System.Threading;
-在此之后:
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Threading;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using System.Net;
-using System.Threading;
-在此之后:
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Threading;
-*/
 using TouchSocket.Core.Log;
 
 namespace TouchSocket.Sockets
@@ -125,7 +98,7 @@ namespace TouchSocket.Sockets
     {
         private int count;
 
-        private ConcurrentQueue<UdpFrame> frames;
+        private readonly ConcurrentQueue<UdpFrame> frames;
 
         private int totalCount = -1;
         /// <summary>
@@ -244,9 +217,9 @@ namespace TouchSocket.Sockets
     {
         private readonly ConcurrentDictionary<long, UdpPackage> revStore;
 
-        private SnowflakeIDGenerator iDGenerator;
+        private readonly SnowflakeIDGenerator m_iDGenerator;
 
-        private int mtu = 1472;
+        private int m_mtu = 1472;
 
         /// <summary>
         /// 构造函数
@@ -254,7 +227,7 @@ namespace TouchSocket.Sockets
         public UdpPackageAdapter()
         {
             this.revStore = new ConcurrentDictionary<long, UdpPackage>();
-            this.iDGenerator = new SnowflakeIDGenerator(4);
+            this.m_iDGenerator = new SnowflakeIDGenerator(4);
         }
 
         /// <summary>
@@ -272,9 +245,14 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int MTU
         {
-            get => this.mtu + 11;
-            set => this.mtu = value > 11 ? value : 1472;
+            get => this.m_mtu + 11;
+            set => this.m_mtu = value > 11 ? value : 1472;
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSendRequestInfo => false;
 
         /// <summary>
         /// <inheritdoc/>
@@ -324,16 +302,16 @@ namespace TouchSocket.Sockets
             {
                 throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            long id = this.iDGenerator.NextID();
+            long id = this.m_iDGenerator.NextID();
             int off = 0;
             int surLen = length;
-            int freeRoom = this.mtu - 11;
+            int freeRoom = this.m_mtu - 11;
             ushort sn = 0;
             /*|********|**|*|n|*/
             /*|********|**|*|**|*/
             while (surLen > 0)
             {
-                byte[] data = new byte[this.mtu];
+                byte[] data = new byte[this.m_mtu];
                 Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(id), 0, data, 0, 8);
                 Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(sn++), 0, data, 8, 2);
                 if (surLen > freeRoom)//有余
@@ -341,7 +319,7 @@ namespace TouchSocket.Sockets
                     Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
                     off += freeRoom;
                     surLen -= freeRoom;
-                    this.GoSend(endPoint, data, 0, this.mtu, isAsync);
+                    this.GoSend(endPoint, data, 0, this.m_mtu, isAsync);
                 }
                 else if (surLen + 2 <= freeRoom)//结束且能容纳Crc
                 {
@@ -402,6 +380,16 @@ namespace TouchSocket.Sockets
                 }
                 this.PreviewSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len, isAsync);
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

@@ -28,9 +28,9 @@ namespace TouchSocket.Rpc
     {
         private static readonly string[] dicType = { "Dictionary`2", "IDictionary`2" };
         private static readonly string[] listType = { "List`1", "HashSet`1", "IList`1", "ISet`1", "ICollection`1", "IEnumerable`1" };
-        private Assembly assembly;
-        private Dictionary<Type, string> genericTypeDic;
-        private Dictionary<Type, ClassCellCode> propertyDic;
+        private readonly Assembly assembly;
+        private readonly Dictionary<Type, string> genericTypeDic;
+        private readonly Dictionary<Type, ClassCellCode> propertyDic;
 
         /// <summary>
         /// 构造函数

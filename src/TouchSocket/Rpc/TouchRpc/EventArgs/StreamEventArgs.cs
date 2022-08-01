@@ -21,9 +21,9 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class StreamEventArgs : MsgEventArgs
     {
-        private Metadata metadata;
+        private readonly Metadata metadata;
 
-        private StreamInfo streamInfo;
+        private readonly StreamInfo streamInfo;
 
         /// <summary>
         /// 构造函数

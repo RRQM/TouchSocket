@@ -22,18 +22,18 @@ namespace TouchSocket.Core
         //机器ID
         private static long workerId;
 
-        private long twepoch = 687888001020L; //唯一时间，这是一个避免重复的随机量，自行设定不要大于当前时间戳
+        private readonly long twepoch = 687888001020L; //唯一时间，这是一个避免重复的随机量，自行设定不要大于当前时间戳
         private static long sequence = 0L;
-        private static int workerIdBits = 4; //机器码字节数。4个字节用来保存机器码(定义为Long类型会出现，最大偏移64位，所以左移64位没有意义)
+        private static readonly int workerIdBits = 4; //机器码字节数。4个字节用来保存机器码(定义为Long类型会出现，最大偏移64位，所以左移64位没有意义)
 
         /// <summary>
         /// 最大机器ID
         /// </summary>
         public static long maxWorkerId = -1L ^ (-1L << workerIdBits); //最大机器ID
 
-        private static int sequenceBits = 10; //计数器字节数，10个字节用来保存计数码
-        private static int workerIdShift = sequenceBits; //机器码数据左移位数，就是后面计数器占用的位数
-        private static int timestampLeftShift = sequenceBits + workerIdBits; //时间戳左移动位数就是机器码和计数器总字节数
+        private static readonly int sequenceBits = 10; //计数器字节数，10个字节用来保存计数码
+        private static readonly int workerIdShift = sequenceBits; //机器码数据左移位数，就是后面计数器占用的位数
+        private static readonly int timestampLeftShift = sequenceBits + workerIdBits; //时间戳左移动位数就是机器码和计数器总字节数
 
         /// <summary>
         /// 一微秒内可以产生计数，如果达到该值则等到下一微妙在进行生成

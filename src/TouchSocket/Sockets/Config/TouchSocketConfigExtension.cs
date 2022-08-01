@@ -385,7 +385,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public static readonly DependencyProperty MaxCountProperty =
             DependencyProperty.Register("MaxCount", typeof(int), typeof(TouchSocketConfigExtension), 10000);
-        
+
         /// <summary>
         /// 端口复用，默认为false，所需类型<see cref="bool"/>
         /// </summary>

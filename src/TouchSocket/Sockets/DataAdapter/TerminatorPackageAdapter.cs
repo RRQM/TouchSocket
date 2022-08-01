@@ -13,39 +13,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using System.Collections.Generic;
-using System.Text;
-using System;
-在此之后:
-using TouchSocket.Core;
-using System.ByteManager;
-using TouchSocket.Core.Extensions;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using System.Collections.Generic;
-using System.Text;
-using System;
-在此之后:
-using TouchSocket.Core;
-using System.ByteManager;
-using TouchSocket.Core.Extensions;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using System.Collections.Generic;
-using System.Text;
-using System;
-在此之后:
-using TouchSocket.Core;
-using System.ByteManager;
-using TouchSocket.Core.Extensions;
-*/
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Extensions;
 
@@ -56,13 +23,13 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class TerminatorPackageAdapter : DataHandlingAdapter
     {
-        private int minSize = 0;
+        private int m_minSize = 0;
 
-        private bool reserveTerminatorCode;
+        private bool m_reserveTerminatorCode;
 
-        private ByteBlock tempByteBlock;
+        private ByteBlock m_tempByteBlock;
 
-        private byte[] terminatorCode;
+        private readonly byte[] m_terminatorCode;
 
         /// <summary>
         /// 构造函数
@@ -89,9 +56,14 @@ namespace TouchSocket.Sockets
         /// <param name="terminatorCode"></param>
         public TerminatorPackageAdapter(int minSize, byte[] terminatorCode)
         {
-            this.minSize = minSize;
-            this.terminatorCode = terminatorCode;
+            this.m_minSize = minSize;
+            this.m_terminatorCode = terminatorCode;
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSendRequestInfo => false;
 
         /// <summary>
         /// <inheritdoc/>
@@ -103,8 +75,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int MinSize
         {
-            get => this.minSize;
-            set => this.minSize = value;
+            get => this.m_minSize;
+            set => this.m_minSize = value;
         }
 
         /// <summary>
@@ -112,8 +84,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public bool ReserveTerminatorCode
         {
-            get => this.reserveTerminatorCode;
-            set => this.reserveTerminatorCode = value;
+            get => this.m_reserveTerminatorCode;
+            set => this.m_reserveTerminatorCode = value;
         }
 
         /// <summary>
@@ -124,30 +96,30 @@ namespace TouchSocket.Sockets
         {
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
-            if (this.tempByteBlock != null)
+            if (this.m_tempByteBlock != null)
             {
-                this.tempByteBlock.Write(buffer, 0, r);
-                buffer = this.tempByteBlock.Buffer;
-                r = (int)this.tempByteBlock.Position;
+                this.m_tempByteBlock.Write(buffer, 0, r);
+                buffer = this.m_tempByteBlock.Buffer;
+                r = (int)this.m_tempByteBlock.Position;
             }
 
-            List<int> indexes = buffer.IndexOfInclude(0, r, this.terminatorCode);
+            List<int> indexes = buffer.IndexOfInclude(0, r, this.m_terminatorCode);
             if (indexes.Count == 0)
             {
                 if (r > this.MaxPackageSize)
                 {
-                    if (this.tempByteBlock != null)
+                    if (this.m_tempByteBlock != null)
                     {
-                        this.tempByteBlock.Dispose();
-                        this.tempByteBlock = null;
+                        this.m_tempByteBlock.Dispose();
+                        this.m_tempByteBlock = null;
                     }
 
                     throw new OverlengthException("在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
                 }
-                else if (this.tempByteBlock == null)
+                else if (this.m_tempByteBlock == null)
                 {
-                    this.tempByteBlock = BytePool.GetByteBlock(r * 2);
-                    this.tempByteBlock.Write(buffer, 0, r);
+                    this.m_tempByteBlock = BytePool.GetByteBlock(r * 2);
+                    this.m_tempByteBlock.Write(buffer, 0, r);
                 }
             }
             else
@@ -156,13 +128,13 @@ namespace TouchSocket.Sockets
                 foreach (int lastIndex in indexes)
                 {
                     int length;
-                    if (this.reserveTerminatorCode)
+                    if (this.m_reserveTerminatorCode)
                     {
                         length = lastIndex - startIndex + 1;
                     }
                     else
                     {
-                        length = lastIndex - startIndex - this.terminatorCode.Length + 1;
+                        length = lastIndex - startIndex - this.m_terminatorCode.Length + 1;
                     }
 
                     ByteBlock packageByteBlock = BytePool.GetByteBlock(length);
@@ -173,15 +145,15 @@ namespace TouchSocket.Sockets
                     this.PreviewHandle(packageByteBlock);
                     startIndex = lastIndex + 1;
                 }
-                if (this.tempByteBlock != null)
+                if (this.m_tempByteBlock != null)
                 {
-                    this.tempByteBlock.Dispose();
-                    this.tempByteBlock = null;
+                    this.m_tempByteBlock.Dispose();
+                    this.m_tempByteBlock = null;
                 }
                 if (startIndex < r)
                 {
-                    this.tempByteBlock = BytePool.GetByteBlock((r - startIndex) * 2);
-                    this.tempByteBlock.Write(buffer, startIndex, r - startIndex);
+                    this.m_tempByteBlock = BytePool.GetByteBlock((r - startIndex) * 2);
+                    this.m_tempByteBlock.Write(buffer, startIndex, r - startIndex);
                 }
             }
         }
@@ -199,10 +171,10 @@ namespace TouchSocket.Sockets
             {
                 throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
-            int dataLen = length - offset + this.terminatorCode.Length;
+            int dataLen = length - offset + this.m_terminatorCode.Length;
             ByteBlock byteBlock = BytePool.GetByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);
-            byteBlock.Write(this.terminatorCode);
+            byteBlock.Write(this.m_terminatorCode);
 
             try
             {
@@ -238,14 +210,14 @@ namespace TouchSocket.Sockets
             {
                 throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
-            int dataLen = length + this.terminatorCode.Length;
+            int dataLen = length + this.m_terminatorCode.Length;
             ByteBlock byteBlock = BytePool.GetByteBlock(dataLen);
             foreach (var item in transferBytes)
             {
                 byteBlock.Write(item.Buffer, item.Offset, item.Length);
             }
 
-            byteBlock.Write(this.terminatorCode);
+            byteBlock.Write(this.m_terminatorCode);
 
             try
             {
@@ -268,9 +240,20 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         protected override void Reset()
         {
-            this.tempByteBlock = null;
+            this.m_tempByteBlock.SafeDispose();
+            this.m_tempByteBlock = null;
         }
 
         private void PreviewHandle(ByteBlock byteBlock)

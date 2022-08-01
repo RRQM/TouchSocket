@@ -26,7 +26,7 @@ namespace TouchSocket.Core.Run
     {
         private bool allowMultiple = false;
 
-        private ConcurrentDictionary<string, List<TokenInstance>> tokenAndInstance = new ConcurrentDictionary<string, List<TokenInstance>>();
+        private readonly ConcurrentDictionary<string, List<TokenInstance>> tokenAndInstance = new ConcurrentDictionary<string, List<TokenInstance>>();
 
         /// <summary>
         /// 允许多广播注册

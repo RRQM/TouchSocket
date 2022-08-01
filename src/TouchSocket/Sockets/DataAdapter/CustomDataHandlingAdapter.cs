@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using TouchSocket.Core.ByteManager;
 
@@ -25,7 +26,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="ByteBlock.Dispose"/>后，再置空；
         /// </summary>
-        protected ByteBlock tempByteBlock;
+        protected ByteBlock TempByteBlock;
+
+        /// <summary>
+        /// 缓存对象。
+        /// </summary>
+        protected TRequest TempRequest;
 
         /// <summary>
         /// 默认不支持拼接发送
@@ -45,23 +51,29 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         protected abstract FilterResult Filter(ByteBlock byteBlock, bool beCached, ref TRequest request, ref int tempCapacity);
 
-        private int a;
+        /// <summary>
+        /// 成功执行接收以后。
+        /// </summary>
+        /// <param name="request"></param>
+        protected virtual void OnReceivedSuccess(TRequest request)
+        {
+        }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            this.a += byteBlock.Len;
-            if (this.tempByteBlock == null)
+            if (this.TempByteBlock == null)
             {
                 this.Single(byteBlock, false);
             }
             else
             {
-                this.tempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
-                ByteBlock block = this.tempByteBlock;
-                this.tempByteBlock = null;
+                this.TempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
+                ByteBlock block = this.TempByteBlock;
+                this.TempByteBlock = null;
                 this.Single(block, true);
             }
         }
@@ -87,18 +99,14 @@ namespace TouchSocket.Sockets
         {
             throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
         }
-
         /// <summary>
-        /// 缓存对象。
+        /// <inheritdoc/>
         /// </summary>
-        protected TRequest tempRequest;
-
-        /// <summary>
-        /// 成功执行接收以后。
-        /// </summary>
-        /// <param name="request"></param>
-        protected virtual void OnReceivedSuccess(TRequest request)
+        protected override void Reset()
         {
+            this.TempByteBlock.SafeDispose();
+            this.TempByteBlock = null;
+            this.TempRequest = default;
         }
 
         private void Single(ByteBlock byteBlock, bool temp)
@@ -109,13 +117,13 @@ namespace TouchSocket.Sockets
             while (byteBlock.Pos < byteBlock.Len)
             {
                 int tempCapacity = 1024 * 64;
-                FilterResult filterResult = this.Filter(byteBlock, this.tempRequest != null, ref this.tempRequest, ref tempCapacity);
+                FilterResult filterResult = this.Filter(byteBlock, this.TempRequest != null, ref this.TempRequest, ref tempCapacity);
                 switch (filterResult)
                 {
                     case FilterResult.Success:
-                        this.GoReceived(null, this.tempRequest);
-                        this.OnReceivedSuccess(this.tempRequest);
-                        this.tempRequest = default;
+                        this.GoReceived(null, this.TempRequest);
+                        this.OnReceivedSuccess(this.TempRequest);
+                        this.TempRequest = default;
                         neverSucceed = false;
                         break;
 
@@ -127,22 +135,22 @@ namespace TouchSocket.Sockets
                                 if (neverSucceed)
                                 {
                                     byteBlock.Pos = position;
-                                    this.tempByteBlock = byteBlock;
+                                    this.TempByteBlock = byteBlock;
                                 }
                                 else
                                 {
-                                    this.tempByteBlock = new ByteBlock(tempCapacity);
-                                    this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                    this.TempByteBlock = new ByteBlock(tempCapacity);
+                                    this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                                     byteBlock.Dispose();
                                 }
                             }
                             else
                             {
-                                this.tempByteBlock = new ByteBlock(tempCapacity);
-                                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                this.TempByteBlock = new ByteBlock(tempCapacity);
+                                this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                             }
 
-                            if (this.tempByteBlock.Len > this.MaxPackageSize)
+                            if (this.TempByteBlock.Len > this.MaxPackageSize)
                             {
                                 this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
                             }
@@ -153,19 +161,6 @@ namespace TouchSocket.Sockets
                         break;
                 }
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        protected override void Reset()
-        {
-            if (this.tempByteBlock != null)
-            {
-                this.tempByteBlock.Dispose();
-                this.tempByteBlock = null;
-            }
-            this.tempRequest = default;
         }
     }
 }

@@ -10,45 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Log;
-using System;
-在此之后:
-using System;
-using System.Collections.Generic;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Log;
-using System;
-在此之后:
-using System;
-using System.Collections.Generic;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Log;
-using System;
-在此之后:
-using System;
-using System.Collections.Generic;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-*/
 using System;
 using System.Collections.Generic;
 using TouchSocket.Core.ByteManager;
@@ -61,7 +22,7 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class DataHandlingAdapter
     {
-        internal ITcpClientBase client;
+        internal ITcpClientBase m_client;
 
         private int m_maxPackageSize = 1024 * 1024;
 
@@ -71,7 +32,12 @@ namespace TouchSocket.Sockets
         public abstract bool CanSplicingSend { get; }
 
         /// <summary>
-        /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
+        /// 是否允许发送<see cref="IRequestInfo"/>对象。
+        /// </summary>
+        public abstract bool CanSendRequestInfo { get; }
+
+        /// <summary>
+        /// 获取或设置适配器能接收的最大数据包长度。
         /// </summary>
         public int MaxPackageSize
         {
@@ -82,7 +48,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public ITcpClientBase Client => this.client;
+        public ITcpClientBase Client => this.m_client;
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -133,6 +99,16 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// 发送数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        public void SendInput(IRequestInfo requestInfo, bool isAsync)
+        {
+            this.PreviewSend(requestInfo, isAsync);
+        }
+
+        /// <summary>
         /// 处理已经经过预先处理后的数据
         /// </summary>
         /// <param name="byteBlock">以二进制形式传递</param>
@@ -166,9 +142,9 @@ namespace TouchSocket.Sockets
             {
                 this.Reset();
             }
-            if (log && this.client != null && this.client.Logger != null)
+            if (log && this.m_client != null && this.m_client.Logger != null)
             {
-                this.client.Logger.Error(error);
+                this.m_client.Logger.Error(error);
             }
         }
 
@@ -186,6 +162,13 @@ namespace TouchSocket.Sockets
         /// <param name="length">长度</param>
         /// <param name="isAsync">是否使用IOCP发送</param>
         protected abstract void PreviewSend(byte[] buffer, int offset, int length, bool isAsync);
+
+        /// <summary>
+        /// 当发送数据前预先处理数据
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync">是否使用IOCP发送</param>
+        protected abstract void PreviewSend(IRequestInfo requestInfo, bool isAsync);
 
         /// <summary>
         /// 组合发送预处理数据，

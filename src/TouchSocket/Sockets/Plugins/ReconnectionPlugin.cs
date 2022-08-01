@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets.Plugins
     /// 重连插件
     /// </summary>
     [SingletonPlugin]
-    public sealed class ReconnectionPlugin<TClient> : TcpPluginBase
+    public sealed class ReconnectionPlugin<TClient> : TcpPluginBase where TClient : class, ITcpClient
     {
         private readonly bool m_printLog;
         private readonly int m_sleepTime;

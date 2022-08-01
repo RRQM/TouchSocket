@@ -21,14 +21,14 @@ namespace TouchSocket.Sockets
     /// 客户端集合
     /// </summary>
     [DebuggerDisplay("Count={Count}")]
-    public class SocketClientCollection
+    public sealed class SocketClientCollection
     {
         /// <summary>
         /// 数量
         /// </summary>
         public int Count => this.tokenDic.Count;
 
-        private ConcurrentDictionary<string, ISocketClient> tokenDic = new ConcurrentDictionary<string, ISocketClient>();
+        private readonly ConcurrentDictionary<string, ISocketClient> tokenDic = new ConcurrentDictionary<string, ISocketClient>();
 
         internal bool TryAdd(ISocketClient socketClient)
         {

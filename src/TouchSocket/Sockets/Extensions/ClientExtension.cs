@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Net.Sockets;
-using System.Text;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Plugins;
-using TouchSocket.Sockets.Plugins;
 
 namespace TouchSocket.Sockets
 {
@@ -46,7 +41,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                if (client==null||!client.Online)
+                if (client == null || !client.Online)
                 {
                     return;
                 }
@@ -68,179 +63,6 @@ namespace TouchSocket.Sockets
             return $"{client.IP}:{client.Port}";
         }
 
-        #region 发送
-        /// <summary>
-        /// 发送字符串
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="msg"></param>
-        public static void Send<T>(this T client, string msg) where T : ISend
-        {
-            if (string.IsNullOrEmpty(msg))
-            {
-                throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
-            }
-
-            client.Send(Encoding.UTF8.GetBytes(msg));
-        }
-
-        /// <summary>
-        /// 发送字符串
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="msg"></param>
-        public static void SendAsync<T>(this T client, string msg) where T : ISend
-        {
-            if (string.IsNullOrEmpty(msg))
-            {
-                throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
-            }
-
-            client.SendAsync(Encoding.UTF8.GetBytes(msg));
-        }
-
-        /// <summary>
-        /// 发送字符串
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="msg"></param>
-        public static void Send<T>(this T client, string id, string msg) where T : IIDSender
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                throw new ArgumentException($"“{nameof(id)}”不能为 null 或空。", nameof(id));
-            }
-
-            if (string.IsNullOrEmpty(msg))
-            {
-                throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
-            }
-
-            client.Send(id, Encoding.UTF8.GetBytes(msg));
-        }
-
-        /// <summary>
-        /// 发送字符串
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="msg"></param>
-        public static void SendAsync<T>(this T client, string id, string msg) where T : IIDSender
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                throw new ArgumentException($"“{nameof(id)}”不能为 null 或空。", nameof(id));
-            }
-
-            if (string.IsNullOrEmpty(msg))
-            {
-                throw new ArgumentException($"“{nameof(msg)}”不能为 null 或空。", nameof(msg));
-            }
-
-            client.SendAsync(id, Encoding.UTF8.GetBytes(msg));
-        }
-
-        /// <summary>
-        /// 尝试异步发送数据。
-        /// <para>当客户端使用独立线程发送时，会永远返回True</para>
-        /// </summary>
-        /// <typeparam name="T">客户端类型</typeparam>
-        /// <param name="client">客户端</param>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>是否完成发送</returns>
-        public static bool TrySendAsync<T>(this T client, byte[] buffer, int offset, int length) where T : ISend
-        {
-            if (client.CanSend)
-            {
-                try
-                {
-                    client.SendAsync(buffer, offset, length);
-                    return true;
-                }
-                catch
-                {
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 尝试发送数据
-        /// </summary>
-        /// <typeparam name="T">客户端类型</typeparam>
-        /// <param name="client">客户端</param>
-        /// <param name="buffer">数据</param>
-        /// <returns>是否完成发送</returns>
-        public static bool TrySendAsync<T>(this T client, byte[] buffer) where T : ISend
-        {
-            return TrySendAsync(client, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 尝试发送数据
-        /// </summary>
-        /// <typeparam name="T">客户端类型</typeparam>
-        /// <param name="client">客户端</param>
-        /// <param name="byteBlock">数据</param>
-        /// <returns>是否完成发送</returns>
-        public static bool TrySendAsync<T>(this T client, ByteBlock byteBlock) where T : ISend
-        {
-            return TrySendAsync(client, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 尝试发送数据
-        /// </summary>
-        /// <typeparam name="T">客户端类型</typeparam>
-        /// <param name="client">客户端</param>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>是否完成发送</returns>
-        public static bool TrySend<T>(this T client, byte[] buffer, int offset, int length) where T : ISend
-        {
-            if (client.CanSend)
-            {
-                try
-                {
-                    client.Send(buffer, offset, length);
-                    return true;
-                }
-                catch
-                {
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 尝试发送数据
-        /// </summary>
-        /// <typeparam name="T">客户端类型</typeparam>
-        /// <param name="client">客户端</param>
-        /// <param name="buffer">数据</param>
-        /// <returns>是否完成发送</returns>
-        public static bool TrySend<T>(this T client, byte[] buffer) where T : ISend
-        {
-            return TrySend(client, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 尝试发送数据
-        /// </summary>
-        /// <typeparam name="T">客户端类型</typeparam>
-        /// <param name="client">客户端</param>
-        /// <param name="byteBlock">数据</param>
-        /// <returns>是否完成发送</returns>
-        public static bool TrySend<T>(this T client, ByteBlock byteBlock) where T : ISend
-        {
-            return TrySend(client, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-        #endregion 发送
-
         #region Udp广播
         /// <summary>
         /// 广播。
@@ -252,7 +74,7 @@ namespace TouchSocket.Sockets
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static void SendWithBroadcast<T>(this T client,int port,byte[] buffer,int offset,int length) where T : IUdpClientSender
+        public static void SendWithBroadcast<T>(this T client, int port, byte[] buffer, int offset, int length) where T : IUdpClientSender
         {
             //client.Send(new IPHost($"255.255.255.255:{port}").EndPoint,buffer,offset,length);
         }

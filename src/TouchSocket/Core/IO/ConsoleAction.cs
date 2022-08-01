@@ -21,7 +21,7 @@ namespace TouchSocket.Core.IO
     /// </summary>
     public class ConsoleAction
     {
-        private string helpOrder;
+        private readonly string helpOrder;
 
         /// <summary>
         /// 构造函数
@@ -81,7 +81,7 @@ namespace TouchSocket.Core.IO
         /// </summary>
         public string HelpOrder => this.helpOrder;
 
-        private Dictionary<string, VAction> actions = new Dictionary<string, VAction>();
+        private readonly Dictionary<string, VAction> actions = new Dictionary<string, VAction>();
 
         /// <summary>
         /// 添加
@@ -131,15 +131,15 @@ namespace TouchSocket.Core.IO
 
     internal struct VAction
     {
-        private Action action;
+        private readonly Action action;
 
         public Action Action => this.action;
 
-        private string fullOrder;
+        private readonly string fullOrder;
 
         public string FullOrder => this.fullOrder;
 
-        private string description;
+        private readonly string description;
 
         /// <summary>
         /// 构造函数

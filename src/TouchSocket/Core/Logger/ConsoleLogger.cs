@@ -28,8 +28,8 @@ namespace TouchSocket.Core.Log
             this.m_consoleBackgroundColor = Console.BackgroundColor;
         }
 
-        private ConsoleColor m_consoleForegroundColor;
-        private ConsoleColor m_consoleBackgroundColor;
+        private readonly ConsoleColor m_consoleForegroundColor;
+        private readonly ConsoleColor m_consoleBackgroundColor;
 
         /// <summary>
         /// 记录日志

@@ -184,9 +184,9 @@ namespace TouchSocket.Http
         #region Cache implementation
 
         private readonly ReaderWriterLockSlim lockEx = new ReaderWriterLockSlim();
-        private Dictionary<string, MemCacheEntry> entriesByKey = new Dictionary<string, MemCacheEntry>();
-        private Dictionary<string, HashSet<string>> entriesByPath = new Dictionary<string, HashSet<string>>();
-        private Dictionary<string, FileCacheEntry> pathsByKey = new Dictionary<string, FileCacheEntry>();
+        private readonly Dictionary<string, MemCacheEntry> entriesByKey = new Dictionary<string, MemCacheEntry>();
+        private readonly Dictionary<string, HashSet<string>> entriesByPath = new Dictionary<string, HashSet<string>>();
+        private readonly Dictionary<string, FileCacheEntry> pathsByKey = new Dictionary<string, FileCacheEntry>();
 
         private class MemCacheEntry
         {

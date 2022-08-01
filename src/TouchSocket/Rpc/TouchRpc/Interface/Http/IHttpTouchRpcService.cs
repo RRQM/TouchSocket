@@ -10,55 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
 using TouchSocket.Http;
-using System;
-在此之后:
-using System;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Http;
-using System;
-在此之后:
-using System;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Http;
-using System;
-在此之后:
-using System;
-*/
-using TouchSocket.Http;
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using System.Threading.Tasks;
-在此之后:
-using System.Threading.Tasks;
-using TouchSocket.Http;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using System.Threading.Tasks;
-在此之后:
-using System.Threading.Tasks;
-using TouchSocket.Http;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using System.Threading.Tasks;
-在此之后:
-using System.Threading.Tasks;
-using TouchSocket.Http;
-*/
-
 
 namespace TouchSocket.Rpc.TouchRpc
 {

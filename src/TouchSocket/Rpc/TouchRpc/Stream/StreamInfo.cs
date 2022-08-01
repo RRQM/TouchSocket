@@ -17,9 +17,9 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public struct StreamInfo
     {
-        private long size;
+        private readonly long size;
 
-        private string streamType;
+        private readonly string streamType;
 
         /// <summary>
         /// 构造函数
