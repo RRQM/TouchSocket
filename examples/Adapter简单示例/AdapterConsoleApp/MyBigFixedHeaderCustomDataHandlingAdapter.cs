@@ -10,9 +10,16 @@ namespace AdapterConsoleApp
     {
         public override int HeaderLength => throw new NotImplementedException();
 
+        public override bool CanSendRequestInfo => false;
+
         protected override MyBigFixedHeaderRequestInfo GetInstance()
         {
             return new MyBigFixedHeaderRequestInfo();
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new NotImplementedException();
         }
     }
 

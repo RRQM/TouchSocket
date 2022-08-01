@@ -80,9 +80,16 @@ namespace HeartbeatConsoleApp
     {
         public override int HeaderLength => 3;
 
+        public override bool CanSendRequestInfo => false;
+
         protected override MyRequestInfo GetInstance()
         {
             return new MyRequestInfo();
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new NotImplementedException();
         }
     }
 
