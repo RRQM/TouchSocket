@@ -53,7 +53,6 @@ namespace TouchSocket.Core.Plugins
             {
                 throw new ArgumentNullException();
             }
-
             if (plugin.GetType().GetCustomAttribute<SingletonPluginAttribute>() is SingletonPluginAttribute singletonPlugin)
             {
                 foreach (var item in this.m_plugins)

@@ -21,9 +21,9 @@ namespace TouchSocket.Rpc.WebApi
     /// </summary>
     public class WebApiServerCallContext : ICallContext
     {
-        private object m_caller;
-        private HttpContext m_context;
-        private MethodInstance m_methodInstance;
+        private readonly object m_caller;
+        private readonly HttpContext m_context;
+        private readonly MethodInstance m_methodInstance;
         private CancellationTokenSource m_tokenSource;
 
         /// <summary>

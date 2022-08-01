@@ -32,7 +32,7 @@ namespace TouchSocket.Rpc.JsonRpc
     {
         private JRPT m_jrpt;
 
-        private WaitHandlePool<IWaitResult> m_waitHandle;
+        private readonly WaitHandlePool<IWaitResult> m_waitHandle;
 
         /// <summary>
         /// 构造函数

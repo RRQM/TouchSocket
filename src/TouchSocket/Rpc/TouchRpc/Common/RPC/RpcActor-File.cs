@@ -25,7 +25,7 @@ namespace TouchSocket.Rpc.TouchRpc
 {
     public partial class RpcActor
     {
-        private ConcurrentDictionary<int, FileOperationEventArgs> m_eventArgs;
+        private readonly ConcurrentDictionary<int, FileOperationEventArgs> m_eventArgs;
 
         private ResponseType m_responseType;
 

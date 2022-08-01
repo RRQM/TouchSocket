@@ -11,39 +11,18 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using System;
-在此之后:
-using System;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using System;
-在此之后:
-using System;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using System;
-在此之后:
-using System;
-*/
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
+using TouchSocket.Core.Config;
+using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// TCP终端基础接口
     /// </summary>
-    public interface ITcpClientBase : IClient, ISend, IDefaultSender
+    public interface ITcpClientBase : IClient, ISend, IDefaultSender, IPlguinObject
     {
         /// <summary>
         /// 断开连接
@@ -56,14 +35,14 @@ namespace TouchSocket.Sockets
         int BufferLength { get; }
 
         /// <summary>
-        /// 适配器能接收的最大数据包长度。
-        /// </summary>
-        int MaxPackageSize { get; }
-
-        /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
         /// </summary>
         bool CanSetDataHandlingAdapter { get; }
+
+        /// <summary>
+        /// 客户端配置
+        /// </summary>
+        TouchSocketConfig Config { get; }
 
         /// <summary>
         /// 数据处理适配器
@@ -79,6 +58,11 @@ namespace TouchSocket.Sockets
         /// 主通信器
         /// </summary>
         Socket MainSocket { get; }
+
+        /// <summary>
+        /// 适配器能接收的最大数据包长度。
+        /// </summary>
+        int MaxPackageSize { get; }
 
         /// <summary>
         /// 判断是否在线

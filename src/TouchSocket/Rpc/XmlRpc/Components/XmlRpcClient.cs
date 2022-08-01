@@ -13,33 +13,6 @@
 using System;
 using System.Threading.Tasks;
 using System.Xml;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Rpc.TouchRpc;
-using System;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Rpc.TouchRpc;
-using System;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Rpc.TouchRpc;
-using System;
-在此之后:
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-*/
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Http;
 using TouchSocket.Rpc.TouchRpc;

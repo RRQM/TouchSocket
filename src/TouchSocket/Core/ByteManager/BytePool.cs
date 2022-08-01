@@ -23,7 +23,7 @@ namespace TouchSocket.Core.ByteManager
     /// </summary>
     public static class BytePool
     {
-        private static ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
+        private static readonly ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
 
         private static bool m_autoZero;
         private static long m_fullSize;
@@ -31,7 +31,7 @@ namespace TouchSocket.Core.ByteManager
         private static int m_maxBlockSize;
         private static long m_maxSize;
         private static int m_minBlockSize;
-        private static Timer m_timer;
+        private static readonly Timer m_timer;
 
         static BytePool()
         {

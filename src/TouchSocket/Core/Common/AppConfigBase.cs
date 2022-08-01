@@ -114,7 +114,7 @@ namespace TouchSocket.Core
             return _default;
         }
 
-        private static Dictionary<Type, object> list = new Dictionary<Type, object>();
+        private static readonly Dictionary<Type, object> list = new Dictionary<Type, object>();
 
         /// <summary>
         /// 获取默认配置，每次调用该方法时，都会重新加载配置。

@@ -25,7 +25,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class TcpServiceBase : BaseSocket, ITcpService, IIDSender
     {
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -176,20 +175,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="id">用于检索TcpSocketClient</param>
         /// <param name="buffer"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Send(string id, byte[] buffer)
-        {
-            this.Send(id, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <exception cref="KeyNotFoundException"></exception>
@@ -206,34 +191,6 @@ namespace TouchSocket.Sockets
             {
                 throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
             }
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Send(string id, ByteBlock byteBlock)
-        {
-            this.Send(id, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void SendAsync(string id, byte[] buffer)
-        {
-            this.SendAsync(id, buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -260,17 +217,37 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 发送流中的有效数据
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void SendAsync(string id, ByteBlock byteBlock)
+        /// <param name="id"></param>
+        /// <param name="requestInfo"></param>
+        public void Send(string id, IRequestInfo requestInfo)
         {
-            this.SendAsync(id, byteBlock.Buffer, 0, byteBlock.Len);
+            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            {
+                client.Send(requestInfo);
+            }
+            else
+            {
+                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="requestInfo"></param>
+        public void SendAsync(string id, IRequestInfo requestInfo)
+        {
+            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            {
+                client.SendAsync(requestInfo);
+            }
+            else
+            {
+                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+            }
         }
 
         #endregion ID发送

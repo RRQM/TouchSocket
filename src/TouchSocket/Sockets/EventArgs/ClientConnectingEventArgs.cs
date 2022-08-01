@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class ClientConnectingEventArgs : ClientOperationEventArgs
     {
-        private Socket socket;
+        private readonly Socket socket;
 
         /// <summary>
         /// 构造函数

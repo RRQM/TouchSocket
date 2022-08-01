@@ -38,11 +38,6 @@ namespace TouchSocket.Sockets
         IPHost RemoteIPHost { get; }
 
         /// <summary>
-        /// 客户端配置
-        /// </summary>
-        TouchSocketConfig Config { get; }
-
-        /// <summary>
         /// 独立线程发送
         /// </summary>
         bool SeparateThreadSend { get; }

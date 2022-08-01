@@ -60,7 +60,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 服务器映射
         /// </summary>
-        public ActionMap ActionMap { get => m_actionMap; }
+        public ActionMap ActionMap { get => this.m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -134,7 +134,7 @@ namespace TouchSocket.Rpc.TouchRpc
             if (response.StatusCode == "200")
             {
                 this.SwitchProtocolToTouchRpc();
-                this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default, 
+                this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default,
                     timeout, this.Config.GetValue<Metadata>(TouchRpcConfigExtensions.MetadataProperty));
                 return this;
             }

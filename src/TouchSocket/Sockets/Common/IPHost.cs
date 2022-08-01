@@ -23,9 +23,9 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class IPHost
     {
-        private bool isUri;
+        private readonly bool isUri;
 
-        private Uri uri;
+        private readonly Uri uri;
 
         /// <summary>
         /// 构造函数

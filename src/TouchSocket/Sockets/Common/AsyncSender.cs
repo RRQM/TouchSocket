@@ -31,13 +31,13 @@ namespace TouchSocket.Sockets
 
         private readonly EventWaitHandle waitHandle;
 
-        private byte[] buffer = new byte[1024 * 1024];
+        private readonly byte[] buffer = new byte[1024 * 1024];
 
-        private Action<Exception> onError;
+        private readonly Action<Exception> onError;
 
         private volatile bool sending;
 
-        private Socket socket;
+        private readonly Socket socket;
 
         private static int cacheLength = 1024 * 1024 * 100;
 

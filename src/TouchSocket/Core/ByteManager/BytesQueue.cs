@@ -34,7 +34,7 @@ namespace TouchSocket.Core.ByteManager
         /// </summary>
         public long FullSize => this.size * this.bytesQueue.Count;
 
-        private ConcurrentQueue<byte[]> bytesQueue = new ConcurrentQueue<byte[]>();
+        private readonly ConcurrentQueue<byte[]> bytesQueue = new ConcurrentQueue<byte[]>();
 
         internal long referenced;
 

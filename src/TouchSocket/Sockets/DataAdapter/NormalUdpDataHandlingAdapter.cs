@@ -29,6 +29,11 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public override bool CanSendRequestInfo => false;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
@@ -58,6 +63,16 @@ namespace TouchSocket.Sockets
         protected override void PreviewSend(EndPoint endPoint, IList<TransferByte> transferBytes, bool isAsync)
         {
 
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+            throw new System.NotImplementedException();
         }
 
         /// <summary>

@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets
 {
@@ -28,10 +27,5 @@ namespace TouchSocket.Sockets
         /// 包含此辅助类的主服务器类
         /// </summary>
         TcpServiceBase Service { get; }
-
-        /// <summary>
-        /// 插件管理器
-        /// </summary>
-        IPluginsManager PluginsManager { get; }
     }
 }

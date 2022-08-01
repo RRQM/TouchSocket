@@ -38,7 +38,7 @@ namespace TouchSocket.Core.Plugins
         /// <param name="pluginsManager"></param>
         /// <param name="ps">创建插件相关构造函数插件</param>
         /// <returns>插件类型实例</returns>
-        public static TPlugin Add<TPlugin>(this IPluginsManager pluginsManager, object[] ps) where TPlugin : class, IPlugin
+        public static TPlugin Add<TPlugin>(this IPluginsManager pluginsManager, params object[] ps) where TPlugin : class, IPlugin
         {
             var obj = pluginsManager.Container.Resolve<TPlugin>(ps);
             pluginsManager.Add(obj);

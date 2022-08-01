@@ -27,9 +27,10 @@ namespace TouchSocket.Rpc.XmlRpc
     /// </summary>
     public class XmlRpcParserPlugin : HttpPluginBase, IRpcParser
     {
+        private readonly ActionMap m_actionMap;
         private RpcStore m_rpcStore;
         private string m_xmlRpcUrl = "/xmlrpc";
-        readonly ActionMap m_actionMap;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -38,6 +39,11 @@ namespace TouchSocket.Rpc.XmlRpc
             this.m_actionMap = new ActionMap();
             rpcStore?.AddRpcParser(this.GetType().Name, this);
         }
+
+        /// <summary>
+        /// XmlRpc调用
+        /// </summary>
+        public ActionMap ActionMap => this.m_actionMap;
 
         /// <summary>
         /// 所属服务器
@@ -52,11 +58,6 @@ namespace TouchSocket.Rpc.XmlRpc
             get => this.m_xmlRpcUrl;
             set => this.m_xmlRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
         }
-
-        /// <summary>
-        /// XmlRpc调用
-        /// </summary>
-        public ActionMap ActionMap => this.m_actionMap;
 
         #region RPC解析器
 
@@ -86,6 +87,7 @@ namespace TouchSocket.Rpc.XmlRpc
         {
             this.m_rpcStore = rpcService;
         }
+
         #endregion RPC解析器
 
         /// <summary>
@@ -157,7 +159,6 @@ namespace TouchSocket.Rpc.XmlRpc
                 {
                     invokeResult = this.m_rpcStore.Execute(client, methodInstance, invokePS);
                 }
-
 
                 HttpResponse httpResponse = new HttpResponse();
 

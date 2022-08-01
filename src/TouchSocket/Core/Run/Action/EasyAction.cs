@@ -22,7 +22,7 @@ namespace TouchSocket.Core.Run
     /// </summary>
     public class EasyAction
     {
-        private static ConcurrentDictionary<object, Timer> timers = new ConcurrentDictionary<object, Timer>();
+        private static readonly ConcurrentDictionary<object, Timer> timers = new ConcurrentDictionary<object, Timer>();
 
         /// <summary>
         /// 延迟执行

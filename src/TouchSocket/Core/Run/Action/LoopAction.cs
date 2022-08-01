@@ -34,9 +34,9 @@ namespace TouchSocket.Core.Run
 
         private TimeSpan interval;
 
-        private int loopCount;
+        private readonly int loopCount;
 
-        private EventWaitHandle waitHandle;
+        private readonly EventWaitHandle waitHandle;
 
         private LoopAction(int count, TimeSpan interval, Action<LoopAction> action)
         {
@@ -117,7 +117,7 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public int LoopCount => this.loopCount;
 
-        private Action<LoopAction> action;
+        private readonly Action<LoopAction> action;
 
         /// <summary>
         /// 执行委托

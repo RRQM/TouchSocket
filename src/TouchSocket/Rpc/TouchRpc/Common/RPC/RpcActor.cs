@@ -97,7 +97,7 @@ namespace TouchSocket.Rpc.TouchRpc
         private readonly bool m_isService;
         private string m_id;
         private bool m_isHandshaked;
-        private WaitHandlePool<IWaitResult> m_waitHandlePool;
+        private readonly WaitHandlePool<IWaitResult> m_waitHandlePool;
         private ILog m_logger;
 
         #endregion 变量

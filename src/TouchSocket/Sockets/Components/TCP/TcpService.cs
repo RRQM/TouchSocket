@@ -46,22 +46,18 @@ namespace TouchSocket.Sockets
         private int m_backlog;
         private int m_clearInterval;
         private ClearType m_clearType;
+        private TouchSocketConfig m_config;
         private int m_maxCount;
         private NetworkMonitor[] m_monitors;
         private ReceiveType m_receiveType;
         private ServerState m_serverState;
-        private TouchSocketConfig m_config;
-        private SocketClientCollection m_socketClients;
+        private readonly SocketClientCollection m_socketClients;
         private bool m_usePlugin;
         private bool m_useSsl;
+
         #endregion 变量
 
         #region 属性
-
-        /// <summary>
-        /// 获取默认新ID。
-        /// </summary>
-        public Func<string> GetDefaultNewID { get; private set; }
 
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
@@ -82,6 +78,11 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         public override IContainer Container => this.Config?.Container;
+
+        /// <summary>
+        /// 获取默认新ID。
+        /// </summary>
+        public Func<string> GetDefaultNewID { get; private set; }
 
         /// <summary>
         /// 最大可连接数
@@ -323,7 +324,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -331,7 +331,15 @@ namespace TouchSocket.Sockets
         public override IService Setup(TouchSocketConfig config)
         {
             this.m_config = config;
-            this.LoadConfig(config);
+            if (config.IsUsePlugin)
+            {
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
+            }
+            this.LoadConfig(this.m_config);
+            if (this.UsePlugin)
+            {
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
+            }
             return this;
         }
 
@@ -507,6 +515,14 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// 在验证Ssl发送错误时。
+        /// </summary>
+        /// <param name="ex"></param>
+        protected virtual void OnAuthenticatingError(System.Exception ex)
+        {
+        }
+
+        /// <summary>
         /// 在Socket初始化对象后，Bind之前调用。
         /// 可用于设置Socket参数。
         /// 父类方法可覆盖。
@@ -643,31 +659,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void SetClientConfiguration(SocketClient client)
-        {
-            client.m_usePlugin = this.m_usePlugin;
-            client.m_lastTick = DateTime.Now.Ticks;
-            client.m_config = this.m_config;
-            client.m_service = this;
-            client.Logger = this.Container.Resolve<ILog>();
-            client.ClearType = this.m_clearType;
-            client.m_receiveType = this.m_receiveType;
-            client.BufferLength = this.BufferLength;
-            if (client.CanSetDataHandlingAdapter)
-            {
-                client.SetDataHandlingAdapter(this.Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
-            }
-        }
-
-        /// <summary>
-        /// 在验证Ssl发送错误时。
-        /// </summary>
-        /// <param name="ex"></param>
-        protected virtual void OnAuthenticatingError(System.Exception ex)
-        {
-
-        }
-
         private void OnTask(Socket socket)
         {
             Task.Run(() =>
@@ -721,6 +712,22 @@ namespace TouchSocket.Sockets
                     this.Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
                 }
             });
+        }
+
+        private void SetClientConfiguration(SocketClient client)
+        {
+            client.m_usePlugin = this.m_usePlugin;
+            client.m_lastTick = DateTime.Now.Ticks;
+            client.m_config = this.m_config;
+            client.m_service = this;
+            client.Logger = this.Container.Resolve<ILog>();
+            client.ClearType = this.m_clearType;
+            client.m_receiveType = this.m_receiveType;
+            client.BufferLength = this.BufferLength;
+            if (client.CanSetDataHandlingAdapter)
+            {
+                client.SetDataHandlingAdapter(this.Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
+            }
         }
     }
 

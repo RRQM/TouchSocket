@@ -39,7 +39,7 @@ namespace TouchSocket.Core.Pool
         {
         }
 
-        private ConcurrentQueue<T> queue = new ConcurrentQueue<T>();
+        private readonly ConcurrentQueue<T> queue = new ConcurrentQueue<T>();
 
         private bool autoCreate = true;
 

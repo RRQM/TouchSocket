@@ -31,7 +31,7 @@ namespace TouchSocket.Core.Data.XML
             this.path = path;
         }
 
-        private string path = null;
+        private readonly string path = null;
 
         #region 存储
 

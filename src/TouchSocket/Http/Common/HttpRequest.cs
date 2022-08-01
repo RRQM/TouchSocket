@@ -419,6 +419,18 @@ namespace TouchSocket.Http
 
             return pairs;
         }
+        /// <summary>
+        /// 输出
+        /// </summary>
+        public override string ToString()
+        {
+            using (ByteBlock byteBlock = new ByteBlock())
+            {
+                this.Build(byteBlock);
+                return byteBlock.ToString();
+            }
+        }
+
 
         private void ParseUrl()
         {

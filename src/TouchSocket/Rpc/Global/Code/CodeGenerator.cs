@@ -25,7 +25,7 @@ namespace TouchSocket.Rpc
     /// </summary>
     public static class CodeGenerator
     {
-        private static Dictionary<Type, string> proxyType = new Dictionary<Type, string>();
+        private static readonly Dictionary<Type, string> proxyType = new Dictionary<Type, string>();
 
         /// <summary>
         /// 生成回调。

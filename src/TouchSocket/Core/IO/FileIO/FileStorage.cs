@@ -28,7 +28,7 @@ namespace TouchSocket.Core.IO
         private byte[] m_fileData;
         private FileInfo m_fileInfo;
         private FileStream m_fileStream;
-        private ReaderWriterLockSlim m_lockSlim;
+        private readonly ReaderWriterLockSlim m_lockSlim;
         private string m_path;
 
         private FileStorage()

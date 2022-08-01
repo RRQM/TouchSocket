@@ -71,7 +71,7 @@ namespace TouchSocket.Core
             }
         }
 
-        private EndianType endianType;
+        private readonly EndianType endianType;
 
         /// <summary>
         /// 构造函数

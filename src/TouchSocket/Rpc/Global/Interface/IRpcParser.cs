@@ -35,7 +35,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="server"></param>
         /// <param name="methodInstances"></param>
-        void OnRegisterServer(IRpcServer  server, MethodInstance[] methodInstances);
+        void OnRegisterServer(IRpcServer server, MethodInstance[] methodInstances);
 
         /// <summary>
         /// 取消注册服务

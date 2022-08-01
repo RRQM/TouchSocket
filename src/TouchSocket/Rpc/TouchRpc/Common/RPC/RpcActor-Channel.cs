@@ -21,7 +21,7 @@ namespace TouchSocket.Rpc.TouchRpc
 {
     public partial class RpcActor
     {
-        private ConcurrentDictionary<int, Channel> m_userChannels;
+        private readonly ConcurrentDictionary<int, Channel> m_userChannels;
 
         /// <summary>
         /// <inheritdoc/>

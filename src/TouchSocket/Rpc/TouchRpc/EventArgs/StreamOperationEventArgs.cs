@@ -20,7 +20,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class StreamOperationEventArgs : StreamEventArgs
     {
-        private StreamOperator streamOperator;
+        private readonly StreamOperator streamOperator;
 
         /// <summary>
         /// 构造函数

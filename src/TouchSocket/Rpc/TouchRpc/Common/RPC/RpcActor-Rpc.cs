@@ -1070,7 +1070,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
         }
 
-        private WaitCallback m_waitCallback_InvokeClientByID;
+        private readonly WaitCallback m_waitCallback_InvokeClientByID;
 
         private void InvokeClientByID(object o)
         {
@@ -1149,7 +1149,7 @@ namespace TouchSocket.Rpc.TouchRpc
             InvokeResult invokeResult = new InvokeResult();
             object[] ps = null;
             MethodInstance methodInstance = this.GetInvokeMethod?.Invoke(context.methodName);
-            if (methodInstance!=null)
+            if (methodInstance != null)
             {
                 try
                 {

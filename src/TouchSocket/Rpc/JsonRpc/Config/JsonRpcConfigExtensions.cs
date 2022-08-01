@@ -10,58 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core.Dependency;
-using TouchSocket.Rpc.JsonRpc;
-using System;
-在此之后:
-using System;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core.Dependency;
-using TouchSocket.Rpc.JsonRpc;
-using System;
-在此之后:
-using System;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core.Dependency;
-using TouchSocket.Rpc.JsonRpc;
-using System;
-在此之后:
-using System;
-*/
-
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Rpc.JsonRpc;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core.Dependency;
-在此之后:
-using TouchSocket.Rpc.JsonRpc;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core.Dependency;
-在此之后:
-using TouchSocket.Rpc.JsonRpc;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core.Dependency;
-在此之后:
-using TouchSocket.Rpc.JsonRpc;
-*/
 
 namespace TouchSocket.Sockets
 {

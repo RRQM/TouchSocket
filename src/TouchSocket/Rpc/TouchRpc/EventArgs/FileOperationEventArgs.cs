@@ -33,7 +33,7 @@ namespace TouchSocket.Rpc.TouchRpc
             this.fileOperator = fileOperator;
         }
 
-        private FileOperator fileOperator;
+        private readonly FileOperator fileOperator;
 
         /// <summary>
         /// 文件操作器

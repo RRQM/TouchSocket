@@ -21,7 +21,7 @@ namespace TouchSocket.Http.Plugins
     /// </summary>
     public class HttpStaticPagePlugin : HttpPluginBase
     {
-        private FileCachePool fileCache;
+        private readonly FileCachePool fileCache;
 
         /// <summary>
         /// 构造函数

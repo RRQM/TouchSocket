@@ -25,7 +25,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
     /// </summary>
     public abstract class WSCommandLinePlugin : WebSocketPluginBase
     {
-        private Dictionary<string, Method> pairs = new Dictionary<string, Method>();
+        private readonly Dictionary<string, Method> pairs = new Dictionary<string, Method>();
 
         /// <summary>
         /// 字符串转换器，默认支持基础类型和Json。可以自定义。

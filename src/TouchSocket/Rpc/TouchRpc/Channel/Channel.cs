@@ -25,19 +25,12 @@ namespace TouchSocket.Rpc.TouchRpc
     public class Channel : DisposableObject
     {
         private int m_cacheCapacity;
-
         private volatile bool m_canFree;
-
         private readonly IInternalRpc m_client;
-
         private ByteBlock m_currentByteBlock;
-
         private IntelligentDataQueue<ChannelData> m_dataQueue;
-
         private int m_id;
-
         private string m_lastOperationMes;
-
         private AutoResetEvent m_moveWaitHandle;
         private ChannelStatus m_status;
         private string m_targetClientID;

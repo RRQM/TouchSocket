@@ -31,14 +31,14 @@ namespace TouchSocket.Rpc.TouchRpc
             this.callerEndPoint = callerEndPoint;
         }
 
-        private UdpSessionBase service;
+        private readonly UdpSessionBase service;
 
         /// <summary>
         /// Udp服务器
         /// </summary>
         public UdpSessionBase Service => this.service;
 
-        private EndPoint callerEndPoint;
+        private readonly EndPoint callerEndPoint;
 
         /// <summary>
         /// 调用者终结点

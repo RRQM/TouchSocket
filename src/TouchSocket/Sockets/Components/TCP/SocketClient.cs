@@ -29,7 +29,7 @@ namespace TouchSocket.Sockets
     /// 服务器辅助类
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("ID={ID},IPAdress={IP}:{Port}")]
-    public class SocketClient : BaseSocket, ISocketClient,IPlguinObject
+    public class SocketClient : BaseSocket, ISocketClient, IPlguinObject
     {
         /// <summary>
         /// 构造函数
@@ -182,6 +182,7 @@ namespace TouchSocket.Sockets
         /// 处理经过适配器后的数据。返回值表示是否继续向下传递。
         /// </summary>
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
+
 
         /// <summary>
         /// <inheritdoc/>
@@ -426,11 +427,11 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(adapter));
             }
 
-            if (adapter.client != null)
+            if (adapter.m_client != null)
             {
                 throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
             }
-            adapter.client = this;
+            adapter.m_client = this;
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
             if (this.m_config != null)
@@ -754,15 +755,27 @@ namespace TouchSocket.Sockets
         #region 同步发送
 
         /// <summary>
-        /// 发送字节流
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"></param>
+        /// <param name="requestInfo"></param>
         /// <exception cref="NotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        public void Send(byte[] buffer)
+        public void Send(IRequestInfo requestInfo)
         {
-            this.Send(buffer, 0, buffer.Length);
+            if (this.m_disposedValue)
+            {
+                return;
+            }
+            if (this.m_adapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+            }
+            if (!this.m_adapter.CanSendRequestInfo)
+            {
+                throw new NotSupportedException($"当前适配器不支持对象发送。");
+            }
+            this.m_adapter.SendInput(requestInfo, false);
         }
 
         /// <summary>
@@ -785,18 +798,6 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
             }
             this.m_adapter.SendInput(buffer, offset, length, false);
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Send(ByteBlock byteBlock)
-        {
-            this.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         /// <summary>
@@ -862,27 +863,27 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// IOCP发送
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"></param>
+        /// <param name="requestInfo"></param>
         /// <exception cref="NotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        public void SendAsync(byte[] buffer)
+        public void SendAsync(IRequestInfo requestInfo)
         {
-            this.SendAsync(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// IOCP发送流中的有效数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void SendAsync(ByteBlock byteBlock)
-        {
-            this.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+            if (this.m_disposedValue)
+            {
+                return;
+            }
+            if (this.m_adapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+            }
+            if (!this.m_adapter.CanSendRequestInfo)
+            {
+                throw new NotSupportedException($"当前适配器不支持对象发送。");
+            }
+            this.m_adapter.SendInput(requestInfo, true);
         }
 
         /// <summary>
@@ -930,20 +931,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="id">用于检索TcpSocketClient</param>
         /// <param name="buffer"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Send(string id, byte[] buffer)
-        {
-            this.Send(id, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <exception cref="KeyNotFoundException"></exception>
@@ -953,34 +940,6 @@ namespace TouchSocket.Sockets
         public void Send(string id, byte[] buffer, int offset, int length)
         {
             this.m_service.Send(id, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void Send(string id, ByteBlock byteBlock)
-        {
-            this.Send(id, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void SendAsync(string id, byte[] buffer)
-        {
-            this.SendAsync(id, buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -1000,17 +959,23 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 发送流中的有效数据
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        public void SendAsync(string id, ByteBlock byteBlock)
+        /// <param name="id"></param>
+        /// <param name="requestInfo"></param>
+        public void Send(string id, IRequestInfo requestInfo)
         {
-            this.SendAsync(id, byteBlock.Buffer, 0, byteBlock.Len);
+            this.m_service.Send(id, requestInfo);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="requestInfo"></param>
+        public void SendAsync(string id, IRequestInfo requestInfo)
+        {
+            this.m_service.SendAsync(id, requestInfo);
         }
 
         #endregion ID发送

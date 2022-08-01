@@ -31,14 +31,14 @@ namespace TouchSocket.Sockets
             this.socket = socket ?? throw new ArgumentNullException(nameof(socket));
         }
 
-        private IPHost iPHost;
+        private readonly IPHost iPHost;
 
         /// <summary>
         /// 监听地址组
         /// </summary>
         public IPHost IPHost => this.iPHost;
 
-        private Socket socket;
+        private readonly Socket socket;
 
         /// <summary>
         /// Socket组件

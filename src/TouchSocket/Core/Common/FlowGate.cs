@@ -23,7 +23,7 @@ namespace TouchSocket.Core
     {
         private long m_maximum;
 
-        private Stopwatch m_stopwatch;
+        private readonly Stopwatch m_stopwatch;
 
         private long m_timeTick;
 

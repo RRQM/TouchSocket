@@ -11,64 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-
-/* 项目“TouchSocketPro (net5)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.IO;
-using TouchSocket.Http;
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-在此之后:
-using TouchSocket.IO;
-using System.Linq;
-using TouchSocket.Text;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System.IO;
-using TouchSocket.Http;
-*/
-
-/* 项目“TouchSocketPro (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.IO;
-using TouchSocket.Http;
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-在此之后:
-using TouchSocket.IO;
-using System.Linq;
-using TouchSocket.Text;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System.IO;
-using TouchSocket.Http;
-*/
-
-/* 项目“TouchSocketPro (netstandard2.0)”的未合并的更改
-在此之前:
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.IO;
-using TouchSocket.Http;
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-在此之后:
-using TouchSocket.IO;
-using System.Linq;
-using TouchSocket.Text;
-using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using System.IO;
-using TouchSocket.Http;
-*/
-
 using System.IO;
 using System.Linq;
 using System.Text;

@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets.Plugins
     /// <summary>
     /// 插件实现基类
     /// </summary>
-    public abstract class TcpPluginBase : DisposableObject, ITcpPlugin
+    public abstract class TcpPluginBase : DisposableObject, ITcpPlugin, IConfigPlugin
     {
         /// <summary>
         /// <inheritdoc/>
@@ -39,6 +39,11 @@ namespace TouchSocket.Sockets.Plugins
         [DependencyInject]
         public IPluginsManager PluginsManager { get; set; }
 
+        void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
+        {
+            this.OnConnected(client, e);
+        }
+
         void ITcpPlugin.OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
             this.OnConnecting(client, e);
@@ -54,6 +59,16 @@ namespace TouchSocket.Sockets.Plugins
             this.OnIDChanged(client, e);
         }
 
+        void IConfigPlugin.OnLoadedConfig(object sender, ConfigEventArgs e)
+        {
+            this.OnLoadedConfig((ITcpClientBase)sender, e);
+        }
+
+        void IConfigPlugin.OnLoadingConfig(object sender, ConfigEventArgs e)
+        {
+            this.OnLoadingConfig((ITcpClientBase)sender, e);
+        }
+
         void ITcpPlugin.OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
         {
             this.OnReceivedData(client, e);
@@ -64,11 +79,6 @@ namespace TouchSocket.Sockets.Plugins
             this.OnSending(client, e);
         }
 
-        void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
-        {
-            this.OnConnected(client, e);
-        }
-
         /// <summary>
         /// 成功建立连接
         /// </summary>
@@ -76,7 +86,6 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         protected virtual void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -86,7 +95,6 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         protected virtual void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -96,7 +104,6 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         protected virtual void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -106,7 +113,24 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         protected virtual void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
         {
+        }
 
+        /// <summary>
+        /// 当载入配置时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected virtual void OnLoadedConfig(ITcpClientBase sender, ConfigEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// 当完成配置载入时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected virtual void OnLoadingConfig(ITcpClientBase sender, ConfigEventArgs e)
+        {
         }
 
         /// <summary>
@@ -116,7 +140,11 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e">参数，当设置e.Handled=true时，终止向下传递</param>
         protected virtual void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
         {
+        }
 
+        void ITcpPlugin.OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        {
+            this.OnReceivingData(client, e);
         }
 
         /// <summary>
@@ -126,8 +154,8 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e">参数，当设置e.IsPermitOperation=false时，中断发送。</param>
         protected virtual void OnSending(ITcpClientBase client, SendingEventArgs e)
         {
-
         }
+
         /// <summary>
         /// 在刚收到数据时触发，即在适配器之前。
         /// </summary>
@@ -135,12 +163,6 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e">参数</param>
         protected virtual void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
         {
-
-        }
-
-        void ITcpPlugin.OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
-        {
-            this.OnReceivingData(client,e);
         }
     }
 }
