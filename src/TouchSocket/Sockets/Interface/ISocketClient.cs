@@ -16,7 +16,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 服务器辅助类接口
     /// </summary>
-    public interface ISocketClient : ITcpClientBase, IClientSender, IIDSender
+    public interface ISocketClient : ITcpClientBase, IClientSender, IIDSender, IIDRequsetInfoSender
     {
         /// <summary>
         /// 用于索引的ID

@@ -23,12 +23,32 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp服务器基类
     /// </summary>
-    public abstract class TcpServiceBase : BaseSocket, ITcpService, IIDSender
+    public abstract class TcpServiceBase : BaseSocket, ITcpService, IIDSender, IIDRequsetInfoSender
     {
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public abstract TouchSocketConfig Config { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract IContainer Container { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public int Count => this.SocketClients.Count;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public abstract NetworkMonitor[] Monitors { get; }
+
+        /// <summary>
+        /// 插件管理器
+        /// </summary>
+        public abstract IPluginsManager PluginsManager { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -43,32 +63,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract TouchSocketConfig Config { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public abstract SocketClientCollection SocketClients { get; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public abstract bool UseSsl { get; }
-
-        /// <summary>
-        /// 插件管理器
-        /// </summary>
-        public abstract IPluginsManager PluginsManager { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract IContainer Container { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public int Count => this.SocketClients.Count;
 
         /// <summary>
         /// <inheritdoc/>
@@ -90,8 +90,6 @@ namespace TouchSocket.Sockets
         /// <param name="oldID"></param>
         /// <param name="newID"></param>
         public abstract void ResetID(string oldID, string newID);
-
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -194,6 +192,23 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="requestInfo"></param>
+        public void Send(string id, IRequestInfo requestInfo)
+        {
+            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            {
+                client.Send(requestInfo);
+            }
+            else
+            {
+                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+            }
+        }
+
+        /// <summary>
         /// 发送字节流
         /// </summary>
         /// <param name="id">用于检索TcpSocketClient</param>
@@ -209,23 +224,6 @@ namespace TouchSocket.Sockets
             if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
             {
                 client.SendAsync(buffer, offset, length);
-            }
-            else
-            {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="requestInfo"></param>
-        public void Send(string id, IRequestInfo requestInfo)
-        {
-            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
-            {
-                client.Send(requestInfo);
             }
             else
             {

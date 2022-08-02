@@ -50,7 +50,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 等待型客户端。
     /// </summary>
-    public interface IWaitingClient<TClient> : IWaitSender where TClient : IClient, IDefaultSender, ISend
+    public interface IWaitingClient<TClient> : IWaitSender where TClient : IClient, IDefaultSender, ISender
     {
         /// <summary>
         /// 等待设置。
@@ -187,7 +187,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="waitingOptions"></param>
         /// <returns></returns>
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions = WaitingOptions.AllAdapter) where TClient : IClient, IDefaultSender, ISend
+        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions = WaitingOptions.AllAdapter) where TClient : IClient, IDefaultSender, ISender
         {
             if (client.GetValue<IWaitingClient<TClient>>(WaitingClientProperty) is IWaitingClient<TClient> c1)
             {
@@ -201,7 +201,7 @@ namespace TouchSocket.Sockets
         }
     }
 
-    internal class WaitingClient<TClient> : IWaitingClient<TClient> where TClient : IClient, IDefaultSender, ISend
+    internal class WaitingClient<TClient> : IWaitingClient<TClient> where TClient : IClient, IDefaultSender, ISender
     {
         private readonly TClient m_client;
 

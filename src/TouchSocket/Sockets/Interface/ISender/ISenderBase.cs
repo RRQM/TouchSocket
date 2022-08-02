@@ -15,7 +15,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 具有发送动作的基类。
     /// </summary>
-    public interface ISendBase
+    public interface ISenderBase
     {
         /// <summary>
         /// 表示对象能否顺利执行发送操作。

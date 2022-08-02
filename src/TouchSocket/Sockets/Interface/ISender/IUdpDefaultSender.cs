@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 具有直接发送功能
     /// </summary>
-    public interface IUdpDefaultSender : ISendBase
+    public interface IUdpDefaultSender : ISenderBase
     {
         /// <summary>
         /// 绕过适配器，直接发送字节流

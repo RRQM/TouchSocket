@@ -30,7 +30,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        public static void Send<TClient>(this TClient client, byte[] buffer) where TClient : ISend
+        public static void Send<TClient>(this TClient client, byte[] buffer) where TClient : ISender
         {
             client.Send(buffer, 0, buffer.Length);
         }
@@ -41,7 +41,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
-        public static void Send<TClient>(this TClient client, ByteBlock byteBlock) where TClient : ISend
+        public static void Send<TClient>(this TClient client, ByteBlock byteBlock) where TClient : ISender
         {
             client.Send(byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -52,7 +52,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="value"></param>
-        public static void Send<TClient>(this TClient client, string value) where TClient : ISend
+        public static void Send<TClient>(this TClient client, string value) where TClient : ISender
         {
             if (value is null)
             {
@@ -68,7 +68,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        public static void SendAsync<TClient>(this TClient client, byte[] buffer) where TClient : ISend
+        public static void SendAsync<TClient>(this TClient client, byte[] buffer) where TClient : ISender
         {
             client.SendAsync(buffer, 0, buffer.Length);
         }
@@ -79,7 +79,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
-        public static void SendAsync<TClient>(this TClient client, ByteBlock byteBlock) where TClient : ISend
+        public static void SendAsync<TClient>(this TClient client, ByteBlock byteBlock) where TClient : ISender
         {
             client.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
         }
@@ -90,7 +90,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="value"></param>
-        public static void SendAsync<TClient>(this TClient client, string value) where TClient : ISend
+        public static void SendAsync<TClient>(this TClient client, string value) where TClient : ISender
         {
             if (value is null)
             {
