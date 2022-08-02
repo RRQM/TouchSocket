@@ -61,14 +61,16 @@ namespace TouchSocket.Sockets
                         return FilterResult.Cache;
                     }
 
-                    len = indexEnd - this.EndCode.Length - byteBlock.Pos + 1;
+                    len = indexEnd - this.EndCode.Length - pos + 1;
                     if (len >= this.MinSize)
                     {
                         break;
                     }
                     byteBlock.Pos += len + this.EndCode.Length;
                 }
-                request.OnParsingBody(byteBlock.ToArray(byteBlock.Pos, len));
+
+                byteBlock.Pos = pos;
+                request.OnParsingBody(byteBlock.ToArray(pos, len));
                 byteBlock.Pos += len;
 
                 if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, this.EndCode.Length)))
@@ -110,7 +112,7 @@ namespace TouchSocket.Sockets
                         return FilterResult.Cache;
                     }
 
-                    len = indexEnd - this.EndCode.Length - byteBlock.Pos + 1;
+                    len = indexEnd - this.EndCode.Length - pos + 1;
                     if (len >= this.MinSize)
                     {
                         break;
@@ -118,7 +120,8 @@ namespace TouchSocket.Sockets
                     byteBlock.Pos += len + this.EndCode.Length;
                 }
 
-                request.OnParsingBody(byteBlock.ToArray(byteBlock.Pos, len));
+                byteBlock.Pos = pos;
+                request.OnParsingBody(byteBlock.ToArray(pos, len));
                 byteBlock.Pos += len;
 
                 if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, this.EndCode.Length)))

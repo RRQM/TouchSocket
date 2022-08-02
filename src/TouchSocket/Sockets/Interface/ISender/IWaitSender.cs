@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 发送等待接口
     /// </summary>
-    public interface IWaitSender : ISendBase
+    public interface IWaitSender : ISenderBase
     {
         /// <summary>
         /// 发送字节流

@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 具有Udp终结点的发送
     /// </summary>
-    public interface IUdpClientSender : ISend
+    public interface IUdpClientSender : ISender
     {
         /// <summary>
         /// 同步组合发送数据。

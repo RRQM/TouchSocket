@@ -17,7 +17,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 具有直接发送功能
     /// </summary>
-    public interface IDefaultSender : ISendBase
+    public interface IDefaultSender : ISenderBase
     {
         #region 默认发送
         /// <summary>
