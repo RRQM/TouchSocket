@@ -13,6 +13,7 @@ namespace WebApiServerApp
     {
         private static void Main(string[] args)
         {
+            WebApiParserPlugin webApiParser=null;
             HttpService service = new HttpService();
             service.Setup(new TouchSocketConfig()
                .UsePlugin()
@@ -20,10 +21,12 @@ namespace WebApiServerApp
                .ConfigureRpcStore(a =>
                {
                    a.RegisterServer<Server>();//注册服务
+               })
+               .ConfigurePlugins(a=> 
+               {
+                   webApiParser= a.Add<WebApiParserPlugin>();
                }))
                .Start();
-
-            var webApiParser = service.AddPlugin<WebApiParserPlugin>();
 
             Console.WriteLine("以下连接用于测试webApi");
             Console.WriteLine($"使用：http://127.0.0.1:7789/Server/Sum?a=10&b=20");
