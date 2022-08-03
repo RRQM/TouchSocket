@@ -193,6 +193,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// </summary>
         public Func<string> GetDefaultNewID { get; private set; }
 
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
