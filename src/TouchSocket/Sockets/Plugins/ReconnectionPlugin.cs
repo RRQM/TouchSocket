@@ -14,6 +14,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core.Dependency;
+using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets.Plugins
@@ -24,26 +25,16 @@ namespace TouchSocket.Sockets.Plugins
     [SingletonPlugin]
     public sealed class ReconnectionPlugin<TClient> : TcpPluginBase where TClient : class, ITcpClient
     {
-        private readonly bool m_printLog;
-        private readonly int m_sleepTime;
-        private readonly Action<TClient> m_successCallback;
-        private readonly int m_tryCount;
+        private readonly Func<TClient, bool> m_tryCon;
 
         /// <summary>
         /// 初始化一个重连插件
         /// </summary>
-        /// <param name="tryCount"></param>
-        /// <param name="successCallback"></param>
-        /// <param name="printLog"></param>
-        /// <param name="sleepTime"></param>
-        [DependencyInject(10, true, 1000, null)]
-        public ReconnectionPlugin(int tryCount, bool printLog, int sleepTime, Action<TClient> successCallback)
+        /// <param name="tryCon">无论如何，只要返回True，则结束本轮尝试</param>
+        public ReconnectionPlugin(Func<TClient,bool> tryCon)
         {
-            this.m_tryCount = tryCount;
-            this.m_successCallback = successCallback;
-            this.m_printLog = printLog;
-            this.m_sleepTime = sleepTime;
             this.Order = int.MinValue;
+            this.m_tryCon = tryCon;
         }
 
         /// <summary>
@@ -63,30 +54,18 @@ namespace TouchSocket.Sockets.Plugins
                 }
                 Task.Run(() =>
                 {
-                    int tryT = this.m_tryCount;
-                    while (this.m_tryCount < 0 || tryT-- > 0)
+                    while (true)
                     {
                         try
                         {
-                            if (tcpClient.Online)
+                            if (this.m_tryCon.Invoke((TClient)tcpClient))
                             {
-                                return;
+                                break;
                             }
-                            else
-                            {
-                                tcpClient.Connect();
-                            }
-
-                            this.m_successCallback?.Invoke((TClient)tcpClient);
-                            break;
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            if (this.m_printLog)
-                            {
-                                client.Logger.Debug(TouchSocket.Core.Log.LogType.Error, client, "断线重连失败。", ex);
-                            }
-                            Thread.Sleep(this.m_sleepTime);
+                           
                         }
                     }
                 });
