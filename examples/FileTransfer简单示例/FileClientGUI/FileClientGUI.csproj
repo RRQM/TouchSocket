@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="RRQMSkin" Version="3.7.1" />
-    <PackageReference Include="TouchSocket" Version="0.3.0" />
+    <PackageReference Include="TouchSocket" Version="0.3.2" />
   </ItemGroup>
 
   <ItemGroup>
