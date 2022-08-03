@@ -38,7 +38,7 @@ namespace TouchSocket.Rpc.WebApi
         {
             if (!routeTemple.StartsWith("/"))
             {
-                routeTemple.Insert(0, "/");
+                routeTemple = routeTemple.Insert(0, "/");
             }
             this.RouteTemple = routeTemple;
         }

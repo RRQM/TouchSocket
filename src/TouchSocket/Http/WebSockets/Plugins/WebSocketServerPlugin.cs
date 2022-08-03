@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using TouchSocket.Core.Dependency;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Http.Plugins;
 using TouchSocket.Sockets;
 
@@ -21,6 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// 基于Http的WebSocket的扩展。
     /// <para>此组件只能挂载在<see cref="HttpService"/>中</para>
     /// </summary>
+    [SingletonPlugin]
     public class WebSocketServerPlugin : HttpPluginBase
     {
         /// <summary>
