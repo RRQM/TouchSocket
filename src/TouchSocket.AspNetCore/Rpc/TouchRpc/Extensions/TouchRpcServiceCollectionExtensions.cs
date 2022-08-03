@@ -12,20 +12,13 @@
 //------------------------------------------------------------------------------
 using TouchSocket.Core.Config;
 using TouchSocket.Rpc.TouchRpc.AspNetCore;
-/* 项目“TouchSocketPro.AspNetCore (netcoreapp3.1)”的未合并的更改
-在此之前:
-using TouchSocket.Core.Config;
-在此之后:
-using TouchSocket.Sockets;
-*/
-
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
     /// ServiceCollectionExtensions
     /// </summary>
-    public static class ServiceCollectionExtensions
+    public static class TouchRpcServiceCollectionExtensions
     {
         /// <summary>
         /// 添加WSTouchRpc服务。
