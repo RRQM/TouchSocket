@@ -23,7 +23,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp服务器基类
     /// </summary>
-    public abstract class TcpServiceBase : BaseSocket, ITcpService, IIDSender, IIDRequsetInfoSender
+    public abstract class TcpServiceBase : BaseSocket, ITcpService
     {
         /// <summary>
         /// <inheritdoc/>
@@ -69,6 +69,31 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         public abstract bool UseSsl { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract int ClearInterval { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract ClearType ClearType { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract Func<string> GetDefaultNewID { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract int MaxCount { get; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public abstract bool UsePlugin { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -247,6 +272,8 @@ namespace TouchSocket.Sockets
                 throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
             }
         }
+
+        public abstract bool SocketClientExist(string id);
 
         #endregion ID发送
     }

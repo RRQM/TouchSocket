@@ -19,6 +19,17 @@ namespace TouchSocket.Sockets
     public interface ISocketClient : ITcpClientBase, IClientSender, IIDSender, IIDRequsetInfoSender
     {
         /// <summary>
+        /// 重新设置ID
+        /// </summary>
+        /// <param name="newID"></param>
+        void ResetID(string newID);
+
+        /// <summary>
+        /// 选择清理类型
+        /// </summary>
+        ClearType ClearType { get; set; }
+
+        /// <summary>
         /// 用于索引的ID
         /// </summary>
         string ID { get; }

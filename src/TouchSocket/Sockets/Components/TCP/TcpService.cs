@@ -15,7 +15,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
@@ -28,8 +27,10 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// TCP泛型服务器，由客户自己指定<see cref="SocketClient"/>类型。
     /// </summary>
-    public class TcpService<TClient> : TcpServiceBase, ITcpService<TClient>, IPlguinObject where TClient : SocketClient
+    public class TcpService<TClient> : TcpServiceBase, ITcpService<TClient> where TClient : SocketClient
     {
+        private readonly WaitCallback m_waitCallback;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -37,21 +38,23 @@ namespace TouchSocket.Sockets
         {
             this.m_iDGenerator = new SnowflakeIDGenerator(4);
             this.m_socketClients = new SocketClientCollection();
-            this.GetDefaultNewID = () => { return this.m_iDGenerator.NextID().ToString(); };
+            this.m_getDefaultNewID = () => { return this.m_iDGenerator.NextID().ToString(); };
+            m_waitCallback = new WaitCallback(this.SocketInit);
         }
 
         #region 变量
 
         private readonly SnowflakeIDGenerator m_iDGenerator;
+        private readonly SocketClientCollection m_socketClients;
         private int m_backlog;
         private int m_clearInterval;
         private ClearType m_clearType;
         private TouchSocketConfig m_config;
+        private Func<string> m_getDefaultNewID;
         private int m_maxCount;
         private NetworkMonitor[] m_monitors;
         private ReceiveType m_receiveType;
         private ServerState m_serverState;
-        private readonly SocketClientCollection m_socketClients;
         private bool m_usePlugin;
         private bool m_useSsl;
 
@@ -62,12 +65,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
-        public int ClearInterval => this.m_clearInterval;
+        public override int ClearInterval => this.m_clearInterval;
 
         /// <summary>
-        /// 清理类型
+        /// <inheritdoc/>
         /// </summary>
-        public ClearType ClearType => this.m_clearType;
+        public override ClearType ClearType => this.m_clearType;
 
         /// <summary>
         /// 获取服务器配置
@@ -80,14 +83,14 @@ namespace TouchSocket.Sockets
         public override IContainer Container => this.Config?.Container;
 
         /// <summary>
-        /// 获取默认新ID。
+        /// <inheritdoc/>
         /// </summary>
-        public Func<string> GetDefaultNewID { get; private set; }
+        public override Func<string> GetDefaultNewID => m_getDefaultNewID;
 
         /// <summary>
-        /// 最大可连接数
+        /// <inheritdoc/>
         /// </summary>
-        public int MaxCount => this.m_maxCount;
+        public override int MaxCount => this.m_maxCount;
 
         /// <summary>
         /// <inheritdoc/>
@@ -100,24 +103,24 @@ namespace TouchSocket.Sockets
         public override IPluginsManager PluginsManager => this.Config?.PluginsManager;
 
         /// <summary>
-        /// 服务器名称
+        /// <inheritdoc/>
         /// </summary>
-        public override string ServerName => this.Config == null ? null : this.Config.GetValue<string>(TouchSocketConfigExtension.ServerNameProperty);
+        public override string ServerName => this.Config?.GetValue<string>(TouchSocketConfigExtension.ServerNameProperty);
 
         /// <summary>
-        /// 服务器状态
+        /// <inheritdoc/>
         /// </summary>
         public override ServerState ServerState => this.m_serverState;
 
         /// <summary>
-        /// 获取当前连接的所有客户端
+        /// <inheritdoc/>
         /// </summary>
         public override SocketClientCollection SocketClients => this.m_socketClients;
 
         /// <summary>
-        /// 是否已启动插件
+        /// <inheritdoc/>
         /// </summary>
-        public bool UsePlugin => this.m_usePlugin;
+        public override bool UsePlugin => this.m_usePlugin;
 
         /// <summary>
         /// <inheritdoc/>
@@ -153,7 +156,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientConnected(ISocketClient socketClient, TouchSocketEventArgs e)
+        protected override sealed void OnClientConnected(ISocketClient socketClient, TouchSocketEventArgs e)
         {
             this.OnConnected((TClient)socketClient, e);
         }
@@ -163,7 +166,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
             this.OnConnecting((TClient)socketClient, e);
         }
@@ -173,7 +176,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
+        protected override sealed void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
         {
             this.OnDisconnected((TClient)socketClient, e);
         }
@@ -184,7 +187,7 @@ namespace TouchSocket.Sockets
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.OnReceived((TClient)socketClient, byteBlock, requestInfo);
         }
@@ -281,7 +284,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 重置ID
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="oldID"></param>
         /// <param name="newID"></param>
@@ -359,7 +362,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public bool SocketClientExist(string id)
+        public override bool SocketClientExist(string id)
         {
             return this.SocketClients.SocketClientExist(id);
         }
@@ -494,7 +497,7 @@ namespace TouchSocket.Sockets
             }
             if (config.GetValue<Func<string>>(TouchSocketConfigExtension.GetDefaultNewIDProperty) is Func<string> fun)
             {
-                this.GetDefaultNewID = fun;
+                this.m_getDefaultNewID = fun;
             }
             this.m_usePlugin = config.IsUsePlugin;
             this.m_maxCount = config.GetValue<int>(TouchSocketConfigExtension.MaxCountProperty);
@@ -542,9 +545,11 @@ namespace TouchSocket.Sockets
 
         private void BeginClearAndHandle()
         {
-            Thread thread = new Thread(this.CheckClient);
-            thread.IsBackground = true;
-            thread.Name = "CheckClient";
+            Thread thread = new Thread(this.CheckClient)
+            {
+                IsBackground = true,
+                Name = "CheckClient"
+            };
             thread.Start();
             int threadCount = this.Config.GetValue<int>(TouchSocketConfigExtension.ThreadCountProperty);
             while (!ThreadPool.SetMinThreads(threadCount, threadCount))
@@ -640,7 +645,7 @@ namespace TouchSocket.Sockets
                         socket.Close();
                         socket.Dispose();
                     }
-                    this.OnTask(socket);
+                    this.OnSocketInit(socket);
                 }
                 e.AcceptSocket = null;
 
@@ -659,59 +664,9 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void OnTask(Socket socket)
+        private void OnSocketInit(Socket socket)
         {
-            Task.Run(() =>
-            {
-                try
-                {
-                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty));
-                    TClient client = this.GetClientInstence();
-                    this.SetClientConfiguration(client);
-                    client.SetSocket(socket);
-
-                    ClientOperationEventArgs args = new ClientOperationEventArgs();
-                    args.ID = this.GetDefaultNewID();
-                    client.InternalConnecting(args);//Connecting
-                    if (args.Operation.HasFlag(Operation.Permit))
-                    {
-                        client.m_id = args.ID;
-                        if (this.SocketClients.TryAdd(client))
-                        {
-                            client.InternalConnected(new MsgEventArgs("客户端成功连接"));
-                            if (this.m_useSsl)
-                            {
-                                try
-                                {
-                                    client.BeginReceiveSsl(this.m_receiveType, this.m_config.GetValue<ServiceSslOption>(TouchSocketConfigExtension.SslOptionProperty));
-                                }
-                                catch (System.Exception ex)
-                                {
-                                    this.OnAuthenticatingError(ex);
-                                    return;
-                                }
-                            }
-                            else
-                            {
-                                client.BeginReceive(this.m_receiveType);
-                            }
-                        }
-                        else
-                        {
-                            throw new Exception($"ID={client.m_id}重复");
-                        }
-                    }
-                    else
-                    {
-                        socket.SafeDispose();
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    socket.SafeDispose();
-                    this.Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
-                }
-            });
+            ThreadPool.QueueUserWorkItem(m_waitCallback, socket);
         }
 
         private void SetClientConfiguration(SocketClient client)
@@ -727,6 +682,59 @@ namespace TouchSocket.Sockets
             if (client.CanSetDataHandlingAdapter)
             {
                 client.SetDataHandlingAdapter(this.Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
+            }
+        }
+
+        private void SocketInit(object o)
+        {
+            Socket socket = (Socket)o;
+            try
+            {
+                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty));
+                TClient client = this.GetClientInstence();
+                this.SetClientConfiguration(client);
+                client.SetSocket(socket);
+
+                ClientOperationEventArgs args = new ClientOperationEventArgs();
+                args.ID = this.GetDefaultNewID();
+                client.InternalConnecting(args);//Connecting
+                if (args.Operation.HasFlag(Operation.Permit))
+                {
+                    client.m_id = args.ID;
+                    if (this.SocketClients.TryAdd(client))
+                    {
+                        client.InternalConnected(new MsgEventArgs("客户端成功连接"));
+                        if (this.m_useSsl)
+                        {
+                            try
+                            {
+                                client.BeginReceiveSsl(this.m_receiveType, this.m_config.GetValue<ServiceSslOption>(TouchSocketConfigExtension.SslOptionProperty));
+                            }
+                            catch (System.Exception ex)
+                            {
+                                this.OnAuthenticatingError(ex);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            client.BeginReceive(this.m_receiveType);
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception($"ID={client.m_id}重复");
+                    }
+                }
+                else
+                {
+                    socket.SafeDispose();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                socket.SafeDispose();
+                this.Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
             }
         }
     }

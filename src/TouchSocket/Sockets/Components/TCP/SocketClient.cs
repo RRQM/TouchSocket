@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Threading.Tasks;
+using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
@@ -55,7 +55,6 @@ namespace TouchSocket.Sockets
         protected readonly object m_sendLocker;
 
         private DataHandlingAdapter m_adapter;
-        private ClearType m_clearType;
         private Socket m_mainSocket;
         private int m_maxPackageSize;
         private bool m_online;
@@ -76,16 +75,12 @@ namespace TouchSocket.Sockets
         public virtual bool CanSetDataHandlingAdapter => true;
 
         /// <summary>
-        /// 选择清理类型
+        ///<inheritdoc/>
         /// </summary>
-        public ClearType ClearType
-        {
-            get => this.m_clearType;
-            set => this.m_clearType = value;
-        }
+        public ClearType ClearType { get; set; }
 
         /// <summary>
-        /// 服务配置
+        /// <inheritdoc/>
         /// </summary>
         public TouchSocketConfig Config => this.m_config;
 
@@ -95,7 +90,7 @@ namespace TouchSocket.Sockets
         public IContainer Container => this.Config?.Container;
 
         /// <summary>
-        /// 数据处理适配器
+        /// <inheritdoc/>
         /// </summary>
         public DataHandlingAdapter DataHandlingAdapter => this.m_adapter;
 
@@ -105,12 +100,12 @@ namespace TouchSocket.Sockets
         public string ID => this.m_id;
 
         /// <summary>
-        /// IP地址
+        /// <inheritdoc/>
         /// </summary>
         public string IP { get; private set; }
 
         /// <summary>
-        /// 主通信器
+        /// <inheritdoc/>
         /// </summary>
         public Socket MainSocket => this.m_mainSocket;
 
@@ -145,15 +140,12 @@ namespace TouchSocket.Sockets
         public ReceiveType ReceiveType => this.m_receiveType;
 
         /// <summary>
-        /// 端口号
-        /// </summary>
-        /// <summary>
-        /// 包含此辅助类的主服务器类
+        /// <inheritdoc/>
         /// </summary>
         public TcpServiceBase Service => this.m_service;
 
         /// <summary>
-        /// 是否已启动插件
+        /// <inheritdoc/>
         /// </summary>
         public bool UsePlugin => this.m_usePlugin;
 
@@ -174,15 +166,14 @@ namespace TouchSocket.Sockets
         #endregion 事件&委托
 
         /// <summary>
-        /// 处理未经过适配器的数据。返回值表示是否继续向下传递。
+        /// <inheritdoc/>
         /// </summary>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
 
         /// <summary>
-        /// 处理经过适配器后的数据。返回值表示是否继续向下传递。
+        ///<inheritdoc/>
         /// </summary>
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -216,7 +207,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 重新设置ID
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="newID"></param>
         public virtual void ResetID(string newID)
@@ -234,7 +225,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 设置数据处理适配器
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="adapter"></param>
         public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
@@ -248,7 +239,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 禁用发送或接收
+        /// <inheritdoc/>
         /// </summary>
         /// <param name="how"></param>
         public void Shutdown(SocketShutdown how)
@@ -288,10 +279,10 @@ namespace TouchSocket.Sockets
         {
             if (nowTick - (this.m_lastTick / 10000000.0) > time)
             {
-                Task.Run(() =>
+                ThreadPool.QueueUserWorkItem(o =>
                 {
                     this.BreakOut($"超时无数据交互，被主动清理", false);
-                });
+                }, null);
             }
         }
 
@@ -488,7 +479,7 @@ namespace TouchSocket.Sockets
                         }
                     }
                 }
-                if (this.m_clearType.HasFlag(ClearType.Send))
+                if (this.ClearType.HasFlag(ClearType.Send))
                 {
                     this.m_lastTick = DateTime.Now.Ticks;
                 }
@@ -562,7 +553,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                if (this.m_clearType.HasFlag(ClearType.Receive))
+                if (this.ClearType.HasFlag(ClearType.Receive))
                 {
                     this.m_lastTick = DateTime.Now.Ticks;
                 }
@@ -943,6 +934,16 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="requestInfo"></param>
+        public void Send(string id, IRequestInfo requestInfo)
+        {
+            this.m_service.Send(id, requestInfo);
+        }
+
+        /// <summary>
         /// 发送字节流
         /// </summary>
         /// <param name="id">用于检索TcpSocketClient</param>
@@ -956,16 +957,6 @@ namespace TouchSocket.Sockets
         public void SendAsync(string id, byte[] buffer, int offset, int length)
         {
             this.m_service.SendAsync(id, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="requestInfo"></param>
-        public void Send(string id, IRequestInfo requestInfo)
-        {
-            this.m_service.Send(id, requestInfo);
         }
 
         /// <summary>

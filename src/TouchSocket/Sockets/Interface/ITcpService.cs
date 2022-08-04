@@ -11,14 +11,15 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core.Dependency;
+using System;
+using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// TCP系列服务器接口
     /// </summary>
-    public interface ITcpService<TClient> : ITcpService, IIDSender where TClient : ISocketClient
+    public interface ITcpService<TClient> : ITcpService where TClient : ISocketClient
     {
         /// <summary>
         /// 用户连接完成
@@ -36,23 +37,6 @@ namespace TouchSocket.Sockets
         event ClientDisconnectedEventHandler<TClient> Disconnected;
 
         /// <summary>
-        /// 获取最大可连接数
-        /// </summary>
-        int MaxCount { get; }
-
-        /// <summary>
-        /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
-        /// </summary>
-        int ClearInterval { get; }
-
-        /// <summary>
-        /// 根据ID判断SocketClient是否存在
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        bool SocketClientExist(string id);
-
-        /// <summary>
         /// 尝试获取TClient
         /// </summary>
         /// <param name="id">ID</param>
@@ -64,17 +48,17 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// TCP服务器接口
     /// </summary>
-    public interface ITcpService : IService
+    public interface ITcpService : IService, IIDSender, IIDRequsetInfoSender, IPlguinObject
     {
         /// <summary>
-        /// 内置IOC容器
+        /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
         /// </summary>
-        IContainer Container { get; }
+        int ClearInterval { get; }
 
         /// <summary>
-        /// 使用Ssl加密
+        /// 清理客户端类型
         /// </summary>
-        bool UseSsl { get; }
+        ClearType ClearType { get; }
 
         /// <summary>
         /// 当前在线客户端数量
@@ -82,9 +66,14 @@ namespace TouchSocket.Sockets
         int Count { get; }
 
         /// <summary>
-        /// 获取当前连接的所有客户端
+        /// 获取默认新ID。
         /// </summary>
-        SocketClientCollection SocketClients { get; }
+        Func<string> GetDefaultNewID { get; }
+
+        /// <summary>
+        /// 获取最大可连接数
+        /// </summary>
+        int MaxCount { get; }
 
         /// <summary>
         /// 网络监听集合
@@ -92,11 +81,19 @@ namespace TouchSocket.Sockets
         NetworkMonitor[] Monitors { get; }
 
         /// <summary>
-        /// 重新设置ID
+        /// 获取当前连接的所有客户端
         /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
-        void ResetID(string oldID, string newID);
+        SocketClientCollection SocketClients { get; }
+
+        /// <summary>
+        /// 使用Ssl加密
+        /// </summary>
+        bool UseSsl { get; }
+
+        /// <summary>
+        /// 清理当前已连接的所有客户端
+        /// </summary>
+        void Clear();
 
         /// <summary>
         /// 获取当前在线的所有ID集合
@@ -105,8 +102,19 @@ namespace TouchSocket.Sockets
         string[] GetIDs();
 
         /// <summary>
-        /// 清理当前已连接的所有客户端
+        /// 重置ID
         /// </summary>
-        void Clear();
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
+        /// <exception cref="ClientNotFindException"></exception>
+        /// <exception cref="Exception"></exception>
+        void ResetID(string oldID, string newID);
+
+        /// <summary>
+        /// 根据ID判断SocketClient是否存在
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool SocketClientExist(string id);
     }
 }
