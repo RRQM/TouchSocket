@@ -14,13 +14,14 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// TCP客户端终端接口
     /// </summary>
-    public interface ITcpClient : ITcpClientBase, IClientSender
+    public interface ITcpClient : ITcpClientBase, IClientSender,IPlguinObject
     {
         /// <summary>
         /// 成功连接到服务器

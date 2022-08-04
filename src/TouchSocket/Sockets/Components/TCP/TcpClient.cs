@@ -52,7 +52,7 @@ namespace TouchSocket.Sockets
     /// TCP客户端
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{IP}:{Port}")]
-    public class TcpClientBase : BaseSocket, ITcpClient, IPlguinObject
+    public class TcpClientBase : BaseSocket, ITcpClient
     {
         /// <summary>
         /// 构造函数
