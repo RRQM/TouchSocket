@@ -78,14 +78,14 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             TouchRpcPackage context = new TouchRpcPackage();
             context.timeout = byteBlock.ReadInt32();
-            context.sign = byteBlock.ReadInt64();
-            context.status = (byte)byteBlock.ReadByte();
+            context.Sign = byteBlock.ReadInt64();
+            context.Status = (byte)byteBlock.ReadByte();
             context.feedback = (byte)byteBlock.ReadByte();
             context.serializationType = (byte)byteBlock.ReadByte();
             context.isByRef = byteBlock.ReadBoolean();
             context.methodName = byteBlock.ReadString();
             context.id = byteBlock.ReadString();
-            context.message = byteBlock.ReadString();
+            context.Message = byteBlock.ReadString();
             context.returnParameterBytes = byteBlock.ReadBytesPackage();
 
             byte countPar = (byte)byteBlock.ReadByte();
@@ -112,14 +112,14 @@ namespace TouchSocket.Rpc.TouchRpc
         public void Serialize(ByteBlock byteBlock)
         {
             byteBlock.Write(this.timeout);
-            byteBlock.Write(this.sign);
-            byteBlock.Write(this.status);
+            byteBlock.Write(this.Sign);
+            byteBlock.Write(this.Status);
             byteBlock.Write(this.feedback);
             byteBlock.Write(this.serializationType);
             byteBlock.Write(this.isByRef);
             byteBlock.Write(this.methodName);
             byteBlock.Write(this.id);
-            byteBlock.Write(this.message);
+            byteBlock.Write(this.Message);
             byteBlock.WriteBytesPackage(this.returnParameterBytes);
 
             if (this.parametersBytes != null && this.parametersBytes.Count > 0)

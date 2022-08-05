@@ -19,7 +19,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class FileTransferStatusEventArgs : FileTransferEventArgs
     {
-        private Result result;
+        private Result m_result;
 
         /// <summary>
         /// 构造函数
@@ -32,12 +32,12 @@ namespace TouchSocket.Rpc.TouchRpc
         public FileTransferStatusEventArgs(TransferType transferType, FileRequest fileRequest, Metadata metadata, Result result, TouchRpcFileInfo fileInfo)
             : base(transferType, fileRequest, metadata, fileInfo)
         {
-            this.result = result;
+            this.m_result = result;
         }
 
         /// <summary>
         /// 结果
         /// </summary>
-        public Result Result => this.result;
+        public Result Result => this.m_result;
     }
 }

@@ -141,7 +141,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public RpcActor(bool isService)
         {
-            this.m_eventArgs = new ConcurrentDictionary<int, FileOperationEventArgs>();
+            this.m_eventArgs = new ConcurrentDictionary<int, object>();
             this.m_waitHandlePool = new WaitHandlePool<IWaitResult>();
             this.m_userChannels = new ConcurrentDictionary<int, Channel>();
             this.m_contextDic = new ConcurrentDictionary<long, TouchRpcCallContext>();
@@ -958,6 +958,25 @@ namespace TouchSocket.Rpc.TouchRpc
                                     rpcActor.SocketSend(TouchRpcUtility.P_1507_PushFile2C_Response, block.WriteObject(waitTransfer, SerializationType.Json));
                                 }
                             }
+                        }
+                        catch (System.Exception ex)
+                        {
+                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                        }
+                        break;
+                    }
+                case TouchRpcUtility.P_509_PushFileAck_Request:
+                    {
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitResult waitResult = byteBlock.ReadObject<WaitResult>(SerializationType.Json);
+                            this.m_eventArgs.TryAdd((int)waitResult.Sign,waitResult);
+
+                            EasyAction.DelayRun(10000, waitResult,(a) =>
+                            {
+                                this.m_eventArgs.TryRemove((int)a.Sign,out _);
+                            });
                         }
                         catch (System.Exception ex)
                         {

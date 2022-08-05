@@ -24,12 +24,15 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class Channel : DisposableObject
     {
-        private int m_cacheCapacity;
-        private volatile bool m_canFree;
         private readonly IInternalRpc m_client;
+        private int m_cacheCapacity;
+
+        private volatile bool m_canFree;
         private ByteBlock m_currentByteBlock;
+
         private IntelligentDataQueue<ChannelData> m_dataQueue;
         private int m_id;
+
         private string m_lastOperationMes;
         private AutoResetEvent m_moveWaitHandle;
         private ChannelStatus m_status;
@@ -642,26 +645,6 @@ namespace TouchSocket.Rpc.TouchRpc
         private void OnCreate(string targetClientID)
         {
             this.m_targetClientID = targetClientID;
-
-            //if (upgrade)
-            //{
-            //    this.m_dataOrder = TouchRpcUtility.P_111_DataOrder_2C;
-            //    this.m_completeOrder = TouchRpcUtility.P_112_CompleteOrder_2C;
-            //    this.m_cancelOrder = TouchRpcUtility.P_113_CancelOrder_2C;
-            //    this.m_disposeOrder = TouchRpcUtility.P_114_DisposeOrder_2C;
-            //    this.m_holdOnOrder = TouchRpcUtility.P_115_HoldOnOrder_2C;
-            //    this.m_queueChangedOrder = TouchRpcUtility.P_116_QueueChangedOrder_2C;
-            //}
-            //else
-            //{
-            //    this.m_dataOrder = TouchRpcUtility.P_101_DataOrder;
-            //    this.m_completeOrder = TouchRpcUtility.P_102_CompleteOrder;
-            //    this.m_cancelOrder = TouchRpcUtility.P_103_CancelOrder;
-            //    this.m_disposeOrder = TouchRpcUtility.P_104_DisposeOrder;
-            //    this.m_holdOnOrder = TouchRpcUtility.P_105_HoldOnOrder;
-            //    this.m_queueChangedOrder = TouchRpcUtility.P_106_QueueChangedOrder;
-            //}
-
             this.m_status = ChannelStatus.Default;
             this.m_cacheCapacity = 1024 * 1024 * 10;
             this.m_dataQueue = new IntelligentDataQueue<ChannelData>(this.m_cacheCapacity)

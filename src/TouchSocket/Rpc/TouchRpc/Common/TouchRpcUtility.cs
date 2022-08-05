@@ -18,14 +18,14 @@ namespace TouchSocket.Rpc.TouchRpc
     public class TouchRpcUtility
     {
         /// <summary>
-        /// 集群验证令箭
-        /// </summary>
-        public const string TouchRpcCluster = "C4C9D0F8-4004-4804-BBDA-129F8BC33659";
-
-        /// <summary>
         /// TouchRpc字符串
         /// </summary>
         public const string TouchRpc = "TOUCHRPC";
+
+        /// <summary>
+        /// 集群验证令箭
+        /// </summary>
+        public const string TouchRpcCluster = "C4C9D0F8-4004-4804-BBDA-129F8BC33659";
 
         /// <summary>
         /// 传输分包
@@ -60,6 +60,11 @@ namespace TouchSocket.Rpc.TouchRpc
         public const short P_1002_Ping_Response = -1002;
 
         /// <summary>
+        /// Ping回应
+        /// </summary>
+        public const short P_1003_Ping2C_Response = -1003;
+
+        /// <summary>
         /// Ping
         /// </summary>
         public const short P_2_Ping_Request = -2;
@@ -68,11 +73,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// Ping
         /// </summary>
         public const short P_3_Ping2C_Request = -3;
-
-        /// <summary>
-        /// Ping回应
-        /// </summary>
-        public const short P_1003_Ping2C_Response = -1003;
 
         #endregion 基本协议，0-99；
 
@@ -315,6 +315,16 @@ namespace TouchSocket.Rpc.TouchRpc
         public const short P_1506_BeginPullFileFC_Response = -1506;
 
         /// <summary>
+        /// 推送到客户端响应
+        /// </summary>
+        public const short P_1507_PushFile2C_Response = -1507;
+
+        /// <summary>
+        /// 推送到客户端转发响应
+        /// </summary>
+        public const short P_1508_PushFileFC_Response = -1508;
+
+        /// <summary>
         /// 拉取文件
         /// </summary>
         public const short P_500_PullFile_Request = -500;
@@ -355,19 +365,14 @@ namespace TouchSocket.Rpc.TouchRpc
         public const short P_507_PushFile2C_Request = -507;
 
         /// <summary>
-        /// 推送到客户端响应
-        /// </summary>
-        public const short P_1507_PushFile2C_Response = -1507;
-
-        /// <summary>
         /// 推送到客户端转发
         /// </summary>
         public const short P_508_PushFileFC_Request = -508;
 
         /// <summary>
-        /// 推送到客户端转发响应
+        /// 推送文件状态确认
         /// </summary>
-        public const short P_1508_PushFileFC_Response = -1508;
+        public const short P_509_PushFileAck_Request = -509;
 
         #endregion FileTransfer协议 500-599
 
