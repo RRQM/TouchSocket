@@ -14,7 +14,10 @@ using TouchSocket.Core.Run;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
-    internal class WaitPing : WaitResult
+    /// <summary>
+    /// WaitPing
+    /// </summary>
+    public class WaitPing : WaitResult
     {
 
     }

@@ -92,6 +92,8 @@ namespace TouchSocket.Rpc.TouchRpc
 
         #endregion 委托
 
+        private readonly WaitCallback m_raiseLocalEvent;
+
         /// <summary>
         /// 配置
         /// </summary>
