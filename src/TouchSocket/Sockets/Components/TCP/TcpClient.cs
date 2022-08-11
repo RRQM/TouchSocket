@@ -401,10 +401,8 @@ namespace TouchSocket.Sockets
 
                     if (this.m_separateThreadSend)
                     {
-                        if (this.m_asyncSender == null)
-                        {
-                            this.m_asyncSender = new AsyncSender(this.m_mainSocket, this.m_mainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
-                        }
+                        this.m_asyncSender.SafeDispose();
+                        this.m_asyncSender = new AsyncSender(this.m_mainSocket, this.m_mainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
                     }
                     this.BeginReceive();
                     this.m_online = true;
