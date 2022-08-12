@@ -28,7 +28,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static string GetInfo<T>(this T client) where T : ISocketClient
         {
-            return $"IP&Port={client.IP}:{client.Port}，ID={client.ID}，Protocol={client.Protocol}";
+            return $"IP&Port={client.IP}:{client.Port},ID={client.ID},Protocol={client.Protocol}";
         }
 
         /// <summary>
