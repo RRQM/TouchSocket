@@ -49,7 +49,7 @@ namespace TouchSocket.Core
         public SnowflakeIDGenerator(long workerId)
         {
             if (workerId > maxWorkerId || workerId < 0)
-                throw new Exception(string.Format("worker Id can't be greater than {0} or less than 0 ", workerId));
+                throw new Exception(string.Format("worker Id can't be greater than {0} or less than 0 ", maxWorkerId));
             SnowflakeIDGenerator.workerId = workerId;
             this.twepoch = DateTime.Now.Ticks - 10000;
         }
