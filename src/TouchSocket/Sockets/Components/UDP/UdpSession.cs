@@ -18,6 +18,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
+using TouchSocket.Core.Collections.Concurrent;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
@@ -52,6 +53,7 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class UdpSessionBase : BaseSocket, IUdpSession, IPlguinObject
     {
+        private readonly ConcurrentList<SocketAsyncEventArgs> m_socketAsyncs;
         private TouchSocketConfig m_config;
         private UdpDataHandlingAdapter m_adapter;
         private NetworkMonitor m_monitor;
@@ -64,6 +66,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public UdpSessionBase()
         {
+            this.m_socketAsyncs = new ConcurrentList<SocketAsyncEventArgs>();
             this.Protocol = Protocol.UDP;
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.ReceiveBufferSize = this.BufferLength;
@@ -302,6 +305,11 @@ namespace TouchSocket.Sockets
             }
             this.m_monitor = null;
             this.m_serverState = ServerState.Stopped;
+            foreach (var item in this.m_socketAsyncs)
+            {
+                item.SafeDispose();
+            }
+            this.m_socketAsyncs.Clear();
             return this;
         }
 
@@ -456,6 +464,7 @@ namespace TouchSocket.Sockets
                         for (int i = 0; i < threadCount; i++)
                         {
                             SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
+                            this.m_socketAsyncs.Add(eventArg);
                             eventArg.Completed += this.IO_Completed;
                             ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
                             eventArg.UserToken = byteBlock;
@@ -472,6 +481,7 @@ namespace TouchSocket.Sockets
                             for (int i = 0; i < threadCount; i++)
                             {
                                 SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
+                                this.m_socketAsyncs.Add(eventArg);
                                 eventArg.Completed += this.IO_Completed;
                                 ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength);
                                 eventArg.UserToken = byteBlock;
@@ -501,17 +511,18 @@ namespace TouchSocket.Sockets
         {
             while (true)
             {
+                ByteBlock byteBlock = new ByteBlock();
                 try
                 {
                     EndPoint endPoint = this.m_monitor.IPHost.EndPoint;
-                    ByteBlock byteBlock = new ByteBlock();
                     int r = this.m_monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
                     byteBlock.SetLength(r);
                     this.HandleBuffer(endPoint, byteBlock);
                 }
                 catch (System.Exception ex)
                 {
-                    this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                    byteBlock.Dispose();
+                    this.Logger.Log(LogType.Error, this, ex.Message, ex);
                     break;
                 }
             }
@@ -531,14 +542,14 @@ namespace TouchSocket.Sockets
                 }
                 if (this.m_adapter == null)
                 {
-                    this.Logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetDescription());
+                    this.Logger.Error(this, ResType.NullDataAdapter.GetDescription());
                     return;
                 }
                 this.m_adapter.ReceivedInput(endPoint, byteBlock);
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
+                this.Logger.Log(LogType.Error, this, "在处理数据时发生错误", ex);
             }
             finally
             {
@@ -718,7 +729,7 @@ namespace TouchSocket.Sockets
                 }
                 catch (System.Exception ex)
                 {
-                    this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                    this.Logger.Log(LogType.Error, this, ex.Message, ex);
                 }
             }
         }
