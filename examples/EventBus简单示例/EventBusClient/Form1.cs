@@ -172,7 +172,7 @@ namespace EERPCClientDemo
 
     internal class ThisRpcServer : RpcServer
     {
-        [TouchRpc]
+        [TouchRpc(true)]
         public DateTime GetDataTime()
         {
             return DateTime.Now;
