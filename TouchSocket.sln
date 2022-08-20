@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32428.217
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{06A5E4BC-4AE9-4F5F-BF8E-C6651413442B}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{5F888345-EC9C-4AC3-B4D5-D9510A32C9DC}"
 	ProjectSection(SolutionItems) = preProject
-		源码编译相关问题.txt = 源码编译相关问题.txt
+		doc\源码编译相关问题.txt = doc\源码编译相关问题.txt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket", "src\TouchSocket\TouchSocket.csproj", "{37BF3CB2-9003-465D-A936-7373301FDA5C}"
@@ -31,10 +29,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{37BF3CB2-9003-465D-A936-7373301FDA5C} = {06A5E4BC-4AE9-4F5F-BF8E-C6651413442B}
-		{6E00016F-41A4-40BC-AF9C-DA3B0FA4F81A} = {06A5E4BC-4AE9-4F5F-BF8E-C6651413442B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
