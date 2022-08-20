@@ -18,7 +18,7 @@ namespace TouchSocket.Core.Log
     /// <summary>
     /// 快捷日志
     /// </summary>
-    public class EasyLogger : ILog
+    public class EasyLogger : LoggerBase
     {
         private readonly Action<LogType, object, string, Exception> m_action;
         private readonly Action<string> m_action1;
@@ -41,25 +41,15 @@ namespace TouchSocket.Core.Log
             this.m_action1 = action;
         }
 
-        /// <summary>
-        /// 记录日志
-        /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        public virtual void Debug(LogType logType, object source, string message)
-        {
-            this.Debug(logType, source, message, null);
-        }
-
-        /// <summary>
-        /// 记录日志
-        /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        /// <param name="exception"></param>
-        public virtual void Debug(LogType logType, object source, string message, Exception exception)
+        
+       /// <summary>
+       /// <inheritdoc/>
+       /// </summary>
+       /// <param name="logType"></param>
+       /// <param name="source"></param>
+       /// <param name="message"></param>
+       /// <param name="exception"></param>
+        protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
             try
             {

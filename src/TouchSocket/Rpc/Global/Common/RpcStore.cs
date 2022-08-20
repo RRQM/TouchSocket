@@ -20,7 +20,6 @@ using System.Net;
 using System.Reflection;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Collections.Concurrent;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Plugins;
@@ -46,10 +45,11 @@ namespace TouchSocket.Rpc
         public const string ProxyKey = "proxy";
 
         private static readonly ConcurrentDictionary<string, Type> m_proxyAttributeMap = new ConcurrentDictionary<string, Type>();
+        private readonly ConcurrentDictionary<string, IRpcParser> m_parsers = new ConcurrentDictionary<string, IRpcParser>();
+        private readonly ConcurrentDictionary<Type, List<MethodInstance>> m_serverTypes = new ConcurrentDictionary<Type, List<MethodInstance>>();
         private string m_proxyUrl = "/proxy";
         private HttpService m_service;
-        private readonly ConcurrentDictionary<string, IRpcParser> m_parsers = new ConcurrentDictionary<string, IRpcParser>();
-        private readonly ConcurrentList<MethodInstance> m_methods = new ConcurrentList<MethodInstance>();
+
         static RpcStore()
         {
             SearchAttribute();
@@ -62,33 +62,15 @@ namespace TouchSocket.Rpc
         /// </summary>
         public RpcStore(IContainer container)
         {
-            this.ServerProviders = new RpcServerCollection();
             this.Container = container ?? throw new ArgumentNullException(nameof(container));
             this.Container.RegisterSingleton<RpcStore>(this);
+
+            if (!container.IsRegistered(typeof(IRpcServerFactory)))
+            {
+                this.Container.RegisterSingleton<IRpcServerFactory,RpcServerFactory>();
+            }
+          
             SearchAttribute();
-        }
-
-        private bool RemoveServer(Type type, out IRpcServer serverProvider, out MethodInstance[] methodInstances)
-        {
-            serverProvider = null;
-            bool success = false;
-            List<MethodInstance> keys = new List<MethodInstance>();
-            foreach (var methodInstance in this.m_methods)
-            {
-                if (methodInstance.Server.GetType().FullName == type.FullName)
-                {
-                    success = true;
-                    serverProvider = methodInstance.Server;
-                    keys.Add(methodInstance);
-                }
-            }
-
-            foreach (var item in keys)
-            {
-                this.m_methods.Remove(item);
-            }
-            methodInstances = keys.ToArray();
-            return success;
         }
 
         /// <summary>
@@ -102,9 +84,10 @@ namespace TouchSocket.Rpc
         public IContainer Container { get; private set; }
 
         /// <summary>
-        /// 数量
+        /// 解析器集合。
+        /// <para>如果想快速获得对象，请使用<see cref="TryGetRpcParser(string, out IRpcParser)"/>，一般key为对象类型名称，或自定义的。</para>
         /// </summary>
-        public int Count => this.m_parsers.Count;
+        public IRpcParser[] RpcParsers => this.m_parsers.Values.ToArray();
 
         /// <summary>
         /// 请求代理。
@@ -129,14 +112,9 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 服务实例集合
+        /// 服务类型
         /// </summary>
-        public RpcServerCollection ServerProviders { get; private set; }
-
-        /// <summary>
-        /// 获取所有已注册的函数。
-        /// </summary>
-        public MethodInstance[] GetAllMethods() => this.m_methods.ToArray();
+        public Type[] ServerTypes => this.m_serverTypes.Keys.ToArray();
 
         /// <summary>
         /// 获取IRpcParser
@@ -174,53 +152,50 @@ namespace TouchSocket.Rpc
             }
             if (!this.m_parsers.TryAdd(key, parser))
             {
-                throw new System.Exception("相同键值得解析器已经存在。");
+                throw new Exception("相同键值得解析器已经存在。");
             }
             parser.SetRpcStore(this);
             if (applyServer)
             {
-                Dictionary<IRpcServer, List<MethodInstance>> pairs = new Dictionary<IRpcServer, List<MethodInstance>>();
-
-                MethodInstance[] instances = this.m_methods.ToArray();
-
-                foreach (var item in instances)
+                foreach (var item in this.m_serverTypes)
                 {
-                    if (!pairs.ContainsKey(item.Server))
-                    {
-                        pairs.Add(item.Server, new List<MethodInstance>());
-                    }
-
-                    pairs[item.Server].Add(item);
-                }
-                foreach (var item in pairs.Keys)
-                {
-                    parser.OnRegisterServer(item, pairs[item].ToArray());
+                    parser.OnRegisterServer(item.Value.ToArray());
                 }
             }
         }
 
         /// <summary>
+        /// 获取服务类型对应的服务方法。
+        /// </summary>
+        /// <param name="serverType"></param>
+        /// <returns></returns>
+        public MethodInstance[] GetServerMethodInstances(Type serverType)
+        {
+            return this.m_serverTypes[serverType].ToArray();
+        }
+
+        /// <summary>
         /// 执行Rpc
         /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="methodInstance"></param>
+        /// <param name="rpcServer"></param>
         /// <param name="ps"></param>
+        /// <param name="callContext"></param>
         /// <returns></returns>
-        public InvokeResult Execute(object caller, MethodInstance methodInstance, object[] ps)
+        public InvokeResult Execute(IRpcServer rpcServer, object[] ps, ICallContext callContext)
         {
             if (this.m_disposedValue)
             {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             InvokeResult invokeResult = new InvokeResult();
-            IRpcServer serverProvider = this.GetServerProvider(methodInstance);
             try
             {
-                if (methodInstance.Filters != null)
+                if (callContext.MethodInstance.Filters != null)
                 {
-                    for (int i = 0; i < methodInstance.Filters.Length; i++)
+                    for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        methodInstance.Filters[i].Executing(caller, ref invokeResult, methodInstance, ps);
+                        callContext.MethodInstance.Filters[i].Executing(callContext, ref invokeResult);
+                        callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ref invokeResult).Wait();
                     }
                 }
 
@@ -229,20 +204,21 @@ namespace TouchSocket.Rpc
                     return invokeResult;
                 }
 
-                if (methodInstance.HasReturn)
+                if (callContext.MethodInstance.HasReturn)
                 {
-                    invokeResult.Result = methodInstance.Invoke(serverProvider, ps);
+                    invokeResult.Result = callContext.MethodInstance.Invoke(rpcServer, ps);
                 }
                 else
                 {
-                    methodInstance.Invoke(serverProvider, ps);
+                    callContext.MethodInstance.Invoke(rpcServer, ps);
                 }
                 invokeResult.Status = InvokeStatus.Success;
-                if (methodInstance.Filters != null)
+                if (callContext.MethodInstance.Filters != null)
                 {
-                    for (int i = 0; i < methodInstance.Filters.Length; i++)
+                    for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        methodInstance.Filters[i].Executed(caller, ref invokeResult, methodInstance);
+                        callContext.MethodInstance.Filters[i].Executed(callContext, ref invokeResult);
+                        callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ref invokeResult).Wait();
                     }
                 }
             }
@@ -257,28 +233,44 @@ namespace TouchSocket.Rpc
                 {
                     invokeResult.Message = "函数内部发生异常，信息：未知";
                 }
-                if (methodInstance.Filters != null)
+                if (callContext.MethodInstance.Filters != null)
                 {
-                    for (int i = 0; i < methodInstance.Filters.Length; i++)
+                    for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        methodInstance.Filters[i].ExecutException(caller, ref invokeResult, methodInstance, ex);
+                        callContext.MethodInstance.Filters[i].ExecutException(callContext, ref invokeResult, ex);
+                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ref invokeResult, ex).Wait();
                     }
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 invokeResult.Status = InvokeStatus.Exception;
                 invokeResult.Message = ex.Message;
-                if (methodInstance.Filters != null)
+                if (callContext.MethodInstance.Filters != null)
                 {
-                    for (int i = 0; i < methodInstance.Filters.Length; i++)
+                    for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        methodInstance.Filters[i].ExecutException(caller, ref invokeResult, methodInstance, ex);
+                        callContext.MethodInstance.Filters[i].ExecutException(callContext, ref invokeResult, ex);
+                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ref invokeResult, ex).Wait();
                     }
                 }
             }
 
             return invokeResult;
+        }
+
+        /// <summary>
+        /// 获取所有已注册的函数。
+        /// </summary>
+        public MethodInstance[] GetAllMethods()
+        {
+            List<MethodInstance> methods = new List<MethodInstance>();  
+            foreach (var item in this.m_serverTypes.Values)
+            {
+                methods.AddRange(item);
+            }
+
+            return methods.ToArray();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -340,11 +332,9 @@ namespace TouchSocket.Rpc
 
             List<ServerCellCode> codes = new List<ServerCellCode>();
 
-            var types = this.ServerProviders.GetRegisterTypes();
-
             foreach (var attrbute in attrbuteType)
             {
-                foreach (var item in types)
+                foreach (var item in m_serverTypes.Keys)
                 {
                     ServerCellCode serverCellCode = CodeGenerator.Generator(item, attrbute);
                     codes.Add(serverCellCode);
@@ -373,7 +363,6 @@ namespace TouchSocket.Rpc
         {
             return this.RemoveRpcParser(parserName, out _);
         }
-
 
         /// <summary>
         /// 分享代理。
@@ -447,12 +436,12 @@ namespace TouchSocket.Rpc
             {
                 throw new RpcException("类型不相符");
             }
-            this.ServerProviders.Remove(providerType);
-            if (this.RemoveServer(providerType, out IRpcServer serverProvider, out MethodInstance[] instances))
+
+            if (this.RemoveServer(providerType, out MethodInstance[] instances))
             {
                 foreach (var parser in this)
                 {
-                    parser.OnUnregisterServer(serverProvider, instances);
+                    parser.OnUnregisterServer(instances);
                 }
 
                 return instances.Length;
@@ -474,159 +463,6 @@ namespace TouchSocket.Rpc
         {
             return this.m_parsers.TryRemove(key, out parser);
         }
-
-        #region 注册
-
-        /// <summary>
-        /// 注册所有服务
-        /// </summary>
-        /// <returns>返回搜索到的服务数</returns>
-        public int RegisterAllServer()
-        {
-            List<Type> types = new List<Type>();
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var assembly in assemblies)
-            {
-                try
-                {
-                    Type[] t1 = assembly.GetTypes().Where(p => typeof(IRpcServer).IsAssignableFrom(p) && !p.IsAbstract && p.IsClass).ToArray();
-                    types.AddRange(t1);
-                }
-                catch
-                {
-                }
-            }
-
-            foreach (Type type in types)
-            {
-                this.RegisterServer(type);
-            }
-            return types.Count;
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public IRpcServer RegisterServer<T>() where T : IRpcServer
-        {
-            return this.RegisterServer(typeof(T));
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="providerType"></param>
-        /// <returns></returns>
-        public IRpcServer RegisterServer(Type providerType)
-        {
-            if (!typeof(IRpcServer).IsAssignableFrom(providerType))
-            {
-                throw new RpcException("类型不相符");
-            }
-            this.Container.RegisterSingleton(providerType, providerType);
-            IRpcServer serverProvider = (IRpcServer)this.Container.Resolve(providerType);
-            this.RegisterServer(serverProvider);
-            return serverProvider;
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="serverProvider"></param>
-        public void RegisterServer(IRpcServer serverProvider)
-        {
-            if (this.m_disposedValue)
-            {
-                throw new ObjectDisposedException(this.GetType().FullName);
-            }
-
-            this.ServerProviders.Add(serverProvider.GetType(), serverProvider);
-            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverProvider.GetType());
-
-            foreach (var item in methodInstances)
-            {
-                item.Server = serverProvider;
-                this.m_methods.Add(item);
-            }
-            foreach (var parser in this)
-            {
-                parser.OnRegisterServer(serverProvider, methodInstances);
-            }
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <typeparam name="TFrom"></typeparam>
-        /// <typeparam name="TTo"></typeparam>
-        /// <returns></returns>
-        public IRpcServer RegisterServer<TFrom, TTo>() where TFrom : class, IRpcServer where TTo : TFrom
-        {
-            return this.RegisterServer(typeof(TFrom), typeof(TTo));
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="providerInterfaceType"></param>
-        /// <param name="providerType"></param>
-        /// <returns></returns>
-        public IRpcServer RegisterServer(Type providerInterfaceType, Type providerType)
-        {
-            if (!typeof(IRpcServer).IsAssignableFrom(providerInterfaceType))
-            {
-                throw new RpcException("类型不相符");
-            }
-
-            if (!typeof(IRpcServer).IsAssignableFrom(providerType))
-            {
-                throw new RpcException("类型不相符");
-            }
-
-            this.Container.RegisterSingleton(providerInterfaceType, providerType);
-            IRpcServer serverProvider = (IRpcServer)this.Container.Resolve(providerInterfaceType);
-            this.RegisterServer(providerInterfaceType, serverProvider);
-            return serverProvider;
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="serverProvider"></param>
-        public void RegisterServer<TFrom>(IRpcServer serverProvider) where TFrom : class, IRpcServer
-        {
-            this.RegisterServer(typeof(TFrom), serverProvider);
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="providerInterfaceType"></param>
-        /// <param name="serverProvider"></param>
-        public void RegisterServer(Type providerInterfaceType, IRpcServer serverProvider)
-        {
-            if (this.m_disposedValue)
-            {
-                throw new ObjectDisposedException(this.GetType().FullName);
-            }
-
-            this.ServerProviders.Add(providerInterfaceType, serverProvider);
-            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(providerInterfaceType);
-
-            foreach (var item in methodInstances)
-            {
-                item.Server = serverProvider;
-                this.m_methods.Add(item);
-            }
-            foreach (var parser in this)
-            {
-                parser.OnRegisterServer(serverProvider, methodInstances);
-            }
-        }
-
-        #endregion 注册
 
         /// <summary>
         /// <inheritdoc/>
@@ -691,10 +527,117 @@ namespace TouchSocket.Rpc
             }
         }
 
-        private IRpcServer GetServerProvider(MethodInstance methodInstance)
+        private bool RemoveServer(Type type, out MethodInstance[] methodInstances)
         {
-            return methodInstance.Server;
+            foreach (var newType in this.m_serverTypes.Keys)
+            {
+                if (newType.FullName == type.FullName)
+                {
+                    this.m_serverTypes.TryRemove(newType,out var list);
+                    methodInstances=list.ToArray();
+                    return true;
+                }
+            }
+            methodInstances = null;
+            return false;
         }
+
+        #region 注册
+
+        /// <summary>
+        /// 注册为单例服务
+        /// </summary>
+        /// <param name="serverFromType"></param>
+        /// <param name="rpcServer"></param>
+        /// <returns></returns>
+        public void RegisterServer(Type serverFromType, IRpcServer rpcServer)
+        {
+            if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
+            {
+                throw new RpcException($"注册类型必须与{nameof(IRpcServer)}有继承关系");
+            }
+
+            if (!serverFromType.IsAssignableFrom(rpcServer.GetType()))
+            {
+                throw new RpcException("实例类型必须与注册类型有继承关系。");
+            }
+            foreach (var item in this.m_serverTypes.Keys)
+            {
+                if (item.FullName == serverFromType.FullName)
+                {
+                    throw new RpcException($"名为{serverFromType.FullName}的类型已注册。");
+                }
+            }
+
+            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType);
+            foreach (var item in methodInstances)
+            {
+                item.IsSingleton = true;
+                item.ServerFactory = new RpcServerFactory(this.Container);
+            }
+            this.m_serverTypes.TryAdd(serverFromType,new List<MethodInstance>(methodInstances));
+            this.Container.RegisterSingleton(serverFromType, rpcServer);
+           
+            foreach (var parser in this)
+            {
+                parser.OnRegisterServer(methodInstances);
+            }
+        }
+
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        /// <param name="serverFromType"></param>
+        /// <param name="serverToType"></param>
+        /// <returns></returns>
+        public void RegisterServer(Type serverFromType, Type serverToType)
+        {
+            if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
+            {
+                throw new RpcException($"注册类型必须与{nameof(IRpcServer)}有继承关系");
+            }
+
+            if (!serverFromType.IsAssignableFrom(serverToType))
+            {
+                throw new RpcException("实例类型必须与注册类型有继承关系。");
+            }
+
+            foreach (var item in this.m_serverTypes.Keys)
+            {
+                if (item.FullName == serverFromType.FullName)
+                {
+                    throw new RpcException($"名为{serverFromType.FullName}的类型已注册。");
+                }
+            }
+
+            bool singleton;
+            if (typeof(ITransientRpcServer).IsAssignableFrom(serverFromType))
+            {
+                singleton = true;
+                this.Container.RegisterSingleton(serverFromType, serverToType);
+            }
+            else
+            {
+                singleton = false;
+                this.Container.RegisterTransient(serverFromType, serverToType);
+            }
+            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType);
+
+            foreach (var item in methodInstances)
+            {
+                item.IsSingleton = singleton;
+                item.ServerFactory = new RpcServerFactory(this.Container);
+            }
+
+            this.m_serverTypes.TryAdd(serverFromType,new List<MethodInstance>(methodInstances));
+           
+            foreach (var parser in this)
+            {
+                parser.OnRegisterServer(methodInstances);
+            }
+        }
+
+        #endregion 注册
     }
 
     internal class InternalPlugin : HttpPluginBase

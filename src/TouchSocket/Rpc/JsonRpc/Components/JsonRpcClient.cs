@@ -13,6 +13,7 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Extensions;
@@ -77,7 +78,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            JsonRpcWaitContext context = new JsonRpcWaitContext();
+            JsonRpcWaitResult context = new JsonRpcWaitResult();
             WaitData<IWaitResult> waitData = this.m_waitHandle.GetWaitData(context);
 
             using (ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength))
@@ -138,7 +139,7 @@ namespace TouchSocket.Rpc.JsonRpc
                         {
                             this.Send(byteBlock);
                             waitData.Wait(invokeOption.Timeout);
-                            JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
+                            JsonRpcWaitResult resultContext = (JsonRpcWaitResult)waitData.WaitResult;
                             this.m_waitHandle.Destroy(waitData);
 
                             if (resultContext.Status == 0)
@@ -179,7 +180,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <exception cref="Exception"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            JsonRpcWaitContext context = new JsonRpcWaitContext();
+            JsonRpcWaitResult context = new JsonRpcWaitResult();
             WaitData<IWaitResult> waitData = this.m_waitHandle.GetWaitData(context);
 
             using (ByteBlock byteBlock = BytePool.GetByteBlock(this.BufferLength))
@@ -239,7 +240,7 @@ namespace TouchSocket.Rpc.JsonRpc
                         {
                             this.Send(byteBlock);
                             waitData.Wait(invokeOption.Timeout);
-                            JsonRpcWaitContext resultContext = (JsonRpcWaitContext)waitData.WaitResult;
+                            JsonRpcWaitResult resultContext = (JsonRpcWaitResult)waitData.WaitResult;
                             this.m_waitHandle.Destroy(waitData);
 
                             if (resultContext.Status == 0)
@@ -339,7 +340,7 @@ namespace TouchSocket.Rpc.JsonRpc
                         JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(jsonString, typeof(JsonResponseContext));
                         if (responseContext != null)
                         {
-                            JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
+                            JsonRpcWaitResult waitContext = new JsonRpcWaitResult();
                             waitContext.Status = 1;
                             waitContext.Sign = long.Parse(responseContext.id);
                             waitContext.error = responseContext.error;
@@ -355,7 +356,7 @@ namespace TouchSocket.Rpc.JsonRpc
                         JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(httpResponse.GetBody(), typeof(JsonResponseContext));
                         if (responseContext != null)
                         {
-                            JsonRpcWaitContext waitContext = new JsonRpcWaitContext();
+                            JsonRpcWaitResult waitContext = new JsonRpcWaitResult();
                             waitContext.Status = 1;
                             waitContext.Sign = long.Parse(responseContext.id);
                             waitContext.error = responseContext.error;

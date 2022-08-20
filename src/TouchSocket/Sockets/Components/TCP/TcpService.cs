@@ -29,8 +29,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class TcpService<TClient> : TcpServiceBase, ITcpService<TClient> where TClient : SocketClient
     {
-        private readonly WaitCallback m_waitCallback;
-
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -39,7 +37,6 @@ namespace TouchSocket.Sockets
             this.m_iDGenerator = new SnowflakeIDGenerator(4);
             this.m_socketClients = new SocketClientCollection();
             this.m_getDefaultNewID = () => { return this.m_iDGenerator.NextID().ToString(); };
-            m_waitCallback = new WaitCallback(this.SocketInit);
         }
 
         #region 变量
@@ -580,7 +577,7 @@ namespace TouchSocket.Sockets
                 }
                 catch (System.Exception ex)
                 {
-                    this.Logger.Debug(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
+                    this.Logger.Log(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
                 }
             }
 
@@ -641,11 +638,11 @@ namespace TouchSocket.Sockets
                     socket.SendBufferSize = this.BufferLength;
                     if (this.SocketClients.Count > this.m_maxCount)
                     {
-                        this.Logger.Debug(LogType.Warning, this, "连接客户端数量已达到设定最大值");
+                        this.Logger.Warning(this, "连接客户端数量已达到设定最大值");
                         socket.Close();
                         socket.Dispose();
                     }
-                    this.OnSocketInit(socket);
+                    this.SocketInit(socket);
                 }
                 e.AcceptSocket = null;
 
@@ -664,11 +661,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void OnSocketInit(Socket socket)
-        {
-            ThreadPool.QueueUserWorkItem(m_waitCallback, socket);
-        }
-
         private void SetClientConfiguration(SocketClient client)
         {
             client.m_usePlugin = this.m_usePlugin;
@@ -685,18 +677,22 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void SocketInit(object o)
+        private void SocketInit(Socket socket)
         {
-            Socket socket = (Socket)o;
             try
             {
-                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty));
+                if (this.Config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty))
+                {
+                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
+                }
                 TClient client = this.GetClientInstence();
                 this.SetClientConfiguration(client);
                 client.SetSocket(socket);
 
-                ClientOperationEventArgs args = new ClientOperationEventArgs();
-                args.ID = this.GetDefaultNewID();
+                ClientOperationEventArgs args = new ClientOperationEventArgs
+                {
+                    ID = this.GetDefaultNewID()
+                };
                 client.InternalConnecting(args);//Connecting
                 if (args.Operation.HasFlag(Operation.Permit))
                 {
@@ -731,10 +727,10 @@ namespace TouchSocket.Sockets
                     socket.SafeDispose();
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 socket.SafeDispose();
-                this.Logger.Debug(LogType.Error, this, "接收新连接错误", ex);
+                this.Logger.Log(LogType.Error, this, "接收新连接错误", ex);
             }
         }
     }

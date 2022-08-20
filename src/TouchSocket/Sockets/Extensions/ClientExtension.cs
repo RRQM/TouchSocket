@@ -62,22 +62,5 @@ namespace TouchSocket.Sockets
         {
             return $"{client.IP}:{client.Port}";
         }
-
-        #region Udp广播
-        /// <summary>
-        /// 广播。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="port"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public static void SendWithBroadcast<T>(this T client, int port, byte[] buffer, int offset, int length) where T : IUdpClientSender
-        {
-            //client.Send(new IPHost($"255.255.255.255:{port}").EndPoint,buffer,offset,length);
-        }
-        #endregion
     }
 }

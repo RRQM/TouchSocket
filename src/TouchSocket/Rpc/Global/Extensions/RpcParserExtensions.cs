@@ -67,13 +67,13 @@ namespace TouchSocket.Rpc
         /// 注册所有服务
         /// </summary>
         /// <returns>返回注册实例</returns>
-        public static IRpcServer RegisterServer<TFrom, TTo>(this IRpcParser rpcParser) where TFrom : class, IRpcServer where TTo : TFrom
+        public static void RegisterServer<TFrom, TTo>(this IRpcParser rpcParser) where TFrom : class, IRpcServer where TTo : TFrom
         {
             if (rpcParser.RpcStore == null)
             {
                 throw new ArgumentNullException(nameof(rpcParser.RpcStore), $"RpcStore为空，这一般是该解析器没有完成初始化配置所导致的。");
             }
-            return rpcParser.RpcStore.RegisterServer<TFrom, TTo>();
+            rpcParser.RpcStore.RegisterServer<TFrom, TTo>();
         }
 
         /// <summary>
@@ -83,17 +83,17 @@ namespace TouchSocket.Rpc
         /// <param name="providerInterfaceType"></param>
         /// <param name="providerType"></param>
         /// <returns></returns>
-        public static IRpcServer RegisterServer(this IRpcParser rpcParser, Type providerInterfaceType, Type providerType)
+        public static void RegisterServer(this IRpcParser rpcParser, Type providerInterfaceType, Type providerType)
         {
             if (rpcParser.RpcStore == null)
             {
                 throw new ArgumentNullException(nameof(rpcParser.RpcStore), $"RpcStore为空，这一般是该解析器没有完成初始化配置所导致的。");
             }
-            return rpcParser.RpcStore.RegisterServer(providerInterfaceType, providerType);
+            rpcParser.RpcStore.RegisterServer(providerInterfaceType, providerType);
         }
 
         /// <summary>
-        /// 注册服务
+        /// 注册为单例服务
         /// </summary>
         /// <typeparam name="TFrom"></typeparam>
         /// <param name="rpcParser"></param>
@@ -108,7 +108,7 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 注册服务
+        /// 注册为单例服务
         /// </summary>
         /// <param name="rpcParser"></param>
         /// <param name="providerInterfaceType"></param>
@@ -127,42 +127,28 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static IRpcServer RegisterServer<T>(this IRpcParser rpcParser) where T : IRpcServer
+        public static void RegisterServer<T>(this IRpcParser rpcParser) where T : IRpcServer
         {
             if (rpcParser.RpcStore == null)
             {
                 throw new ArgumentNullException(nameof(rpcParser.RpcStore), $"RpcStore为空，这一般是该解析器没有完成初始化配置所导致的。");
             }
-            return rpcParser.RpcStore.RegisterServer<T>();
+             rpcParser.RpcStore.RegisterServer<T>();
         }
 
         /// <summary>
         /// 注册服务
         /// </summary>
         /// <param name="rpcParser"></param>
-        /// <param name="providerType"></param>
+        /// <param name="fromType"></param>
         /// <returns></returns>
-        public static IRpcServer RegisterServer(this IRpcParser rpcParser, Type providerType)
+        public static void RegisterServer(this IRpcParser rpcParser, Type fromType)
         {
             if (rpcParser.RpcStore == null)
             {
                 throw new ArgumentNullException(nameof(rpcParser.RpcStore), $"RpcStore为空，这一般是该解析器没有完成初始化配置所导致的。");
             }
-            return rpcParser.RpcStore.RegisterServer(providerType);
-        }
-
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="rpcParser"></param>
-        /// <param name="serverProvider"></param>
-        public static void RegisterServer(this IRpcParser rpcParser, IRpcServer serverProvider)
-        {
-            if (rpcParser.RpcStore == null)
-            {
-                throw new ArgumentNullException(nameof(rpcParser.RpcStore), $"RpcStore为空，这一般是该解析器没有完成初始化配置所导致的。");
-            }
-            rpcParser.RpcStore.RegisterServer(serverProvider);
+             rpcParser.RpcStore.RegisterServer(fromType);
         }
 
         /// <summary>

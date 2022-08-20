@@ -61,12 +61,12 @@ namespace TouchSocket.Sockets.Plugins
 
         void IConfigPlugin.OnLoadedConfig(object sender, ConfigEventArgs e)
         {
-            this.OnLoadedConfig((ITcpClientBase)sender, e);
+            this.OnLoadedConfig(sender, e);
         }
 
         void IConfigPlugin.OnLoadingConfig(object sender, ConfigEventArgs e)
         {
-            this.OnLoadingConfig((ITcpClientBase)sender, e);
+            this.OnLoadingConfig(sender, e);
         }
 
         void ITcpPlugin.OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
@@ -120,7 +120,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        protected virtual void OnLoadedConfig(ITcpClientBase sender, ConfigEventArgs e)
+        protected virtual void OnLoadedConfig(object sender, ConfigEventArgs e)
         {
         }
 
@@ -129,7 +129,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        protected virtual void OnLoadingConfig(ITcpClientBase sender, ConfigEventArgs e)
+        protected virtual void OnLoadingConfig(object sender, ConfigEventArgs e)
         {
         }
 

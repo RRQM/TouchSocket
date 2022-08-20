@@ -163,7 +163,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 waitStream.Status = 3;
                 waitStream.Message = ex.Message;
 
-                this.Logger.Debug(LogType.Error, this, $"在{nameof(P_8_RequestStreamToThis)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在{nameof(P_8_RequestStreamToThis)}中发生错误。", ex);
             }
 
             waitStream.Metadata = null;
@@ -233,7 +233,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 waitStream.Status = 3;
                 waitStream.Message = ex.Message;
 
-                this.Logger.Debug(LogType.Error, this, $"在{nameof(P_9_RequestStreamToThis)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在{nameof(P_9_RequestStreamToThis)}中发生错误。", ex);
             }
 
             waitStream.Metadata = null;

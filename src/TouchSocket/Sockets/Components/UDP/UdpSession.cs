@@ -794,7 +794,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public void Send(IList<TransferByte> transferBytes)
+        public void Send(IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_adapter == null)
             {
@@ -812,7 +812,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(this.m_remoteIPHost.EndPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
@@ -828,7 +828,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="transferBytes"></param>
-        public void Send(EndPoint endPoint, IList<TransferByte> transferBytes)
+        public void Send(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_adapter == null)
             {
@@ -846,7 +846,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
@@ -861,7 +861,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public void SendAsync(IList<TransferByte> transferBytes)
+        public void SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_adapter == null)
             {
@@ -879,7 +879,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(this.m_remoteIPHost.EndPoint, byteBlock.Buffer, 0, byteBlock.Len, true);
                 }
@@ -895,7 +895,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="transferBytes"></param>
-        public void SendAsync(EndPoint endPoint, IList<TransferByte> transferBytes)
+        public void SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_adapter == null)
             {
@@ -913,7 +913,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len, true);
                 }

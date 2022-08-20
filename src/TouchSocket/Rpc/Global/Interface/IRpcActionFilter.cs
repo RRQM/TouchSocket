@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc
 {
@@ -20,33 +21,55 @@ namespace TouchSocket.Rpc
     public interface IRpcActionFilter
     {
         /// <summary>
-        /// 在执行RPC之前。
+        /// 在执行JsonRpc之前。
         /// <para>当<paramref name="invokeResult"/>的InvokeStatus不为<see cref="InvokeStatus.Ready"/>。则不会执行RPC</para>
         /// <para>同时，当<paramref name="invokeResult"/>的InvokeStatus为<see cref="InvokeStatus.Success"/>。会直接返回结果</para>
         /// </summary>
-        /// <param name="caller"></param>
+        /// <param name="callContext"></param>
         /// <param name="invokeResult"></param>
-        /// <param name="methodInstance"></param>
-        /// <param name="ps"></param>
-        void Executing(object caller, ref InvokeResult invokeResult, MethodInstance methodInstance, object[] ps);
+        void Executing(ICallContext callContext, ref InvokeResult invokeResult);
 
         /// <summary>
-        /// 成功执行后。
-        /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响RPC最终结果</para>
+        /// 在执行JsonRpc之前。
+        /// <para>当<paramref name="invokeResult"/>的InvokeStatus不为<see cref="InvokeStatus.Ready"/>。则不会执行RPC</para>
+        /// <para>同时，当<paramref name="invokeResult"/>的InvokeStatus为<see cref="InvokeStatus.Success"/>。会直接返回结果</para>
         /// </summary>
-        /// <param name="caller"></param>
+        /// <param name="callContext"></param>
         /// <param name="invokeResult"></param>
-        /// <param name="methodInstance"></param>
-        void Executed(object caller, ref InvokeResult invokeResult, MethodInstance methodInstance);
+        Task ExecutingAsync(ICallContext callContext, ref InvokeResult invokeResult);
 
         /// <summary>
-        /// 执行遇见异常。
+        /// 成功执行JsonRpc后。
         /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响RPC最终结果</para>
         /// </summary>
-        /// <param name="caller"></param>
+        /// <param name="callContext"></param>
         /// <param name="invokeResult"></param>
-        /// <param name="methodInstance"></param>
+        void Executed(ICallContext callContext, ref InvokeResult invokeResult);
+
+        /// <summary>
+        /// 成功执行JsonRpc后。
+        /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响RPC最终结果</para>
+        /// </summary>
+        /// <param name="callContext"></param>
+        /// <param name="invokeResult"></param>
+        Task ExecutedAsync(ICallContext callContext, ref InvokeResult invokeResult);
+
+        /// <summary>
+        /// 执行JsonRpc遇见异常。
+        /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响RPC最终结果</para>
+        /// </summary>
+        /// <param name="callContext"></param>
+        /// <param name="invokeResult"></param>
         /// <param name="exception"></param>
-        void ExecutException(object caller, ref InvokeResult invokeResult, MethodInstance methodInstance, Exception exception);
+        void ExecutException(ICallContext callContext, ref InvokeResult invokeResult, Exception exception);
+
+        /// <summary>
+        /// 执行JsonRpc遇见异常。
+        /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响RPC最终结果</para>
+        /// </summary>
+        /// <param name="callContext"></param>
+        /// <param name="invokeResult"></param>
+        /// <param name="exception"></param>
+        Task ExecutExceptionAsync(ICallContext callContext, ref InvokeResult invokeResult, Exception exception);
     }
 }

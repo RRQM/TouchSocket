@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Log;
 
@@ -20,9 +21,23 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 数据处理适配器
     /// </summary>
-    public abstract class DataHandlingAdapter
+    public abstract class DataHandlingAdapter:DisposableObject
     {
-        internal ITcpClientBase m_client;
+        private ITcpClientBase m_client;
+
+        /// <summary>
+        /// 当插件在被第一次加载时调用。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <exception cref="Exception">此适配器已被其他终端使用，请重新创建对象。</exception>
+        public virtual void OnLoaded(ITcpClientBase client)
+        {
+            if (this.m_client != null)
+            {
+                throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
+            }
+            this.m_client = client;
+        }
 
         private int m_maxPackageSize = 1024 * 1024;
 
@@ -93,7 +108,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="transferBytes"></param>
         /// <param name="isAsync"></param>
-        public void SendInput(IList<TransferByte> transferBytes, bool isAsync)
+        public void SendInput(IList<ArraySegment<byte>> transferBytes, bool isAsync)
         {
             this.PreviewSend(transferBytes, isAsync);
         }
@@ -176,11 +191,20 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="transferBytes">代发送数据组合</param>
         /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(IList<TransferByte> transferBytes, bool isAsync);
+        protected abstract void PreviewSend(IList<ArraySegment<byte>> transferBytes, bool isAsync);
 
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。
         /// </summary>
         protected abstract void Reset();
+
+        /// <summary>
+        /// 该方法被触发时，一般说明<see cref="Client"/>已经断开连接。
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
     }
 }

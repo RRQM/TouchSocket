@@ -14,23 +14,43 @@
 namespace TouchSocket.Core.Log
 {
     /// <summary>
-    /// 日志类型
+    /// 日志类型。
     /// </summary>
     public enum LogType
     {
         /// <summary>
-        /// 一般消息
+        /// 不使用日志类输出
         /// </summary>
-        Message,
+        None = 0,
 
         /// <summary>
-        /// 警示消息
+        /// 更为详细的步骤型日志输出
         /// </summary>
-        Warning,
+        Trace = 1,
 
         /// <summary>
-        /// 错误消息
+        /// 调试信息日志
         /// </summary>
-        Error
+        Debug = 2,
+
+        /// <summary>
+        /// 消息类日志输出
+        /// </summary>
+        Information = 4,
+
+        /// <summary>
+        /// 警告类日志输出
+        /// </summary>
+        Warning = 8,
+
+        /// <summary>
+        /// 错误类日志输出
+        /// </summary>
+        Error = 16,
+
+        /// <summary>
+        /// 不可控中断类日输出
+        /// </summary>
+        Critical = 32
     }
 }

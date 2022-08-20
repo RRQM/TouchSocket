@@ -14,45 +14,34 @@
 using System.Threading;
 using TouchSocket.Http;
 
-namespace TouchSocket.Rpc.WebApi
+namespace TouchSocket.Rpc.JsonRpc
 {
     /// <summary>
-    /// WebApi调用上下文
+    /// JsonRpc调用上下文
     /// </summary>
-    public class WebApiServerCallContext : ICallContext
+    internal class JsonRpcCallContext : IJsonRpcCallContext
     {
-        private readonly object m_caller;
-        private readonly HttpContext m_context;
-        private readonly MethodInstance m_methodInstance;
         private CancellationTokenSource m_tokenSource;
 
         /// <summary>
-        /// 构造函数
+        /// Json字符串
         /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="context"></param>
-        /// <param name="methodInstance"></param>
-        public WebApiServerCallContext(object caller, HttpContext context, MethodInstance methodInstance)
-        {
-            this.m_caller = caller;
-            this.m_context = context;
-            this.m_methodInstance = methodInstance;
-        }
+        public string JsonString { get; internal set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public object Caller => this.m_caller;
+        public object Caller { get; internal set; }
 
         /// <summary>
-        /// Http上下文
+        /// JsonRpc上下文
         /// </summary>
-        public HttpContext Context => this.m_context;
+        public JsonRpcPackage JsonRpcPackage { get; internal set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public MethodInstance MethodInstance => this.m_methodInstance;
+        public MethodInstance MethodInstance { get; internal set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -68,5 +57,15 @@ namespace TouchSocket.Rpc.WebApi
                 return this.m_tokenSource;
             }
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public HttpContext HttpContext { get; internal set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public JRPT JRPT { get; internal set; }
     }
 }

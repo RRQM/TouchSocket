@@ -88,7 +88,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 发送数据接口
         /// </summary>
-        public Action<RpcActor, bool, TransferByte[]> OutputSend { get; set; }
+        public Action<RpcActor, bool, ArraySegment<byte>[]> OutputSend { get; set; }
 
         #endregion 委托
 

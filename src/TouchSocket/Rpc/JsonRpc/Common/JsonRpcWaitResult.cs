@@ -10,20 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Net.Sockets;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core.Run;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Rpc.JsonRpc
 {
-    internal class NATModel
+    internal class JsonRpcWaitResult : WaitResult
     {
-        public Socket Socket;
-        public ByteBlock ByteBlock;
+        internal object Return;
 
-        public NATModel(Socket socket, ByteBlock byteBlock)
-        {
-            this.Socket = socket;
-            this.ByteBlock = byteBlock;
-        }
+        internal error error;
     }
 }

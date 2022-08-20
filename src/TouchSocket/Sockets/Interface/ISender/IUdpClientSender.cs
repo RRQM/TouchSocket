@@ -32,7 +32,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void Send(EndPoint endPoint, IList<TransferByte> transferBytes);
+        void Send(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
 
         /// <summary>
         /// 异步组合发送数据。
@@ -45,7 +45,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void SendAsync(EndPoint endPoint, IList<TransferByte> transferBytes);
+        void SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
 
         /// <summary>
         /// 同步组合发送数据。

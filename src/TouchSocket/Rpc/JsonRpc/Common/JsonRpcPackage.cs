@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc.JsonRpc
     /// <summary>
     /// JsonRpc调用器
     /// </summary>
-    public class JsonRpcContext
+    public class JsonRpcPackage
     {
 #pragma warning disable
         public string jsonrpc;

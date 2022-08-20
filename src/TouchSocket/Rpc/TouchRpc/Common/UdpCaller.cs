@@ -20,6 +20,10 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class UdpCaller
     {
+        private readonly EndPoint callerEndPoint;
+
+        private readonly UdpSessionBase m_service;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -27,22 +31,18 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="callerEndPoint"></param>
         public UdpCaller(UdpSessionBase service, EndPoint callerEndPoint)
         {
-            this.service = service;
+            this.m_service = service;
             this.callerEndPoint = callerEndPoint;
         }
-
-        private readonly UdpSessionBase service;
-
-        /// <summary>
-        /// Udp服务器
-        /// </summary>
-        public UdpSessionBase Service => this.service;
-
-        private readonly EndPoint callerEndPoint;
 
         /// <summary>
         /// 调用者终结点
         /// </summary>
         public EndPoint CallerEndPoint => this.callerEndPoint;
+
+        /// <summary>
+        /// Udp服务器
+        /// </summary>
+        public UdpSessionBase Service => this.m_service;
     }
 }

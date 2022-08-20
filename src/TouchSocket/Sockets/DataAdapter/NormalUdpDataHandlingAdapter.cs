@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Net;
 using TouchSocket.Core.ByteManager;
@@ -60,7 +61,7 @@ namespace TouchSocket.Sockets
         /// <param name="endPoint"></param>
         /// <param name="transferBytes"></param>
         /// <param name="isAsync"></param>
-        protected override void PreviewSend(EndPoint endPoint, IList<TransferByte> transferBytes, bool isAsync)
+        protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes, bool isAsync)
         {
 
         }

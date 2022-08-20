@@ -84,7 +84,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 发送数据接口
         /// </summary>
-        public Action<RpcActor, bool, TransferByte[]> OutputSend { get; set; }
+        public Action<RpcActor, bool, ArraySegment<byte>[]> OutputSend { get; set; }
 
         /// <summary>
         /// 获取调用函数的委托
@@ -326,7 +326,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "重置ID错误", ex);
+                            this.Logger.Log(LogType.Error, this, "重置ID错误", ex);
                         }
                         break;
                     }
@@ -344,7 +344,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "重置ID错误", ex);
+                            this.Logger.Log(LogType.Error, this, "重置ID错误", ex);
                         }
                         break;
                     }
@@ -356,7 +356,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "在OnPing中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, "在OnPing中发生错误。", ex);
                         }
                         break;
                     }
@@ -368,7 +368,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "在OnPong发送异常。", ex);
+                            this.Logger.Log(LogType.Error, this, "在OnPong发送异常。", ex);
                         }
                         break;
                     }
@@ -389,7 +389,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "创建通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, "创建通道异常", ex);
                         }
                         break;
                     }
@@ -408,7 +408,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "通道接收异常", ex);
+                            this.Logger.Log(LogType.Error, this, "通道接收异常", ex);
                         }
                         break;
                     }
@@ -461,7 +461,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "创建通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, "创建通道异常", ex);
                         }
                         break;
                     }
@@ -504,7 +504,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, "通道异常", ex);
                         }
                         break;
                     }
@@ -517,7 +517,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, $"在{protocol}中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, $"在{protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -532,7 +532,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "创建通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, "创建通道异常", ex);
                         }
 
                         break;
@@ -548,7 +548,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception e)
                         {
-                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
+                            this.Logger.Error(this, $"错误代码: {protocol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -562,7 +562,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception e)
                         {
-                            this.Logger.Debug(LogType.Error, this, $"错误代码: 101, 错误详情:{e.Message}");
+                            this.Logger.Error(this, $"错误代码: 101, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -584,7 +584,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception e)
                         {
-                            this.Logger.Debug(LogType.Error, this, $"错误代码: 103, 错误详情:{e.Message}");
+                            this.Logger.Error(this, $"错误代码: 103, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -600,7 +600,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception e)
                         {
-                            this.Logger.Debug(LogType.Error, this, $"错误代码: {protocol}, 错误详情:{e.Message}");
+                            this.Logger.Error(this, $"错误代码: {protocol}, 错误详情:{e.Message}");
                         }
                         break;
                     }
@@ -645,7 +645,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
                         }
                         break;
                     }
@@ -659,7 +659,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "在StreamStatusToThis中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, "在StreamStatusToThis中发生错误。", ex);
                         }
                         break;
                     }
@@ -672,7 +672,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
                         }
                         break;
                     }
@@ -690,7 +690,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -711,7 +711,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -732,7 +732,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -766,7 +766,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -791,7 +791,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -813,7 +813,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -834,7 +834,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -848,7 +848,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -862,7 +862,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -882,7 +882,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -908,7 +908,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -922,7 +922,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -939,7 +939,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -961,7 +961,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -980,7 +980,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
                         }
                         break;
                     }
@@ -992,7 +992,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Debug(LogType.Error, this, "处理协议数据异常", ex);
+                            this.Logger.Log(LogType.Error, this, "处理协议数据异常", ex);
                         }
                         break;
                     }
@@ -1270,10 +1270,10 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private void SocketSend(short protocol, byte[] dataBuffer, int offset, int length)
         {
-            TransferByte[] transferBytes = new TransferByte[]
+            ArraySegment<byte>[] transferBytes = new ArraySegment<byte>[]
             {
-            new TransferByte(TouchSocketBitConverter.Default.GetBytes(protocol)),
-            new TransferByte(dataBuffer,offset,length)
+            new ArraySegment<byte>(TouchSocketBitConverter.Default.GetBytes(protocol)),
+            new ArraySegment<byte>(dataBuffer,offset,length)
             };
             this.OutputSend?.Invoke(this, false, transferBytes);
         }
@@ -1290,9 +1290,9 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private void SocketSend(byte[] dataBuffer, int offset, int length)
         {
-            TransferByte[] transferBytes = new TransferByte[]
+            ArraySegment<byte>[] transferBytes = new ArraySegment<byte>[]
             {
-            new TransferByte(dataBuffer,offset,length)
+            new ArraySegment<byte>(dataBuffer,offset,length)
             };
             this.OutputSend?.Invoke(this, false, transferBytes);
         }
@@ -1313,10 +1313,10 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private void SocketSendAsync(short protocol, byte[] dataBuffer, int offset, int length)
         {
-            TransferByte[] transferBytes = new TransferByte[]
+            ArraySegment<byte>[] transferBytes = new ArraySegment<byte>[]
              {
-            new TransferByte(TouchSocketBitConverter.Default.GetBytes(protocol)),
-            new TransferByte(dataBuffer,offset,length)
+            new ArraySegment<byte>(TouchSocketBitConverter.Default.GetBytes(protocol)),
+            new ArraySegment<byte>(dataBuffer,offset,length)
              };
             this.OutputSend?.Invoke(this, true, transferBytes);
         }

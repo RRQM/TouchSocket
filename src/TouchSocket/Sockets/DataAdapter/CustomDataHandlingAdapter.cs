@@ -34,6 +34,11 @@ namespace TouchSocket.Sockets
         protected TRequest TempRequest;
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override bool CanSendRequestInfo => false;
+
+        /// <summary>
         /// 默认不支持拼接发送
         /// </summary>
         public override bool CanSplicingSend => false;
@@ -60,6 +65,16 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// 即将执行<see cref="DataHandlingAdapter.GoReceived(ByteBlock, IRequestInfo)"/>。
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>返回值标识是否继续执行</returns>
+        protected virtual bool OnReceivingSuccess(TRequest request)
+        {
+            return true;
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
@@ -81,6 +96,15 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <param name="isAsync"></param>
+        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        {
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <param name="buffer">数据</param>
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
@@ -95,10 +119,11 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="transferBytes"></param>
         /// <param name="isAsync"></param>
-        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes, bool isAsync)
         {
             throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
         }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -121,8 +146,11 @@ namespace TouchSocket.Sockets
                 switch (filterResult)
                 {
                     case FilterResult.Success:
-                        this.GoReceived(null, this.TempRequest);
-                        this.OnReceivedSuccess(this.TempRequest);
+                        if (this.OnReceivingSuccess(this.TempRequest))
+                        {
+                            this.GoReceived(null, this.TempRequest);
+                            this.OnReceivedSuccess(this.TempRequest);
+                        }
                         this.TempRequest = default;
                         neverSucceed = false;
                         break;

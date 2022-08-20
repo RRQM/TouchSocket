@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
@@ -59,6 +60,8 @@ namespace TouchSocket.Sockets
         private int m_maxPackageSize;
         private bool m_online;
         private Stream m_workStream;
+        private string serviceIP;
+        private int servicePort;
 
         #endregion 变量
 
@@ -174,6 +177,16 @@ namespace TouchSocket.Sockets
         ///<inheritdoc/>
         /// </summary>
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public string ServiceIP => this.serviceIP;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public int ServicePort => this.servicePort;
 
         /// <summary>
         /// <inheritdoc/>
@@ -309,30 +322,7 @@ namespace TouchSocket.Sockets
         internal void SetSocket(Socket mainSocket)
         {
             this.m_mainSocket = mainSocket ?? throw new ArgumentNullException(nameof(mainSocket));
-            if (this.m_mainSocket == null)
-            {
-                this.IP = null;
-                this.Port = -1;
-                return;
-            }
-
-            string ipport;
-            if (this.m_mainSocket.Connected && this.m_mainSocket.RemoteEndPoint != null)
-            {
-                ipport = this.m_mainSocket.RemoteEndPoint.ToString();
-            }
-            else if (this.m_mainSocket.IsBound && this.m_mainSocket.LocalEndPoint != null)
-            {
-                ipport = this.m_mainSocket.LocalEndPoint.ToString();
-            }
-            else
-            {
-                return;
-            }
-
-            int r = ipport.LastIndexOf(":");
-            this.IP = ipport.Substring(0, r);
-            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
+            this.OnSocketInitialized(mainSocket);
         }
 
         /// <summary>
@@ -408,6 +398,19 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// 初始化设置Socket。
+        /// <para>父函数实现了获取IP，端口等信息的操作</para>
+        /// </summary>
+        /// <param name="mainSocket"></param>
+        protected virtual void OnSocketInitialized(Socket mainSocket)
+        {
+            this.IP = mainSocket.RemoteEndPoint.GetIP();
+            this.Port = mainSocket.RemoteEndPoint.GetPort();
+            this.serviceIP = mainSocket.LocalEndPoint.GetIP();
+            this.servicePort = mainSocket.LocalEndPoint.GetPort();
+        }
+
+        /// <summary>
         /// 设置适配器，该方法不会检验<see cref="CanSetDataHandlingAdapter"/>的值。
         /// </summary>
         /// <param name="adapter"></param>
@@ -418,11 +421,7 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(adapter));
             }
 
-            if (adapter.m_client != null)
-            {
-                throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
-            }
-            adapter.m_client = this;
+            adapter.OnLoaded(this);
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
             if (this.m_config != null)
@@ -510,6 +509,7 @@ namespace TouchSocket.Sockets
                 if (this.m_online)
                 {
                     this.m_online = false;
+                    this.m_adapter.SafeDispose();
                     this.m_mainSocket.SafeDispose();
                     this.m_service?.SocketClients.TryRemove(this.m_id, out _);
                     this.PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
@@ -572,14 +572,14 @@ namespace TouchSocket.Sockets
                 }
                 if (this.m_adapter == null)
                 {
-                    this.Logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetDescription());
+                    this.Logger.Error(this, ResType.NullDataAdapter.GetDescription());
                     return;
                 }
                 this.m_adapter.ReceivedInput(byteBlock);
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
+                this.Logger.Log(LogType.Error, this, "在处理数据时发生错误", ex);
             }
             finally
             {
@@ -795,7 +795,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public virtual void Send(IList<TransferByte> transferBytes)
+        public virtual void Send(IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_disposedValue)
             {
@@ -816,7 +816,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
@@ -881,7 +881,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        public virtual void SendAsync(IList<TransferByte> transferBytes)
+        public virtual void SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_disposedValue)
             {
@@ -902,7 +902,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, true);
                 }

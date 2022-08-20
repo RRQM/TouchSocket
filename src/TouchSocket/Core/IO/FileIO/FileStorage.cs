@@ -61,6 +61,11 @@ namespace TouchSocket.Core.IO
         public FileInfo FileInfo => this.m_fileInfo;
 
         /// <summary>
+        /// 文件长度
+        /// </summary>
+        public long Length => this.m_fileStream.Length;
+
+        /// <summary>
         /// 文件路径
         /// </summary>
         public string Path => this.m_path;

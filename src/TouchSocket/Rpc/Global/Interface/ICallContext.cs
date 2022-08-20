@@ -12,6 +12,8 @@
 //------------------------------------------------------------------------------
 
 using System.Threading;
+using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc
 {
@@ -21,14 +23,21 @@ namespace TouchSocket.Rpc
     public interface ICallContext
     {
         /// <summary>
-        /// 函数实例
+        /// 调用此服务的主体。
+        /// <para>
+        /// <list type="bullet">
+        /// <item>当该服务在<see cref="ITcpService"/>及派生中调用时，该值一般为<see cref="ISocketClient"/>对象。</item>
+        /// <item>当该服务在<see cref="ITcpClient"/>及派生中调用时，该值一般为<see cref="ITcpClient"/>对象。</item>
+        /// <item>当该服务在<see cref="IUdpSession"/>及派生中调用时，该值一般为<see cref="UdpCaller"/>对象。</item>
+        /// </list>
+        /// </para>
         /// </summary>
-        MethodInstance MethodInstance { get; }
+        object Caller { get;}
 
         /// <summary>
-        /// 实际调用者
+        /// 本次调用的<see cref="MethodInstance"/>
         /// </summary>
-        object Caller { get; }
+        MethodInstance MethodInstance { get;}
 
         /// <summary>
         /// 可取消的调用令箭

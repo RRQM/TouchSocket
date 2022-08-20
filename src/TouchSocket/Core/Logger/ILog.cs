@@ -21,13 +21,10 @@ namespace TouchSocket.Core.Log
     public interface ILog
     {
         /// <summary>
-        /// 日志记录
+        /// 日志输出类型。
+        /// 当<see cref="Log(LogType, object, string, Exception)"/>的类型，在该设置之内时，才会真正输出日志。
         /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        /// <param name="exception"></param>
-        void Debug(LogType logType, object source, string message, Exception exception);
+        LogType LogType { get; set; }
 
         /// <summary>
         /// 日志记录
@@ -35,6 +32,7 @@ namespace TouchSocket.Core.Log
         /// <param name="logType"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>
-        void Debug(LogType logType, object source, string message);
+        /// <param name="exception"></param>
+        void Log(LogType logType, object source, string message, Exception exception);
     }
 }

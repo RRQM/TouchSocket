@@ -42,11 +42,6 @@ namespace TouchSocket.Core.IO
         public abstract bool CanRead { get; }
 
         /// <summary>
-        /// 可写
-        /// </summary>
-        public abstract bool CanWrite { get; }
-
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public int ReadTimeout { get; set; }
@@ -119,7 +114,8 @@ namespace TouchSocket.Core.IO
 
         /// <summary>
         /// 传输输入.
-        /// 必须以length为0结束。读取端会超时。
+        /// 当以length为0结束。
+        /// 否则读取端会超时。
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
@@ -137,6 +133,14 @@ namespace TouchSocket.Core.IO
             this.m_surLength = length;
             this.m_readEvent.Set();
             return this.m_inputEvent.WaitOne(this.ReadTimeout);
+        }
+
+        /// <summary>
+        /// 输入完成
+        /// </summary>
+        protected bool InputComplate()
+        {
+           return this.Input(new byte[0], 0, 0);
         }
 
         private void Reset()

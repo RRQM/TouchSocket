@@ -600,7 +600,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 不允许直接发送
         /// </summary>
         /// <param name="transferBytes"></param>
-        public override void Send(IList<TransferByte> transferBytes)
+        public override void Send(IList<ArraySegment<byte>> transferBytes)
         {
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
@@ -661,7 +661,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 不允许直接发送
         /// </summary>
         /// <param name="transferBytes"></param>
-        public override void SendAsync(IList<TransferByte> transferBytes)
+        public override void SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
@@ -746,7 +746,7 @@ namespace TouchSocket.Rpc.TouchRpc
             this.Close(arg2);
         }
 
-        private void RpcActorSend(RpcActor actor, bool isAsync, TransferByte[] transferBytes)
+        private void RpcActorSend(RpcActor actor, bool isAsync, ArraySegment<byte>[] transferBytes)
         {
             if (isAsync)
             {
@@ -812,7 +812,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FileTransfered)}中发生异常", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(FileTransfered)}中发生异常", ex);
             }
         }
 
@@ -832,7 +832,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FileTransfering)}中发生异常", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(FileTransfering)}中发生异常", ex);
             }
         }
 
@@ -915,7 +915,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
         #region RPC解析器
 
-        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -926,7 +926,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
         }
 
-        void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {

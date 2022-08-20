@@ -102,17 +102,6 @@ namespace TouchSocket.Core.ByteManager
             return byteBlock.ToArray(offset, byteBlock.Len - offset);
         }
 
-        /// <summary>
-        /// 写入
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public static void Write<T>(this T byteBlock, byte[] buffer) where T : IByteBlock
-        {
-            byteBlock.Write(buffer, 0, buffer.Length);
-        }
-
         #region BytesPackage
 
         /// <summary>
