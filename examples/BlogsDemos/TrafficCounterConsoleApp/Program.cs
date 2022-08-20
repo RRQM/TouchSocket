@@ -46,8 +46,8 @@ namespace TrafficCounterConsoleApp
                 var clients = service.GetClients();
                 foreach (var item in clients)
                 {
-                    item.Logger.Message($"发送流量：{item.GetSendTrafficCounter()}");
-                    item.Logger.Message($"接收流量：{item.GetReceivedTrafficCounter()}");
+                    item.Logger.Info($"发送流量：{item.GetSendTrafficCounter()}");
+                    item.Logger.Info($"接收流量：{item.GetReceivedTrafficCounter()}");
                 }
             }, null, 0, 1000);
 

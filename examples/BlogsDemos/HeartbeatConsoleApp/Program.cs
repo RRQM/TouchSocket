@@ -35,7 +35,7 @@ namespace HeartbeatConsoleApp
                 .Start();//启动
 
             service.AddPlugin<HeartbeatAndReceivePlugin>();
-            service.Logger.Message("服务器成功启动");
+            service.Logger.Info("服务器成功启动");
 
             tcpClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
@@ -45,7 +45,7 @@ namespace HeartbeatConsoleApp
             tcpClient.AddPlugin<HeartbeatAndReceivePlugin>();
 
             tcpClient.Connect();
-            tcpClient.Logger.Message("客户端成功连接");
+            tcpClient.Logger.Info("客户端成功连接");
 
             consoleAction.OnException += ConsoleAction_OnException;
             consoleAction.Add("1", "发送心跳", () =>
@@ -239,7 +239,7 @@ namespace HeartbeatConsoleApp
         {
             if (e.RequestInfo is MyRequestInfo myRequest)
             {
-                client.Logger.Message(myRequest.ToString());
+                client.Logger.Info(myRequest.ToString());
                 if (myRequest.DataType == DataType.Ping)
                 {
                     client.Pong();

@@ -14,15 +14,15 @@ namespace ConsulConsoleApp
             TcpService service = new TcpService();
             service.Connecting += (client, e) =>
             {
-                service.Logger.Message("Connecting");
+                service.Logger.Info("Connecting");
             };//有客户端正在连接
-            service.Connected += (client, e) => { service.Logger.Message("Connected"); };//有客户端连接
-            service.Disconnected += (client, e) => { service.Logger.Message("Disconnected"); };//有客户端断开连接
+            service.Connected += (client, e) => { service.Logger.Info("Connected"); };//有客户端连接
+            service.Disconnected += (client, e) => { service.Logger.Info("Disconnected"); };//有客户端断开连接
             service.Received += (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                client.Logger.Message($"已从{client.ID}接收到信息：{mes}");
+                client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
 
                 //client.Send(mes);//将收到的信息直接返回给发送方
             };

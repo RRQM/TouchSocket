@@ -54,7 +54,7 @@ namespace LimitNumberOfConnectionsConsoleApp
             this.Max = max;
             this.Logger = logger;
 
-            logger.Message($"限制连接插件生效，同一IP限制{max}个连接");
+            logger.Info($"限制连接插件生效，同一IP限制{max}个连接");
         }
 
         private readonly ConcurrentDictionary<string, Count> m_ipToCount = new ConcurrentDictionary<string, Count>();

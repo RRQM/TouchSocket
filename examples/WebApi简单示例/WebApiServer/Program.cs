@@ -58,11 +58,11 @@ namespace WebApiServerApp
         /// </summary>
         /// <param name="callContext"></param>
         [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
-        public Task<string> DownloadFile(WebApiServerCallContext callContext, string id)
+        public Task<string> DownloadFile(IWebApiCallContext callContext, string id)
         {
             if (id == "rrqm")
             {
-                callContext.Context.Response.FromFile(@"D:\System\Windows.iso", callContext.Context.Request);
+                callContext.HttpContext.Response.FromFile(@"D:\System\Windows.iso", callContext.HttpContext.Request);
                 return Task.FromResult("ok");
             }
             return Task.FromResult("id不正确。");

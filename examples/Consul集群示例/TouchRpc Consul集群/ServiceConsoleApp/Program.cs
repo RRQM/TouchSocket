@@ -37,26 +37,26 @@ namespace ServiceConsoleApp
                 })
                 .BuildWithHttpTouchRpcService();
 
-            service.Logger.Message("Http服务器已启动");
+            service.Logger.Info("Http服务器已启动");
 
             service.AddPlugin<WebSocketServerPlugin>().//添加WebSocket功能
                     SetWSUrl("/ws");
-            service.Logger.Message($"WS插件已加载，使用 ws://127.0.0.1:{port}/ws 连接");
+            service.Logger.Info($"WS插件已加载，使用 ws://127.0.0.1:{port}/ws 连接");
 
             service.AddPlugin<MyWebSocketPlug>();//添加WebSocket业务数据接收插件
             service.AddPlugin<MyWebSocketCommand>();//添加WebSocket快捷实现，常规WS客户端发送文本“Add 10 20”即可得到30。
-            service.Logger.Message("WS命令行插件已加载，使用WS发送文本“Add 10 20”获取答案");
+            service.Logger.Info("WS命令行插件已加载，使用WS发送文本“Add 10 20”获取答案");
 
             IRpcParser jsonRpcParser = service.AddPlugin<JsonRpcParserPlugin>()
                  .SetJsonRpcUrl("/jsonrpc");
-            service.Logger.Message($"jsonrpc插件已加载，使用 Http://127.0.0.1:{port}/jsonrpc +JsonRpc规范调用");
+            service.Logger.Info($"jsonrpc插件已加载，使用 Http://127.0.0.1:{port}/jsonrpc +JsonRpc规范调用");
 
             IRpcParser xmlRpcParser = service.AddPlugin<XmlRpcParserPlugin>()
                 .SetXmlRpcUrl("/xmlrpc");
-            service.Logger.Message($"jsonrpc插件已加载，使用 Http://127.0.0.1:{port}/xmlrpc +XmlRpc规范调用");
+            service.Logger.Info($"jsonrpc插件已加载，使用 Http://127.0.0.1:{port}/xmlrpc +XmlRpc规范调用");
 
             IRpcParser webApiParser = service.AddPlugin<WebApiParserPlugin>();
-            service.Logger.Message("WebApi插件已加载");
+            service.Logger.Info("WebApi插件已加载");
 
             RpcStore rpcStore = new RpcStore(new TouchSocket.Core.Dependency.Container());
             rpcStore.AddRpcParser("httpTouchRpcService", service);
@@ -64,14 +64,14 @@ namespace ServiceConsoleApp
             rpcStore.AddRpcParser("xmlRpcParser", xmlRpcParser);
             rpcStore.AddRpcParser("webApiParser", webApiParser);
             rpcStore.RegisterServer<MyServer>();
-            service.Logger.Message("RPC注册完成。");
+            service.Logger.Info("RPC注册完成。");
 
             //rpcStore.ShareProxy(new IPHost(8848));
             //rpcStore.ProxyUrl = "/proxy";
             //service.Logger.Message("RPC代理文件已分享，使用 Http://127.0.0.1:8848/proxy?proxy=all 获取");
 
             RegisterConsul(port);
-            service.Logger.Message("Consul已成功注册");
+            service.Logger.Info("Consul已成功注册");
 
             while (Console.ReadKey().Key != ConsoleKey.Escape)
             {
@@ -154,7 +154,7 @@ namespace ServiceConsoleApp
         {
             SocketClient socketClient = (SocketClient)client;
 
-            client.Logger.Message($"WS客户端连接，ID={socketClient.ID}，IPHost={client.IP}:{client.Port}");
+            client.Logger.Info($"WS客户端连接，ID={socketClient.ID}，IPHost={client.IP}:{client.Port}");
             base.OnHandshaked(client, e);
         }
 
@@ -162,7 +162,7 @@ namespace ServiceConsoleApp
         {
             if (e.DataFrame.Opcode == WSDataType.Text)
             {
-                client.Logger.Message($"WS Msg={e.DataFrame.ToText()}");
+                client.Logger.Info($"WS Msg={e.DataFrame.ToText()}");
             }
 
             base.OnHandleWSDataFrame(client, e);

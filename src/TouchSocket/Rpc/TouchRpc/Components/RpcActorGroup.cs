@@ -91,9 +91,6 @@ namespace TouchSocket.Rpc.TouchRpc
         public Action<RpcActor, bool, ArraySegment<byte>[]> OutputSend { get; set; }
 
         #endregion 委托
-
-        private readonly WaitCallback m_raiseLocalEvent;
-
         /// <summary>
         /// 配置
         /// </summary>

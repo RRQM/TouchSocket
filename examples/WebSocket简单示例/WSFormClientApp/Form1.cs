@@ -19,7 +19,7 @@ namespace WSClientApp
 
         private void MyWSClient_Handshaked(WebSocketClientBase client, HttpContextEventArgs e)
         {
-            client.Logger.Message("成功连接");
+            client.Logger.Info("成功连接");
         }
 
         private WebSocketClient myWSClient;
@@ -46,27 +46,27 @@ namespace WSClientApp
             switch (dataFrame.Opcode)
             {
                 case WSDataType.Cont:
-                    client.Logger.Message($"收到中间数据，长度为：{dataFrame.PayloadLength}");
+                    client.Logger.Info($"收到中间数据，长度为：{dataFrame.PayloadLength}");
                     break;
 
                 case WSDataType.Text:
-                    client.Logger.Message(dataFrame.ToText());
+                    client.Logger.Info(dataFrame.ToText());
                     break;
 
                 case WSDataType.Binary:
                     if (dataFrame.FIN)
                     {
-                        client.Logger.Message($"收到二进制数据，长度为：{dataFrame.PayloadLength}");
+                        client.Logger.Info($"收到二进制数据，长度为：{dataFrame.PayloadLength}");
                     }
                     else
                     {
-                        client.Logger.Message($"收到未结束的二进制数据，长度为：{dataFrame.PayloadLength}");
+                        client.Logger.Info($"收到未结束的二进制数据，长度为：{dataFrame.PayloadLength}");
                     }
                     break;
 
                 case WSDataType.Close:
                     {
-                        client.Logger.Message("远程请求断开");
+                        client.Logger.Info("远程请求断开");
                         client.Close("断开");
                     }
 

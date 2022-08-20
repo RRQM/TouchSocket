@@ -33,7 +33,7 @@ namespace ServiceConsoleApp
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                service.Logger.Message($"服务器已从{client.ID}接收到信息：{mes}");
+                service.Logger.Info($"服务器已从{client.ID}接收到信息：{mes}");
 
                 client.Send(mes);//将收到的信息直接返回给发送方
             };
@@ -51,7 +51,7 @@ namespace ServiceConsoleApp
                     a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
                 }))
                 .Start();//启动
-            service.Logger.Message("服务器成功启动");
+            service.Logger.Info("服务器成功启动");
             return service;
         }
 
@@ -64,7 +64,7 @@ namespace ServiceConsoleApp
             {
                 //从服务器收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                tcpClient.Logger.Message($"客户端接收到信息：{mes}");
+                tcpClient.Logger.Info($"客户端接收到信息：{mes}");
             };
 
             //载入配置
@@ -76,7 +76,7 @@ namespace ServiceConsoleApp
                     a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
                 }))
                 .Connect();
-            tcpClient.Logger.Message("客户端成功连接");
+            tcpClient.Logger.Info("客户端成功连接");
             return tcpClient;
         }
     }
