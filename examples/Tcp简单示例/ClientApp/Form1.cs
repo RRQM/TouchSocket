@@ -32,7 +32,7 @@ namespace ClientApp
 
         private void TcpClient_Received(TcpClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            client.Logger.Message($"从服务器收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
+            client.Logger.Info($"从服务器收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
         }
 
         private TcpClient m_tcpClient;
@@ -60,11 +60,11 @@ namespace ClientApp
 
             m_tcpClient.Connected += (client, e) =>
             {
-                client.Logger.Message("成功连接");
+                client.Logger.Info("成功连接");
             };//成功连接到服务器
             m_tcpClient.Disconnected += (client, e) =>
             {
-                client.Logger.Message($"断开连接，信息：{e.Message}");
+                client.Logger.Info($"断开连接，信息：{e.Message}");
             };//从服务器断开连接，当连接不成功时不会触发。
             m_tcpClient.Received += this.TcpClient_Received;
 
@@ -94,7 +94,7 @@ namespace ClientApp
                 //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse
 
                 byte[] returnData = m_tcpClient.GetWaitingClient(WaitingOptions.AllAdapter).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
-                this.m_tcpClient.Logger.Message($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+                this.m_tcpClient.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
             }
             catch (TimeoutException)
             {

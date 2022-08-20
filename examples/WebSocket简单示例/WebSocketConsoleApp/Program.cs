@@ -104,13 +104,13 @@ namespace WebSocketConsoleApp
         [Router("/[api]/ws")]
         [Router("/[api]/[action]")]
         [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
-        public void ConnectWS(WebApiServerCallContext callContext)
+        public void ConnectWS(IWebApiCallContext callContext)
         {
             if (callContext.Caller is HttpSocketClient socketClient)
             {
-                if (socketClient.SwitchProtocolToWebSocket(callContext.Context))
+                if (socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
                 {
-                    m_logger.Message("WS通过WebApi连接");
+                    m_logger.Info("WS通过WebApi连接");
                 }
             }
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
@@ -146,54 +147,35 @@ namespace TouchRpcServerApp
         }
     }
 
-    internal class MyRpcActionFilterAttribute : Attribute, IRpcActionFilter
+    internal class MyRpcActionFilterAttribute : RpcActionFilterAttribute, IRpcActionFilter
     {
-        /// <summary>
-        /// 在执行RPC之前。
-        /// <para>当<paramref name="invokeResult"/>的InvokeStatus不为<see cref="InvokeStatus.Ready"/>。则不会执行RPC</para>
-        /// <para>同时，当<paramref name="invokeResult"/>的InvokeStatus为<see cref="InvokeStatus.Success"/>。会直接返回结果</para>
-        /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="invokeResult"></param>
-        /// <param name="methodInstance"></param>
-        /// <param name="ps"></param>
-        public void Executing(object caller, ref InvokeResult invokeResult, MethodInstance methodInstance, object[] ps)
+
+        public override void Executing(ICallContext callContext, ref InvokeResult invokeResult)
         {
-            if (caller is TcpTouchRpcSocketClient client)
+            if (callContext.Caller is TcpTouchRpcSocketClient client)
             {
-                client.Logger.Message($"即将执行RPC-{methodInstance.Name}");
+                client.Logger.Info($"即将执行RPC-{callContext.MethodInstance.Name}");
             }
+            base.Executing(callContext, ref invokeResult);
         }
 
-        /// <summary>
-        /// 成功执行后。
-        /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响RPC最终结果</para>
-        /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="invokeResult"></param>
-        /// <param name="methodInstance"></param>
-        public void Executed(object caller, ref InvokeResult invokeResult, MethodInstance methodInstance)
+        public override void Executed(ICallContext callContext, ref InvokeResult invokeResult)
         {
-            if (caller is TcpTouchRpcSocketClient client)
+            if (callContext.Caller is TcpTouchRpcSocketClient client)
             {
-                client.Logger.Message($"执行RPC-{methodInstance.Name}完成，状态={invokeResult.Status}");
+                client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
             }
+            base.Executed(callContext, ref invokeResult);
         }
 
-        /// <summary>
-        /// 执行遇见异常。
-        /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响RPC最终结果</para>
-        /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="invokeResult"></param>
-        /// <param name="methodInstance"></param>
-        /// <param name="exception"></param>
-        public void ExecutException(object caller, ref InvokeResult invokeResult, MethodInstance methodInstance, Exception exception)
+        public override void ExecutException(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
         {
-            if (caller is TcpTouchRpcSocketClient client)
+            if (callContext.Caller is TcpTouchRpcSocketClient client)
             {
-                client.Logger.Message($"执行RPC-{methodInstance.Name}异常，信息={invokeResult.Message}");
+                client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
             }
+
+            base.ExecutException(callContext, ref invokeResult, exception);
         }
     }
 

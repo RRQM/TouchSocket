@@ -50,7 +50,7 @@ namespace ServiceApp
                     a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
                 }))
                 .Start();//启动
-            m_service.Logger.Message("服务器成功启动");
+            m_service.Logger.Info("服务器成功启动");
         }
 
         private void M_service_Disconnected(SocketClient client, ClientDisconnectedEventArgs e)
@@ -65,7 +65,7 @@ namespace ServiceApp
 
         private void Service_Received(SocketClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            client.Logger.Message($"从客户端id={client.ID}，ip={client.IP}，port={client.Port}收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
+            client.Logger.Info($"从客户端id={client.ID}，ip={client.IP}，port={client.Port}收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -89,7 +89,7 @@ namespace ServiceApp
                 {
                     //然后调用GetWaitingClient获取到IWaitingClient的对象。该对象会复用。
                     byte[] returnData = client.GetWaitingClient(WaitingOptions.AllAdapter).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
-                    this.m_service.Logger.Message($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+                    this.m_service.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
                 }
                 catch (TimeoutException)
                 {

@@ -24,11 +24,11 @@ namespace UdpDemoApp
             {
                 if (byteBlock.Len > 1024)
                 {
-                    m_udpSession.Logger.Message($"收到：{byteBlock.Len}长度的数据。");
+                    m_udpSession.Logger.Info($"收到：{byteBlock.Len}长度的数据。");
                 }
                 else
                 {
-                    m_udpSession.Logger.Message($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
+                    m_udpSession.Logger.Info($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
                 }
             };
 
@@ -51,7 +51,7 @@ namespace UdpDemoApp
                      a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
                  }))
                  .Start();
-            m_udpSession.Logger.Message("等待接收");
+            m_udpSession.Logger.Info("等待接收");
         }
 
         private void ShowMsg(string msg)

@@ -67,7 +67,7 @@ namespace WSTouchRpcClientConsoleApp
 
         private static void Client_Handshaked(WSTouchRpcClient client, VerifyOptionEventArgs e)
         {
-            client.Logger.Message("成功连接");
+            client.Logger.Info("成功连接");
         }
     }
 }

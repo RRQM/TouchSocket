@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Sockets;
 
@@ -98,7 +99,7 @@ namespace AdapterConsoleApp
             }
         }
 
-        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes, bool isAsync)
         {
             //暂时不实现。
         }
