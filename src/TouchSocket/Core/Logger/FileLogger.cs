@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
 using TouchSocket.Core.IO;
@@ -23,13 +24,7 @@ namespace TouchSocket.Core.Log
     /// </summary>
     public class FileLogger : LoggerBase
     {
-        private readonly string m_rootPath;
-
-        private int m_count;
-
-        private int m_day = -1;
-
-        private FileStorageWriter m_writer;
+        private static string m_rootPath;
 
         /// <summary>
         /// 构造函数
@@ -37,19 +32,19 @@ namespace TouchSocket.Core.Log
         /// <param name="rootPath">日志根目录</param>
         public FileLogger(string rootPath = null)
         {
-            this.m_rootPath = Path.Combine(rootPath ?? AppDomain.CurrentDomain.BaseDirectory, "logs");
-            if (!Directory.Exists(this.m_rootPath))
+            lock (typeof(FileLogger))
             {
-                Directory.CreateDirectory(this.m_rootPath);
-            }
-        }
+                rootPath ??= AppDomain.CurrentDomain.BaseDirectory;
 
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~FileLogger()
-        {
-            this.m_writer.SafeDispose();
+                if (m_rootPath.IsNullOrEmpty())
+                {
+                    m_rootPath = Path.Combine(rootPath, "logs");
+                }
+                else if (m_rootPath != Path.Combine(rootPath, "logs"))
+                {
+                    throw new Exception($"{this.GetType().Name}无法指向不同的根路径。");
+                }
+            }
         }
 
         /// <summary>
@@ -78,36 +73,45 @@ namespace TouchSocket.Core.Log
             this.Print(stringBuilder.ToString());
         }
 
+        private static FileStorageWriter m_writer;
         private void Print(string logString)
         {
             try
             {
                 lock (typeof(FileLogger))
                 {
-                    if (this.m_day != DateTime.Now.DayOfYear)
+                    string dir = Path.Combine(m_rootPath, DateTime.Now.ToString("[yyyy-MM-dd]"));
+                    if (!Directory.Exists(dir))
                     {
-                        this.m_day = DateTime.Now.DayOfYear;
-                        this.m_count = 0;
+                        Directory.CreateDirectory(dir);
                     }
-                    else
+                    if (m_writer==null)
                     {
-                        if (m_writer.FileStorage.Length > 1024 * 1024)
+                        int count = 0;
+                        string path = null;
+                        while (true)
                         {
-                            this.m_count++;
-                            this.m_writer.SafeDispose();
-                            this.m_writer = null;
+                            path = Path.Combine(dir, $"{count:0000}" + ".log");
+                            if (!File.Exists(path))
+                            {
+                                m_writer= FilePool.GetWriter(path);
+                                break;
+                            }
+                            count++;
                         }
                     }
-                    if (this.m_writer == null)
+                    m_writer.Write(Encoding.UTF8.GetBytes(logString));
+                    if (m_writer.FileStorage.Length>1024*1024)
                     {
-                        this.m_writer = FilePool.GetWriter(Path.Combine(this.m_rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{this.m_count:00}" + ".log"), true);
+                        m_writer.SafeDispose();
+                        m_writer = null;
                     }
-                    var data = Encoding.UTF8.GetBytes(logString);
-                    this.m_writer.Write(data, 0, data.Length);
                 }
             }
             catch
             {
+                m_writer.SafeDispose();
+                m_writer = null;
             }
         }
     }
