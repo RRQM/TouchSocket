@@ -348,7 +348,6 @@ namespace TouchSocket.Rpc
                 if (attributes.Count() > 0)
                 {
                     MethodInstance methodInstance = new MethodInstance(method);
-                    methodInstance.Server = null;
                     methodInstance.ServerType = serverType;
                     methodInstance.RpcAttributes = attributes.ToArray();
                     methodInstance.Description = method.GetCustomAttribute<DescriptionAttribute>()?.Description;

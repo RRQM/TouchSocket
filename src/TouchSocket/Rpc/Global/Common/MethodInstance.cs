@@ -28,7 +28,13 @@ namespace TouchSocket.Rpc
         /// <param name="methodInfo"></param>
         public MethodInstance(MethodInfo methodInfo) : base(methodInfo)
         {
+            
         }
+
+        /// <summary>
+        /// 服务实例工厂
+        /// </summary>
+        public IRpcServerFactory ServerFactory { get; internal set; }
 
         /// <summary>
         /// 描述属性
@@ -36,9 +42,19 @@ namespace TouchSocket.Rpc
         public string Description { get; internal set; }
 
         /// <summary>
+        /// 筛选器
+        /// </summary>
+        public IRpcActionFilter[] Filters { get; internal set; }
+
+        /// <summary>
         /// 是否可用
         /// </summary>
         public bool IsEnable { get; set; }
+
+        /// <summary>
+        /// 是否为单例
+        /// </summary>
+        public bool IsSingleton { get; internal set; }
 
         /// <summary>
         /// 函数标识
@@ -51,11 +67,6 @@ namespace TouchSocket.Rpc
         public string[] ParameterNames { get; internal set; }
 
         /// <summary>
-        /// 筛选器
-        /// </summary>
-        public IRpcActionFilter[] Filters { get; internal set; }
-
-        /// <summary>
         /// 参数集合
         /// </summary>
         public ParameterInfo[] Parameters { get; internal set; }
@@ -66,19 +77,14 @@ namespace TouchSocket.Rpc
         public Type[] ParameterTypes { get; internal set; }
 
         /// <summary>
-        /// 执行此Rpc的实例
+        /// Rpc属性集合
         /// </summary>
-        public IRpcServer Server { get; internal set; }
+        public RpcAttribute[] RpcAttributes { get; internal set; }
 
         /// <summary>
         /// 实例类型
         /// </summary>
         public Type ServerType { get; internal set; }
-
-        /// <summary>
-        /// Rpc属性集合
-        /// </summary>
-        public RpcAttribute[] RpcAttributes { get; internal set; }
 
         /// <summary>
         /// 获取指定类型属性标签

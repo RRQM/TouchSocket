@@ -1125,17 +1125,17 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private void InvokeThis(object o)
         {
-            TouchRpcPackage context = (TouchRpcPackage)o;
-            List<byte[]> psData = context.parametersBytes;
-            if (context.Feedback == 1)
+            TouchRpcPackage rpcPackage = (TouchRpcPackage)o;
+            List<byte[]> psData = rpcPackage.parametersBytes;
+            if (rpcPackage.Feedback == 1)
             {
                 ByteBlock returnByteBlock = new ByteBlock();
                 try
                 {
-                    context.parametersBytes = null;
-                    context.Status = 1;
-                    context.Serialize(returnByteBlock);
-                    this.SocketSendAsync(TouchRpcUtility.P_1200_Invoke_Response, returnByteBlock.Buffer, 0, returnByteBlock.Len);
+                    rpcPackage.parametersBytes = null;
+                    rpcPackage.Status = 1;
+                    rpcPackage.Serialize(returnByteBlock);
+                    this.SocketSend(TouchRpcUtility.P_1200_Invoke_Response, returnByteBlock.Buffer, 0, returnByteBlock.Len);
                 }
                 catch
                 {
@@ -1148,24 +1148,29 @@ namespace TouchSocket.Rpc.TouchRpc
 
             InvokeResult invokeResult = new InvokeResult();
             object[] ps = null;
-            MethodInstance methodInstance = this.GetInvokeMethod?.Invoke(context.methodName);
+            MethodInstance methodInstance = this.GetInvokeMethod?.Invoke(rpcPackage.methodName);
+            TouchRpcCallContext callContext = null;
             if (methodInstance != null)
             {
                 try
                 {
                     if (methodInstance.IsEnable)
                     {
+                        callContext = new TouchRpcCallContext()
+                        {
+                            Caller = this.Caller,
+                            MethodInstance = methodInstance,
+                            TouchRpcPackage = rpcPackage
+                        };
+                        this.m_contextDic.TryAdd(rpcPackage.Sign, callContext);
+
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
                             ps = new object[methodInstance.ParameterTypes.Length];
-
-                            TouchRpcCallContext callContext = new TouchRpcCallContext(this.Caller, context, methodInstance);
-                            this.m_contextDic.TryAdd(context.Sign, callContext);
-
                             ps[0] = callContext;
                             for (int i = 0; i < psData.Count; i++)
                             {
-                                ps[i + 1] = this.m_serializationSelector.DeserializeParameter(context.SerializationType, psData[i], methodInstance.ParameterTypes[i + 1]);
+                                ps[i + 1] = this.m_serializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i + 1]);
                             }
                         }
                         else
@@ -1173,7 +1178,7 @@ namespace TouchSocket.Rpc.TouchRpc
                             ps = new object[methodInstance.ParameterTypes.Length];
                             for (int i = 0; i < methodInstance.ParameterTypes.Length; i++)
                             {
-                                ps[i] = this.m_serializationSelector.DeserializeParameter(context.SerializationType, psData[i], methodInstance.ParameterTypes[i]);
+                                ps[i] = this.m_serializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i]);
                             }
                         }
                     }
@@ -1182,7 +1187,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         invokeResult.Status = InvokeStatus.UnEnable;
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     invokeResult.Status = InvokeStatus.Exception;
                     invokeResult.Message = ex.Message;
@@ -1195,10 +1200,15 @@ namespace TouchSocket.Rpc.TouchRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                invokeResult = this.RpcStore.Execute(this.Caller, methodInstance, ps);
+                IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                if (rpcServer is ITransientRpcServer transientRpcServer)
+                {
+                    transientRpcServer.CallContext = callContext;
+                }
+                invokeResult = this.RpcStore.Execute(rpcServer, ps, callContext);
             }
 
-            if (context.Feedback != 2)
+            if (rpcPackage.Feedback != 2)
             {
                 return;
             }
@@ -1207,24 +1217,24 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 case InvokeStatus.UnFound:
                     {
-                        context.Status = 2;
+                        rpcPackage.Status = 2;
                         break;
                     }
                 case InvokeStatus.Success:
                     {
                         if (methodInstance.HasReturn)
                         {
-                            context.returnParameterBytes = this.m_serializationSelector.SerializeParameter(context.SerializationType, invokeResult.Result);
+                            rpcPackage.returnParameterBytes = this.m_serializationSelector.SerializeParameter(rpcPackage.SerializationType, invokeResult.Result);
                         }
                         else
                         {
-                            context.returnParameterBytes = null;
+                            rpcPackage.returnParameterBytes = null;
                         }
 
                         if (methodInstance.IsByRef)
                         {
-                            context.isByRef = true;
-                            context.parametersBytes = new List<byte[]>();
+                            rpcPackage.isByRef = true;
+                            rpcPackage.parametersBytes = new List<byte[]>();
 
                             int i = 0;
                             if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
@@ -1233,46 +1243,46 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
                             for (; i < ps.Length; i++)
                             {
-                                context.parametersBytes.Add(this.m_serializationSelector.SerializeParameter(context.SerializationType, ps[i]));
+                                rpcPackage.parametersBytes.Add(this.m_serializationSelector.SerializeParameter(rpcPackage.SerializationType, ps[i]));
                             }
                         }
                         else
                         {
-                            context.parametersBytes = null;
+                            rpcPackage.parametersBytes = null;
                         }
 
-                        context.Status = 1;
+                        rpcPackage.Status = 1;
                         break;
                     }
                 case InvokeStatus.UnEnable:
                     {
-                        context.Status = 3;
+                        rpcPackage.Status = 3;
                         break;
                     }
                 case InvokeStatus.InvocationException:
                     {
-                        context.Status = 5;
-                        context.Message = invokeResult.Message;
+                        rpcPackage.Status = 5;
+                        rpcPackage.Message = invokeResult.Message;
                         break;
                     }
                 case InvokeStatus.Exception:
                     {
-                        context.Status = 6;
-                        context.Message = invokeResult.Message;
+                        rpcPackage.Status = 6;
+                        rpcPackage.Message = invokeResult.Message;
                         break;
                     }
                 default:
                     return;
             }
 
-            this.m_contextDic.TryRemove(context.Sign, out _);
+            this.m_contextDic.TryRemove(rpcPackage.Sign, out _);
             ByteBlock byteBlock = new ByteBlock();
             try
             {
-                context.Serialize(byteBlock);
+                rpcPackage.Serialize(byteBlock);
                 this.SocketSend(TouchRpcUtility.P_1200_Invoke_Response, byteBlock);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 this.Logger?.Exception(ex);
             }

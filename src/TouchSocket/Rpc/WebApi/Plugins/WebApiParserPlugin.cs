@@ -69,6 +69,12 @@ namespace TouchSocket.Rpc.WebApi
 
                 InvokeResult invokeResult = new InvokeResult();
                 object[] ps = null;
+                WebApiCallContext callContext = new WebApiCallContext()
+                {
+                    Caller = client,
+                    HttpContext = e.Context,
+                    MethodInstance = methodInstance
+                };
                 if (methodInstance.IsEnable)
                 {
                     try
@@ -77,7 +83,6 @@ namespace TouchSocket.Rpc.WebApi
                         int i = 0;
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
-                            WebApiServerCallContext callContext = new WebApiServerCallContext(client, e.Context, methodInstance);
                             ps[i] = callContext;
                             i++;
                         }
@@ -115,7 +120,12 @@ namespace TouchSocket.Rpc.WebApi
                 }
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = this.m_rpcStore.Execute(client, methodInstance, ps);
+                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                    if (rpcServer is ITransientRpcServer transientRpcServer)
+                    {
+                        transientRpcServer.CallContext = callContext;
+                    }
+                    invokeResult = this.m_rpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
@@ -179,6 +189,12 @@ namespace TouchSocket.Rpc.WebApi
 
                 InvokeResult invokeResult = new InvokeResult();
                 object[] ps = null;
+                WebApiCallContext callContext = new WebApiCallContext()
+                {
+                    Caller = client,
+                    HttpContext = e.Context,
+                    MethodInstance = methodInstance
+                };
                 if (methodInstance.IsEnable)
                 {
                     try
@@ -187,7 +203,6 @@ namespace TouchSocket.Rpc.WebApi
                         int i = 0;
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
-                            WebApiServerCallContext callContext = new WebApiServerCallContext(client, e.Context, methodInstance);
                             ps[i] = callContext;
                             i++;
                         }
@@ -234,7 +249,12 @@ namespace TouchSocket.Rpc.WebApi
                 }
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = this.m_rpcStore.Execute(client, methodInstance, ps);
+                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                    if (rpcServer is ITransientRpcServer transientRpcServer)
+                    {
+                        transientRpcServer.CallContext = callContext;
+                    }
+                    invokeResult = this.m_rpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
@@ -287,7 +307,7 @@ namespace TouchSocket.Rpc.WebApi
 
         #region RPC解析器
 
-        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -305,7 +325,7 @@ namespace TouchSocket.Rpc.WebApi
             }
         }
 
-        void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {

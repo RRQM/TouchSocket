@@ -23,43 +23,16 @@ namespace TouchSocket.Core.Run
         /// <summary>
         /// 消息
         /// </summary>
-        protected string message;
+        public string Message { get; set; }
 
         /// <summary>
         /// 标记号
         /// </summary>
-        protected long sign;
+        public long Sign { get; set; }
 
         /// <summary>
         /// 状态
         /// </summary>
-        protected byte status;
-
-        /// <summary>
-        /// 消息
-        /// </summary>
-        public string Message
-        {
-            get => this.message;
-            set => this.message = value;
-        }
-
-        /// <summary>
-        /// 标记号
-        /// </summary>
-        public long Sign
-        {
-            get => this.sign;
-            set => this.sign = value;
-        }
-
-        /// <summary>
-        /// 状态
-        /// </summary>
-        public byte Status
-        {
-            get => this.status;
-            set => this.status = value;
-        }
+        public byte Status { get; set; }
     }
 }

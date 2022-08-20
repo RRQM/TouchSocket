@@ -11,47 +11,46 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
+using System.Threading;
+using TouchSocket.Http;
+
+namespace TouchSocket.Rpc.WebApi
 {
     /// <summary>
-    /// 传输字节
+    /// WebApi调用上下文
     /// </summary>
-    public readonly struct TransferByte
+    internal class WebApiCallContext : ICallContext
     {
+        private CancellationTokenSource m_tokenSource;
+
         /// <summary>
-        /// 构造函数
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public TransferByte(byte[] buffer, int offset, int length)
+        public object Caller { get; internal set; }
+
+        /// <summary>
+        /// Http上下文
+        /// </summary>
+        public HttpContext HttpContext { get; internal set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public MethodInstance MethodInstance { get; internal set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public CancellationTokenSource TokenSource
         {
-            this.Offset = offset;
-            this.Length = length;
-            this.Buffer = buffer;
+            get
+            {
+                if (this.m_tokenSource == null)
+                {
+                    this.m_tokenSource = new CancellationTokenSource();
+                }
+                return this.m_tokenSource;
+            }
         }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="buffer"></param>
-        public TransferByte(byte[] buffer) : this(buffer, 0, buffer.Length)
-        {
-        }
-
-        /// <summary>
-        /// 数据内存
-        /// </summary>
-        public byte[] Buffer { get; }
-
-        /// <summary>
-        /// 偏移
-        /// </summary>
-        public int Offset { get; }
-
-        /// <summary>
-        /// 长度
-        /// </summary>
-        public int Length { get; }
     }
 }

@@ -60,7 +60,7 @@ namespace TouchSocket.Core.Plugins
                     {
                         if (printLog)
                         {
-                            client.Logger.Debug(LogType.Error, client, "断线重连失败。", ex);
+                            client.Logger.Log(LogType.Error, client, "断线重连失败。", ex);
                         }
                         Thread.Sleep(sleepTime);
                     }

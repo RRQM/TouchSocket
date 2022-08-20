@@ -193,7 +193,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// </summary>
         public Func<string> GetDefaultNewID { get; private set; }
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -404,7 +403,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         #region RPC解析器
 
-        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -415,7 +414,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             }
         }
 
-        void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -665,7 +664,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             this.OnStreamTransfering(client, e);
         }
 
-        private void RpcServiceOutputSend(RpcActor actor, bool arg2, TransferByte[] arg3)
+        private void RpcServiceOutputSend(RpcActor actor, bool arg2, ArraySegment<byte>[] arg3)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
             client.RpcActorSend(arg2, arg3);

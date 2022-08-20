@@ -224,7 +224,7 @@ namespace TouchSocket.Sockets
                 {
                     return tcpClient.Online;
                 }
-                else if (this.m_client is IUdpSession udp)
+                else if (this.m_client is IUdpSession)
                 {
                     return true;
                 }
@@ -292,7 +292,7 @@ namespace TouchSocket.Sockets
                         case WaitDataStatus.Default:
                         case WaitDataStatus.Disposed:
                         default:
-                            throw new Exception(TouchSocket.Core.ResType.UnknownError.GetDescription());
+                            throw new Exception(ResType.UnknownError.GetDescription());
                     }
                 }
                 finally
@@ -500,11 +500,8 @@ namespace TouchSocket.Sockets
 
         private bool OnHandleRawBuffer(ByteBlock byteBlock)
         {
-            if (byteBlock != null)
-            {
-                return !this.m_waitData.Set(new ResponsedData(byteBlock.ToArray(), null));
-            }
-            return true;
+            ResponsedData responsedData = new ResponsedData(byteBlock.ToArray(), null);
+            return !this.m_waitData.Set(responsedData);
         }
 
         /// <summary>
@@ -514,11 +511,16 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         private bool OnHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
+            ResponsedData responsedData;
             if (byteBlock != null)
             {
-                return !this.m_waitData.Set(new ResponsedData(byteBlock.ToArray(), requestInfo));
+                responsedData = new ResponsedData(byteBlock.ToArray(), requestInfo);
             }
-            return true;
+            else
+            {
+                responsedData = new ResponsedData(null, requestInfo);
+            }
+            return !this.m_waitData.Set(responsedData);
         }
     }
 }

@@ -68,6 +68,11 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 能否写入。
+        /// </summary>
+        public abstract bool CanWrite { get; }
+
+        /// <summary>
         /// 内容长度
         /// </summary>
         public long ContentLength

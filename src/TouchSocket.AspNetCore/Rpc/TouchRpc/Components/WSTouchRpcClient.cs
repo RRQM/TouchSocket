@@ -815,12 +815,12 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             this.Close(arg2);
         }
 
-        private async void RpcActorSend(RpcActor actor, bool isAsync, TransferByte[] transferBytes)
+        private async void RpcActorSend(RpcActor actor, bool isAsync, ArraySegment<byte>[] transferBytes)
         {
             using ByteBlock byteBlock = new ByteBlock();
             foreach (var item in transferBytes)
             {
-                byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                byteBlock.Write(item.Array, item.Offset, item.Count);
             }
             await this.m_client.SendAsync(byteBlock.Buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
         }
@@ -879,7 +879,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FileTransfered)}中发生异常", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(FileTransfered)}中发生异常", ex);
             }
         }
 
@@ -899,7 +899,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(FileTransfering)}中发生异常", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(FileTransfering)}中发生异常", ex);
             }
         }
 
@@ -982,7 +982,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         #region RPC解析器
 
-        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -993,7 +993,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             }
         }
 
-        void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {

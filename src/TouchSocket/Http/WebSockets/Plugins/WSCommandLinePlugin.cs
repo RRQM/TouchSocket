@@ -118,7 +118,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
                 }
                 catch (Exception ex)
                 {
-                    this.Logger.Debug(TouchSocket.Core.Log.LogType.Error, this, ex.Message, ex);
+                    this.Logger.Log(TouchSocket.Core.Log.LogType.Error, this, ex.Message, ex);
                 }
             }
 

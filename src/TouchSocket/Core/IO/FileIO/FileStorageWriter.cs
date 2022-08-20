@@ -19,18 +19,15 @@ namespace TouchSocket.Core.IO
     public class FileStorageWriter : DisposableObject
     {
         private readonly FileStorage m_fileStorage;
-        private readonly bool m_singleRef;
         private long m_position;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="fileStorage"></param>
-        /// <param name="singleRef"></param>
-        public FileStorageWriter(FileStorage fileStorage, bool singleRef)
+        public FileStorageWriter(FileStorage fileStorage)
         {
             this.m_fileStorage = fileStorage;
-            this.m_singleRef = singleRef;
         }
 
         /// <summary>

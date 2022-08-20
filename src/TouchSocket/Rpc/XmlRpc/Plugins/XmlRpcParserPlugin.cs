@@ -61,7 +61,7 @@ namespace TouchSocket.Rpc.XmlRpc
 
         #region RPC解析器
 
-        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -72,7 +72,7 @@ namespace TouchSocket.Rpc.XmlRpc
             }
         }
 
-        void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -113,29 +113,51 @@ namespace TouchSocket.Rpc.XmlRpc
                 e.Handled = true;
 
                 XmlDocument xml = new XmlDocument();
-                xml.LoadXml(e.Context.Request.GetBody());
+                string xmlstring = e.Context.Request.GetBody();
+                xml.LoadXml(xmlstring);
                 XmlNode methodName = xml.SelectSingleNode("methodCall/methodName");
                 string actionKey = methodName.InnerText;
 
-                object[] invokePS = null;
+                object[] ps = null;
                 InvokeResult invokeResult = new InvokeResult();
+                XmlRpcCallContext callContext=null;
+
                 if (this.m_actionMap.TryGetMethodInstance(actionKey, out MethodInstance methodInstance))
                 {
                     if (methodInstance.IsEnable)
                     {
                         try
                         {
-                            List<object> ps = new List<object>();
-                            XmlNode paramsNode = xml.SelectSingleNode("methodCall/params");
-                            int index = 0;
-                            foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                            callContext = new XmlRpcCallContext()
                             {
-                                XmlNode valueNode = paramNode.FirstChild.FirstChild;
-                                ps.Add(XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
-                                index++;
+                                Caller = client,
+                                HttpContext = e.Context,
+                                MethodInstance = methodInstance,
+                                XmlString = xmlstring
+                            };
+                            ps = new object[methodInstance.ParameterNames.Length];
+                            XmlNode paramsNode = xml.SelectSingleNode("methodCall/params");
+                            if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                            {
+                                ps[0] = callContext;
+                                int index = 1;
+                                foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                                {
+                                    XmlNode valueNode = paramNode.FirstChild.FirstChild;
+                                    ps[index]=(XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                    index++;
+                                }
                             }
-
-                            invokePS = ps.ToArray();
+                            else
+                            {
+                                int index = 0;
+                                foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                                {
+                                    XmlNode valueNode = paramNode.FirstChild.FirstChild;
+                                    ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                    index++;
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -155,9 +177,15 @@ namespace TouchSocket.Rpc.XmlRpc
                     invokeResult.Message = "没有找到这个服务。";
                 }
 
+
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = this.m_rpcStore.Execute(client, methodInstance, invokePS);
+                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                    if (rpcServer is ITransientRpcServer transientRpcServer)
+                    {
+                        transientRpcServer.CallContext = callContext;
+                    }
+                    invokeResult = this.m_rpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 HttpResponse httpResponse = new HttpResponse();

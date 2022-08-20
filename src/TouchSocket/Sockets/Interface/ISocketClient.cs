@@ -38,5 +38,15 @@ namespace TouchSocket.Sockets
         /// 包含此辅助类的主服务器类
         /// </summary>
         TcpServiceBase Service { get; }
+
+        /// <summary>
+        /// 接收此客户端的服务器IP地址
+        /// </summary>
+        string ServiceIP { get; }
+
+        /// <summary>
+        /// 接收此客户端的服务器端口
+        /// </summary>
+        int ServicePort { get; }
     }
 }

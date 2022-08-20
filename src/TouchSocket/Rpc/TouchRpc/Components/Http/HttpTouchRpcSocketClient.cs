@@ -510,7 +510,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 不允许直接发送
         /// </summary>
         /// <param name="transferBytes"></param>
-        public override void Send(IList<TransferByte> transferBytes)
+        public override void Send(IList<ArraySegment<byte>> transferBytes)
         {
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
@@ -530,7 +530,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 不允许直接发送
         /// </summary>
         /// <param name="transferBytes"></param>
-        public override void SendAsync(IList<TransferByte> transferBytes)
+        public override void SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
@@ -625,7 +625,7 @@ namespace TouchSocket.Rpc.TouchRpc
             base.OnDisconnected(e);
         }
 
-        internal void RpcActorSend(bool isAsync, TransferByte[] transferBytes)
+        internal void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
         {
             if (isAsync)
             {

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Net;
 using TouchSocket.Core.Log;
 using TouchSocket.Sockets;
@@ -31,7 +32,7 @@ namespace TouchSocket.Rpc.TouchRpc
             this.Logger = logger;
         }
 
-        private void RpcActorSend(RpcActor actor, bool isAsync, TransferByte[] transferBytes)
+        private void RpcActorSend(RpcActor actor, bool isAsync, ArraySegment<byte>[] transferBytes)
         {
             if (isAsync)
             {

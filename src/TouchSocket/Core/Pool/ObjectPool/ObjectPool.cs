@@ -23,6 +23,12 @@ namespace TouchSocket.Core.Pool
     /// <typeparam name="T"></typeparam>
     public class ObjectPool<T> : IObjectPool where T : IPoolObject
     {
+        private readonly ConcurrentQueue<T> m_queue = new ConcurrentQueue<T>();
+
+        private bool m_autoCreate = true;
+
+        private int m_freeSize;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -39,17 +45,13 @@ namespace TouchSocket.Core.Pool
         {
         }
 
-        private readonly ConcurrentQueue<T> queue = new ConcurrentQueue<T>();
-
-        private bool autoCreate = true;
-
         /// <summary>
         /// 是否自动生成
         /// </summary>
         public bool AutoCreate
         {
-            get => this.autoCreate;
-            set => this.autoCreate = value;
+            get => this.m_autoCreate;
+            set => this.m_autoCreate = value;
         }
 
         /// <summary>
@@ -60,66 +62,16 @@ namespace TouchSocket.Core.Pool
         /// <summary>
         /// 可使用（创建）数量
         /// </summary>
-        public int FreeSize => this.freeSize;
-
-        private int freeSize;
+        public int FreeSize => this.m_freeSize;
 
         /// <summary>
         /// 清除池中所有对象
         /// </summary>
         public void Clear()
         {
-            while (this.queue.TryDequeue(out _))
+            while (this.m_queue.TryDequeue(out _))
             {
             }
-        }
-
-        /// <summary>
-        /// 获取对象T
-        /// </summary>
-        /// <returns></returns>
-        public T GetObject()
-        {
-            T t;
-            if (this.queue.TryDequeue(out t))
-            {
-                t.Recreate();
-                t.NewCreate = false;
-                Interlocked.Decrement(ref this.freeSize);
-                return t;
-            }
-            if (this.autoCreate)
-            {
-                t = (T)Activator.CreateInstance(typeof(T));
-                t.Create();
-                t.NewCreate = true;
-            }
-            return t;
-        }
-
-        /// <summary>
-        /// 获取所有对象
-        /// </summary>
-        /// <returns></returns>
-        public T[] GetAllObject()
-        {
-            List<T> ts = new List<T>();
-            while (this.queue.TryDequeue(out T t))
-            {
-                ts.Add(t);
-            }
-            return ts.ToArray();
-        }
-
-        /// <summary>
-        /// 预获取
-        /// </summary>
-        /// <returns></returns>
-        public T PreviewGetObject()
-        {
-            T t;
-            this.queue.TryPeek(out t);
-            return t;
         }
 
         /// <summary>
@@ -129,10 +81,10 @@ namespace TouchSocket.Core.Pool
         public void DestroyObject(T t)
         {
             t.Destroy();
-            if (this.freeSize < this.Capacity)
+            if (this.m_freeSize < this.Capacity)
             {
-                Interlocked.Increment(ref this.freeSize);
-                this.queue.Enqueue(t);
+                Interlocked.Increment(ref this.m_freeSize);
+                this.m_queue.Enqueue(t);
             }
         }
 
@@ -142,6 +94,52 @@ namespace TouchSocket.Core.Pool
         public void Dispose()
         {
             this.Clear();
+        }
+
+        /// <summary>
+        /// 获取所有对象
+        /// </summary>
+        /// <returns></returns>
+        public T[] GetAllObject()
+        {
+            List<T> ts = new List<T>();
+            while (this.m_queue.TryDequeue(out T t))
+            {
+                ts.Add(t);
+            }
+            return ts.ToArray();
+        }
+
+        /// <summary>
+        /// 获取对象T
+        /// </summary>
+        /// <returns></returns>
+        public T GetObject()
+        {
+            if (this.m_queue.TryDequeue(out T t))
+            {
+                t.Recreate();
+                t.NewCreate = false;
+                Interlocked.Decrement(ref this.m_freeSize);
+                return t;
+            }
+            if (this.m_autoCreate)
+            {
+                t = (T)Activator.CreateInstance(typeof(T));
+                t.Create();
+                t.NewCreate = true;
+            }
+            return t;
+        }
+
+        /// <summary>
+        /// 预获取
+        /// </summary>
+        /// <returns></returns>
+        public T PreviewGetObject()
+        {
+            this.m_queue.TryPeek(out T t);
+            return t;
         }
     }
 }

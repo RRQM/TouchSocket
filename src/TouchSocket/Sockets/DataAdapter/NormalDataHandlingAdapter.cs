@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using TouchSocket.Core.ByteManager;
 
@@ -56,7 +57,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="transferBytes"></param>
         /// <param name="isAsync"></param>
-        protected override void PreviewSend(IList<TransferByte> transferBytes, bool isAsync)
+        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes, bool isAsync)
         {
             throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
         }

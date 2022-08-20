@@ -108,7 +108,7 @@ namespace TouchSocket.Sockets
         /// <param name="endPoint"></param>
         /// <param name="transferBytes"></param>
         /// <param name="isAsync"></param>
-        public void SendInput(EndPoint endPoint, IList<TransferByte> transferBytes, bool isAsync)
+        public void SendInput(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes, bool isAsync)
         {
             this.PreviewSend(endPoint, transferBytes, isAsync);
         }
@@ -186,7 +186,7 @@ namespace TouchSocket.Sockets
         /// <param name="endPoint"></param>
         /// <param name="transferBytes">代发送数据组合</param>
         /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(EndPoint endPoint, IList<TransferByte> transferBytes, bool isAsync);
+        protected abstract void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes, bool isAsync);
 
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。

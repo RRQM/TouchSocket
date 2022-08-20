@@ -632,12 +632,12 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             return null;
         }
 
-        internal async void RpcActorSend(bool isAsync, TransferByte[] transferBytes)
+        internal async void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
         {
             using ByteBlock byteBlock = new ByteBlock();
             foreach (var item in transferBytes)
             {
-                byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                byteBlock.Write(item.Array, item.Offset, item.Count);
             }
             await this.m_client.SendAsync(byteBlock.Buffer, System.Net.WebSockets.WebSocketMessageType.Binary, true, CancellationToken.None);
         }

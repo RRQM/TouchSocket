@@ -178,9 +178,9 @@ namespace TouchSocket.Sockets
                 this.IP = ip;
                 this.Port = portNum;
             }
-            catch
+            catch(Exception ex)
             {
-                throw new Exception("IPHost不合法");
+                throw new Exception($"IPHost初始化失败，信息:{ex.Message}",ex);
             }
         }
 

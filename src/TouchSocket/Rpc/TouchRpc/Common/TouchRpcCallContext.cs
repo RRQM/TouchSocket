@@ -18,25 +18,9 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// TouchRpc上下文
     /// </summary>
-    public class TouchRpcCallContext : ICallContext
+    internal class TouchRpcCallContext : ITouchRpcCallContext
     {
-        private readonly object caller;
-        private CancellationTokenSource tokenSource;
-        private readonly TouchRpcPackage context;
-        private readonly MethodInstance methodInstance;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="context"></param>
-        /// <param name="methodInstance"></param>
-        public TouchRpcCallContext(object caller, TouchRpcPackage context, MethodInstance methodInstance)
-        {
-            this.caller = caller;
-            this.context = context;
-            this.methodInstance = methodInstance;
-        }
+        private CancellationTokenSource m_tokenSource;
 
         /// <summary>
         /// 当<see cref="TokenSource"/>不为空时，调用<see cref="CancellationTokenSource.Cancel()"/>
@@ -44,9 +28,9 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public bool TryCancel()
         {
-            if (this.tokenSource != null)
+            if (this.m_tokenSource != null)
             {
-                this.tokenSource.Cancel();
+                this.m_tokenSource.Cancel();
                 return true;
             }
             return false;
@@ -55,7 +39,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public object Caller => this.caller;
+        public object Caller { get; internal set; }
 
         /// <summary>
         /// 能取消的调用令箭，在客户端主动取消或网络故障时生效
@@ -64,27 +48,27 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             get
             {
-                if (this.tokenSource == null)
+                if (this.m_tokenSource == null)
                 {
-                    this.tokenSource = new CancellationTokenSource();
+                    this.m_tokenSource = new CancellationTokenSource();
                 }
-                return this.tokenSource;
+                return this.m_tokenSource;
             }
         }
 
         /// <summary>
         /// TouchRpcContext
         /// </summary>
-        public TouchRpcPackage Context => this.context;
+        public TouchRpcPackage TouchRpcPackage { get; internal set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public MethodInstance MethodInstance => this.methodInstance;
+        public MethodInstance MethodInstance { get; internal set; }
 
         /// <summary>
         /// 序列化类型
         /// </summary>
-        public SerializationType SerializationType => this.context == null ? (SerializationType)byte.MaxValue : this.context.SerializationType;
+        public SerializationType SerializationType => this.TouchRpcPackage == null ? (SerializationType)byte.MaxValue : this.TouchRpcPackage.SerializationType;
     }
 }

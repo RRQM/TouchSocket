@@ -17,7 +17,7 @@ namespace TouchSocket.Core.Log
     /// <summary>
     /// 控制台日志记录器
     /// </summary>
-    public class ConsoleLogger : ILog
+    public class ConsoleLogger : LoggerBase
     {
         /// <summary>
         /// 初始化一个日志记录器
@@ -31,25 +31,14 @@ namespace TouchSocket.Core.Log
         private readonly ConsoleColor m_consoleForegroundColor;
         private readonly ConsoleColor m_consoleBackgroundColor;
 
-        /// <summary>
-        /// 记录日志
-        /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        public virtual void Debug(LogType logType, object source, string message)
-        {
-            this.Debug(logType, source, message, null);
-        }
-
-        /// <summary>
-        /// 记录日志
-        /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        /// <param name="exception"></param>
-        public virtual void Debug(LogType logType, object source, string message, Exception exception)
+       /// <summary>
+       /// <inheritdoc/>
+       /// </summary>
+       /// <param name="logType"></param>
+       /// <param name="source"></param>
+       /// <param name="message"></param>
+       /// <param name="exception"></param>
+        protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
             lock (typeof(ConsoleLogger))
             {
@@ -65,7 +54,7 @@ namespace TouchSocket.Core.Log
                         Console.ForegroundColor = ConsoleColor.Red;
                         break;
 
-                    case LogType.Message:
+                    case LogType.Information:
                     default:
                         Console.ForegroundColor = this.m_consoleForegroundColor;
                         break;

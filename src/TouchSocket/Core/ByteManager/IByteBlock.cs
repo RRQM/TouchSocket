@@ -17,7 +17,7 @@ namespace TouchSocket.Core.ByteManager
     /// <summary>
     /// 字节块流
     /// </summary>
-    public interface IByteBlock : IDisposable
+    public interface IByteBlock : IWrite, IDisposable
     {
         /// <summary>
         /// 字节实例
@@ -143,14 +143,5 @@ namespace TouchSocket.Core.ByteManager
         /// <param name="length"></param>
         /// <returns></returns>
         byte[] ToArray(int offset, int length);
-
-        /// <summary>
-        /// 写入
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <exception cref="ObjectDisposedException"></exception>
-        void Write(byte[] buffer, int offset, int count);
     }
 }

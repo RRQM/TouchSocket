@@ -16,6 +16,7 @@ namespace TouchSocket.Core
 {
     /// <summary>
     /// 具有释放的对象。
+    /// 并未实现析构函数相关。
     /// </summary>
     public class DisposableObject : IDisposable
     {

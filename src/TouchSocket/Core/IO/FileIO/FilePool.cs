@@ -97,7 +97,7 @@ namespace TouchSocket.Core.IO
                         throw new Exception("该流文件正在其他地方引用。");
                     }
                     Interlocked.Increment(ref fileStorage.reference);
-                    return new FileStorageWriter(fileStorage, singleRef);
+                    return new FileStorageWriter(fileStorage);
                 }
                 else
                 {

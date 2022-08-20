@@ -273,6 +273,11 @@ namespace TouchSocket.Sockets
             }
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public abstract bool SocketClientExist(string id);
 
         #endregion ID发送

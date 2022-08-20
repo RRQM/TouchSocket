@@ -13,6 +13,7 @@
 using System;
 using System.IO;
 using System.Text;
+using TouchSocket.Core.IO;
 
 namespace TouchSocket.Core.Log
 {
@@ -20,9 +21,15 @@ namespace TouchSocket.Core.Log
     /// 文件日志记录器
     /// <para>会在指定目录下，生成logs文件夹，然后按[yyyy-MM-dd].log的形式，每日生成日志</para>
     /// </summary>
-    public class FileLogger : ILog
+    public class FileLogger : LoggerBase
     {
-        private readonly string rootPath;
+        private readonly string m_rootPath;
+
+        private int m_count;
+
+        private int m_day = -1;
+
+        private FileStorageWriter m_writer;
 
         /// <summary>
         /// 构造函数
@@ -30,22 +37,19 @@ namespace TouchSocket.Core.Log
         /// <param name="rootPath">日志根目录</param>
         public FileLogger(string rootPath = null)
         {
-            this.rootPath = Path.Combine(rootPath == null ? AppDomain.CurrentDomain.BaseDirectory : rootPath, "logs");
-            if (!Directory.Exists(this.rootPath))
+            this.m_rootPath = Path.Combine(rootPath ?? AppDomain.CurrentDomain.BaseDirectory, "logs");
+            if (!Directory.Exists(this.m_rootPath))
             {
-                Directory.CreateDirectory(this.rootPath);
+                Directory.CreateDirectory(this.m_rootPath);
             }
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 析构函数
         /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        public void Debug(LogType logType, object source, string message)
+        ~FileLogger()
         {
-            this.Debug(logType, source, message, null);
+            this.m_writer.SafeDispose();
         }
 
         /// <summary>
@@ -55,7 +59,7 @@ namespace TouchSocket.Core.Log
         /// <param name="source"></param>
         /// <param name="message"></param>
         /// <param name="exception"></param>
-        public void Debug(LogType logType, object source, string message, Exception exception)
+        protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff"));
@@ -74,8 +78,6 @@ namespace TouchSocket.Core.Log
             this.Print(stringBuilder.ToString());
         }
 
-        private int m_day = -1;
-        private int m_count;
         private void Print(string logString)
         {
             try
@@ -89,13 +91,19 @@ namespace TouchSocket.Core.Log
                     }
                     else
                     {
-                        if (new FileInfo(Path.Combine(this.rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{this.m_count:00}" + ".log")).Length > 1024 * 1024)
+                        if (m_writer.FileStorage.Length > 1024 * 1024)
                         {
                             this.m_count++;
+                            this.m_writer.SafeDispose();
+                            this.m_writer = null;
                         }
                     }
-                    string path = Path.Combine(this.rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{this.m_count:00}" + ".log");
-                    File.AppendAllText(path, logString);
+                    if (this.m_writer == null)
+                    {
+                        this.m_writer = FilePool.GetWriter(Path.Combine(this.m_rootPath, $"{DateTime.Now:[yyyy-MM-dd]}-{this.m_count:00}" + ".log"), true);
+                    }
+                    var data = Encoding.UTF8.GetBytes(logString);
+                    this.m_writer.Write(data, 0, data.Length);
                 }
             }
             catch

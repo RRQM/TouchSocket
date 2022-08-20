@@ -19,13 +19,14 @@ namespace TouchSocket.Core.IO
     /// <summary>
     /// 阻塞式单项读取流。
     /// </summary>
-    public abstract class BlockReadStream : Stream
+    public abstract class BlockReadStream : Stream,IWrite
     {
-        private byte[] m_buffer;
         private readonly AutoResetEvent m_inputEvent;
-        private volatile int m_offset;
         private readonly AutoResetEvent m_readEvent;
-        private volatile int m_surLength;
+        private byte[] m_buffer;
+        private bool m_dis;
+        private volatile int m_length;
+        private volatile int m_offset;
 
         /// <summary>
         /// 构造函数
@@ -38,14 +39,24 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
-        /// 可读
+        /// 还剩余的未读取的长度
         /// </summary>
-        public override bool CanRead => true;
+        public int CanReadLen
+        {
+            get
+            {
+                if (this.m_dis)
+                {
+                    return 0;
+                }
+                return this.m_length - this.m_offset;
+            }
+        }
 
         /// <summary>
         /// 不可使用
         /// </summary>
-        public override bool CanSeek => throw new NotImplementedException();
+        public override bool CanSeek => false;
 
         /// <summary>
         /// 不可使用
@@ -76,21 +87,21 @@ namespace TouchSocket.Core.IO
                 throw new Exception("该流不允许读取。");
             }
             int r;
-            if (this.m_surLength > 0)
+            if (this.m_length > 0)
             {
-                if (this.m_surLength > count)
+                if (this.m_length > count)
                 {
                     //按count读取
                     Array.Copy(this.m_buffer, this.m_offset, buffer, offset, count);
-                    this.m_surLength -= count;
+                    this.m_length -= count;
                     this.m_offset += count;
                     r = count;
                 }
                 else
                 {
                     //会读完本次
-                    Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_surLength);
-                    r = this.m_surLength;
+                    Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_length);
+                    r = this.m_length;
                     this.Reset();
                 }
             }
@@ -99,24 +110,24 @@ namespace TouchSocket.Core.IO
                 //无数据，须等待
                 if (this.m_readEvent.WaitOne(this.ReadTimeout))
                 {
-                    if (this.m_surLength == 0)
+                    if (this.m_length == 0)
                     {
                         this.Reset();
                         r = 0;
                     }
-                    else if (this.m_surLength > count)
+                    else if (this.m_length > count)
                     {
                         //按count读取
                         Array.Copy(this.m_buffer, this.m_offset, buffer, offset, count);
-                        this.m_surLength -= count;
+                        this.m_length -= count;
                         this.m_offset += count;
                         r = count;
                     }
                     else
                     {
                         //会读完本次
-                        Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_surLength);
-                        r = this.m_surLength;
+                        Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_length);
+                        r = this.m_length;
                         this.Reset();
                     }
                 }
@@ -149,6 +160,23 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (this.m_dis)
+            {
+                return;
+            }
+            this.m_dis = true;
+            this.Reset();
+            this.m_readEvent.SafeDispose();
+            this.m_inputEvent.SafeDispose();
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
         /// 传输输入.
         /// 必须以length为0结束。读取端会超时。
         /// </summary>
@@ -161,7 +189,7 @@ namespace TouchSocket.Core.IO
             this.m_inputEvent.Reset();
             this.m_buffer = buffer;
             this.m_offset = offset;
-            this.m_surLength = length;
+            this.m_length = length;
             this.m_readEvent.Set();
             return this.m_inputEvent.WaitOne(this.ReadTimeout);
         }
@@ -170,21 +198,9 @@ namespace TouchSocket.Core.IO
         {
             this.m_buffer = null;
             this.m_offset = 0;
-            this.m_surLength = 0;
+            this.m_length = 0;
             this.m_readEvent.Reset();
             this.m_inputEvent.Set();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            this.Reset();
-            this.m_readEvent.Dispose();
-            this.m_inputEvent.Dispose();
-            base.Dispose(disposing);
         }
     }
 }

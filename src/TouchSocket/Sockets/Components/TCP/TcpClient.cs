@@ -127,7 +127,7 @@ namespace TouchSocket.Sockets
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
         }
 
@@ -160,7 +160,7 @@ namespace TouchSocket.Sockets
             }
             catch (Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
             }
         }
 
@@ -189,7 +189,7 @@ namespace TouchSocket.Sockets
             }
             catch (Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
             }
         }
 
@@ -323,6 +323,7 @@ namespace TouchSocket.Sockets
                     this.m_mainSocket.SafeDispose();
                     this.m_asyncSender.SafeDispose();
                     this.m_workStream.SafeDispose();
+                    this.m_adapter.SafeDispose();
                     this.m_online = false;
                     this.PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
                 }
@@ -354,6 +355,7 @@ namespace TouchSocket.Sockets
             {
                 this.PluginsManager.Clear();
                 this.m_config = default;
+                this.m_adapter.SafeDispose();
                 this.m_adapter = default;
             }
         }
@@ -567,7 +569,7 @@ namespace TouchSocket.Sockets
         /// <param name="ex"></param>
         protected virtual void OnSeparateThreadSendError(System.Exception ex)
         {
-            this.Logger.Debug(LogType.Error, this, "独立线程发送错误", ex);
+            this.Logger.Log(LogType.Error, this, "独立线程发送错误", ex);
         }
 
         /// <summary>
@@ -581,11 +583,7 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(adapter));
             }
 
-            if (adapter.m_client != null)
-            {
-                throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
-            }
-            adapter.m_client = this;
+            adapter.OnLoaded(this);
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
             if (this.Config != null)
@@ -738,14 +736,14 @@ namespace TouchSocket.Sockets
                 }
                 if (this.m_adapter == null)
                 {
-                    this.Logger.Debug(LogType.Error, this, ResType.NullDataAdapter.GetDescription());
+                    this.Logger.Error(this, ResType.NullDataAdapter.GetDescription());
                     return;
                 }
                 this.m_adapter.ReceivedInput(byteBlock);
             }
             catch (System.Exception ex)
             {
-                this.Logger.Debug(LogType.Error, this, "在处理数据时发生错误", ex);
+                this.Logger.Log(LogType.Error, this, "在处理数据时发生错误", ex);
             }
             finally
             {
@@ -804,7 +802,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException"><inheritdoc/></exception>
         /// <exception cref="OverlengthException"><inheritdoc/></exception>
         /// <exception cref="Exception"><inheritdoc/></exception>
-        public virtual void Send(IList<TransferByte> transferBytes)
+        public virtual void Send(IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_adapter == null)
             {
@@ -822,7 +820,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, false);
                 }
@@ -890,7 +888,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException"><inheritdoc/></exception>
         /// <exception cref="OverlengthException"><inheritdoc/></exception>
         /// <exception cref="Exception"><inheritdoc/></exception>
-        public virtual void SendAsync(IList<TransferByte> transferBytes)
+        public virtual void SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             if (this.m_disposedValue)
             {
@@ -911,7 +909,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
                     this.m_adapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len, true);
                 }

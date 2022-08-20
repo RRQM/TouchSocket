@@ -10,14 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Run;
 
-namespace TouchSocket.Rpc.JsonRpc
+using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Sockets;
+
+namespace TouchSocket.Rpc
 {
-    internal class JsonRpcWaitContext : WaitResult
+    /// <summary>
+    /// Rpc服务接口
+    /// </summary>
+    public interface ITransientRpcServer:IRpcServer
     {
-        internal object Return;
-
-        internal error error;
+        /// <summary>
+        /// 调用上下文
+        /// </summary>
+        ICallContext CallContext { get; set; }
     }
 }

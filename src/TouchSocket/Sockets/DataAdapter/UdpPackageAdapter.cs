@@ -359,12 +359,12 @@ namespace TouchSocket.Sockets
         /// <param name="endPoint"></param>
         /// <param name="transferBytes"></param>
         /// <param name="isAsync"></param>
-        protected override void PreviewSend(EndPoint endPoint, IList<TransferByte> transferBytes, bool isAsync)
+        protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes, bool isAsync)
         {
             int length = 0;
             foreach (var item in transferBytes)
             {
-                length += item.Length;
+                length += item.Count;
             }
 
             if (length > this.MaxPackageSize)
@@ -376,7 +376,7 @@ namespace TouchSocket.Sockets
             {
                 foreach (var item in transferBytes)
                 {
-                    byteBlock.Write(item.Buffer, item.Offset, item.Length);
+                    byteBlock.Write(item.Array, item.Offset, item.Count);
                 }
                 this.PreviewSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len, isAsync);
             }

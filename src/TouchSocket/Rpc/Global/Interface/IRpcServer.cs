@@ -11,6 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Sockets;
+
 namespace TouchSocket.Rpc
 {
     /// <summary>
@@ -18,5 +21,6 @@ namespace TouchSocket.Rpc
     /// </summary>
     public interface IRpcServer
     {
+
     }
 }

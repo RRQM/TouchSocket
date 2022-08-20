@@ -11,42 +11,48 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace TouchSocket.Core.Log
 {
     /// <summary>
     /// 一组日志记录器
     /// </summary>
-    public class LoggerGroup : ILog
+    public class LoggerGroup : LoggerBase
     {
-        private readonly ILog[] logs;
+        private readonly ILog[] m_logs;
+
 
         /// <summary>
-        /// 构造函数
+        /// 一组日志记录器
         /// </summary>
         /// <param name="logs"></param>
         public LoggerGroup(params ILog[] logs)
         {
-            this.logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            this.m_logs = logs ?? throw new ArgumentNullException(nameof(logs));
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 组内的日志记录器
+        /// </summary>
+        public ILog[] Logs => this.m_logs;
+
+        /// <summary>
+        /// 指定输出<see cref="LoggerGroup"/>中的特定类型的日志
         /// </summary>
         /// <param name="logType"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>
         /// <param name="exception"></param>
-        public void Debug(LogType logType, object source, string message, Exception exception)
+        public void Log<TLog>(LogType logType, object source, string message, Exception exception) where TLog : ILog
         {
-            foreach (var log in this.logs)
+            for (int i = 0; i < this.Logs.Length; i++)
             {
-                try
+                ILog log = this.Logs[i];
+                if (log.GetType() == typeof(TLog))
                 {
-                    log.Debug(logType, source, message, exception);
-                }
-                catch
-                {
+                    log.Log(logType, source, message, exception);
                 }
             }
         }
@@ -57,44 +63,118 @@ namespace TouchSocket.Core.Log
         /// <param name="logType"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>
-        public void Debug(LogType logType, object source, string message)
-        {
-            this.Debug(logType, source, message, null);
-        }
-
-        /// <summary>
-        /// 使用指定类型的记录器输出
-        /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
         /// <param name="exception"></param>
-        public void Debug<T>(LogType logType, object source, string message, Exception exception) where T : ILog
+        protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
-            foreach (var log in this.logs)
+            for (int i = 0; i < this.Logs.Length; i++)
             {
-                if (log.GetType() == typeof(T))
-                {
-                    try
-                    {
-                        log.Debug(logType, source, message, exception);
-                    }
-                    catch
-                    {
-                    }
-                }
+                this.Logs[i].Log(logType, source, message, exception);
             }
         }
+    }
 
+    /// <summary>
+    /// 一组日志记录器
+    /// </summary>
+    /// <typeparam name="TLog1"></typeparam>
+    /// <typeparam name="TLog2"></typeparam>
+    public class LoggerGroup<TLog1, TLog2> : LoggerGroup
+        where TLog1 : ILog
+        where TLog2 : ILog
+    {
         /// <summary>
-        /// 使用指定类型的记录器输出
+        /// 一组日志记录器
         /// </summary>
-        /// <param name="logType"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        public void Debug<T>(LogType logType, object source, string message) where T : ILog
+        public LoggerGroup(TLog1 log1, TLog2 log2) : base(log1, log2)
         {
-            this.Debug<T>(logType, source, message, null);
+        }
+    }
+
+    /// <summary>
+    /// 一组日志记录器
+    /// </summary>
+    /// <typeparam name="TLog1"></typeparam>
+    /// <typeparam name="TLog2"></typeparam>
+    /// <typeparam name="TLog3"></typeparam>
+    public class LoggerGroup<TLog1, TLog2,TLog3> : LoggerGroup
+        where TLog1 : ILog
+        where TLog2 : ILog
+        where TLog3 : ILog
+    {
+        /// <summary>
+        /// 一组日志记录器
+        /// </summary>
+        public LoggerGroup(TLog1 log1, TLog2 log2,TLog3 log3) : base(log1, log2,log3)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 一组日志记录器
+    /// </summary>
+    /// <typeparam name="TLog1"></typeparam>
+    /// <typeparam name="TLog2"></typeparam>
+    /// <typeparam name="TLog3"></typeparam>
+    /// <typeparam name="TLog4"></typeparam>
+    public class LoggerGroup<TLog1, TLog2, TLog3, TLog4> : LoggerGroup
+        where TLog1 : ILog
+        where TLog2 : ILog
+        where TLog3 : ILog
+        where TLog4 : ILog
+    {
+        /// <summary>
+        /// 一组日志记录器
+        /// </summary>
+        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4) : base(log1, log2, log3,log4)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 一组日志记录器
+    /// </summary>
+    /// <typeparam name="TLog1"></typeparam>
+    /// <typeparam name="TLog2"></typeparam>
+    /// <typeparam name="TLog3"></typeparam>
+    /// <typeparam name="TLog4"></typeparam>
+    /// <typeparam name="TLog5"></typeparam>
+    public class LoggerGroup<TLog1, TLog2, TLog3, TLog4, TLog5> : LoggerGroup
+        where TLog1 : ILog
+        where TLog2 : ILog
+        where TLog3 : ILog
+        where TLog4 : ILog
+        where TLog5 : ILog
+    {
+        /// <summary>
+        /// 一组日志记录器
+        /// </summary>
+        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4, TLog5 log5) : base(log1, log2, log3, log4,log5)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 一组日志记录器
+    /// </summary>
+    /// <typeparam name="TLog1"></typeparam>
+    /// <typeparam name="TLog2"></typeparam>
+    /// <typeparam name="TLog3"></typeparam>
+    /// <typeparam name="TLog4"></typeparam>
+    /// <typeparam name="TLog5"></typeparam>
+    /// <typeparam name="TLog6"></typeparam>
+    public class LoggerGroup<TLog1, TLog2, TLog3, TLog4, TLog5, TLog6> : LoggerGroup
+       where TLog1 : ILog
+       where TLog2 : ILog
+       where TLog3 : ILog
+       where TLog4 : ILog
+       where TLog5 : ILog
+       where TLog6 : ILog
+    {
+        /// <summary>
+        /// 一组日志记录器
+        /// </summary>
+        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4, TLog5 log5, TLog6 log6) : base(log1, log2, log3, log4, log5,log6)
+        {
         }
     }
 }

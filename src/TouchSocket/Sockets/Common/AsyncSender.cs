@@ -14,6 +14,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using TouchSocket.Core;
 using TouchSocket.Core.Collections.Concurrent;
 
 namespace TouchSocket.Sockets
@@ -21,25 +22,35 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 异步独立线程发送器
     /// </summary>
-    internal class AsyncSender : TouchSocket.Core.DisposableObject
+    internal class AsyncSender : DisposableObject
     {
-        private readonly IntelligentDataQueue<QueueDataBytes> asyncBytes;
+        private static int m_cacheLength = 1024 * 1024 * 100;
+        private readonly IntelligentDataQueue<QueueDataBytes> m_asyncBytes;
 
-        private readonly SocketAsyncEventArgs sendEventArgs;
+        private readonly byte[] m_buffer = new byte[1024 * 1024];
+        private readonly Action<Exception> m_onError;
+        private readonly SocketAsyncEventArgs m_sendEventArgs;
 
-        private readonly Thread sendThread;
+        private readonly Thread m_sendThread;
 
-        private readonly EventWaitHandle waitHandle;
+        private readonly Socket m_socket;
+        private readonly EventWaitHandle m_waitHandle;
+        private volatile bool m_sending;
 
-        private readonly byte[] buffer = new byte[1024 * 1024];
-
-        private readonly Action<Exception> onError;
-
-        private volatile bool sending;
-
-        private readonly Socket socket;
-
-        private static int cacheLength = 1024 * 1024 * 100;
+        internal AsyncSender(Socket socket, EndPoint endPoint, Action<Exception> onError)
+        {
+            this.m_sendEventArgs = new SocketAsyncEventArgs();
+            this.m_sendEventArgs.Completed += this.SendEventArgs_Completed;
+            this.m_socket = socket;
+            this.m_sendEventArgs.RemoteEndPoint = endPoint;
+            this.m_onError = onError;
+            this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
+            this.m_waitHandle = new AutoResetEvent(false);
+            this.m_sendThread = new Thread(this.BeginSend);
+            this.m_sendThread.IsBackground = true;
+            this.m_sendThread.Name = "AsyncSendThread";
+            this.m_sendThread.Start();
+        }
 
         /// <summary>
         /// 缓存发送池尺寸，
@@ -47,41 +58,26 @@ namespace TouchSocket.Sockets
         /// </summary>
         public static int CacheLength
         {
-            get => cacheLength;
-            set => cacheLength = value;
-        }
-
-        internal AsyncSender(Socket socket, EndPoint endPoint, Action<Exception> onError)
-        {
-            this.sendEventArgs = new SocketAsyncEventArgs();
-            this.sendEventArgs.Completed += this.SendEventArgs_Completed;
-            this.socket = socket;
-            this.sendEventArgs.RemoteEndPoint = endPoint;
-            this.onError = onError;
-            this.asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
-            this.waitHandle = new AutoResetEvent(false);
-            this.sendThread = new Thread(this.BeginSend);
-            this.sendThread.IsBackground = true;
-            this.sendThread.Name = "AsyncSendThread";
-            this.sendThread.Start();
+            get => m_cacheLength;
+            set => m_cacheLength = value;
         }
 
         internal void AsyncSend(byte[] buffer, int offset, int length)
         {
             QueueDataBytes asyncByte = new QueueDataBytes(buffer, offset, length);
-            this.asyncBytes.Enqueue(asyncByte);
-            if (!this.sending)
+            this.m_asyncBytes.Enqueue(asyncByte);
+            if (!this.m_sending)
             {
-                this.sending = true;
-                this.waitHandle.Set();
+                this.m_sending = true;
+                this.m_waitHandle.Set();
             }
         }
 
         protected override void Dispose(bool disposing)
         {
-            this.waitHandle.Set();
-            this.waitHandle.SafeDispose();
-            this.sendEventArgs.SafeDispose();
+            this.m_waitHandle.Set();
+            this.m_waitHandle.SafeDispose();
+            this.m_sendEventArgs.SafeDispose();
             base.Dispose(disposing);
         }
 
@@ -91,29 +87,29 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    if (this.tryGet(out QueueDataBytes asyncByte))
+                    if (this.TryGet(out QueueDataBytes asyncByte))
                     {
-                        this.sendEventArgs.SetBuffer(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
+                        this.m_sendEventArgs.SetBuffer(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
 
-                        if (!this.socket.SendAsync(this.sendEventArgs))
+                        if (!this.m_socket.SendAsync(this.m_sendEventArgs))
                         {
                             // 同步发送时处理发送完成事件
-                            this.ProcessSend(this.sendEventArgs);
+                            this.ProcessSend(this.m_sendEventArgs);
                         }
                         else
                         {
-                            this.waitHandle.WaitOne();
+                            this.m_waitHandle.WaitOne();
                         }
                     }
                     else
                     {
-                        this.sending = false;
-                        this.waitHandle.WaitOne();
+                        this.m_sending = false;
+                        this.m_waitHandle.WaitOne();
                     }
                 }
                 catch (Exception ex)
                 {
-                    this.onError?.Invoke(ex);
+                    this.m_onError?.Invoke(ex);
                 }
             }
         }
@@ -126,7 +122,7 @@ namespace TouchSocket.Sockets
         {
             if (e.SocketError != SocketError.Success)
             {
-                this.onError?.Invoke(new Exception(e.SocketError.ToString()));
+                this.m_onError?.Invoke(new Exception(e.SocketError.ToString()));
             }
         }
 
@@ -137,29 +133,29 @@ namespace TouchSocket.Sockets
                 this.ProcessSend(e);
                 if (!this.m_disposedValue)
                 {
-                    this.waitHandle.Set();
+                    this.m_waitHandle.Set();
                 }
             }
         }
 
-        private bool tryGet(out QueueDataBytes asyncByteDe)
+        private bool TryGet(out QueueDataBytes asyncByteDe)
         {
             int len = 0;
-            int surLen = this.buffer.Length;
+            int surLen = this.m_buffer.Length;
             while (true)
             {
-                if (this.asyncBytes.TryPeek(out QueueDataBytes asyncB))
+                if (this.m_asyncBytes.TryPeek(out QueueDataBytes asyncB))
                 {
                     if (surLen > asyncB.Length)
                     {
-                        if (this.asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
+                        if (this.m_asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
                         {
-                            Array.Copy(asyncByte.Buffer, asyncByte.Offset, this.buffer, len, asyncByte.Length);
+                            Array.Copy(asyncByte.Buffer, asyncByte.Offset, this.m_buffer, len, asyncByte.Length);
                             len += asyncByte.Length;
                             surLen -= asyncByte.Length;
                         }
                     }
-                    else if (asyncB.Length > this.buffer.Length)
+                    else if (asyncB.Length > this.m_buffer.Length)
                     {
                         if (len > 0)
                         {
@@ -189,7 +185,7 @@ namespace TouchSocket.Sockets
                     }
                 }
             }
-            asyncByteDe = new QueueDataBytes(this.buffer, 0, len);
+            asyncByteDe = new QueueDataBytes(this.m_buffer, 0, len);
             return true;
         }
     }

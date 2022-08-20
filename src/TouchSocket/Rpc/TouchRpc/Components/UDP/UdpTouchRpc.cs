@@ -158,7 +158,7 @@ namespace TouchSocket.Rpc.TouchRpc
             return this.GetUdpRpcActor().InvokeAsync<T>(method, invokeOption, parameters);
         }
 
-        void IRpcParser.OnRegisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -169,7 +169,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
         }
 
-        void IRpcParser.OnUnregisterServer(IRpcServer provider, MethodInstance[] methodInstances)
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
