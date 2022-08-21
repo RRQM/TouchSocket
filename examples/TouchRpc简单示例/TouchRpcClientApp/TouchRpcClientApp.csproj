@@ -5,6 +5,9 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\TouchRpcServerApp\RpcProxy.cs" Link="RpcProxy.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="TouchSocket" Version="0.4.2" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using TouchSocket.Core.Config;
@@ -17,28 +18,31 @@ namespace TouchRpcServerApp
     {
         private static void Main(string[] args)
         {
-            TcpTouchRpcService tcpTouchRpcService= CreateTcpTouchRpcService(7789);
+            TcpTouchRpcService tcpTouchRpcService = CreateTcpTouchRpcService(7789);
             HttpTouchRpcService httpTouchRpcService = CreateHttpTouchRpcService(7790);
             UdpTouchRpc udpTouchRpc = CreateUdpTouchRpc(7791);
+
+            string code = CodeGenerator.ConvertToCode("RpcProxy", CodeGenerator.Generator<MyRpcServer, TouchRpcAttribute>());
+            File.WriteAllText("../../../RpcProxy.cs", code);
             Console.ReadKey();
         }
 
-     
+
         private static TcpTouchRpcService CreateTcpTouchRpcService(int port)
         {
-            var service =new  TcpTouchRpcService();
-            TouchSocketConfig config=  new TouchSocketConfig()//配置
+            var service = new TcpTouchRpcService();
+            TouchSocketConfig config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
-                   .ConfigureContainer(a=> 
+                   .ConfigureContainer(a =>
                    {
                        a.SetLogger<LoggerGroup<ConsoleLogger, FileLogger>>();//注册一个日志组
                    })
-                   .ConfigureRpcStore(a=> 
+                   .ConfigureRpcStore(a =>
                    {
                        a.RegisterServer<MyRpcServer>();//注册服务
                    })
                    .SetVerifyToken("TouchRpc");
-           
+
             service.Setup(config)
                 .Start();
 
@@ -72,7 +76,7 @@ namespace TouchRpcServerApp
         {
             var service = new UdpTouchRpc();
             TouchSocketConfig config = new TouchSocketConfig()//配置
-                   .SetBindIPHost( new IPHost(port))
+                   .SetBindIPHost(new IPHost(port))
                    .ConfigureContainer(a =>
                    {
                        a.SetLogger<LoggerGroup<ConsoleLogger, FileLogger>>();//注册一个日志组

@@ -1,4 +1,5 @@
-﻿using RRQMProxy;
+﻿using RpcProxy;
+using RRQMProxy;
 using System;
 using System.Windows.Forms;
 using TouchSocket.Core.Config;
@@ -24,7 +25,7 @@ namespace TouchRpcClientApp
                 .SetVerifyToken("TouchRpc"));
             client.Connect();
 
-            //直接调用时，第一个参数为服务名+方法名（必须全小写）
+            //直接调用时，第一个参数为调用键，服务类全名+方法名（必须全小写）
             //第二个参数为调用配置参数，可设置调用超时时间，取消调用等功能。
             //后续参数为调用参数。
             bool result = client.Invoke<bool>("touchrpcserverapp.myrpcserver.login", InvokeOption.WaitInvoke, textBox1.Text, textBox2.Text);
@@ -140,7 +141,7 @@ namespace TouchRpcClientApp
                .SetRemoteIPHost("127.0.0.1:7790")
                .SetVerifyToken("TouchRpc"));
             client.Connect();
-            //直接调用时，第一个参数为服务名+方法名（必须全小写）
+            //直接调用时，第一个参数为调用键，服务类全名+方法名（必须全小写）
             //第二个参数为调用配置参数，可设置调用超时时间，取消调用等功能。
             //后续参数为调用参数。
             bool result = client.Invoke<bool>("touchrpcserverapp.myrpcserver.login", InvokeOption.WaitInvoke, textBox1.Text, textBox2.Text);
