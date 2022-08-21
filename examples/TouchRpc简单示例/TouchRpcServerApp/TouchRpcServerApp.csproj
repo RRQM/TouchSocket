@@ -6,13 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="TouchSocketPro">
-      <HintPath>..\..\..\..\TouchSocketPro\TouchSocketPro\bin\Debug\net45\TouchSocketPro.dll</HintPath>
-    </Reference>
+    <PackageReference Include="TouchSocket" Version="0.4.2" />
   </ItemGroup>
-
-  <!--<ItemGroup>
-    <PackageReference Include="TouchSocket" Version="0.4.1" />
-  </ItemGroup>-->
 
 </Project>
