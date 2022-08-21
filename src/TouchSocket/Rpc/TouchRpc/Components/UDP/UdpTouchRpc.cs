@@ -158,6 +158,7 @@ namespace TouchSocket.Rpc.TouchRpc
             return this.GetUdpRpcActor().InvokeAsync<T>(method, invokeOption, parameters);
         }
 
+        #region RPC解析器
         void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
@@ -179,6 +180,13 @@ namespace TouchSocket.Rpc.TouchRpc
                 }
             }
         }
+        void IRpcParser.SetRpcStore(RpcStore rpcService)
+        {
+            this.m_rpcStore = rpcService;
+        }
+
+        #endregion
+
 
         /// <summary>
         /// <inheritdoc/>
@@ -272,11 +280,6 @@ namespace TouchSocket.Rpc.TouchRpc
             this.GetUdpRpcActor().SendAsync(protocol);
         }
 
-        void IRpcParser.SetRpcStore(RpcStore rpcService)
-        {
-            this.m_rpcStore = rpcService;
-        }
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -305,6 +308,15 @@ namespace TouchSocket.Rpc.TouchRpc
         protected override void LoadConfig(TouchSocketConfig config)
         {
             this.m_serializationSelector = (SerializationSelector)config.GetValue(TouchRpcConfigExtensions.SerializationSelectorProperty);
+
+            if (config.GetValue<RpcStore>(RpcConfigExtensions.RpcStoreProperty) is RpcStore rpcStore)
+            {
+                rpcStore.AddRpcParser(this.GetType().Name, this);
+            }
+            else
+            {
+                new RpcStore(config.Container).AddRpcParser(this.GetType().Name, this);
+            }
             base.LoadConfig(config);
         }
 
