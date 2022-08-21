@@ -18,16 +18,16 @@ using TouchSocket.Rpc.TouchRpc.AspNetCore;
 
 namespace TouchRpcWebApplication.RpcProviders
 {
-    public class TestServerProvider : RpcServer
+    public class MyRpcServer : RpcServer
     {
-        private readonly ILogger<TestServerProvider> m_logger;
+        private readonly ILogger<MyRpcServer> m_logger;
 
         /// <summary>
         /// 支持注入
         /// </summary>
         /// <param name="service"></param>
         /// <param name="logger"></param>
-        public TestServerProvider(IWSTouchRpcService service, ILogger<TestServerProvider> logger)
+        public MyRpcServer(IWSTouchRpcService service, ILogger<MyRpcServer> logger)
         {
             this.m_logger = logger;
         }

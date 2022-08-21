@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using TouchRpcWebApplication.RpcProviders;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
@@ -32,25 +33,17 @@ namespace TouchRpcWebApplication
 
         public IConfiguration Configuration { get; }
 
-        public static RpcStore RpcStore { get; set; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //声明一个适应于Asp，兼容IServiceCollection服务的容器
-            IContainer container = new AspNetCoreContainer(services);
-
             //向Asp服务中添加IWSTouchRpcService
             var touchRpcService = services.AddWSTouchRpc(new TouchSocketConfig()
-                .SetContainer(container));//设置IOC容器
+                .SetContainer(new AspNetCoreContainer(services)));//设置IOC容器
 
-            RpcStore = new RpcStore(container);//和RpcStore共享容器
-            RpcStore.AddRpcParser(nameof(touchRpcService), touchRpcService);//添加解析器
-            RpcStore.RegisterAllServer();//注册所有服务。
+            touchRpcService.RegisterServer<MyRpcServer>();//注册所有服务。
 
             services.AddControllers();
 
-            // ���Swagger
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API Demo", Version = "v1" });
