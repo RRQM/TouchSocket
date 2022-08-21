@@ -5,6 +5,6 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="0.4.1" />
+    <PackageReference Include="TouchSocket" Version="0.4.2" />
   </ItemGroup>
 </Project>
