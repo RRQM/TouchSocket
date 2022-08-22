@@ -151,7 +151,7 @@ namespace TouchRpcServerApp
         }
     }
 
-    internal class MyRpcActionFilterAttribute : RpcActionFilterAttribute, IRpcActionFilter
+    public class MyRpcActionFilterAttribute : RpcActionFilterAttribute, IRpcActionFilter
     {
 
         public override void Executing(ICallContext callContext, ref InvokeResult invokeResult)

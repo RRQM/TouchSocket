@@ -116,7 +116,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenUdpReceiver", "exampl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "反向Rpc示例", "反向Rpc示例", "{5777979E-5737-46EF-9B0E-9C18FA7004B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReverseRpcConsoleApp", "examples\TouchRpc简单示例\反向Rpc示例\ReverseRpcConsoleApp\ReverseRpcConsoleApp.csproj", "{D5738DF3-C8E8-4E21-98B2-0557F0392167}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReverseRpcConsoleApp", "examples\TouchRpc简单示例\反向Rpc示例\ReverseRpcConsoleApp\ReverseRpcConsoleApp.csproj", "{D5738DF3-C8E8-4E21-98B2-0557F0392167}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "控制台", "控制台", "{FB0FA0CF-1657-48F7-B852-FBA818F1AE8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileServiceConsoleApp", "examples\FileTransfer简单示例\FileClientApp\FileServiceConsoleApp\FileServiceConsoleApp.csproj", "{8C6EA0F4-78F6-4E5F-B633-848355B06331}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileClientConsoleApp", "examples\FileTransfer简单示例\FileClientConsoleApp\FileClientConsoleApp.csproj", "{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -260,6 +266,14 @@ Global
 		{D5738DF3-C8E8-4E21-98B2-0557F0392167}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5738DF3-C8E8-4E21-98B2-0557F0392167}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5738DF3-C8E8-4E21-98B2-0557F0392167}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C6EA0F4-78F6-4E5F-B633-848355B06331}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C6EA0F4-78F6-4E5F-B633-848355B06331}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C6EA0F4-78F6-4E5F-B633-848355B06331}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C6EA0F4-78F6-4E5F-B633-848355B06331}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -305,6 +319,9 @@ Global
 		{EDAA9CD3-1474-4588-9E3B-E970CED20F0F} = {8B9374B5-42D7-48C9-84C7-A560167F0D47}
 		{5777979E-5737-46EF-9B0E-9C18FA7004B6} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
 		{D5738DF3-C8E8-4E21-98B2-0557F0392167} = {5777979E-5737-46EF-9B0E-9C18FA7004B6}
+		{FB0FA0CF-1657-48F7-B852-FBA818F1AE8A} = {24212B0A-8DAA-4AC3-BB5D-F3AC485EABA4}
+		{8C6EA0F4-78F6-4E5F-B633-848355B06331} = {FB0FA0CF-1657-48F7-B852-FBA818F1AE8A}
+		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4} = {FB0FA0CF-1657-48F7-B852-FBA818F1AE8A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
