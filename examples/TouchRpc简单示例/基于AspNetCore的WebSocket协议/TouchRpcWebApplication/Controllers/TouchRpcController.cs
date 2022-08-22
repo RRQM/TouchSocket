@@ -34,7 +34,7 @@ namespace TouchRpcWebApplication.Controllers
         [HttpGet]
         public string GetProxy()
         {
-            var cellcode = Startup.RpcStore.GetProxyInfo();
+            var cellcode = this.m_touchRpcService.RpcStore.GetProxyInfo();
             string code = CodeGenerator.ConvertToCode("RRQM", cellcode);
             return code;
         }
