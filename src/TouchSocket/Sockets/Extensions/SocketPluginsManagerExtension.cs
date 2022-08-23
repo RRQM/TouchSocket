@@ -37,6 +37,7 @@ namespace TouchSocket.Core.Plugins
         public static IPluginsManager UseReconnection(this IPluginsManager pluginsManager, int tryCount = 10, 
             bool printLog = false, int sleepTime = 1000, Action<ITcpClient> successCallback = null)
         {
+            bool first = true;
             var reconnectionPlugin = new ReconnectionPlugin<ITcpClient>(client=> 
             {
                 int tryT = tryCount;
@@ -50,9 +51,11 @@ namespace TouchSocket.Core.Plugins
                         }
                         else
                         {
+                            if (first) Thread.Sleep(1000);
+                            first = false;
                             client.Connect();
+                            first = true;
                         }
-
                         successCallback?.Invoke(client);
                         return true;
                     }
@@ -85,6 +88,7 @@ namespace TouchSocket.Core.Plugins
             Func<ITcpClient,int,Exception,bool> failCallback=null,
             Action<ITcpClient> successCallback = null)
         {
+            bool first = true;
             var reconnectionPlugin = new ReconnectionPlugin<ITcpClient>(client =>
             {
                 int tryT = 0;
@@ -98,7 +102,10 @@ namespace TouchSocket.Core.Plugins
                         }
                         else
                         {
+                            if (first) Thread.Sleep(1000);
+                            first = false;
                             client.Connect();
+                            first = true;
                         }
 
                         successCallback?.Invoke(client);
