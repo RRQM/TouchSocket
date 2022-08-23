@@ -318,6 +318,7 @@ namespace TouchSocket.Sockets
         {
             lock (this)
             {
+                base.Dispose(true);
                 if (this.m_online)
                 {
                     this.m_mainSocket.SafeDispose();
@@ -656,6 +657,10 @@ namespace TouchSocket.Sockets
             try
             {
                 int r = this.m_workStream.EndRead(result);
+                if (r == 0)
+                {
+                    this.BreakOut("远程终端主动关闭", false);
+                }
                 byteBlock.SetLength(r);
                 this.HandleBuffer(byteBlock);
                 this.BeginSsl();
