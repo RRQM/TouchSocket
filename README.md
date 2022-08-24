@@ -44,12 +44,15 @@
 - .NET Standard2.0及以上。
 
 ## 🥪支持框架
+- Console
 - WPF
 - Winform
 - Blazor Server
 - Xamarin
+- MAUI
+- Avalonia 
 - Mono
-- Unity
+- Unity 3D
 - 其他（即所有C#系）
 
 
