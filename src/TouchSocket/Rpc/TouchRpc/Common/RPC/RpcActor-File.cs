@@ -1068,7 +1068,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     {
                         waitTransfer.Status = 4;
                         waitTransfer.Message = ex.Message;
-                        fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetDescription(ex.Message)));
+                        fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetDescription(fileRequest.SavePath, ex.Message)));
                         this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                     }
                 }
