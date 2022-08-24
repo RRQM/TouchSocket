@@ -318,7 +318,6 @@ namespace TouchSocket.Sockets
         {
             lock (this)
             {
-                base.Dispose(true);
                 if (this.m_online)
                 {
                     this.m_mainSocket.SafeDispose();
@@ -644,7 +643,7 @@ namespace TouchSocket.Sockets
             {
                 this.m_workStream.BeginRead(byteBlock.Buffer, 0, byteBlock.Capacity, this.EndSsl, byteBlock);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 byteBlock.Dispose();
                 this.BreakOut(ex.Message, false);
