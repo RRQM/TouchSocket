@@ -14,6 +14,7 @@
 <a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw">
 <img src="https://img.shields.io/badge/QQ群-234762506-red" alt="QQ">
 </a>
+<img src="https://img.shields.io/github/stars/RRQM/TouchSocket?logo=github" alt="GitHub stars"></a> 
 </div>  
 
 <div align="center">
