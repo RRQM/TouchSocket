@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net5;netcoreapp3.1</TargetFrameworks>
+		<ApplicationIcon>logo.ico</ApplicationIcon>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
+		<Version>0.4.0</Version>
+		<LangVersion>8.0</LangVersion>
+		<Company>若汝棋茗</Company>
+		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
+		<PackageTags>rpc,http,https,websocket,webapi</PackageTags>
+		<Description>这是一个适用于AspNetCore的、轻量级的、支持插件的综合网络通信库。基础通信功能包含Tcp、Udp、Ssl、Rpc、Http等。其中http服务器支持WebSocket、静态网页、XmlRpc、WebApi、JsonRpc等扩展插件。和自定义协议的TouchRpc，支持Ssl加密、异步调用、权限管理、错误状态返回、服务回调、分布式调用等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
+
+AspNetCore - AspNetCore is a lightweight, plug-in - enabled comprehensive network communication library. Basic communication functions include Tcp, Udp, Ssl, Rpc, and Http. HTTP server supports WebSocket, static web page, XmlRpc, WebApi, JsonRpc and other extension plug-ins. And custom protocol TouchRpc, support Ssl encryption, asynchronous call, permission management, error status return, service callback, distributed call, etc. It takes 3.8 seconds for 100,000 calls when the no-load function is executing, and 0.9 seconds when the state is not returned.
+
+API：https://www.yuque.com/rrqm/touchsocket/index</Description>
+		<PackageProjectUrl>https://gitee.com/dotnetchina/TouchSocket.Sockets</PackageProjectUrl>
+		<PackageIconUrl></PackageIconUrl>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<PackageIcon>logo.png</PackageIcon>
+		<Authors>若汝棋茗</Authors>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5|AnyCPU'">
+		<DocumentationFile>bin\Debug\net5\TouchSocket.AspNetCore.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5|AnyCPU'">
+		<DocumentationFile>bin\Release\net5\TouchSocket.AspNetCore.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Debug\netcoreapp3.1\TouchSocket.AspNetCore.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Release\netcoreapp3.1\TouchSocket.AspNetCore.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="logo.png">
+		  <Pack>True</Pack>
+		  <PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.26" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
+		<PackageReference Include="TouchSocket" Version="0.4.0" />
+	</ItemGroup>
+</Project>
