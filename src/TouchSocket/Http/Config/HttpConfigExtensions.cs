@@ -73,5 +73,23 @@ namespace TouchSocket.Sockets
         }
 
         #endregion 创建
+
+        /// <summary>
+        /// Http代理
+        /// </summary>
+        public static readonly DependencyProperty HttpProxyProperty =
+            DependencyProperty.Register("HttpProxy", typeof(HttpProxy), typeof(HttpConfigExtensions), null);
+
+        /// <summary>
+        ///设置Http代理
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetHttpProxy(this TouchSocketConfig config, HttpProxy value)
+        {
+            config.SetValue(HttpProxyProperty, value);
+            return config;
+        }
     }
 }

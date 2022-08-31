@@ -33,14 +33,14 @@ namespace TouchSocket.Http
     {
         private readonly object m_requestLocker = new object();
         private bool m_getContent;
-        private readonly WaitData<HttpResponse> waitData;
+        private readonly WaitData<HttpResponse> m_waitData;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public HttpClientBase()
         {
-            this.waitData = new WaitData<HttpResponse>();
+            this.m_waitData = new WaitData<HttpResponse>();
         }
 
         /// <summary>
@@ -60,8 +60,8 @@ namespace TouchSocket.Http
                 {
                     request.Build(byteBlock);
 
-                    this.waitData.Reset();
-                    this.waitData.SetCancellationToken(token);
+                    this.m_waitData.Reset();
+                    this.m_waitData.SetCancellationToken(token);
 
                     this.DefaultSend(byteBlock);
                     if (onlyRequest)
@@ -69,10 +69,10 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (this.waitData.Wait(timeout))
+                    switch (this.m_waitData.Wait(timeout))
                     {
                         case WaitDataStatus.SetRunning:
-                            return this.waitData.WaitResult;
+                            return this.m_waitData.WaitResult;
 
                         case WaitDataStatus.Overtime:
                             throw new TimeoutException(ResType.Overtime.GetDescription());
@@ -105,8 +105,8 @@ namespace TouchSocket.Http
                 {
                     request.Build(byteBlock);
 
-                    this.waitData.Reset();
-                    this.waitData.SetCancellationToken(token);
+                    this.m_waitData.Reset();
+                    this.m_waitData.SetCancellationToken(token);
 
                     this.DefaultSend(byteBlock);
                     if (onlyRequest)
@@ -114,10 +114,10 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (this.waitData.Wait(timeout))
+                    switch (this.m_waitData.Wait(timeout))
                     {
                         case WaitDataStatus.SetRunning:
-                            return this.waitData.WaitResult;
+                            return this.m_waitData.WaitResult;
 
                         case WaitDataStatus.Overtime:
                             throw new TimeoutException(ResType.Overtime.GetDescription());
@@ -139,8 +139,49 @@ namespace TouchSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.waitData?.Dispose();
+            this.m_waitData?.Dispose();
             base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public override ITcpClient Connect(int timeout = 5000)
+        {
+            if (this.Config.GetValue<HttpProxy>(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
+            {
+                IPHost proxyHost = httpProxy.Host;
+                IPHost remoteHost = this.Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
+                try
+                {
+                    this.Config.SetRemoteIPHost(proxyHost);
+                    base.Connect(timeout);
+                    HttpRequest httpRequest = new HttpRequest();
+                    httpRequest.InitHeaders()
+                        .SetHost(remoteHost.Host)
+                        .SetUrl(remoteHost.Host,true)
+                        .AsMethod("CONNECT");
+                    string ss = httpRequest.ToString();
+                    var response = this.Request(httpRequest,timeout:timeout);
+                    if (response.StatusCode != "200")
+                    {
+                        throw new Exception(response.StatusMessage);
+                    }
+                }
+                finally
+                {
+                    this.Config.SetRemoteIPHost(remoteHost);
+                }
+            }
+            else
+            {
+                base.Connect(timeout);
+            }
+
+
+            return this;
         }
 
         /// <summary>
@@ -158,7 +199,7 @@ namespace TouchSocket.Http
                 {
                     response.TryGetContent(out _);
                 }
-                this.waitData.Set(response);
+                this.m_waitData.Set(response);
             }
         }
 

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
 
@@ -21,38 +22,83 @@ namespace TouchSocket.Http
     public interface IHttpPlugin : IPlugin
     {
         /// <summary>
-        /// 在收到其他Http请求时
+        /// 在收到Delete时
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnReceivedOtherHttpRequest(ITcpClientBase client, HttpContextEventArgs e);
-
-        /// <summary>
-        /// 在收到Get时
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        void OnGet(ITcpClientBase client, HttpContextEventArgs e);
-
-        /// <summary>
-        /// 在收到Put时
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        void OnPut(ITcpClientBase client, HttpContextEventArgs e);
+        
+        void OnDelete(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>
         /// 在收到Delete时
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnDelete(ITcpClientBase client, HttpContextEventArgs e);
+        /// <returns></returns>
+        Task OnDeleteAsync(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 在收到Get时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        
+        void OnGet(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 在收到Get时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnGetAsync(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>
         /// 在收到Post时
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
+        
         void OnPost(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 在收到Post时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnPostAsync(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 在收到Put时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        
+        void OnPut(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 在收到Put时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnPutAsync(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 在收到其他Http请求时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        
+        void OnReceivedOtherHttpRequest(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 在收到其他Http请求时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnReceivedOtherHttpRequestAsync(ITcpClientBase client, HttpContextEventArgs e);
     }
 }

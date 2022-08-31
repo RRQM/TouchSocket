@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
 
@@ -21,24 +22,51 @@ namespace TouchSocket.Http.WebSockets
     public interface IWebSocketPlugin : IPlugin
     {
         /// <summary>
-        /// 表示在即将握手连接时。
+        /// 当收到WS数据时。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnHandshaking(ITcpClientBase client, HttpContextEventArgs e);
-
-        /// <summary>
-        /// 表示完成握手后。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        void OnHandshaked(ITcpClientBase client, HttpContextEventArgs e);
+        
+        void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e);
 
         /// <summary>
         /// 当收到WS数据时。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e);
+        /// <returns></returns>
+        Task OnHandleWSDataFrameAsync(ITcpClientBase client, WSDataFrameEventArgs e);
+
+        /// <summary>
+        /// 表示完成握手后。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        
+        void OnHandshaked(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 表示完成握手后。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnHandshakedAsync(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 表示在即将握手连接时。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        
+        void OnHandshaking(ITcpClientBase client, HttpContextEventArgs e);
+
+        /// <summary>
+        /// 表示在即将握手连接时。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnHandshakingAsync(ITcpClientBase client, HttpContextEventArgs e);
     }
 }

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Http.Plugins;
 using TouchSocket.Sockets;
 
@@ -20,15 +21,26 @@ namespace TouchSocket.Http.WebSockets.Plugins
     /// </summary>
     public class WebSocketPluginBase : HttpPluginBase, IWebSocketPlugin
     {
+        #region 虚函数
+
         /// <summary>
-        /// 表示在即将握手连接时。
-        /// <para>在此处拒绝操作，则会返回403 Forbidden。</para>
-        /// <para>也可以向<see cref="HttpContextEventArgs.Context"/>注入更多信息。</para>
+        /// 处理WS数据帧。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
+        protected virtual void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
         {
+        }
+
+        /// <summary>
+        /// 处理WS数据帧。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnHandleWSDataFrameAsync(ITcpClientBase client, WSDataFrameEventArgs e)
+        {
+            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -41,17 +53,48 @@ namespace TouchSocket.Http.WebSockets.Plugins
         }
 
         /// <summary>
-        /// 处理WS数据帧。
+        /// 表示完成握手后。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
+        /// <returns></returns>
+        protected virtual Task OnHandshakedAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// 表示在即将握手连接时。
+        /// <para>在此处拒绝操作，则会返回403 Forbidden。</para>
+        /// <para>也可以向<see cref="HttpContextEventArgs.Context"/>注入更多信息。</para>
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
         {
         }
 
-        void IWebSocketPlugin.OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
+        /// <summary>
+        /// 表示在即将握手连接时。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnHandshakingAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnHandshaking(client, e);
+            return Task.FromResult(0);
+        }
+
+        #endregion 虚函数
+
+        void IWebSocketPlugin.OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
+        {
+            this.OnHandleWSDataFrame(client, e);
+        }
+
+        Task IWebSocketPlugin.OnHandleWSDataFrameAsync(ITcpClientBase client, WSDataFrameEventArgs e)
+        {
+            return this.OnHandleWSDataFrameAsync(client, e);
         }
 
         void IWebSocketPlugin.OnHandshaked(ITcpClientBase client, HttpContextEventArgs e)
@@ -59,9 +102,19 @@ namespace TouchSocket.Http.WebSockets.Plugins
             this.OnHandshaked(client, e);
         }
 
-        void IWebSocketPlugin.OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
+        Task IWebSocketPlugin.OnHandshakedAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnHandleWSDataFrame(client, e);
+            return this.OnHandshakedAsync(client, e);
+        }
+
+        void IWebSocketPlugin.OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            this.OnHandshaking(client, e);
+        }
+
+        Task IWebSocketPlugin.OnHandshakingAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return this.OnHandshakingAsync(client, e);
         }
     }
 }
