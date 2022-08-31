@@ -15,6 +15,7 @@ using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Run;
+using TouchSocket.Http.WebProxy;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -153,6 +154,7 @@ namespace TouchSocket.Http
             if (this.Config.GetValue<HttpProxy>(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
             {
                 IPHost proxyHost = httpProxy.Host;
+                var credential = httpProxy.Credential;
                 IPHost remoteHost = this.Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
                 try
                 {
@@ -161,10 +163,34 @@ namespace TouchSocket.Http
                     HttpRequest httpRequest = new HttpRequest();
                     httpRequest.InitHeaders()
                         .SetHost(remoteHost.Host)
-                        .SetUrl(remoteHost.Host,true)
+                        .SetUrl(remoteHost.Host, true)
                         .AsMethod("CONNECT");
-                    string ss = httpRequest.ToString();
-                    var response = this.Request(httpRequest,timeout:timeout);
+                    // string ss = httpRequest.ToString();
+                    var response = this.Request(httpRequest, timeout: timeout);
+                    if (response.IsProxyAuthenticationRequired)
+                    {
+                        if (credential is null)
+                        {
+                            throw new Exception("未指定代理的凭据。");
+                        }
+                        if (response.Headers.ContainsKey("proxy-authenticate") == false || response.Headers["proxy-authenticate"].IsNullOrEmpty())
+                        {
+                            throw new Exception("未指定代理身份验证质询。");
+                        }
+
+                        var AuthHeader = response.Headers["proxy-authenticate"];
+                        var ares = new AuthenticationChallenge(AuthHeader, credential);
+
+                        httpRequest.Headers.Add("proxy-authorization", ares.ToString());
+
+                        /**
+                         * 重新发起连接请求是否需要手动释放上一个？
+                         */
+                        base.Close();
+                        base.Connect(timeout);
+                        response = this.Request(httpRequest, timeout: timeout);
+                    }
+
                     if (response.StatusCode != "200")
                     {
                         throw new Exception(response.StatusMessage);
