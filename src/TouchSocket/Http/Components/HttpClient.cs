@@ -165,7 +165,6 @@ namespace TouchSocket.Http
                         .SetHost(remoteHost.Host)
                         .SetUrl(remoteHost.Host, true)
                         .AsMethod("CONNECT");
-                    // string ss = httpRequest.ToString();
                     var response = this.Request(httpRequest, timeout: timeout);
                     if (response.IsProxyAuthenticationRequired)
                     {
@@ -173,21 +172,21 @@ namespace TouchSocket.Http
                         {
                             throw new Exception("未指定代理的凭据。");
                         }
-                        if (response.Headers.ContainsKey("proxy-authenticate") == false || response.Headers["proxy-authenticate"].IsNullOrEmpty())
+                        string authHeader = response.GetHeader(HttpHeaders.ProxyAuthenticate);
+                        if (authHeader.IsNullOrEmpty())
                         {
                             throw new Exception("未指定代理身份验证质询。");
                         }
 
-                        var AuthHeader = response.Headers["proxy-authenticate"];
-                        var ares = new AuthenticationChallenge(AuthHeader, credential);
+                       var ares = new AuthenticationChallenge(authHeader, credential);
 
-                        httpRequest.Headers.Add("proxy-authorization", ares.ToString());
-
-                        /**
-                         * 重新发起连接请求是否需要手动释放上一个？
-                         */
-                        base.Close();
-                        base.Connect(timeout);
+                        httpRequest.SetHeader(HttpHeaders.ProxyAuthorization, ares.ToString());
+                        if (response.CloseConnection)
+                        {
+                            base.Close("代理要求关闭连接，随后重写连接。");
+                            base.Connect(timeout);
+                        }
+                       
                         response = this.Request(httpRequest, timeout: timeout);
                     }
 

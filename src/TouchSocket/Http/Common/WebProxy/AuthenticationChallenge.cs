@@ -1,30 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Http.WebProxy
 {
     /// <summary>
     /// 处理代理认证凭证
     /// </summary>
-    public class AuthenticationChallenge
+    internal class AuthenticationChallenge
     {
-        /// <summary>
-        /// 凭证类型
-        /// </summary>
-        public AuthenticationType type { get; set; }
-        /// <summary>
-        /// 其实用不用他都一样 
-        /// </summary>
-        public Dictionary<string, string> parameters { get; set; }
-
-        /// <summary>
-        /// 暂时不知
-        /// </summary>
-        public uint NonceCount { get; set; }
-
         /// <summary>
         /// 构造
         /// </summary>
@@ -37,6 +21,34 @@ namespace TouchSocket.Http.WebProxy
             this.NonceCount = nonceCount;
         }
 
+        /// <summary>
+        /// 暂时不知
+        /// </summary>
+        public uint NonceCount { get; set; }
+
+        /// <summary>
+        /// 其实用不用他都一样
+        /// </summary>
+        public Dictionary<string, string> Parameters { get; set; }
+
+        /// <summary>
+        /// 凭证类型
+        /// </summary>
+        public AuthenticationType Type { get; set; }
+
+        /// <summary>
+        /// 转换成凭证本文
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public override string ToString()
+        {
+            if (Type == AuthenticationType.Basic)
+                return ToBasicString();
+            else
+                throw new Exception("该凭证类型不支持");
+        }
+
         private void Parse(string value, NetworkCredential credential)
         {
             var chal = value.Split(new[] { ' ' }, 2);
@@ -44,21 +56,21 @@ namespace TouchSocket.Http.WebProxy
                 throw new Exception("该凭证类型不支持");
 
             var schm = chal[0].ToLower();
-            this.parameters = ParseParameters(chal[1]);
+            this.Parameters = ParseParameters(chal[1]);
 
-            if (this.parameters.ContainsKey("username") == false)
-                this.parameters.Add("username", credential.Username);
-            if (this.parameters.ContainsKey("password") == false)
-                this.parameters.Add("password", credential.Password);
+            if (this.Parameters.ContainsKey("username") == false)
+                this.Parameters.Add("username", credential.Username);
+            if (this.Parameters.ContainsKey("password") == false)
+                this.Parameters.Add("password", credential.Password);
 
-            /*   
+            /*
              *   Basic基本类型貌似只需要用户名密码即可
              *   if (this.parameters.ContainsKey("uri") == false)
                      this.parameters.Add("uri", credential.Domain);*/
 
             if (schm == "basic")
             {
-                this.type = AuthenticationType.Basic;
+                this.Type = AuthenticationType.Basic;
             }
             else
                 throw new Exception("该凭证类型不支持");
@@ -76,7 +88,7 @@ namespace TouchSocket.Http.WebProxy
                           ? param.Trim().Trim('"')
                           : i < param.Length - 1
                             ? param.Substring(i + 1).Trim().Trim('"')
-                            : String.Empty;
+                            : string.Empty;
 
                 res.Add(name, val);
             }
@@ -129,22 +141,9 @@ namespace TouchSocket.Http.WebProxy
 
         private string ToBasicString()
         {
-            var userPass = $"{parameters["username"]}:{parameters["password"]}";
+            var userPass = $"{Parameters["username"]}:{Parameters["password"]}";
             var cred = Convert.ToBase64String(Encoding.UTF8.GetBytes(userPass));
             return "Basic " + cred;
-        }
-
-        /// <summary>
-        /// 转换成凭证本文
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public override string ToString()
-        {
-            if (type == AuthenticationType.Basic)
-                return ToBasicString();
-            else
-                throw new Exception("该凭证类型不支持");
         }
     }
 }

@@ -41,7 +41,15 @@ namespace TouchSocket.Http.WebProxy
         /// 凭证密码
         /// </summary>
         public string Password { get; }
+
+        /// <summary>
+        /// Domain
+        /// </summary>
         public string Domain { get; }
+
+        /// <summary>
+        /// Roles
+        /// </summary>
         public string[] Roles { get; }
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Http.WebProxy;
+﻿using TouchSocket.Http.WebProxy;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -22,6 +16,7 @@ namespace TouchSocket.Http
         {
             this.Host = host;
         }
+
         /// <summary>
         /// 带基本验证的代理
         /// </summary>
@@ -35,12 +30,13 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 代理的地址
-        /// </summary>
-        public IPHost Host { get; set; }
-        /// <summary>
         /// 验证代理
         /// </summary>
         public NetworkCredential Credential { get; set; }
+
+        /// <summary>
+        /// 代理的地址
+        /// </summary>
+        public IPHost Host { get; set; }
     }
 }
