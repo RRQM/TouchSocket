@@ -75,6 +75,17 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 关闭会话请求
+        /// </summary>
+        public bool CloseConnection
+        {
+            get
+            {
+                return this.GetHeader(HttpHeaders.Connection).Equals("close", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        /// <summary>
         /// 是否重定向
         /// </summary>
         public bool IsRedirect
