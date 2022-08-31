@@ -21,6 +21,7 @@ namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
     /// WebSocketClient用户终端简单实现。
+    /// Pull Requests
     /// </summary>
     public class WebSocketClient : WebSocketClientBase
     {
