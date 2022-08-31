@@ -15,7 +15,6 @@ using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Run;
-using TouchSocket.Http.WebProxy;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
