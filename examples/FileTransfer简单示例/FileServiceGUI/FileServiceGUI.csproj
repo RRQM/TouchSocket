@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net45</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Images\完成.png" />
+    <None Remove="Resources\Images\未完成.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RRQMSkin" Version="4.0.0" />
+    <PackageReference Include="TouchSocket" Version="0.4.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Images\完成.png" />
+    <Resource Include="Resources\Images\未完成.png" />
+  </ItemGroup>
+
+</Project>
