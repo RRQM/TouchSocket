@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Http.WebProxy
+namespace TouchSocket.Http
 {
     /// <summary>
     /// 代理身份认证

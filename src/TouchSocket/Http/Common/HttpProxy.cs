@@ -1,5 +1,4 @@
-﻿using TouchSocket.Http.WebProxy;
-using TouchSocket.Sockets;
+﻿using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
 {

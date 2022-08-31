@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TouchSocket.Http.WebProxy
+namespace TouchSocket.Http
 {
     /// <summary>
     /// 处理代理认证凭证
