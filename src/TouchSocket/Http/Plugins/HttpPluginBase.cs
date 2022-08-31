@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Sockets;
 using TouchSocket.Sockets.Plugins;
 
@@ -89,5 +90,88 @@ namespace TouchSocket.Http.Plugins
         {
             this.OnPost(client, e);
         }
+
+        Task IHttpPlugin.OnDeleteAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return this.OnDeleteAsync(client,e);
+        }
+
+        Task IHttpPlugin.OnGetAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return this.OnGetAsync(client, e);
+        }
+
+        Task IHttpPlugin.OnPostAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+           return this.OnPostAsync(client, e);
+        }
+
+        Task IHttpPlugin.OnPutAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+           return this.OnPutAsync(client, e);
+        }
+
+        Task IHttpPlugin.OnReceivedOtherHttpRequestAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return this.OnReceivedOtherHttpRequestAsync(client, e);
+        }
+
+        #region 虚函数
+        /// <summary>
+        /// 在收到Delete时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnDeleteAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// 在收到Get时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnGetAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// 在收到Post时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnPostAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        ///  在收到Put时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnPutAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// 在收到其他Http请求时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnReceivedOtherHttpRequestAsync(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+        #endregion
+
     }
 }

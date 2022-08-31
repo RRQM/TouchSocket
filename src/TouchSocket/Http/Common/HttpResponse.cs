@@ -64,6 +64,28 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 是否代理权限验证。
+        /// </summary>
+        public bool IsProxyAuthenticationRequired
+        {
+            get
+            {
+                return this.StatusCode == "407";
+            }
+        }
+
+        /// <summary>
+        /// 是否重定向
+        /// </summary>
+        public bool IsRedirect
+        {
+            get
+            {
+                return this.StatusCode == "301" || this.StatusCode == "302";
+            }
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public override bool CanRead => this.m_canRead;

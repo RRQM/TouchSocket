@@ -171,10 +171,11 @@ namespace TouchSocket.Http
         /// 设置Url，必须以“/”开头，可带参数
         /// </summary>
         /// <param name="url"></param>
+        /// <param name="justValue"></param>
         /// <returns></returns>
-        public HttpRequest SetUrl(string url)
+        public HttpRequest SetUrl(string url, bool justValue = false)
         {
-            if (url.StartsWith("/"))
+            if (justValue || url.StartsWith("/"))
             {
                 this.m_uRL = url;
             }
