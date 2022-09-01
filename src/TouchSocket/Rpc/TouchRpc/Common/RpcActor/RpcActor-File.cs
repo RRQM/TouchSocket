@@ -20,6 +20,7 @@ using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.IO;
 using TouchSocket.Core.Run;
 using TouchSocket.Core.Serialization;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -57,17 +58,17 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             if (fileRequest is null)
             {
-                return new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileRequest)));
+                return new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileRequest)));
             }
 
             if (fileOperator is null)
             {
-                return new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileOperator)));
+                return new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileOperator)));
             }
 
             if (string.IsNullOrEmpty(fileRequest.SavePath))
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(fileRequest.SavePath), fileRequest.SavePath)));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(fileRequest.SavePath)));
             }
 
             WaitFileInfo waitFileInfo = new WaitFileInfo();
@@ -95,19 +96,19 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
                             else if (waitFileResult.Status == 2)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetDescription(waitFileResult.Message)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteRefuse.GetDescription(waitFileResult.Message)));
                             }
                             else if (waitFileResult.Status == 3)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(waitFileResult.FileRequest.Path), waitFileResult.FileRequest.Path)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(waitFileResult.FileRequest.Path)));
                             }
                             else if (waitFileResult.Status == 4)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteFileNotExists.GetDescription(waitFileResult.FileRequest.Path)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.FileNotExists.GetDescription(waitFileResult.FileRequest.Path)));
                             }
                             else if (waitFileResult.Status == 6)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteNotSupported.GetDescription()));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteNotSupported.GetDescription()));
                             }
                             else
                             {
@@ -151,7 +152,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     return rpcActor.PullFile(fileRequest, fileOperator, metadata);
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             if (string.IsNullOrEmpty(targetID) || targetID == this.ID)
@@ -161,17 +162,17 @@ namespace TouchSocket.Rpc.TouchRpc
 
             if (fileRequest is null)
             {
-                return new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileRequest)));
+                return new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileRequest)));
             }
 
             if (fileOperator is null)
             {
-                return new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileOperator)));
+                return new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileOperator)));
             }
 
             if (string.IsNullOrEmpty(fileRequest.SavePath))
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(fileRequest.SavePath), fileRequest.SavePath)));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(fileRequest.SavePath)));
             }
 
             WaitFileInfo waitFileInfo = new WaitFileInfo();
@@ -200,23 +201,23 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
                             else if (waitFileResult.Status == 2)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetDescription(waitFileResult.Message)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteRefuse.GetDescription(waitFileResult.Message)));
                             }
                             else if (waitFileResult.Status == 3)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(waitFileResult.FileRequest.Path), waitFileResult.FileRequest.Path)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(waitFileResult.FileRequest.Path)));
                             }
                             else if (waitFileResult.Status == 4)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteFileNotExists.GetDescription(waitFileResult.FileRequest.Path)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.FileNotExists.GetDescription(waitFileResult.FileRequest.Path)));
                             }
                             else if (waitFileResult.Status == 6)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteNotSupported.GetDescription()));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteNotSupported.GetDescription()));
                             }
                             else if (waitFileResult.Status == 7)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ClientNotFind.GetDescription(targetID)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.ClientNotFind.GetDescription(targetID)));
                             }
                             else
                             {
@@ -287,17 +288,17 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             if (fileRequest is null)
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileRequest))));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileRequest))));
             }
 
             if (fileOperator is null)
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileOperator))));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileOperator))));
             }
 
             if (string.IsNullOrEmpty(fileRequest.SavePath))
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(fileRequest.SavePath), fileRequest.SavePath)));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(fileRequest.SavePath)));
             }
             string fullPath;
             if (Path.IsPathRooted(fileRequest.Path))
@@ -310,13 +311,13 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             if (!File.Exists(fullPath))
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(fullPath), fullPath)));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(fullPath)));
             }
 
-            TouchRpcFileInfo fileInfo;
+            TouchRpcFileInfo fileInfo = new TouchRpcFileInfo();
             try
             {
-                fileInfo = FileTool.GetFileInfo(fullPath, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume));
+                FileTool.GetFileInfo(fullPath, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume), ref fileInfo);
             }
             catch (Exception ex)
             {
@@ -351,19 +352,19 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
                             else if (waitTransferResult.Status == 2)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetDescription(waitTransferResult.Message)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteRefuse.GetDescription(waitTransferResult.Message)));
                             }
                             else if (waitTransferResult.Status == 3)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.FileExists.GetDescription(waitTransferResult.Path)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.FileExisted.GetDescription(waitTransferResult.Path)));
                             }
                             else if (waitTransferResult.Status == 4)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetDescription(waitTransferResult.Path)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.LoadStreamFail.GetDescription(waitTransferResult.Path)));
                             }
                             else if (waitTransferResult.Status == 6)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteNotSupported.GetDescription()));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteNotSupported.GetDescription()));
                             }
                             else
                             {
@@ -407,7 +408,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     return rpcActor.PushFile(fileRequest, fileOperator, metadata);
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             if (string.IsNullOrEmpty(targetID) || targetID == this.ID)
@@ -417,17 +418,17 @@ namespace TouchSocket.Rpc.TouchRpc
 
             if (fileRequest is null)
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileRequest))));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileRequest))));
             }
 
             if (fileOperator is null)
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(fileOperator))));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(fileOperator))));
             }
 
             if (string.IsNullOrEmpty(fileRequest.SavePath))
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(fileRequest.SavePath), fileRequest.SavePath)));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(fileRequest.SavePath)));
             }
 
             string fullPath;
@@ -442,13 +443,13 @@ namespace TouchSocket.Rpc.TouchRpc
 
             if (!File.Exists(fullPath))
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.PathInvalid.GetDescription(nameof(fullPath), fullPath)));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.PathInvalid.GetDescription(fullPath)));
             }
 
-            TouchRpcFileInfo fileInfo;
+            TouchRpcFileInfo fileInfo = new TouchRpcFileInfo();
             try
             {
-                fileInfo = FileTool.GetFileInfo(fullPath, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume));
+                FileTool.GetFileInfo(fullPath, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume), ref fileInfo);
             }
             catch (Exception ex)
             {
@@ -483,23 +484,23 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
                             else if (waitResult.Status == 2)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetDescription(waitResult.Message)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteRefuse.GetDescription(waitResult.Message)));
                             }
                             else if (waitResult.Status == 3)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.FileExists.GetDescription(waitResult.Path)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.FileExisted.GetDescription(waitResult.Path)));
                             }
                             else if (waitResult.Status == 4)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetDescription()));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.LoadStreamFail.GetDescription()));
                             }
                             else if (waitResult.Status == 6)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.RemoteNotSupported.GetDescription()));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.RemoteNotSupported.GetDescription()));
                             }
                             else if (waitResult.Status == 7)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.ClientNotFind.GetDescription(targetID)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.ClientNotFind.GetDescription(targetID)));
                             }
                             else
                             {
@@ -585,7 +586,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 try
                                 {
                                     waitTransfer.Status = 1;
-                                    this.SendDefaultObject(responseOrder, waitTransfer);
+                                    this.SendJsonObject(responseOrder, waitTransfer);
                                     long position = waitTransfer.Position;
                                     reader.Position = position;
                                     fileOperator.SetFileCompletedLength(position);
@@ -636,7 +637,7 @@ namespace TouchSocket.Rpc.TouchRpc
                             {
                                 waitTransfer.Status = 4;
                                 e = new FileTransferStatusEventArgs(TransferType.Pull,
-                                    args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(ResType.SetChannelFail)), null);
+                                    args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(TouchSocketRes.SetChannelFail)), null);
                             }
                         }
                     }
@@ -645,17 +646,17 @@ namespace TouchSocket.Rpc.TouchRpc
                         waitTransfer.Status = 2;
                         waitTransfer.Message = ex.Message;
                         e = new FileTransferStatusEventArgs(TransferType.Pull,
-                             args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(ResType.LoadStreamFail)), null);
+                             args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(TouchSocketRes.LoadStreamFail)), null);
                     }
                 }
                 else
                 {
                     e = new FileTransferStatusEventArgs(TransferType.Pull, null, null,
-                        new Result(ResultCode.Overtime, StringResStore.GetDescription(ResType.GetEventArgsFail)), null);
+                        new Result(ResultCode.Overtime, StringResStore.GetDescription(TouchSocketRes.GetEventArgsFail)), null);
                     waitTransfer.Status = 3;
                 }
 
-                this.SendDefaultObject(responseOrder, waitTransfer);
+                this.SendJsonObject(responseOrder, waitTransfer);
 
                 this.OnFileTransfered?.Invoke(this, e);
             }, null);
@@ -751,15 +752,15 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
                             else if (waitTransferResult.Status == 2)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetDescription(fileInfo.FilePath)));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.LoadStreamFail.GetDescription(fileInfo.FilePath)));
                             }
                             else if (waitTransferResult.Status == 3)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.GetEventArgsFail.GetDescription()));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.GetEventArgsFail.GetDescription()));
                             }
                             else if (waitTransferResult.Status == 4)
                             {
-                                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.SetChannelFail.GetDescription()));
+                                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.SetChannelFail.GetDescription()));
                             }
                             else
                             {
@@ -820,7 +821,7 @@ namespace TouchSocket.Rpc.TouchRpc
                             if (r == 0)
                             {
                                 channel.Complete();
-                                WaitResult waitResult=null;
+                                WaitResult waitResult = null;
                                 if (SpinWait.SpinUntil(() =>
                                 {
                                     if (this.m_eventArgs.TryRemove(waitTransfer.EventHashCode, out object obj))
@@ -878,12 +879,12 @@ namespace TouchSocket.Rpc.TouchRpc
                 }
                 else
                 {
-                    return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.SetChannelFail.GetDescription()));
+                    return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.SetChannelFail.GetDescription()));
                 }
             }
             catch (Exception ex)
             {
-                return fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetDescription(waitTransfer.Path, ex.Message)));
+                return fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.LoadStreamFail.GetDescription(waitTransfer.Path, ex.Message)));
             }
         }
 
@@ -922,7 +923,9 @@ namespace TouchSocket.Rpc.TouchRpc
                 if (File.Exists(fileRequest.Path))
                 {
                     //合法传输
-                    waitFileInfo.FileInfo = FileTool.GetFileInfo(fileRequest.Path, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume));
+                    TouchRpcFileInfo touchRpcFileInfo = new TouchRpcFileInfo();
+                    FileTool.GetFileInfo(fileRequest.Path, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume), ref touchRpcFileInfo);
+                    waitFileInfo.FileInfo = touchRpcFileInfo;
                     waitFileInfo.Status = 1;
                     waitFileInfo.EventHashCode = args.GetHashCode();
 
@@ -935,7 +938,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                  TransferType.Pull,
                                  eventArgs.FileRequest,
                                  eventArgs.Metadata,
-                                 new Result(ResultCode.Overtime, StringResStore.GetDescription(ResType.NoResponse)), null);
+                                 new Result(ResultCode.Overtime, StringResStore.GetDescription(TouchSocketRes.NoResponse)), null);
                             this.OnFileTransfered?.Invoke(this, e);
                         }
                     });
@@ -961,7 +964,7 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 if (this.ResponseType == ResponseType.None || this.ResponseType == ResponseType.Pull)
                 {
-                    this.SendDefaultObject(responseOrder, new WaitTransfer() { Sign = waitRemoteFileInfo.Sign, Status = 6 });
+                    this.SendJsonObject(responseOrder, new WaitTransfer() { Sign = waitRemoteFileInfo.Sign, Status = 6 });
                     return;
                 }
                 FileRequest fileRequest = waitRemoteFileInfo.FileRequest;
@@ -1008,7 +1011,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 waitTransfer.ChannelID = channel.ID;
                                 waitTransfer.Position = fileInfo.Position;
                                 waitTransfer.Status = 1;
-                                this.SendDefaultObject(responseOrder, waitTransfer);
+                                this.SendJsonObject(responseOrder, waitTransfer);
 
                                 fileOperator.SetFileCompletedLength(fileInfo.Position);
                                 while (channel.MoveNext())
@@ -1055,7 +1058,7 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
 
                             this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
-                            this.SendDefaultObject(TouchRpcUtility.P_509_PushFileAck_Request, new WaitResult()
+                            this.SendJsonObject(TouchRpcUtility.P_509_PushFileAck_Request, new WaitResult()
                             {
                                 Sign = args.GetHashCode(),
                                 Status = (byte)(fileOperator.Result.ResultCode == ResultCode.Success ? 1 : 0),
@@ -1068,7 +1071,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     {
                         waitTransfer.Status = 4;
                         waitTransfer.Message = ex.Message;
-                        fileOperator.SetFileResult(new Result(ResultCode.Error, ResType.LoadStreamFail.GetDescription(fileRequest.SavePath, ex.Message)));
+                        fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.LoadStreamFail.GetDescription(fileRequest.SavePath, ex.Message)));
                         this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                     }
                 }
@@ -1079,14 +1082,21 @@ namespace TouchSocket.Rpc.TouchRpc
                     this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                 }
 
-                this.SendDefaultObject(responseOrder, waitTransfer);
+                this.SendJsonObject(responseOrder, waitTransfer);
             }, null);
         }
 
-        private void SendDefaultObject(short protocol, object obj)
+        private void SendJsonObject(short protocol, object obj)
         {
             using ByteBlock byteBlock = new ByteBlock();
             byteBlock.WriteObject(obj, SerializationType.Json);
+            this.SocketSend(protocol, byteBlock);
+        }
+
+        private void SendFastObject(short protocol, object obj)
+        {
+            using ByteBlock byteBlock = new ByteBlock();
+            byteBlock.WriteObject(obj, SerializationType.FastBinary);
             this.SocketSend(protocol, byteBlock);
         }
     }

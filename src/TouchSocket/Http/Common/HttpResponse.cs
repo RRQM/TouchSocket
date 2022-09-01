@@ -64,39 +64,6 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 是否代理权限验证。
-        /// </summary>
-        public bool IsProxyAuthenticationRequired
-        {
-            get
-            {
-                return this.StatusCode == "407";
-            }
-        }
-
-        /// <summary>
-        /// 关闭会话请求
-        /// </summary>
-        public bool CloseConnection
-        {
-            get
-            {
-                return this.GetHeader(HttpHeaders.Connection).Equals("close", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-
-        /// <summary>
-        /// 是否重定向
-        /// </summary>
-        public bool IsRedirect
-        {
-            get
-            {
-                return this.StatusCode == "301" || this.StatusCode == "302";
-            }
-        }
-
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public override bool CanRead => this.m_canRead;
@@ -112,10 +79,41 @@ namespace TouchSocket.Http
         public override ITcpClientBase Client => this.m_client;
 
         /// <summary>
+        /// 关闭会话请求
+        /// </summary>
+        public bool CloseConnection
+        {
+            get
+            {
+                return this.GetHeader(HttpHeaders.Connection).Equals("close", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+        /// <summary>
         /// 是否分块
         /// </summary>
         public bool IsChunk { get; set; }
 
+        /// <summary>
+        /// 是否代理权限验证。
+        /// </summary>
+        public bool IsProxyAuthenticationRequired
+        {
+            get
+            {
+                return this.StatusCode == "407";
+            }
+        }
+
+        /// <summary>
+        /// 是否重定向
+        /// </summary>
+        public bool IsRedirect
+        {
+            get
+            {
+                return this.StatusCode == "301" || this.StatusCode == "302";
+            }
+        }
         /// <summary>
         /// 是否已经响应数据。
         /// </summary>

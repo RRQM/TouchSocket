@@ -11,13 +11,16 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Run;
 using TouchSocket.Core.Serialization;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -78,16 +81,16 @@ namespace TouchSocket.Rpc.TouchRpc
                                 }
                                 else
                                 {
-                                    return streamOperator.SetStreamResult(new Result(ResultCode.Error, ResType.SetChannelFail.GetDescription()));
+                                    return streamOperator.SetStreamResult(new Result(ResultCode.Error, TouchSocketRes.SetChannelFail.GetDescription()));
                                 }
                             }
                             else if (waitStreamResult.Status == 2)
                             {
-                                return streamOperator.SetStreamResult(new Result(ResultCode.Error, ResType.RemoteRefuse.GetDescription(waitStreamResult.Message)));
+                                return streamOperator.SetStreamResult(new Result(ResultCode.Error, TouchSocketRes.RemoteRefuse.GetDescription(waitStreamResult.Message)));
                             }
                             else if (waitStreamResult.Status == 3)
                             {
-                                return streamOperator.SetStreamResult(new Result(ResultCode.Error, ResType.RemoteException.GetDescription(waitStreamResult.Message)));
+                                return streamOperator.SetStreamResult(new Result(ResultCode.Error, TouchSocketRes.Exception.GetDescription(waitStreamResult.Message)));
                             }
                             else
                             {
@@ -115,10 +118,25 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             finally
             {
+                this.WaitHandlePool.Destroy(waitData);
                 byteBlock.Dispose();
             }
         }
 
+        /// <summary>
+        /// 发送流数据
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="streamOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public Task<Result> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = default)
+        {
+            return Task.Run(() =>
+            {
+                return this.SendStream(stream, streamOperator, metadata);
+            });
+        }
         private void P_8_RequestStreamToThis(WaitStream waitStream)
         {
             StreamOperator streamOperator = new StreamOperator();
@@ -139,7 +157,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     }
                     else
                     {
-                        streamOperator.SetStreamResult(new Result(ResultCode.Error, ResType.StreamBucketNull.GetDescription()));
+                        streamOperator.SetStreamResult(new Result(ResultCode.Error, TouchSocketRes.StreamBucketNull.GetDescription()));
                         waitStream.Status = 3;
                         waitStream.Message = "未设置流容器";
 
@@ -153,7 +171,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     waitStream.Status = 2;
                     waitStream.Message = args.Message;
 
-                    this.OnStreamTransfered?.Invoke(this, new StreamStatusEventArgs(new Result(ResultCode.Error, ResType.RemoteRefuse.GetDescription(waitStream.Message)), waitStream.Metadata, streamInfo)
+                    this.OnStreamTransfered?.Invoke(this, new StreamStatusEventArgs(new Result(ResultCode.Error, TouchSocketRes.RemoteRefuse.GetDescription(waitStream.Message)), waitStream.Metadata, streamInfo)
                     { Message = args.Message });
                 }
             }
@@ -171,21 +189,6 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 this.SocketSend(TouchRpcUtility.P_1400_SendStreamToSocketClient_Response, byteBlock);
             }
-        }
-
-        /// <summary>
-        /// 发送流数据
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="streamOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = default)
-        {
-            return Task.Run(() =>
-            {
-                return this.SendStream(stream, streamOperator, metadata);
-            });
         }
 
         private void P_9_RequestStreamToThis(WaitStream waitStream)
@@ -209,7 +212,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     }
                     else
                     {
-                        streamOperator.SetStreamResult(new Result(ResultCode.Error, ResType.StreamBucketNull.GetDescription()));
+                        streamOperator.SetStreamResult(new Result(ResultCode.Error, TouchSocketRes.StreamBucketNull.GetDescription()));
                         waitStream.Status = 3;
                         waitStream.Message = "未设置流容器";
 
@@ -223,7 +226,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     waitStream.Status = 2;
                     waitStream.Message = args.Message;
 
-                    this.OnStreamTransfered?.Invoke(this, new StreamStatusEventArgs(new Result(ResultCode.Error, ResType.RemoteRefuse.GetDescription(waitStream.Message)), waitStream.Metadata, streamInfo)
+                    this.OnStreamTransfered?.Invoke(this, new StreamStatusEventArgs(new Result(ResultCode.Error, TouchSocketRes.RemoteRefuse.GetDescription(waitStream.Message)), waitStream.Metadata, streamInfo)
                     { Message = args.Message });
                 }
             }

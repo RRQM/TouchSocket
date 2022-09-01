@@ -17,6 +17,7 @@ using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Plugins;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -212,7 +213,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -229,7 +230,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -252,7 +253,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -269,7 +270,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
             }
         }
 

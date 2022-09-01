@@ -13,6 +13,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core.IO
 {
@@ -21,7 +22,7 @@ namespace TouchSocket.Core.IO
     /// </summary>
     public class FileStorage : IDisposable
     {
-        internal int reference;
+        internal int m_reference;
         private bool m_cache;
         private bool m_disposedValue;
         private FileAccess? m_fileAccess;
@@ -43,6 +44,14 @@ namespace TouchSocket.Core.IO
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
             this.Dispose(disposing: false);
+        }
+
+        /// <summary>
+        /// 写入时清空缓存区
+        /// </summary>
+        public void Flush()
+        {
+            this.m_fileStream.Flush();
         }
 
         /// <summary>
@@ -73,7 +82,13 @@ namespace TouchSocket.Core.IO
         /// <summary>
         /// 引用次数。
         /// </summary>
-        public int Reference => this.reference;
+        public int Reference => this.m_reference;
+
+        /// <summary>
+        /// 文件流。
+        /// 一般情况下，请不要直接访问该对象。否则有可能会产生不可预测的错误。
+        /// </summary>
+        public FileStream FileStream { get => this.m_fileStream;}
 
         /// <summary>
         /// 创建一个只读的、已经缓存的文件信息。该操作不会占用文件句柄。
@@ -88,7 +103,7 @@ namespace TouchSocket.Core.IO
             if (!File.Exists(path))
             {
                 fileStorage = null;
-                msg = ResType.FileNotExists.GetDescription(path);
+                msg = TouchSocketRes.FileNotExists.GetDescription(path);
                 return false;
             }
             try
@@ -99,7 +114,7 @@ namespace TouchSocket.Core.IO
                     m_fileAccess = FileAccess.Read,
                     m_fileInfo = new FileInfo(path),
                     m_path = path,
-                    reference = 0,
+                    m_reference = 0,
                     m_fileData = File.ReadAllBytes(path)
                 };
                 msg = null;
@@ -127,7 +142,7 @@ namespace TouchSocket.Core.IO
             if (fileAccess == FileAccess.Read && !File.Exists(path))
             {
                 fileStorage = null;
-                msg = ResType.FileNotExists.GetDescription(path);
+                msg = TouchSocketRes.FileNotExists.GetDescription(path);
                 return false;
             }
             try
@@ -137,7 +152,7 @@ namespace TouchSocket.Core.IO
                     m_fileAccess = fileAccess,
                     m_fileInfo = new FileInfo(path),
                     m_path = path,
-                    reference = 0,
+                    m_reference = 0,
                     m_fileStream = new FileStream(path, FileMode.OpenOrCreate, fileAccess)
                 };
                 msg = null;
@@ -156,7 +171,7 @@ namespace TouchSocket.Core.IO
         /// </summary>
         public void Dispose()
         {
-            if (this.reference > 0)
+            if (this.m_reference > 0)
             {
                 throw new Exception("当前对象引用次数不为0，请先降低其引用。");
             }

@@ -281,9 +281,10 @@ namespace TouchSocket.Http
                 string[] kv = item.SplitFirst(':');
                 if (kv.Length == 2)
                 {
-                    if (!this.m_headers.ContainsKey(kv[0]))
+                    string key = kv[0].ToLower();
+                    if (!this.m_headers.ContainsKey(key))
                     {
-                        this.m_headers.Add(kv[0].ToLower(), kv[1]);
+                        this.m_headers.Add(key, kv[1]);
                     }
                 }
             }

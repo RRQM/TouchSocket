@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using TouchSocket.Core.Reflection;
 
-namespace TouchSocket
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 映射数据

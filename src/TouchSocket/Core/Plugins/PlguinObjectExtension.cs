@@ -25,7 +25,7 @@ namespace TouchSocket.Core.Plugins
         /// </summary>
         /// <typeparam name="TPlugin">插件类型</typeparam>
         /// <returns>插件类型实例</returns>
-        public static TPlugin AddPlugin<TPlugin>(this IPlguinObject plguinObject) where TPlugin : class, IPlugin
+        public static TPlugin AddPlugin<TPlugin>(this IPluginObject plguinObject) where TPlugin : class, IPlugin
         {
             var obj = plguinObject.Container.Resolve<TPlugin>();
             AddPlugin(plguinObject, obj);
@@ -38,7 +38,7 @@ namespace TouchSocket.Core.Plugins
         /// <param name="plguinObject"></param>
         /// <param name="plugin">插件</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public static void AddPlugin(this IPlguinObject plguinObject, IPlugin plugin)
+        public static void AddPlugin(this IPluginObject plguinObject, IPlugin plugin)
         {
             plguinObject.PluginsManager.Add(plugin);
         }
@@ -46,7 +46,7 @@ namespace TouchSocket.Core.Plugins
         /// <summary>
         /// 清空插件
         /// </summary>
-        public static void ClearPlugins(this IPlguinObject plguinObject)
+        public static void ClearPlugins(this IPluginObject plguinObject)
         {
             plguinObject.PluginsManager.Clear();
         }
@@ -56,7 +56,7 @@ namespace TouchSocket.Core.Plugins
         /// </summary>
         /// <param name="plguinObject"></param>
         /// <param name="plugin"></param>
-        public static void RemovePlugin(this IPlguinObject plguinObject, IPlugin plugin)
+        public static void RemovePlugin(this IPluginObject plguinObject, IPlugin plugin)
         {
             plguinObject.PluginsManager.Remove(plugin);
         }
@@ -66,7 +66,7 @@ namespace TouchSocket.Core.Plugins
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="plguinObject"></param>
-        public static void RemovePlugin<T>(this IPlguinObject plguinObject) where T : IPlugin
+        public static void RemovePlugin<T>(this IPluginObject plguinObject) where T : IPlugin
         {
             plguinObject.PluginsManager.Remove(typeof(T));
         }

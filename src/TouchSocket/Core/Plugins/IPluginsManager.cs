@@ -22,6 +22,11 @@ namespace TouchSocket.Core.Plugins
     public interface IPluginsManager : IEnumerable<IPlugin>
     {
         /// <summary>
+        /// 标识该插件是否可用。当不可用时，仅可以添加和删除插件，但不会触发插件
+        /// </summary>
+        bool Enable { get; set; }
+
+        /// <summary>
         /// 内置IOC容器
         /// </summary>
         IContainer Container { get; }
@@ -55,7 +60,8 @@ namespace TouchSocket.Core.Plugins
         /// </summary>
         /// <typeparam name="TPlugin">接口类型</typeparam>
         /// <param name="name">触发名称</param>
-        /// <param name="params">参数</param>
-        bool Raise<TPlugin>(string name, params object[] @params) where TPlugin : IPlugin;
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        bool Raise<TPlugin>(string name, object sender, TouchSocketEventArgs e) where TPlugin : IPlugin;
     }
 }

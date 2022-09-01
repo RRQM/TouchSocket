@@ -14,6 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
+using TouchSocket.Resources;
 using TouchSocket.Core.Run;
 using TouchSocket.Sockets;
 
@@ -94,7 +95,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     return rpcActor.CreateChannel();
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             ByteBlock byteBlock = new ByteBlock();
@@ -124,7 +125,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 {
                                     return channel;
                                 }
-                                throw new Exception(ResType.UnknownError.GetDescription());
+                                throw new Exception(TouchSocketRes.UnknownError.GetDescription());
                             }
                             else
                             {
@@ -137,7 +138,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                     default:
                         {
-                            throw new Exception(ResType.UnknownError.GetDescription());
+                            throw new Exception(TouchSocketRes.UnknownError.GetDescription());
                         }
                 }
             }
@@ -166,7 +167,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     return rpcActor.CreateChannel();
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             ByteBlock byteBlock = new ByteBlock();
@@ -195,7 +196,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 {
                                     return channel;
                                 }
-                                throw new Exception(ResType.UnknownError.GetDescription());
+                                throw new Exception(TouchSocketRes.UnknownError.GetDescription());
                             }
                             else
                             {
@@ -208,7 +209,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                     default:
                         {
-                            throw new Exception(ResType.UnknownError.GetDescription());
+                            throw new Exception(TouchSocketRes.UnknownError.GetDescription());
                         }
                 }
             }

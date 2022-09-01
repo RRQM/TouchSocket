@@ -151,6 +151,17 @@ namespace TouchSocket.Core.Dependency
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="descriptor"></param>
+        /// <param name="key"></param>
+        public void Unregister(DependencyDescriptor descriptor, string key = "")
+        {
+            string k = $"{descriptor.FromType.FullName}{key}";
+            this.registrations.TryRemove(k, out _);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <param name="toType"></param>
         /// <param name="ops"></param>
         /// <returns></returns>

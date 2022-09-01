@@ -13,6 +13,7 @@
 using System.Collections.Generic;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
+using TouchSocket.Resources;
 using TouchSocket.Core.Run;
 using TouchSocket.Core.Serialization;
 using TouchSocket.Sockets;
@@ -171,7 +172,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     }
                 case 7:
                     {
-                        throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(this.ID));
+                        throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(this.ID));
                     }
                 default:
                     throw new RpcException($"未知状态定义，信息：{this.Message}");

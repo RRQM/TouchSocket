@@ -24,5 +24,13 @@ namespace TouchSocket.Core.Dependency
         /// <param name="key"></param>
         /// <param name="descriptor"></param>
         void Register(DependencyDescriptor descriptor, string key = "");
+
+        /// <summary>
+        /// 移除注册信息。
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        void Unregister(DependencyDescriptor descriptor, string key = "");
     }
 }

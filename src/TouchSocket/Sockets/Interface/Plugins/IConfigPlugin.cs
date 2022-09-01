@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets
@@ -24,13 +25,30 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        [AsyncRaiser]
         void OnLoadingConfig(object sender, ConfigEventArgs e);
+
+        /// <summary>
+        /// 当载入配置时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        Task OnLoadingConfigAsync(object sender, ConfigEventArgs e);
 
         /// <summary>
         /// 当完成配置载入时
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        [AsyncRaiser]
         void OnLoadedConfig(object sender, ConfigEventArgs e);
+
+        /// <summary>
+        /// 当完成配置载入时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnLoadedConfigAsync(object sender, ConfigEventArgs e);
     }
 }

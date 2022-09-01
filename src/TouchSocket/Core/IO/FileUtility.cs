@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
@@ -177,6 +178,16 @@ namespace TouchSocket.Core.IO
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 获取文件夹下一级文件名称，不含路径。
+        /// </summary>
+        /// <param name="sourceFolder"></param>
+        /// <returns></returns>
+        public static string[] GetFiles(string sourceFolder)
+        {
+           return Directory.GetFiles(sourceFolder).Select(s=>Path.GetFileName(s)).ToArray();
         }
 
 # if NET45_OR_GREATER

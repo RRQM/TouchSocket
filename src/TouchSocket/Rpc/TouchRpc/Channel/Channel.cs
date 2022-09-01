@@ -26,10 +26,8 @@ namespace TouchSocket.Rpc.TouchRpc
     {
         private readonly IInternalRpc m_client;
         private int m_cacheCapacity;
-
         private volatile bool m_canFree;
         private ByteBlock m_currentByteBlock;
-
         private IntelligentDataQueue<ChannelData> m_dataQueue;
         private int m_id;
         private string m_lastOperationMes;

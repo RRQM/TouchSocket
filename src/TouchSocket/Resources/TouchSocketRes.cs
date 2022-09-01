@@ -13,12 +13,12 @@
 
 using System.ComponentModel;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Resources
 {
     /// <summary>
-    /// RRQM资源枚举
+    /// TouchSocket资源枚举
     /// </summary>
-    public enum ResType
+    public enum TouchSocketRes
     {
         /// <summary>
         /// 未知错误
@@ -27,58 +27,40 @@ namespace TouchSocket.Core
         UnknownError,
 
         /// <summary>
-        /// 参数为空
+        /// 操作超时
+        /// </summary>
+        [Description("操作超时")]
+        Overtime,
+
+        /// <summary>
+        /// 参数‘{0}’为空。
         /// </summary>
         [Description("参数‘{0}’为空。")]
         ArgumentNull,
 
         /// <summary>
-        /// 远程终端拒绝该操作
+        /// 远程终端拒绝该操作，反馈信息：{0}。
         /// </summary>
         [Description("远程终端拒绝该操作，反馈信息：{0}。")]
         RemoteRefuse,
 
         /// <summary>
-        /// 远程终端不响应该操作
+        /// 远程终端不响应该操作。
         /// </summary>
         [Description("远程终端不支持响应该操作。")]
         RemoteNotSupported,
 
         /// <summary>
-        /// 远程终端异常
+        /// 远程终端异常，信息：{0}。
         /// </summary>
-        [Description("远程终端异常，信息：{0}。")]
-        RemoteException,
+        [Description("发生异常，信息：{0}。")]
+        Exception,
 
         /// <summary>
-        /// 通道设置失败
+        /// 通道设置失败。
         /// </summary>
         [Description("通道设置失败。")]
         SetChannelFail,
-
-        /// <summary>
-        /// 路径无效
-        /// </summary>
-        [Description("参数‘{0}’设置的路径‘{1}’不合法。")]
-        PathInvalid,
-
-        /// <summary>
-        /// 文件已存在
-        /// </summary>
-        [Description("文件‘{0}’已存在。")]
-        FileExists,
-
-        /// <summary>
-        /// 文件不存在
-        /// </summary>
-        [Description("文件‘{0}’不存在。")]
-        FileNotExists,
-
-        /// <summary>
-        /// 远程文件不存在
-        /// </summary>
-        [Description("远程文件‘{0}’不存在。")]
-        RemoteFileNotExists,
 
         /// <summary>
         /// 创建写入流失败
@@ -111,7 +93,7 @@ namespace TouchSocket.Core
         StreamBucketNull,
 
         /// <summary>
-        /// 加载流异常。
+        /// 从‘{0}’路径加载流异常，信息：‘{1}’。
         /// </summary>
         [Description("从‘{0}’路径加载流异常，信息：‘{1}’。")]
         LoadStreamFail,
@@ -132,7 +114,7 @@ namespace TouchSocket.Core
         /// 该Token消息已注册
         /// </summary>
         [Description("Token消息为‘{0}’的已注册。")]
-        TokenExist,
+        TokenExisted,
 
         /// <summary>
         /// 信息未找到
@@ -147,12 +129,6 @@ namespace TouchSocket.Core
         NullDataAdapter,
 
         /// <summary>
-        /// 操作超时
-        /// </summary>
-        [Description("操作超时")]
-        Overtime,
-
-        /// <summary>
         /// 名称为“{0}”的事件已存在
         /// </summary>
         [Description("名称为“{0}”的事件已存在。")]
@@ -163,6 +139,36 @@ namespace TouchSocket.Core
         /// </summary>
         [Description("名称为“{0}”的事件不存在。")]
         EventNotExist,
+
+        /// <summary>
+        /// 目录‘{0}’已存在。
+        /// </summary>
+        [Description("目录‘{0}’已存在。")]
+        DirectoryExisted,
+
+        /// <summary>
+        /// 路径‘{0}’无效。
+        /// </summary>
+        [Description("路径‘{0}’无效。")]
+        PathInvalid,
+
+        /// <summary>
+        /// 文件‘{0}’已存在。
+        /// </summary>
+        [Description("文件‘{0}’已存在。")]
+        FileExisted,
+
+        /// <summary>
+        /// 文件‘{0}’不存在。
+        /// </summary>
+        [Description("文件‘{0}’不存在。")]
+        FileNotExists,
+
+        /// <summary>
+        /// 目录‘{0}’不存在。
+        /// </summary>
+        [Description("目录‘{0}’不存在。")]
+        DirectoryNotExists,
 
         /// <summary>
         /// 客户端没有连接

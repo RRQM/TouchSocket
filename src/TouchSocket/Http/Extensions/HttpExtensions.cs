@@ -371,8 +371,6 @@ namespace TouchSocket.Http
 
                 if (response.CanWrite)
                 {
-                    response.IsChunk = false;
-
                     HttpRange httpRange;
                     string range = request?.GetHeader(HttpHeaders.Range);
                     if (string.IsNullOrEmpty(range))

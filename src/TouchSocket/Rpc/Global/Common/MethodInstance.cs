@@ -28,7 +28,6 @@ namespace TouchSocket.Rpc
         /// <param name="methodInfo"></param>
         public MethodInstance(MethodInfo methodInfo) : base(methodInfo)
         {
-            
         }
 
         /// <summary>

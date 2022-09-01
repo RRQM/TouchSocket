@@ -16,28 +16,8 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// 文件信息
     /// </summary>
-    public class TouchRpcFileInfo
+    public class TouchRpcFileInfo: RemoteFileInfo
     {
-        /// <summary>
-        /// 文件MD5
-        /// </summary>
-        public string MD5 { get; set; }
-
-        /// <summary>
-        /// 文件大小
-        /// </summary>
-        public long FileLength { get; set; }
-
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string FilePath { get; set; }
-
         /// <summary>
         /// 流位置
         /// </summary>

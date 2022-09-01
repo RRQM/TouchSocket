@@ -30,14 +30,12 @@ namespace TouchSocket.Rpc.TouchRpc
         public FileOperationEventArgs(TransferType transferType, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata, TouchRpcFileInfo fileInfo)
             : base(transferType, fileRequest, metadata, fileInfo)
         {
-            this.fileOperator = fileOperator;
+            this.FileOperator = fileOperator;
         }
-
-        private readonly FileOperator fileOperator;
 
         /// <summary>
         /// 文件操作器
         /// </summary>
-        public FileOperator FileOperator => this.fileOperator;
+        public FileOperator FileOperator { get; private set; }
     }
 }

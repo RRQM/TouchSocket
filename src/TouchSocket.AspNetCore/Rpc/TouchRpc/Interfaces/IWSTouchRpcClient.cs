@@ -20,7 +20,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
     /// <summary>
     /// IWSTouchRpcClient
     /// </summary>
-    public interface IWSTouchRpcClient : ITouchRpc, IPlguinObject, IRpcParser
+    public interface IWSTouchRpcClient : ITouchRpc, IPluginObject, IRpcParser
     {
         /// <summary>
         /// 异步连接

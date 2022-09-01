@@ -21,6 +21,7 @@ using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -228,7 +229,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_usePlugin)
             {
-                this.PluginsManager.Raise<ITcpPlugin>("OnIDChanged", socketClient, e);
+                this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnIDChanged), socketClient, e);
                 if (e.Handled)
                 {
                     return;
@@ -320,7 +321,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(oldID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(oldID));
             }
         }
 

@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Dependency;
+using TouchSocket.Resources;
 using TouchSocket.Core.Run;
 
 namespace TouchSocket.Sockets
@@ -292,7 +293,7 @@ namespace TouchSocket.Sockets
                         case WaitDataStatus.Default:
                         case WaitDataStatus.Disposed:
                         default:
-                            throw new Exception(ResType.UnknownError.GetDescription());
+                            throw new Exception(TouchSocketRes.UnknownError.GetDescription());
                     }
                 }
                 finally
@@ -520,7 +521,8 @@ namespace TouchSocket.Sockets
             {
                 responsedData = new ResponsedData(null, requestInfo);
             }
-            return !this.m_waitData.Set(responsedData);
+
+             return !this.m_waitData.Set(responsedData);
         }
     }
 }

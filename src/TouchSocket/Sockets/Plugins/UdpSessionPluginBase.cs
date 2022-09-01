@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
@@ -30,6 +31,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <inheritdoc/>
         /// </summary>
         public int Order { get; set; }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -45,6 +47,11 @@ namespace TouchSocket.Sockets.Plugins
             this.OnReceivedData(client, e);
         }
 
+        Task IUdpSessionPlugin.OnReceivedDataAsync(IUdpSession client, UdpReceivedDataEventArgs e)
+        {
+            return this.OnReceivedDataAsync(client, e);
+        }
+
         /// <summary>
         /// 收到数据
         /// </summary>
@@ -52,7 +59,17 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         protected virtual void OnReceivedData(IUdpSession client, UdpReceivedDataEventArgs e)
         {
+        }
 
+        /// <summary>
+        /// 在收到数据时触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnReceivedDataAsync(IUdpSession client, UdpReceivedDataEventArgs e)
+        {
+            return Task.FromResult(0);
         }
     }
 }

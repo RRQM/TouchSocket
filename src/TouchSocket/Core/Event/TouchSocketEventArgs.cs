@@ -25,7 +25,7 @@ namespace TouchSocket.Core
         /// </summary>
         public bool IsPermitOperation
         {
-            get => this.operation.HasFlag(Operation.Permit);
+            get => this.Operation.HasFlag(Operation.Permit);
             set
             {
                 if (value)
@@ -44,7 +44,7 @@ namespace TouchSocket.Core
         /// </summary>
         public bool Handled
         {
-            get => this.operation.HasFlag(Operation.Handled);
+            get => this.Operation.HasFlag(Operation.Handled);
             set
             {
                 if (value)
@@ -58,12 +58,10 @@ namespace TouchSocket.Core
             }
         }
 
-        private Operation operation;
-
         /// <summary>
         /// 操作类型。
         /// </summary>
-        public Operation Operation => this.operation;
+        public Operation Operation { get; private set; }
 
         /// <summary>
         /// 添加操作
@@ -71,7 +69,7 @@ namespace TouchSocket.Core
         /// <param name="operation"></param>
         public void AddOperation(Operation operation)
         {
-            this.operation |= operation;
+            this.Operation |= operation;
         }
 
         /// <summary>
@@ -80,9 +78,9 @@ namespace TouchSocket.Core
         /// <param name="operation"></param>
         public void RemoveOperation(Operation operation)
         {
-            if (this.operation.HasFlag(operation))
+            if (this.Operation.HasFlag(operation))
             {
-                this.operation ^= operation;
+                this.Operation ^= operation;
             }
         }
     }

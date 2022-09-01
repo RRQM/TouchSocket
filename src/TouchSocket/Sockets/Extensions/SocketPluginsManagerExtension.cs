@@ -34,11 +34,11 @@ namespace TouchSocket.Core.Plugins
         /// <param name="printLog">是否输出日志。</param>
         /// <param name="sleepTime">失败时，停留时间</param>
         /// <returns></returns>
-        public static IPluginsManager UseReconnection(this IPluginsManager pluginsManager, int tryCount = 10, 
+        public static IPluginsManager UseReconnection(this IPluginsManager pluginsManager, int tryCount = 10,
             bool printLog = false, int sleepTime = 1000, Action<ITcpClient> successCallback = null)
         {
             bool first = true;
-            var reconnectionPlugin = new ReconnectionPlugin<ITcpClient>(client=> 
+            var reconnectionPlugin = new ReconnectionPlugin<ITcpClient>(client =>
             {
                 int tryT = tryCount;
                 while (tryCount < 0 || tryT-- > 0)
@@ -85,7 +85,7 @@ namespace TouchSocket.Core.Plugins
         /// <param name="successCallback">成功连接时回调。</param>
         /// <returns></returns>
         public static IPluginsManager UseReconnection(this IPluginsManager pluginsManager, int sleepTime = 1000,
-            Func<ITcpClient,int,Exception,bool> failCallback=null,
+            Func<ITcpClient, int, Exception, bool> failCallback = null,
             Action<ITcpClient> successCallback = null)
         {
             bool first = true;
@@ -114,7 +114,7 @@ namespace TouchSocket.Core.Plugins
                     catch (Exception ex)
                     {
                         Thread.Sleep(sleepTime);
-                        if (failCallback?.Invoke(client, ++tryT, ex)!=true)
+                        if (failCallback?.Invoke(client, ++tryT, ex) != true)
                         {
                             return true;
                         }

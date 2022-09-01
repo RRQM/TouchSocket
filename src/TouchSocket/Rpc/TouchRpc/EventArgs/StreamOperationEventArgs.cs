@@ -20,7 +20,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class StreamOperationEventArgs : StreamEventArgs
     {
-        private readonly StreamOperator streamOperator;
 
         /// <summary>
         /// 构造函数
@@ -30,7 +29,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="streamInfo"></param>
         public StreamOperationEventArgs(StreamOperator streamOperator, Metadata metadata, StreamInfo streamInfo) : base(metadata, streamInfo)
         {
-            this.streamOperator = streamOperator ?? throw new ArgumentNullException(nameof(streamOperator));
+            this.StreamOperator = streamOperator ?? throw new ArgumentNullException(nameof(streamOperator));
             this.AddOperation(Operation.Permit);
         }
 
@@ -38,6 +37,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 流操作
         /// </summary>
-        public StreamOperator StreamOperator => this.streamOperator;
+        public StreamOperator StreamOperator { get; private set; }
     }
 }

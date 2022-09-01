@@ -21,9 +21,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class StreamEventArgs : MsgEventArgs
     {
-        private readonly Metadata metadata;
-
-        private readonly StreamInfo streamInfo;
 
         /// <summary>
         /// 构造函数
@@ -32,8 +29,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="streamInfo"></param>
         public StreamEventArgs(Metadata metadata, StreamInfo streamInfo)
         {
-            this.metadata = metadata;
-            this.streamInfo = streamInfo;
+            this.Metadata = metadata;
+            this.StreamInfo = streamInfo;
         }
 
         /// <summary>
@@ -44,11 +41,11 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 用于可传输的元数据
         /// </summary>
-        public Metadata Metadata => this.metadata;
+        public Metadata Metadata { get; private set; }
 
         /// <summary>
         /// 流信息
         /// </summary>
-        public StreamInfo StreamInfo => this.streamInfo;
+        public StreamInfo StreamInfo { get; private set; }
     }
 }

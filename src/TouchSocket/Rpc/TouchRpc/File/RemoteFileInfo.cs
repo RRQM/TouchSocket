@@ -11,39 +11,34 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Plugins;
+using System;
+using System.IO;
 
-namespace TouchSocket.Rpc.TouchRpc.AspNetCore
+namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
-    /// WSTouchRpcService服务器接口
+    /// 文件信息
     /// </summary>
-    public interface IWSTouchRpcService : ITouchRpcService, IPluginObject
+    public class RemoteFileInfo : RemoteFileSystemInfo
     {
         /// <summary>
-        /// 配置项
+        /// 文件MD5
         /// </summary>
-        TouchSocketConfig Config { get; }
+        public string MD5 { get; set; }
 
         /// <summary>
-        /// 连接验证口令
+        /// 文件大小
         /// </summary>
-        string VerifyToken { get; }
+        public long FileLength { get; set; }
 
         /// <summary>
-        /// 转换客户端
+        /// 文件名
         /// </summary>
-        /// <param name="webSocket"></param>
-        /// <returns></returns>
-        Task SwitchClientAsync(System.Net.WebSockets.WebSocket webSocket);
+        public string FileName { get; set; }
 
         /// <summary>
-        /// 重置ID
+        /// 文件路径
         /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
-        void ResetID(string oldID, string newID);
+        public string FilePath { get; set; }
     }
 }
