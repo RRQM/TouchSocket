@@ -48,6 +48,7 @@ namespace EERPCServiceDemo
 
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                .UsePlugin()
                 .ConfigurePlugins(a =>
                 {
                     a.Add<TouchRpcActionPlugin<TcpTouchRpcSocketClient>>()
