@@ -120,9 +120,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReverseRpcConsoleApp", "exa
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "控制台", "控制台", "{FB0FA0CF-1657-48F7-B852-FBA818F1AE8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileServiceConsoleApp", "examples\FileTransfer简单示例\FileClientApp\FileServiceConsoleApp\FileServiceConsoleApp.csproj", "{8C6EA0F4-78F6-4E5F-B633-848355B06331}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileServiceConsoleApp", "examples\FileTransfer简单示例\FileClientApp\FileServiceConsoleApp\FileServiceConsoleApp.csproj", "{8C6EA0F4-78F6-4E5F-B633-848355B06331}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileClientConsoleApp", "examples\FileTransfer简单示例\FileClientConsoleApp\FileClientConsoleApp.csproj", "{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileClientConsoleApp", "examples\FileTransfer简单示例\FileClientConsoleApp\FileClientConsoleApp.csproj", "{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "远程文件系统访问简单示例", "远程文件系统访问简单示例", "{1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerConsoleApp", "examples\远程文件系统访问简单示例\ServerConsoleApp\ServerConsoleApp.csproj", "{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientWinFormsApp", "examples\远程文件系统访问简单示例\ClientWinFormsApp\ClientWinFormsApp.csproj", "{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -274,6 +280,14 @@ Global
 		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -322,6 +336,8 @@ Global
 		{FB0FA0CF-1657-48F7-B852-FBA818F1AE8A} = {24212B0A-8DAA-4AC3-BB5D-F3AC485EABA4}
 		{8C6EA0F4-78F6-4E5F-B633-848355B06331} = {FB0FA0CF-1657-48F7-B852-FBA818F1AE8A}
 		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4} = {FB0FA0CF-1657-48F7-B852-FBA818F1AE8A}
+		{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6} = {1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}
+		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA} = {1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
