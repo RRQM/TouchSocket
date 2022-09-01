@@ -16,7 +16,6 @@ namespace WSTouchRpcClientConsoleApp
         private static void Main(string[] args)
         {
             client = new WSTouchRpcClient();
-            client.Handshaked += Client_Handshaked;
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("ws://127.0.0.1:5000/wstouchrpc"));
             client.ConnectAsync();
@@ -63,11 +62,6 @@ namespace WSTouchRpcClientConsoleApp
                 Console.WriteLine(client.Invoke<bool>("TouchRpcWebApplication.RpcProviders.TestServerProvider.Login".ToLower(), null, strs[0], strs[1]));
                 Console.ReadKey();
             }
-        }
-
-        private static void Client_Handshaked(WSTouchRpcClient client, VerifyOptionEventArgs e)
-        {
-            client.Logger.Info("成功连接");
         }
     }
 }

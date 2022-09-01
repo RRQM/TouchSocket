@@ -22,7 +22,9 @@ using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.IO;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 
 namespace FileServiceGUI
@@ -81,13 +83,18 @@ namespace FileServiceGUI
                 return;
             }
             this.fileService = new TcpTouchRpcService();
-            this.fileService.Received += this.FileService_Received;
             this.fileService.Connected += this.FileService_Connected;
             this.fileService.Disconnected += this.FileService_Disconnected;
-            this.fileService.FileTransfering += this.FileService_FileTransfering;
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                .SetVerifyToken("FileService");
+                .SetVerifyToken("FileService")
+                 .UsePlugin()
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<TouchRpcActionPlugin<TcpTouchRpcSocketClient>>()//此处的逻辑可用插件替代完成。
+                       .SetFileTransfering(this.FileService_FileTransfering)
+                       .SetReceivedProtocolData(this.FileService_Received);
+                });
 
             try
             {
@@ -101,16 +108,16 @@ namespace FileServiceGUI
             }
         }
 
-        private void FileService_Received(TcpTouchRpcSocketClient socketClient, short protocol, ByteBlock byteBlock)
+        private void FileService_Received(TcpTouchRpcSocketClient socketClient, ProtocolDataEventArgs e)
         {
-            this.ShowMsg($"收到数据：协议={protocol},数据长度:{byteBlock.Len - 2}");
-            if (protocol == -1)
+            this.ShowMsg($"收到数据：协议={e.Protocol},数据长度:{e.ByteBlock.Len - 2}");
+            if (e.Protocol == -1)
             {
-                socketClient.Send(byteBlock.ToArray(2));
+                socketClient.Send(e.ByteBlock.ToArray(2));
             }
             else
             {
-                socketClient.Send(protocol, byteBlock.ToArray(2));
+                socketClient.Send(e.Protocol, e.ByteBlock.ToArray(2));
             }
         }
 
