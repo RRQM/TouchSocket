@@ -14,6 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core.IO
 {
@@ -23,7 +24,7 @@ namespace TouchSocket.Core.IO
     public static class FilePool
     {
         private static readonly object m_locker = new object();
-        private static readonly ConcurrentDictionary<string, FileStorage> pathStream = new ConcurrentDictionary<string, FileStorage>();
+        private static readonly ConcurrentDictionary<string, FileStorage> m_pathStorage = new ConcurrentDictionary<string, FileStorage>();
 
         /// <summary>
         /// 获取一个文件读取访问器
@@ -40,9 +41,9 @@ namespace TouchSocket.Core.IO
                 }
 
                 path = Path.GetFullPath(path);
-                if (pathStream.TryGetValue(path, out FileStorage fileStorage))
+                if (m_pathStorage.TryGetValue(path, out FileStorage fileStorage))
                 {
-                    Interlocked.Increment(ref fileStorage.reference);
+                    Interlocked.Increment(ref fileStorage.m_reference);
                     return new FileStorageReader(fileStorage);
                 }
                 else
@@ -66,9 +67,9 @@ namespace TouchSocket.Core.IO
                 {
                     return 0;
                 }
-                if (pathStream.TryGetValue(path, out FileStorage fileStorage))
+                if (m_pathStorage.TryGetValue(path, out FileStorage fileStorage))
                 {
-                    return fileStorage.reference;
+                    return fileStorage.m_reference;
                 }
                 return 0;
             }
@@ -86,23 +87,56 @@ namespace TouchSocket.Core.IO
             {
                 if (string.IsNullOrEmpty(path))
                 {
-                    throw new System.ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
+                    throw new ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
                 }
 
                 path = Path.GetFullPath(path);
-                if (pathStream.TryGetValue(path, out FileStorage fileStorage))
+                if (m_pathStorage.TryGetValue(path, out FileStorage fileStorage))
                 {
-                    if (singleRef && fileStorage.reference != 0)
+                    if (singleRef && fileStorage.m_reference != 0)
                     {
                         throw new Exception("该流文件正在其他地方引用。");
                     }
-                    Interlocked.Increment(ref fileStorage.reference);
+                    Interlocked.Increment(ref fileStorage.m_reference);
                     return new FileStorageWriter(fileStorage);
                 }
                 else
                 {
                     LoadFileForWrite(path);
                     return GetWriter(path, singleRef);
+                }
+            }
+        } 
+        
+        /// <summary>
+        /// 获取一个可读可写的Stream对象。
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="singleRef"></param>
+        /// <returns></returns>
+        public static FileStorageStream GetFileStorageStream(string path, bool singleRef = false)
+        {
+            lock (m_locker)
+            {
+                if (string.IsNullOrEmpty(path))
+                {
+                    throw new ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
+                }
+
+                path = Path.GetFullPath(path);
+                if (m_pathStorage.TryGetValue(path, out FileStorage fileStorage))
+                {
+                    if (singleRef && fileStorage.m_reference != 0)
+                    {
+                        throw new Exception("该流文件正在其他地方引用。");
+                    }
+                    Interlocked.Increment(ref fileStorage.m_reference);
+                    return new FileStorageStream(fileStorage);
+                }
+                else
+                {
+                    LoadFileForWrite(path);
+                    return GetFileStorageStream(path, singleRef);
                 }
             }
         }
@@ -122,7 +156,7 @@ namespace TouchSocket.Core.IO
                 }
 
                 path = Path.GetFullPath(path);
-                if (pathStream.TryGetValue(path, out FileStorage storage))
+                if (m_pathStorage.TryGetValue(path, out FileStorage storage))
                 {
                     if (storage.Access != FileAccess.Read || !storage.Cache)
                     {
@@ -132,7 +166,7 @@ namespace TouchSocket.Core.IO
                 }
                 if (FileStorage.TryCreateCacheFileStorage(path, out FileStorage fileStorage, out string msg))
                 {
-                    pathStream.TryAdd(path, fileStorage);
+                    m_pathStorage.TryAdd(path, fileStorage);
                 }
                 else
                 {
@@ -156,7 +190,7 @@ namespace TouchSocket.Core.IO
                 }
 
                 path = Path.GetFullPath(path);
-                if (pathStream.TryGetValue(path, out FileStorage storage))
+                if (m_pathStorage.TryGetValue(path, out FileStorage storage))
                 {
                     if (storage.Access != FileAccess.Read)
                     {
@@ -166,7 +200,7 @@ namespace TouchSocket.Core.IO
                 }
                 if (FileStorage.TryCreateFileStorage(path, FileAccess.Read, out FileStorage fileStorage, out string msg))
                 {
-                    pathStream.TryAdd(path, fileStorage);
+                    m_pathStorage.TryAdd(path, fileStorage);
                 }
                 else
                 {
@@ -186,11 +220,11 @@ namespace TouchSocket.Core.IO
             {
                 if (string.IsNullOrEmpty(path))
                 {
-                    throw new System.ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
+                    throw new ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
                 }
 
                 path = Path.GetFullPath(path);
-                if (pathStream.TryGetValue(path, out FileStorage storage))
+                if (m_pathStorage.TryGetValue(path, out FileStorage storage))
                 {
                     if (storage.Access != FileAccess.Write)
                     {
@@ -200,7 +234,7 @@ namespace TouchSocket.Core.IO
                 }
                 if (FileStorage.TryCreateFileStorage(path, FileAccess.Write, out FileStorage fileStorage, out string msg))
                 {
-                    pathStream.TryAdd(path, fileStorage);
+                    m_pathStorage.TryAdd(path, fileStorage);
                 }
                 else
                 {
@@ -219,13 +253,13 @@ namespace TouchSocket.Core.IO
         {
             if (string.IsNullOrEmpty(path))
             {
-                return new Result(ResultCode.Error, ResType.ArgumentNull.GetDescription(nameof(path)));
+                return new Result(ResultCode.Error, TouchSocketRes.ArgumentNull.GetDescription(nameof(path)));
             }
             path = Path.GetFullPath(path);
-            if (pathStream.TryGetValue(path, out FileStorage fileStorage))
+            if (m_pathStorage.TryGetValue(path, out FileStorage fileStorage))
             {
-                Interlocked.Decrement(ref fileStorage.reference);
-                if (fileStorage.reference <= 0)
+                Interlocked.Decrement(ref fileStorage.m_reference);
+                if (fileStorage.m_reference <= 0)
                 {
                     if (delayTime > 0)
                     {
@@ -233,7 +267,7 @@ namespace TouchSocket.Core.IO
                         {
                             if (GetReferenceCount(p) == 0)
                             {
-                                if (pathStream.TryRemove(p, out fileStorage))
+                                if (m_pathStorage.TryRemove(p, out fileStorage))
                                 {
                                     fileStorage.Dispose();
                                 }
@@ -243,7 +277,7 @@ namespace TouchSocket.Core.IO
                     }
                     else
                     {
-                        if (pathStream.TryRemove(path, out fileStorage))
+                        if (m_pathStorage.TryRemove(path, out fileStorage))
                         {
                             fileStorage.Dispose();
                         }
@@ -252,12 +286,12 @@ namespace TouchSocket.Core.IO
                 }
                 else
                 {
-                    return new Result(ResultCode.Error, ResType.StreamReferencing.GetDescription(path, fileStorage.reference));
+                    return new Result(ResultCode.Error, TouchSocketRes.StreamReferencing.GetDescription(path, fileStorage.m_reference));
                 }
             }
             else
             {
-                return new Result(ResultCode.Success, ResType.StreamNotFind.GetDescription(path));
+                return new Result(ResultCode.Success, TouchSocketRes.StreamNotFind.GetDescription(path));
             }
         }
     }

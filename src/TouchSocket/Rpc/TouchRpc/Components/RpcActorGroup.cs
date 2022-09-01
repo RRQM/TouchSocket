@@ -19,7 +19,6 @@ using TouchSocket.Core.Data.Security;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Serialization;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -91,6 +90,7 @@ namespace TouchSocket.Rpc.TouchRpc
         public Action<RpcActor, bool, ArraySegment<byte>[]> OutputSend { get; set; }
 
         #endregion 委托
+
         /// <summary>
         /// 配置
         /// </summary>
@@ -108,25 +108,27 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public RpcActor CreateRpcActor(object caller)
         {
-            RpcActor rpcActor = new RpcActor(true);
-            rpcActor.Logger = this.Config.Container.Resolve<ILog>();
-            rpcActor.Caller = caller;
-            rpcActor.RpcStore = this.RpcStore;
-            rpcActor.OnHandshaking = this.OnHandshaking;
-            rpcActor.GetInvokeMethod = this.GetInvokeMethod;
-            rpcActor.OnHandshaked = this.OnHandshaked;
-            rpcActor.OutputSend = this.OutputSend;
-            rpcActor.OnResetID = this.OnResetID;
-            rpcActor.OnReceived = this.OnReceived;
-            rpcActor.OnClose = this.OnClose;
-            rpcActor.OnFindRpcActor = this.OnFindRpcActor;
-            rpcActor.OnStreamTransfering = this.OnStreamTransfering;
-            rpcActor.OnStreamTransfered = this.OnStreamTransfered;
-            rpcActor.OnFileTransfering = this.OnFileTransfering;
-            rpcActor.OnFileTransfered = this.OnFileTransfered;
-            rpcActor.ResponseType = this.Config.GetValue<ResponseType>(TouchRpcConfigExtensions.ResponseTypeProperty);
-            rpcActor.RootPath = this.Config.GetValue<string>(TouchRpcConfigExtensions.RootPathProperty);
-            rpcActor.SerializationSelector = this.Config.GetValue<SerializationSelector>(TouchRpcConfigExtensions.SerializationSelectorProperty);
+            RpcActor rpcActor = new RpcActor(true)
+            {
+                Logger = this.Config.Container.Resolve<ILog>(),
+                Caller = caller,
+                RpcStore = this.RpcStore,
+                OnHandshaking = this.OnHandshaking,
+                GetInvokeMethod = this.GetInvokeMethod,
+                OnHandshaked = this.OnHandshaked,
+                OutputSend = this.OutputSend,
+                OnResetID = this.OnResetID,
+                OnReceived = this.OnReceived,
+                OnClose = this.OnClose,
+                OnFindRpcActor = this.OnFindRpcActor,
+                OnStreamTransfering = this.OnStreamTransfering,
+                OnStreamTransfered = this.OnStreamTransfered,
+                OnFileTransfering = this.OnFileTransfering,
+                OnFileTransfered = this.OnFileTransfered,
+                ResponseType = this.Config.GetValue<ResponseType>(TouchRpcConfigExtensions.ResponseTypeProperty),
+                RootPath = this.Config.GetValue<string>(TouchRpcConfigExtensions.RootPathProperty),
+                SerializationSelector = this.Config.GetValue<SerializationSelector>(TouchRpcConfigExtensions.SerializationSelectorProperty)
+            };
             return rpcActor;
         }
     }

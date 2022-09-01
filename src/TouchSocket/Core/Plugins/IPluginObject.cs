@@ -10,42 +10,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using TouchSocket.Core.Dependency;
 
-
-using System;
-
-namespace TouchSocket.Rpc.TouchRpc
+namespace TouchSocket.Core.Plugins
 {
     /// <summary>
-    /// 路径不合法
+    /// 具有插件功能的对象
     /// </summary>
-    [System.Serializable]
-    public class PathInvalidException : Exception
+    public interface IPluginObject
     {
         /// <summary>
-        ///<inheritdoc/>
+        /// 内置IOC容器
         /// </summary>
-        public PathInvalidException() : base() { }
+        IContainer Container { get; }
 
         /// <summary>
-        ///<inheritdoc/>
+        /// 插件管理器
         /// </summary>
-        /// <param name="message"></param>
-        public PathInvalidException(string message) : base(message) { }
+        IPluginsManager PluginsManager { get; }
 
         /// <summary>
-        ///<inheritdoc/>
+        /// 是否已启用插件
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="inner"></param>
-        public PathInvalidException(string message, System.Exception inner) : base(message, inner) { }
-
-        /// <summary>
-        ///<inheritdoc/>
-        /// </summary>
-        /// <param name="info"></param>
-        /// <param name="context"></param>
-        protected PathInvalidException(System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        bool UsePlugin { get; }
     }
 }

@@ -271,5 +271,32 @@ namespace TouchSocket.Core.Dependency
         {
             return Resolve<T>(container, null, key);
         }
+
+        #region Unregister
+        /// <summary>
+        /// 移除注册信息
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="fromType"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static IContainer Unregister(this IContainer container, Type fromType, string key = "")
+        {
+            container.Unregister(new DependencyDescriptor(fromType), key);
+            return container;
+        }
+
+        /// <summary>
+        /// 移除注册信息
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static IContainer Unregister<TFrom>(this IContainer container, string key = "")
+        {
+            container.Unregister(new DependencyDescriptor(typeof(TFrom)), key);
+            return container;
+        }
+        #endregion
     }
 }

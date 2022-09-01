@@ -58,4 +58,50 @@ namespace TouchSocket.Core
             return $"类型：{this.ResultCode}，信息：{this.Message}";
         }
     }
+
+    /// <summary>
+    /// 结果返回
+    /// </summary>
+    public class ResultBase : IResult
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="resultCode"></param>
+        /// <param name="message"></param>
+        public ResultBase(ResultCode resultCode, string message)
+        {
+            this.ResultCode = resultCode;
+            this.Message = message;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="resultCode"></param>
+        public ResultBase(ResultCode resultCode)
+        {
+            this.ResultCode = resultCode;
+            this.Message = resultCode.GetDescription();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ResultCode ResultCode { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public string Message { get; private set; }
+
+        /// <summary>
+        /// ToString
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return $"类型：{this.ResultCode}，信息：{this.Message}";
+        }
+    }
 }

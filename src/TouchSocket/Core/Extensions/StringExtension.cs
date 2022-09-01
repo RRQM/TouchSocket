@@ -235,7 +235,14 @@ namespace TouchSocket.Core.Extensions
             {
                 return str;
             }
-            return string.Format(str, ps);
+            try
+            {
+                return string.Format(str, ps);
+            }
+            catch
+            {
+                return str;
+            }
         }
 
         /// <summary>

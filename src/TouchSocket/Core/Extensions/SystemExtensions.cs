@@ -54,7 +54,7 @@ namespace System
         #region 其他
 
         /// <summary>
-        /// 安全性释放（不用判断对象是否为空）
+        /// 安全性释放（不用判断对象是否为空）。不会抛出任何异常。
         /// </summary>
         /// <param name="dis"></param>
         /// <returns></returns>

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets
@@ -24,6 +25,15 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
+        [AsyncRaiser]
         void OnReceivedData(IUdpSession client, UdpReceivedDataEventArgs e);
+
+        /// <summary>
+        /// 在收到数据时触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnReceivedDataAsync(IUdpSession client, UdpReceivedDataEventArgs e);
     }
 }

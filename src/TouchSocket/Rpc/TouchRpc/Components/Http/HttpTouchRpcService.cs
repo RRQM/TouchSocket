@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
+using TouchSocket.Resources;
 using TouchSocket.Core.Serialization;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
@@ -40,19 +41,21 @@ namespace TouchSocket.Rpc.TouchRpc
         public HttpTouchRpcService()
         {
             this.m_actionMap = new ActionMap();
-            this.m_rpcActorGroup = new RpcActorGroup();
-            this.m_rpcActorGroup.OnClose = this.OnRpcServiceClose;
-            this.m_rpcActorGroup.GetInvokeMethod = this.GetInvokeMethod;
-            this.m_rpcActorGroup.OnFileTransfered = this.OnRpcServiceFileTransfered;
-            this.m_rpcActorGroup.OnFileTransfering = this.OnRpcServiceFileTransfering;
-            this.m_rpcActorGroup.OnFindRpcActor = this.OnRpcServiceFindRpcActor;
-            this.m_rpcActorGroup.OnHandshaked = this.OnRpcServiceHandshaked;
-            this.m_rpcActorGroup.OnHandshaking = this.OnRpcServiceHandshaking;
-            this.m_rpcActorGroup.OnReceived = this.OnRpcServiceReceived;
-            this.m_rpcActorGroup.OnResetID = this.OnRpcServiceResetID;
-            this.m_rpcActorGroup.OnStreamTransfered = this.OnRpcServiceStreamTransfered;
-            this.m_rpcActorGroup.OnStreamTransfering = this.OnRpcServiceStreamTransfering;
-            this.m_rpcActorGroup.OutputSend = this.RpcServiceOutputSend;
+            this.m_rpcActorGroup = new RpcActorGroup
+            {
+                OnClose = this.OnRpcServiceClose,
+                GetInvokeMethod = this.GetInvokeMethod,
+                OnFileTransfered = this.OnRpcServiceFileTransfered,
+                OnFileTransfering = this.OnRpcServiceFileTransfering,
+                OnFindRpcActor = this.OnRpcServiceFindRpcActor,
+                OnHandshaked = this.OnRpcServiceHandshaked,
+                OnHandshaking = this.OnRpcServiceHandshaking,
+                OnReceived = this.OnRpcServiceReceived,
+                OnResetID = this.OnRpcServiceResetID,
+                OnStreamTransfered = this.OnRpcServiceStreamTransfered,
+                OnStreamTransfering = this.OnRpcServiceStreamTransfering,
+                OutputSend = this.RpcServiceOutputSend
+            };
         }
 
         #region 字段
@@ -123,46 +126,11 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
-        public event TransferFileEventHandler<TClient> FileTransfered;
-
-        /// <summary>
-        /// 文件传输开始之前
-        /// </summary>
-        public event FileOperationEventHandler<TClient> FileTransfering;
-
-        /// <summary>
-        /// 在完成握手连接时
-        /// </summary>
-        public event VerifyOptionEventHandler<TClient> Handshaked;
-
-        /// <summary>
-        /// 表示即将握手
-        /// </summary>
-        public event VerifyOptionEventHandler<TClient> Handshaking;
-
-        /// <summary>
-        /// 收到数据
-        /// </summary>
-        public event ProtocolReceivedEventHandler<TClient> Received;
-
-        /// <summary>
-        /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
-        /// </summary>
-        public event StreamStatusEventHandler<TClient> StreamTransfered;
-
-        /// <summary>
-        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
-        /// </summary>
-        public event StreamOperationEventHandler<TClient> StreamTransfering;
-
-        /// <summary>
-        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
-        /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(TClient client, FileTransferStatusEventArgs e)
         {
-            this.FileTransfered?.Invoke(client, e);
+           
         }
 
         /// <summary>
@@ -172,7 +140,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(TClient client, FileOperationEventArgs e)
         {
-            this.FileTransfering?.Invoke(client, e);
+            
         }
 
         /// <summary>
@@ -182,7 +150,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnHandshaked(TClient client, VerifyOptionEventArgs e)
         {
-            this.Handshaked?.Invoke(client, e);
+            
         }
 
         /// <summary>
@@ -192,7 +160,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e">参数</param>
         protected virtual void OnHandshaking(TClient client, VerifyOptionEventArgs e)
         {
-            this.Handshaking?.Invoke(client, e);
+           
         }
 
         /// <summary>
@@ -203,7 +171,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="byteBlock"></param>
         protected virtual void OnReceived(TClient client, short protocol, ByteBlock byteBlock)
         {
-            this.Received?.Invoke(client, protocol, byteBlock);
+            
         }
 
         /// <summary>
@@ -213,7 +181,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfered(TClient client, StreamStatusEventArgs e)
         {
-            this.StreamTransfered?.Invoke(client, e);
+          
         }
 
         /// <summary>
@@ -223,14 +191,13 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfering(TClient client, StreamOperationEventArgs e)
         {
-            this.StreamTransfering?.Invoke(client, e);
+           
         }
 
         private void PrivateOnRpcActorInit(HttpTouchRpcSocketClient client)
         {
             client.m_rpcActor = this.m_rpcActorGroup.CreateRpcActor(client);
         }
-
         #endregion 事件
 
         #region Rpc
@@ -251,7 +218,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -273,7 +240,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -297,7 +264,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -322,7 +289,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -346,7 +313,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -371,7 +338,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -392,7 +359,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -410,7 +377,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -434,7 +401,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -454,7 +421,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -474,7 +441,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -494,7 +461,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
             }
         }
 
@@ -516,7 +483,7 @@ namespace TouchSocket.Rpc.TouchRpc
         private void OnRpcServiceFileTransfered(RpcActor actor, FileTransferStatusEventArgs e)
         {
             TClient client = (TClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnFileTransfered", client, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfered), client, e))
             {
                 return;
             }
@@ -526,7 +493,7 @@ namespace TouchSocket.Rpc.TouchRpc
         private void OnRpcServiceFileTransfering(RpcActor actor, FileOperationEventArgs e)
         {
             TClient client = (TClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnFileTransfering", client, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfering), client, e))
             {
                 return;
             }
@@ -545,7 +512,7 @@ namespace TouchSocket.Rpc.TouchRpc
         private void OnRpcServiceHandshaked(RpcActor actor, VerifyOptionEventArgs e)
         {
             TClient client = (TClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnHandshaked", client, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaked), client, e))
             {
                 return;
             }
@@ -563,7 +530,7 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 e.Message = "Token不受理";
             }
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnHandshaking", client, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaking), client, e))
             {
                 return;
             }
@@ -573,7 +540,7 @@ namespace TouchSocket.Rpc.TouchRpc
         private void OnRpcServiceReceived(RpcActor actor, short protocol, ByteBlock byteBlock)
         {
             TClient client = (TClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnReceivedProtocolData", client, new ProtocolDataEventArgs(protocol, byteBlock)))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnReceivedProtocolData), client, new ProtocolDataEventArgs(protocol, byteBlock)))
             {
                 return;
             }
@@ -585,11 +552,10 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             this.ResetID(arg2.OldID, arg2.NewID);
         }
-
         private void OnRpcServiceStreamTransfered(RpcActor actor, StreamStatusEventArgs e)
         {
             TClient client = (TClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnStreamTransfered", client, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfered), client, e))
             {
                 return;
             }
@@ -599,7 +565,7 @@ namespace TouchSocket.Rpc.TouchRpc
         private void OnRpcServiceStreamTransfering(RpcActor actor, StreamOperationEventArgs e)
         {
             TClient client = (TClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnStreamTransfering", client, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfering), client, e))
             {
                 return;
             }
@@ -667,7 +633,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -718,7 +684,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             else
             {
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
             }
         }
 

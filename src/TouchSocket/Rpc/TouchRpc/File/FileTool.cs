@@ -19,31 +19,32 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// 文件
     /// </summary>
-    internal static class FileTool
+    static class FileTool
     {
         /// <summary>
         /// 获取文件信息
         /// </summary>
         /// <param name="path"></param>
         /// <param name="md5"></param>
+        /// <param name="fileInfo"></param>
         /// <returns></returns>
-        public static TouchRpcFileInfo GetFileInfo(string path, bool md5)
+        public static void GetFileInfo<T>(string path, bool md5, ref T fileInfo) where T : RemoteFileInfo
         {
-            TouchRpcFileInfo fileInfo = new TouchRpcFileInfo();
-            fileInfo.FilePath = path;
-            fileInfo.FileName = Path.GetFileName(path);
-            using (FileStream fileStream = File.OpenRead(path))
+            FileInfo info = new FileInfo(path);
+            fileInfo.FilePath = info.FullName;
+            fileInfo.FileName = info.Name;
+            fileInfo.Attributes = info.Attributes;
+            fileInfo.CreationTime = info.CreationTime;
+            fileInfo.FileLength = info.Length;
+            fileInfo.LastAccessTime = info.LastAccessTime;
+            fileInfo.LastWriteTime = info.LastWriteTime;
+
+            if (md5)
             {
-                fileInfo.FileLength = fileStream.Length;
-                if (md5)
-                {
-                    fileInfo.MD5 = FileUtility.GetStreamMD5(fileStream);
-                }
+                using FileStream fileStream = File.OpenRead(path);
+                fileInfo.MD5 = FileUtility.GetStreamMD5(fileStream);
             }
-
-            return fileInfo;
         }
-
 
         /// <summary>
         /// 读取缓存文件信息

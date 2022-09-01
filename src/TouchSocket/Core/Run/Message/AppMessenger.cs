@@ -16,6 +16,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core.Run
 {
@@ -127,7 +128,7 @@ namespace TouchSocket.Core.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
+                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
             }
         }
 
@@ -177,7 +178,7 @@ namespace TouchSocket.Core.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
+                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
             }
         }
 
@@ -212,7 +213,7 @@ namespace TouchSocket.Core.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
+                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
             }
         }
 
@@ -236,7 +237,7 @@ namespace TouchSocket.Core.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
+                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
             }
         }
 
@@ -259,7 +260,7 @@ namespace TouchSocket.Core.Run
             }
             else
             {
-                throw new MessageRegisteredException(ResType.TokenExist.GetDescription(token));
+                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
             }
         }
 
@@ -280,7 +281,7 @@ namespace TouchSocket.Core.Run
             }
             else
             {
-                throw new MessageNotFoundException(ResType.MessageNotFound.GetDescription(token));
+                throw new MessageNotFoundException(TouchSocketRes.MessageNotFound.GetDescription(token));
             }
         }
 
@@ -312,7 +313,7 @@ namespace TouchSocket.Core.Run
             }
             else
             {
-                throw new MessageNotFoundException(ResType.MessageNotFound.GetDescription(token));
+                throw new MessageNotFoundException(TouchSocketRes.MessageNotFound.GetDescription(token));
             }
         }
 

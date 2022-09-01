@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using TouchSocket.Core;
@@ -20,7 +21,7 @@ using TouchSocket.Core.Data.Security;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Run;
 using TouchSocket.Core.Serialization;
-using TouchSocket.Sockets;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -32,6 +33,16 @@ namespace TouchSocket.Rpc.TouchRpc
         #region 委托
 
         /// <summary>
+        /// 获取调用函数的委托
+        /// </summary>
+        public Func<string, MethodInstance> GetInvokeMethod { get; set; }
+
+        /// <summary>
+        /// 请求关闭
+        /// </summary>
+        public Action<RpcActor, string> OnClose { get; set; }
+
+        /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         public Action<RpcActor, FileTransferStatusEventArgs> OnFileTransfered { get; set; }
@@ -40,11 +51,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 在文件传输即将进行时触发。
         /// </summary>
         public Action<RpcActor, FileOperationEventArgs> OnFileTransfering { get; set; }
-
-        /// <summary>
-        /// 请求关闭
-        /// </summary>
-        public Action<RpcActor, string> OnClose { get; set; }
 
         /// <summary>
         /// 查找其他RpcActor
@@ -86,18 +92,14 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public Action<RpcActor, bool, ArraySegment<byte>[]> OutputSend { get; set; }
 
-        /// <summary>
-        /// 获取调用函数的委托
-        /// </summary>
-        public Func<string, MethodInstance> GetInvokeMethod { get; set; }
         #endregion 委托
 
         #region 变量
 
         private readonly bool m_isService;
+        private readonly WaitHandlePool<IWaitResult> m_waitHandlePool;
         private string m_id;
         private bool m_isHandshaked;
-        private readonly WaitHandlePool<IWaitResult> m_waitHandlePool;
         private ILog m_logger;
 
         #endregion 变量
@@ -125,14 +127,14 @@ namespace TouchSocket.Rpc.TouchRpc
         public ILog Logger { get => this.m_logger; set => this.m_logger = value; }
 
         /// <summary>
-        /// 等待返回池
-        /// </summary>
-        public WaitHandlePool<IWaitResult> WaitHandlePool => this.m_waitHandlePool;
-
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public Func<IRpcClient, bool> TryCanInvoke { get; set; }
+
+        /// <summary>
+        /// 等待返回池
+        /// </summary>
+        public WaitHandlePool<IWaitResult> WaitHandlePool => this.m_waitHandlePool;
 
         #endregion 属性
 
@@ -161,7 +163,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 this.m_isHandshaked = false;
                 foreach (var item in this.m_userChannels.Values)
                 {
-                    item.Dispose();
+                    item.SafeDispose();
                 }
                 var keys = this.m_contextDic.Keys.ToArray();
                 foreach (var item in keys)
@@ -259,6 +261,7 @@ namespace TouchSocket.Rpc.TouchRpc
             short protocol = TouchSocketBitConverter.Default.ToInt16(byteBlock.Buffer, 0);
             switch (protocol)
             {
+                #region 0-99
                 case TouchRpcUtility.P_0_Handshake_Request:
                     {
                         try
@@ -288,7 +291,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 this.Close(args.Message);
                             }
                         }
-                        catch (System.Exception ex)
+                        catch (Exception ex)
                         {
                             this.Close(ex.Message);
                         }
@@ -324,9 +327,9 @@ namespace TouchSocket.Rpc.TouchRpc
                             byteBlock.Reset();
                             this.SocketSend(TouchRpcUtility.P_1001_ResetID_Response, byteBlock.WriteObject(waitSetID));
                         }
-                        catch (System.Exception ex)
+                        catch (Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "重置ID错误", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -344,7 +347,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "重置ID错误", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -356,7 +359,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "在OnPing中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -368,7 +371,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "在OnPong发送异常。", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -380,6 +383,8 @@ namespace TouchSocket.Rpc.TouchRpc
                     {
                         break;
                     }
+                #endregion 0-99
+                #region 100-199
                 case TouchRpcUtility.P_100_CreateChannel_Request:
                     {
                         try
@@ -389,7 +394,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "创建通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -408,7 +413,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "通道接收异常", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -461,7 +466,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "创建通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -504,7 +509,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -517,7 +522,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, $"在{protocol}中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -532,11 +537,13 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "创建通道异常", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
 
                         break;
                     }
+                #endregion 100-199
+                #region 200-299
                 case TouchRpcUtility.P_200_Invoke_Request:/*函数调用*/
                     {
                         try
@@ -546,9 +553,9 @@ namespace TouchSocket.Rpc.TouchRpc
 
                             ThreadPool.QueueUserWorkItem(this.m_waitCallback_InvokeThis, context);
                         }
-                        catch (System.Exception e)
+                        catch (System.Exception ex)
                         {
-                            this.Logger.Error(this, $"错误代码: {protocol}, 错误详情:{e.Message}");
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -560,18 +567,24 @@ namespace TouchSocket.Rpc.TouchRpc
                             TouchRpcPackage result = TouchRpcPackage.Deserialize(byteBlock);
                             this.WaitHandlePool.SetRun(result.Sign, result);
                         }
-                        catch (System.Exception e)
+                        catch (System.Exception ex)
                         {
-                            this.Logger.Error(this, $"错误代码: 101, 错误详情:{e.Message}");
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
                 case TouchRpcUtility.P_201_Invoke2C_Request:/*ID调用客户端*/
                     {
-                        byteBlock.Pos = 2;
-                        TouchRpcPackage context = TouchRpcPackage.Deserialize(byteBlock);
-                        ThreadPool.QueueUserWorkItem(this.m_waitCallback_InvokeClientByID, context);
-
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            TouchRpcPackage context = TouchRpcPackage.Deserialize(byteBlock);
+                            ThreadPool.QueueUserWorkItem(this.m_waitCallback_InvokeClientByID, context);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
+                        }
                         break;
                     }
                 case TouchRpcUtility.P_1201_Invoke2C_Response:/*ID函数调用*/
@@ -582,9 +595,9 @@ namespace TouchSocket.Rpc.TouchRpc
                             TouchRpcPackage result = TouchRpcPackage.Deserialize(byteBlock);
                             this.WaitHandlePool.SetRun(result.Sign, result);
                         }
-                        catch (System.Exception e)
+                        catch (System.Exception ex)
                         {
-                            this.Logger.Error(this, $"错误代码: 103, 错误详情:{e.Message}");
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -598,12 +611,14 @@ namespace TouchSocket.Rpc.TouchRpc
                                 context.TokenSource.Cancel();
                             }
                         }
-                        catch (System.Exception e)
+                        catch (System.Exception ex)
                         {
-                            this.Logger.Error(this, $"错误代码: {protocol}, 错误详情:{e.Message}");
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
+                #endregion 200-299
+                #region 300-399
                 case TouchRpcUtility.P_300_GetAllEvents_Request:
                     {
                         break;
@@ -636,6 +651,8 @@ namespace TouchSocket.Rpc.TouchRpc
                     {
                         break;
                     }
+                #endregion 300-399
+                #region 400-499
                 case TouchRpcUtility.P_400_SendStreamToSocketClient_Request://StreamStatusToThis
                     {
                         try
@@ -643,9 +660,9 @@ namespace TouchSocket.Rpc.TouchRpc
                             byteBlock.Pos = 2;
                             this.P_8_RequestStreamToThis(byteBlock.ReadObject<WaitStream>(SerializationType.Json));
                         }
-                        catch (System.Exception ex)
+                        catch (Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -659,7 +676,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "在StreamStatusToThis中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -670,12 +687,14 @@ namespace TouchSocket.Rpc.TouchRpc
                             byteBlock.Pos = 2;
                             this.P_9_RequestStreamToThis(byteBlock.ReadObject<WaitStream>(SerializationType.Json));
                         }
-                        catch (System.Exception ex)
+                        catch (Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "在P_8_RequestStreamToThis中发生错误。", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
+                #endregion 400-499
+                #region 500-599
                 case TouchRpcUtility.P_500_PullFile_Request:
                     {
                         try
@@ -685,20 +704,28 @@ namespace TouchSocket.Rpc.TouchRpc
 
                             EasyAction.TaskRun(waitFileInfo, (w) =>
                             {
-                                this.SendDefaultObject(TouchRpcUtility.P_1500_PullFile_Response, this.RequestPullFile(w));
+                                this.SendJsonObject(TouchRpcUtility.P_1500_PullFile_Response, this.RequestPullFile(w));
                             });
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
                 case TouchRpcUtility.P_1500_PullFile_Response:
                     {
-                        byteBlock.Pos = 2;
-                        WaitFileInfo waitFile = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
-                        this.WaitHandlePool.SetRun(waitFile);
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitFileInfo waitFile = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            this.WaitHandlePool.SetRun(waitFile);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
+                        }
+
                         break;
                     }
                 case TouchRpcUtility.P_501_BeginPullFile_Request:
@@ -711,15 +738,22 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
                 case TouchRpcUtility.P_1501_BeginPullFile_Response:
                     {
-                        byteBlock.Pos = 2;
-                        WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
-                        this.WaitHandlePool.SetRun(waitTransfer);
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            this.WaitHandlePool.SetRun(waitTransfer);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
+                        }
                         break;
                     }
                 case TouchRpcUtility.P_502_PushFile_Request:
@@ -732,15 +766,23 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
                 case TouchRpcUtility.P_1502_PushFile_Response:
                     {
-                        byteBlock.Pos = 2;
-                        WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
-                        this.WaitHandlePool.SetRun(waitTransfer);
+                        try
+                        {
+                            byteBlock.Pos = 2;
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            this.WaitHandlePool.SetRun(waitTransfer);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
+                        }
+
                         break;
                     }
                 case TouchRpcUtility.P_503_PullFile2C_Request:
@@ -766,7 +808,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -786,12 +828,12 @@ namespace TouchSocket.Rpc.TouchRpc
 
                             EasyAction.TaskRun(waitFileInfo, (w) =>
                             {
-                                this.SendDefaultObject(TouchRpcUtility.P_1504_PullFileFC_Response, this.RequestPullFile(w));
+                                this.SendJsonObject(TouchRpcUtility.P_1504_PullFileFC_Response, this.RequestPullFile(w));
                             });
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -813,7 +855,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -834,7 +876,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -848,7 +890,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -862,7 +904,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -882,7 +924,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -908,7 +950,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -922,7 +964,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -939,7 +981,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -961,7 +1003,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -971,28 +1013,41 @@ namespace TouchSocket.Rpc.TouchRpc
                         {
                             byteBlock.Pos = 2;
                             WaitResult waitResult = byteBlock.ReadObject<WaitResult>(SerializationType.Json);
-                            this.m_eventArgs.TryAdd((int)waitResult.Sign,waitResult);
+                            this.m_eventArgs.TryAdd((int)waitResult.Sign, waitResult);
 
-                            EasyAction.DelayRun(10000, waitResult,(a) =>
-                            {
-                                this.m_eventArgs.TryRemove((int)a.Sign,out _);
-                            });
+                            EasyAction.DelayRun(10000, waitResult, (a) =>
+                             {
+                                 this.m_eventArgs.TryRemove((int)a.Sign, out _);
+                             });
                         }
                         catch (System.Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, ex.Message, ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
+                case TouchRpcUtility.P_510_RemoteAccess_Request:
+                    {
+                        break;
+                    }
+                case TouchRpcUtility.P_1510_RemoteAccess_Response:
+                    {
+                        break;
+                    }
+                #endregion 500-599
                 default:
                     {
+                        if (protocol<0)
+                        {
+                            return;
+                        }
                         try
                         {
                             this.OnReceived?.Invoke(this, protocol, byteBlock);
                         }
-                        catch (System.Exception ex)
+                        catch (Exception ex)
                         {
-                            this.Logger.Log(LogType.Error, this, "处理协议数据异常", ex);
+                            this.Logger.Log(LogType.Error, this, $"在protocol={protocol}中发生错误。", ex);
                         }
                         break;
                     }
@@ -1008,7 +1063,9 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             try
             {
-                var wait = this.WaitHandlePool.GetWaitData(new WaitPing());
+                WaitResult waitResult = new WaitResult();
+                var wait = this.WaitHandlePool.GetWaitData(new WaitResult());
+
                 this.SocketSend(TouchRpcUtility.P_2_Ping_Request, TouchSocketBitConverter.Default.GetBytes(wait.WaitResult.Sign));
                 switch (wait.Wait(timeout))
                 {
@@ -1110,13 +1167,13 @@ namespace TouchSocket.Rpc.TouchRpc
                         break;
                     }
                 case WaitDataStatus.Overtime:
-                    throw new TimeoutException(ResType.Overtime.GetDescription());
+                    throw new TimeoutException(TouchSocketRes.Overtime.GetDescription());
                 case WaitDataStatus.Canceled:
                     break;
 
                 case WaitDataStatus.Disposed:
                 default:
-                    throw new Exception(ResType.UnknownError.GetDescription());
+                    throw new Exception(TouchSocketRes.UnknownError.GetDescription());
             }
         }
 

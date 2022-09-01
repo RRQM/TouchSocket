@@ -10,40 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Plugins;
 
-namespace TouchSocket.Rpc.TouchRpc.AspNetCore
+namespace TouchSocket.Core.Plugins
 {
     /// <summary>
-    /// WSTouchRpcService服务器接口
+    /// 标识该接口应当还会触发异步接口。
+    /// 异步接口方法的返回值应该为Task，且必须以Async结尾。
     /// </summary>
-    public interface IWSTouchRpcService : ITouchRpcService, IPluginObject
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class AsyncRaiserAttribute : Attribute
     {
-        /// <summary>
-        /// 配置项
-        /// </summary>
-        TouchSocketConfig Config { get; }
-
-        /// <summary>
-        /// 连接验证口令
-        /// </summary>
-        string VerifyToken { get; }
-
-        /// <summary>
-        /// 转换客户端
-        /// </summary>
-        /// <param name="webSocket"></param>
-        /// <returns></returns>
-        Task SwitchClientAsync(System.Net.WebSockets.WebSocket webSocket);
-
-        /// <summary>
-        /// 重置ID
-        /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
-        void ResetID(string oldID, string newID);
     }
 }

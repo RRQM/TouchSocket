@@ -10,28 +10,38 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Dependency;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
-    /// 具有插件功能的对象
+    /// 远程文件系统信息
     /// </summary>
-    public interface IPlguinObject
+    public abstract class RemoteFileSystemInfo
     {
         /// <summary>
-        /// 内置IOC容器
+        /// 上次写入当前文件或目录的时间
         /// </summary>
-        IContainer Container { get; }
+        public DateTime LastWriteTime { get; set; }
 
         /// <summary>
-        /// 插件管理器
+        /// 上次访问当前文件或目录的时间
         /// </summary>
-        IPluginsManager PluginsManager { get; }
+        public DateTime LastAccessTime { get; set; }
 
         /// <summary>
-        /// 是否已启用插件
+        /// 当前文件或目录的创建时间
         /// </summary>
-        bool UsePlugin { get; }
+        public DateTime CreationTime { get; set; }
+
+        /// <summary>
+        /// 当前文件或目录的特性
+        /// </summary>
+        public FileAttributes Attributes { get; set; }
     }
 }

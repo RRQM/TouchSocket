@@ -90,5 +90,15 @@ namespace TouchSocket.Core.AspNetCore
 
             return this.m_container.Resolve(fromType, ps, key);
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="descriptor"></param>
+        /// <param name="key"></param>
+        public void Unregister(DependencyDescriptor descriptor, string key = "")
+        {
+            ((IContainer)this.m_container).Unregister(descriptor, key);
+        }
     }
 }

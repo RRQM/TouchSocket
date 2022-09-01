@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// TCP终端基础接口
     /// </summary>
-    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPlguinObject, IRequsetInfoSender
+    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender
     {
         /// <summary>
         /// 断开连接

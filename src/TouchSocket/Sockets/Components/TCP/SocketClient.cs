@@ -23,6 +23,7 @@ using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -30,7 +31,7 @@ namespace TouchSocket.Sockets
     /// 服务器辅助类
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("ID={ID},IPAdress={IP}:{Port}")]
-    public class SocketClient : BaseSocket, ISocketClient, IPlguinObject
+    public class SocketClient : BaseSocket, ISocketClient, IPluginObject
     {
         /// <summary>
         /// 构造函数
@@ -302,7 +303,7 @@ namespace TouchSocket.Sockets
         internal void InternalConnected(TouchSocketEventArgs e)
         {
             this.m_online = true;
-            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnConnected", this, e))
+            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnected), this, e))
             {
                 return;
             }
@@ -312,7 +313,7 @@ namespace TouchSocket.Sockets
 
         internal void InternalConnecting(ClientOperationEventArgs e)
         {
-            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnConnecting", this, e))
+            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnecting), this, e))
             {
                 return;
             }
@@ -361,7 +362,7 @@ namespace TouchSocket.Sockets
             if (this.m_usePlugin)
             {
                 SendingEventArgs args = new SendingEventArgs(buffer, offset, length);
-                this.PluginsManager.Raise<ITcpPlugin>("OnSendingData", this, args);
+                this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnSendingData), this, args);
                 if (args.Operation.HasFlag(Operation.Permit))
                 {
                     return true;
@@ -447,7 +448,7 @@ namespace TouchSocket.Sockets
         {
             if (!this.m_online)
             {
-                throw new NotConnectedException(ResType.NotConnected.GetDescription());
+                throw new NotConnectedException(TouchSocketRes.NotConnected.GetDescription());
             }
             if (this.HandleSendingData(buffer, offset, length))
             {
@@ -567,7 +568,7 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
-                if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnReceivingData", this, new ByteBlockEventArgs(byteBlock)))
+                if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnReceivingData), this, new ByteBlockEventArgs(byteBlock)))
                 {
                     return;
                 }
@@ -577,7 +578,7 @@ namespace TouchSocket.Sockets
                 }
                 if (this.m_adapter == null)
                 {
-                    this.Logger.Error(this, ResType.NullDataAdapter.GetDescription());
+                    this.Logger.Error(this, TouchSocketRes.NullDataAdapter.GetDescription());
                     return;
                 }
                 this.m_adapter.ReceivedInput(byteBlock);
@@ -602,7 +603,7 @@ namespace TouchSocket.Sockets
             if (this.m_usePlugin)
             {
                 ReceivedDataEventArgs args = new ReceivedDataEventArgs(byteBlock, requestInfo);
-                this.PluginsManager.Raise<ITcpPlugin>("OnReceivedData", this, args);
+                this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnReceivedData), this, args);
                 if (args.Handled)
                 {
                     return;
@@ -616,7 +617,7 @@ namespace TouchSocket.Sockets
 
         private void PrivateOnDisconnected(ClientDisconnectedEventArgs e)
         {
-            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnDisconnected", this, e))
+            if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e))
             {
                 return;
             }
@@ -765,7 +766,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             if (!this.m_adapter.CanSendRequestInfo)
             {
@@ -791,7 +792,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             this.m_adapter.SendInput(buffer, offset, length, false);
         }
@@ -808,7 +809,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             if (this.m_adapter.CanSplicingSend)
             {
@@ -853,7 +854,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             this.m_adapter.SendInput(buffer, offset, length, true);
         }
@@ -873,7 +874,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             if (!this.m_adapter.CanSendRequestInfo)
             {
@@ -894,7 +895,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             if (this.m_adapter.CanSplicingSend)
             {

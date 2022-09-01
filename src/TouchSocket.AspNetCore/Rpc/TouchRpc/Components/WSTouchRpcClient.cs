@@ -432,7 +432,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>("OnDisconnected", this, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e))
             {
                 return;
             }
@@ -755,9 +755,10 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         {
             return this.m_actionMap.GetMethodInstance(arg);
         }
+
         private void OnRpcActorFileTransfered(RpcActor actor, FileTransferStatusEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnFileTransfered", this, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfered), this, e))
             {
                 return;
             }
@@ -766,7 +767,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private void OnRpcActorFileTransfering(RpcActor actor, FileOperationEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnFileTransfering", this, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfering), this, e))
             {
                 return;
             }
@@ -775,7 +776,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private void OnRpcActorHandshaked(RpcActor actor, VerifyOptionEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnHandshaked", this, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaked), this, e))
             {
                 return;
             }
@@ -784,7 +785,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private void OnRpcActorReceived(RpcActor actor, short protocol, ByteBlock byteBlock)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnReceivedProtocolData", this, new ProtocolDataEventArgs(protocol, byteBlock)))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnReceivedProtocolData), this, new ProtocolDataEventArgs(protocol, byteBlock)))
             {
                 return;
             }
@@ -794,7 +795,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private void OnRpcActorStreamTransfered(RpcActor actor, StreamStatusEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnStreamTransfered", this, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfered), this, e))
             {
                 return;
             }
@@ -803,7 +804,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private void OnRpcActorStreamTransfering(RpcActor actor, StreamOperationEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnStreamTransfering", this, e))
+            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfering), this, e))
             {
                 return;
             }
@@ -827,60 +828,14 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         #endregion 内部委托绑定
 
-        #region 事件
-
-        /// <summary>
-        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
-        /// </summary>
-        public event TransferFileEventHandler<WSTouchRpcClient> FileTransfered;
-
-        /// <summary>
-        /// 在文件传输即将进行时触发。
-        /// </summary>
-        public event FileOperationEventHandler<WSTouchRpcClient> FileTransfering;
-
-        /// <summary>
-        /// 在完成握手连接时
-        /// </summary>
-        public event VerifyOptionEventHandler<WSTouchRpcClient> Handshaked;
-
-        /// <summary>
-        /// 接收到数据
-        /// </summary>
-        public event ProtocolReceivedEventHandler<WSTouchRpcClient> Received;
-
-        /// <summary>
-        /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
-        /// </summary>
-        public event StreamStatusEventHandler<WSTouchRpcClient> StreamTransfered;
-
-        /// <summary>
-        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
-        /// </summary>
-        public event StreamOperationEventHandler<WSTouchRpcClient> StreamTransfering;
-
-        #endregion 事件
-
         #region 事件触发
-
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(FileTransferStatusEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnFileTransfered", this, e))
-            {
-                return;
-            }
-            try
-            {
-                this.FileTransfered?.Invoke(this, e);
-            }
-            catch (System.Exception ex)
-            {
-                this.Logger.Log(LogType.Error, this, $"在事件{nameof(FileTransfered)}中发生异常", ex);
-            }
+           
         }
 
         /// <summary>
@@ -889,18 +844,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(FileOperationEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnFileTransfering", this, e))
-            {
-                return;
-            }
-            try
-            {
-                this.FileTransfering?.Invoke(this, e);
-            }
-            catch (System.Exception ex)
-            {
-                this.Logger.Log(LogType.Error, this, $"在事件{nameof(FileTransfering)}中发生异常", ex);
-            }
+           
         }
 
         /// <summary>
@@ -929,13 +873,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                     }
                 }, null, heartbeat.Interval, heartbeat.Interval);
             }
-
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnHandshaked", this, e))
-            {
-                return;
-            }
-
-            this.Handshaked?.Invoke(this, e);
         }
 
         /// <summary>
@@ -945,11 +882,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="byteBlock"></param>
         protected virtual void OnReceived(short protocol, ByteBlock byteBlock)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnReceivedProtocolData", this, new ProtocolDataEventArgs(protocol, byteBlock)))
-            {
-                return;
-            }
-            this.Received?.Invoke(this, protocol, byteBlock);
+           
         }
 
         /// <summary>
@@ -958,11 +891,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnStreamTransfered(StreamStatusEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnStreamTransfered", this, e))
-            {
-                return;
-            }
-            this.StreamTransfered?.Invoke(this, e);
+           
         }
 
         /// <summary>
@@ -971,11 +900,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnStreamTransfering(StreamOperationEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>("OnStreamTransfering", this, e))
-            {
-                return;
-            }
-            this.StreamTransfering?.Invoke(this, e);
+           
         }
 
         #endregion 事件触发

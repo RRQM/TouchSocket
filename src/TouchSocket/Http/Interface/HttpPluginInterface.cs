@@ -26,7 +26,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnDelete(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnGet(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnPost(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnPut(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnReceivedOtherHttpRequest(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>

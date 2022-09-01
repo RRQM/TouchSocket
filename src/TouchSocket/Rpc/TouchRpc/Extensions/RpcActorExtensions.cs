@@ -10,15 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Run;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
-    /// WaitPing
+    /// RpcActorExtensions
     /// </summary>
-    public class WaitPing : WaitResult
+    public static class RpcActorExtensions
     {
-
     }
 }

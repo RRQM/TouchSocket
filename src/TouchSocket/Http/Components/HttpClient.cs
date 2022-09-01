@@ -14,6 +14,7 @@ using System;
 using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
+using TouchSocket.Resources;
 using TouchSocket.Core.Run;
 using TouchSocket.Sockets;
 
@@ -75,14 +76,14 @@ namespace TouchSocket.Http
                             return this.m_waitData.WaitResult;
 
                         case WaitDataStatus.Overtime:
-                            throw new TimeoutException(ResType.Overtime.GetDescription());
+                            throw new TimeoutException(TouchSocketRes.Overtime.GetDescription());
                         case WaitDataStatus.Canceled:
                             return default;
 
                         case WaitDataStatus.Default:
                         case WaitDataStatus.Disposed:
                         default:
-                            throw new Exception(ResType.UnknownError.GetDescription());
+                            throw new Exception(TouchSocketRes.UnknownError.GetDescription());
                     }
                 }
             }
@@ -120,14 +121,14 @@ namespace TouchSocket.Http
                             return this.m_waitData.WaitResult;
 
                         case WaitDataStatus.Overtime:
-                            throw new TimeoutException(ResType.Overtime.GetDescription());
+                            throw new TimeoutException(TouchSocketRes.Overtime.GetDescription());
                         case WaitDataStatus.Canceled:
                             return default;
 
                         case WaitDataStatus.Default:
                         case WaitDataStatus.Disposed:
                         default:
-                            throw new Exception(ResType.UnknownError.GetDescription());
+                            throw new Exception(TouchSocketRes.UnknownError.GetDescription());
                     }
                 }
             }
@@ -177,7 +178,7 @@ namespace TouchSocket.Http
                             throw new Exception("未指定代理身份验证质询。");
                         }
 
-                       var ares = new AuthenticationChallenge(authHeader, credential);
+                        var ares = new AuthenticationChallenge(authHeader, credential);
 
                         httpRequest.SetHeader(HttpHeaders.ProxyAuthorization, ares.ToString());
                         if (response.CloseConnection)
@@ -185,7 +186,7 @@ namespace TouchSocket.Http
                             base.Close("代理要求关闭连接，随后重写连接。");
                             base.Connect(timeout);
                         }
-                       
+
                         response = this.Request(httpRequest, timeout: timeout);
                     }
 
@@ -203,8 +204,6 @@ namespace TouchSocket.Http
             {
                 base.Connect(timeout);
             }
-
-
             return this;
         }
 

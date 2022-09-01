@@ -26,7 +26,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e);
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnHandshaked(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        
+        [AsyncRaiser]
         void OnHandshaking(ITcpClientBase client, HttpContextEventArgs e);
 
         /// <summary>

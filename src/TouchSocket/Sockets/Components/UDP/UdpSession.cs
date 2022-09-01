@@ -23,6 +23,7 @@ using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -51,7 +52,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// UDP基类服务器。
     /// </summary>
-    public abstract class UdpSessionBase : BaseSocket, IUdpSession, IPlguinObject
+    public abstract class UdpSessionBase : BaseSocket, IUdpSession, IPluginObject
     {
         private readonly ConcurrentList<SocketAsyncEventArgs> m_socketAsyncs;
         private TouchSocketConfig m_config;
@@ -542,7 +543,7 @@ namespace TouchSocket.Sockets
                 }
                 if (this.m_adapter == null)
                 {
-                    this.Logger.Error(this, ResType.NullDataAdapter.GetDescription());
+                    this.Logger.Error(this, TouchSocketRes.NullDataAdapter.GetDescription());
                     return;
                 }
                 this.m_adapter.ReceivedInput(endPoint, byteBlock);
@@ -572,7 +573,7 @@ namespace TouchSocket.Sockets
             if (this.m_usePlugin)
             {
                 UdpReceivedDataEventArgs args = new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo);
-                this.PluginsManager.Raise<IUdpSessionPlugin>("OnReceivedData", this, args);
+                this.PluginsManager.Raise<IUdpSessionPlugin>(nameof(IUdpSessionPlugin.OnReceivedData), this, args);
                 if (args.Handled)
                 {
                     return;
@@ -613,7 +614,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             if (!this.m_adapter.CanSendRequestInfo)
             {
@@ -658,7 +659,7 @@ namespace TouchSocket.Sockets
             }
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
             if (!this.m_adapter.CanSendRequestInfo)
             {
@@ -798,7 +799,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
 
             if (this.m_adapter.CanSplicingSend)
@@ -832,7 +833,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
 
             if (this.m_adapter.CanSplicingSend)
@@ -865,7 +866,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
 
             if (this.m_adapter.CanSplicingSend)
@@ -899,7 +900,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_adapter == null)
             {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), ResType.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketRes.NullDataAdapter.GetDescription());
             }
 
             if (this.m_adapter.CanSplicingSend)

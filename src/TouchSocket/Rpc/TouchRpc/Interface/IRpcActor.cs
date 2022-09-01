@@ -20,7 +20,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// RpcActor接口
     /// </summary>
-    public interface IRpcActor : IRpcActorBase, IRpcClient, IIDRpcActor
+    public partial interface IRpcActor : IRpcActorBase, IRpcClient, IIDRpcActor
     {
 
         /// <summary>
@@ -74,6 +74,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         Task<Result> PushFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
+        
         /// <summary>
         /// 判断使用该ID的Channel是否存在。
         /// </summary>

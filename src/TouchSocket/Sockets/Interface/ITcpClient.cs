@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// TCP客户端终端接口
     /// </summary>
-    public interface ITcpClient : ITcpClientBase, IClientSender,IPlguinObject
+    public interface ITcpClient : ITcpClientBase, IClientSender,IPluginObject
     {
         /// <summary>
         /// 成功连接到服务器

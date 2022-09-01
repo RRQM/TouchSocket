@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.IO;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -27,35 +28,25 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
     /// <summary>
     /// WSTouchRpcSocketClient
     /// </summary>
-    public class WSTouchRpcSocketClient : DisposableObject, IRpcActor,IPlguinObject
+    public class WSTouchRpcSocketClient : DisposableObject, IRpcActor, IPluginObject
     {
+        internal ClientDisconnectedEventHandler<WSTouchRpcSocketClient> m_internalDisconnected;
         internal string m_id;
-        internal WSTouchRpcService m_service;
-        private readonly byte[] m_buffer = new byte[1024 * 64];
-        private System.Net.WebSockets.WebSocket m_client;
         internal RpcActor m_rpcActor;
-        internal ClientDisconnectedEventHandler<WSTouchRpcSocketClient> internalDisconnected;
+        internal WSTouchRpcService m_service;
         internal bool m_usePlugin;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public IContainer Container => this.Config?.Container;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public IPluginsManager PluginsManager => this.Config?.PluginsManager;
-
-        /// <summary>
-        /// 是否已启动插件
-        /// </summary>
-        public bool UsePlugin => this.m_usePlugin;
+        private readonly byte[] m_buffer = new byte[1024 * 64];
+        private WebSocket m_client;
 
         /// <summary>
         /// 配置
         /// </summary>
         public TouchSocketConfig Config { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public IContainer Container => this.Config?.Container;
 
         /// <summary>
         /// <inheritdoc/>
@@ -71,6 +62,11 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         public ILog Logger => this.m_rpcActor.Logger;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public IPluginsManager PluginsManager => this.Config?.PluginsManager;
 
         /// <summary>
         /// <inheritdoc/>
@@ -91,6 +87,11 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         public Func<IRpcClient, bool> TryCanInvoke { get => this.m_rpcActor.TryCanInvoke; set => this.m_rpcActor.TryCanInvoke = value; }
+
+        /// <summary>
+        /// 是否已启动插件
+        /// </summary>
+        public bool UsePlugin => this.m_usePlugin;
 
         /// <summary>
         /// <inheritdoc/>
@@ -544,6 +545,16 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             return this.m_rpcActor.TrySubscribeChannel(id, out channel);
         }
 
+        internal async void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
+        {
+            using ByteBlock byteBlock = new ByteBlock();
+            foreach (var item in transferBytes)
+            {
+                byteBlock.Write(item.Array, item.Offset, item.Count);
+            }
+            await this.m_client.SendAsync(byteBlock.Buffer, System.Net.WebSockets.WebSocketMessageType.Binary, true, CancellationToken.None);
+        }
+
         internal Task Start(TouchSocketConfig config, System.Net.WebSockets.WebSocket webSocket)
         {
             this.Config = config;
@@ -619,7 +630,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 this.Dispose();
                 this.m_client.SafeDispose();
                 this.m_rpcActor.SafeDispose();
-                this.internalDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(manual, msg));
+                this.m_internalDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(manual, msg));
             }
         }
 
@@ -630,16 +641,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 return socketClient.m_rpcActor;
             }
             return null;
-        }
-
-        internal async void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
-        {
-            using ByteBlock byteBlock = new ByteBlock();
-            foreach (var item in transferBytes)
-            {
-                byteBlock.Write(item.Array, item.Offset, item.Count);
-            }
-            await this.m_client.SendAsync(byteBlock.Buffer, System.Net.WebSockets.WebSocketMessageType.Binary, true, CancellationToken.None);
         }
     }
 }

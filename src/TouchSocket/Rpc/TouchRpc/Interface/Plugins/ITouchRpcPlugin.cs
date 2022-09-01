@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -20,32 +21,84 @@ namespace TouchSocket.Rpc.TouchRpc
     public interface ITouchRpcPlugin : IPlugin
     {
         /// <summary>
-        /// 在文件传输即将进行时触发。
+        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnFileTransfering(ITouchRpc client, FileOperationEventArgs e);
+        [AsyncRaiser]
+        void OnFileTransfered(ITouchRpc client, FileTransferStatusEventArgs e);
 
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnFileTransfered(ITouchRpc client, FileTransferStatusEventArgs e);
+        /// <returns></returns>
+        Task OnFileTransferedAsync(ITouchRpc client, FileTransferStatusEventArgs e);
+
+        /// <summary>
+        /// 在文件传输即将进行时触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        [AsyncRaiser]
+        void OnFileTransfering(ITouchRpc client, FileOperationEventArgs e);
+
+        /// <summary>
+        /// 在文件传输即将进行时触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnFileTransferingAsync(ITouchRpc client, FileOperationEventArgs e);
+
+        /// <summary>
+        /// 在完成握手连接时。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        [AsyncRaiser]
+        void OnHandshaked(ITouchRpc client, VerifyOptionEventArgs e);
+
+        /// <summary>
+        /// 在完成握手连接时。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnHandshakedAsync(ITouchRpc client, VerifyOptionEventArgs e);
+
+        /// <summary>
+        /// 在验证Token时
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        [AsyncRaiser]
+        void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e);
+
+        /// <summary>
+        /// 在验证Token时
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnHandshakingAsync(ITouchRpc client, VerifyOptionEventArgs e);
 
         /// <summary>
         /// 收到协议数据
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
+        [AsyncRaiser]
         void OnReceivedProtocolData(ITouchRpc client, ProtocolDataEventArgs e);
 
         /// <summary>
-        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
+        /// 收到协议数据
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnStreamTransfering(ITouchRpc client, StreamOperationEventArgs e);
+        /// <returns></returns>
+        Task OnReceivedProtocolDataAsync(ITouchRpc client, ProtocolDataEventArgs e);
 
         /// <summary>
         /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
@@ -53,20 +106,32 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
+        [AsyncRaiser]
         void OnStreamTransfered(ITouchRpc client, StreamStatusEventArgs e);
 
         /// <summary>
-        /// 在完成握手连接时。
+        /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。
+        /// 当流数据传输结束之后。并不意味着完成传输，请通过<see cref="StreamStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        void OnHandshaked(ITouchRpc client, VerifyOptionEventArgs e);
+        /// <returns></returns>
+        Task OnStreamTransferedAsync(ITouchRpc client, StreamStatusEventArgs e);
 
         /// <summary>
-        /// 在验证Token时
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
         /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e);
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        [AsyncRaiser]
+        void OnStreamTransfering(ITouchRpc client, StreamOperationEventArgs e);
+
+        /// <summary>
+        /// 即将接收流数据，用户需要在此事件中对e.Bucket初始化。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnStreamTransferingAsync(ITouchRpc client, StreamOperationEventArgs e);
     }
 }

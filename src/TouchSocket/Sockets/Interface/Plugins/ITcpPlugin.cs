@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.Plugins;
 
@@ -25,48 +26,111 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
+        [AsyncRaiser]
         void OnConnected(ITcpClientBase client, TouchSocketEventArgs e);
+
+        /// <summary>
+        /// 客户端连接成功后触发    
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e);
 
         /// <summary>
         ///在即将完成连接时触发。
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
+        [AsyncRaiser]
         void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e);
+
+        /// <summary>
+        /// 在即将完成连接时触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e);
 
         /// <summary>
         /// 会话断开后触发
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
+        [AsyncRaiser]
         void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e);
 
         /// <summary>
-        /// 在收到数据时触发
+        /// 会话断开后触发
         /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e);
-
-        /// <summary>
-        /// 在刚收到数据时触发，即在适配器之前。
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e);
-
-        /// <summary>
-        /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        void OnSendingData(ITcpClientBase client, SendingEventArgs e);
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e);
 
         /// <summary>
         /// 当Client的ID被更改后触发
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
+        [AsyncRaiser]
         void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e);
+
+        /// <summary>
+        /// 当Client的ID被更改后触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e);
+
+        /// <summary>
+        /// 在收到数据时触发
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        [AsyncRaiser]
+        void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e);
+
+        /// <summary>
+        /// 在收到数据时触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e);
+
+        /// <summary>
+        /// 在刚收到数据时触发，即在适配器之前。
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        [AsyncRaiser]
+        void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e);
+
+        /// <summary>
+        /// 在刚收到数据时触发，即在适配器之前。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnReceivingDataAsync(ITcpClientBase client, ByteBlockEventArgs e);
+
+        /// <summary>
+        /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        [AsyncRaiser]
+        void OnSendingData(ITcpClientBase client, SendingEventArgs e);
+
+        /// <summary>
+        /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e);
     }
 }

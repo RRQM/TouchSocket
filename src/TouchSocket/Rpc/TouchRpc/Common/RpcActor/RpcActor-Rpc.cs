@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Log;
+using TouchSocket.Resources;
 using TouchSocket.Core.Run;
 using TouchSocket.Sockets;
 
@@ -477,7 +478,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     rpcActor.Invoke(method, invokeOption, parameters);
                     return;
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             TouchRpcPackage context = new TouchRpcPackage();
@@ -594,7 +595,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     return rpcActor.Invoke<T>(method, invokeOption, parameters);
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             TouchRpcPackage context = new TouchRpcPackage();
@@ -704,7 +705,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     rpcActor.Invoke(method, invokeOption, ref parameters, types);
                     return;
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             TouchRpcPackage context = new TouchRpcPackage();
@@ -822,7 +823,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     return rpcActor.Invoke<T>(method, invokeOption, ref parameters, types);
                 }
-                throw new ClientNotFindException(ResType.ClientNotFind.GetDescription());
+                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription());
             }
 
             TouchRpcPackage context = new TouchRpcPackage();

@@ -48,7 +48,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// TCP服务器接口
     /// </summary>
-    public interface ITcpService : IService, IIDSender, IIDRequsetInfoSender, IPlguinObject
+    public interface ITcpService : IService, IIDSender, IIDRequsetInfoSender, IPluginObject
     {
         /// <summary>
         /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。

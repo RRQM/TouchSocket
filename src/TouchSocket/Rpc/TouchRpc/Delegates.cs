@@ -10,51 +10,67 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.ByteManager;
+//using TouchSocket.Core.ByteManager;
 
-namespace TouchSocket.Rpc.TouchRpc
-{
-    /// <summary>
-    /// 表示即将握手
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    public delegate void VerifyOptionEventHandler<TClient>(TClient client, VerifyOptionEventArgs e);
+//namespace TouchSocket.Rpc.TouchRpc
+//{
+//    /// <summary>
+//    /// 表示即将握手
+//    /// </summary>
+//    /// <typeparam name="TClient"></typeparam>
+//    /// <param name="client"></param>
+//    /// <param name="e"></param>
+//    public delegate void VerifyOptionEventHandler<TClient>(TClient client, VerifyOptionEventArgs e);
 
-    /// <summary>
-    /// 传输文件操作处理
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    public delegate void FileOperationEventHandler<TClient>(TClient client, FileOperationEventArgs e);
+//    /// <summary>
+//    /// 传输文件操作处理
+//    /// </summary>
+//    /// <param name="client"></param>
+//    /// <param name="e"></param>
+//    public delegate void FileOperationEventHandler<TClient>(TClient client, FileOperationEventArgs e);
 
-    /// <summary>
-    /// 协议数据
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="protocol"></param>
-    /// <param name="byteBlock"></param>
-    public delegate void ProtocolReceivedEventHandler<TClient>(TClient client, short protocol, ByteBlock byteBlock);
+//    /// <summary>
+//    /// 协议数据
+//    /// </summary>
+//    /// <param name="client"></param>
+//    /// <param name="protocol"></param>
+//    /// <param name="byteBlock"></param>
+//    public delegate void ProtocolReceivedEventHandler<TClient>(TClient client, short protocol, ByteBlock byteBlock);
 
-    /// <summary>
-    /// 收到流操作
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    public delegate void StreamOperationEventHandler<TClient>(TClient client, StreamOperationEventArgs e);
+//    /// <summary>
+//    /// 收到流操作
+//    /// </summary>
+//    /// <param name="client"></param>
+//    /// <param name="e"></param>
+//    public delegate void StreamOperationEventHandler<TClient>(TClient client, StreamOperationEventArgs e);
 
-    /// <summary>
-    /// 流状态
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    public delegate void StreamStatusEventHandler<TClient>(TClient client, StreamStatusEventArgs e) where TClient : IRpcActor;
+//    /// <summary>
+//    /// 流状态
+//    /// </summary>
+//    /// <param name="client"></param>
+//    /// <param name="e"></param>
+//    public delegate void StreamStatusEventHandler<TClient>(TClient client, StreamStatusEventArgs e) where TClient : IRpcActor;
 
-    /// <summary>
-    /// 传输文件消息
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    public delegate void TransferFileEventHandler<TClient>(TClient client, FileTransferStatusEventArgs e);
-}
+//    /// <summary>
+//    /// 传输文件消息
+//    /// </summary>
+//    /// <param name="client"></param>
+//    /// <param name="e"></param>
+//    public delegate void TransferFileEventHandler<TClient>(TClient client, FileTransferStatusEventArgs e);
+
+//    /// <summary>
+//    /// 在远程操作访问之前。
+//    /// </summary>
+//    /// <typeparam name="TClient"></typeparam>
+//    /// <param name="client"></param>
+//    /// <param name="e"></param>
+//    public delegate void RemoteAccessingEventHandler<TClient>(TClient client, RemoteAccessActionEventArgs e);
+
+//    /// <summary>
+//    /// 在远程操作访问之后。
+//    /// </summary>
+//    /// <typeparam name="TClient"></typeparam>
+//    /// <param name="client"></param>
+//    /// <param name="e"></param>
+//    public delegate void RemoteAccessedEventHandler<TClient>(TClient client, RemoteAccessEventArgs e);
+//}

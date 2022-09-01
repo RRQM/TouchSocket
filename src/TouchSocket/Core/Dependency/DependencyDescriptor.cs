@@ -46,6 +46,15 @@ namespace TouchSocket.Core.Dependency
         }
 
         /// <summary>
+        /// 初始化一个简单的的服务描述
+        /// </summary>
+        /// <param name="fromType"></param>
+        public DependencyDescriptor(Type fromType)
+        {
+            this.FromType = fromType;
+        }
+
+        /// <summary>
         /// 实例类型
         /// </summary>
         public Type ToType { get; }

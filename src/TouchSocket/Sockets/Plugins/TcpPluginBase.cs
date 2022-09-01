@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
@@ -44,9 +45,19 @@ namespace TouchSocket.Sockets.Plugins
             this.OnConnected(client, e);
         }
 
+        Task ITcpPlugin.OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        {
+            return this.OnConnectedAsync(client, e);
+        }
+
         void ITcpPlugin.OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
             this.OnConnecting(client, e);
+        }
+
+        Task ITcpPlugin.OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
+        {
+            return this.OnConnectingAsync(client, e);
         }
 
         void ITcpPlugin.OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
@@ -54,9 +65,19 @@ namespace TouchSocket.Sockets.Plugins
             this.OnDisconnected(client, e);
         }
 
+        Task ITcpPlugin.OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        {
+            return this.OnDisconnectedAsync(client, e);
+        }
+
         void ITcpPlugin.OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
         {
             this.OnIDChanged(client, e);
+        }
+
+        Task ITcpPlugin.OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        {
+            return this.OnIDChangedAsync(client, e);
         }
 
         void IConfigPlugin.OnLoadedConfig(object sender, ConfigEventArgs e)
@@ -64,9 +85,19 @@ namespace TouchSocket.Sockets.Plugins
             this.OnLoadedConfig(sender, e);
         }
 
+        Task IConfigPlugin.OnLoadedConfigAsync(object sender, ConfigEventArgs e)
+        {
+            return this.OnLoadedConfigAsync(sender, e);
+        }
+
         void IConfigPlugin.OnLoadingConfig(object sender, ConfigEventArgs e)
         {
             this.OnLoadingConfig(sender, e);
+        }
+
+        Task IConfigPlugin.OnLoadingConfigAsync(object sender, ConfigEventArgs e)
+        {
+            return this.OnLoadingConfigAsync(sender, e);
         }
 
         void ITcpPlugin.OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
@@ -74,10 +105,32 @@ namespace TouchSocket.Sockets.Plugins
             this.OnReceivedData(client, e);
         }
 
+        Task ITcpPlugin.OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e)
+        {
+            return this.OnReceivedDataAsync(client, e);
+        }
+
+        void ITcpPlugin.OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        {
+            this.OnReceivingData(client, e);
+        }
+
+        Task ITcpPlugin.OnReceivingDataAsync(ITcpClientBase client, ByteBlockEventArgs e)
+        {
+            return this.OnReceivingDataAsync(client, e);
+        }
+
         void ITcpPlugin.OnSendingData(ITcpClientBase client, SendingEventArgs e)
         {
             this.OnSending(client, e);
         }
+
+        Task ITcpPlugin.OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e)
+        {
+            return this.OnSendingDataAsync(client, e);
+        }
+
+        #region 虚函数实现
 
         /// <summary>
         /// 成功建立连接
@@ -86,6 +139,17 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         protected virtual void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
+        }
+
+        /// <summary>
+        /// 客户端连接成功后触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        {
+            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -98,6 +162,17 @@ namespace TouchSocket.Sockets.Plugins
         }
 
         /// <summary>
+        /// 在即将完成连接时触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
         /// 在断开连接时
         /// </summary>
         /// <param name="client"></param>
@@ -107,12 +182,34 @@ namespace TouchSocket.Sockets.Plugins
         }
 
         /// <summary>
+        /// 会话断开后触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
         /// 当Client的ID被更改后触发
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
         protected virtual void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
         {
+        }
+
+        /// <summary>
+        /// 当Client的ID被更改后触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        {
+            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -129,8 +226,30 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnLoadedConfigAsync(object sender, ConfigEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// 当完成配置载入时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         protected virtual void OnLoadingConfig(object sender, ConfigEventArgs e)
         {
+        }
+
+        /// <summary>
+        /// 当载入配置时
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnLoadingConfigAsync(object sender, ConfigEventArgs e)
+        {
+            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -142,9 +261,35 @@ namespace TouchSocket.Sockets.Plugins
         {
         }
 
-        void ITcpPlugin.OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        /// <summary>
+        /// 在收到数据时触发
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            this.OnReceivingData(client, e);
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// 在刚收到数据时触发，即在适配器之前。
+        /// </summary>
+        /// <param name="client">客户端</param>
+        /// <param name="e">参数</param>
+        protected virtual void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// 在刚收到数据时触发，即在适配器之前。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnReceivingDataAsync(ITcpClientBase client, ByteBlockEventArgs e)
+        {
+            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -157,12 +302,16 @@ namespace TouchSocket.Sockets.Plugins
         }
 
         /// <summary>
-        /// 在刚收到数据时触发，即在适配器之前。
+        /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
         /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        protected virtual void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e)
         {
+            return Task.FromResult(0);
         }
+
+        #endregion 虚函数实现
     }
 }

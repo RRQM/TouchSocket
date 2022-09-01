@@ -22,18 +22,18 @@ namespace TouchSocket.Core.Run
     /// <typeparam name="T"></typeparam>
     public class WaitHandlePool<T> : IDisposable where T : IWaitResult
     {
-        private readonly SnowflakeIDGenerator idGenerator;
-        private readonly ConcurrentDictionary<long, WaitData<T>> waitDic;
-        private readonly ConcurrentQueue<WaitData<T>> waitQueue;
+        private readonly SnowflakeIDGenerator m_idGenerator;
+        private readonly ConcurrentDictionary<long, WaitData<T>> m_waitDic;
+        private readonly ConcurrentQueue<WaitData<T>> m_waitQueue;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public WaitHandlePool()
         {
-            this.waitDic = new ConcurrentDictionary<long, WaitData<T>>();
-            this.waitQueue = new ConcurrentQueue<WaitData<T>>();
-            this.idGenerator = new SnowflakeIDGenerator(4);
+            this.m_waitDic = new ConcurrentDictionary<long, WaitData<T>>();
+            this.m_waitQueue = new ConcurrentQueue<WaitData<T>>();
+            this.m_idGenerator = new SnowflakeIDGenerator(4);
         }
 
         /// <summary>
@@ -46,10 +46,10 @@ namespace TouchSocket.Core.Run
             {
                 throw new ObjectDisposedException(nameof(waitData));
             }
-            if (this.waitDic.TryRemove(waitData.WaitResult.Sign, out _))
+            if (this.m_waitDic.TryRemove(waitData.WaitResult.Sign, out _))
             {
                 waitData.Reset();
-                this.waitQueue.Enqueue(waitData);
+                this.m_waitQueue.Enqueue(waitData);
             }
         }
 
@@ -58,17 +58,17 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public void Dispose()
         {
-            foreach (var item in this.waitDic.Values)
+            foreach (var item in this.m_waitDic.Values)
             {
                 item.Dispose();
             }
-            foreach (var item in this.waitQueue)
+            foreach (var item in this.m_waitQueue)
             {
                 item.Dispose();
             }
-            this.waitDic.Clear();
+            this.m_waitDic.Clear();
 
-            this.waitQueue.Clear();
+            this.m_waitQueue.Clear();
         }
 
         /// <summary>
@@ -79,25 +79,24 @@ namespace TouchSocket.Core.Run
         /// <returns></returns>
         public WaitData<T> GetWaitData(T result, bool autoSign = true)
         {
-            WaitData<T> waitData;
-            if (this.waitQueue.TryDequeue(out waitData))
+            if (this.m_waitQueue.TryDequeue(out var waitData))
             {
                 if (autoSign)
                 {
-                    result.Sign = this.idGenerator.NextID();
+                    result.Sign = this.m_idGenerator.NextID();
                 }
                 waitData.SetResult(result);
-                this.waitDic.TryAdd(result.Sign, waitData);
+                this.m_waitDic.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitData<T>();
             if (autoSign)
             {
-                result.Sign = this.idGenerator.NextID();
+                result.Sign = this.m_idGenerator.NextID();
             }
             waitData.SetResult(result);
-            this.waitDic.TryAdd(result.Sign, waitData);
+            this.m_waitDic.TryAdd(result.Sign, waitData);
             return waitData;
         }
 
@@ -108,7 +107,7 @@ namespace TouchSocket.Core.Run
         public void SetRun(long sign)
         {
             WaitData<T> waitData;
-            if (this.waitDic.TryGetValue(sign, out waitData))
+            if (this.m_waitDic.TryGetValue(sign, out waitData))
             {
                 waitData.Set();
             }
@@ -122,7 +121,7 @@ namespace TouchSocket.Core.Run
         public void SetRun(long sign, T waitResult)
         {
             WaitData<T> waitData;
-            if (this.waitDic.TryGetValue(sign, out waitData))
+            if (this.m_waitDic.TryGetValue(sign, out waitData))
             {
                 waitData.Set(waitResult);
             }
@@ -135,7 +134,7 @@ namespace TouchSocket.Core.Run
         public void SetRun(T waitResult)
         {
             WaitData<T> waitData;
-            if (this.waitDic.TryGetValue(waitResult.Sign, out waitData))
+            if (this.m_waitDic.TryGetValue(waitResult.Sign, out waitData))
             {
                 waitData.Set(waitResult);
             }

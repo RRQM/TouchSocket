@@ -17,9 +17,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public struct StreamInfo
     {
-        private readonly long size;
-
-        private readonly string streamType;
 
         /// <summary>
         /// 构造函数
@@ -28,18 +25,18 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="streamType"></param>
         public StreamInfo(long size, string streamType)
         {
-            this.size = size;
-            this.streamType = streamType;
+            this.Size = size;
+            this.StreamType = streamType;
         }
 
         /// <summary>
         /// 流长度
         /// </summary>
-        public long Size => this.size;
+        public long Size { get; private set; }
 
         /// <summary>
         /// 流类型
         /// </summary>
-        public string StreamType => this.streamType;
+        public string StreamType { get; private set; }
     }
 }
