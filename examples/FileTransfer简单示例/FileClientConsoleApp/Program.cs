@@ -2,8 +2,10 @@
 using TouchSocket.Core;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Log;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Core.Run;
 using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 
 namespace FileClientConsoleApp
@@ -15,20 +17,21 @@ namespace FileClientConsoleApp
             TcpTouchRpcClient client = new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .SetVerifyToken("File")
+                .ConfigurePlugins(a=> 
+                {
+                    a.Add<TouchRpcActionPlugin<TcpTouchRpcClient>>()//此处的逻辑可用插件替代完成。
+                    .SetFileTransfering((client, e) =>
+                    {
+                        //有可能是上传，也有可能是下载
+                        client.Logger.Info($"服务器请求传输文件，ID={client.ID}，请求类型={e.TransferType}，文件名={e.FileInfo.FileName}");
+                    })
+                    .SetFileTransfered((client, e) =>
+                    {
+                        //传输结束，但是不一定成功，需要从e.Result判断状态。
+                        client.Logger.Info($"服务器传输文件结束，ID={client.ID}，请求类型={e.TransferType}，文件名={e.FileInfo.FileName}，请求状态={e.Result}");
+                    });
+                })
                 .BuildWithTcpTouchRpcClient();
-
-            client.FileTransfering += (client, e) =>
-            {
-                //有可能是上传，也有可能是下载
-                client.Logger.Info($"服务器请求传输文件，ID={client.ID}，请求类型={e.TransferType}，文件名={e.FileInfo.FileName}");
-            };
-
-            client.FileTransfered += (client, e) =>
-            {
-                //传输结束，但是不一定成功，需要从e.Result判断状态。
-                client.Logger.Info($"服务器传输文件结束，ID={client.ID}，请求类型={e.TransferType}，文件名={e.FileInfo.FileName}，请求状态={e.Result}");
-            };
-
 
             client.Logger.Info("连接成功");
 

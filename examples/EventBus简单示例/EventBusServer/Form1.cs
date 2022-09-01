@@ -15,7 +15,9 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 
 namespace EERPCServiceDemo
@@ -42,12 +44,16 @@ namespace EERPCServiceDemo
             Control.CheckForIllegalCrossThreadCalls = false;
             this.tcpRpcService = new TcpTouchRpcService();
             this.tcpRpcService.Connected += this.TcpRpcParser_Connected;
-            this.tcpRpcService.Handshaking += this.TcpRpcParser_Handshaking;
-            this.tcpRpcService.Handshaked += this.TcpRpcParser_Handshaked;
             this.tcpRpcService.Disconnected += this.TcpRpcParser_Disconnected;
 
             var config = new TouchSocketConfig();
-            config.SetListenIPHosts(new IPHost[] { new IPHost(7789) });
+            config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<TouchRpcActionPlugin<TcpTouchRpcSocketClient>>()
+                        .SetHandshaking(this.TcpRpcParser_Handshaking)
+                        .SetHandshaked(this.TcpRpcParser_Handshaked);
+                });
 
             this.tcpRpcService.Setup(config).Start();
             this.ShowMsg("服务器已启动");

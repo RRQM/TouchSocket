@@ -185,7 +185,7 @@ namespace TouchRpcServerApp
 
     internal class MyTouchRpcPlugin : TouchRpcPluginBase
     {
-        public override void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e)
+        protected override void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e)
         {
             if (e.Token == "123")
             {

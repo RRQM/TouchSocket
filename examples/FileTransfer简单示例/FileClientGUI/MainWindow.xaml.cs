@@ -22,7 +22,9 @@ using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.IO;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 
 namespace FileClientGUI
@@ -73,12 +75,17 @@ namespace FileClientGUI
         private void ConButton_Click(object sender, RoutedEventArgs e)
         {
             fileClient = new TcpTouchRpcClient();
-            fileClient.FileTransfering += this.FileClient_BeforeFileTransfer;
-            fileClient.Received += FileClient_Received;
             fileClient.Disconnected += this.FileClient_Disconnected;
             fileClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .SetVerifyToken("FileService"));
+                .SetVerifyToken("FileService")
+                .UsePlugin()
+                .ConfigurePlugins(a=> 
+                {
+                    a.Add<TouchRpcActionPlugin<TcpTouchRpcClient>>()//此处的逻辑可用插件替代完成。
+                       .SetFileTransfering(this.FileClient_BeforeFileTransfer)
+                       .SetReceivedProtocolData(FileClient_Received);
+                }));
 
             try
             {
@@ -99,9 +106,9 @@ namespace FileClientGUI
         {
         }
 
-        private void FileClient_Received(TcpTouchRpcClient client, short protocol, ByteBlock byteBlock)
+        private void FileClient_Received(TcpTouchRpcClient client, ProtocolDataEventArgs e)
         {
-            ShowMsg($"收到数据：协议={protocol},数据长度:{byteBlock.Len - 2}");
+            ShowMsg($"收到数据：协议={e.Protocol},数据长度:{e.ByteBlock.Len - 2}");
         }
 
         private void FileClient_BeforeFileTransfer(TcpTouchRpcClient client, FileOperationEventArgs e)
