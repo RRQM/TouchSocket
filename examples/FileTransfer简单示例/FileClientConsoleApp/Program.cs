@@ -17,6 +17,7 @@ namespace FileClientConsoleApp
             TcpTouchRpcClient client = new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .SetVerifyToken("File")
+                .UsePlugin()
                 .ConfigurePlugins(a=> 
                 {
                     a.Add<TouchRpcActionPlugin<TcpTouchRpcClient>>()//此处的逻辑可用插件替代完成。
