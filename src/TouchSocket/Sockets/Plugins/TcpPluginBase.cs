@@ -21,7 +21,15 @@ namespace TouchSocket.Sockets.Plugins
     /// <summary>
     /// 插件实现基类
     /// </summary>
-    public abstract class TcpPluginBase : DisposableObject, ITcpPlugin, IConfigPlugin
+    public abstract class TcpPluginBase : TcpPluginBase<ITcpClientBase>
+    {
+
+    }
+
+    /// <summary>
+    /// 插件实现基类
+    /// </summary>
+    public abstract class TcpPluginBase<TClient> : DisposableObject, ITcpPlugin, IConfigPlugin
     {
         /// <summary>
         /// <inheritdoc/>
@@ -42,42 +50,42 @@ namespace TouchSocket.Sockets.Plugins
 
         void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            this.OnConnected(client, e);
+            this.OnConnected((TClient)client, e);
         }
 
         Task ITcpPlugin.OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            return this.OnConnectedAsync(client, e);
+            return this.OnConnectedAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            this.OnConnecting(client, e);
+            this.OnConnecting((TClient)client, e);
         }
 
         Task ITcpPlugin.OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            return this.OnConnectingAsync(client, e);
+            return this.OnConnectingAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            this.OnDisconnected(client, e);
+            this.OnDisconnected((TClient)client, e);
         }
 
         Task ITcpPlugin.OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            return this.OnDisconnectedAsync(client, e);
+            return this.OnDisconnectedAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            this.OnIDChanged(client, e);
+            this.OnIDChanged((TClient)client, e);
         }
 
         Task ITcpPlugin.OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            return this.OnIDChangedAsync(client, e);
+            return this.OnIDChangedAsync((TClient)client, e);
         }
 
         void IConfigPlugin.OnLoadedConfig(object sender, ConfigEventArgs e)
@@ -102,32 +110,32 @@ namespace TouchSocket.Sockets.Plugins
 
         void ITcpPlugin.OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            this.OnReceivedData(client, e);
+            this.OnReceivedData((TClient)client, e);
         }
 
         Task ITcpPlugin.OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            return this.OnReceivedDataAsync(client, e);
+            return this.OnReceivedDataAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            this.OnReceivingData(client, e);
+            this.OnReceivingData((TClient)client, e);
         }
 
         Task ITcpPlugin.OnReceivingDataAsync(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            return this.OnReceivingDataAsync(client, e);
+            return this.OnReceivingDataAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnSendingData(ITcpClientBase client, SendingEventArgs e)
         {
-            this.OnSending(client, e);
+            this.OnSending((TClient)client, e);
         }
 
         Task ITcpPlugin.OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e)
         {
-            return this.OnSendingDataAsync(client, e);
+            return this.OnSendingDataAsync((TClient)client, e);
         }
 
         #region 虚函数实现
@@ -137,7 +145,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
+        protected virtual void OnConnected(TClient client, TouchSocketEventArgs e)
         {
         }
 
@@ -147,7 +155,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        protected virtual Task OnConnectedAsync(TClient client, TouchSocketEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -157,7 +165,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+        protected virtual void OnConnecting(TClient client, ClientOperationEventArgs e)
         {
         }
 
@@ -167,7 +175,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
+        protected virtual Task OnConnectingAsync(TClient client, ClientOperationEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -177,7 +185,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected virtual void OnDisconnected(TClient client, ClientDisconnectedEventArgs e)
         {
         }
 
@@ -187,7 +195,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected virtual Task OnDisconnectedAsync(TClient client, ClientDisconnectedEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -197,7 +205,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
+        protected virtual void OnIDChanged(TClient client, TouchSocketEventArgs e)
         {
         }
 
@@ -207,7 +215,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        protected virtual Task OnIDChangedAsync(TClient client, TouchSocketEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -257,7 +265,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数，当设置e.Handled=true时，终止向下传递</param>
-        protected virtual void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
+        protected virtual void OnReceivedData(TClient client, ReceivedDataEventArgs e)
         {
         }
 
@@ -267,7 +275,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e)
+        protected virtual Task OnReceivedDataAsync(TClient client, ReceivedDataEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -277,7 +285,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
-        protected virtual void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        protected virtual void OnReceivingData(TClient client, ByteBlockEventArgs e)
         {
         }
 
@@ -287,7 +295,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnReceivingDataAsync(ITcpClientBase client, ByteBlockEventArgs e)
+        protected virtual Task OnReceivingDataAsync(TClient client, ByteBlockEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -297,7 +305,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数，当设置e.IsPermitOperation=false时，中断发送。</param>
-        protected virtual void OnSending(ITcpClientBase client, SendingEventArgs e)
+        protected virtual void OnSending(TClient client, SendingEventArgs e)
         {
         }
 
@@ -307,7 +315,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e)
+        protected virtual Task OnSendingDataAsync(TClient client, SendingEventArgs e)
         {
             return Task.FromResult(0);
         }
