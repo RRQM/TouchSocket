@@ -19,7 +19,14 @@ namespace TouchSocket.Http.WebSockets.Plugins
     /// <summary>
     /// WS插件基类
     /// </summary>
-    public class WebSocketPluginBase : HttpPluginBase, IWebSocketPlugin
+    public class WebSocketPluginBase : WebSocketPluginBase<ITcpClientBase>
+    {
+    }
+
+    /// <summary>
+    /// WS插件基类
+    /// </summary>
+    public class WebSocketPluginBase<TClient> : HttpPluginBase<TClient>, IWebSocketPlugin
     {
         #region 虚函数
 
@@ -28,7 +35,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
+        protected virtual void OnHandleWSDataFrame(TClient client, WSDataFrameEventArgs e)
         {
         }
 
@@ -38,7 +45,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnHandleWSDataFrameAsync(ITcpClientBase client, WSDataFrameEventArgs e)
+        protected virtual Task OnHandleWSDataFrameAsync(TClient client, WSDataFrameEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -48,7 +55,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnHandshaked(ITcpClientBase client, HttpContextEventArgs e)
+        protected virtual void OnHandshaked(TClient client, HttpContextEventArgs e)
         {
         }
 
@@ -58,7 +65,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnHandshakedAsync(ITcpClientBase client, HttpContextEventArgs e)
+        protected virtual Task OnHandshakedAsync(TClient client, HttpContextEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -70,7 +77,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
+        protected virtual void OnHandshaking(TClient client, HttpContextEventArgs e)
         {
         }
 
@@ -80,7 +87,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnHandshakingAsync(ITcpClientBase client, HttpContextEventArgs e)
+        protected virtual Task OnHandshakingAsync(TClient client, HttpContextEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -89,32 +96,32 @@ namespace TouchSocket.Http.WebSockets.Plugins
 
         void IWebSocketPlugin.OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
         {
-            this.OnHandleWSDataFrame(client, e);
+            this.OnHandleWSDataFrame((TClient)client, e);
         }
 
         Task IWebSocketPlugin.OnHandleWSDataFrameAsync(ITcpClientBase client, WSDataFrameEventArgs e)
         {
-            return this.OnHandleWSDataFrameAsync(client, e);
+            return this.OnHandleWSDataFrameAsync((TClient)client, e);
         }
 
         void IWebSocketPlugin.OnHandshaked(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnHandshaked(client, e);
+            this.OnHandshaked((TClient)client, e);
         }
 
         Task IWebSocketPlugin.OnHandshakedAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnHandshakedAsync(client, e);
+            return this.OnHandshakedAsync((TClient)client, e);
         }
 
         void IWebSocketPlugin.OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnHandshaking(client, e);
+            this.OnHandshaking((TClient)client, e);
         }
 
         Task IWebSocketPlugin.OnHandshakingAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnHandshakingAsync(client, e);
+            return this.OnHandshakingAsync((TClient)client, e);
         }
     }
 }

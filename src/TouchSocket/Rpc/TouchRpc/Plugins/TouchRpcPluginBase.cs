@@ -11,16 +11,29 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 using TouchSocket.Sockets.Plugins;
 
 namespace TouchSocket.Rpc.TouchRpc.Plugins
 {
     /// <summary>
-    /// 文件插件基类
+    /// TouchRpc插件基类
     /// </summary>
-    public class TouchRpcPluginBase : TcpPluginBase, ITouchRpcPlugin
+    public class TouchRpcPluginBase : TouchRpcPluginBase<ITouchRpc>
     {
+
+    }
+
+    /// <summary>
+    /// TouchRpc插件基类
+    /// </summary>
+    public class TouchRpcPluginBase<TClient> : DisposableObject, ITouchRpcPlugin
+    {
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public int Order { get; set; }
         #region 虚函数
 
         /// <summary>
@@ -28,7 +41,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnFileTransfered(ITouchRpc client, FileTransferStatusEventArgs e)
+        protected virtual void OnFileTransfered(TClient client, FileTransferStatusEventArgs e)
         {
         }
 
@@ -38,7 +51,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnFileTransferedAsync(ITouchRpc client, FileTransferStatusEventArgs e)
+        protected virtual Task OnFileTransferedAsync(TClient client, FileTransferStatusEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -48,7 +61,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnFileTransfering(ITouchRpc client, FileOperationEventArgs e)
+        protected virtual void OnFileTransfering(TClient client, FileOperationEventArgs e)
         {
         }
 
@@ -58,7 +71,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnFileTransferingAsync(ITouchRpc client, FileOperationEventArgs e)
+        protected virtual Task OnFileTransferingAsync(TClient client, FileOperationEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -68,7 +81,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnHandshaked(ITouchRpc client, MsgEventArgs e)
+        protected virtual void OnHandshaked(TClient client, MsgEventArgs e)
         {
         }
 
@@ -78,7 +91,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnHandshakedAsync(ITouchRpc client, VerifyOptionEventArgs e)
+        protected virtual Task OnHandshakedAsync(TClient client, VerifyOptionEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -88,7 +101,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e)
+        protected virtual void OnHandshaking(TClient client, VerifyOptionEventArgs e)
         {
         }
 
@@ -98,7 +111,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnHandshakingAsync(ITouchRpc client, VerifyOptionEventArgs e)
+        protected virtual Task OnHandshakingAsync(TClient client, VerifyOptionEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -108,7 +121,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnReceivedProtocolData(ITouchRpc client, ProtocolDataEventArgs e)
+        protected virtual void OnReceivedProtocolData(TClient client, ProtocolDataEventArgs e)
         {
         }
 
@@ -118,7 +131,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnReceivedProtocolDataAsync(ITouchRpc client, ProtocolDataEventArgs e)
+        protected virtual Task OnReceivedProtocolDataAsync(TClient client, ProtocolDataEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -128,7 +141,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnStreamTransfered(ITouchRpc client, StreamStatusEventArgs e)
+        protected virtual void OnStreamTransfered(TClient client, StreamStatusEventArgs e)
         {
         }
 
@@ -138,7 +151,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnStreamTransferedAsync(ITouchRpc client, StreamStatusEventArgs e)
+        protected virtual Task OnStreamTransferedAsync(TClient client, StreamStatusEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -148,7 +161,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnStreamTransfering(ITouchRpc client, StreamOperationEventArgs e)
+        protected virtual void OnStreamTransfering(TClient client, StreamOperationEventArgs e)
         {
         }
 
@@ -158,7 +171,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnStreamTransferingAsync(ITouchRpc client, StreamOperationEventArgs e)
+        protected virtual Task OnStreamTransferingAsync(TClient client, StreamOperationEventArgs e)
         {
             return Task.FromResult(0);
         }
@@ -167,72 +180,71 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
 
         void ITouchRpcPlugin.OnFileTransfered(ITouchRpc client, FileTransferStatusEventArgs e)
         {
-            this.OnFileTransfered(client, e);
+            this.OnFileTransfered((TClient)client, e);
         }
 
         Task ITouchRpcPlugin.OnFileTransferedAsync(ITouchRpc client, FileTransferStatusEventArgs e)
         {
-            return this.OnFileTransferedAsync(client, e);
+            return this.OnFileTransferedAsync((TClient)client, e);
         }
 
         void ITouchRpcPlugin.OnFileTransfering(ITouchRpc client, FileOperationEventArgs e)
         {
-            this.OnFileTransfering(client, e);
+            this.OnFileTransfering((TClient)client, e);
         }
 
         Task ITouchRpcPlugin.OnFileTransferingAsync(ITouchRpc client, FileOperationEventArgs e)
         {
-            return this.OnFileTransferingAsync(client, e);
+            return this.OnFileTransferingAsync((TClient)client, e);
         }
 
         void ITouchRpcPlugin.OnHandshaked(ITouchRpc client, VerifyOptionEventArgs e)
         {
-            this.OnHandshaked(client, e);
+            this.OnHandshaked((TClient)client, e);
         }
 
         Task ITouchRpcPlugin.OnHandshakedAsync(ITouchRpc client, VerifyOptionEventArgs e)
         {
-            return this.OnHandshakedAsync(client, e);
+            return this.OnHandshakedAsync((TClient)client, e);
         }
 
         void ITouchRpcPlugin.OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e)
         {
-            this.OnHandshaking(client, e);
+            this.OnHandshaking((TClient)client, e);
         }
 
         Task ITouchRpcPlugin.OnHandshakingAsync(ITouchRpc client, VerifyOptionEventArgs e)
         {
-            return this.OnHandshakingAsync(client, e);
+            return this.OnHandshakingAsync((TClient)client, e);
         }
 
         void ITouchRpcPlugin.OnReceivedProtocolData(ITouchRpc client, ProtocolDataEventArgs e)
         {
-            this.OnReceivedProtocolData(client, e);
+            this.OnReceivedProtocolData((TClient)client, e);
         }
 
         Task ITouchRpcPlugin.OnReceivedProtocolDataAsync(ITouchRpc client, ProtocolDataEventArgs e)
         {
-            return this.OnReceivedProtocolDataAsync(client, e);
+            return this.OnReceivedProtocolDataAsync((TClient)client, e);
         }
-
         void ITouchRpcPlugin.OnStreamTransfered(ITouchRpc client, StreamStatusEventArgs e)
         {
-            this.OnStreamTransfered(client, e);
+            this.OnStreamTransfered((TClient)client, e);
         }
 
         Task ITouchRpcPlugin.OnStreamTransferedAsync(ITouchRpc client, StreamStatusEventArgs e)
         {
-            return this.OnStreamTransferedAsync(client, e);
+            return this.OnStreamTransferedAsync((TClient)client, e);
         }
 
         void ITouchRpcPlugin.OnStreamTransfering(ITouchRpc client, StreamOperationEventArgs e)
         {
-            this.OnStreamTransfering(client, e);
+            this.OnStreamTransfering((TClient)client, e);
         }
 
         Task ITouchRpcPlugin.OnStreamTransferingAsync(ITouchRpc client, StreamOperationEventArgs e)
         {
-            return this.OnStreamTransferingAsync(client, e);
+            return this.OnStreamTransferingAsync((TClient)client, e);
         }
     }
 }

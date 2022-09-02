@@ -17,10 +17,14 @@ using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets.Plugins
 {
+    public class UdpSessionPluginBase : UdpSessionPluginBase<IUdpSession>
+    {
+
+    }
     /// <summary>
     /// Udp插件实现类
     /// </summary>
-    public class UdpSessionPluginBase : DisposableObject, IUdpSessionPlugin
+    public class UdpSessionPluginBase<TSession> : DisposableObject, IUdpSessionPlugin
     {
         /// <summary>
         /// <inheritdoc/>
@@ -44,12 +48,12 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         void IUdpSessionPlugin.OnReceivedData(IUdpSession client, UdpReceivedDataEventArgs e)
         {
-            this.OnReceivedData(client, e);
+            this.OnReceivedData((TSession)client, e);
         }
 
         Task IUdpSessionPlugin.OnReceivedDataAsync(IUdpSession client, UdpReceivedDataEventArgs e)
         {
-            return this.OnReceivedDataAsync(client, e);
+            return this.OnReceivedDataAsync((TSession)client, e);
         }
 
         /// <summary>
@@ -57,7 +61,7 @@ namespace TouchSocket.Sockets.Plugins
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnReceivedData(IUdpSession client, UdpReceivedDataEventArgs e)
+        protected virtual void OnReceivedData(TSession client, UdpReceivedDataEventArgs e)
         {
         }
 
@@ -67,7 +71,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnReceivedDataAsync(IUdpSession client, UdpReceivedDataEventArgs e)
+        protected virtual Task OnReceivedDataAsync(TSession client, UdpReceivedDataEventArgs e)
         {
             return Task.FromResult(0);
         }
