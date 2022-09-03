@@ -126,9 +126,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileClientConsoleApp", "exa
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "远程文件系统访问简单示例", "远程文件系统访问简单示例", "{1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerConsoleApp", "examples\远程文件系统访问简单示例\ServerConsoleApp\ServerConsoleApp.csproj", "{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerConsoleApp", "examples\远程文件系统访问简单示例\ServerConsoleApp\ServerConsoleApp.csproj", "{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientWinFormsApp", "examples\远程文件系统访问简单示例\ClientWinFormsApp\ClientWinFormsApp.csproj", "{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientWinFormsApp", "examples\远程文件系统访问简单示例\ClientWinFormsApp\ClientWinFormsApp.csproj", "{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BytePool简单示例", "BytePool简单示例", "{6D046723-8625-4D69-BD71-64E5F43B210A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BytePoolConsoleApp", "examples\BytePool简单示例\BytePoolConsoleApp\BytePoolConsoleApp.csproj", "{F5AA7892-A533-4603-959F-A990AE569C59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -288,6 +292,10 @@ Global
 		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5AA7892-A533-4603-959F-A990AE569C59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5AA7892-A533-4603-959F-A990AE569C59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5AA7892-A533-4603-959F-A990AE569C59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5AA7892-A533-4603-959F-A990AE569C59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -338,6 +346,7 @@ Global
 		{EDEB1260-9D17-439C-A5E3-A31E1B1FE1F4} = {FB0FA0CF-1657-48F7-B852-FBA818F1AE8A}
 		{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6} = {1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}
 		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA} = {1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}
+		{F5AA7892-A533-4603-959F-A990AE569C59} = {6D046723-8625-4D69-BD71-64E5F43B210A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
