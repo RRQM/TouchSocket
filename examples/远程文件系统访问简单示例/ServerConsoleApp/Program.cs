@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using TouchSocket.Core;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
@@ -58,6 +59,17 @@ namespace ServerConsoleApp
                 return;
             }
             base.OnRemoteAccessing(client, e);
+        }
+
+        protected override void OnLoadingStream(TcpTouchRpcSocketClient client, LoadingStreamEventArgs e)
+        {
+            //该方法会在客户端调用LoadRemoteStream时触发。
+            //此时，你可以通过e.Metadata判断客户端传递来的数据。
+            //最重要的是，对e.Stream进行赋值，因为这个流数据即会被映射到客户端，以供客户端读取和写入。
+            MemoryStream memoryStream = new MemoryStream();
+            memoryStream.SetLength(100);
+            e.Stream= memoryStream;
+            base.OnLoadingStream(client, e);
         }
     }
 }
