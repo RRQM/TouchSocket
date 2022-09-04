@@ -82,6 +82,12 @@ TouchSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的
 ## 🌟说明文档
 - [ 文档首页 ](https://www.yuque.com/rrqm/touchsocket/index)
 
+## 👑功能导图
+
+<p align="center">
+<img src="./images/1.png" alt="图片名称" align=center />
+</p>
+
 ## ✨简单示例
 
  **_以下仅以最简方式创建示例，更多详情请查看[说明文档](https://www.yuque.com/rrqm/touchsocket/index)。_** 
