@@ -131,5 +131,20 @@ namespace ClientWinFormsApp
                 this.m_client?.Logger.Exception(ex);
             }
         }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //RemoteStream是将服务器的流数据映射到此处，然后可以直接当本地Stream一样的读取和写入。
+                RemoteStream remoteStream = this.m_client?.LoadRemoteStream(new Metadata());
+
+                MessageBox.Show($"流加载完成，流长度为{remoteStream.Length}");
+            }
+            catch (Exception ex)
+            {
+                this.m_client?.Logger.Exception(ex);
+            }
+        }
     }
 }
