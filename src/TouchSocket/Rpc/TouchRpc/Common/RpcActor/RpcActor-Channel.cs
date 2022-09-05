@@ -42,12 +42,10 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             while (true)
             {
-                try
+                int id = new Random().Next(int.MinValue, int.MaxValue);
+                if (!this.ChannelExisted(id))
                 {
-                    return this.CreateChannel(new Random().Next(int.MinValue, int.MaxValue));
-                }
-                catch
-                {
+                    return this.CreateChannel(id);
                 }
             }
         }
