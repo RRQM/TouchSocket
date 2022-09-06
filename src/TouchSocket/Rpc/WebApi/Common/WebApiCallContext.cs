@@ -19,7 +19,7 @@ namespace TouchSocket.Rpc.WebApi
     /// <summary>
     /// WebApi调用上下文
     /// </summary>
-    internal class WebApiCallContext : ICallContext
+    internal class WebApiCallContext : IWebApiCallContext
     {
         private CancellationTokenSource m_tokenSource;
 
