@@ -54,7 +54,7 @@
 - MAUI
 - Avalonia 
 - Mono
-- Unity 3D
+- Unity 3D（除WebGL）
 - 其他（即所有C#系）
 
 
