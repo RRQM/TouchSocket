@@ -18,6 +18,7 @@ using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Data.Security;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
@@ -147,7 +148,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当客户端ID被修改时触发。
         /// </summary>
-        public event TouchSocketEventHandler<TClient> IDChanged;
+        public event IDChangedEventHandler<TClient> IDChanged;
 
         /// <summary>
         /// <inheritdoc/>
@@ -225,7 +226,12 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnIDChanged(TClient socketClient, TouchSocketEventArgs e)
+        protected virtual void OnIDChanged(TClient socketClient, IDChangedEventArgs e)
+        {
+            this.IDChanged?.Invoke(socketClient, e);
+        }
+
+        private void PrivateOnIDChanged(TClient socketClient, IDChangedEventArgs e)
         {
             if (this.m_usePlugin)
             {
@@ -235,7 +241,8 @@ namespace TouchSocket.Sockets
                     return;
                 }
             }
-            this.IDChanged?.Invoke(socketClient, e);
+
+            this.OnIDChanged(socketClient,e);
         }
 
         /// <summary>
@@ -309,14 +316,20 @@ namespace TouchSocket.Sockets
                 socketClient.m_id = newID;
                 if (this.m_socketClients.TryAdd(socketClient))
                 {
-                    this.OnIDChanged(socketClient, new TouchSocketEventArgs());
+                    this.PrivateOnIDChanged(socketClient, new IDChangedEventArgs(oldID,newID));
                     return;
                 }
                 else
                 {
                     socketClient.m_id = oldID;
-                    this.m_socketClients.TryAdd(socketClient);
-                    throw new Exception("ID重复");
+                    if (this.m_socketClients.TryAdd(socketClient))
+                    {
+                        throw new Exception("ID重复");
+                    }
+                    else
+                    {
+                        socketClient.Close("修改新ID时重复，且回退旧ID时也重复。");
+                    }
                 }
             }
             else

@@ -23,7 +23,7 @@ namespace TouchSocket.Sockets.Plugins
     /// </summary>
     public abstract class TcpPluginBase : TcpPluginBase<ITcpClientBase>
     {
-
+        
     }
 
     /// <summary>
@@ -78,12 +78,12 @@ namespace TouchSocket.Sockets.Plugins
             return this.OnDisconnectedAsync((TClient)client, e);
         }
 
-        void ITcpPlugin.OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e)
+        void ITcpPlugin.OnIDChanged(ITcpClientBase client, IDChangedEventArgs e)
         {
             this.OnIDChanged((TClient)client, e);
         }
 
-        Task ITcpPlugin.OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        Task ITcpPlugin.OnIDChangedAsync(ITcpClientBase client, IDChangedEventArgs e)
         {
             return this.OnIDChangedAsync((TClient)client, e);
         }

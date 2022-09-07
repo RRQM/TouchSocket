@@ -31,6 +31,14 @@ public delegate void MessageEventHandler<TClient>(TClient client, MsgEventArgs e
 public delegate void TouchSocketEventHandler<TClient>(TClient client, TouchSocketEventArgs e);
 
 /// <summary>
+/// ID修改通知
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate void IDChangedEventHandler<TClient>(TClient client, IDChangedEventArgs e);
+
+/// <summary>
 /// Connecting
 /// </summary>
 /// <typeparam name="TClient"></typeparam>

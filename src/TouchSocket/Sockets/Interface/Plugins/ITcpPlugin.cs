@@ -75,7 +75,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         [AsyncRaiser]
-        void OnIDChanged(ITcpClientBase client, TouchSocketEventArgs e);
+        void OnIDChanged(ITcpClientBase client, IDChangedEventArgs e);
 
         /// <summary>
         /// 当Client的ID被更改后触发
@@ -83,7 +83,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnIDChangedAsync(ITcpClientBase client, TouchSocketEventArgs e);
+        Task OnIDChangedAsync(ITcpClientBase client, IDChangedEventArgs e);
 
         /// <summary>
         /// 在收到数据时触发
