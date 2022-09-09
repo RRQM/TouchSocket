@@ -20,7 +20,7 @@ using TouchSocket.Core.Plugins;
 namespace TouchSocket.Sockets.Plugins
 {
     /// <summary>
-    /// 重连插件
+    /// 重连插件 
     /// </summary>
     [SingletonPlugin]
     public sealed class ReconnectionPlugin<TClient> : TcpPluginBase where TClient : class, ITcpClient
