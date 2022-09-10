@@ -132,7 +132,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientWinFormsApp", "exampl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BytePool简单示例", "BytePool简单示例", "{6D046723-8625-4D69-BD71-64E5F43B210A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BytePoolConsoleApp", "examples\BytePool简单示例\BytePoolConsoleApp\BytePoolConsoleApp.csproj", "{F5AA7892-A533-4603-959F-A990AE569C59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BytePoolConsoleApp", "examples\BytePool简单示例\BytePoolConsoleApp\BytePoolConsoleApp.csproj", "{F5AA7892-A533-4603-959F-A990AE569C59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity3d简单示例", "Unity3d简单示例", "{59C3DFB0-C6E1-4F7E-AD9D-9857A4153A1E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnityServerConsoleApp", "examples\Unity3d简单示例\UnityServer\UnityServerConsoleApp\UnityServerConsoleApp.csproj", "{F645710B-4FE8-430C-9860-B289743CAE23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -296,6 +300,10 @@ Global
 		{F5AA7892-A533-4603-959F-A990AE569C59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5AA7892-A533-4603-959F-A990AE569C59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5AA7892-A533-4603-959F-A990AE569C59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F645710B-4FE8-430C-9860-B289743CAE23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F645710B-4FE8-430C-9860-B289743CAE23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F645710B-4FE8-430C-9860-B289743CAE23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F645710B-4FE8-430C-9860-B289743CAE23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -347,6 +355,7 @@ Global
 		{707CC6CD-17D0-4EC8-9CF7-D056F7740EC6} = {1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}
 		{82E99507-C5AA-4AC0-A857-6294D5CF9FFA} = {1DE974CF-D77E-4E9B-B3F9-7E5A3F9C4A67}
 		{F5AA7892-A533-4603-959F-A990AE569C59} = {6D046723-8625-4D69-BD71-64E5F43B210A}
+		{F645710B-4FE8-430C-9860-B289743CAE23} = {59C3DFB0-C6E1-4F7E-AD9D-9857A4153A1E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
