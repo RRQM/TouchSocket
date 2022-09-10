@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc
 {
@@ -29,6 +24,6 @@ namespace TouchSocket.Rpc
         /// <param name="callContext"></param>
         /// <param name="ps"></param>
         /// <returns></returns>
-        public IRpcServer Create(ICallContext callContext,object[] ps); 
+        public IRpcServer Create(ICallContext callContext, object[] ps);
     }
 }

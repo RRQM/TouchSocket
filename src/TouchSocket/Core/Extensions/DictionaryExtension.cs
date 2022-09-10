@@ -97,6 +97,26 @@ namespace TouchSocket.Core.Extensions
             }
         }
 
+        /// <summary>
+        /// 获取值。如果键不存在，则返回默认值。
+        /// </summary>
+        /// <typeparam name="Tkey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="dictionary"></param>
+        /// <param name="tkey"></param>
+        /// <returns></returns>
+        public static TValue GetValue<Tkey, TValue>(this Dictionary<Tkey, TValue> dictionary, Tkey tkey)
+        {
+            if (dictionary.TryGetValue(tkey, out TValue value))
+            {
+                return value;
+            }
+            else
+            {
+                return default;
+            }
+        }
+
         #endregion 字典扩展
     }
 }

@@ -19,7 +19,7 @@ namespace TouchSocket.Core.IO
     /// <summary>
     /// 阻塞式单项读取流。
     /// </summary>
-    public abstract class BlockReadStream : Stream,IWrite
+    public abstract class BlockReadStream : Stream, IWrite
     {
         private readonly AutoResetEvent m_inputEvent;
         private readonly AutoResetEvent m_readEvent;

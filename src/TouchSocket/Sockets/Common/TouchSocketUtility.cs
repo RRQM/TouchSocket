@@ -96,5 +96,10 @@ namespace TouchSocket.Sockets
                 return regex1.IsMatch(input);
             }
         }
+
+        /// <summary>
+        /// 大数据边界
+        /// </summary>
+        public const int BigDataBoundary = 1024 * 512;
     }
 }

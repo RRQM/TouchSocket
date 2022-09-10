@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
-using TouchSocket.Resources;
 using TouchSocket.Core.Serialization;
 using TouchSocket.Http;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -130,7 +130,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(TClient client, FileTransferStatusEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(TClient client, FileOperationEventArgs e)
         {
-            
+
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnHandshaked(TClient client, VerifyOptionEventArgs e)
         {
-            
+
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e">参数</param>
         protected virtual void OnHandshaking(TClient client, VerifyOptionEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="byteBlock"></param>
         protected virtual void OnReceived(TClient client, short protocol, ByteBlock byteBlock)
         {
-            
+
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfered(TClient client, StreamStatusEventArgs e)
         {
-          
+
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfering(TClient client, StreamOperationEventArgs e)
         {
-           
+
         }
 
         private void PrivateOnRpcActorInit(HttpTouchRpcSocketClient client)

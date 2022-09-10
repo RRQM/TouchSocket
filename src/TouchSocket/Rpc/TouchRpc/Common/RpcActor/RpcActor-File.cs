@@ -77,7 +77,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
 
-            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo, SerializationType.Json);
+            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo);
             try
             {
                 this.SocketSend(TouchRpcUtility.P_500_PullFile_Request, byteBlock);
@@ -182,7 +182,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
 
-            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo, SerializationType.Json);
+            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo);
             try
             {
                 this.SocketSend(TouchRpcUtility.P_503_PullFile2C_Request, byteBlock.Buffer, 0, byteBlock.Len);
@@ -333,7 +333,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
 
-            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo, SerializationType.Json);
+            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo);
             try
             {
                 this.SocketSend(TouchRpcUtility.P_502_PushFile_Request, byteBlock);
@@ -465,7 +465,7 @@ namespace TouchSocket.Rpc.TouchRpc
             };
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitFileInfo);
 
-            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo, SerializationType.Json);
+            ByteBlock byteBlock = new ByteBlock().WriteObject(waitFileInfo);
             try
             {
                 this.SocketSend(TouchRpcUtility.P_507_PushFile2C_Request, byteBlock.Buffer, 0, byteBlock.Len);
@@ -586,7 +586,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 try
                                 {
                                     waitTransfer.Status = 1;
-                                    this.SendJsonObject(responseOrder, waitTransfer);
+                                    this.SendFastObject(responseOrder, waitTransfer);
                                     long position = waitTransfer.Position;
                                     reader.Position = position;
                                     fileOperator.SetFileCompletedLength(position);
@@ -656,7 +656,7 @@ namespace TouchSocket.Rpc.TouchRpc
                     waitTransfer.Status = 3;
                 }
 
-                this.SendJsonObject(responseOrder, waitTransfer);
+                this.SendFastObject(responseOrder, waitTransfer);
 
                 this.OnFileTransfered?.Invoke(this, e);
             }, null);
@@ -699,7 +699,7 @@ namespace TouchSocket.Rpc.TouchRpc
             };
 
             WaitData<IWaitResult> waitData = this.WaitHandlePool.GetWaitData(waitTransfer);
-            ByteBlock byteBlock = new ByteBlock().WriteObject(waitTransfer, SerializationType.Json);
+            ByteBlock byteBlock = new ByteBlock().WriteObject(waitTransfer);
             try
             {
                 if (clientID == null)
@@ -964,7 +964,7 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 if (this.ResponseType == ResponseType.None || this.ResponseType == ResponseType.Pull)
                 {
-                    this.SendJsonObject(responseOrder, new WaitTransfer() { Sign = waitRemoteFileInfo.Sign, Status = 6 });
+                    this.SendFastObject(responseOrder, new WaitTransfer() { Sign = waitRemoteFileInfo.Sign, Status = 6 });
                     return;
                 }
                 FileRequest fileRequest = waitRemoteFileInfo.FileRequest;
@@ -1011,7 +1011,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 waitTransfer.ChannelID = channel.ID;
                                 waitTransfer.Position = fileInfo.Position;
                                 waitTransfer.Status = 1;
-                                this.SendJsonObject(responseOrder, waitTransfer);
+                                this.SendFastObject(responseOrder, waitTransfer);
 
                                 fileOperator.SetFileCompletedLength(fileInfo.Position);
                                 while (channel.MoveNext())
@@ -1058,7 +1058,7 @@ namespace TouchSocket.Rpc.TouchRpc
                             }
 
                             this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
-                            this.SendJsonObject(TouchRpcUtility.P_509_PushFileAck_Request, new WaitResult()
+                            this.SendFastObject(TouchRpcUtility.P_509_PushFileAck_Request, new WaitResult()
                             {
                                 Sign = args.GetHashCode(),
                                 Status = (byte)(fileOperator.Result.ResultCode == ResultCode.Success ? 1 : 0),
@@ -1082,15 +1082,8 @@ namespace TouchSocket.Rpc.TouchRpc
                     this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                 }
 
-                this.SendJsonObject(responseOrder, waitTransfer);
+                this.SendFastObject(responseOrder, waitTransfer);
             }, null);
-        }
-
-        private void SendJsonObject(short protocol, object obj)
-        {
-            using ByteBlock byteBlock = new ByteBlock();
-            byteBlock.WriteObject(obj, SerializationType.Json);
-            this.SocketSend(protocol, byteBlock);
         }
 
         private void SendFastObject(short protocol, object obj)

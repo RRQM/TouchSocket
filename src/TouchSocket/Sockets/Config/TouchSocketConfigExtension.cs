@@ -198,17 +198,35 @@ namespace TouchSocket.Sockets
             DependencyProperty.Register("RemoteIPHost", typeof(IPHost), typeof(TouchSocketConfigExtension), null);
 
         /// <summary>
-        /// 在异步发送时，使用独立线程发送，所需类型<see cref="bool"/>
-        /// </summary>
-        public static readonly DependencyProperty SeparateThreadSendProperty =
-            DependencyProperty.Register("SeparateThreadSend", typeof(bool), typeof(TouchSocketConfigExtension), false);
-
-        /// <summary>
         /// Ssl配置，为Null时则不启用
         /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
         /// </summary>
         public static readonly DependencyProperty SslOptionProperty =
             DependencyProperty.Register("SslOption", typeof(SslOption), typeof(TouchSocketConfigExtension), null);
+
+        /// <summary>
+        /// 是否使用延迟合并发送。默认null。不开启
+        /// 所需类型<see cref="DelaySenderOption"/>
+        /// </summary>
+        public static readonly DependencyProperty DelaySenderProperty =
+            DependencyProperty.Register("DelaySender", typeof(DelaySenderOption), typeof(TouchSocketConfigExtension), null);
+
+        /// <summary>
+        /// 使用默认配置延迟合并发送。
+        /// 所需类型<see cref="DelaySenderOption"/>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="option"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig UseDelaySender(this TouchSocketConfig config, DelaySenderOption option = default)
+        {
+            if (option == default)
+            {
+                option = new DelaySenderOption();
+            }
+            config.SetValue(DelaySenderProperty, option);
+            return config;
+        }
 
         /// <summary>
         /// 固定端口绑定。
@@ -329,18 +347,6 @@ namespace TouchSocket.Sockets
             config.SetValue(NoDelayProperty, true);
             return config;
         }
-
-        /// <summary>
-        /// 在异步发送时，使用独立线程发送。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig UseSeparateThreadSend(this TouchSocketConfig config)
-        {
-            config.SetValue(SeparateThreadSendProperty, true);
-            return config;
-        }
-
         #endregion TcpClient
 
         #region TcpService

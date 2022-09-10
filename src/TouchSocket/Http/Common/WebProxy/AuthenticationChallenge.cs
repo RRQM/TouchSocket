@@ -29,7 +29,7 @@ namespace TouchSocket.Http
         /// <param name="nonceCount">暂时不知道是什么</param>
         public AuthenticationChallenge(string value, NetworkCredential credential, uint nonceCount = 0)
         {
-            Parse(value, credential);
+            this.Parse(value, credential);
             this.NonceCount = nonceCount;
         }
 
@@ -55,8 +55,8 @@ namespace TouchSocket.Http
         /// <exception cref="Exception"></exception>
         public override string ToString()
         {
-            if (Type == AuthenticationType.Basic)
-                return ToBasicString();
+            if (this.Type == AuthenticationType.Basic)
+                return this.ToBasicString();
             else
                 throw new Exception("该凭证类型不支持");
         }
@@ -68,7 +68,7 @@ namespace TouchSocket.Http
                 throw new Exception("该凭证类型不支持");
 
             var schm = chal[0].ToLower();
-            this.Parameters = ParseParameters(chal[1]);
+            this.Parameters = this.ParseParameters(chal[1]);
 
             if (this.Parameters.ContainsKey("username") == false)
                 this.Parameters.Add("username", credential.Username);
@@ -91,7 +91,7 @@ namespace TouchSocket.Http
         private Dictionary<string, string> ParseParameters(string value)
         {
             var res = new Dictionary<string, string>();
-            IEnumerable<string> values = SplitHeaderValue(value, ',');
+            IEnumerable<string> values = this.SplitHeaderValue(value, ',');
             foreach (var param in values)
             {
                 var i = param.IndexOf('=');
@@ -153,7 +153,7 @@ namespace TouchSocket.Http
 
         private string ToBasicString()
         {
-            var userPass = $"{Parameters["username"]}:{Parameters["password"]}";
+            var userPass = $"{this.Parameters["username"]}:{this.Parameters["password"]}";
             var cred = Convert.ToBase64String(Encoding.UTF8.GetBytes(userPass));
             return "Basic " + cred;
         }

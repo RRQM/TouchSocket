@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading;
-using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Sockets;
 using TouchSocket.Sockets.Plugins;

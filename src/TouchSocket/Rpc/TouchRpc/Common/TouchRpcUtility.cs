@@ -11,11 +11,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
-    /// RRQMRpcUtility
+    /// TouchRpcUtility
     /// </summary>
     public class TouchRpcUtility
     {
@@ -25,9 +26,9 @@ namespace TouchSocket.Rpc.TouchRpc
         public const string TouchRpc = "TOUCHRPC";
 
         /// <summary>
-        /// 集群验证令箭
+        /// TouchRpc
         /// </summary>
-        public const string TouchRpcCluster = "C4C9D0F8-4004-4804-BBDA-129F8BC33659";
+        public static Protocol TouchRpcProtocol { get; private set; } = new Protocol(TouchRpc);
 
         /// <summary>
         /// 传输分包

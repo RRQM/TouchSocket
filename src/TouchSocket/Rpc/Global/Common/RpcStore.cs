@@ -67,9 +67,9 @@ namespace TouchSocket.Rpc
 
             if (!container.IsRegistered(typeof(IRpcServerFactory)))
             {
-                this.Container.RegisterSingleton<IRpcServerFactory,RpcServerFactory>();
+                this.Container.RegisterSingleton<IRpcServerFactory, RpcServerFactory>();
             }
-          
+
             SearchAttribute();
         }
 
@@ -264,7 +264,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         public MethodInstance[] GetAllMethods()
         {
-            List<MethodInstance> methods = new List<MethodInstance>();  
+            List<MethodInstance> methods = new List<MethodInstance>();
             foreach (var item in this.m_serverTypes.Values)
             {
                 methods.AddRange(item);
@@ -334,7 +334,7 @@ namespace TouchSocket.Rpc
 
             foreach (var attrbute in attrbuteType)
             {
-                foreach (var item in m_serverTypes.Keys)
+                foreach (var item in this.m_serverTypes.Keys)
                 {
                     ServerCellCode serverCellCode = CodeGenerator.Generator(item, attrbute);
                     codes.Add(serverCellCode);
@@ -533,8 +533,8 @@ namespace TouchSocket.Rpc
             {
                 if (newType.FullName == type.FullName)
                 {
-                    this.m_serverTypes.TryRemove(newType,out var list);
-                    methodInstances=list.ToArray();
+                    this.m_serverTypes.TryRemove(newType, out var list);
+                    methodInstances = list.ToArray();
                     return true;
                 }
             }
@@ -575,9 +575,9 @@ namespace TouchSocket.Rpc
                 item.IsSingleton = true;
                 item.ServerFactory = new RpcServerFactory(this.Container);
             }
-            this.m_serverTypes.TryAdd(serverFromType,new List<MethodInstance>(methodInstances));
+            this.m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
             this.Container.RegisterSingleton(serverFromType, rpcServer);
-           
+
             foreach (var parser in this)
             {
                 parser.OnRegisterServer(methodInstances);
@@ -613,13 +613,13 @@ namespace TouchSocket.Rpc
             bool singleton;
             if (typeof(ITransientRpcServer).IsAssignableFrom(serverFromType))
             {
-                singleton = true;
-                this.Container.RegisterSingleton(serverFromType, serverToType);
+                singleton = false;
+                this.Container.RegisterTransient(serverFromType, serverToType);
             }
             else
             {
-                singleton = false;
-                this.Container.RegisterTransient(serverFromType, serverToType);
+                singleton = true;
+                this.Container.RegisterSingleton(serverFromType, serverToType);
             }
             MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType);
 
@@ -629,8 +629,8 @@ namespace TouchSocket.Rpc
                 item.ServerFactory = new RpcServerFactory(this.Container);
             }
 
-            this.m_serverTypes.TryAdd(serverFromType,new List<MethodInstance>(methodInstances));
-           
+            this.m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
+
             foreach (var parser in this)
             {
                 parser.OnRegisterServer(methodInstances);

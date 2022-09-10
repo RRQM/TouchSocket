@@ -353,18 +353,13 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <summary>
-        /// TouchRpc
-        /// </summary>
-        public static Protocol TouchRpc { get; private set; } = new Protocol("TouchRpc");
-
-        /// <summary>
         /// 转化Protocol协议标识为TouchRpc
         /// </summary>
         /// <param name="client"></param>
         public static void SwitchProtocolToTouchRpc(this ITcpClientBase client)
         {
-            client.Protocol = TouchRpc;
             client.SetDataHandlingAdapter(new FixedHeaderPackageAdapter());
+            client.Protocol = TouchRpcUtility.TouchRpcProtocol;
         }
 
         /// <summary>

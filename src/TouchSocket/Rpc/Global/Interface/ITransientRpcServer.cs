@@ -11,15 +11,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using TouchSocket.Rpc.TouchRpc;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.Rpc
 {
     /// <summary>
     /// Rpc服务接口
     /// </summary>
-    public interface ITransientRpcServer:IRpcServer
+    public interface ITransientRpcServer : IRpcServer
     {
         /// <summary>
         /// 调用上下文

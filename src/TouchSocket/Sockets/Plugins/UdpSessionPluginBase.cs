@@ -17,9 +17,12 @@ using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets.Plugins
 {
+    /// <summary>
+    /// UdpSessionPluginBase
+    /// </summary>
     public class UdpSessionPluginBase : UdpSessionPluginBase<IUdpSession>
-    { 
-    
+    {
+
     }
     /// <summary>
     /// Udp插件实现类

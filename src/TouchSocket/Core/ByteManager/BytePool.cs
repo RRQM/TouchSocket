@@ -201,6 +201,7 @@ namespace TouchSocket.Core.ByteManager
 
         /// <summary>
         /// 获取内存核心。获取的核心可以不用归还。
+        /// 如果要调用<see cref="Recycle(byte[])"/>归还，切记不要有持久性引用。
         /// </summary>
         /// <param name="byteSize"></param>
         /// <param name="equalSize"></param>

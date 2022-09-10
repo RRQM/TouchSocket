@@ -133,7 +133,7 @@ namespace TouchSocket.Rpc
             {
                 throw new ArgumentNullException(nameof(rpcParser.RpcStore), $"RpcStore为空，这一般是该解析器没有完成初始化配置所导致的。");
             }
-             rpcParser.RpcStore.RegisterServer<T>();
+            rpcParser.RpcStore.RegisterServer<T>();
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace TouchSocket.Rpc
             {
                 throw new ArgumentNullException(nameof(rpcParser.RpcStore), $"RpcStore为空，这一般是该解析器没有完成初始化配置所导致的。");
             }
-             rpcParser.RpcStore.RegisterServer(fromType);
+            rpcParser.RpcStore.RegisterServer(fromType);
         }
 
         /// <summary>

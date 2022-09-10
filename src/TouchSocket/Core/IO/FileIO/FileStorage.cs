@@ -88,7 +88,7 @@ namespace TouchSocket.Core.IO
         /// 文件流。
         /// 一般情况下，请不要直接访问该对象。否则有可能会产生不可预测的错误。
         /// </summary>
-        public FileStream FileStream { get => this.m_fileStream;}
+        public FileStream FileStream { get => this.m_fileStream; }
 
         /// <summary>
         /// 创建一个只读的、已经缓存的文件信息。该操作不会占用文件句柄。

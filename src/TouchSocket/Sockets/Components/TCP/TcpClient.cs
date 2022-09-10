@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
+using TouchSocket.Core.Collections.Concurrent;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Data.Security;
 using TouchSocket.Core.Dependency;
@@ -61,30 +62,22 @@ namespace TouchSocket.Sockets
         /// </summary>
         public TcpClientBase()
         {
-            this.sendLocker = new object();
             this.Protocol = Protocol.TCP;
         }
 
         #region 变量
 
-        private AsyncSender m_asyncSender;
+        private DelaySender m_delaySender;
         private TouchSocketConfig m_config;
         private DataHandlingAdapter m_adapter;
         private Socket m_mainSocket;
         private bool m_online;
         private ReceiveType m_receiveType;
-        private bool m_separateThreadSend;
+        private bool m_useDelaySender;
         private bool m_usePlugin;
-        private bool m_useSsl;
         private Stream m_workStream;
         private int m_maxPackageSize;
         private IPHost m_remoteIPHost;
-
-        /// <summary>
-        /// 发送锁对象
-        /// </summary>
-        protected readonly object sendLocker;
-
         #endregion 变量
 
         #region 事件
@@ -265,11 +258,6 @@ namespace TouchSocket.Sockets
         public ReceiveType ReceiveType => this.m_receiveType;
 
         /// <summary>
-        /// 在异步发送时，使用独立线程发送
-        /// </summary>
-        public bool SeparateThreadSend => this.m_separateThreadSend;
-
-        /// <summary>
         /// 是否已启用插件
         /// </summary>
         public bool UsePlugin => this.m_usePlugin;
@@ -277,7 +265,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool UseSsl => this.m_useSsl;
+        public bool UseSsl { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -323,7 +311,7 @@ namespace TouchSocket.Sockets
                 if (this.m_online)
                 {
                     this.m_mainSocket.SafeDispose();
-                    this.m_asyncSender.SafeDispose();
+                    this.m_delaySender.SafeDispose();
                     this.m_workStream.SafeDispose();
                     this.m_adapter.SafeDispose();
                     this.m_online = false;
@@ -403,11 +391,16 @@ namespace TouchSocket.Sockets
                     this.m_mainSocket.EndConnect(result);
                     this.LoadSocketAndReadIpPort();
 
-                    if (this.m_separateThreadSend)
+                    if (this.m_config.GetValue<DelaySenderOption>(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
                     {
-                        this.m_asyncSender.SafeDispose();
-                        this.m_asyncSender = new AsyncSender(this.m_mainSocket, this.m_mainSocket.RemoteEndPoint, this.OnSeparateThreadSendError);
+                        this.m_useDelaySender = true;
+                        this.m_delaySender.SafeDispose();
+                        this.m_delaySender = new DelaySender(this.m_mainSocket, senderOption.QueueLength, this.OnDelaySenderError)
+                        {
+                            DelayLength = senderOption.DelayLength
+                        };
                     }
+
                     this.BeginReceive();
                     this.m_online = true;
                     this.PrivateOnConnected(new MsgEventArgs("连接成功"));
@@ -551,27 +544,22 @@ namespace TouchSocket.Sockets
             this.m_remoteIPHost = config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
             this.m_maxPackageSize = config.GetValue<int>(TouchSocketConfigExtension.MaxPackageSizeProperty);
             this.BufferLength = config.GetValue<int>(TouchSocketConfigExtension.BufferLengthProperty);
-            this.m_separateThreadSend = config.GetValue<bool>(TouchSocketConfigExtension.SeparateThreadSendProperty);
             this.m_receiveType = config.GetValue<ReceiveType>(TouchSocketConfigExtension.ReceiveTypeProperty);
             this.m_usePlugin = config.IsUsePlugin;
             this.Logger = this.Container.Resolve<ILog>();
             if (config.GetValue(TouchSocketConfigExtension.SslOptionProperty) != null)
             {
-                if (this.m_separateThreadSend)
-                {
-                    throw new Exception("Ssl配置下，不允许独立线程发送。");
-                }
-                this.m_useSsl = true;
+                this.UseSsl = true;
             }
         }
 
         /// <summary>
-        /// 在独立发送线程中发生错误
+        /// 在延迟发生错误
         /// </summary>
         /// <param name="ex"></param>
-        protected virtual void OnSeparateThreadSendError(System.Exception ex)
+        protected virtual void OnDelaySenderError(Exception ex)
         {
-            this.Logger.Log(LogType.Error, this, "独立线程发送错误", ex);
+            this.Logger.Log(LogType.Error, this, "发送错误", ex);
         }
 
         /// <summary>
@@ -602,7 +590,7 @@ namespace TouchSocket.Sockets
                 this.m_workStream.Dispose();
             }
 
-            if (this.m_useSsl)
+            if (this.UseSsl)
             {
                 ClientSslOption sslOption = this.m_config.GetValue<ClientSslOption>(TouchSocketConfigExtension.SslOptionProperty);
                 SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_mainSocket, false), false);
@@ -1046,37 +1034,40 @@ namespace TouchSocket.Sockets
             }
             if (this.HandleSendingData(buffer, offset, length))
             {
-                lock (this.sendLocker)
+                if (this.UseSsl)
                 {
-                    if (this.m_useSsl)
+                    if (isAsync)
+                    {
+                        this.m_workStream.WriteAsync(buffer, offset, length);
+                    }
+                    else
                     {
                         this.m_workStream.Write(buffer, offset, length);
+                    }
+
+                }
+                else
+                {
+                    if (this.m_useDelaySender && length < TouchSocketUtility.BigDataBoundary)
+                    {
+                        if (isAsync)
+                        {
+                            this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
+                        }
+                        else
+                        {
+                            this.m_delaySender.Send(QueueDataBytes.CreateNew(buffer, offset, length));
+                        }
                     }
                     else
                     {
                         if (isAsync)
                         {
-                            if (this.m_separateThreadSend)
-                            {
-                                this.m_asyncSender.AsyncSend(buffer, offset, length);
-                            }
-                            else
-                            {
-                                this.m_mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
-                            }
+                            this.m_mainSocket.BeginSend(buffer, offset, length, SocketFlags.None, null, null);
                         }
                         else
                         {
-                            while (length > 0)
-                            {
-                                int r = this.MainSocket.Send(buffer, offset, length, SocketFlags.None);
-                                if (r == 0 && length > 0)
-                                {
-                                    throw new Exception("发送数据不完全");
-                                }
-                                offset += r;
-                                length -= r;
-                            }
+                            this.m_mainSocket.AbsoluteSend(buffer, offset, length);
                         }
                     }
                 }

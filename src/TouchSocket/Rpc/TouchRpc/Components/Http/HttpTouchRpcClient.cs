@@ -512,7 +512,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.Protocol == TouchRpcExtensions.TouchRpc)
+            if (this.Protocol == TouchRpcUtility.TouchRpcProtocol && byteBlock != null)
             {
                 this.m_rpcActor.InputReceivedData(byteBlock);
                 return;
@@ -760,14 +760,13 @@ namespace TouchSocket.Rpc.TouchRpc
         #endregion 内部委托绑定
 
         #region 事件触发
-
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(FileTransferStatusEventArgs e)
         {
-            
+
         }
 
         /// <summary>
@@ -776,7 +775,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(FileOperationEventArgs e)
         {
-            
+
         }
 
         /// <summary>

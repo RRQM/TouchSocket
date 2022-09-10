@@ -19,7 +19,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// 文件
     /// </summary>
-    static class FileTool
+    internal static class FileTool
     {
         /// <summary>
         /// 获取文件信息

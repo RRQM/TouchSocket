@@ -10,19 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core.IO
 {
     /// <summary>
     /// FileStorageStream
     /// </summary>
-    public class FileStorageStream:Stream
+    public class FileStorageStream : Stream
     {
         private readonly FileStorage m_fileStorage;
         private long m_position;
@@ -74,7 +69,7 @@ namespace TouchSocket.Core.IO
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override long Position { get=>this.m_position ; set=>this.m_position=value; }
+        public override long Position { get => this.m_position; set => this.m_position = value; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -93,7 +88,7 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return this.m_fileStorage.Read(this.m_position,buffer,offset,count);
+            return this.m_fileStorage.Read(this.m_position, buffer, offset, count);
         }
 
         /// <summary>
@@ -138,7 +133,7 @@ namespace TouchSocket.Core.IO
         /// <param name="count"></param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            this.m_fileStorage.Write(this.m_position,buffer,offset,count);
+            this.m_fileStorage.Write(this.m_position, buffer, offset, count);
         }
 
         /// <summary>

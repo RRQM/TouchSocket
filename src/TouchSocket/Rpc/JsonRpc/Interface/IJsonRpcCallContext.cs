@@ -10,20 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Http;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.JsonRpc
 {
     /// <summary>
     /// IJsonRpcCallContext
     /// </summary>
-    public interface IJsonRpcCallContext:ICallContext
+    public interface IJsonRpcCallContext : ICallContext
     {
         /// <summary>
         /// Json字符串

@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using TouchSocket.Core;
@@ -127,6 +126,11 @@ namespace TouchSocket.Rpc.TouchRpc
         public ILog Logger { get => this.m_logger; set => this.m_logger = value; }
 
         /// <summary>
+        ///  获取可用于同步对<see cref="RpcActor"/>的访问的对象。
+        /// </summary>
+        public object SyncRoot { get; } = new object();
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public Func<IRpcClient, bool> TryCanInvoke { get; set; }
@@ -173,6 +177,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         rpcCallContext.TryCancel();
                     }
                 }
+                this.WaitHandlePool.CancelAll();
                 this.OnClose?.Invoke(this, message);
             }
         }
@@ -262,6 +267,7 @@ namespace TouchSocket.Rpc.TouchRpc
             switch (protocol)
             {
                 #region 0-99
+
                 case TouchRpcUtility.P_0_Handshake_Request:
                     {
                         try
@@ -383,8 +389,11 @@ namespace TouchSocket.Rpc.TouchRpc
                     {
                         break;
                     }
+
                 #endregion 0-99
+
                 #region 100-199
+
                 case TouchRpcUtility.P_100_CreateChannel_Request:
                     {
                         try
@@ -542,8 +551,11 @@ namespace TouchSocket.Rpc.TouchRpc
 
                         break;
                     }
+
                 #endregion 100-199
+
                 #region 200-299
+
                 case TouchRpcUtility.P_200_Invoke_Request:/*函数调用*/
                     {
                         try
@@ -617,8 +629,11 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         break;
                     }
+
                 #endregion 200-299
+
                 #region 300-399
+
                 case TouchRpcUtility.P_300_GetAllEvents_Request:
                     {
                         break;
@@ -651,14 +666,17 @@ namespace TouchSocket.Rpc.TouchRpc
                     {
                         break;
                     }
+
                 #endregion 300-399
+
                 #region 400-499
+
                 case TouchRpcUtility.P_400_SendStreamToSocketClient_Request://StreamStatusToThis
                     {
                         try
                         {
                             byteBlock.Pos = 2;
-                            this.P_8_RequestStreamToThis(byteBlock.ReadObject<WaitStream>(SerializationType.Json));
+                            this.P_8_RequestStreamToThis(byteBlock.ReadObject<WaitStream>());
                         }
                         catch (Exception ex)
                         {
@@ -685,7 +703,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            this.P_9_RequestStreamToThis(byteBlock.ReadObject<WaitStream>(SerializationType.Json));
+                            this.P_9_RequestStreamToThis(byteBlock.ReadObject<WaitStream>());
                         }
                         catch (Exception ex)
                         {
@@ -694,17 +712,19 @@ namespace TouchSocket.Rpc.TouchRpc
                         break;
                     }
                 #endregion 400-499
+
                 #region 500-599
+
                 case TouchRpcUtility.P_500_PullFile_Request:
                     {
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
 
                             EasyAction.TaskRun(waitFileInfo, (w) =>
                             {
-                                this.SendJsonObject(TouchRpcUtility.P_1500_PullFile_Response, this.RequestPullFile(w));
+                                this.SendFastObject(TouchRpcUtility.P_1500_PullFile_Response, this.RequestPullFile(w));
                             });
                         }
                         catch (System.Exception ex)
@@ -718,7 +738,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFile = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFile = byteBlock.ReadObject<WaitFileInfo>();
                             this.WaitHandlePool.SetRun(waitFile);
                         }
                         catch (Exception ex)
@@ -733,7 +753,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             this.BeginPullFile(TouchRpcUtility.P_1501_BeginPullFile_Response, waitTransfer);
                         }
                         catch (System.Exception ex)
@@ -747,7 +767,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             this.WaitHandlePool.SetRun(waitTransfer);
                         }
                         catch (Exception ex)
@@ -761,7 +781,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
                             this.RequestPushFile(TouchRpcUtility.P_1502_PushFile_Response, waitFileInfo);
                         }
                         catch (System.Exception ex)
@@ -775,7 +795,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             this.WaitHandlePool.SetRun(waitTransfer);
                         }
                         catch (Exception ex)
@@ -790,19 +810,19 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
 
                             using (ByteBlock block = new ByteBlock())
                             {
                                 if (this.OnFindRpcActor.Invoke(waitFileInfo.ClientID) is RpcActor rpcActor)
                                 {
                                     waitFileInfo.ClientID = this.ID;
-                                    rpcActor.SocketSend(TouchRpcUtility.P_504_PullFileFC_Request, block.WriteObject(waitFileInfo, SerializationType.Json));
+                                    rpcActor.SocketSend(TouchRpcUtility.P_504_PullFileFC_Request, block.WriteObject(waitFileInfo));
                                 }
                                 else
                                 {
                                     waitFileInfo.Status = 7;
-                                    this.SocketSend(TouchRpcUtility.P_1503_PullFile2C_Response, block.WriteObject(waitFileInfo, SerializationType.Json));
+                                    this.SocketSend(TouchRpcUtility.P_1503_PullFile2C_Response, block.WriteObject(waitFileInfo));
                                 }
                             }
                         }
@@ -815,7 +835,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 case TouchRpcUtility.P_1503_PullFile2C_Response:
                     {
                         byteBlock.Pos = 2;
-                        WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                        WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
                         this.WaitHandlePool.SetRun(waitFileInfo);
                         break;
                     }
@@ -824,11 +844,11 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
 
                             EasyAction.TaskRun(waitFileInfo, (w) =>
                             {
-                                this.SendJsonObject(TouchRpcUtility.P_1504_PullFileFC_Response, this.RequestPullFile(w));
+                                this.SendFastObject(TouchRpcUtility.P_1504_PullFileFC_Response, this.RequestPullFile(w));
                             });
                         }
                         catch (System.Exception ex)
@@ -842,14 +862,14 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
 
                             using (ByteBlock block = new ByteBlock())
                             {
                                 if (this.OnFindRpcActor?.Invoke(waitFileInfo.ClientID) is RpcActor rpcActor)
                                 {
                                     waitFileInfo.ClientID = this.ID;
-                                    rpcActor.SocketSend(TouchRpcUtility.P_1503_PullFile2C_Response, block.WriteObject(waitFileInfo, SerializationType.Json));
+                                    rpcActor.SocketSend(TouchRpcUtility.P_1503_PullFile2C_Response, block.WriteObject(waitFileInfo));
                                 }
                             }
                         }
@@ -864,13 +884,13 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             using (ByteBlock block = new ByteBlock())
                             {
                                 if (this.OnFindRpcActor?.Invoke(waitTransfer.ClientID) is RpcActor rpcActor)
                                 {
                                     waitTransfer.ClientID = this.ID;
-                                    rpcActor.SocketSend(TouchRpcUtility.P_506_BeginPullFileFC_Request, block.WriteObject(waitTransfer, SerializationType.Json));
+                                    rpcActor.SocketSend(TouchRpcUtility.P_506_BeginPullFileFC_Request, block.WriteObject(waitTransfer));
                                 }
                             }
                         }
@@ -885,7 +905,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             this.WaitHandlePool.SetRun(waitTransfer);
                         }
                         catch (System.Exception ex)
@@ -899,7 +919,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             this.BeginPullFile(TouchRpcUtility.P_1506_BeginPullFileFC_Response, waitTransfer);
                         }
                         catch (System.Exception ex)
@@ -913,12 +933,12 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             using (ByteBlock block = new ByteBlock())
                             {
                                 if (this.OnFindRpcActor?.Invoke(waitTransfer.ClientID) is RpcActor rpcActor)
                                 {
-                                    rpcActor.SocketSend(TouchRpcUtility.P_1505_BeginPullFile2C_Response, block.WriteObject(waitTransfer, SerializationType.Json));
+                                    rpcActor.SocketSend(TouchRpcUtility.P_1505_BeginPullFile2C_Response, block.WriteObject(waitTransfer));
                                 }
                             }
                         }
@@ -933,18 +953,18 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
 
                             using (ByteBlock block = new ByteBlock())
                             {
                                 if (this.OnFindRpcActor?.Invoke(waitFileInfo.ClientID) is RpcActor rpcActor)
                                 {
                                     waitFileInfo.ClientID = this.ID;
-                                    rpcActor.SocketSend(TouchRpcUtility.P_508_PushFileFC_Request, block.WriteObject(waitFileInfo, SerializationType.Json));
+                                    rpcActor.SocketSend(TouchRpcUtility.P_508_PushFileFC_Request, block.WriteObject(waitFileInfo));
                                 }
                                 else
                                 {
-                                    this.SocketSend(TouchRpcUtility.P_1507_PushFile2C_Response, block.WriteObject(new WaitTransfer() { Sign = waitFileInfo.Sign, Status = 7 }, SerializationType.Json));
+                                    this.SocketSend(TouchRpcUtility.P_1507_PushFile2C_Response, block.WriteObject(new WaitTransfer() { Sign = waitFileInfo.Sign, Status = 7 }));
                                 }
                             }
                         }
@@ -959,7 +979,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
                             this.WaitHandlePool.SetRun(waitTransfer);
                         }
                         catch (System.Exception ex)
@@ -973,7 +993,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>(SerializationType.Json);
+                            WaitFileInfo waitFileInfo = byteBlock.ReadObject<WaitFileInfo>();
                             EasyAction.TaskRun(waitFileInfo, (w) =>
                             {
                                 this.RequestPushFile(TouchRpcUtility.P_1508_PushFileFC_Response, w);
@@ -990,14 +1010,14 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>(SerializationType.Json);
+                            WaitTransfer waitTransfer = byteBlock.ReadObject<WaitTransfer>();
 
                             if (this.OnFindRpcActor?.Invoke(waitTransfer.ClientID) is RpcActor rpcActor)
                             {
                                 using (ByteBlock block = new ByteBlock())
                                 {
                                     waitTransfer.ClientID = this.ID;
-                                    rpcActor.SocketSend(TouchRpcUtility.P_1507_PushFile2C_Response, block.WriteObject(waitTransfer, SerializationType.Json));
+                                    rpcActor.SocketSend(TouchRpcUtility.P_1507_PushFile2C_Response, block.WriteObject(waitTransfer));
                                 }
                             }
                         }
@@ -1012,7 +1032,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         try
                         {
                             byteBlock.Pos = 2;
-                            WaitResult waitResult = byteBlock.ReadObject<WaitResult>(SerializationType.Json);
+                            WaitResult waitResult = byteBlock.ReadObject<WaitResult>();
                             this.m_eventArgs.TryAdd((int)waitResult.Sign, waitResult);
 
                             EasyAction.DelayRun(10000, waitResult, (a) =>
@@ -1034,10 +1054,12 @@ namespace TouchSocket.Rpc.TouchRpc
                     {
                         break;
                     }
+
                 #endregion 500-599
+
                 default:
                     {
-                        if (protocol<0)
+                        if (protocol < 0)
                         {
                             return;
                         }

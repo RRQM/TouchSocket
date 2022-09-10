@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace TouchSocket.Core.Log
 {
@@ -96,7 +94,7 @@ namespace TouchSocket.Core.Log
     /// <typeparam name="TLog1"></typeparam>
     /// <typeparam name="TLog2"></typeparam>
     /// <typeparam name="TLog3"></typeparam>
-    public class LoggerGroup<TLog1, TLog2,TLog3> : LoggerGroup
+    public class LoggerGroup<TLog1, TLog2, TLog3> : LoggerGroup
         where TLog1 : ILog
         where TLog2 : ILog
         where TLog3 : ILog
@@ -104,7 +102,7 @@ namespace TouchSocket.Core.Log
         /// <summary>
         /// 一组日志记录器
         /// </summary>
-        public LoggerGroup(TLog1 log1, TLog2 log2,TLog3 log3) : base(log1, log2,log3)
+        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3) : base(log1, log2, log3)
         {
         }
     }
@@ -125,7 +123,7 @@ namespace TouchSocket.Core.Log
         /// <summary>
         /// 一组日志记录器
         /// </summary>
-        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4) : base(log1, log2, log3,log4)
+        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4) : base(log1, log2, log3, log4)
         {
         }
     }
@@ -148,7 +146,7 @@ namespace TouchSocket.Core.Log
         /// <summary>
         /// 一组日志记录器
         /// </summary>
-        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4, TLog5 log5) : base(log1, log2, log3, log4,log5)
+        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4, TLog5 log5) : base(log1, log2, log3, log4, log5)
         {
         }
     }
@@ -173,7 +171,7 @@ namespace TouchSocket.Core.Log
         /// <summary>
         /// 一组日志记录器
         /// </summary>
-        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4, TLog5 log5, TLog6 log6) : base(log1, log2, log3, log4, log5,log6)
+        public LoggerGroup(TLog1 log1, TLog2 log2, TLog3 log3, TLog4 log4, TLog5 log5, TLog6 log6) : base(log1, log2, log3, log4, log5, log6)
         {
         }
     }

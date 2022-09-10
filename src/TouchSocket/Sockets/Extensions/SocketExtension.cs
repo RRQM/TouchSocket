@@ -10,22 +10,38 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Http.WebSockets;
+using System;
+using System.Net.Sockets;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// WebSocketPluginsManagerExtension
+    /// SocketExtension
     /// </summary>
-    public static class WebSocketPluginsManagerExtension
+    public static class SocketExtension
     {
         /// <summary>
-        /// 使用WebSocket插件
+        /// 会使用同步锁，保证所有数据上缓存区。
         /// </summary>
-        /// <returns>插件类型实例</returns>
-        public static WebSocketServerPlugin UseWebSocket(this IPluginsManager pluginsManager)
+        /// <param name="socket"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public static void AbsoluteSend(this Socket socket, byte[] buffer, int offset, int length)
         {
-            return pluginsManager.Add<WebSocketServerPlugin>();
+            lock (socket)
+            {
+                while (length > 0)
+                {
+                    int r = socket.Send(buffer, offset, length, SocketFlags.None);
+                    if (r == 0 && length > 0)
+                    {
+                        throw new Exception("发送数据不完全");
+                    }
+                    offset += r;
+                    length -= r;
+                }
+            }
         }
     }
 }

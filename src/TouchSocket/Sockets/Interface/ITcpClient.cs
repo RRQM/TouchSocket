@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// TCP客户端终端接口
     /// </summary>
-    public interface ITcpClient : ITcpClientBase, IClientSender,IPluginObject
+    public interface ITcpClient : ITcpClientBase, IClientSender, IPluginObject
     {
         /// <summary>
         /// 成功连接到服务器
@@ -37,11 +37,6 @@ namespace TouchSocket.Sockets
         /// 远程IPHost。
         /// </summary>
         IPHost RemoteIPHost { get; }
-
-        /// <summary>
-        /// 独立线程发送
-        /// </summary>
-        bool SeparateThreadSend { get; }
 
         /// <summary>
         /// 连接服务器

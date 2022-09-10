@@ -50,7 +50,7 @@
 
 //        public static Exception Throw(Enum @enum,string msg,Exception exception)
 //        { 
-        
+
 //        }
 
 //    }

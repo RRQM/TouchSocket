@@ -30,7 +30,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void Send(string id,IRequestInfo requestInfo);
+        void Send(string id, IRequestInfo requestInfo);
 
         /// <summary>
         /// 异步发送数据。
@@ -43,6 +43,6 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void SendAsync(string id,IRequestInfo requestInfo);
+        void SendAsync(string id, IRequestInfo requestInfo);
     }
 }

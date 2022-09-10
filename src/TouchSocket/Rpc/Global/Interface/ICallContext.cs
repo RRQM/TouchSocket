@@ -32,12 +32,12 @@ namespace TouchSocket.Rpc
         /// </list>
         /// </para>
         /// </summary>
-        object Caller { get;}
+        object Caller { get; }
 
         /// <summary>
         /// 本次调用的<see cref="MethodInstance"/>
         /// </summary>
-        MethodInstance MethodInstance { get;}
+        MethodInstance MethodInstance { get; }
 
         /// <summary>
         /// 可取消的调用令箭

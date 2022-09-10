@@ -74,7 +74,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         Task<Result> PushFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null);
 
-        
+
         /// <summary>
         /// 判断使用该ID的Channel是否存在。
         /// </summary>

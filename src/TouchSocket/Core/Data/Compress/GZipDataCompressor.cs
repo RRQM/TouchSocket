@@ -10,32 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 
-namespace TouchSocket.Rpc.TouchRpc
+namespace TouchSocket.Core.Data
 {
     /// <summary>
-    /// 文件信息
+    /// GZip压缩算法的压缩机
     /// </summary>
-    public class RemoteFileInfo : RemoteFileSystemInfo
+    public sealed class GZipDataCompressor : IDataCompressor
     {
-        /// <summary>
-        /// 文件MD5
-        /// </summary>
-        public string MD5 { get; set; }
+        byte[] IDataCompressor.Compress(ArraySegment<byte> data)
+        {
+            return GZip.Compress(data.Array, data.Offset, data.Count);
+        }
 
-        /// <summary>
-        /// 文件大小
-        /// </summary>
-        public long FileLength { get; set; }
-
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string FilePath { get; set; }
+        byte[] IDataCompressor.Decompress(ArraySegment<byte> data)
+        {
+            return GZip.Decompress(data.Array, data.Offset, data.Count);
+        }
     }
 }

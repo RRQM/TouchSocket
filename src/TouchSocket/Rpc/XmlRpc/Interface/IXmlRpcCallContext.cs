@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Http;
 
 namespace TouchSocket.Rpc.XmlRpc
@@ -22,7 +17,7 @@ namespace TouchSocket.Rpc.XmlRpc
     /// <summary>
     /// IXmlRpcCallContext
     /// </summary>
-    public interface IXmlRpcCallContext:ICallContext
+    public interface IXmlRpcCallContext : ICallContext
     {
         /// <summary>
         /// XmlRpc的调用字符串。

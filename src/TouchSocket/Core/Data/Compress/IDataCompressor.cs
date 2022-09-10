@@ -10,32 +10,27 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 
-namespace TouchSocket.Rpc.TouchRpc
+namespace TouchSocket.Core.Data
 {
     /// <summary>
-    /// 文件信息
+    /// 数据压缩机接口
     /// </summary>
-    public class RemoteFileInfo : RemoteFileSystemInfo
+    public interface IDataCompressor
     {
         /// <summary>
-        /// 文件MD5
+        /// 压缩数据
         /// </summary>
-        public string MD5 { get; set; }
+        /// <param name="data"></param>
+        /// <returns></returns>
+        byte[] Compress(ArraySegment<byte> data);
 
         /// <summary>
-        /// 文件大小
+        /// 解压数据
         /// </summary>
-        public long FileLength { get; set; }
-
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string FilePath { get; set; }
+        /// <param name="data"></param>
+        /// <returns></returns>
+        byte[] Decompress(ArraySegment<byte> data);
     }
 }

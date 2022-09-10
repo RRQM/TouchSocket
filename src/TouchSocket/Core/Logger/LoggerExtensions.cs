@@ -115,7 +115,7 @@ namespace TouchSocket.Core.Log
         {
             if (logger is LoggerGroup loggerGroup)
             {
-                loggerGroup.Log<TLog>(logType,source,message,exception);
+                loggerGroup.Log<TLog>(logType, source, message, exception);
             }
         }
         /// <summary>
@@ -144,7 +144,7 @@ namespace TouchSocket.Core.Log
         /// <param name="logger"></param>
         /// <param name="source"></param>
         /// <param name="msg"></param>
-        public static void Warning<TLog>(this ILog logger, object source, string msg)where TLog:ILog
+        public static void Warning<TLog>(this ILog logger, object source, string msg) where TLog : ILog
         {
             logger.Log<TLog>(LogType.Warning, source, msg, null);
         }

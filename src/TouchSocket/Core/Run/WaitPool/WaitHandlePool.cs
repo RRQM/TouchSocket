@@ -72,6 +72,17 @@ namespace TouchSocket.Core.Run
         }
 
         /// <summary>
+        /// 取消全部
+        /// </summary>
+        public void CancelAll()
+        {
+            foreach (var item in this.m_waitDic.Values)
+            {
+                item.Cancel();
+            }
+        }
+
+        /// <summary>
         ///  获取一个可等待对象
         /// </summary>
         /// <param name="result"></param>
