@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml;
 using TouchSocket.Core.ByteManager;
@@ -120,7 +119,7 @@ namespace TouchSocket.Rpc.XmlRpc
 
                 object[] ps = null;
                 InvokeResult invokeResult = new InvokeResult();
-                XmlRpcCallContext callContext=null;
+                XmlRpcCallContext callContext = null;
 
                 if (this.m_actionMap.TryGetMethodInstance(actionKey, out MethodInstance methodInstance))
                 {
@@ -144,7 +143,7 @@ namespace TouchSocket.Rpc.XmlRpc
                                 foreach (XmlNode paramNode in paramsNode.ChildNodes)
                                 {
                                     XmlNode valueNode = paramNode.FirstChild.FirstChild;
-                                    ps[index]=(XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                    ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
                                     index++;
                                 }
                             }
@@ -180,7 +179,7 @@ namespace TouchSocket.Rpc.XmlRpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
                     if (rpcServer is ITransientRpcServer transientRpcServer)
                     {
                         transientRpcServer.CallContext = callContext;

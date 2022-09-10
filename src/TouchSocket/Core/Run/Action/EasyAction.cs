@@ -24,6 +24,12 @@ namespace TouchSocket.Core.Run
     {
         private static readonly ConcurrentDictionary<object, Timer> timers = new ConcurrentDictionary<object, Timer>();
 
+#if DEBUG
+        /// <summary>
+        /// Timers
+        /// </summary>
+        public static ConcurrentDictionary<object, Timer> Timers => timers;
+#endif
         /// <summary>
         /// 延迟执行
         /// </summary>

@@ -26,11 +26,16 @@ namespace TouchSocket.Rpc.TouchRpc
     {
         private readonly IInternalRpc m_client;
         private int m_cacheCapacity;
+
         private volatile bool m_canFree;
         private ByteBlock m_currentByteBlock;
+
         private IntelligentDataQueue<ChannelData> m_dataQueue;
+
         private int m_id;
+
         private string m_lastOperationMes;
+
         private AutoResetEvent m_moveWaitHandle;
         private ChannelStatus m_status;
         private string m_targetClientID;
@@ -541,7 +546,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     data.byteBlock.Pos = 6;
                     this.m_lastOperationMes = data.byteBlock.ReadString();
-                    data.byteBlock.Dispose();
+                    data.byteBlock.SetHolding(false);
 
                     this.RequestComplete();
                     return;
@@ -550,15 +555,14 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     data.byteBlock.Pos = 6;
                     this.m_lastOperationMes = data.byteBlock.ReadString();
-                    data.byteBlock.Dispose();
+                    data.byteBlock.SetHolding(false);
                     this.RequestCancel();
                     return;
                 }
                 else if (data.type == TouchRpcUtility.P_104_DisposeOrder)
                 {
                     data.byteBlock.Pos = 6;
-                    this.m_lastOperationMes = data.byteBlock.ReadString();
-                    data.byteBlock.Dispose();
+                    data.byteBlock.SetHolding(false);
                     this.RequestDispose();
                     return;
                 }
@@ -566,7 +570,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     data.byteBlock.Pos = 6;
                     this.m_canFree = data.byteBlock.ReadBoolean();
-                    data.byteBlock.Dispose();
+                    data.byteBlock.SetHolding(false);
                     return;
                 }
             }

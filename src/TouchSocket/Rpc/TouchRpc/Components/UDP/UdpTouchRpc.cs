@@ -454,7 +454,6 @@ namespace TouchSocket.Rpc.TouchRpc
             throw new NotImplementedException();
         }
 
-        
         void IIDRpcActor.Invoke(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             throw new NotImplementedException();

@@ -32,11 +32,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public bool IsHandshaked => this.m_rpcActor == null ? false : this.m_rpcActor.IsHandshaked;
 
         /// <summary>
@@ -47,17 +42,22 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public RpcActor RpcActor => this.m_rpcActor;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public string RootPath { get => this.m_rpcActor.RootPath; set => this.m_rpcActor.RootPath = value; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public RpcActor RpcActor => this.m_rpcActor;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public SerializationSelector SerializationSelector => this.m_rpcActor.SerializationSelector;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
 
         /// <summary>
         /// 验证超时时间,默认为3000ms
@@ -449,6 +449,26 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <summary>
+        /// 不允许直接发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public override void Send(byte[] buffer, int offset, int length)
+        {
+            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
+        }
+
+        /// <summary>
+        /// 不允许直接发送
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        public override void Send(IList<ArraySegment<byte>> transferBytes)
+        {
+            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="protocol"></param>
@@ -487,26 +507,6 @@ namespace TouchSocket.Rpc.TouchRpc
         public void SendAsync(short protocol)
         {
             this.m_rpcActor.SendAsync(protocol);
-        }
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public override void Send(byte[] buffer, int offset, int length)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
-        }
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        public override void Send(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
 
         /// <summary>
@@ -566,6 +566,18 @@ namespace TouchSocket.Rpc.TouchRpc
             return this.m_rpcActor.TrySubscribeChannel(id, out channel);
         }
 
+        internal void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
+        {
+            if (isAsync)
+            {
+                base.SendAsync(transferBytes);
+            }
+            else
+            {
+                base.Send(transferBytes);
+            }
+        }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -622,18 +634,6 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             this.m_rpcActor.Close(e.Message);
             base.OnDisconnected(e);
-        }
-
-        internal void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
-        {
-            if (isAsync)
-            {
-                base.SendAsync(transferBytes);
-            }
-            else
-            {
-                base.Send(transferBytes);
-            }
         }
     }
 }

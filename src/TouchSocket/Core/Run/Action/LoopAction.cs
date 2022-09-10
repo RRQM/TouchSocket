@@ -32,7 +32,7 @@ namespace TouchSocket.Core.Run
 
         private int executedCount;
 
-        private TimeSpan interval;
+        private readonly TimeSpan interval;
 
         private readonly int loopCount;
 

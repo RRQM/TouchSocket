@@ -11,10 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
 
 namespace TouchSocket.Sockets.Plugins
@@ -31,7 +28,7 @@ namespace TouchSocket.Sockets.Plugins
         /// 初始化一个重连插件
         /// </summary>
         /// <param name="tryCon">无论如何，只要返回True，则结束本轮尝试</param>
-        public ReconnectionPlugin(Func<TClient,bool> tryCon)
+        public ReconnectionPlugin(Func<TClient, bool> tryCon)
         {
             this.Order = int.MinValue;
             this.m_tryCon = tryCon;
@@ -65,7 +62,7 @@ namespace TouchSocket.Sockets.Plugins
                         }
                         catch
                         {
-                           
+
                         }
                     }
                 });

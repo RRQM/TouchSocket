@@ -17,8 +17,8 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Dependency;
-using TouchSocket.Resources;
 using TouchSocket.Core.Run;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -521,8 +521,7 @@ namespace TouchSocket.Sockets
             {
                 responsedData = new ResponsedData(null, requestInfo);
             }
-
-             return !this.m_waitData.Set(responsedData);
+            return !this.m_waitData.Set(responsedData);
         }
     }
 }

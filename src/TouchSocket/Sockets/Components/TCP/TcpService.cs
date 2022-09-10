@@ -84,7 +84,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override Func<string> GetDefaultNewID => m_getDefaultNewID;
+        public override Func<string> GetDefaultNewID => this.m_getDefaultNewID;
 
         /// <summary>
         /// <inheritdoc/>
@@ -155,7 +155,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnected(ISocketClient socketClient, TouchSocketEventArgs e)
+        protected sealed override void OnClientConnected(ISocketClient socketClient, TouchSocketEventArgs e)
         {
             this.OnConnected((TClient)socketClient, e);
         }
@@ -165,7 +165,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected sealed override void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
             this.OnConnecting((TClient)socketClient, e);
         }
@@ -175,7 +175,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
+        protected sealed override void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
         {
             this.OnDisconnected((TClient)socketClient, e);
         }
@@ -186,7 +186,7 @@ namespace TouchSocket.Sockets
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected sealed override void OnClientReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.OnReceived((TClient)socketClient, byteBlock, requestInfo);
         }
@@ -242,7 +242,7 @@ namespace TouchSocket.Sockets
                 }
             }
 
-            this.OnIDChanged(socketClient,e);
+            this.OnIDChanged(socketClient, e);
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace TouchSocket.Sockets
                 socketClient.m_id = newID;
                 if (this.m_socketClients.TryAdd(socketClient))
                 {
-                    this.PrivateOnIDChanged(socketClient, new IDChangedEventArgs(oldID,newID));
+                    this.PrivateOnIDChanged(socketClient, new IDChangedEventArgs(oldID, newID));
                     return;
                 }
                 else
@@ -679,7 +679,7 @@ namespace TouchSocket.Sockets
         {
             client.m_usePlugin = this.m_usePlugin;
             client.m_lastTick = DateTime.Now.Ticks;
-            client.m_config = this.m_config;
+            client.Config = this.m_config;
             client.m_service = this;
             client.Logger = this.Container.Resolve<ILog>();
             client.ClearType = this.m_clearType;
@@ -702,6 +702,7 @@ namespace TouchSocket.Sockets
                 TClient client = this.GetClientInstence();
                 this.SetClientConfiguration(client);
                 client.SetSocket(socket);
+                client.InternalInitialized();
 
                 ClientOperationEventArgs args = new ClientOperationEventArgs
                 {

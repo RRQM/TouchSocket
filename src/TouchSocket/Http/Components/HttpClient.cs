@@ -14,8 +14,8 @@ using System;
 using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
-using TouchSocket.Resources;
 using TouchSocket.Core.Run;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http

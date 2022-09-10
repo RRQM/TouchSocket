@@ -31,13 +31,13 @@ namespace TouchSocket.Core.Log
         private readonly ConsoleColor m_consoleForegroundColor;
         private readonly ConsoleColor m_consoleBackgroundColor;
 
-       /// <summary>
-       /// <inheritdoc/>
-       /// </summary>
-       /// <param name="logType"></param>
-       /// <param name="source"></param>
-       /// <param name="message"></param>
-       /// <param name="exception"></param>
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="logType"></param>
+        /// <param name="source"></param>
+        /// <param name="message"></param>
+        /// <param name="exception"></param>
         protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
             lock (typeof(ConsoleLogger))

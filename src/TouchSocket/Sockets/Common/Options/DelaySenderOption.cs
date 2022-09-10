@@ -11,31 +11,21 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc.TouchRpc
+namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 文件信息
+    /// DelaySenderOption
     /// </summary>
-    public class RemoteFileInfo : RemoteFileSystemInfo
+    public class DelaySenderOption
     {
         /// <summary>
-        /// 文件MD5
+        /// 延迟队列最大尺寸，默认1024*1024*10字节。
         /// </summary>
-        public string MD5 { get; set; }
+        public int QueueLength { get; set; } = 1024 * 1024 * 10;
 
         /// <summary>
-        /// 文件大小
+        /// 延迟包最大尺寸，默认1024*512字节。
         /// </summary>
-        public long FileLength { get; set; }
-
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string FilePath { get; set; }
+        public int DelayLength { get; set; } = 1024 * 512;
     }
 }

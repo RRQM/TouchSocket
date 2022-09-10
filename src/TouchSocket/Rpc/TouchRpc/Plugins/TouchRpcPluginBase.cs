@@ -13,7 +13,6 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace TouchSocket.Rpc.TouchRpc.Plugins
 {
@@ -227,6 +226,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
         {
             return this.OnReceivedProtocolDataAsync((TClient)client, e);
         }
+
         void ITouchRpcPlugin.OnStreamTransfered(ITouchRpc client, StreamStatusEventArgs e)
         {
             this.OnStreamTransfered((TClient)client, e);

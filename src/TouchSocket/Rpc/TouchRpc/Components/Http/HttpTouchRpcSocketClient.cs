@@ -27,20 +27,8 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class HttpTouchRpcSocketClient : HttpSocketClient, IHttpRpcClientBase
     {
-        internal RpcActor m_rpcActor;
         internal Action<HttpTouchRpcSocketClient> internalOnRpcActorInit;
-
-        private void InitRpcActor()
-        {
-            this.SwitchProtocolToTouchRpc();
-            this.internalOnRpcActorInit?.Invoke(this);
-            this.m_rpcActor.ID = this.ID;
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
+        internal RpcActor m_rpcActor;
 
         /// <summary>
         /// <inheritdoc/>
@@ -60,17 +48,22 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public RpcActor RpcActor => this.m_rpcActor;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public SerializationSelector SerializationSelector => this.m_rpcActor.SerializationSelector;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
 
         /// <summary>
         /// 连接令箭
         /// </summary>
         public string VerifyToken => this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public RpcActor RpcActor => this.m_rpcActor;
 
         /// <summary>
         /// <inheritdoc/>
@@ -201,18 +194,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_rpcActor.InvokeAsync(method, invokeOption, parameters);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         /// <param name="targetID"></param>
         /// <param name="method"></param>
         /// <param name="invokeOption"></param>
@@ -236,6 +217,18 @@ namespace TouchSocket.Rpc.TouchRpc
         public T Invoke<T>(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             return this.m_rpcActor.Invoke<T>(targetID, method, invokeOption, ref parameters, types);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="invokeOption"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return this.m_rpcActor.InvokeAsync(method, invokeOption, parameters);
         }
 
         /// <summary>
@@ -404,11 +397,118 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="cancellationToken"></param>
         public void ResetID(string newID, CancellationToken cancellationToken = default)
         {
-            if (this.Protocol == TouchRpcExtensions.TouchRpc)
+            if (this.Protocol == TouchRpcUtility.TouchRpcProtocol)
             {
                 this.m_rpcActor.ResetID(newID, cancellationToken);
             }
             base.ResetID(newID);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="streamOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public Result SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
+        {
+            return this.m_rpcActor.SendStream(stream, streamOperator, metadata);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="streamOperator"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public Task<Result> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
+        {
+            return this.m_rpcActor.SendStreamAsync(stream, streamOperator, metadata);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="channel"></param>
+        /// <returns></returns>
+        public bool TrySubscribeChannel(int id, out Channel channel)
+        {
+            return this.m_rpcActor.TrySubscribeChannel(id, out channel);
+        }
+
+        internal void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
+        {
+            if (isAsync)
+            {
+                base.SendAsync(transferBytes);
+            }
+            else
+            {
+                base.Send(transferBytes);
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            this.m_rpcActor.SafeDispose();
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            if (this.Protocol == TouchRpcUtility.TouchRpcProtocol && byteBlock != null)
+            {
+                this.m_rpcActor.InputReceivedData(byteBlock);
+            }
+            else
+            {
+                base.HandleReceivedData(byteBlock, requestInfo);
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        {
+            this.m_rpcActor?.Close(e.Message);
+            base.OnDisconnected(e);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="request"></param>
+        protected override void OnReceivedHttpRequest(HttpRequest request)
+        {
+            if (request.Method == TouchRpcUtility.TouchRpc)
+            {
+                request.SafeDispose();
+                this.InitRpcActor();
+                this.DefaultSend(new HttpResponse().SetStatus().BuildAsBytes());
+                return;
+            }
+            base.OnReceivedHttpRequest(request);
+        }
+
+        private void InitRpcActor()
+        {
+            this.SwitchProtocolToTouchRpc();
+            this.internalOnRpcActorInit?.Invoke(this);
+            this.m_rpcActor.ID = this.ID;
         }
 
         #region 发送
@@ -452,6 +552,26 @@ namespace TouchSocket.Rpc.TouchRpc
         public void Send(short protocol)
         {
             this.m_rpcActor.Send(protocol);
+        }
+
+        /// <summary>
+        /// 不允许直接发送
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public override void Send(byte[] buffer, int offset, int length)
+        {
+            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
+        }
+
+        /// <summary>
+        /// 不允许直接发送
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        public override void Send(IList<ArraySegment<byte>> transferBytes)
+        {
+            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
 
         /// <summary>
@@ -501,26 +621,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public override void Send(byte[] buffer, int offset, int length)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
-        }
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        public override void Send(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
-        }
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
         public override void SendAsync(byte[] buffer, int offset, int length)
         {
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
@@ -536,105 +636,5 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         #endregion 发送
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="streamOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
-        {
-            return this.m_rpcActor.SendStream(stream, streamOperator, metadata);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="streamOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
-        {
-            return this.m_rpcActor.SendStreamAsync(stream, streamOperator, metadata);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="channel"></param>
-        /// <returns></returns>
-        public bool TrySubscribeChannel(int id, out Channel channel)
-        {
-            return this.m_rpcActor.TrySubscribeChannel(id, out channel);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            this.m_rpcActor.SafeDispose();
-            base.Dispose(disposing);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            if (this.Protocol == TouchRpcExtensions.TouchRpc)
-            {
-                this.m_rpcActor.InputReceivedData(byteBlock);
-            }
-            else
-            {
-                base.HandleReceivedData(byteBlock, requestInfo);
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="request"></param>
-        protected override void OnReceivedHttpRequest(HttpRequest request)
-        {
-            if (request.Method == TouchRpcUtility.TouchRpc)
-            {
-                request.SafeDispose();
-                this.InitRpcActor();
-                this.DefaultSend(new HttpResponse().SetStatus().BuildAsBytes());
-                return;
-            }
-            base.OnReceivedHttpRequest(request);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
-        {
-            this.m_rpcActor?.Close(e.Message);
-            base.OnDisconnected(e);
-        }
-
-        internal void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
-        {
-            if (isAsync)
-            {
-                base.SendAsync(transferBytes);
-            }
-            else
-            {
-                base.Send(transferBytes);
-            }
-        }
     }
 }

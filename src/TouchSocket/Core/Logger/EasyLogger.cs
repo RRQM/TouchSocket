@@ -41,14 +41,14 @@ namespace TouchSocket.Core.Log
             this.m_action1 = action;
         }
 
-        
-       /// <summary>
-       /// <inheritdoc/>
-       /// </summary>
-       /// <param name="logType"></param>
-       /// <param name="source"></param>
-       /// <param name="message"></param>
-       /// <param name="exception"></param>
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="logType"></param>
+        /// <param name="source"></param>
+        /// <param name="message"></param>
+        /// <param name="exception"></param>
         protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
             try

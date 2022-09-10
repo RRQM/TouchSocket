@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -44,11 +42,6 @@ namespace TouchSocket.Core.Reflection
     /// </summary>
     public class Method
     {
-        /// <summary>
-        /// 方法执行委托
-        /// </summary>
-        private readonly Func<object, object[], object> m_invoker;
-
         private readonly MethodInfo m_info;
 
         private readonly bool m_isByRef;
@@ -67,32 +60,32 @@ namespace TouchSocket.Core.Reflection
                 if (item.ParameterType.IsByRef)
                 {
                     this.m_isByRef = true;
-                    if (method.ReturnType == typeof(Task))
-                    {
-                        this.HasReturn = false;
-                        this.TaskType = TaskType.Task;
-                    }
-                    else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
-                    {
-                        this.HasReturn = true;
-                        this.ReturnType = method.ReturnType.GetGenericArguments()[0];
-                        this.TaskType = TaskType.TaskObject;
-                    }
-                    else if (method.ReturnType == typeof(void))
-                    {
-                        this.HasReturn = false;
-                        this.TaskType = TaskType.None;
-                    }
-                    else
-                    {
-                        this.HasReturn = true;
-                        this.TaskType = TaskType.None;
-                        this.ReturnType = method.ReturnType;
-                    }
-                    return;
+                    break;
                 }
             }
-            this.m_invoker = this.CreateInvoker(method);
+
+            if (method.ReturnType == typeof(Task))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskType.Task;
+            }
+            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                this.HasReturn = true;
+                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                this.TaskType = TaskType.TaskObject;
+            }
+            else if (method.ReturnType == typeof(void))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskType.None;
+            }
+            else
+            {
+                this.HasReturn = true;
+                this.TaskType = TaskType.None;
+                this.ReturnType = method.ReturnType;
+            }
         }
 
         /// <summary>
@@ -143,27 +136,13 @@ namespace TouchSocket.Core.Reflection
                 case TaskType.None:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         return re;
                     }
                 case TaskType.Task:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         Task task = (Task)re;
                         task.Wait();
                         return default;
@@ -171,14 +150,7 @@ namespace TouchSocket.Core.Reflection
                 case TaskType.TaskObject:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         Task task = (Task)re;
                         task.Wait();
                         return task.GetType().GetProperty("Result").GetValue(task);
@@ -201,27 +173,13 @@ namespace TouchSocket.Core.Reflection
                 case TaskType.None:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         return re;
                     }
                 case TaskType.Task:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         Task task = (Task)re;
                         await task;
                         return default;
@@ -229,14 +187,7 @@ namespace TouchSocket.Core.Reflection
                 case TaskType.TaskObject:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         Task task = (Task)re;
                         await task;
                         return task.GetType().GetProperty("Result").GetValue(task);
@@ -263,87 +214,17 @@ namespace TouchSocket.Core.Reflection
                 case TaskType.Task:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         return (Task)re;
                     }
                 case TaskType.TaskObject:
                     {
                         object re;
-                        if (this.m_isByRef)
-                        {
-                            re = this.m_info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        re = this.m_info.Invoke(instance, parameters);
                         return (Task)re;
                     }
                 default:
                     return default;
-            }
-        }
-
-        /// <summary>
-        /// 生成方法的调用委托
-        /// </summary>
-        /// <param name="method">方法成员信息</param>
-        /// <exception cref="ArgumentException"></exception>
-        /// <returns></returns>
-        private Func<object, object[], object> CreateInvoker(MethodInfo method)
-        {
-            var instance = Expression.Parameter(typeof(object), "instance");
-            var parameters = Expression.Parameter(typeof(object[]), "parameters");
-
-            var instanceCast = method.IsStatic ? null : Expression.Convert(instance, method.DeclaringType);
-            var parametersCast = method.GetParameters().Select((p, i) =>
-            {
-                var parameter = Expression.ArrayIndex(parameters, Expression.Constant(i));
-                return Expression.Convert(parameter, p.ParameterType);
-            });
-
-            var body = Expression.Call(instanceCast, method, parametersCast);
-
-            if (method.ReturnType == typeof(Task))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskType.Task;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
-            }
-            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
-            {
-                this.TaskType = TaskType.TaskObject;
-                this.HasReturn = true;
-                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
-            }
-            else if (method.ReturnType == typeof(void))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskType.None;
-                var action = Expression.Lambda<Action<object, object[]>>(body, instance, parameters).Compile();
-                return (_instance, _parameters) =>
-                {
-                    action.Invoke(_instance, _parameters);
-                    return null;
-                };
-            }
-            else
-            {
-                this.HasReturn = true;
-                this.TaskType = TaskType.None;
-                this.ReturnType = method.ReturnType;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
             }
         }
     }

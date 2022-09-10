@@ -11,11 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core.Log;
 
 namespace TouchSocket.Core.Log
 {
@@ -53,7 +48,7 @@ namespace TouchSocket.Core.Log
         {
             if (this.LogType.HasFlag(logType))
             {
-                WriteLog(logType, source, message, exception);
+                this.WriteLog(logType, source, message, exception);
             }
         }
 

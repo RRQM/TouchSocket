@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 数据处理适配器
     /// </summary>
-    public abstract class DataHandlingAdapter:DisposableObject
+    public abstract class DataHandlingAdapter : DisposableObject
     {
         private ITcpClientBase m_client;
 

@@ -16,7 +16,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// 文件信息
     /// </summary>
-    public class TouchRpcFileInfo: RemoteFileInfo
+    public class TouchRpcFileInfo : RemoteFileInfo
     {
         /// <summary>
         /// 流位置

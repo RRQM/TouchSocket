@@ -11,10 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.IO;
@@ -37,8 +33,9 @@ namespace TouchSocket.Sockets
         public PipelineDataHandlingAdapter()
         {
         }
-        byte[] m_buffer;
-        Task m_task;
+
+        private byte[] m_buffer;
+        private Task m_task;
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -49,12 +46,12 @@ namespace TouchSocket.Sockets
             {
                 this.m_task?.GetAwaiter().GetResult();
                 this.m_pipeline = new InternalPipeline(this.Client);
-                m_task = Task.Run(() =>
+                this.m_task = Task.Run(() =>
                   {
                       try
                       {
                           this.GoReceived(default, this.m_pipeline);
-                          if (this.m_pipeline.CanReadLen>0)
+                          if (this.m_pipeline.CanReadLen > 0)
                           {
                               this.m_buffer = new byte[this.m_pipeline.CanReadLen];
                               this.m_pipeline.Read(this.m_buffer, 0, this.m_buffer.Length);
@@ -139,7 +136,7 @@ namespace TouchSocket.Sockets
 
         internal void InternalInput(byte[] buffer, int offset, int length)
         {
-            Input(buffer, offset, length);
+            this.Input(buffer, offset, length);
         }
 
         protected override void Dispose(bool disposing)

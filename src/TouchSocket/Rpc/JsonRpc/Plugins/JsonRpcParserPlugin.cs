@@ -306,8 +306,8 @@ namespace TouchSocket.Rpc.JsonRpc
                 if (rpcServer is ITransientRpcServer transientRpcServer)
                 {
                     transientRpcServer.CallContext = callContext;
-                } 
-                
+                }
+
                 invokeResult = this.m_rpcStore.Execute(rpcServer, callContext.JsonRpcPackage.parameters, callContext);
             }
 

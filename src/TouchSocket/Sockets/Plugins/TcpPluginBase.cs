@@ -23,7 +23,7 @@ namespace TouchSocket.Sockets.Plugins
     /// </summary>
     public abstract class TcpPluginBase : TcpPluginBase<ITcpClientBase>
     {
-        
+
     }
 
     /// <summary>

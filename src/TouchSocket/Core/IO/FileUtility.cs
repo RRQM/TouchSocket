@@ -187,7 +187,7 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public static string[] GetFiles(string sourceFolder)
         {
-           return Directory.GetFiles(sourceFolder).Select(s=>Path.GetFileName(s)).ToArray();
+            return Directory.GetFiles(sourceFolder).Select(s => Path.GetFileName(s)).ToArray();
         }
 
 # if NET45_OR_GREATER

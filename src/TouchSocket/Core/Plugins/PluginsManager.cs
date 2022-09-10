@@ -12,13 +12,12 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core.Dependency;
+using TouchSocket.Core.Log;
 using TouchSocket.Core.Reflection;
 
 namespace TouchSocket.Core.Plugins
@@ -76,7 +75,7 @@ namespace TouchSocket.Core.Plugins
             var types = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
             foreach (var type in types)
             {
-                if (!m_pluginInfoes.ContainsKey(type))
+                if (!this.m_pluginInfoes.ContainsKey(type))
                 {
                     Dictionary<string, PluginMethod[]> pairs = new Dictionary<string, PluginMethod[]>();
                     var ms = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
@@ -89,10 +88,10 @@ namespace TouchSocket.Core.Plugins
                                 throw new Exception("插件的接口方法不允许重载");
                             }
                             List<PluginMethod> methods = new List<PluginMethod>();
-                            if (item.GetCustomAttribute<AsyncRaiserAttribute>()!=null)
+                            if (item.GetCustomAttribute<AsyncRaiserAttribute>() != null)
                             {
-                               var asyncMethod= type.GetMethod($"{item.Name}Async");
-                                if (asyncMethod==null)
+                                var asyncMethod = type.GetMethod($"{item.Name}Async", BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                                if (asyncMethod == null)
                                 {
                                     throw new Exception("当接口标识为异步时，还应当定义其异步方法，以“Async”结尾");
                                 }
@@ -101,7 +100,7 @@ namespace TouchSocket.Core.Plugins
                                 {
                                     throw new Exception("异步接口方法不符合设定");
                                 }
-                                if (asyncMethod.ReturnType!=typeof(Task))
+                                if (asyncMethod.ReturnType != typeof(Task))
                                 {
                                     throw new Exception("异步接口方法返回值必须为Task。");
                                 }
@@ -111,7 +110,7 @@ namespace TouchSocket.Core.Plugins
                             pairs.Add(item.Name, methods.ToArray());
                         }
                     }
-                    m_pluginInfoes.Add(type, pairs);
+                    this.m_pluginInfoes.Add(type, pairs);
                 }
             }
 
@@ -158,7 +157,7 @@ namespace TouchSocket.Core.Plugins
             {
                 return false;
             }
-            if (m_pluginInfoes.TryGetValue(typeof(TPlugin), out var value))
+            if (this.m_pluginInfoes.TryGetValue(typeof(TPlugin), out var value))
             {
                 if (value.TryGetValue(name, out PluginMethod[] pluginMethods))
                 {
@@ -176,8 +175,9 @@ namespace TouchSocket.Core.Plugins
                                 {
                                     pluginMethods[j].Invoke(this.m_plugins[i].Plugin, sender, e);
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    this.Container.Resolve<ILog>().Exception(ex);
                                 }
                             }
                         }

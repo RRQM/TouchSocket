@@ -106,8 +106,8 @@ namespace TouchSocket.Core.IO
                     return GetWriter(path, singleRef);
                 }
             }
-        } 
-        
+        }
+
         /// <summary>
         /// 获取一个可读可写的Stream对象。
         /// </summary>

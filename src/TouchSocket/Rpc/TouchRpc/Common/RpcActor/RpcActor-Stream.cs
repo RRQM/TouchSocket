@@ -19,7 +19,6 @@ using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Run;
-using TouchSocket.Core.Serialization;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -42,7 +41,7 @@ namespace TouchSocket.Rpc.TouchRpc
             waitStream.Size = size;
             waitStream.StreamType = stream.GetType().FullName;
             ByteBlock byteBlock = BytePool.GetByteBlock(TouchRpcUtility.TransferPackage)
-                .WriteObject(waitStream, SerializationType.Json);
+                .WriteObject(waitStream);
             try
             {
                 this.SocketSend(TouchRpcUtility.P_400_SendStreamToSocketClient_Request, byteBlock);

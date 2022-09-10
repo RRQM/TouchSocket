@@ -18,8 +18,8 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Log;
-using TouchSocket.Resources;
 using TouchSocket.Core.Run;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -1201,7 +1201,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
                 if (rpcServer is ITransientRpcServer transientRpcServer)
                 {
                     transientRpcServer.CallContext = callContext;

@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Core.Serialization;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -34,7 +29,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// TouchRpcContext
         /// </summary>
-        TouchRpcPackage TouchRpcPackage { get;}
+        TouchRpcPackage TouchRpcPackage { get; }
 
         /// <summary>
         /// 序列化类型

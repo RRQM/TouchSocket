@@ -19,6 +19,7 @@ using System.Net.Sockets;
 using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
+using TouchSocket.Core.Collections.Concurrent;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
@@ -39,23 +40,15 @@ namespace TouchSocket.Sockets
         public SocketClient()
         {
             this.Protocol = Protocol.TCP;
-            this.m_sendLocker = new object();
         }
 
         #region 变量
 
-        internal TouchSocketConfig m_config;
         internal string m_id;
         internal long m_lastTick;
         internal ReceiveType m_receiveType;
         internal TcpServiceBase m_service;
         internal bool m_usePlugin;
-
-        /// <summary>
-        /// 发送锁对象
-        /// </summary>
-        protected readonly object m_sendLocker;
-
         private DataHandlingAdapter m_adapter;
         private Socket m_mainSocket;
         private int m_maxPackageSize;
@@ -63,6 +56,8 @@ namespace TouchSocket.Sockets
         private Stream m_workStream;
         private string serviceIP;
         private int servicePort;
+        private bool m_useDelaySender;
+        private DelaySender m_delaySender;
 
         #endregion 变量
 
@@ -86,7 +81,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public TouchSocketConfig Config => this.m_config;
+        public TouchSocketConfig Config { get; internal set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -303,6 +298,17 @@ namespace TouchSocket.Sockets
         internal void InternalConnected(TouchSocketEventArgs e)
         {
             this.m_online = true;
+
+            if (this.Config.GetValue<DelaySenderOption>(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
+            {
+                this.m_useDelaySender = true;
+                this.m_delaySender.SafeDispose();
+                this.m_delaySender = new DelaySender(this.m_mainSocket, senderOption.QueueLength, this.OnDelaySenderError)
+                {
+                    DelayLength = senderOption.DelayLength
+                };
+            }
+
             if (this.m_usePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnected), this, e))
             {
                 return;
@@ -323,7 +329,29 @@ namespace TouchSocket.Sockets
         internal void SetSocket(Socket mainSocket)
         {
             this.m_mainSocket = mainSocket ?? throw new ArgumentNullException(nameof(mainSocket));
-            this.OnSocketInitialized(mainSocket);
+            this.IP = mainSocket.RemoteEndPoint.GetIP();
+            this.Port = mainSocket.RemoteEndPoint.GetPort();
+            this.serviceIP = mainSocket.LocalEndPoint.GetIP();
+            this.servicePort = mainSocket.LocalEndPoint.GetPort();
+        }
+        /// <summary>
+        /// 在延迟发生错误
+        /// </summary>
+        /// <param name="ex"></param>
+        protected virtual void OnDelaySenderError(Exception ex)
+        {
+            this.Logger.Log(LogType.Error, this, "发送错误", ex);
+        }
+        /// <summary>
+        /// 当初始化完成时
+        /// </summary>
+        protected virtual void OnInitialized()
+        {
+
+        }
+        internal void InternalInitialized()
+        {
+            this.OnInitialized();
         }
 
         /// <summary>
@@ -399,19 +427,6 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 初始化设置Socket。
-        /// <para>父函数实现了获取IP，端口等信息的操作</para>
-        /// </summary>
-        /// <param name="mainSocket"></param>
-        protected virtual void OnSocketInitialized(Socket mainSocket)
-        {
-            this.IP = mainSocket.RemoteEndPoint.GetIP();
-            this.Port = mainSocket.RemoteEndPoint.GetPort();
-            this.serviceIP = mainSocket.LocalEndPoint.GetIP();
-            this.servicePort = mainSocket.LocalEndPoint.GetPort();
-        }
-
-        /// <summary>
         /// 设置适配器，该方法不会检验<see cref="CanSetDataHandlingAdapter"/>的值。
         /// </summary>
         /// <param name="adapter"></param>
@@ -425,7 +440,7 @@ namespace TouchSocket.Sockets
             adapter.OnLoaded(this);
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.SocketSend;
-            if (this.m_config != null)
+            if (this.Config != null)
             {
                 this.m_maxPackageSize = Math.Max(adapter.MaxPackageSize, this.Config.GetValue<int>(TouchSocketConfigExtension.MaxPackageSizeProperty));
                 adapter.MaxPackageSize = this.m_maxPackageSize;
@@ -452,11 +467,30 @@ namespace TouchSocket.Sockets
             }
             if (this.HandleSendingData(buffer, offset, length))
             {
-                lock (this.m_sendLocker)
+                if (this.UseSsl)
                 {
-                    if (this.UseSsl)
+                    if (isAsync)
+                    {
+                        this.m_workStream.WriteAsync(buffer, offset, length);
+                    }
+                    else
                     {
                         this.m_workStream.Write(buffer, offset, length);
+                    }
+
+                }
+                else
+                {
+                    if (this.m_useDelaySender && length < TouchSocketUtility.BigDataBoundary)
+                    {
+                        if (isAsync)
+                        {
+                            this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
+                        }
+                        else
+                        {
+                            this.m_delaySender.Send(QueueDataBytes.CreateNew(buffer, offset, length));
+                        }
                     }
                     else
                     {
@@ -466,16 +500,7 @@ namespace TouchSocket.Sockets
                         }
                         else
                         {
-                            while (length > 0)
-                            {
-                                int r = this.m_mainSocket.Send(buffer, offset, length, SocketFlags.None);
-                                if (r == 0 && length > 0)
-                                {
-                                    throw new Exception("发送数据不完全");
-                                }
-                                offset += r;
-                                length -= r;
-                            }
+                            this.m_mainSocket.AbsoluteSend(buffer, offset, length);
                         }
                     }
                 }
@@ -511,6 +536,7 @@ namespace TouchSocket.Sockets
                 if (this.m_online)
                 {
                     this.m_online = false;
+                    this.m_delaySender.SafeDispose();
                     this.m_adapter.SafeDispose();
                     this.m_mainSocket.SafeDispose();
                     this.m_service?.SocketClients.TryRemove(this.m_id, out _);
@@ -526,7 +552,7 @@ namespace TouchSocket.Sockets
             try
             {
                 int r = this.m_workStream.EndRead(result);
-                if (r==0)
+                if (r == 0)
                 {
                     this.BreakOut("远程终端主动关闭", false);
                 }

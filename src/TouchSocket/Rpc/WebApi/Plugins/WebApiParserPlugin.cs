@@ -120,7 +120,7 @@ namespace TouchSocket.Rpc.WebApi
                 }
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
                     if (rpcServer is ITransientRpcServer transientRpcServer)
                     {
                         transientRpcServer.CallContext = callContext;
@@ -249,7 +249,7 @@ namespace TouchSocket.Rpc.WebApi
                 }
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext,ps);
+                    IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
                     if (rpcServer is ITransientRpcServer transientRpcServer)
                     {
                         transientRpcServer.CallContext = callContext;

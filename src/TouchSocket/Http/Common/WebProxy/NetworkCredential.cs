@@ -11,10 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Http
 {
@@ -39,10 +35,10 @@ namespace TouchSocket.Http
 
             if (username.Length == 0)
                 throw new ArgumentException("An empty string.", "username");
-            Username = username;
-            Password = password;
-            Domain = domain;
-            Roles = roles;
+            this.Username = username;
+            this.Password = password;
+            this.Domain = domain;
+            this.Roles = roles;
         }
         /// <summary>
         /// 凭证用户名

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
 using TouchSocket.Core.IO;
@@ -85,7 +84,7 @@ namespace TouchSocket.Core.Log
                     {
                         Directory.CreateDirectory(dir);
                     }
-                    if (m_writer==null)
+                    if (m_writer == null)
                     {
                         int count = 0;
                         string path = null;
@@ -94,14 +93,14 @@ namespace TouchSocket.Core.Log
                             path = Path.Combine(dir, $"{count:0000}" + ".log");
                             if (!File.Exists(path))
                             {
-                                m_writer= FilePool.GetWriter(path);
+                                m_writer = FilePool.GetWriter(path);
                                 break;
                             }
                             count++;
                         }
                     }
                     m_writer.Write(Encoding.UTF8.GetBytes(logString));
-                    if (m_writer.FileStorage.Length>1024*1024)
+                    if (m_writer.FileStorage.Length > 1024 * 1024)
                     {
                         m_writer.SafeDispose();
                         m_writer = null;

@@ -798,13 +798,14 @@ namespace TouchSocket.Rpc.TouchRpc
         #endregion RPC解析器
 
         #region 事件触发
+
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(FileTransferStatusEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -813,7 +814,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(FileOperationEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -851,7 +852,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="byteBlock"></param>
         protected virtual void OnReceived(short protocol, ByteBlock byteBlock)
         {
-           
+
         }
 
         /// <summary>
@@ -860,7 +861,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfered(StreamStatusEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -869,7 +870,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfering(StreamOperationEventArgs e)
         {
-           
+
         }
         #endregion 事件触发
     }

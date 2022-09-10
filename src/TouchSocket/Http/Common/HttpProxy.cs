@@ -36,8 +36,8 @@ namespace TouchSocket.Http
         /// <param name="passWord"></param>
         public HttpProxy(IPHost host, string userName, string passWord)
         {
-            Host = host;
-            Credential = new NetworkCredential(userName, passWord, $"{host.IP}:{host.Port}");
+            this.Host = host;
+            this.Credential = new NetworkCredential(userName, passWord, $"{host.IP}:{host.Port}");
         }
 
         /// <summary>

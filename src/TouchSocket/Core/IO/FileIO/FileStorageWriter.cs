@@ -16,7 +16,7 @@ namespace TouchSocket.Core.IO
     /// <summary>
     /// 文件写入器。
     /// </summary>
-    public class FileStorageWriter : DisposableObject,IWrite
+    public class FileStorageWriter : DisposableObject, IWrite
     {
         private readonly FileStorage m_fileStorage;
         private long m_position;
@@ -78,7 +78,7 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public long SeekToEnd()
         {
-           return this.Position = this.FileStorage.Length;
+            return this.Position = this.FileStorage.Length;
         }
 
         /// <summary>

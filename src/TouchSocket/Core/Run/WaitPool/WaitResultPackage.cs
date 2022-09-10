@@ -10,32 +10,37 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using TouchSocket.Core.ByteManager;
 
-namespace TouchSocket.Rpc.TouchRpc
+namespace TouchSocket.Core.Run
 {
     /// <summary>
-    /// 文件信息
+    /// WaitResultPackageBase
     /// </summary>
-    public class RemoteFileInfo : RemoteFileSystemInfo
+    public class WaitResultPackageBase : WaitResult
     {
         /// <summary>
-        /// 文件MD5
+        /// 打包.
+        /// <para>重写的话，基类方法必须先执行</para>
         /// </summary>
-        public string MD5 { get; set; }
+        /// <param name="byteBlock"></param>
+        public virtual void Package(ByteBlock byteBlock)
+        {
+            byteBlock.Write(this.Sign);
+            byteBlock.Write(this.Status);
+            byteBlock.Write(this.Message);
+        }
 
         /// <summary>
-        /// 文件大小
+        /// 解包
+        /// <para>重写的话，基类方法必须先执行</para>
         /// </summary>
-        public long FileLength { get; set; }
-
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string FilePath { get; set; }
+        /// <param name="byteBlock"></param>
+        public virtual void Unpackage(ByteBlock byteBlock)
+        {
+            this.Sign = byteBlock.ReadInt64();
+            this.Status = (byte)byteBlock.ReadByte();
+            this.Message = byteBlock.ReadString();
+        }
     }
 }

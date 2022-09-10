@@ -140,7 +140,7 @@ namespace TouchSocket.Core.IO
         /// </summary>
         protected bool InputComplate()
         {
-           return this.Input(new byte[0], 0, 0);
+            return this.Input(new byte[0], 0, 0);
         }
 
         private void Reset()

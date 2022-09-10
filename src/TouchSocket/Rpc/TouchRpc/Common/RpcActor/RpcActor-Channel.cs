@@ -14,8 +14,8 @@ using System;
 using System.Collections.Concurrent;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
-using TouchSocket.Resources;
 using TouchSocket.Core.Run;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -40,12 +40,15 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public Channel CreateChannel()
         {
-            while (true)
+            lock (this.SyncRoot)
             {
-                int id = new Random().Next(int.MinValue, int.MaxValue);
-                if (!this.ChannelExisted(id))
+                while (true)
                 {
-                    return this.CreateChannel(id);
+                    int id = new object().GetHashCode();
+                    if (!this.ChannelExisted(id))
+                    {
+                        return this.CreateChannel(id);
+                    }
                 }
             }
         }
