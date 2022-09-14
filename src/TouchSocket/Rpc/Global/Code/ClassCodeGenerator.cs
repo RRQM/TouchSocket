@@ -26,11 +26,11 @@ namespace TouchSocket.Rpc
     /// </summary>
     public class ClassCodeGenerator
     {
-        private static readonly string[] dicType = { "Dictionary`2", "IDictionary`2" };
-        private static readonly string[] listType = { "List`1", "HashSet`1", "IList`1", "ISet`1", "ICollection`1", "IEnumerable`1" };
-        private readonly Assembly assembly;
-        private readonly Dictionary<Type, string> genericTypeDic;
-        private readonly Dictionary<Type, ClassCellCode> propertyDic;
+        private static readonly string[] m_dicType = { "Dictionary`2", "IDictionary`2" };
+        private static readonly string[] m_listType = { "List`1", "HashSet`1", "IList`1", "ISet`1", "ICollection`1", "IEnumerable`1" };
+        private readonly Assembly m_assembly;
+        private readonly Dictionary<Type, string> m_genericTypeDic;
+        private readonly Dictionary<Type, ClassCellCode> m_propertyDic;
 
         /// <summary>
         /// 构造函数
@@ -38,15 +38,15 @@ namespace TouchSocket.Rpc
         /// <param name="assembly"></param>
         public ClassCodeGenerator(Assembly assembly)
         {
-            this.assembly = assembly;
-            this.propertyDic = new Dictionary<Type, ClassCellCode>();
-            this.genericTypeDic = new Dictionary<Type, string>();
+            this.m_assembly = assembly;
+            this.m_propertyDic = new Dictionary<Type, ClassCellCode>();
+            this.m_genericTypeDic = new Dictionary<Type, string>();
         }
 
         /// <summary>
         /// 程序集
         /// </summary>
-        public Assembly Assembly => this.assembly;
+        public Assembly Assembly => this.m_assembly;
 
         /// <summary>
         /// 获取类单元参数
@@ -54,7 +54,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public ClassCellCode[] GetClassCellCodes()
         {
-            return this.propertyDic.Values.ToArray();
+            return this.m_propertyDic.Values.ToArray();
         }
 
         /// <summary>
@@ -89,6 +89,13 @@ namespace TouchSocket.Rpc
                 Type elementType = type.GetElementType();
                 return this.GetTypeFullName(elementType) + type.Name.Replace(elementType.Name, string.Empty);
             }
+            else if (type.FullName.StartsWith("System.ValueTuple"))
+            {
+                Type[] elementType = type.GetGenericArguments();
+
+                var strs = elementType.Select(e=> this.GetTypeFullName(e));
+                return $"({string.Join(",",strs)})";
+            }
             else if (type.IsByRef)
             {
                 return this.GetTypeFullName(type.GetElementType());
@@ -97,13 +104,13 @@ namespace TouchSocket.Rpc
             {
                 return type.FullName;
             }
-            else if (listType.Contains(type.Name) || dicType.Contains(type.Name))
+            else if (m_listType.Contains(type.Name) || m_dicType.Contains(type.Name))
             {
-                return this.genericTypeDic[type];
+                return this.m_genericTypeDic[type];
             }
-            else if (this.propertyDic.ContainsKey(type))
+            else if (this.m_propertyDic.ContainsKey(type))
             {
-                return this.propertyDic[type].Name;
+                return this.m_propertyDic[type].Name;
             }
             else
             {
@@ -132,23 +139,23 @@ namespace TouchSocket.Rpc
                         this.AddTypeString(itemType);
                     }
 
-                    if (listType.Contains(type.Name))
+                    if (m_listType.Contains(type.Name))
                     {
                         string typeInnerString = this.GetTypeFullName(types[0]);
                         string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
-                        if (!this.genericTypeDic.ContainsKey(type))
+                        if (!this.m_genericTypeDic.ContainsKey(type))
                         {
-                            this.genericTypeDic.Add(type, typeString);
+                            this.m_genericTypeDic.Add(type, typeString);
                         }
                     }
-                    else if (dicType.Contains(type.Name))
+                    else if (m_dicType.Contains(type.Name))
                     {
                         string keyString = this.GetTypeFullName(types[0]);
                         string valueString = this.GetTypeFullName(types[1]);
                         string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
-                        if (!this.genericTypeDic.ContainsKey(type))
+                        if (!this.m_genericTypeDic.ContainsKey(type))
                         {
-                            this.genericTypeDic.Add(type, typeString);
+                            this.m_genericTypeDic.Add(type, typeString);
                         }
                     }
                 }
@@ -206,9 +213,25 @@ namespace TouchSocket.Rpc
                     }
 
                     stringBuilder.AppendLine("}");
-                    if (!this.propertyDic.ContainsKey(type))
+                    if (!this.m_propertyDic.ContainsKey(type))
                     {
-                        this.propertyDic.Add(type, new ClassCellCode() { Name = type.Name, Code = stringBuilder.ToString() });
+                        string className;
+                        if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
+                        {
+                            className = attribute.ClassName?? type.Name;
+                        }
+                        else if (CodeGenerator.TryGetProxyTypeName(type, out className))
+                        {
+                        }
+                        else if (type.Assembly == this.m_assembly)
+                        {
+                            className = type.Name;
+                        }
+                        else
+                        {
+                            return;
+                        }
+                        this.m_propertyDic.Add(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
                     }
                 }
                 else
@@ -216,12 +239,12 @@ namespace TouchSocket.Rpc
                     string className;
                     if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
                     {
-                        className = attribute.ClassName;
+                        className = attribute.ClassName ?? type.Name;
                     }
                     else if (CodeGenerator.TryGetProxyTypeName(type, out className))
                     {
                     }
-                    else if (type.Assembly == this.assembly)
+                    else if (type.Assembly == this.m_assembly)
                     {
                         className = type.Name;
                     }
@@ -251,12 +274,12 @@ namespace TouchSocket.Rpc
                             {
                                 this.AddTypeString(itemType);
                             }
-                            if (listType.Contains(type.BaseType.Name))
+                            if (m_listType.Contains(type.BaseType.Name))
                             {
                                 string typeString = this.GetTypeFullName(types[0]);
                                 stringBuilder.Append($":{type.BaseType.Name.Replace("`1", string.Empty)}<{typeString}>");
                             }
-                            else if (dicType.Contains(type.BaseType.Name))
+                            else if (m_dicType.Contains(type.BaseType.Name))
                             {
                                 string keyString = this.GetTypeFullName(types[0]);
                                 string valueString = this.GetTypeFullName(types[1]);
@@ -275,7 +298,7 @@ namespace TouchSocket.Rpc
                     foreach (PropertyInfo itemProperty in propertyInfos)
                     {
                         this.AddTypeString(itemProperty.PropertyType);
-                        if (this.propertyDic.ContainsKey(itemProperty.PropertyType))
+                        if (this.m_propertyDic.ContainsKey(itemProperty.PropertyType))
                         {
                             stringBuilder.Append($"public {itemProperty.PropertyType.Name} {itemProperty.Name}");
                         }
@@ -287,12 +310,12 @@ namespace TouchSocket.Rpc
                                 this.AddTypeString(itemType);
                             }
 
-                            if (listType.Contains(itemProperty.PropertyType.Name))
+                            if (m_listType.Contains(itemProperty.PropertyType.Name))
                             {
                                 string typeString = this.GetTypeFullName(types[0]);
                                 stringBuilder.Append($"public {itemProperty.PropertyType.Name.Replace("`1", string.Empty)}<{typeString}> {itemProperty.Name}");
                             }
-                            else if (dicType.Contains(itemProperty.PropertyType.Name))
+                            else if (m_dicType.Contains(itemProperty.PropertyType.Name))
                             {
                                 string keyString = this.GetTypeFullName(types[0]);
                                 string valueString = this.GetTypeFullName(types[1]);
@@ -310,9 +333,9 @@ namespace TouchSocket.Rpc
 
                     stringBuilder.AppendLine("}");
 
-                    if (!this.propertyDic.ContainsKey(type))
+                    if (!this.m_propertyDic.ContainsKey(type))
                     {
-                        this.propertyDic.Add(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
+                        this.m_propertyDic.Add(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
                     }
                 }
             }
