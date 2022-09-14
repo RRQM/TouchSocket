@@ -5,6 +5,6 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket" Version="0.6.0" />
+		<PackageReference Include="TouchSocket" Version="0.6.1" />
 	</ItemGroup>
 </Project>
