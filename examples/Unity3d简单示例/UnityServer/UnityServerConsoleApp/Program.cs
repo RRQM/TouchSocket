@@ -23,16 +23,59 @@ namespace UnityServerConsoleApp
         {
             //unitypackage在本级目录下。
             //已发布的apk和exe客户端也在本级目录下。
-            StartTcpService();
-            StartTcpRpcService();
+            StartTcpService(7789);
+            StartTcpRpcService(7790);
+            StartUdpService(7791);
+            StartUdpRpc(7792);
             Console.ReadKey();
         }
 
-        static void StartTcpRpcService()
+        static void StartUdpRpc(int port)
+        {
+            var service = new UdpTouchRpc();
+            TouchSocketConfig config = new TouchSocketConfig()//配置
+                   .SetBindIPHost(new IPHost(port))
+                   .ConfigureContainer(a =>
+                   {
+                       a.SetSingletonLogger<ConsoleLogger>();//注册一个日志组
+                   })
+                   .ConfigureRpcStore(a =>
+                   {
+                       a.RegisterServer<MyRpcServer>();//注册服务
+                   });
+
+            service.Setup(config)
+                .Start();
+
+            service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
+        }
+
+        static void StartUdpService(int port)
+        {
+            UdpSession udpService = new UdpSession();
+            udpService.Received += (remote, byteBlock, requestInfo) =>
+            {
+                udpService.Send(remote, byteBlock);
+                Console.WriteLine($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
+            };
+            udpService.Setup(new TouchSocketConfig()
+                 .SetBindIPHost(new IPHost(port))
+                 .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())//常规udp
+                 //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
+                 .ConfigureContainer(a =>
+                 {
+                     a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
+                 }))
+                 .Start();
+
+            udpService.Logger.Info($"UdpService已启动，端口：{port}");
+        }
+
+        static void StartTcpRpcService(int port)
         {
             var service = new TcpTouchRpcService();
             TouchSocketConfig config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
+                   .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .SetThreadCount(50)
                    .UseDelaySender()
                    .UsePlugin()
@@ -53,7 +96,7 @@ namespace UnityServerConsoleApp
             service.Setup(config)
                 .Start();
 
-            service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{7790}");
+            service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
 
             string code = service.RpcStore.GetProxyCodes("TcpRpcProxy");
             File.WriteAllText("TcpRpcProxy.cs", code);
@@ -61,11 +104,11 @@ namespace UnityServerConsoleApp
             //service.RpcStore.ShareProxy(new IPHost(8848));
         }
 
-        static void StartTcpService()
+        static void StartTcpService(int port)
         {
             TcpService service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置     
-                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })//同时监听两个地址
+                .SetListenIPHosts(new IPHost[] { new IPHost(port) })//同时监听两个地址
                 .SetMaxCount(10000)
                 .SetThreadCount(10)
                 .UsePlugin()
@@ -79,7 +122,7 @@ namespace UnityServerConsoleApp
                     a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
                 }))
                 .Start();//启动
-            service.Logger.Info("Tcp服务器已启动，端口7789");
+            service.Logger.Info($"Tcp服务器已启动，端口{port}");
         }
     }
 
@@ -88,6 +131,11 @@ namespace UnityServerConsoleApp
         protected override void OnStreamTransfering(TcpTouchRpcSocketClient client, StreamOperationEventArgs e)
         {
             client.Logger.Info($"客户端：{client.GetInfo()}正在传输流....，总长度={e.StreamInfo.Size}");
+            foreach (var item in e.Metadata)
+            {
+                client.Logger.Info($"Key：{item.Key}，Value={item.Value}");
+            }
+
             e.Bucket = new MemoryStream();
         }
 
