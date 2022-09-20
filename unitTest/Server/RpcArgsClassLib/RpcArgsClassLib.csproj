@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TouchSocket" Version="0.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="TouchSocketPro">
+      <HintPath>..\..\..\TouchSocketPro\bin\Debug\net45\TouchSocketPro.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
