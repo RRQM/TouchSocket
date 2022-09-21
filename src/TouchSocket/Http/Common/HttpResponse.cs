@@ -29,7 +29,6 @@ namespace TouchSocket.Http
         private bool m_canWrite;
         private ITcpClientBase m_client;
         private byte[] m_content;
-        private GetContentResult m_getContentResult;
         private bool m_responsed;
         private bool m_sentHeader;
         private long m_sentLength;
@@ -88,6 +87,7 @@ namespace TouchSocket.Http
                 return this.GetHeader(HttpHeaders.Connection).Equals("close", StringComparison.CurrentCultureIgnoreCase);
             }
         }
+
         /// <summary>
         /// 是否分块
         /// </summary>
@@ -114,6 +114,7 @@ namespace TouchSocket.Http
                 return this.StatusCode == "301" || this.StatusCode == "302";
             }
         }
+
         /// <summary>
         /// 是否已经响应数据。
         /// </summary>
@@ -200,7 +201,7 @@ namespace TouchSocket.Http
         {
             this.m_content = content;
             this.ContentLength = content.Length;
-            this.m_getContentResult = GetContentResult.Success;
+            this.ContentComplated = true;
         }
 
         /// <summary>
@@ -209,59 +210,57 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override bool TryGetContent(out byte[] content)
         {
-            switch (this.m_getContentResult)
+            if (!this.ContentComplated.HasValue)
             {
-                case GetContentResult.Default:
+                if (!this.IsChunk && this.m_contentLength == 0)
+                {
+                    this.m_content = new byte[0];
+                    content = this.m_content;
+                    return true;
+                }
+
+                try
+                {
+                    using (ByteBlock block1 = new ByteBlock(1024 * 1024))
                     {
-                        if (!this.IsChunk && this.m_contentLength == 0)
+                        using (ByteBlock block2 = new ByteBlock())
                         {
-                            this.m_content = new byte[0];
+                            byte[] buffer = block2.Buffer;
+                            while (true)
+                            {
+                                int r = this.Read(buffer, 0, buffer.Length);
+                                if (r == 0)
+                                {
+                                    break;
+                                }
+                                block1.Write(buffer, 0, r);
+                            }
+                            this.m_content = block1.ToArray();
                             content = this.m_content;
                             return true;
                         }
-
-                        try
-                        {
-                            using (ByteBlock block1 = new ByteBlock(1024 * 1024))
-                            {
-                                using (ByteBlock block2 = new ByteBlock())
-                                {
-                                    byte[] buffer = block2.Buffer;
-                                    while (true)
-                                    {
-                                        int r = this.Read(buffer, 0, buffer.Length);
-                                        if (r == 0)
-                                        {
-                                            break;
-                                        }
-                                        block1.Write(buffer, 0, r);
-                                    }
-                                    this.m_content = block1.ToArray();
-                                    content = this.m_content;
-                                    this.m_getContentResult = GetContentResult.Success;
-                                    return true;
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            this.m_getContentResult = GetContentResult.Fail;
-                            content = null;
-                            return false;
-                        }
-                        finally
-                        {
-                            this.m_canRead = false;
-                        }
                     }
-                case GetContentResult.Success:
-                    content = this.m_content;
-                    return true;
-
-                case GetContentResult.Fail:
-                default:
+                }
+                catch
+                {
+                    this.ContentComplated = false;
                     content = null;
                     return false;
+                }
+                finally
+                {
+                    this.m_canRead = false;
+                }
+            }
+            else if (this.ContentComplated == true)
+            {
+                content = this.m_content;
+                return true;
+            }
+            else
+            {
+                content = null;
+                return false;
             }
         }
 
@@ -386,7 +385,7 @@ namespace TouchSocket.Http
             {
                 this.SetHeader(HttpHeaders.TransferEncoding, "chunked");
             }
-            foreach (var headerkey in this.Headers.Keys)
+            foreach (var headerkey in this.Headers.AllKeys)
             {
                 stringBuilder.Append($"{headerkey}: ");
                 stringBuilder.Append(this.Headers[headerkey] + "\r\n");

@@ -16,13 +16,14 @@ using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Extensions;
+using TouchSocket.Core.Log;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// 终止字符数据包处理适配器，支持以任意字符、字节数组结尾的数据包。
     /// </summary>
-    public class TerminatorPackageAdapter : DataHandlingAdapter
+    public class TerminatorPackageAdapter : DealDataHandlingAdapter
     {
         private int m_minSize = 0;
 
@@ -95,6 +96,10 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            {
+                this.Reset();
+            }
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
             if (this.m_tempByteBlock != null)
@@ -109,18 +114,17 @@ namespace TouchSocket.Sockets
             {
                 if (r > this.MaxPackageSize)
                 {
-                    if (this.m_tempByteBlock != null)
-                    {
-                        this.m_tempByteBlock.Dispose();
-                        this.m_tempByteBlock = null;
-                    }
-
-                    throw new OverlengthException("在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
+                    this.Reset();
+                    this.Client?.Logger.Error("在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
                 }
                 else if (this.m_tempByteBlock == null)
                 {
                     this.m_tempByteBlock = BytePool.GetByteBlock(r * 2);
                     this.m_tempByteBlock.Write(buffer, 0, r);
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
                 }
             }
             else
@@ -146,15 +150,15 @@ namespace TouchSocket.Sockets
                     this.PreviewHandle(packageByteBlock);
                     startIndex = lastIndex + 1;
                 }
-                if (this.m_tempByteBlock != null)
-                {
-                    this.m_tempByteBlock.Dispose();
-                    this.m_tempByteBlock = null;
-                }
+                this.Reset();
                 if (startIndex < r)
                 {
                     this.m_tempByteBlock = BytePool.GetByteBlock((r - startIndex) * 2);
                     this.m_tempByteBlock.Write(buffer, startIndex, r - startIndex);
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
                 }
             }
         }

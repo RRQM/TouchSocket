@@ -11,7 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,9 +31,9 @@ namespace TouchSocket.Http
         private bool m_canRead;
         private ITcpClientBase m_client;
         private byte[] m_content;
-        private GetContentResult m_getContentResult;
-        private Dictionary<string, string> m_params;
-        private Dictionary<string, string> m_query;
+        private NameValueCollection m_forms;
+        private NameValueCollection m_params;
+        private NameValueCollection m_query;
         private string m_relativeURL;
         private bool m_sentHeader;
         private int m_sentLength;
@@ -83,9 +84,46 @@ namespace TouchSocket.Http
         public override ITcpClientBase Client => this.m_client;
 
         /// <summary>
+        /// 表单数据
+        /// </summary>
+        public NameValueCollection Forms
+        {
+            get
+            {
+                if (this.ContentType == @"application/x-www-form-urlencoded")
+                {
+                    this.m_forms ??= this.GetParameters(this.GetBody());
+                    return this.m_forms;
+                }
+
+                return this.m_forms ??= new NameValueCollection();
+            }
+        }
+
+        /// <summary>
         /// 获取时候保持连接
         /// </summary>
-        public bool KeepAlive { get; set; }
+        public bool KeepAlive
+        {
+            get
+            {
+                if (this.ProtocolVersion == "1.0")
+                {
+                    return false;
+                }
+                else
+                {
+                    if (this.GetHeader(HttpHeaders.Connection) == "keep-alive")
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// HTTP请求方式。
@@ -95,14 +133,11 @@ namespace TouchSocket.Http
         /// <summary>
         /// Body参数
         /// </summary>
-        public Dictionary<string, string> Params
+        public NameValueCollection Params
         {
             get
             {
-                if (this.m_params == null)
-                {
-                    this.m_params = new Dictionary<string, string>();
-                }
+                this.m_params ??= new NameValueCollection();
                 return this.m_params;
             }
         }
@@ -110,14 +145,11 @@ namespace TouchSocket.Http
         /// <summary>
         /// url参数
         /// </summary>
-        public Dictionary<string, string> Query
+        public NameValueCollection Query
         {
             get
             {
-                if (this.m_query == null)
-                {
-                    this.m_query = new Dictionary<string, string>();
-                }
+                this.m_query ??= new NameValueCollection();
                 return this.m_query;
             }
         }
@@ -149,11 +181,9 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public byte[] BuildAsBytes()
         {
-            using (ByteBlock byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock);
-                return byteBlock.ToArray();
-            }
+            using ByteBlock byteBlock = new ByteBlock();
+            this.Build(byteBlock);
+            return byteBlock.ToArray();
         }
 
         /// <summary>
@@ -164,7 +194,7 @@ namespace TouchSocket.Http
         {
             this.m_content = content;
             this.ContentLength = content.Length;
-            this.m_getContentResult = GetContentResult.Success;
+            this.ContentComplated = true;
         }
 
         /// <summary>
@@ -188,64 +218,70 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 输出
+        /// </summary>
+        public override string ToString()
+        {
+            using (ByteBlock byteBlock = new ByteBlock())
+            {
+                this.Build(byteBlock);
+                return byteBlock.ToString();
+            }
+        }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <returns></returns>
         public override bool TryGetContent(out byte[] content)
         {
-            switch (this.m_getContentResult)
+            if (!this.ContentComplated.HasValue)
             {
-                case GetContentResult.Default:
+                if (this.m_contentLength == 0)
+                {
+                    this.m_content = new byte[0];
+                    content = this.m_content;
+                    this.ContentComplated = true;
+                    return true;
+                }
+                try
+                {
+                    using MemoryStream block1 = new MemoryStream();
+                    using ByteBlock block2 = new ByteBlock();
+                    byte[] buffer = block2.Buffer;
+                    while (true)
                     {
-                        if (this.m_contentLength == 0)
+                        int r = this.Read(buffer, 0, buffer.Length);
+                        if (r == 0)
                         {
-                            this.m_content = new byte[0];
-                            content = this.m_content;
-                            this.m_getContentResult = GetContentResult.Success;
-                            return true;
+                            break;
                         }
-                        try
-                        {
-                            using (ByteBlock block1 = new ByteBlock(1024 * 1024))
-                            {
-                                using (ByteBlock block2 = new ByteBlock())
-                                {
-                                    byte[] buffer = block2.Buffer;
-                                    while (true)
-                                    {
-                                        int r = this.Read(buffer, 0, buffer.Length);
-                                        if (r == 0)
-                                        {
-                                            break;
-                                        }
-                                        block1.Write(buffer, 0, r);
-                                    }
-                                    this.m_content = block1.ToArray();
-                                    content = this.m_content;
-                                    this.m_getContentResult = GetContentResult.Success;
-                                    return true;
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            this.m_getContentResult = GetContentResult.Fail;
-                            content = null;
-                            return false;
-                        }
-                        finally
-                        {
-                            this.m_canRead = false;
-                        }
+                        block1.Write(buffer, 0, r);
                     }
-                case GetContentResult.Success:
+                    this.m_content = block1.ToArray();
                     content = this.m_content;
                     return true;
-
-                case GetContentResult.Fail:
-                default:
+                }
+                catch
+                {
+                    this.ContentComplated = false;
                     content = null;
                     return false;
+                }
+                finally
+                {
+                    this.m_canRead = false;
+                }
+            }
+            else if (this.ContentComplated == true)
+            {
+                content = this.m_content;
+                return true;
+            }
+            else
+            {
+                content = null;
+                return false;
             }
         }
 
@@ -307,31 +343,6 @@ namespace TouchSocket.Http
                     this.ProtocolVersion = ps[1];
                 }
             }
-
-            if (this.ProtocolVersion == "1.1")
-            {
-                if (this.GetHeader(HttpHeaders.Connection) == "keep-alive")
-                {
-                    this.KeepAlive = true;
-                }
-                else
-                {
-                    this.KeepAlive = false;
-                }
-            }
-            else
-            {
-                this.KeepAlive = false;
-            }
-
-            if (this.Method == "POST")
-            {
-                this.ContentType = this.GetHeader(HttpHeaders.ContentType);
-                if (this.ContentType == @"application/x-www-form-urlencoded")
-                {
-                    this.m_params = this.GetParameters(this.GetBody());
-                }
-            }
         }
 
         private void BuildContent(ByteBlock byteBlock)
@@ -363,9 +374,9 @@ namespace TouchSocket.Http
                     urlBuilder.Append(this.m_relativeURL);
                     urlBuilder.Append("?");
                     int i = 0;
-                    foreach (var item in this.m_query)
+                    foreach (var item in this.m_query.AllKeys)
                     {
-                        urlBuilder.Append($"{item.Key}={item.Value}");
+                        urlBuilder.Append($"{item}={this.m_query[item]}");
                         if (++i < this.m_query.Count)
                         {
                             urlBuilder.Append("&");
@@ -387,7 +398,7 @@ namespace TouchSocket.Http
             {
                 this.SetHeader(HttpHeaders.ContentLength, this.ContentLength.ToString());
             }
-            foreach (var headerkey in this.Headers.Keys)
+            foreach (var headerkey in this.Headers.AllKeys)
             {
                 stringBuilder.Append($"{headerkey}: ");
                 stringBuilder.Append(this.Headers[headerkey] + "\r\n");
@@ -397,7 +408,7 @@ namespace TouchSocket.Http
             byteBlock.Write(this.Encoding.GetBytes(stringBuilder.ToString()));
         }
 
-        private Dictionary<string, string> GetParameters(string row)
+        private NameValueCollection GetParameters(string row)
         {
             if (string.IsNullOrEmpty(row))
             {
@@ -409,7 +420,7 @@ namespace TouchSocket.Http
                 return null;
             }
 
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
+            NameValueCollection pairs = new NameValueCollection();
             foreach (var item in kvs)
             {
                 string[] kv = item.SplitFirst('=');
@@ -421,18 +432,6 @@ namespace TouchSocket.Http
 
             return pairs;
         }
-        /// <summary>
-        /// 输出
-        /// </summary>
-        public override string ToString()
-        {
-            using (ByteBlock byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock);
-                return byteBlock.ToString();
-            }
-        }
-
 
         private void ParseUrl()
         {

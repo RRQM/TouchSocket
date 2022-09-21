@@ -97,7 +97,8 @@ namespace TouchSocket.Rpc.WebApi
                         {
                             for (; i < methodInstance.Parameters.Length; i++)
                             {
-                                if (e.Context.Request.Query.TryGetValue(methodInstance.ParameterNames[i], out string value))
+                                string value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
+                                if (!value.IsNullOrEmpty())
                                 {
                                     ps[i] = this.m_converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
                                 }
@@ -218,7 +219,8 @@ namespace TouchSocket.Rpc.WebApi
                         {
                             for (; i < methodInstance.Parameters.Length - 1; i++)
                             {
-                                if (e.Context.Request.Query.TryGetValue(methodInstance.ParameterNames[i], out string value))
+                                string value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
+                                if (!value.IsNullOrEmpty())
                                 {
                                     ps[i] = this.m_converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
                                 }

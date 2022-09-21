@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -86,7 +87,7 @@ namespace TouchSocket.Sockets
         bool UseSsl { get; }
 
         /// <summary>
-        /// 关闭Socket信道，并随后释放资源
+        /// 中断终端
         /// </summary>
         void Close();
 

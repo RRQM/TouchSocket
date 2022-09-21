@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 固定长度数据包处理适配器。
     /// </summary>
-    public class FixedSizePackageAdapter : DataHandlingAdapter
+    public class FixedSizePackageAdapter : DealDataHandlingAdapter
     {
         /// <summary>
         /// 包剩余长度
@@ -54,12 +54,17 @@ namespace TouchSocket.Sockets
         /// 获取已设置的数据包的长度
         /// </summary>
         public int FixedSize { get; private set; }
+
         /// <summary>
         /// 预处理
         /// </summary>
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            {
+                this.Reset();
+            }
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
             if (this.m_tempByteBlock == null)
@@ -86,6 +91,10 @@ namespace TouchSocket.Sockets
                 {
                     this.m_tempByteBlock.Write(buffer, 0, r);
                     this.m_surPlusLength -= r;
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
                 }
             }
         }
@@ -189,11 +198,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override void Reset()
         {
-            if (this.m_tempByteBlock != null)
-            {
-                this.m_tempByteBlock.Dispose();
-                this.m_tempByteBlock = null;
-            }
+            this.m_tempByteBlock.SafeDispose();
+            this.m_tempByteBlock = null;
             this.m_surPlusLength = 0;
         }
 
@@ -225,6 +231,10 @@ namespace TouchSocket.Sockets
                     this.m_tempByteBlock = BytePool.GetByteBlock(this.FixedSize);
                     this.m_surPlusLength = this.FixedSize - (r - index);
                     this.m_tempByteBlock.Write(dataBuffer, index, r - index);
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
                 }
                 index += this.FixedSize;
             }

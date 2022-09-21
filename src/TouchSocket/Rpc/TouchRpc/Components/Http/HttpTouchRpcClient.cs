@@ -31,8 +31,8 @@ namespace TouchSocket.Rpc.TouchRpc
     public class HttpTouchRpcClient : HttpClientBase, IHttpTouchRpcClient
     {
         private readonly ActionMap m_actionMap;
-        private int m_failCount = 0;
         private readonly RpcActor m_rpcActor;
+        private int m_failCount = 0;
         private RpcStore m_rpcStore;
         private Timer m_timer;
 
@@ -680,6 +680,7 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         #region 内部委托绑定
+
         private MethodInstance GetInvokeMethod(string arg)
         {
             return this.ActionMap.GetMethodInstance(arg);
@@ -705,6 +706,30 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private void OnRpcActorHandshaked(RpcActor actor, VerifyOptionEventArgs e)
         {
+            this.m_timer.SafeDispose();
+
+            if (this.Config.GetValue<HeartbeatValue>(TouchRpcConfigExtensions.HeartbeatFrequencyProperty) is HeartbeatValue heartbeat)
+            {
+                this.m_timer = new Timer((obj) =>
+                {
+                    if (DateTime.Now.TimeOfDay-this.GetLastActiveTime().TimeOfDay<TimeSpan.FromMilliseconds(heartbeat.Interval))
+                    {
+                        return;
+                    }
+                    if (this.Ping())
+                    {
+                        Interlocked.Exchange(ref this.m_failCount, 0);
+                    }
+                    else
+                    {
+                        if (Interlocked.Increment(ref this.m_failCount) > heartbeat.MaxFailCount)
+                        {
+                            this.Close("自动心跳失败次数达到最大，已清理连接。");
+                            this.m_timer.SafeDispose();
+                        }
+                    }
+                }, null, heartbeat.Interval, heartbeat.Interval);
+            }
             if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaked), this, e))
             {
                 return;
@@ -760,13 +785,13 @@ namespace TouchSocket.Rpc.TouchRpc
         #endregion 内部委托绑定
 
         #region 事件触发
+
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(FileTransferStatusEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -775,7 +800,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(FileOperationEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -784,26 +808,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnHandshaked(MsgEventArgs e)
         {
-            this.m_timer.SafeDispose();
-
-            if (this.Config.GetValue<HeartbeatValue>(TouchRpcConfigExtensions.HeartbeatFrequencyProperty) is HeartbeatValue heartbeat)
-            {
-                this.m_timer = new Timer((obj) =>
-                {
-                    if (this.Ping())
-                    {
-                        Interlocked.Exchange(ref this.m_failCount, 0);
-                    }
-                    else
-                    {
-                        if (Interlocked.Increment(ref this.m_failCount) > heartbeat.MaxFailCount)
-                        {
-                            this.Close("自动心跳失败次数达到最大，已清理连接。");
-                            this.m_timer.SafeDispose();
-                        }
-                    }
-                }, null, heartbeat.Interval, heartbeat.Interval);
-            }
+           
         }
 
         /// <summary>
@@ -829,7 +834,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfering(StreamOperationEventArgs e)
         {
-
         }
 
         #endregion 事件触发
@@ -863,6 +867,7 @@ namespace TouchSocket.Rpc.TouchRpc
             this.m_rpcActor.RpcStore = rpcStore;
             this.m_rpcStore = rpcStore;
         }
+
         #endregion RPC解析器
     }
 }

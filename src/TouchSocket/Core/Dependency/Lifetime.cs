@@ -24,7 +24,7 @@ namespace TouchSocket.Core.Dependency
         Singleton,
 
         /// <summary>
-        /// 以<see cref="IScopedContainer"/>接口为区域实例单例。
+        /// 以<see cref="IContainerProvider"/>接口为区域实例单例。
         /// </summary>
         Scoped,
 

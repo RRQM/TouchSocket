@@ -22,7 +22,7 @@ namespace TouchSocket.Core.Dependency
     /// </summary>
     public class Container : IContainer
     {
-        private readonly ConcurrentDictionary<string, DependencyDescriptor> registrations = new ConcurrentDictionary<string, DependencyDescriptor>();
+        private readonly ConcurrentDictionary<string, DependencyDescriptor> m_registrations = new ConcurrentDictionary<string, DependencyDescriptor>();
 
         /// <summary>
         /// 初始化一个IOC容器
@@ -40,7 +40,7 @@ namespace TouchSocket.Core.Dependency
         /// <returns></returns>
         public bool IsRegistered(Type fromType, string key = "")
         {
-            return this.registrations.ContainsKey($"{fromType.FullName}{key}");
+            return this.m_registrations.ContainsKey($"{fromType.FullName}{key}");
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace TouchSocket.Core.Dependency
         public void Register(DependencyDescriptor descriptor, string key = "")
         {
             string k = $"{descriptor.FromType.FullName}{key}";
-            this.registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
+            this.m_registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace TouchSocket.Core.Dependency
         /// <returns></returns>
         public object Resolve(Type fromType, object[] ps = null, string key = "")
         {
-            if (fromType == typeof(IScopedContainer))
+            if (fromType == typeof(IContainerProvider))
             {
                 return this.GetScopedContainer();
             }
@@ -73,8 +73,12 @@ namespace TouchSocket.Core.Dependency
             {
                 Type type = fromType.GetGenericTypeDefinition();
                 k = $"{type.FullName}{key}";
-                if (this.registrations.TryGetValue(k, out descriptor))
+                if (this.m_registrations.TryGetValue(k, out descriptor))
                 {
+                    if (descriptor.ImplementationFactory!=null)
+                    {
+                        return descriptor.ImplementationFactory.Invoke(this);
+                    }
                     if (descriptor.Lifetime == Lifetime.Singleton)
                     {
                         if (descriptor.ToInstance != null)
@@ -108,8 +112,12 @@ namespace TouchSocket.Core.Dependency
                 }
             }
             k = $"{fromType.FullName}{key}";
-            if (this.registrations.TryGetValue(k, out descriptor))
+            if (this.m_registrations.TryGetValue(k, out descriptor))
             {
+                if (descriptor.ImplementationFactory != null)
+                {
+                    return descriptor.ImplementationFactory.Invoke(this);
+                }
                 if (descriptor.Lifetime == Lifetime.Singleton)
                 {
                     if (descriptor.ToInstance != null)
@@ -156,7 +164,7 @@ namespace TouchSocket.Core.Dependency
         public void Unregister(DependencyDescriptor descriptor, string key = "")
         {
             string k = $"{descriptor.FromType.FullName}{key}";
-            this.registrations.TryRemove(k, out _);
+            this.m_registrations.TryRemove(k, out _);
         }
 
         /// <summary>
@@ -327,21 +335,21 @@ namespace TouchSocket.Core.Dependency
             return instance;
         }
 
-        private IScopedContainer GetScopedContainer()
+        private IContainerProvider GetScopedContainer()
         {
             Container container = new Container();
-            foreach (var item in this.registrations)
+            foreach (var item in this.m_registrations)
             {
                 if (item.Value.Lifetime == Lifetime.Scoped)
                 {
-                    container.registrations.AddOrUpdate(item.Key, new DependencyDescriptor(item.Value.FromType, item.Value.ToType, Lifetime.Singleton), (k, v) => { return v; });
+                    container.m_registrations.AddOrUpdate(item.Key, new DependencyDescriptor(item.Value.FromType, item.Value.ToType, Lifetime.Singleton), (k, v) => { return v; });
                 }
                 else
                 {
-                    container.registrations.AddOrUpdate(item.Key, item.Value, (k, v) => { return v; });
+                    container.m_registrations.AddOrUpdate(item.Key, item.Value, (k, v) => { return v; });
                 }
             }
-            return new ScopedContainer(container);
+            return new ContainerProvider(container);
         }
     }
 }

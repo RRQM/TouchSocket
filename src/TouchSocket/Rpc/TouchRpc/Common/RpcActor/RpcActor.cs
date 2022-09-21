@@ -632,43 +632,6 @@ namespace TouchSocket.Rpc.TouchRpc
 
                 #endregion 200-299
 
-                #region 300-399
-
-                case TouchRpcUtility.P_300_GetAllEvents_Request:
-                    {
-                        break;
-                    }
-                case TouchRpcUtility.P_301_PublishEvent_Request:
-                    {
-                        break;
-                    }
-                case TouchRpcUtility.P_302_UnpublishEvent_Request:
-                    {
-                        break;
-                    }
-                case TouchRpcUtility.P_303_SubscribeEvent_Request:
-                    {
-                        break;
-                    }
-                case TouchRpcUtility.P_305_RaiseEvent_Request:
-                    {
-                        break;
-                    }
-                case TouchRpcUtility.P_306_TriggerEvent://触发事件
-                    {
-                        break;
-                    }
-                case TouchRpcUtility.P_1300_GetAllEvents_Response:
-                case TouchRpcUtility.P_1301_PublishEvent_Response:
-                case TouchRpcUtility.P_1302_UnpublishEvent_Response:
-                case TouchRpcUtility.P_1303_SubscribeEvent_Response:
-                case TouchRpcUtility.P_1305_RaiseEvent_Response:
-                    {
-                        break;
-                    }
-
-                #endregion 300-399
-
                 #region 400-499
 
                 case TouchRpcUtility.P_400_SendStreamToSocketClient_Request://StreamStatusToThis
@@ -711,6 +674,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         break;
                     }
+              
                 #endregion 400-499
 
                 #region 500-599
@@ -1046,15 +1010,6 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         break;
                     }
-                case TouchRpcUtility.P_510_RemoteAccess_Request:
-                    {
-                        break;
-                    }
-                case TouchRpcUtility.P_1510_RemoteAccess_Response:
-                    {
-                        break;
-                    }
-
                 #endregion 500-599
 
                 default:

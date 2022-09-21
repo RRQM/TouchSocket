@@ -521,6 +521,7 @@ namespace TouchSocket.Sockets
             {
                 responsedData = new ResponsedData(null, requestInfo);
             }
+
             return !this.m_waitData.Set(responsedData);
         }
     }

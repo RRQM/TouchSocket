@@ -120,6 +120,8 @@ namespace TouchSocket.Core.Plugins
                 else if (x.Plugin.Order < y.Plugin.Order) return 1;
                 else return -1;
             });
+
+            this.Container.RegisterSingleton(plugin);
         }
 
         /// <summary>

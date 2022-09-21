@@ -715,6 +715,30 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private void OnRpcActorHandshaked(RpcActor actor, VerifyOptionEventArgs e)
         {
+            this.m_timer.SafeDispose();
+
+            if (this.Config.GetValue<HeartbeatValue>(TouchRpcConfigExtensions.HeartbeatFrequencyProperty) is HeartbeatValue heartbeat)
+            {
+                this.m_timer = new Timer((obj) =>
+                {
+                    if (DateTime.Now.TimeOfDay - this.GetLastActiveTime().TimeOfDay < TimeSpan.FromMilliseconds(heartbeat.Interval))
+                    {
+                        return;
+                    }
+                    if (this.Ping())
+                    {
+                        Interlocked.Exchange(ref this.m_failCount, 0);
+                    }
+                    else
+                    {
+                        if (Interlocked.Increment(ref this.m_failCount) > heartbeat.MaxFailCount)
+                        {
+                            this.Close("自动心跳失败次数达到最大，已清理连接。");
+                            this.m_timer.SafeDispose();
+                        }
+                    }
+                }, null, heartbeat.Interval, heartbeat.Interval);
+            }
             if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaked), this, e))
             {
                 return;
@@ -798,7 +822,6 @@ namespace TouchSocket.Rpc.TouchRpc
         #endregion RPC解析器
 
         #region 事件触发
-
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
@@ -823,26 +846,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnHandshaked(VerifyOptionEventArgs e)
         {
-            this.m_timer.SafeDispose();
 
-            if (this.Config.GetValue<HeartbeatValue>(TouchRpcConfigExtensions.HeartbeatFrequencyProperty) is HeartbeatValue heartbeat)
-            {
-                this.m_timer = new Timer((obj) =>
-                {
-                    if (this.Ping())
-                    {
-                        Interlocked.Exchange(ref this.m_failCount, 0);
-                    }
-                    else
-                    {
-                        if (Interlocked.Increment(ref this.m_failCount) > heartbeat.MaxFailCount)
-                        {
-                            this.Close("自动心跳失败次数达到最大，已清理连接。");
-                            this.m_timer.SafeDispose();
-                        }
-                    }
-                }, null, heartbeat.Interval, heartbeat.Interval);
-            }
         }
 
         /// <summary>

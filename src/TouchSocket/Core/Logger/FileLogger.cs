@@ -65,6 +65,7 @@ namespace TouchSocket.Core.Log
             if (exception != null)
             {
                 stringBuilder.Append(" | ");
+                stringBuilder.Append($"【异常消息】：{exception.Message}");
                 stringBuilder.Append($"【堆栈】：{(exception == null ? "未知" : exception.StackTrace)}");
             }
             stringBuilder.AppendLine();

@@ -67,6 +67,7 @@ namespace TouchSocket.Core.Log
                 if (exception != null)
                 {
                     Console.Write(" | ");
+                    Console.Write($"【异常消息】：{exception.Message}");
                     Console.Write($"【堆栈】：{(exception == null ? "未知" : exception.StackTrace)}");
                 }
                 Console.WriteLine();

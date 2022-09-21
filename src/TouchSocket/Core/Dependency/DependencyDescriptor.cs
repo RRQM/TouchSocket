@@ -55,6 +55,11 @@ namespace TouchSocket.Core.Dependency
         }
 
         /// <summary>
+        /// 实例化工厂委托
+        /// </summary>
+        public Func<IContainer,object> ImplementationFactory { get; set; }
+
+        /// <summary>
         /// 实例类型
         /// </summary>
         public Type ToType { get; }

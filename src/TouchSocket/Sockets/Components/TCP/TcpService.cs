@@ -354,6 +354,7 @@ namespace TouchSocket.Sockets
             {
                 this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
             }
+            this.Container.RegisterTransient<TClient>();
             return this;
         }
 

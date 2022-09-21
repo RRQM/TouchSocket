@@ -34,7 +34,7 @@ namespace TouchSocket.Core
         /// </summary>
         public FlowGate()
         {
-            this.m_stopwatch = new Stopwatch();
+            this.m_stopwatch = new Stopwatch(); 
         }
 
         /// <summary>

@@ -83,6 +83,11 @@ namespace TouchSocket.Core.Run
         }
 
         /// <summary>
+        /// 延迟模式
+        /// </summary>
+        public bool DelayModel { get; set; } = false;
+
+        /// <summary>
         ///  获取一个可等待对象
         /// </summary>
         /// <param name="result"></param>
@@ -102,6 +107,7 @@ namespace TouchSocket.Core.Run
             }
 
             waitData = new WaitData<T>();
+            waitData.DelayModel = this.DelayModel;
             if (autoSign)
             {
                 result.Sign = this.m_idGenerator.NextID();

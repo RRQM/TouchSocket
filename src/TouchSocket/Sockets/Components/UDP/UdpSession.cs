@@ -108,6 +108,16 @@ namespace TouchSocket.Sockets
         public IContainer Container => this.m_config?.Container;
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DateTime LastReceivedTime { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DateTime LastSendTime { get; private set; }
+
+        /// <summary>
         /// 数据处理适配器
         /// </summary>
         public UdpDataHandlingAdapter DataHandlingAdapter => this.m_adapter;
@@ -358,10 +368,7 @@ namespace TouchSocket.Sockets
             {
                 throw new Exception("配置文件为空");
             }
-            if (this.Logger == null)
-            {
-                this.Logger = this.Container.Resolve<ILog>();
-            }
+            this.Logger= this.Container.Resolve<ILog>();
             this.m_remoteIPHost = config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
             this.BufferLength = config.GetValue<int>(TouchSocketConfigExtension.BufferLengthProperty);
             this.m_usePlugin = config.IsUsePlugin;
@@ -434,6 +441,8 @@ namespace TouchSocket.Sockets
                         this.m_monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, endPoint);
                     }
                 }
+
+                this.LastSendTime = DateTime.Now;
             }
         }
 
@@ -443,10 +452,6 @@ namespace TouchSocket.Sockets
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             socket.ReceiveBufferSize = this.BufferLength;
             socket.SendBufferSize = this.BufferLength;
-            if (threadCount > 1)
-            {
-                socket.UseOnlyOverlappedIO = true;
-            }
             socket.EnableBroadcast = this.m_config.GetValue<bool>(TouchSocketConfigExtension.EnableBroadcastProperty);
             if (this.m_config.GetValue<bool>(TouchSocketConfigExtension.ReuseAddressProperty))
             {
@@ -533,6 +538,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
+                this.LastReceivedTime = DateTime.Now;
                 if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {
                     return;

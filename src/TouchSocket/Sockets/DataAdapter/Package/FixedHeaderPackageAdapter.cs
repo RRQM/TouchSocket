@@ -20,28 +20,13 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 固定包头数据包处理适配器，支持Byte、UShort、Int三种类型作为包头。使用<see cref="TouchSocketBitConverter.DefaultEndianType"/>大小端设置。
     /// </summary>
-    public class FixedHeaderPackageAdapter : DataHandlingAdapter
+    public class FixedHeaderPackageAdapter : DealDataHandlingAdapter
     {
         private byte[] m_agreementTempBytes;
-
-        private FixedHeaderType m_fixedHeaderType = FixedHeaderType.Int;
-
-        private int m_minPackageSize = 0;
-
         private int m_surPlusLength = 0;
 
         //包剩余长度
         private ByteBlock m_tempByteBlock;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public FixedHeaderPackageAdapter()
-        {
-            this.MaxPackageSize = 1024 * 1024 * 10;
-        }
-
-        //临时包
 
         /// <summary>
         /// <inheritdoc/>
@@ -56,20 +41,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 设置包头类型，默认为int
         /// </summary>
-        public FixedHeaderType FixedHeaderType
-        {
-            get => this.m_fixedHeaderType;
-            set => this.m_fixedHeaderType = value;
-        }
+        public FixedHeaderType FixedHeaderType { get; set; } = FixedHeaderType.Int;
 
         /// <summary>
         /// 获取或设置包数据的最小值（默认为0）
         /// </summary>
-        public int MinPackageSize
-        {
-            get => this.m_minPackageSize;
-            set => this.m_minPackageSize = value;
-        }
+        public int MinPackageSize { get; set; } = 0;
 
         /// <summary>
         /// 当接收到数据时处理数据
@@ -79,6 +56,11 @@ namespace TouchSocket.Sockets
         {
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
+
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            {
+                this.Reset();
+            }
 
             if (this.m_agreementTempBytes != null)
             {
@@ -108,6 +90,10 @@ namespace TouchSocket.Sockets
                 {
                     this.m_tempByteBlock.Write(buffer, 0, r);
                     this.m_surPlusLength -= r;
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
                 }
             }
         }
@@ -134,7 +120,7 @@ namespace TouchSocket.Sockets
             ByteBlock byteBlock = null;
             byte[] lenBytes = null;
 
-            switch (this.m_fixedHeaderType)
+            switch (this.FixedHeaderType)
             {
                 case FixedHeaderType.Byte:
                     {
@@ -192,7 +178,7 @@ namespace TouchSocket.Sockets
                 length += item.Count;
             }
 
-            if (length < this.m_minPackageSize)
+            if (length < this.MinPackageSize)
             {
                 throw new Exception("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
@@ -205,7 +191,7 @@ namespace TouchSocket.Sockets
             ByteBlock byteBlock = null;
             byte[] lenBytes = null;
 
-            switch (this.m_fixedHeaderType)
+            switch (this.FixedHeaderType)
             {
                 case FixedHeaderType.Byte:
                     {
@@ -313,15 +299,19 @@ namespace TouchSocket.Sockets
         {
             while (index < r)
             {
-                if (r - index <= (byte)this.m_fixedHeaderType)
+                if (r - index <= (byte)this.FixedHeaderType)
                 {
                     this.m_agreementTempBytes = new byte[r - index];
                     Array.Copy(dataBuffer, index, this.m_agreementTempBytes, 0, this.m_agreementTempBytes.Length);
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
                     return;
                 }
                 int length = 0;
 
-                switch (this.m_fixedHeaderType)
+                switch (this.FixedHeaderType)
                 {
                     case FixedHeaderType.Byte:
                         length = dataBuffer[index];
@@ -340,7 +330,7 @@ namespace TouchSocket.Sockets
                 {
                     throw new Exception("接收数据长度错误，已放弃接收");
                 }
-                else if (length < this.m_minPackageSize)
+                else if (length < this.MinPackageSize)
                 {
                     throw new Exception("接收数据长度小于设定值，已放弃接收");
                 }
@@ -349,11 +339,11 @@ namespace TouchSocket.Sockets
                     throw new Exception("接收数据长度大于设定值，已放弃接收");
                 }
 
-                int recedSurPlusLength = r - index - (byte)this.m_fixedHeaderType;
+                int recedSurPlusLength = r - index - (byte)this.FixedHeaderType;
                 if (recedSurPlusLength >= length)
                 {
                     ByteBlock byteBlock = BytePool.GetByteBlock(length);
-                    byteBlock.Write(dataBuffer, index + (byte)this.m_fixedHeaderType, length);
+                    byteBlock.Write(dataBuffer, index + (byte)this.FixedHeaderType, length);
                     this.PreviewHandle(byteBlock);
                     this.m_surPlusLength = 0;
                 }
@@ -361,9 +351,13 @@ namespace TouchSocket.Sockets
                 {
                     this.m_tempByteBlock = BytePool.GetByteBlock(length);
                     this.m_surPlusLength = length - recedSurPlusLength;
-                    this.m_tempByteBlock.Write(dataBuffer, index + (byte)this.m_fixedHeaderType, recedSurPlusLength);
+                    this.m_tempByteBlock.Write(dataBuffer, index + (byte)this.FixedHeaderType, recedSurPlusLength);
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
                 }
-                index += (length + (byte)this.m_fixedHeaderType);
+                index += (length + (byte)this.FixedHeaderType);
             }
         }
     }

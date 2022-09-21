@@ -21,7 +21,7 @@ namespace TouchSocket.Core.ByteManager
     /// <summary>
     /// 字节块流
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("Len={Len}")]
+    [System.Diagnostics.DebuggerDisplay("Len={Len},Pos={Pos},Capacity={Capacity}")]
     public sealed class ByteBlock : Stream, IByteBlock
     {
         internal long m_length;
@@ -46,7 +46,7 @@ namespace TouchSocket.Core.ByteManager
         }
 
         /// <summary>
-        /// 构造函数
+        /// 实例化一个已知内存的对象。且该内存不会被回收。
         /// </summary>
         /// <param name="bytes"></param>
         public ByteBlock(byte[] bytes)

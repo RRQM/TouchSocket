@@ -25,6 +25,7 @@ namespace TouchSocket.Sockets
     {
         private ITcpClientBase m_client;
 
+        
         /// <summary>
         /// 当插件在被第一次加载时调用。
         /// </summary>

@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// 同时<see cref="IRequestInfo"/>将实现为TRequest，发送数据直接发送。
     /// <para>此处设计思路借鉴SuperSocket。</para>
     /// </summary>
-    public abstract class CustomDataHandlingAdapter<TRequest> : DataHandlingAdapter where TRequest : class, IRequestInfo
+    public abstract class CustomDataHandlingAdapter<TRequest> : DealDataHandlingAdapter where TRequest : class, IRequestInfo
     {
         /// <summary>
         /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="ByteBlock.Dispose"/>后，再置空；
@@ -80,6 +80,10 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            {
+                this.Reset();
+            }
             if (this.TempByteBlock == null)
             {
                 this.Single(byteBlock, false);
@@ -136,9 +140,7 @@ namespace TouchSocket.Sockets
 
         private void Single(ByteBlock byteBlock, bool temp)
         {
-            int position = byteBlock.Pos;
             byteBlock.Pos = 0;
-            bool neverSucceed = true;
             while (byteBlock.Pos < byteBlock.Len)
             {
                 int tempCapacity = 1024 * 64;
@@ -152,7 +154,6 @@ namespace TouchSocket.Sockets
                             this.OnReceivedSuccess(this.TempRequest);
                         }
                         this.TempRequest = default;
-                        neverSucceed = false;
                         break;
 
                     case FilterResult.Cache:
@@ -160,17 +161,9 @@ namespace TouchSocket.Sockets
                         {
                             if (temp)
                             {
-                                if (neverSucceed)
-                                {
-                                    byteBlock.Pos = position;
-                                    this.TempByteBlock = byteBlock;
-                                }
-                                else
-                                {
-                                    this.TempByteBlock = new ByteBlock(tempCapacity);
-                                    this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
-                                    byteBlock.Dispose();
-                                }
+                                this.TempByteBlock = new ByteBlock(tempCapacity);
+                                this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                byteBlock.Dispose();
                             }
                             else
                             {
@@ -183,9 +176,17 @@ namespace TouchSocket.Sockets
                                 this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
                             }
                         }
+                        if (this.UpdateCacheTimeWhenRev)
+                        {
+                            this.LastCacheTime = DateTime.Now;
+                        }
                         return;
 
                     case FilterResult.GoOn:
+                        if (this.UpdateCacheTimeWhenRev)
+                        {
+                            this.LastCacheTime = DateTime.Now;
+                        }
                         break;
                 }
             }

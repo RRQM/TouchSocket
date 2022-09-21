@@ -37,7 +37,12 @@ namespace TouchSocket.Http.WebSockets
         public static readonly DependencyProperty WebSocketVersionProperty =
             DependencyProperty.Register("WebSocketVersion", typeof(string), typeof(WebSocketServerPlugin), "13");
 
-        private string wSUrl = "/ws";
+        private string m_wSUrl = "/ws";
+
+        /// <summary>
+        /// 是否默认处理Close报文。
+        /// </summary>
+        public bool AutoClose { get; set; } = true;
 
         /// <summary>
         /// 处理WS数据的回调
@@ -50,8 +55,18 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public string WSUrl
         {
-            get => this.wSUrl;
-            set => this.wSUrl = string.IsNullOrEmpty(value) ? "/" : value;
+            get => this.m_wSUrl;
+            set => this.m_wSUrl = string.IsNullOrEmpty(value) ? "/" : value;
+        }
+
+        /// <summary>
+        /// 不处理Close报文。
+        /// </summary>
+        /// <returns></returns>
+        public WebSocketServerPlugin NoAutoClose()
+        {
+            this.AutoClose = false;
+            return this;
         }
 
         /// <summary>
@@ -104,8 +119,15 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         protected virtual void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
         {
-            this.PluginsManager.Raise<IWebSocketPlugin>("OnHandleWSDataFrame", client, e);
-            if (e.Handled)
+            if (e.DataFrame.Opcode == WSDataType.Close && this.AutoClose)
+            {
+                string msg = e.DataFrame.PayloadData?.ToString();
+                this.PluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnClosing), client, new MsgEventArgs() { Message = msg });
+                client.Close(msg);
+                return;
+            }
+
+            if (this.PluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandleWSDataFrame), client, e))
             {
                 return;
             }

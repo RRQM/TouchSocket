@@ -98,6 +98,30 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 当数据类型为multipart/form-data时，获取boundary
+        /// </summary>
+        /// <param name="httpBase"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static string GetBoundary(this HttpBase httpBase)
+        {
+            if (httpBase.ContentType.IsNullOrEmpty())
+            {
+                return string.Empty;
+            }
+            string[] strs = httpBase.ContentType.Split(';');
+            if (strs.Length==2)
+            {
+                strs= strs[1].Split('=');
+                if (strs.Length==2)
+                {
+                    return strs[1].Trim();
+                }
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
         /// 设置内容
         /// </summary>
         /// <param name="httpBase"></param>
@@ -180,6 +204,24 @@ namespace TouchSocket.Http
         #region HttpRequest
 
         /// <summary>
+        /// 获取多文件集合。如果不存在，则返回null。
+        /// </summary>
+        /// <typeparam name="TRequest"></typeparam>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public static MultifileCollection GetMultifileCollection<TRequest>(this TRequest request) where TRequest : HttpRequest
+        {
+            if (request.GetBoundary().IsNullOrEmpty())
+            {
+                return null;
+            }
+            else
+            {
+                return new MultifileCollection(request);
+            }
+        }
+
+        /// <summary>
         /// 初始化常规的请求头。
         /// <para>包含：</para>
         /// <list type="number">
@@ -212,42 +254,6 @@ namespace TouchSocket.Http
         {
             request.SetHeader(HttpHeaders.Host, host);
             return request;
-        }
-
-        /// <summary>
-        /// 获取指定参数
-        /// </summary>
-        /// <param name="httpRequest"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static bool TryGetParam<TRequest>(this TRequest httpRequest, string key, out string value) where TRequest : HttpRequest
-        {
-            if (httpRequest.Params.ContainsKey(key))
-            {
-                value = httpRequest.Params[key];
-                return true;
-            }
-            value = null;
-            return false;
-        }
-
-        /// <summary>
-        /// 获取指定url的查询参数
-        /// </summary>
-        /// <param name="httpRequest"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static bool TryGetQuery<TRequest>(this TRequest httpRequest, string key, out string value) where TRequest : HttpRequest
-        {
-            if (httpRequest.Query.ContainsKey(key))
-            {
-                value = httpRequest.Query[key];
-                return true;
-            }
-            value = null;
-            return false;
         }
 
         /// <summary>
