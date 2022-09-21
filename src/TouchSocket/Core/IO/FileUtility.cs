@@ -48,6 +48,30 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
+        /// 获取不重复文件夹名称
+        /// </summary>
+        /// <param name="dirName"></param>
+        /// <returns></returns>
+        public static string GetDuplicateDirectoryName(string dirName)
+        {
+            if (!Directory.Exists(dirName))
+            {
+                return dirName;
+            }
+
+            int index = 0;
+            while (true)
+            {
+                index++;
+                string newPath = Path.Combine(Path.GetDirectoryName(dirName), $"{Path.GetFileNameWithoutExtension(dirName)}({index})");
+                if (!System.IO.Directory.Exists(newPath))
+                {
+                    return newPath;
+                }
+            }
+        }
+
+        /// <summary>
         /// 转化为文件大小的字符串，类似10B，10Kb，10Mb，10Gb。
         /// </summary>
         /// <param name="length"></param>

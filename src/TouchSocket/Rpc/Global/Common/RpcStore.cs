@@ -666,41 +666,39 @@ namespace TouchSocket.Rpc
                     }
                     return;
                 }
-                if (e.Context.Request.TryGetQuery(RpcStore.ProxyKey, out string value))
-                {
-                    List<Type> types = new List<Type>();
+                string value = e.Context.Request.Query[RpcStore.ProxyKey];
+                List<Type> types = new List<Type>();
 
-                    if (value.Equals("all", StringComparison.CurrentCultureIgnoreCase))
+                if (value.Equals("all", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    types = RpcStore.ProxyAttributeMap.Values.ToList();
+                }
+                else
+                {
+                    string[] vs = value.Split(',');
+                    foreach (var item in vs)
                     {
-                        types = RpcStore.ProxyAttributeMap.Values.ToList();
-                    }
-                    else
-                    {
-                        string[] vs = value.Split(',');
-                        foreach (var item in vs)
+                        if (RpcStore.ProxyAttributeMap.TryGetValue(item, out Type type))
                         {
-                            if (RpcStore.ProxyAttributeMap.TryGetValue(item, out Type type))
-                            {
-                                types.Add(type);
-                            }
+                            types.Add(type);
                         }
                     }
+                }
 
-                    e.Context.Request.TryGetQuery(RpcStore.Namespace, out string names);
+                string names = e.Context.Request.Query[RpcStore.Namespace];
 
-                    names = string.IsNullOrEmpty(names) ? "RRQMProxy" : names;
+                names = string.IsNullOrEmpty(names) ? "RRQMProxy" : names;
 
-                    string code = CodeGenerator.ConvertToCode(names, this.m_rpcStore.GetProxyInfo(types.ToArray()));
+                string code = CodeGenerator.ConvertToCode(names, this.m_rpcStore.GetProxyInfo(types.ToArray()));
 
-                    using (ByteBlock byteBlock = new ByteBlock())
-                    {
-                        e.Context.Response
-                        .SetStatus()
-                        .SetContent(code)
-                        .SetContentTypeFromFileName($"{names}.cs")
-                        .Build(byteBlock);
-                        client.DefaultSend(byteBlock);
-                    }
+                using (ByteBlock byteBlock = new ByteBlock())
+                {
+                    e.Context.Response
+                    .SetStatus()
+                    .SetContent(code)
+                    .SetContentTypeFromFileName($"{names}.cs")
+                    .Build(byteBlock);
+                    client.DefaultSend(byteBlock);
                 }
             }
             base.OnGet(client, e);

@@ -25,6 +25,8 @@ namespace TouchSocket.Rpc
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public abstract class RpcAttribute : Attribute
     {
+        private readonly Dictionary<Type, string> m_exceptions = new Dictionary<Type, string>();
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -35,6 +37,16 @@ namespace TouchSocket.Rpc
             this.m_exceptions.Add(typeof(RpcInvokeException), "Rpc调用异常");
             this.m_exceptions.Add(typeof(Exception), "其他异常");
         }
+
+        /// <summary>
+        /// 类生成器
+        /// </summary>
+        public ClassCodeGenerator ClassCodeGenerator { get; private set; }
+
+        /// <summary>
+        /// 异常提示
+        /// </summary>
+        public Dictionary<Type, string> Exceptions => this.m_exceptions;
 
         /// <summary>
         /// 生成代码
@@ -49,16 +61,18 @@ namespace TouchSocket.Rpc
         public MethodFlags MethodFlags { get; set; }
 
         /// <summary>
-        /// 异常提示
-        /// </summary>
-        public Dictionary<Type, string> Exceptions => this.m_exceptions;
-
-        /// <summary>
         /// 重新指定生成的函数名称。可以使用类似“JsonRpc_{0}”的模板格式。
         /// </summary>
         public string MethodName { get; set; }
 
-        private readonly Dictionary<Type, string> m_exceptions = new Dictionary<Type, string>();
+        /// <summary>
+        /// 当使用TryCanInvoke不能调用时，执行的代码。
+        /// </summary>
+        /// <returns></returns>
+        public virtual string GetCannotInvoke(MethodInstance methodInstance)
+        {
+            return "throw new RpcException(\"Rpc无法执行。\");";
+        }
 
         /// <summary>
         /// 获取注释信息
@@ -71,36 +85,651 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 获取返回值
+        /// 获取扩展的代理代码
         /// </summary>
         /// <param name="methodInstance"></param>
-        /// <param name="classCodeGenerator"></param>
-        /// <param name="isAsync"></param>
         /// <returns></returns>
-        public virtual string GetReturn(MethodInstance methodInstance, ClassCodeGenerator classCodeGenerator, bool isAsync)
+        public virtual string GetExtensionsMethodProxyCode(MethodInstance methodInstance)
         {
-            if (isAsync)
+            StringBuilder codeString = new StringBuilder();
+
+            string description = this.GetDescription(methodInstance);
+            bool isOut;
+            bool isRef;
+
+            ParameterInfo[] parameters;
+            List<string> parametersStr = this.GetParameters(methodInstance, out isOut, out isRef, out parameters);
+            var InterfaceTypes = this.GetGenericInterfaceTypes();
+            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
             {
-                if (methodInstance.ReturnType == null)
+                codeString.AppendLine("///<summary>");
+                codeString.AppendLine($"///{description}");
+                codeString.AppendLine("///</summary>");
+                foreach (var item in this.Exceptions)
                 {
-                    return "Task";
+                    codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
+                }
+
+                codeString.Append("public static ");
+                codeString.Append(this.GetReturn(methodInstance, false));
+                codeString.Append(" ");
+                codeString.Append(this.GetMethodName(methodInstance, false));
+                codeString.Append("<TClient>(");//方法参数
+
+                codeString.Append($"this TClient client");
+
+                codeString.Append(",");
+                for (int i = 0; i < parametersStr.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+
+                    codeString.Append(parametersStr[i]);
+                }
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append(",");
+                }
+                codeString.Append(this.GetInvokeOption());
+                codeString.AppendLine(") where TClient:");
+
+                for (int i = 0; i < InterfaceTypes.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+
+                    codeString.Append(InterfaceTypes[i].FullName);
+                }
+
+                codeString.AppendLine("{");//方法开始
+
+                codeString.AppendLine("if (client.TryCanInvoke?.Invoke(client)==false)");
+                codeString.AppendLine("{");
+                codeString.AppendLine(this.GetCannotInvoke(methodInstance));
+                codeString.AppendLine("}");
+
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] parameters = new object[]");
+                    codeString.Append("{");
+
+                    foreach (ParameterInfo parameter in parameters)
+                    {
+                        if (parameter.ParameterType.Name.Contains("&") && parameter.IsOut)
+                        {
+                            codeString.Append($"default({this.GetProxyTypeName(parameter.ParameterType)})");
+                        }
+                        else
+                        {
+                            codeString.Append(parameter.Name);
+                        }
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(",");
+                        }
+                    }
+                    codeString.AppendLine("};");
+
+                    if (isOut || isRef)
+                    {
+                        codeString.Append($"Type[] types = new Type[]");
+                        codeString.Append("{");
+                        foreach (ParameterInfo parameter in parameters)
+                        {
+                            codeString.Append($"typeof({this.GetProxyTypeName(parameter.ParameterType)})");
+                            if (parameter != parameters[parameters.Length - 1])
+                            {
+                                codeString.Append(",");
+                            }
+                        }
+                        codeString.AppendLine("};");
+                    }
+                }
+
+                if (methodInstance.HasReturn)
+                {
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else if (isOut || isRef)
+                    {
+                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
                 }
                 else
                 {
-                    return $"Task<{classCodeGenerator.GetTypeFullName(methodInstance.ReturnType)}>";
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append("client.Invoke(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else if (isOut || isRef)
+                    {
+                        codeString.Append("client.Invoke(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
+                    }
+                    else
+                    {
+                        codeString.Append("client.Invoke(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
                 }
-            }
-            else
-            {
-                if (methodInstance.ReturnType == null)
+                if (isOut || isRef)
                 {
-                    return "void";
+                    codeString.AppendLine("if(parameters!=null)");
+                    codeString.AppendLine("{");
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType), i));
+                    }
+                    codeString.AppendLine("}");
+                    if (isOut)
+                    {
+                        codeString.AppendLine("else");
+                        codeString.AppendLine("{");
+                        for (int i = 0; i < parameters.Length; i++)
+                        {
+                            if (parameters[i].IsOut)
+                            {
+                                codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType)));
+                            }
+                        }
+                        codeString.AppendLine("}");
+                    }
+                }
+
+                if (methodInstance.HasReturn)
+                {
+                    codeString.AppendLine("return returnData;");
+                }
+
+                codeString.AppendLine("}");
+            }
+
+            //以下生成异步
+            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync) && !isOut && !isRef)//没有out或者ref
+            {
+                codeString.AppendLine("///<summary>");
+                codeString.AppendLine($"///{description}");
+                codeString.AppendLine("///</summary>");
+                codeString.Append("public static ");
+                codeString.Append(this.GetReturn(methodInstance, true));
+                codeString.Append(" ");
+                codeString.Append(this.GetMethodName(methodInstance, true));
+                codeString.Append("<TClient>(");//方法参数
+
+                codeString.Append($"this TClient client");
+
+                codeString.Append(",");
+                for (int i = 0; i < parametersStr.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+                    codeString.Append(parametersStr[i]);
+                }
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append(",");
+                }
+                codeString.Append(this.GetInvokeOption());
+                codeString.AppendLine(") where TClient:");
+
+                for (int i = 0; i < InterfaceTypes.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+
+                    codeString.Append(InterfaceTypes[i].FullName);
+                }
+
+                codeString.AppendLine("{");//方法开始
+
+                codeString.AppendLine("if (client.TryCanInvoke?.Invoke(client)==false)");
+                codeString.AppendLine("{");
+                codeString.AppendLine($"throw new RpcException(\"Rpc无法执行。\");");
+                codeString.AppendLine("}");
+
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] parameters = new object[]");
+                    codeString.Append("{");
+                    foreach (ParameterInfo parameter in parameters)
+                    {
+                        codeString.Append(parameter.Name);
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(",");
+                        }
+                    }
+                    codeString.AppendLine("};");
+                }
+
+                if (methodInstance.HasReturn)
+                {
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append(string.Format("return client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("return client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
                 }
                 else
                 {
-                    return classCodeGenerator.GetTypeFullName(methodInstance.ReturnType);
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append("return client.InvokeAsync(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else
+                    {
+                        codeString.Append("return client.InvokeAsync(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
                 }
+                codeString.AppendLine("}");
             }
+            return codeString.ToString();
+        }
+
+        /// <summary>
+        /// 获取生成的函数泛型限定名称。默认<see cref="IRpcClient"/>
+        /// </summary>
+        /// <returns></returns>
+        public virtual Type[] GetGenericInterfaceTypes()
+        {
+            return new Type[] { typeof(IRpcClient) };
+        }
+
+        /// <summary>
+        /// 获取生成实体类时的代码块
+        /// </summary>
+        /// <param name="methodInstance"></param>
+        /// <returns></returns>
+        public virtual string GetInstanceProxyCode(MethodInstance methodInstance)
+        {
+            StringBuilder codeString = new StringBuilder();
+
+            string description = this.GetDescription(methodInstance);
+            ParameterInfo[] parameters;
+            bool isOut;
+            bool isRef;
+            List<string> parametersStr = this.GetParameters(methodInstance, out isOut, out isRef, out parameters);
+            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
+            {
+                codeString.AppendLine("///<summary>");
+                codeString.AppendLine($"///{description}");
+                codeString.AppendLine("///</summary>");
+                foreach (var item in this.Exceptions)
+                {
+                    codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
+                }
+
+                codeString.Append("public ");
+                codeString.Append(this.GetReturn(methodInstance, false));
+                codeString.Append(" ");
+                codeString.Append(this.GetMethodName(methodInstance, false));
+                codeString.Append("(");//方法参数
+
+                for (int i = 0; i < parametersStr.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+                    codeString.Append(parametersStr[i]);
+                }
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append(",");
+                }
+                codeString.Append(this.GetInvokeOption());
+                codeString.AppendLine(")");
+
+                codeString.AppendLine("{");//方法开始
+
+                codeString.AppendLine("if(Client==null)");
+                codeString.AppendLine("{");
+                codeString.AppendLine("throw new RpcException(\"IRpcClient为空，请先初始化或者进行赋值\");");
+                codeString.AppendLine("}");
+                codeString.AppendLine("if (Client.TryCanInvoke?.Invoke(Client)==false)");
+                codeString.AppendLine("{");
+                codeString.AppendLine($"throw new RpcException(\"Rpc无法执行。\");");
+                codeString.AppendLine("}");
+
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] parameters = new object[]");
+                    codeString.Append("{");
+
+                    foreach (ParameterInfo parameter in parameters)
+                    {
+                        if (parameter.ParameterType.Name.Contains("&") && parameter.IsOut)
+                        {
+                            codeString.Append($"default({this.GetProxyTypeName(parameter.ParameterType)})");
+                        }
+                        else
+                        {
+                            codeString.Append(parameter.Name);
+                        }
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(",");
+                        }
+                    }
+                    codeString.AppendLine("};");
+
+                    if (isOut || isRef)
+                    {
+                        codeString.Append($"Type[] types = new Type[]");
+                        codeString.Append("{");
+                        foreach (ParameterInfo parameter in parameters)
+                        {
+                            codeString.Append($"typeof({this.GetProxyTypeName(parameter.ParameterType)})");
+                            if (parameter != parameters[parameters.Length - 1])
+                            {
+                                codeString.Append(",");
+                            }
+                        }
+                        codeString.AppendLine("};");
+                    }
+                }
+
+                if (methodInstance.HasReturn)
+                {
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else if (isOut || isRef)
+                    {
+                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
+                }
+                else
+                {
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append("Client.Invoke(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else if (isOut || isRef)
+                    {
+                        codeString.Append("Client.Invoke(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
+                    }
+                    else
+                    {
+                        codeString.Append("Client.Invoke(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
+                }
+                if (isOut || isRef)
+                {
+                    codeString.AppendLine("if(parameters!=null)");
+                    codeString.AppendLine("{");
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType), i));
+                    }
+                    codeString.AppendLine("}");
+                    if (isOut)
+                    {
+                        codeString.AppendLine("else");
+                        codeString.AppendLine("{");
+                        for (int i = 0; i < parameters.Length; i++)
+                        {
+                            if (parameters[i].IsOut)
+                            {
+                                codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType)));
+                            }
+                        }
+                        codeString.AppendLine("}");
+                    }
+                }
+
+                if (methodInstance.HasReturn)
+                {
+                    codeString.AppendLine("return returnData;");
+                }
+
+                codeString.AppendLine("}");
+            }
+
+            //以下生成异步
+            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
+            {
+                codeString.AppendLine("///<summary>");
+                codeString.AppendLine($"///{description}");
+                codeString.AppendLine("///</summary>");
+                codeString.Append("public ");
+                codeString.Append(this.GetReturn(methodInstance, true));
+                codeString.Append(" ");
+                codeString.Append(this.GetMethodName(methodInstance, true));
+                codeString.Append("(");//方法参数
+
+                for (int i = 0; i < parametersStr.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+                    codeString.Append(parametersStr[i]);
+                }
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append(",");
+                }
+                codeString.Append(this.GetInvokeOption());
+                codeString.AppendLine(")");
+
+                codeString.AppendLine("{");//方法开始
+
+                codeString.AppendLine("if(Client==null)");
+                codeString.AppendLine("{");
+                codeString.AppendLine("throw new RpcException(\"IRpcClient为空，请先初始化或者进行赋值\");");
+                codeString.AppendLine("}");
+
+                codeString.AppendLine("if (Client.TryCanInvoke?.Invoke(Client)==false)");
+                codeString.AppendLine("{");
+                codeString.AppendLine($"throw new RpcException(\"Rpc无法执行。\");");
+                codeString.AppendLine("}");
+
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] parameters = new object[]");
+                    codeString.Append("{");
+                    foreach (ParameterInfo parameter in parameters)
+                    {
+                        codeString.Append(parameter.Name);
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(",");
+                        }
+                    }
+                    codeString.AppendLine("};");
+                }
+
+                if (methodInstance.HasReturn)
+                {
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append(string.Format("return Client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("return Client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append("(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
+                }
+                else
+                {
+                    if (parametersStr.Count == 0)
+                    {
+                        codeString.Append("return Client.InvokeAsync(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else
+                    {
+                        codeString.Append("return Client.InvokeAsync(");
+                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.AppendLine(",invokeOption, parameters);");
+                    }
+                }
+                codeString.AppendLine("}");
+            }
+            return codeString.ToString();
+        }
+
+        /// <summary>
+        /// 获取接口的代理代码
+        /// </summary>
+        /// <param name="methodInstance"></param>
+        /// <returns></returns>
+        public virtual string GetInterfaceProxyCode(MethodInstance methodInstance)
+        {
+            StringBuilder codeString = new StringBuilder();
+            bool isOut = false;
+            bool isRef = false;
+            string description = this.GetDescription(methodInstance);
+            List<string> parameters = this.GetParameters(methodInstance, out isOut, out isRef, out _);
+            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
+            {
+                codeString.AppendLine("///<summary>");
+                codeString.AppendLine($"///{description}");
+                codeString.AppendLine("///</summary>");
+                foreach (var item in this.Exceptions)
+                {
+                    codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
+                }
+
+                codeString.Append(this.GetReturn(methodInstance, false));
+                codeString.Append(" ");
+                codeString.Append(this.GetMethodName(methodInstance, false));
+                codeString.Append("(");//方法参数
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+                    codeString.Append(parameters[i]);
+                }
+                if (parameters.Count > 0)
+                {
+                    codeString.Append(",");
+                }
+                codeString.Append(this.GetInvokeOption());
+                codeString.AppendLine(");");
+            }
+
+            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
+            {
+                codeString.AppendLine("///<summary>");
+                codeString.AppendLine($"///{description}");
+                codeString.AppendLine("///</summary>");
+                foreach (var item in this.Exceptions)
+                {
+                    codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
+                }
+
+                codeString.Append(this.GetReturn(methodInstance, true));
+                codeString.Append(" ");
+                codeString.Append(this.GetMethodName(methodInstance, true));
+                codeString.Append("(");//方法参数
+
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        codeString.Append(",");
+                    }
+                    codeString.Append(parameters[i]);
+                }
+                if (parameters.Count > 0)
+                {
+                    codeString.Append(",");
+                }
+                codeString.Append(this.GetInvokeOption());
+                codeString.AppendLine(");");
+            }
+
+            return codeString.ToString();
+        }
+
+        /// <summary>
+        /// 获取调用键
+        /// </summary>
+        /// <param name="methodInstance"></param>
+        /// <returns></returns>
+        public virtual string GetInvokenKey(MethodInstance methodInstance)
+        {
+            return $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
+        }
+
+        /// <summary>
+        /// 获取调用配置
+        /// </summary>
+        /// <returns></returns>
+        public virtual string GetInvokeOption()
+        {
+            return "IInvokeOption invokeOption = default";
         }
 
         /// <summary>
@@ -124,34 +753,14 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 获取生成的函数泛型限定名称。默认<see cref="IRpcClient"/>
-        /// </summary>
-        /// <returns></returns>
-        public virtual Type[] GetGenericInterfaceTypes()
-        {
-            return new Type[] { typeof(IRpcClient) };
-        }
-
-        /// <summary>
-        /// 获取调用键
-        /// </summary>
-        /// <param name="methodInstance"></param>
-        /// <returns></returns>
-        public virtual string GetInvokenKey(MethodInstance methodInstance)
-        {
-            return $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
-        }
-
-        /// <summary>
         /// 获取参数生成
         /// </summary>
         /// <param name="methodInstance"></param>
-        /// <param name="classCodeGenerator"></param>
         /// <param name="isOut"></param>
         /// <param name="isRef"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public virtual List<string> GetParameters(MethodInstance methodInstance, ClassCodeGenerator classCodeGenerator, out bool isOut, out bool isRef, out ParameterInfo[] parameters)
+        public virtual List<string> GetParameters(MethodInstance methodInstance, out bool isOut, out bool isRef, out ParameterInfo[] parameters)
         {
             List<string> list = new List<string>();
             isOut = false;
@@ -176,17 +785,17 @@ namespace TouchSocket.Rpc
                     if (parameters[i].IsOut)
                     {
                         isOut = true;
-                        codeString.Append(string.Format("out {0} {1}", classCodeGenerator.GetTypeFullName(parameters[i].ParameterType), parameters[i].Name));
+                        codeString.Append(string.Format("out {0} {1}", this.GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
                     }
                     else
                     {
                         isRef = true;
-                        codeString.Append(string.Format("ref {0} {1}", classCodeGenerator.GetTypeFullName(parameters[i].ParameterType), parameters[i].Name));
+                        codeString.Append(string.Format("ref {0} {1}", this.GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
                     }
                 }
                 else
                 {
-                    codeString.Append(string.Format("{0} {1}", classCodeGenerator.GetTypeFullName(parameters[i].ParameterType), parameters[i].Name));
+                    codeString.Append(string.Format("{0} {1}", this.GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
                 }
 
                 if (parameters[i].HasDefaultValue)
@@ -221,21 +830,50 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 获取调用配置
+        /// 从类型获取代理名
         /// </summary>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public virtual string GetInvokeOption()
+        public virtual string GetProxyTypeName(Type type)
         {
-            return "IInvokeOption invokeOption = default";
+            return this.ClassCodeGenerator.GetTypeFullName(type);
         }
 
         /// <summary>
-        /// 当使用TryCanInvoke不能调用时，执行的代码。
+        /// 获取返回值
         /// </summary>
+        /// <param name="methodInstance"></param>
+        /// <param name="isAsync"></param>
         /// <returns></returns>
-        public virtual string GetCannotInvoke(MethodInstance methodInstance, ClassCodeGenerator classCodeGenerator)
+        public virtual string GetReturn(MethodInstance methodInstance, bool isAsync)
         {
-            return "throw new RpcException(\"Rpc无法执行。\");";
+            if (isAsync)
+            {
+                if (methodInstance.ReturnType == null)
+                {
+                    return "Task";
+                }
+                else
+                {
+                    return $"Task<{this.GetProxyTypeName(methodInstance.ReturnType)}>";
+                }
+            }
+            else
+            {
+                if (methodInstance.ReturnType == null)
+                {
+                    return "void";
+                }
+                else
+                {
+                    return this.GetProxyTypeName(methodInstance.ReturnType);
+                }
+            }
+        }
+
+        internal void SetClassCodeGenerator(ClassCodeGenerator classCodeGenerator)
+        {
+            this.ClassCodeGenerator = classCodeGenerator;
         }
     }
 }

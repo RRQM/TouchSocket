@@ -50,14 +50,12 @@ namespace TouchSocket.Sockets
         internal TcpServiceBase m_service;
         internal bool m_usePlugin;
         private DataHandlingAdapter m_adapter;
+        private DelaySender m_delaySender;
         private Socket m_mainSocket;
         private int m_maxPackageSize;
         private bool m_online;
-        private Stream m_workStream;
-        private string serviceIP;
-        private int servicePort;
         private bool m_useDelaySender;
-        private DelaySender m_delaySender;
+        private Stream m_workStream;
 
         #endregion 变量
 
@@ -167,6 +165,16 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        public DateTime LastReceivedTime { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DateTime LastSendTime { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
 
         /// <summary>
@@ -177,12 +185,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public string ServiceIP => this.serviceIP;
+        public string ServiceIP { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public int ServicePort => this.servicePort;
+        public int ServicePort { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -198,7 +206,6 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         public virtual void Close(string msg)
         {
-            this.SafeShutdown();
             this.BreakOut(msg, true);
         }
 
@@ -326,32 +333,18 @@ namespace TouchSocket.Sockets
             this.OnConnecting(e);
         }
 
+        internal void InternalInitialized()
+        {
+            this.OnInitialized();
+        }
+
         internal void SetSocket(Socket mainSocket)
         {
             this.m_mainSocket = mainSocket ?? throw new ArgumentNullException(nameof(mainSocket));
             this.IP = mainSocket.RemoteEndPoint.GetIP();
             this.Port = mainSocket.RemoteEndPoint.GetPort();
-            this.serviceIP = mainSocket.LocalEndPoint.GetIP();
-            this.servicePort = mainSocket.LocalEndPoint.GetPort();
-        }
-        /// <summary>
-        /// 在延迟发生错误
-        /// </summary>
-        /// <param name="ex"></param>
-        protected virtual void OnDelaySenderError(Exception ex)
-        {
-            this.Logger.Log(LogType.Error, this, "发送错误", ex);
-        }
-        /// <summary>
-        /// 当初始化完成时
-        /// </summary>
-        protected virtual void OnInitialized()
-        {
-
-        }
-        internal void InternalInitialized()
-        {
-            this.OnInitialized();
+            this.ServiceIP = mainSocket.LocalEndPoint.GetIP();
+            this.ServicePort = mainSocket.LocalEndPoint.GetPort();
         }
 
         /// <summary>
@@ -418,12 +411,28 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// 在延迟发生错误
+        /// </summary>
+        /// <param name="ex"></param>
+        protected virtual void OnDelaySenderError(Exception ex)
+        {
+            this.Logger.Log(LogType.Error, this, "发送错误", ex);
+        }
+
+        /// <summary>
         /// 客户端已断开连接，如果从Connecting中拒绝连接，则不会触发。如果覆盖父类方法，则不会触发插件。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
         {
             this.Disconnected?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 当初始化完成时
+        /// </summary>
+        protected virtual void OnInitialized()
+        {
         }
 
         /// <summary>
@@ -477,7 +486,6 @@ namespace TouchSocket.Sockets
                     {
                         this.m_workStream.Write(buffer, offset, length);
                     }
-
                 }
                 else
                 {
@@ -508,6 +516,8 @@ namespace TouchSocket.Sockets
                 {
                     this.m_lastTick = DateTime.Now.Ticks;
                 }
+
+                this.LastSendTime=DateTime.Now;
             }
         }
 
@@ -532,17 +542,18 @@ namespace TouchSocket.Sockets
         {
             lock (this)
             {
-                base.Dispose(true);
                 if (this.m_online)
                 {
                     this.m_online = false;
+                    this.SafeShutdown();
+                    this.m_mainSocket.SafeDispose();
                     this.m_delaySender.SafeDispose();
                     this.m_adapter.SafeDispose();
-                    this.m_mainSocket.SafeDispose();
                     this.m_service?.SocketClients.TryRemove(this.m_id, out _);
                     this.PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
                     this.Disconnected = null;
                 }
+                base.Dispose(true);
             }
         }
 
@@ -589,7 +600,7 @@ namespace TouchSocket.Sockets
                 {
                     this.m_lastTick = DateTime.Now.Ticks;
                 }
-
+                this.LastReceivedTime = DateTime.Now;
                 if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {
                     return;
@@ -678,7 +689,7 @@ namespace TouchSocket.Sockets
                             this.ProcessReceived(e);
                         }
                     }
-                    catch (System.Exception ex)
+                    catch (Exception ex)
                     {
                         this.BreakOut(ex.Message, false);
                     }

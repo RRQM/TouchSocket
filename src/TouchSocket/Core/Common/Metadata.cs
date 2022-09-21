@@ -10,30 +10,34 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using TouchSocket.Core.Serialization;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 可传输的元数据
+    /// 元数据键值对。
     /// </summary>
-    public class Metadata : Dictionary<string, string>
+    [FastConverter(typeof(MetadataFastBinaryConverter))]
+    public class Metadata : NameValueCollection
     {
         /// <summary>
-        /// 添加或更新
+        /// 元数据键值对。
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        public Metadata AddOrUpdate(string key, string value)
+        public Metadata()
         {
-            if (this.ContainsKey(key))
-            {
-                this[key] = value;
-            }
-            else
-            {
-                this.Add(key, value);
-            }
+
+        }
+        /// <summary>
+        /// 添加。如果键存在，将被覆盖。
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        public new Metadata Add(string name, string value)
+        {
+            base.Add(name, value);
             return this;
         }
     }

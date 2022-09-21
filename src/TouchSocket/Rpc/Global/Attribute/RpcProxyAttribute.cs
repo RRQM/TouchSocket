@@ -20,7 +20,6 @@ namespace TouchSocket.Rpc
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
     public class RpcProxyAttribute : Attribute
     {
-        private string className;
 
         /// <summary>
         /// 构造函数
@@ -33,7 +32,7 @@ namespace TouchSocket.Rpc
                 throw new ArgumentException($"“{nameof(className)}”不能为 null 或空。", nameof(className));
             }
 
-            this.className = className;
+            this.ClassName = className;
         }
 
         /// <summary>
@@ -46,10 +45,6 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 代理类名
         /// </summary>
-        public string ClassName
-        {
-            get => this.className;
-            set => this.className = value;
-        }
+        public string ClassName { get; set; }
     }
 }

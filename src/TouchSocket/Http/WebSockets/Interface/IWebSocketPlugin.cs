@@ -22,6 +22,21 @@ namespace TouchSocket.Http.WebSockets
     public interface IWebSocketPlugin : IPlugin
     {
         /// <summary>
+        /// 表示收到断开连接报文。如果对方直接断开连接，此方法则不会触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        [AsyncRaiser]
+        void OnClosing(ITcpClientBase client, MsgEventArgs e);
+
+        /// <summary>
+        /// 表示收到断开连接报文。如果对方直接断开连接，此方法则不会触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        Task OnClosingAsync(ITcpClientBase client, MsgEventArgs e);
+
+        /// <summary>
         /// 当收到WS数据时。
         /// </summary>
         /// <param name="client"></param>

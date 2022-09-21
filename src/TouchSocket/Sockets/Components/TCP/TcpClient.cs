@@ -193,6 +193,16 @@ namespace TouchSocket.Sockets
         #region 属性
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DateTime LastReceivedTime { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DateTime LastSendTime { get; private set; }
+
+        /// <summary>
         /// 处理未经过适配器的数据。返回值表示是否继续向下传递。
         /// </summary>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
@@ -300,7 +310,6 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         public virtual void Close(string msg)
         {
-            this.SafeShutdown();
             this.BreakOut(msg, true);
         }
 
@@ -310,11 +319,12 @@ namespace TouchSocket.Sockets
             {
                 if (this.m_online)
                 {
+                    this.m_online = false;
+                    this.SafeShutdown();
                     this.m_mainSocket.SafeDispose();
                     this.m_delaySender.SafeDispose();
                     this.m_workStream.SafeDispose();
                     this.m_adapter.SafeDispose();
-                    this.m_online = false;
                     this.PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
                 }
             }
@@ -716,6 +726,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
+                this.LastReceivedTime = DateTime.Now;
                 if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {
                     return;
@@ -735,7 +746,7 @@ namespace TouchSocket.Sockets
                 }
                 this.m_adapter.ReceivedInput(byteBlock);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 this.Logger.Log(LogType.Error, this, "在处理数据时发生错误", ex);
             }
@@ -1071,6 +1082,8 @@ namespace TouchSocket.Sockets
                         }
                     }
                 }
+
+                this.LastSendTime = DateTime.Now;
             }
         }
     }

@@ -24,23 +24,18 @@ namespace TouchSocket.Core.ByteManager
     public static class BytePool
     {
         private static readonly ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
-
-        private static bool m_autoZero;
-        private static long m_fullSize;
-        private static int m_keyCapacity;
-        private static int m_maxBlockSize;
-        private static long m_maxSize;
-        private static int m_minBlockSize;
         private static readonly Timer m_timer;
+        private static long m_fullSize;
+        private static long m_maxSize;
 
         static BytePool()
         {
             m_timer = new Timer((o) =>
             {
-                BytePool.Clear();
+                Clear();
             }, null, 1000 * 60 * 60, 1000 * 60 * 60);
-            m_keyCapacity = 100;
-            m_autoZero = false;
+            KeyCapacity = 100;
+            AutoZero = false;
             m_maxSize = 1024 * 1024 * 512;
             SetBlockSize(1024, 1024 * 1024 * 20);
             AddSizeKey(10240);
@@ -49,25 +44,17 @@ namespace TouchSocket.Core.ByteManager
         /// <summary>
         /// 回收内存时，自动归零
         /// </summary>
-        public static bool AutoZero
-        {
-            get => m_autoZero;
-            set => m_autoZero = value;
-        }
+        public static bool AutoZero { get; set; }
 
         /// <summary>
         /// 键容量
         /// </summary>
-        public static int KeyCapacity
-        {
-            get => m_keyCapacity;
-            set => m_keyCapacity = value;
-        }
+        public static int KeyCapacity { get; set; }
 
         /// <summary>
         /// 单个块最大值
         /// </summary>
-        public static int MaxBlockSize => m_maxBlockSize;
+        public static int MaxBlockSize { get; private set; }
 
         /// <summary>
         /// 允许的内存池最大值
@@ -88,7 +75,7 @@ namespace TouchSocket.Core.ByteManager
         /// <summary>
         /// 单个块最小值
         /// </summary>
-        public static int MinBlockSize => m_minBlockSize;
+        public static int MinBlockSize { get; private set; }
 
         /// <summary>
         /// 添加尺寸键
@@ -151,52 +138,11 @@ namespace TouchSocket.Core.ByteManager
         /// <returns></returns>
         public static ByteBlock GetByteBlock(int byteSize)
         {
-            if (byteSize < m_minBlockSize)
+            if (byteSize < MinBlockSize)
             {
-                byteSize = m_minBlockSize;
+                byteSize = MinBlockSize;
             }
             return GetByteBlock(byteSize, false);
-        }
-
-        /// <summary>
-        /// 获取内存池容量
-        /// </summary>
-        /// <returns></returns>
-        public static long GetPoolSize()
-        {
-            long size = 0;
-            foreach (var item in bytesDictionary.Values)
-            {
-                size += item.FullSize;
-            }
-            return size;
-        }
-
-        /// <summary>
-        /// 移除尺寸键
-        /// </summary>
-        /// <param name="byteSize"></param>
-        /// <returns></returns>
-        public static bool RemoveSizeKey(int byteSize)
-        {
-            if (bytesDictionary.TryRemove(byteSize, out BytesQueue queue))
-            {
-                queue.Clear();
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 设置内存块参数
-        /// </summary>
-        /// <param name="minBlockSize"></param>
-        /// <param name="maxBlockSize"></param>
-        public static void SetBlockSize(int minBlockSize, int maxBlockSize)
-        {
-            BytePool.m_maxBlockSize = maxBlockSize;
-            BytePool.m_minBlockSize = minBlockSize;
-            bytesDictionary.Clear();
         }
 
         /// <summary>
@@ -247,12 +193,26 @@ namespace TouchSocket.Core.ByteManager
         }
 
         /// <summary>
+        /// 获取内存池容量
+        /// </summary>
+        /// <returns></returns>
+        public static long GetPoolSize()
+        {
+            long size = 0;
+            foreach (var item in bytesDictionary.Values)
+            {
+                size += item.FullSize;
+            }
+            return size;
+        }
+
+        /// <summary>
         /// 回收内存核心
         /// </summary>
         /// <param name="bytes"></param>
         public static void Recycle(byte[] bytes)
         {
-            if (bytes == null)
+            if (bytes == null || bytes.Length > MaxBlockSize || bytes.Length < MinBlockSize)
             {
                 return;
             }
@@ -260,7 +220,7 @@ namespace TouchSocket.Core.ByteManager
             {
                 if (bytesDictionary.TryGetValue(bytes.Length, out BytesQueue bytesQueue))
                 {
-                    if (m_autoZero)
+                    if (AutoZero)
                     {
                         Array.Clear(bytes, 0, bytes.Length);
                     }
@@ -279,13 +239,40 @@ namespace TouchSocket.Core.ByteManager
             }
         }
 
+        /// <summary>
+        /// 移除尺寸键
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <returns></returns>
+        public static bool RemoveSizeKey(int byteSize)
+        {
+            if (bytesDictionary.TryRemove(byteSize, out BytesQueue queue))
+            {
+                queue.Clear();
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 设置内存块参数
+        /// </summary>
+        /// <param name="minBlockSize"></param>
+        /// <param name="maxBlockSize"></param>
+        public static void SetBlockSize(int minBlockSize, int maxBlockSize)
+        {
+            BytePool.MaxBlockSize = maxBlockSize;
+            BytePool.MinBlockSize = minBlockSize;
+            bytesDictionary.Clear();
+        }
+
         private static void CheckKeyCapacity(int byteSize)
         {
-            if (byteSize < m_minBlockSize || byteSize > m_maxBlockSize)
+            if (byteSize < MinBlockSize || byteSize > MaxBlockSize)
             {
                 return;
             }
-            if (bytesDictionary.Count < m_keyCapacity)
+            if (bytesDictionary.Count < KeyCapacity)
             {
                 bytesDictionary.TryAdd(byteSize, new BytesQueue(byteSize));
             }

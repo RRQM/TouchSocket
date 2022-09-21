@@ -47,6 +47,18 @@ namespace TouchSocket.Core.IO
         public int ReadTimeout { get; set; }
 
         /// <summary>
+        /// 阻塞读取，但不会移动游标。
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public virtual int PeekRead(byte[] buffer, int offset, int count)
+        {
+            return this.PrivateRead(true, buffer, offset, count);
+        }
+
+        /// <summary>
         /// 阻塞读取。
         /// </summary>
         /// <param name="buffer"></param>
@@ -54,6 +66,11 @@ namespace TouchSocket.Core.IO
         /// <param name="count"></param>
         /// <returns></returns>
         public virtual int Read(byte[] buffer, int offset, int count)
+        {
+            return this.PrivateRead(false,buffer,offset,count);
+        }
+
+        private int PrivateRead(bool peek,byte[] buffer, int offset, int count)
         {
             if (!this.CanRead)
             {
@@ -66,8 +83,11 @@ namespace TouchSocket.Core.IO
                 {
                     //按count读取
                     Array.Copy(this.m_buffer, this.m_offset, buffer, offset, count);
-                    this.m_surLength -= count;
-                    this.m_offset += count;
+                    if (!peek)
+                    {
+                        this.m_surLength -= count;
+                        this.m_offset += count;
+                    }
                     r = count;
                 }
                 else
@@ -75,7 +95,11 @@ namespace TouchSocket.Core.IO
                     //会读完本次
                     Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_surLength);
                     r = this.m_surLength;
-                    this.Reset();
+                    if (!peek)
+                    {
+                        this.Reset();
+                    }
+                   
                 }
             }
             else
@@ -92,8 +116,11 @@ namespace TouchSocket.Core.IO
                     {
                         //按count读取
                         Array.Copy(this.m_buffer, this.m_offset, buffer, offset, count);
-                        this.m_surLength -= count;
-                        this.m_offset += count;
+                        if (!peek)
+                        {
+                            this.m_surLength -= count;
+                            this.m_offset += count;
+                        }
                         r = count;
                     }
                     else
@@ -101,7 +128,11 @@ namespace TouchSocket.Core.IO
                         //会读完本次
                         Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_surLength);
                         r = this.m_surLength;
-                        this.Reset();
+                        if (!peek)
+                        {
+                            this.Reset();
+                        }
+                        
                     }
                 }
                 else

@@ -38,6 +38,23 @@ namespace TouchSocket.Core.Dependency
         /// <summary>
         /// 注册单例
         /// </summary>
+        /// <param name="container"></param>
+        /// <param name="instance"></param>
+        /// <returns></returns>
+        public static IContainer RegisterSingleton(this IContainer container, object instance)
+        {
+            if (instance is null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
+            RegisterSingleton(container, instance.GetType(), instance);
+            return container;
+        }
+
+        /// <summary>
+        /// 注册单例
+        /// </summary>
         /// <typeparam name="TFrom"></typeparam>
         /// <typeparam name="TTo"></typeparam>
         /// <param name="container"></param>
@@ -159,6 +176,19 @@ namespace TouchSocket.Core.Dependency
         /// 注册临时映射
         /// </summary>
         /// <typeparam name="TFrom"></typeparam>
+        /// <param name="container"></param>
+        /// <returns></returns>
+        public static IContainer RegisterTransient<TFrom>(this IContainer container)
+             where TFrom : class
+        {
+            RegisterTransient(container, typeof(TFrom), typeof(TFrom));
+            return container;
+        }
+
+        /// <summary>
+        /// 注册临时映射
+        /// </summary>
+        /// <typeparam name="TFrom"></typeparam>
         /// <typeparam name="TTO"></typeparam>
         /// <param name="container"></param>
         /// <param name="key"></param>
@@ -208,6 +238,19 @@ namespace TouchSocket.Core.Dependency
         /// 注册区域映射
         /// </summary>
         /// <typeparam name="TFrom"></typeparam>
+        /// <param name="container"></param>
+        /// <returns></returns>
+        public static IContainer RegisterScoped<TFrom>(this IContainer container)
+             where TFrom : class
+        {
+            RegisterScoped(container, typeof(TFrom), typeof(TFrom));
+            return container;
+        }
+
+        /// <summary>
+        /// 注册区域映射
+        /// </summary>
+        /// <typeparam name="TFrom"></typeparam>
         /// <typeparam name="TTO"></typeparam>
         /// <param name="container"></param>
         /// <param name="key"></param>
@@ -244,7 +287,7 @@ namespace TouchSocket.Core.Dependency
         /// <param name="ps"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static T Resolve<T>(this IScopedContainer container, object[] ps, string key = "")
+        public static T Resolve<T>(this IContainerProvider container, object[] ps, string key = "")
         {
             return (T)container.Resolve(typeof(T), ps, key);
         }
@@ -255,7 +298,7 @@ namespace TouchSocket.Core.Dependency
         /// <typeparam name="T"></typeparam>
         /// <param name="container"></param>
         /// <returns></returns>
-        public static T Resolve<T>(this IScopedContainer container)
+        public static T Resolve<T>(this IContainerProvider container)
         {
             return Resolve<T>(container, null);
         }
@@ -267,7 +310,7 @@ namespace TouchSocket.Core.Dependency
         /// <param name="container"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static T Resolve<T>(this IScopedContainer container, string key)
+        public static T Resolve<T>(this IContainerProvider container, string key)
         {
             return Resolve<T>(container, null, key);
         }

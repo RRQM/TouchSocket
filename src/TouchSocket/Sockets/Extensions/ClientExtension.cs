@@ -10,6 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 
 namespace TouchSocket.Sockets
@@ -32,6 +35,28 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
+        /// 获取服务器中，除自身以外的所有客户端id
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> GetOtherIDs<T>(this T client) where T : ISocketClient
+        {
+            return client.Service.GetIDs().Where(id=>id!=client.ID);
+        }
+
+        /// <summary>
+        /// 获取最后活动时间。即<see cref="IClient.LastReceivedTime"/>与<see cref="IClient.LastSendTime"/>的最近值。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public static DateTime GetLastActiveTime<T>(this T client) where T : IClient
+        {
+            return client.LastSendTime > client.LastReceivedTime ? client.LastSendTime : client.LastReceivedTime;
+        }
+
+        /// <summary>
         /// 安全性发送关闭报文
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -41,11 +66,11 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                if (client == null || !client.Online)
+                if (!client.MainSocket.Connected)
                 {
                     return;
                 }
-                client.Shutdown(how);
+                client?.MainSocket?.Shutdown(how);
             }
             catch
             {

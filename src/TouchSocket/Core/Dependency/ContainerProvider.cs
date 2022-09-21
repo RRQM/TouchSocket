@@ -14,11 +14,11 @@ using System;
 
 namespace TouchSocket.Core.Dependency
 {
-    internal class ScopedContainer : IScopedContainer
+    internal class ContainerProvider : IContainerProvider
     {
         private readonly Container m_container;
 
-        public ScopedContainer(Container container)
+        public ContainerProvider(Container container)
         {
             this.m_container = container;
         }

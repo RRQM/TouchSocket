@@ -16,7 +16,7 @@ namespace TouchSocket.Core.Dependency
     /// <summary>
     /// 注入容器接口
     /// </summary>
-    public interface IContainer : IScopedContainer
+    public interface IContainer : IContainerProvider
     {
         /// <summary>
         /// 添加类型描述符。

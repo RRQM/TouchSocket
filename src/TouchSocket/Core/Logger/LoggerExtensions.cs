@@ -118,6 +118,7 @@ namespace TouchSocket.Core.Log
                 loggerGroup.Log<TLog>(logType, source, message, exception);
             }
         }
+       
         /// <summary>
         /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出详细日志
         /// </summary>

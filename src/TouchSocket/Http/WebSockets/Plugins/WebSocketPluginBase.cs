@@ -31,6 +31,26 @@ namespace TouchSocket.Http.WebSockets.Plugins
         #region 虚函数
 
         /// <summary>
+        /// 表示收到断开连接报文。如果对方直接断开连接，此方法则不会触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnClosing(ITcpClientBase client, MsgEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// 表示收到断开连接报文。如果对方直接断开连接，此方法则不会触发。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual Task OnClosingAsync(ITcpClientBase client, MsgEventArgs e)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
         /// 处理WS数据帧。
         /// </summary>
         /// <param name="client"></param>
@@ -93,6 +113,16 @@ namespace TouchSocket.Http.WebSockets.Plugins
         }
 
         #endregion 虚函数
+
+        void IWebSocketPlugin.OnClosing(ITcpClientBase client, MsgEventArgs e)
+        {
+            this.OnClosing(client, e);
+        }
+
+        Task IWebSocketPlugin.OnClosingAsync(ITcpClientBase client, MsgEventArgs e)
+        {
+            return this.OnClosingAsync(client, e);
+        }
 
         void IWebSocketPlugin.OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
         {

@@ -47,5 +47,15 @@ namespace TouchSocket.Sockets
         /// 简单IOC容器
         /// </summary>
         IContainer Container { get; }
+
+        /// <summary>
+        /// 最后一次接收到数据的时间
+        /// </summary>
+        DateTime LastReceivedTime { get; }
+
+        /// <summary>
+        /// 最后一次发送数据的时间
+        /// </summary>
+        DateTime LastSendTime { get; }
     }
 }

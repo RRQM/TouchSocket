@@ -18,7 +18,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class ClientDisconnectedEventArgs : MsgEventArgs
     {
-        private readonly bool manual;
 
         /// <summary>
         /// 构造函数
@@ -27,13 +26,13 @@ namespace TouchSocket.Sockets
         /// <param name="mes"></param>
         public ClientDisconnectedEventArgs(bool manual, string mes) : base(mes)
         {
-            this.manual = manual;
+            this.Manual = manual;
         }
 
         /// <summary>
         /// 是否为主动行为。
         /// </summary>
-        public bool Manual => this.manual;
+        public bool Manual { get; private set; }
 
     }
 }

@@ -25,8 +25,8 @@ namespace TouchSocket.Rpc
     /// </summary>
     public static class CodeGenerator
     {
-        private static readonly Dictionary<Type, string> proxyType = new Dictionary<Type, string>();
-
+        private static readonly Dictionary<Type, string> m_proxyType = new Dictionary<Type, string>();
+        private static readonly List<Assembly> m_assemblies = new List<Assembly>();
         /// <summary>
         /// 生成回调。
         /// </summary>
@@ -35,6 +35,15 @@ namespace TouchSocket.Rpc
         /// <param name="methodCellCode"></param>
         /// <returns></returns>
         public delegate bool GeneratorCallback<T>(MethodInstance methodInstance, MethodCellCode methodCellCode) where T : RpcAttribute;
+
+        /// <summary>
+        /// 添加需要代理的程序集
+        /// </summary>
+        /// <param name="assembly"></param>
+        public static void AddProxyAssembly(Assembly assembly)
+        {
+            m_assemblies.Add(assembly);
+        }
 
         /// <summary>
         /// 添加代理类型
@@ -47,10 +56,10 @@ namespace TouchSocket.Rpc
             {
                 return;
             }
-            if (!proxyType.ContainsKey(type))
+            if (!m_proxyType.ContainsKey(type))
             {
                 RpcProxyAttribute attribute = type.GetCustomAttribute<RpcProxyAttribute>();
-                proxyType.Add(type, attribute == null ? type.Name : attribute.ClassName);
+                m_proxyType.Add(type, attribute == null ? type.Name : attribute.ClassName);
                 if (deepSearch)
                 {
                     PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.SetProperty);
@@ -79,7 +88,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public static bool ContainsType(Type type)
         {
-            return proxyType.ContainsKey(type);
+            return m_proxyType.ContainsKey(type);
         }
 
         /// <summary>
@@ -236,15 +245,18 @@ namespace TouchSocket.Rpc
             ServerCellCode serverCellCode = new ServerCellCode();
             MethodInstance[] methodInstances = GetMethodInstances(serverType);
 
-            ClassCodeGenerator classCodeGenerator = new ClassCodeGenerator(serverType.Assembly);
+            List<Assembly> assemblies=new List<Assembly>(m_assemblies);
+            assemblies.Add(serverType.Assembly);
+            ClassCodeGenerator classCodeGenerator = new ClassCodeGenerator(assemblies.ToArray());
 
             serverCellCode.Name = serverType.IsInterface ?
                 (serverType.Name.StartsWith("I") ? serverType.Name.Remove(0, 1) : serverType.Name) : serverType.Name;
             List<MethodInstance> instances = new List<MethodInstance>();
 
-            foreach (var item in proxyType.Keys)
+            foreach (var item in m_proxyType.Keys)
             {
-                classCodeGenerator.AddTypeString(item);
+                int deep = 0;
+                classCodeGenerator.AddTypeString(item,ref deep);
             }
 
             foreach (MethodInstance methodInstance in methodInstances)
@@ -255,7 +267,8 @@ namespace TouchSocket.Rpc
                     {
                         if (methodInstance.ReturnType != null)
                         {
-                            classCodeGenerator.AddTypeString(methodInstance.ReturnType);
+                            int deep = 0;
+                            classCodeGenerator.AddTypeString(methodInstance.ReturnType,ref deep);
                         }
 
                         int i = 0;
@@ -265,7 +278,8 @@ namespace TouchSocket.Rpc
                         }
                         for (; i < methodInstance.ParameterTypes.Length; i++)
                         {
-                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i]);
+                            int deep = 0;
+                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i],ref deep);
                         }
 
                         instances.Add(methodInstance);
@@ -273,19 +287,25 @@ namespace TouchSocket.Rpc
                     }
                 }
             }
+
+            classCodeGenerator.CheckDeep();
             foreach (var item in classCodeGenerator.GetClassCellCodes())
             {
                 serverCellCode.ClassCellCodes.Add(item.Name, item);
             }
 
-            ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
+            //ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
 
             bool first = true;
             foreach (var item in instances)
             {
                 MethodCellCode methodCellCode = new MethodCellCode();
                 RpcAttribute rpcAttribute = (RpcAttribute)item.GetAttribute(attributeType);
-
+                if (rpcAttribute==null)
+                {
+                    continue;
+                }
+                rpcAttribute.SetClassCodeGenerator(classCodeGenerator);
                 if (first)
                 {
                     if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.IncludeInterface))
@@ -303,9 +323,9 @@ namespace TouchSocket.Rpc
                     first = false;
                 }
 
-                methodCellCode.InterfaceTemple = serverCodeGenerator.GetInterfaceProxy(item, rpcAttribute);
-                methodCellCode.CodeTemple = serverCodeGenerator.GetMethodProxy(item, rpcAttribute);
-                methodCellCode.ExtensionsTemple = serverCodeGenerator.GetExtensionsMethodProxy(item, rpcAttribute);
+                methodCellCode.InterfaceTemple = rpcAttribute.GetInterfaceProxyCode(item);
+                methodCellCode.CodeTemple = rpcAttribute.GetInstanceProxyCode(item);
+                methodCellCode.ExtensionsTemple = rpcAttribute.GetExtensionsMethodProxyCode(item);
                 methodCellCode.Name = ((RpcAttribute)item.GetAttribute(attributeType)).GetMethodName(item, false);
                 serverCellCode.Methods.Add(methodCellCode.Name, methodCellCode);
             }
@@ -406,7 +426,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public static bool TryGetProxyTypeName(Type type, out string className)
         {
-            return proxyType.TryGetValue(type, out className);
+            return m_proxyType.TryGetValue(type, out className);
         }
     }
 }
