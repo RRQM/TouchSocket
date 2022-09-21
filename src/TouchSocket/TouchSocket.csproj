@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;net5;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;net6;netstandard2.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
@@ -64,14 +64,14 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5|AnyCPU'">
-		<DocumentationFile>bin\Debug\net5\TouchSocket.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6|AnyCPU'">
+		<DocumentationFile>bin\Debug\net6\TouchSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5|AnyCPU'">
-		<DocumentationFile>bin\Release\net5\TouchSocket.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6|AnyCPU'">
+		<DocumentationFile>bin\Release\net6\TouchSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
