@@ -4,7 +4,6 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 	</PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="TouchSocket" Version="0.6.2" />
 	</ItemGroup>
