@@ -131,9 +131,9 @@ namespace UnityServerConsoleApp
         protected override void OnStreamTransfering(TcpTouchRpcSocketClient client, StreamOperationEventArgs e)
         {
             client.Logger.Info($"客户端：{client.GetInfo()}正在传输流....，总长度={e.StreamInfo.Size}");
-            foreach (var item in e.Metadata)
+            foreach (var item in e.Metadata.AllKeys)
             {
-                client.Logger.Info($"Key：{item.Key}，Value={item.Value}");
+                client.Logger.Info($"Key：{item}，Value={e.Metadata[item]}");
             }
 
             e.Bucket = new MemoryStream();
