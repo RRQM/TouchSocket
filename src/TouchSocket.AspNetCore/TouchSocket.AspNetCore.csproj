@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net6;netcoreapp3.1</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
@@ -38,14 +38,14 @@ API：https://www.yuque.com/rrqm/touchsocket/index</Description>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
 	</ItemGroup>
 	
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net5|AnyCPU'">
-		<DocumentationFile>bin\Debug\net5\TouchSocket.AspNetCore.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6|AnyCPU'">
+		<DocumentationFile>bin\Debug\net6\TouchSocket.AspNetCore.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net5|AnyCPU'">
-		<DocumentationFile>bin\Release\net5\TouchSocket.AspNetCore.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6|AnyCPU'">
+		<DocumentationFile>bin\Release\net6\TouchSocket.AspNetCore.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
