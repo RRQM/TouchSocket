@@ -25,7 +25,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         private readonly RequestDelegate m_next;
         private readonly IWSTouchRpcService m_rpcService;
         private string m_url = "/wstouchrpc";
-        private ILogger<WSTouchRpcMiddleware> m_logger;
+        private readonly ILogger<WSTouchRpcMiddleware> m_logger;
 
         /// <summary>
         /// 实例化一个中间件

@@ -5,7 +5,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>0.6.0</Version>
+		<Version>0.7.0</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -35,7 +35,7 @@ API：https://www.yuque.com/rrqm/touchsocket/index</Description>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
 	</ItemGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6|AnyCPU'">
@@ -77,6 +77,6 @@ API：https://www.yuque.com/rrqm/touchsocket/index</Description>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.26" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
-		<PackageReference Include="TouchSocket" Version="0.6.0" />
+		<PackageReference Include="TouchSocket" Version="0.7.0" />
 	</ItemGroup>
 </Project>

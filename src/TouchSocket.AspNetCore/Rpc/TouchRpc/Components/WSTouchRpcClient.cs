@@ -30,15 +30,20 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
     /// </summary>
     public class WSTouchRpcClient : DisposableObject, IWSTouchRpcClient, IRpcActor
     {
-        private readonly byte[] m_buffer = new byte[1024 * 64];
         private readonly ActionMap m_actionMap;
+        private readonly byte[] m_buffer = new byte[1024 * 64];
+        private readonly RpcActor m_rpcActor;
         private ClientWebSocket m_client;
         private TouchSocketConfig m_config;
         private int m_failCount;
         private IPHost m_remoteIPHost;
-        private RpcActor m_rpcActor;
-        private Timer m_timer;
         private RpcStore m_rpcStore;
+        private Timer m_timer;
+
+        /// <summary>
+        /// 最后活动时间
+        /// </summary>
+        public DateTime LastActiveTime { get;private set; }
 
         /// <summary>
         /// 创建一个WSTouchRpcClient实例。
@@ -67,6 +72,11 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         public event ClientDisconnectedEventHandler<WSTouchRpcClient> Disconnected;
 
         /// <summary>
+        /// 方法映射表
+        /// </summary>
+        public ActionMap ActionMap { get => this.m_actionMap; }
+
+        /// <summary>
         /// 客户端配置
         /// </summary>
         public TouchSocketConfig Config => this.m_config;
@@ -80,12 +90,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         public string ID => this.m_rpcActor.ID;
-
-        /// <summary>
-        /// 方法映射表
-        /// </summary>
-        public ActionMap ActionMap { get => m_actionMap; }
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -124,7 +128,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// RpcStore
         /// </summary>
-        public RpcStore RpcStore { get => m_rpcStore;}
+        public RpcStore RpcStore { get => this.m_rpcStore; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -181,7 +185,8 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 this.m_client.SafeDispose();
                 this.m_client = new ClientWebSocket();
                 await this.m_client.ConnectAsync(this.RemoteIPHost.Uri, default);
-                this.BeginReceive(null);
+
+                _ = this.BeginReceive(null);
             }
 
             if (this.IsHandshaked)
@@ -189,7 +194,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 return;
             }
 
-            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default, 
+            this.m_rpcActor.Handshake(this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty), default,
                 timeout, this.Config.GetValue<Metadata>(TouchRpcConfigExtensions.MetadataProperty));
         }
 
@@ -439,19 +444,17 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             this.Disconnected?.Invoke(this, e);
         }
 
-        private async void BeginReceive(ByteBlock byteBlock)
+        private async Task BeginReceive(ByteBlock byteBlock)
         {
             try
             {
-                if (byteBlock == null)
-                {
-                    byteBlock = new ByteBlock();
-                }
+                byteBlock ??= new ByteBlock();
                 var result = await this.m_client.ReceiveAsync(this.m_buffer, default);
                 if (result.Count == 0)
                 {
                     this.BreakOut("远程终端主动关闭", false);
                 }
+                this.LastActiveTime = DateTime.Now;
                 byteBlock.Write(this.m_buffer, 0, result.Count);
                 if (result.EndOfMessage)
                 {
@@ -466,14 +469,14 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                     {
                         byteBlock.SafeDispose();
                     }
-                    this.BeginReceive(null);
+                    await this.BeginReceive(null);
                 }
                 else
                 {
-                    this.BeginReceive(byteBlock);
+                    await this.BeginReceive(byteBlock);
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 this.BreakOut(ex.Message, false);
             }
@@ -776,6 +779,30 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private void OnRpcActorHandshaked(RpcActor actor, VerifyOptionEventArgs e)
         {
+            this.m_timer.SafeDispose();
+
+            if (this.Config.GetValue<HeartbeatValue>(TouchRpcConfigExtensions.HeartbeatFrequencyProperty) is HeartbeatValue heartbeat)
+            {
+                this.m_timer = new Timer((obj) =>
+                {
+                    if (DateTime.Now.TimeOfDay - this.LastActiveTime.TimeOfDay < TimeSpan.FromMilliseconds(heartbeat.Interval))
+                    {
+                        return;
+                    }
+                    if (this.Ping())
+                    {
+                        this.m_failCount = 0;
+                    }
+                    else
+                    {
+                        if (++this.m_failCount > heartbeat.MaxFailCount)
+                        {
+                            this.Close("自动心跳失败次数达到最大，已清理连接。");
+                            this.m_timer.SafeDispose();
+                        }
+                    }
+                }, null, heartbeat.Interval, heartbeat.Interval);
+            }
             if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaked), this, e))
             {
                 return;
@@ -818,6 +845,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private async void RpcActorSend(RpcActor actor, bool isAsync, ArraySegment<byte>[] transferBytes)
         {
+            this.LastActiveTime = DateTime.Now;
             using ByteBlock byteBlock = new ByteBlock();
             foreach (var item in transferBytes)
             {
@@ -829,13 +857,14 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         #endregion 内部委托绑定
 
         #region 事件触发
+
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(FileTransferStatusEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -844,7 +873,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(FileOperationEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -853,26 +882,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnHandshaked(VerifyOptionEventArgs e)
         {
-            this.m_timer.SafeDispose();
-
-            if (this.Config.GetValue<HeartbeatValue>(TouchRpcConfigExtensions.HeartbeatFrequencyProperty) is HeartbeatValue heartbeat)
-            {
-                this.m_timer = new Timer((obj) =>
-                {
-                    if (this.Ping())
-                    {
-                        this.m_failCount = 0;
-                    }
-                    else
-                    {
-                        if (++this.m_failCount > heartbeat.MaxFailCount)
-                        {
-                            this.Close("自动心跳失败次数达到最大，已清理连接。");
-                            this.m_timer.SafeDispose();
-                        }
-                    }
-                }, null, heartbeat.Interval, heartbeat.Interval);
-            }
+           
         }
 
         /// <summary>
@@ -882,7 +892,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="byteBlock"></param>
         protected virtual void OnReceived(short protocol, ByteBlock byteBlock)
         {
-           
+
         }
 
         /// <summary>
@@ -891,7 +901,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnStreamTransfered(StreamStatusEventArgs e)
         {
-           
+
         }
 
         /// <summary>
@@ -900,7 +910,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnStreamTransfering(StreamOperationEventArgs e)
         {
-           
+
         }
 
         #endregion 事件触发

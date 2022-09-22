@@ -33,7 +33,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
     {
         #region SocketClient
 
-        private ConcurrentDictionary<string, WSTouchRpcSocketClient> m_tokenDic = new ConcurrentDictionary<string, WSTouchRpcSocketClient>();
+        private readonly ConcurrentDictionary<string, WSTouchRpcSocketClient> m_tokenDic = new ConcurrentDictionary<string, WSTouchRpcSocketClient>();
 
         /// <summary>
         /// 数量
@@ -183,7 +183,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// 方法映射表
         /// </summary>
-        public ActionMap ActionMap { get => m_actionMap; }
+        public ActionMap ActionMap { get => this.m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -641,7 +641,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
             this.OnReceived(client, protocol, byteBlock);
         }
-        
+
         private void OnRpcServiceResetID(RpcActor actor, WaitSetID arg2)
         {
             this.ResetID(arg2.OldID, arg2.NewID);

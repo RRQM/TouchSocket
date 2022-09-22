@@ -10,21 +10,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Threading.Tasks;
-using TouchSocket.Core.Plugins;
+using Microsoft.Extensions.DependencyInjection;
+using TouchSocket.Core.AspNetCore;
 
-namespace TouchSocket.Rpc.TouchRpc.AspNetCore
+namespace TouchSocket.Core.Config
 {
     /// <summary>
-    /// IWSTouchRpcClient
+    /// AspNetCoreConfigExtension
     /// </summary>
-    public interface IWSTouchRpcClient : ITouchRpc, IPluginObject, IRpcParser
+    public static class AspNetCoreConfigExtension
     {
         /// <summary>
-        /// 异步连接
+        /// 使用<see cref="AspNetCoreContainer"/>作为容器。
         /// </summary>
-        /// <param name="timeout">验证超时时间</param>
+        /// <param name="config"></param>
+        /// <param name="services"></param>
         /// <returns></returns>
-        Task ConnectAsync(int timeout = 5000);
+        public static TouchSocketConfig UseAspNetCoreContainer(this TouchSocketConfig config, IServiceCollection services)
+        {
+            config.SetContainer(new AspNetCoreContainer(services));
+            return config;
+        }
     }
 }
