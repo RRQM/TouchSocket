@@ -22,7 +22,7 @@ namespace TouchSocket.Core.AspNetCore
     public class AspNetCoreContainer : IContainer
     {
         private readonly IServiceCollection m_services;
-        readonly Container m_container = new Container();
+        private readonly Container m_container = new Container();
 
         /// <summary>
         /// 初始化一个IServiceCollection的容器。
@@ -41,7 +41,7 @@ namespace TouchSocket.Core.AspNetCore
         /// <returns></returns>
         public bool IsRegistered(Type fromType, string key = "")
         {
-            return ((IScopedContainer)this.m_container).IsRegistered(fromType, key);
+            return ((IContainerProvider)this.m_container).IsRegistered(fromType, key);
         }
 
         /// <summary>
