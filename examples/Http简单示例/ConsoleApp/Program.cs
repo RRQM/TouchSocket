@@ -40,6 +40,7 @@ namespace ConsoleApp
             Console.WriteLine("访问 http://127.0.0.1:7789/success 返回响应");
             Console.WriteLine("访问 http://127.0.0.1:7789/file 响应文件");
             Console.WriteLine("访问 http://127.0.0.1:7789/html 返回html");
+            Console.WriteLine("Post访问 http://127.0.0.1:7789/uploadfile 上传文件");
             Console.ReadKey();
         }
 
@@ -90,6 +91,44 @@ namespace ConsoleApp
                 e.Context.Response.Answer();
             }
             base.OnGet(client, e);
+        }
+
+        protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.UrlEquals("/uploadfile"))
+            {
+                try
+                {
+                    if (e.Context.Request.ContentLen>1024*1024*100)//全部数据体超过100Mb则直接拒绝接收。
+                    {
+                        e.Context.Response
+                            .SetStatus("403", "数据过大")
+                            .Answer();
+                        return;
+                    }
+                    //此操作会先接收全部数据，然后再分割数据。
+                    //所以上传文件不宜过大，不然会内存溢出。
+                    var multifileCollection = e.Context.Request.GetMultifileCollection();
+
+                    foreach (var item in multifileCollection)
+                    {
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.Append($"文件名={item.FileName}\t");
+                        stringBuilder.Append($"数据长度={item.Length}");
+                        client.Logger.Info(stringBuilder.ToString());
+                    }
+
+                    e.Context.Response
+                            .SetStatus()
+                            .FromText("Ok")
+                            .Answer();
+                }
+                catch (Exception ex)
+                {
+                    client.Logger.Exception(ex);
+                }
+            }
+            base.OnPost(client, e);
         }
     }
 
