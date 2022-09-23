@@ -69,7 +69,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// 断开连接
         /// </summary>
-        public event ClientDisconnectedEventHandler<WSTouchRpcClient> Disconnected;
+        public ClientDisconnectedEventHandler<WSTouchRpcClient> Disconnected { get; set; }
 
         /// <summary>
         /// 方法映射表

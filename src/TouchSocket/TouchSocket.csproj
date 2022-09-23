@@ -27,16 +27,9 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<RepositoryUrl>https://gitee.com/dotnetchina/touchsocket</RepositoryUrl>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<DebugType>embedded</DebugType>
-		<DebugSymbols>true</DebugSymbols>
-		<EmbedUntrackedSource>true</EmbedUntrackedSource>
-		<EmbedAllSources>true</EmbedAllSources>
 		<RepositoryType>Gitee</RepositoryType>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
 		<DocumentationFile>bin\Debug\netstandard2.0\TouchSocket.xml</DocumentationFile>
