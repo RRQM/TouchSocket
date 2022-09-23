@@ -12,6 +12,9 @@
 //------------------------------------------------------------------------------
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using TouchSocket.Core.Dependency;
 
 namespace TouchSocket.Core.AspNetCore
@@ -22,7 +25,6 @@ namespace TouchSocket.Core.AspNetCore
     public class AspNetCoreContainer : IContainer
     {
         private readonly IServiceCollection m_services;
-        private readonly Container m_container = new Container();
 
         /// <summary>
         /// 初始化一个IServiceCollection的容器。
@@ -30,7 +32,22 @@ namespace TouchSocket.Core.AspNetCore
         /// <param name="services"></param>
         public AspNetCoreContainer(IServiceCollection services)
         {
+            services.AddSingleton<IContainer>(this);
             this.m_services = services;
+        }
+
+        /// <summary>
+        /// 返回迭代器
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<DependencyDescriptor> GetEnumerator()
+        {
+            return this.m_services.ToList().Select(s =>
+              {
+                  DependencyDescriptor descriptor = new DependencyDescriptor(s.ServiceType, s.ImplementationType, (Lifetime)((int)s.Lifetime));
+                  descriptor.ToInstance = s.ImplementationInstance;
+                  return descriptor;
+              }).GetEnumerator();
         }
 
         /// <summary>
@@ -41,7 +58,19 @@ namespace TouchSocket.Core.AspNetCore
         /// <returns></returns>
         public bool IsRegistered(Type fromType, string key = "")
         {
-            return ((IContainerProvider)this.m_container).IsRegistered(fromType, key);
+            if (fromType.IsGenericType)
+            {
+                fromType = fromType.GetGenericTypeDefinition();
+            }
+            var array = m_services.ToArray();
+            foreach (var item in array)
+            {
+                if (item.ServiceType == fromType)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -51,7 +80,14 @@ namespace TouchSocket.Core.AspNetCore
         /// <param name="key"></param>
         public void Register(DependencyDescriptor descriptor, string key = "")
         {
-            this.m_container.Register(descriptor, key);
+            if (!key.IsNullOrEmpty())
+            {
+                throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的多实现注入");
+            }
+            if (this.IsRegistered(descriptor.FromType))
+            {
+                this.Unregister(descriptor.FromType);
+            }
             switch (descriptor.Lifetime)
             {
                 case Lifetime.Singleton:
@@ -64,6 +100,7 @@ namespace TouchSocket.Core.AspNetCore
                         this.m_services.AddSingleton(descriptor.FromType, descriptor.ToType);
                     }
                     break;
+
                 case Lifetime.Transient:
                 default:
                     this.m_services.AddTransient(descriptor.FromType, descriptor.ToType);
@@ -80,15 +117,17 @@ namespace TouchSocket.Core.AspNetCore
         /// <returns></returns>
         public object Resolve(Type fromType, object[] ps = null, string key = "")
         {
+            if (fromType == typeof(IContainer))
+            {
+                return this;
+            }
+            if (fromType == typeof(IServiceProvider))
+            {
+                return this.m_services.BuildServiceProvider();
+            }
             ServiceProvider provider = this.m_services.BuildServiceProvider();
 
-            object obj = provider.GetService(fromType);
-            if (obj != null)
-            {
-                return obj;
-            }
-
-            return this.m_container.Resolve(fromType, ps, key);
+            return provider.GetService(fromType);
         }
 
         /// <summary>
@@ -98,7 +137,20 @@ namespace TouchSocket.Core.AspNetCore
         /// <param name="key"></param>
         public void Unregister(DependencyDescriptor descriptor, string key = "")
         {
-            ((IContainer)this.m_container).Unregister(descriptor, key);
+            var array = m_services.ToArray();
+            foreach (var item in array)
+            {
+                if (item.ServiceType == descriptor.FromType)
+                {
+                    m_services.Remove(item);
+                    return;
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
     }
 }
