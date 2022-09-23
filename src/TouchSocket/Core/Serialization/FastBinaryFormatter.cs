@@ -13,6 +13,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -78,8 +79,8 @@ namespace TouchSocket.Core.Serialization
             int len = 0;
             if (obj != null)
             {
-                PropertyInfo[] propertyInfos = GetProperties(type);
-                foreach (PropertyInfo property in propertyInfos)
+                SerializObject serializObject = GetOrAddInstance(type);
+                foreach (PropertyInfo property in serializObject.Properties)
                 {
                     if (property.GetCustomAttribute<FastNonSerializedAttribute>() != null)
                     {
@@ -95,6 +96,24 @@ namespace TouchSocket.Core.Serialization
                     stream.Write(propertyBytes, 0, propertyBytes.Length);
                     len += propertyBytes.Length + 1;
                     len += this.SerializeObject(stream, property.GetValue(obj, null));
+                }
+
+                foreach (FieldInfo fieldInfo in serializObject.FieldInfos)
+                {
+                    if (fieldInfo.GetCustomAttribute<FastNonSerializedAttribute>() != null)
+                    {
+                        continue;
+                    }
+                    byte[] propertyBytes = Encoding.UTF8.GetBytes(fieldInfo.Name);
+                    if (propertyBytes.Length > byte.MaxValue)
+                    {
+                        throw new Exception($"属性名：{fieldInfo.Name}超长");
+                    }
+                    byte lenBytes = (byte)propertyBytes.Length;
+                    stream.Write(lenBytes);
+                    stream.Write(propertyBytes, 0, propertyBytes.Length);
+                    len += propertyBytes.Length + 1;
+                    len += this.SerializeObject(stream, fieldInfo.GetValue(obj));
                 }
             }
             return len;
@@ -445,10 +464,16 @@ namespace TouchSocket.Core.Serialization
                             string propertyName = Encoding.UTF8.GetString(datas, offset + 1, len);
                             offset += len + 1;
 
-                            if (instanceObject.Properties.ContainsKey(propertyName))
+                            if (instanceObject.PropertiesDic.ContainsKey(propertyName))
                             {
-                                PropertyInfo property = instanceObject.Properties[propertyName];
+                                PropertyInfo property = instanceObject.PropertiesDic[propertyName];
                                 object obj = this.Deserialize(property.PropertyType, datas, ref offset);
+                                property.SetValue(instance, obj);
+                            }
+                            else if (instanceObject.FieldInfosDic.ContainsKey(propertyName))
+                            {
+                                FieldInfo property = instanceObject.FieldInfosDic[propertyName];
+                                object obj = this.Deserialize(property.FieldType, datas, ref offset);
                                 property.SetValue(instance, obj);
                             }
                             else
@@ -566,48 +591,54 @@ namespace TouchSocket.Core.Serialization
                 {
                     SerializObject instanceObject = new SerializObject();
                     instanceObject.Type = type;
-                    if (type.IsGenericType)
+                    if (TouchSocketCoreUtility.listType.IsAssignableFrom(type))
                     {
-                        instanceObject.AddMethod = new Method(type.GetMethod("Add"));
-                        instanceObject.ArgTypes = type.GetGenericArguments();
-                        type = type.GetGenericTypeDefinition().MakeGenericType(instanceObject.ArgTypes);
-
-                        if (instanceObject.ArgTypes.Length == 1)
+                        Type genericType = type;
+                        while (true)
                         {
-                            instanceObject.instanceType = InstanceType.List;
+                            if (genericType.IsGenericType)
+                            {
+                                break;
+                            }
+                            genericType = genericType.BaseType;
+                            if (genericType == TouchSocketCoreUtility.objType)
+                            {
+                                break;
+                            }
                         }
-                        else
-                        {
-                            instanceObject.instanceType = InstanceType.Dictionary;
-                        }
-                    }
-                    else if (TouchSocketCoreUtility.listType.IsAssignableFrom(type))
-                    {
-                        Type baseType = type.BaseType;
-                        while (!baseType.IsGenericType)
-                        {
-                            baseType = baseType.BaseType;
-                        }
-                        instanceObject.ArgTypes = baseType.GetGenericArguments();
+                        instanceObject.ArgTypes = genericType.GetGenericArguments();
 
                         instanceObject.AddMethod = new Method(type.GetMethod("Add"));
                         instanceObject.instanceType = InstanceType.List;
                     }
                     else if (TouchSocketCoreUtility.dicType.IsAssignableFrom(type))
                     {
-                        Type baseType = type.BaseType;
-                        while (!baseType.IsGenericType)
+                        Type genericType = type;
+                        while (true)
                         {
-                            baseType = baseType.BaseType;
+                            if (genericType.IsGenericType)
+                            {
+                                break;
+                            }
+                            genericType = genericType.BaseType;
+                            if (genericType == TouchSocketCoreUtility.objType)
+                            {
+                                break;
+                            }
                         }
-                        instanceObject.ArgTypes = baseType.GetGenericArguments();
-                        instanceObject.AddMethod = new Reflection.Method(type.GetMethod("Add"));
+                        instanceObject.ArgTypes = genericType.GetGenericArguments();
+                        instanceObject.AddMethod = new Method(type.GetMethod("Add"));
                         instanceObject.instanceType = InstanceType.Dictionary;
                     }
                     else
                     {
-                        instanceObject.Properties = GetProperties(type).ToDictionary(a => a.Name);
                         instanceObject.instanceType = InstanceType.Class;
+                    }
+                    instanceObject.PropertiesDic = GetProperties(type).ToDictionary(a => a.Name);
+                    instanceObject.FieldInfosDic = GetFieldInfos(type).ToDictionary(a => a.Name);
+                    if (type.IsGenericType)
+                    {
+                        instanceObject.ArgTypes = type.GetGenericArguments();
                     }
                     return instanceObject;
                 });
@@ -619,6 +650,11 @@ namespace TouchSocket.Core.Serialization
         private static PropertyInfo[] GetProperties(Type type)
         {
             return type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        private static FieldInfo[] GetFieldInfos(Type type)
+        {
+            return type.GetFields(BindingFlags.Instance | BindingFlags.Public);
         }
     }
 }

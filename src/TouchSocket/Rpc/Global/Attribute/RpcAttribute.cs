@@ -39,6 +39,11 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
+        /// 调用键。
+        /// </summary>
+        public string InvokenKey { get; set; }
+
+        /// <summary>
         /// 类生成器
         /// </summary>
         public ClassCodeGenerator ClassCodeGenerator { get; private set; }
@@ -720,6 +725,10 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetInvokenKey(MethodInstance methodInstance)
         {
+            if (!this.InvokenKey.IsNullOrEmpty())
+            {
+                return this.InvokenKey;
+            }
             return $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
         }
 

@@ -15,9 +15,9 @@ using System;
 namespace TouchSocket.Core.Serialization
 {
     /// <summary>
-    /// 忽略的RRQM序列化
+    /// 忽略的Fast序列化
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property| AttributeTargets.Field)]
     public class FastNonSerializedAttribute : Attribute
     {
     }

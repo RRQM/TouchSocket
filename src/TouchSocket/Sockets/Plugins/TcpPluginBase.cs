@@ -34,19 +34,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        [DependencyInject]
-        public ILog Logger { get; set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public int Order { get; set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        [DependencyInject]
-        public IPluginsManager PluginsManager { get; set; }
 
         void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {

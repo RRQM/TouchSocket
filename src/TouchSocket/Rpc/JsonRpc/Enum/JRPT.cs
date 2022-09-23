@@ -25,6 +25,11 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <summary>
         /// Http协议
         /// </summary>
-        Http
+        Http,
+
+        /// <summary>
+        /// Websocket协议
+        /// </summary>
+        Websocket
     }
 }

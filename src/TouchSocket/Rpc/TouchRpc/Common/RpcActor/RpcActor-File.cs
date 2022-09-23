@@ -808,6 +808,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         long position = waitTransfer.Position;
                         reader.Position = position;
                         fileOperator.SetFileCompletedLength(waitTransfer.Position);
+
                         while (true)
                         {
                             if (fileOperator.Token.IsCancellationRequested)
@@ -1006,6 +1007,7 @@ namespace TouchSocket.Rpc.TouchRpc
                                 {
                                     channel = this.CreateChannel(waitTransfer.ClientID);
                                 }
+
                                 waitTransfer.ChannelID = channel.ID;
                                 waitTransfer.Position = fileInfo.Position;
                                 waitTransfer.Status = 1;

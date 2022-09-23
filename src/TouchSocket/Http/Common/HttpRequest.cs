@@ -405,7 +405,7 @@ namespace TouchSocket.Http
             }
 
             stringBuilder.Append("\r\n");
-            byteBlock.Write(this.Encoding.GetBytes(stringBuilder.ToString()));
+            byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
         private NameValueCollection GetParameters(string row)

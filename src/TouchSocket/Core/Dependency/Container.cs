@@ -11,7 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -30,6 +32,15 @@ namespace TouchSocket.Core.Dependency
         public Container()
         {
             this.RegisterSingleton<IContainer>(this);
+        }
+
+        /// <summary>
+        /// 返回迭代器
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<DependencyDescriptor> GetEnumerator()
+        {
+            return m_registrations.Values.ToList().GetEnumerator();
         }
 
         /// <summary>
@@ -333,6 +344,11 @@ namespace TouchSocket.Core.Dependency
                 }
             }
             return instance;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
 
         private IContainerProvider GetScopedContainer()

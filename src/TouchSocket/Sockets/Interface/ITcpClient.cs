@@ -26,12 +26,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
-        event MessageEventHandler<ITcpClient> Connected;
+        MessageEventHandler<ITcpClient> Connected { get; set; }
 
         /// <summary>
         /// 准备连接的时候
         /// </summary>
-        event ClientConnectingEventHandler<ITcpClient> Connecting;
+        ClientConnectingEventHandler<ITcpClient> Connecting { get; set; }
 
         /// <summary>
         /// 远程IPHost。
@@ -53,9 +53,9 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 配置服务器
         /// </summary>
-        /// <param name="clientConfig"></param>
+        /// <param name="config"></param>
         /// <exception cref="Exception"></exception>
-        ITcpClient Setup(TouchSocketConfig clientConfig);
+        ITcpClient Setup(TouchSocketConfig config);
 
         /// <summary>
         /// 配置服务器

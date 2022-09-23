@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core.Dependency;
-
 namespace TouchSocket.Rpc
 {
     /// <summary>
@@ -20,10 +18,5 @@ namespace TouchSocket.Rpc
     /// </summary>
     public abstract class RpcServer : IRpcServer
     {
-        /// <summary>
-        /// 该服务所注册的rpc中心
-        /// </summary>
-        [DependencyInject]
-        public RpcStore RpcStore { get; set; }
     }
 }

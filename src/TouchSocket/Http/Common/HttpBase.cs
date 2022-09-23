@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Collections;
+using TouchSocket.Core.Data;
 using TouchSocket.Core.Extensions;
 using TouchSocket.Core.IO;
 using TouchSocket.Sockets;
@@ -44,14 +45,13 @@ namespace TouchSocket.Http
 
         private IgnoreCaseNameValueCollection m_headers;
         private long m_readLen;
-        private string m_requestLine;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public HttpBase()
         {
-            this.ReadTimeout = 1000 * 60;
+            this.ReadTimeout = 1000 * 30;
         }
 
         /// <summary>
@@ -93,11 +93,6 @@ namespace TouchSocket.Http
         public string ContentType { get; set; }
 
         /// <summary>
-        /// 编码方式
-        /// </summary>
-        public Encoding Encoding { get; set; } = Encoding.UTF8;
-
-        /// <summary>
         /// 传递标识
         /// </summary>
         public object Flag { get; set; }
@@ -127,7 +122,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 请求行
         /// </summary>
-        public string RequestLine => this.m_requestLine;
+        public string RequestLine { get; private set; }
 
         /// <summary>
         /// 获取头值
@@ -216,10 +211,10 @@ namespace TouchSocket.Http
         public void ReadHeaders(byte[] buffer, int offset, int length)
         {
             string data = Encoding.UTF8.GetString(buffer, offset, length);
-            string[] rows = Regex.Split(data, Environment.NewLine);
+            string[] rows = Regex.Split(data, "\r\n");
 
             //Request URL & Method & Version
-            this.m_requestLine = rows[0];
+            this.RequestLine = rows[0];
 
             //Request Headers
             this.GetRequestHeaders(rows);

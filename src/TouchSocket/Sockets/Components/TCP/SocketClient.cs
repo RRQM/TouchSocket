@@ -158,7 +158,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 断开连接
         /// </summary>
-        public event ClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
+        public ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get; set; }
 
         #endregion 事件&委托
 

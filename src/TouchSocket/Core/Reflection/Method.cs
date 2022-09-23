@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Specialized;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -42,6 +43,11 @@ namespace TouchSocket.Core.Reflection
     /// </summary>
     public class Method
     {
+        /// <summary>
+        /// 属性
+        /// </summary>
+        public NameValueCollection Properties { get; set; }=new NameValueCollection();
+
         private readonly MethodInfo m_info;
 
         private readonly bool m_isByRef;

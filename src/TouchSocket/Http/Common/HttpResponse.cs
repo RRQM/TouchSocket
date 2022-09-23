@@ -185,8 +185,8 @@ namespace TouchSocket.Http
             {
                 using (ByteBlock byteBlock = new ByteBlock())
                 {
-                    byteBlock.Write(this.Encoding.GetBytes($"{0.ToString("X")}\r\n"));
-                    byteBlock.Write(this.Encoding.GetBytes("\r\n"));
+                    byteBlock.Write(Encoding.UTF8.GetBytes($"{0:X}\r\n"));
+                    byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
                     this.m_client.DefaultSend(byteBlock);
                     this.m_responsed = true;
                 }
@@ -295,9 +295,9 @@ namespace TouchSocket.Http
             {
                 using (ByteBlock byteBlock = new ByteBlock(count + 1024))
                 {
-                    byteBlock.Write(this.Encoding.GetBytes($"{count.ToString("X")}\r\n"));
+                    byteBlock.Write(Encoding.UTF8.GetBytes($"{count.ToString("X")}\r\n"));
                     byteBlock.Write(buffer, offset, count);
-                    byteBlock.Write(this.Encoding.GetBytes("\r\n"));
+                    byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
                     this.m_client.DefaultSend(byteBlock);
                     this.m_sentLength += count;
                 }
