@@ -139,6 +139,10 @@ namespace ServiceConsoleApp
     /// </summary>
     internal class MyWebSocketCommand : WSCommandLinePlugin
     {
+        public MyWebSocketCommand(ILog logger) : base(logger)
+        {
+        }
+
         public int AddCommand(int a, int b)
         {
             return a + b;

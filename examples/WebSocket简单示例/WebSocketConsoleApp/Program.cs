@@ -150,7 +150,11 @@ namespace WebSocketConsoleApp
     /// </summary>
     public class MyWSCommandLinePlugin : WSCommandLinePlugin
     {
-        public int AddCommand(int a, int b)
+        public MyWSCommandLinePlugin(ILog logger) : base(logger)
+        {
+        }
+
+        public int AddCommand(IHttpClientBase client,int a, int b)
         {
             return a + b;
         }

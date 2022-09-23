@@ -1,5 +1,6 @@
 ﻿using System;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
 using TouchSocket.Sockets.Plugins;
@@ -39,6 +40,10 @@ namespace PluginConsoleApp
 
     internal class MyCommandLinePlugin : TcpCommandLinePlugin
     {
+        public MyCommandLinePlugin(ILog logger) : base(logger)
+        {
+        }
+
         public int AddCommand(int a, int b)
         {
             return a + b;
