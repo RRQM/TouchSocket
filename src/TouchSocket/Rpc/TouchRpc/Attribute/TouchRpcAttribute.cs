@@ -31,6 +31,15 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <summary>
+        /// 适用于TouchRpc的标记.
+        /// </summary>
+        /// <param name="invokenKey"></param>
+        public TouchRpcAttribute(string invokenKey)
+        {
+            this.InvokenKey = invokenKey;
+        }
+
+        /// <summary>
         /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
         /// </summary>
         public bool MethodInvoke { get; }

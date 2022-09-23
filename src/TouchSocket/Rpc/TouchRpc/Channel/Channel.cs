@@ -31,11 +31,9 @@ namespace TouchSocket.Rpc.TouchRpc
         private ByteBlock m_currentByteBlock;
 
         private IntelligentDataQueue<ChannelData> m_dataQueue;
-
         private int m_id;
 
         private string m_lastOperationMes;
-
         private AutoResetEvent m_moveWaitHandle;
         private ChannelStatus m_status;
         private string m_targetClientID;
@@ -475,10 +473,6 @@ namespace TouchSocket.Rpc.TouchRpc
                 byteBlock.Write(this.m_id);
                 byteBlock.WriteBytesPackage(data, offset, length);
                 this.m_client.SocketSend(this.m_targetClientID == null ? TouchRpcUtility.P_101_DataOrder : TouchRpcUtility.P_111_DataOrder_2C, byteBlock.Buffer, 0, byteBlock.Len);
-            }
-            catch (System.Exception)
-            {
-                throw;
             }
             finally
             {

@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TouchSocket.Core.Converter;
+using TouchSocket.Core.Log;
 using TouchSocket.Core.Reflection;
 using TouchSocket.Sockets;
 
@@ -26,6 +27,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
     public abstract class WSCommandLinePlugin : WebSocketPluginBase
     {
         private readonly Dictionary<string, Method> pairs = new Dictionary<string, Method>();
+        private readonly ILog m_logger;
 
         /// <summary>
         /// 字符串转换器，默认支持基础类型和Json。可以自定义。
@@ -48,10 +50,13 @@ namespace TouchSocket.Http.WebSockets.Plugins
         }
 
         /// <summary>
-        /// 构造函数
+        /// WSCommandLinePlugin
         /// </summary>
-        public WSCommandLinePlugin()
+        /// <param name="logger"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        protected WSCommandLinePlugin(ILog logger)
         {
+            this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.Converter = new StringConverter();
             var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
             foreach (var item in ms)
@@ -75,42 +80,49 @@ namespace TouchSocket.Http.WebSockets.Plugins
                     if (strs.Length > 0 && this.pairs.TryGetValue(strs[0], out Method method))
                     {
                         var ps = method.Info.GetParameters();
-                        if (ps.Length == strs.Length - 1)
+                        object[] os = new object[ps.Length];
+                        int index = 0;
+                        for (int i = 0; i < ps.Length; i++)
                         {
-                            object[] os = new object[ps.Length];
-                            for (int i = 0; i < ps.Length; i++)
+                            if (ps[i].ParameterType.IsInterface && typeof(ITcpClientBase).IsAssignableFrom(ps[i].ParameterType))
                             {
-                                os[i] = this.Converter.ConvertFrom(strs[i + 1], ps[i].ParameterType);
+                                os[i] = client;
                             }
-                            e.Handled = true;
-
-                            try
+                            else
                             {
-                                object result = method.Invoke(this, os);
-                                if (method.HasReturn)
+                                os[i] = this.Converter.ConvertFrom(strs[index + 1], ps[i].ParameterType);
+                                index++;
+                            }
+                        }
+
+                        e.Handled = true;
+
+                        try
+                        {
+                            object result = method.Invoke(this, os);
+                            if (method.HasReturn)
+                            {
+                                if (client is HttpClient httpClient)
                                 {
-                                    if (client is HttpClient httpClient)
-                                    {
-                                        httpClient.SendWithWS(this.Converter.ConvertTo(result));
-                                    }
-                                    else if (client is HttpSocketClient httpSocketClient)
-                                    {
-                                        httpSocketClient.SendWithWS(this.Converter.ConvertTo(result));
-                                    }
+                                    httpClient.SendWithWS(this.Converter.ConvertTo(result));
+                                }
+                                else if (client is HttpSocketClient httpSocketClient)
+                                {
+                                    httpSocketClient.SendWithWS(this.Converter.ConvertTo(result));
                                 }
                             }
-                            catch (Exception ex)
+                        }
+                        catch (Exception ex)
+                        {
+                            if (this.ReturnException)
                             {
-                                if (this.ReturnException)
+                                if (client is HttpClient httpClient)
                                 {
-                                    if (client is HttpClient httpClient)
-                                    {
-                                        httpClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
-                                    }
-                                    else if (client is HttpSocketClient httpSocketClient)
-                                    {
-                                        httpSocketClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
-                                    }
+                                    httpClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
+                                }
+                                else if (client is HttpSocketClient httpSocketClient)
+                                {
+                                    httpSocketClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
                                 }
                             }
                         }
@@ -118,7 +130,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
                 }
                 catch (Exception ex)
                 {
-                    this.Logger.Log(TouchSocket.Core.Log.LogType.Error, this, ex.Message, ex);
+                    this.m_logger.Log(Core.Log.LogType.Error, this, ex.Message, ex);
                 }
             }
 

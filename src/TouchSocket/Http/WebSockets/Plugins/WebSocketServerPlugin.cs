@@ -37,7 +37,18 @@ namespace TouchSocket.Http.WebSockets
         public static readonly DependencyProperty WebSocketVersionProperty =
             DependencyProperty.Register("WebSocketVersion", typeof(string), typeof(WebSocketServerPlugin), "13");
 
+        private readonly IPluginsManager m_pluginsManager;
+
         private string m_wSUrl = "/ws";
+
+        /// <summary>
+        /// WebSocketServerPlugin
+        /// </summary>
+        /// <param name="pluginsManager"></param>
+        public WebSocketServerPlugin(IPluginsManager pluginsManager)
+        {
+            this.m_pluginsManager = pluginsManager ?? throw new ArgumentNullException(nameof(pluginsManager));
+        }
 
         /// <summary>
         /// 是否默认处理Close报文。
@@ -122,12 +133,12 @@ namespace TouchSocket.Http.WebSockets
             if (e.DataFrame.Opcode == WSDataType.Close && this.AutoClose)
             {
                 string msg = e.DataFrame.PayloadData?.ToString();
-                this.PluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnClosing), client, new MsgEventArgs() { Message = msg });
+                this.m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnClosing), client, new MsgEventArgs() { Message = msg });
                 client.Close(msg);
                 return;
             }
 
-            if (this.PluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandleWSDataFrame), client, e))
+            if (this.m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandleWSDataFrame), client, e))
             {
                 return;
             }

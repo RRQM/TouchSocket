@@ -112,11 +112,10 @@ namespace TouchSocket.Http.WebSockets
         /// 计算Base64值
         /// </summary>
         /// <param name="str"></param>
-        /// <param name="encoding"></param>
         /// <returns></returns>
-        public static string CalculateBase64Key(string str, Encoding encoding)
+        public static string CalculateBase64Key(string str)
         {
-            return (str + acceptMask).ToSha1(encoding).ToBase64();
+            return (str + acceptMask).ToSha1(Encoding.UTF8).ToBase64();
         }
 
         /// <summary>
@@ -206,7 +205,7 @@ namespace TouchSocket.Http.WebSockets
             response.StatusMessage = "switching protocols";
             response.SetHeader(HttpHeaders.Connection, "upgrade");
             response.SetHeader(HttpHeaders.Upgrade, "websocket");
-            response.SetHeader("sec-websocket-accept", CalculateBase64Key(secWebSocketKey, request.Encoding));
+            response.SetHeader("sec-websocket-accept", CalculateBase64Key(secWebSocketKey));
             return true;
         }
     }

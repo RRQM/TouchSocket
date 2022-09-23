@@ -146,6 +146,7 @@ namespace TouchSocket.Rpc.TouchRpc.Plugins
             this.m_handshaking?.Invoke((TClient)client, e);
         }
 
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>

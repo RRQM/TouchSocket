@@ -28,7 +28,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 断开连接
         /// </summary>
-        event ClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
+        ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get; set; }
 
         /// <summary>
         /// 缓存池大小

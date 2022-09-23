@@ -35,7 +35,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当收到数据时
         /// </summary>
-        public event UdpReceivedEventHandler Received;
+        public UdpReceivedEventHandler Received { get; set; }
 
         /// <summary>
         /// <inheritdoc/>

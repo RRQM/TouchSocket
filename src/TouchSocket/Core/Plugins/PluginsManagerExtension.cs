@@ -26,6 +26,7 @@ namespace TouchSocket.Core.Plugins
         /// <returns>插件类型实例</returns>
         public static TPlugin Add<TPlugin>(this IPluginsManager pluginsManager) where TPlugin : class, IPlugin
         {
+            pluginsManager.Container.RegisterSingleton<TPlugin>();
             var obj = pluginsManager.Container.Resolve<TPlugin>();
             pluginsManager.Add(obj);
             return obj;
@@ -40,6 +41,7 @@ namespace TouchSocket.Core.Plugins
         /// <returns>插件类型实例</returns>
         public static TPlugin Add<TPlugin>(this IPluginsManager pluginsManager, params object[] ps) where TPlugin : class, IPlugin
         {
+            pluginsManager.Container.RegisterSingleton<TPlugin>();
             var obj = pluginsManager.Container.Resolve<TPlugin>(ps);
             pluginsManager.Add(obj);
             return obj;

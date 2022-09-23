@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using TouchSocket.Core.Dependency;
+using TouchSocket.Sockets.Plugins;
 
 namespace TouchSocket.Core.Plugins
 {
@@ -27,6 +28,7 @@ namespace TouchSocket.Core.Plugins
         /// <returns>插件类型实例</returns>
         public static TPlugin AddPlugin<TPlugin>(this IPluginObject plguinObject) where TPlugin : class, IPlugin
         {
+            plguinObject.Container.RegisterSingleton<TPlugin>();
             var obj = plguinObject.Container.Resolve<TPlugin>();
             AddPlugin(plguinObject, obj);
             return obj;
@@ -40,6 +42,7 @@ namespace TouchSocket.Core.Plugins
         /// <exception cref="ArgumentNullException"></exception>
         public static void AddPlugin(this IPluginObject plguinObject, IPlugin plugin)
         {
+            plguinObject.Container.RegisterSingleton(plugin);
             plguinObject.PluginsManager.Add(plugin);
         }
 

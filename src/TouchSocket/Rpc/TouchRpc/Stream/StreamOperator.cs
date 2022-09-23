@@ -27,11 +27,6 @@ namespace TouchSocket.Rpc.TouchRpc
         protected long completedLength;
 
         /// <summary>
-        /// 进度
-        /// </summary>
-        protected float progress;
-
-        /// <summary>
         /// 结果
         /// </summary>
         protected Result result;
@@ -42,6 +37,11 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 临时速度
         /// </summary>
         protected long speedTemp;
+
+        /// <summary>
+        /// 进度
+        /// </summary>
+        protected float progress;
 
         /// <summary>
         /// 已完成长度
@@ -74,6 +74,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public CancellationToken Token { get; set; }
 
+
         /// <summary>
         /// 从上次获取到此次获得的速度
         /// </summary>
@@ -89,7 +90,6 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             this.speedTemp += flow;
             this.completedLength += flow;
-            this.progress = (float)((double)this.completedLength / length);
         }
 
         /// <summary>

@@ -822,6 +822,7 @@ namespace TouchSocket.Rpc.TouchRpc
         #endregion RPC解析器
 
         #region 事件触发
+
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferStatusEventArgs.Result"/>属性值进行判断。
         /// </summary>
@@ -846,7 +847,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnHandshaked(VerifyOptionEventArgs e)
         {
-
+           
         }
 
         /// <summary>

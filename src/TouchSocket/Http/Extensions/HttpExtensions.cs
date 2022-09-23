@@ -50,7 +50,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static T FromJson<T>(this T httpRequest, string value) where T : HttpBase
         {
-            httpRequest.SetContent(httpRequest.Encoding.GetBytes(value));
+            httpRequest.SetContent(Encoding.UTF8.GetBytes(value));
             httpRequest.SetHeader(HttpHeaders.ContentType, "application/json;charset=UTF-8");
             return httpRequest;
         }
@@ -63,7 +63,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static T FromText<T>(this T httpRequest, string value) where T : HttpBase
         {
-            httpRequest.SetContent(httpRequest.Encoding.GetBytes(value));
+            httpRequest.SetContent(Encoding.UTF8.GetBytes(value));
             httpRequest.SetHeader(HttpHeaders.ContentType, "text/plain;charset=UTF-8");
             return httpRequest;
         }
@@ -76,7 +76,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static T FromXML<T>(this T httpRequest, string value) where T : HttpBase
         {
-            httpRequest.SetContent(httpRequest.Encoding.GetBytes(value));
+            httpRequest.SetContent(Encoding.UTF8.GetBytes(value));
             httpRequest.SetHeader(HttpHeaders.ContentType, "application/xml;charset=UTF-8");
             return httpRequest;
         }
@@ -92,7 +92,7 @@ namespace TouchSocket.Http
         {
             if (httpBase.TryGetContent(out byte[] data))
             {
-                return httpBase.Encoding.GetString(data);
+                return Encoding.UTF8.GetString(data);
             }
             throw new Exception("获取数据体错误。");
         }
@@ -130,12 +130,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static T SetContent<T>(this T httpBase, string content, Encoding encoding = null) where T : HttpBase
         {
-            //初始化内容
-            if (encoding != null)
-            {
-                httpBase.Encoding = encoding;
-            }
-            httpBase.SetContent(httpBase.Encoding.GetBytes(content));
+            httpBase.SetContent(Encoding.UTF8.GetBytes(content));
             return httpBase;
         }
 

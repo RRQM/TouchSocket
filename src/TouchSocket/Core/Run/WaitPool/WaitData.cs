@@ -154,6 +154,35 @@ namespace TouchSocket.Core.Run
         }
 
         /// <summary>
+        /// 等待指定毫秒
+        /// </summary>
+        /// <param name="millisecond"></param>
+        public async Task<WaitDataStatus> WaitAsync(int millisecond)
+        {
+            if (this.DelayModel)
+            {
+                for (int i = 0; i < millisecond / 10.0; i++)
+                {
+                    if (this.m_status != WaitDataStatus.Default)
+                    {
+                        return this.m_status;
+                    }
+                    await Task.Delay(10);
+                }
+                this.m_status = WaitDataStatus.Overtime;
+                return this.m_status;
+            }
+            else
+            {
+                if (!this.m_waitHandle.WaitOne(millisecond))
+                {
+                    this.m_status = WaitDataStatus.Overtime;
+                }
+                return this.m_status;
+            }
+        }
+
+        /// <summary>
         /// 释放
         /// </summary>
         /// <param name="disposing"></param>

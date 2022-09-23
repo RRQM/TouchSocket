@@ -25,6 +25,7 @@ namespace TouchSocket.Core
         public static readonly Type byteType = typeof(byte);
         public static readonly Type sbyteType = typeof(sbyte);
         public static readonly Type shortType = typeof(short);
+        public static readonly Type objType = typeof(object);
         public static readonly Type ushortType = typeof(ushort);
         public static readonly Type intType = typeof(int);
         public static readonly Type uintType = typeof(uint);

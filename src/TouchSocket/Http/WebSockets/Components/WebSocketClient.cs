@@ -27,7 +27,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 收到WebSocket数据
         /// </summary>
-        public event WSDataFrameEventHandler<WebSocketClient> Received;
+        public WSDataFrameEventHandler<WebSocketClient> Received { get; set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -81,7 +81,7 @@ namespace TouchSocket.Http.WebSockets
                     throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
                 }
                 string accept = response.GetHeader("sec-websocket-accept").Trim();
-                if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key, Encoding.UTF8).Trim(), StringComparison.OrdinalIgnoreCase))
+                if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
                 {
                     this.MainSocket.SafeDispose();
                     throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
@@ -114,12 +114,12 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 表示在即将握手连接时。
         /// </summary>
-        public event HttpContextEventHandler<WebSocketClientBase> Handshaking;
+        public HttpContextEventHandler<WebSocketClientBase> Handshaking { get; set; }
 
         /// <summary>
         /// 表示完成握手后。
         /// </summary>
-        public event HttpContextEventHandler<WebSocketClientBase> Handshaked;
+        public HttpContextEventHandler<WebSocketClientBase> Handshaked { get; set; }
 
         /// <summary>
         /// 表示在即将握手连接时。

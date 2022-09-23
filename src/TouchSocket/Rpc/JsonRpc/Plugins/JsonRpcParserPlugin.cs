@@ -20,7 +20,8 @@ using TouchSocket.Core.Extensions;
 using TouchSocket.Core.XREF.Newtonsoft.Json;
 using TouchSocket.Core.XREF.Newtonsoft.Json.Linq;
 using TouchSocket.Http;
-using TouchSocket.Http.Plugins;
+using TouchSocket.Http.WebSockets;
+using TouchSocket.Http.WebSockets.Plugins;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.JsonRpc
@@ -28,7 +29,7 @@ namespace TouchSocket.Rpc.JsonRpc
     /// <summary>
     /// JsonRpcParser解析器插件
     /// </summary>
-    public class JsonRpcParserPlugin : HttpPluginBase, IRpcParser
+    public class JsonRpcParserPlugin : WebSocketPluginBase, IRpcParser
     {
         private readonly ActionMap m_actionMap;
         private readonly WaitCallback m_invokeWaitCallback;
@@ -141,6 +142,29 @@ namespace TouchSocket.Rpc.JsonRpc
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
+        protected override void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
+        {
+            if (e.DataFrame.Opcode == WSDataType.Text)
+            {
+                string jsonRpcStr = e.DataFrame.ToText();
+                if (jsonRpcStr.Contains("jsonrpc"))
+                {
+                    e.Handled = true;
+                    ThreadPool.QueueUserWorkItem(this.m_invokeWaitCallback, new JsonRpcCallContext()
+                    {
+                        Caller = client,
+                        JRPT = JRPT.Websocket,
+                        JsonString = jsonRpcStr
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
         protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
         {
             if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
@@ -166,14 +190,17 @@ namespace TouchSocket.Rpc.JsonRpc
         {
             if (client.Protocol == JsonRpcConfigExtensions.TcpJsonRpc)
             {
-                e.Handled = true;
-
-                ThreadPool.QueueUserWorkItem(this.m_invokeWaitCallback, new JsonRpcCallContext()
+                string jsonRpcStr = e.ByteBlock.ToString();
+                if (jsonRpcStr.Contains("jsonrpc"))
                 {
-                    Caller = client,
-                    JRPT = JRPT.Tcp,
-                    JsonString = e.ByteBlock.ToString()
-                });
+                    e.Handled = true;
+                    ThreadPool.QueueUserWorkItem(this.m_invokeWaitCallback, new JsonRpcCallContext()
+                    {
+                        Caller = client,
+                        JRPT = JRPT.Tcp,
+                        JsonString = e.ByteBlock.ToString()
+                    });
+                }
             }
             base.OnReceivedData(client, e);
         }
@@ -385,12 +412,16 @@ namespace TouchSocket.Rpc.JsonRpc
                 }
 
                 ITcpClientBase client = (ITcpClientBase)callContext.Caller;
-                if (client.Protocol == Protocol.Http)
+                if (callContext.JRPT == JRPT.Http)
                 {
                     HttpResponse httpResponse = new HttpResponse();
                     httpResponse.FromJson(jobject.ToString(Formatting.None));
                     httpResponse.Build(responseByteBlock);
                     client.DefaultSend(responseByteBlock);
+                }
+                else if (callContext.JRPT == JRPT.Websocket)
+                {
+                    ((HttpSocketClient)client).SendWithWS(jobject.ToString(Formatting.None));
                 }
                 else
                 {

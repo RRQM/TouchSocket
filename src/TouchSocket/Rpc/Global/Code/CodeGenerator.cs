@@ -344,6 +344,26 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
+        /// 生成代理代码
+        /// </summary>
+        /// <param name="namespace"></param>
+        /// <param name="serverTypes"></param>
+        /// <param name="attributeTypes"></param>
+        /// <returns></returns>
+        public static string GetProxyCodes(string @namespace,Type[] serverTypes, Type[] attributeTypes)
+        {
+            List< ServerCellCode > serverCellCodeList = new List< ServerCellCode >();
+            foreach (var item in serverTypes)
+            {
+                foreach (var item1 in attributeTypes)
+                {
+                    serverCellCodeList.Add(Generator(item,item1));
+                }
+            }
+            return ConvertToCode(@namespace,serverCellCodeList.ToArray());
+        }
+
+        /// <summary>
         /// 从类型获取函数实例
         /// </summary>
         /// <param name="serverType"></param>

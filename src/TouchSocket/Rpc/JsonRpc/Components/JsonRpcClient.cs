@@ -11,16 +11,23 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Extensions;
+using TouchSocket.Core.Log;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Core.Run;
 using TouchSocket.Core.XREF.Newtonsoft.Json;
 using TouchSocket.Core.XREF.Newtonsoft.Json.Linq;
 using TouchSocket.Http;
+using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 
@@ -29,11 +36,10 @@ namespace TouchSocket.Rpc.JsonRpc
     /// <summary>
     /// JsonRpc客户端
     /// </summary>
-    public class JsonRpcClient : TcpClientBase, IJsonRpcClient
+    public class JsonRpcClient : DisposableObject, ITcpClient, IJsonRpcClient
     {
-        private JRPT m_jrpt;
-
         private readonly WaitHandlePool<IWaitResult> m_waitHandle;
+        private JRPT m_jrpt;
 
         /// <summary>
         /// 构造函数
@@ -46,7 +52,57 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
+        public int BufferLength => this.Client.BufferLength;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool CanSend => this.Client.CanSend;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool CanSetDataHandlingAdapter => this.Client.CanSetDataHandlingAdapter;
+
+        /// <summary>
+        /// 内部客户端
+        /// </summary>
+        public ITcpClient Client { get; private set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public TouchSocketConfig Config => this.Client.Config;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public MessageEventHandler<ITcpClient> Connected { get => this.Client.Connected; set => this.Client.Connected = value; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ClientConnectingEventHandler<ITcpClient> Connecting { get => this.Client.Connecting; set => this.Client.Connecting = value; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public IContainer Container => ((IClient)this.Client).Container;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DataHandlingAdapter DataHandlingAdapter => this.Client.DataHandlingAdapter;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get => this.Client.Disconnected; set => this.Client.Disconnected = value; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public string IP => this.Client.IP;
 
         /// <summary>
         /// 协议类型
@@ -56,11 +112,325 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="config"></param>
-        protected override void LoadConfig(TouchSocketConfig config)
+        public DateTime LastReceivedTime => this.Client.LastReceivedTime;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DateTime LastSendTime => this.Client.LastSendTime;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ILog Logger => this.Client.Logger;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Socket MainSocket => this.Client.MainSocket;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public int MaxPackageSize => this.Client.MaxPackageSize;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Func<ByteBlock, bool> OnHandleRawBuffer { get => this.Client.OnHandleRawBuffer; set => this.Client.OnHandleRawBuffer = value; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get => this.Client.OnHandleReceivedData; set => this.Client.OnHandleReceivedData = value; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool Online => this.Client.Online;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public IPluginsManager PluginsManager => this.Client.PluginsManager;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public int Port => this.Client.Port;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Protocol Protocol { get => this.Client.Protocol; set => this.Client.Protocol = value; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ReceiveType ReceiveType => this.Client.ReceiveType;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public IPHost RemoteIPHost => this.Client.RemoteIPHost;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool UsePlugin => this.Client.UsePlugin;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public bool UseSsl => this.Client.UseSsl;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Close()
+        {
+            this.Client.Close();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Close(string msg)
+        {
+            this.Client.Close(msg);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ITcpClient Connect(int timeout = 5000)
+        {
+            this.Client.OnHandleReceivedData = this.HandleReceivedData;
+            this.Client.Connect(timeout);
+            return this;
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Task<ITcpClient> ConnectAsync(int timeout = 5000)
+        {
+            return Task.Run(() =>
+            {
+                return this.Connect(timeout);
+            });
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void DefaultSend(byte[] buffer, int offset, int length)
+        {
+            this.Client.DefaultSend(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void DefaultSendAsync(byte[] buffer, int offset, int length)
+        {
+            this.Client.DefaultSendAsync(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public Stream GetStream()
+        {
+            return this.Client.GetStream();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public object GetValue(DependencyProperty dp)
+        {
+            return this.Client.GetValue(dp);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public T GetValue<T>(DependencyProperty dp)
+        {
+            return this.Client.GetValue<T>(dp);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Send(byte[] buffer, int offset, int length)
+        {
+            this.Client.Send(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Send(IRequestInfo requestInfo)
+        {
+            this.Client.Send(requestInfo);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Send(IList<ArraySegment<byte>> transferBytes)
+        {
+            this.Client.Send(transferBytes);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void SendAsync(byte[] buffer, int offset, int length)
+        {
+            this.Client.SendAsync(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void SendAsync(IRequestInfo requestInfo)
+        {
+            this.Client.SendAsync(requestInfo);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void SendAsync(IList<ArraySegment<byte>> transferBytes)
+        {
+            this.Client.SendAsync(transferBytes);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void SetDataHandlingAdapter(DataHandlingAdapter adapter)
+        {
+            this.Client.SetDataHandlingAdapter(adapter);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ITcpClient Setup(TouchSocketConfig config)
         {
             this.m_jrpt = config.GetValue<JRPT>(JsonRpcConfigExtensions.JRPTProperty);
-            base.LoadConfig(config);
+            switch (this.m_jrpt)
+            {
+                case JRPT.Http:
+                    this.Client ??= new HttpClient();
+                    break;
+
+                case JRPT.Websocket:
+                    this.Client ??= new WebSocketClient();
+                    break;
+
+                case JRPT.Tcp:
+                default:
+                    this.Client ??= new Sockets.TcpClient();
+                    break;
+            }
+            return this.Client.Setup(config);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public ITcpClient Setup(string ipHost)
+        {
+            TouchSocketConfig config = new TouchSocketConfig();
+            config.SetRemoteIPHost(new IPHost(ipHost));
+            return this.Setup(config);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DependencyObject SetValue(DependencyProperty dp, object value)
+        {
+            return this.Client.SetValue(dp, value);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Shutdown(SocketShutdown how)
+        {
+            this.Client.Shutdown(how);
+        }
+
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <param name="requestInfo"></param>
+        private bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            switch (this.m_jrpt)
+            {
+                case JRPT.Http:
+                    {
+                        HttpResponse httpResponse = (HttpResponse)requestInfo;
+                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(httpResponse.GetBody(), typeof(JsonResponseContext));
+                        if (responseContext != null)
+                        {
+                            JsonRpcWaitResult waitContext = new JsonRpcWaitResult();
+                            waitContext.Status = 1;
+                            waitContext.Sign = long.Parse(responseContext.id);
+                            waitContext.error = responseContext.error;
+                            waitContext.Return = responseContext.result;
+                            this.m_waitHandle.SetRun(waitContext);
+                        }
+                        break;
+                    }
+                case JRPT.Websocket:
+                    {
+                        if (requestInfo is WSDataFrame dataFrame)
+                        {
+                            JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(dataFrame.ToText(), typeof(JsonResponseContext));
+                            if (responseContext != null)
+                            {
+                                JsonRpcWaitResult waitContext = new JsonRpcWaitResult();
+                                waitContext.Status = 1;
+                                waitContext.Sign = long.Parse(responseContext.id);
+                                waitContext.error = responseContext.error;
+                                waitContext.Return = responseContext.result;
+                                this.m_waitHandle.SetRun(waitContext);
+                            }
+                        }
+                        break;
+                    }
+                case JRPT.Tcp:
+                default:
+                    {
+                        string jsonString = byteBlock.ToString();
+                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(jsonString, typeof(JsonResponseContext));
+                        if (responseContext != null)
+                        {
+                            JsonRpcWaitResult waitContext = new JsonRpcWaitResult();
+                            waitContext.Status = 1;
+                            waitContext.Sign = long.Parse(responseContext.id);
+                            waitContext.error = responseContext.error;
+                            waitContext.Return = responseContext.result;
+                            this.m_waitHandle.SetRun(waitContext);
+                        }
+                        break;
+                    }
+            }
+            return true;
         }
 
         #region RPC调用
@@ -118,8 +488,14 @@ namespace TouchSocket.Rpc.JsonRpc
                             request.SetUrl(this.RemoteIPHost.GetUrlPath());
                             request.FromJson(jobject.ToString(Formatting.None));
                             request.Build(byteBlock);
+                            break;
                         }
-                        break;
+                    case JRPT.Websocket:
+                        {
+                            ((WebSocketClient)this.Client).SendWithWS(jobject.ToString(Formatting.None));
+                            break;
+                        }
+                        
                 }
                 switch (invokeOption.FeedbackType)
                 {
@@ -210,6 +586,11 @@ namespace TouchSocket.Rpc.JsonRpc
                     case JRPT.Tcp:
                         {
                             byteBlock.Write(Encoding.UTF8.GetBytes(jobject.ToString(Formatting.None)));
+                            break;
+                        }
+                    case JRPT.Websocket:
+                        {
+                            ((WebSocketClient)this.Client).SendWithWS(jobject.ToString(Formatting.None));
                             break;
                         }
                     case JRPT.Http:
@@ -324,68 +705,5 @@ namespace TouchSocket.Rpc.JsonRpc
         }
 
         #endregion RPC调用
-
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            switch (this.m_jrpt)
-            {
-                case JRPT.Tcp:
-                    {
-                        string jsonString = byteBlock.ToString();
-                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(jsonString, typeof(JsonResponseContext));
-                        if (responseContext != null)
-                        {
-                            JsonRpcWaitResult waitContext = new JsonRpcWaitResult();
-                            waitContext.Status = 1;
-                            waitContext.Sign = long.Parse(responseContext.id);
-                            waitContext.error = responseContext.error;
-                            waitContext.Return = responseContext.result;
-                            this.m_waitHandle.SetRun(waitContext);
-                        }
-                        break;
-                    }
-
-                case JRPT.Http:
-                    {
-                        HttpResponse httpResponse = (HttpResponse)requestInfo;
-                        JsonResponseContext responseContext = (JsonResponseContext)JsonConvert.DeserializeObject(httpResponse.GetBody(), typeof(JsonResponseContext));
-                        if (responseContext != null)
-                        {
-                            JsonRpcWaitResult waitContext = new JsonRpcWaitResult();
-                            waitContext.Status = 1;
-                            waitContext.Sign = long.Parse(responseContext.id);
-                            waitContext.error = responseContext.error;
-                            waitContext.Return = responseContext.result;
-                            this.m_waitHandle.SetRun(waitContext);
-                        }
-                        break;
-                    }
-            }
-            base.HandleReceivedData(byteBlock, requestInfo);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnConnecting(ClientConnectingEventArgs e)
-        {
-            switch (this.m_jrpt)
-            {
-                case JRPT.Tcp:
-                    this.SetDataHandlingAdapter(new TerminatorPackageAdapter("\r\n"));
-                    break;
-
-                case JRPT.Http:
-                    this.SetDataHandlingAdapter(new HttpClientDataHandlingAdapter());
-                    break;
-            }
-            base.OnConnecting(e);
-        }
     }
 }

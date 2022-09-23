@@ -133,22 +133,22 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        public event TouchSocketEventHandler<TClient> Connected;
+        public TouchSocketEventHandler<TClient> Connected { get; set; }
 
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        public event ClientOperationEventHandler<TClient> Connecting;
+        public ClientOperationEventHandler<TClient> Connecting { get; set; }
 
         /// <summary>
         /// 有用户断开连接
         /// </summary>
-        public event ClientDisconnectedEventHandler<TClient> Disconnected;
+        public ClientDisconnectedEventHandler<TClient> Disconnected { get; set; }
 
         /// <summary>
         /// 当客户端ID被修改时触发。
         /// </summary>
-        public event IDChangedEventHandler<TClient> IDChanged;
+        public IDChangedEventHandler<TClient> IDChanged { get; set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -759,7 +759,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 处理数据
         /// </summary>
-        public event ReceivedEventHandler<SocketClient> Received;
+        public ReceivedEventHandler<SocketClient> Received { get; set; }
 
         /// <summary>
         /// <inheritdoc/>

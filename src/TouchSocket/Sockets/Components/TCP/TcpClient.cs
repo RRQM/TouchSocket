@@ -37,7 +37,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 接收到数据
         /// </summary>
-        public event ReceivedEventHandler<TcpClient> Received;
+        public  ReceivedEventHandler<TcpClient> Received { get; set; }
 
         /// <summary>
         /// 接收数据
@@ -85,17 +85,17 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 成功连接到服务器
         /// </summary>
-        public event MessageEventHandler<ITcpClient> Connected;
+        public MessageEventHandler<ITcpClient> Connected { get; set; }
 
         /// <summary>
         /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
         /// </summary>
-        public event ClientConnectingEventHandler<ITcpClient> Connecting;
+        public ClientConnectingEventHandler<ITcpClient> Connecting { get; set; }
 
         /// <summary>
         /// 断开连接。在客户端未设置连接状态时，不会触发
         /// </summary>
-        public event ClientDisconnectedEventHandler<ITcpClientBase> Disconnected;
+        public ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get; set; }
 
         private void PrivateOnConnected(MsgEventArgs e)
         {

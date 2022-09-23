@@ -24,17 +24,17 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 用户连接完成
         /// </summary>
-        event TouchSocketEventHandler<TClient> Connected;
+        TouchSocketEventHandler<TClient> Connected { get; set; }
 
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        event ClientOperationEventHandler<TClient> Connecting;
+        ClientOperationEventHandler<TClient> Connecting { get; set; }
 
         /// <summary>
         /// 有用户断开连接
         /// </summary>
-        event ClientDisconnectedEventHandler<TClient> Disconnected;
+        ClientDisconnectedEventHandler<TClient> Disconnected { get; set; }
 
         /// <summary>
         /// 尝试获取TClient
