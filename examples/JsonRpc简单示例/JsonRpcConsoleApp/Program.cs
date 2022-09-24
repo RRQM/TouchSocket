@@ -19,6 +19,35 @@ namespace JsonRpcConsoleApp
 {
     internal class Program
     {
+        //1.完成了JSONRPC 的基本调用方法
+        //2.JSONRPC 服务端和客户端的创建
+        //3.服务端进行主动通知客户端
+        //4.客户端处理服务端推送的自定义消息处理
+        //5.[JsonRpc(true)]特性使用 标记为true 表示直接使用方法名称，否则使用明明空间+类名+方法名 全小写
+        //6.RPC上下文获取。通过上下文进行自定义消息推送
+        private static void Main(string[] args)
+        {
+            //{"jsonrpc": "2.0", "method": "testjsonrpc", "params":"TouchSocket", "id": 1}
+
+            //此处是生成代理文件，你可以将它复制到你的客户端项目中编译。
+            File.WriteAllText("../../../JsonRpcProxy.cs", CodeGenerator.GetProxyCodes("JsonRpcProxy",
+                new Type[] { typeof(JsonRpcServer) }, new Type[] { typeof(JsonRpcAttribute) }));
+
+            Console.WriteLine("代理文件已经写入到当前项目。");
+
+            CreateTcpJsonRpcParser(7705);
+            CreateHTTPJsonRpcParser(7706);
+
+
+            JsonRpcClientInvokeByTcp();
+            JsonRpcClientInvokeByHttp();
+            JsonRpcClientInvokeByWebsocket();
+
+            Console.WriteLine("请按任意键退出");
+
+            Console.ReadKey();
+        }
+
         private static void CreateHTTPJsonRpcParser(int port)
         {
             HttpService service = new HttpService();
@@ -146,37 +175,9 @@ namespace JsonRpcConsoleApp
             JObject newObj = jsonRpcClient.TestJObject(obj);
             Console.WriteLine($"Websocket返回结果:{newObj}");
         }
-
-        //JSONRPC 通讯基础示例 TPC和HTTP 未来考虑扩展升级WebSocket
-        //1.完成了JSONRPC 的基本调用方法
-        //2.JSONRPC 服务端和客户端的创建
-        //3.服务端进行主动通知客户端
-        //4.客户端处理服务端推送的自定义消息处理
-        //5.[JsonRpc(true)]特性使用 标记为true 表示直接使用方法名称，否则使用明明空间+类名+方法名 全小写
-        //6.RPC上下文获取。通过上下文进行自定义消息推送
-        private static void Main(string[] args)
-        {
-            //此处是生成代理文件，你可以将它复制到你的客户端项目中编译。
-            File.WriteAllText("../../../JsonRpcProxy.cs", CodeGenerator.GetProxyCodes("JsonRpcProxy",
-                new Type[] { typeof(JsonRpcServer) }, new Type[] { typeof(JsonRpcAttribute) }));
-
-            Console.WriteLine("代理文件已经写入到当前项目。");
-
-            CreateTcpJsonRpcParser(7705);
-            CreateHTTPJsonRpcParser(7706);
-
-
-            JsonRpcClientInvokeByTcp();
-            JsonRpcClientInvokeByHttp();
-            JsonRpcClientInvokeByWebsocket();
-
-            Console.WriteLine("请按任意键退出");
-
-            Console.ReadKey();
-        }
     }
 
-    public class JsonRpcServer : RpcServer
+    public class JsonRpcServer : TransientRpcServer
     {
         /// <summary>
         /// 使用调用上下文。
@@ -229,6 +230,10 @@ namespace JsonRpcConsoleApp
         [JsonRpc(true)]
         public string TestJsonRpc1(string str)
         {
+            if (this.CallContext is IJsonRpcCallContext context)
+            {
+
+            }
             return "RRQM" + str;
         }
     }
