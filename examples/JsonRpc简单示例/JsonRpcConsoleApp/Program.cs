@@ -61,8 +61,8 @@ namespace JsonRpcConsoleApp
                  })
                  .ConfigurePlugins(a => 
                  {
-                     a.Add<WebSocketServerPlugin>()
-                     .SetWSUrl("/ws");//启用websocket，使用/ws路由连接。
+                     a.UseWebSocket()//启用websocket。
+                     .SetWSUrl("/ws");//使用/ws路由连接。
 
                      a.Add<JsonRpcParserPlugin>()
                      .SetJsonRpcUrl("/jsonRpc");
