@@ -35,40 +35,30 @@ namespace ServiceConsoleApp
                 {
                     a.SetSingletonLogger<ConsoleLogger>();
                 })
+                .ConfigureRpcStore(a => 
+                {
+                    a.RegisterServer<MyServer>();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseWebSocket()//添加WebSocket功能
+                        .SetWSUrl("/ws");
+                    a.Add<MyWebSocketPlug>();//添加WebSocket业务数据接收插件
+                    a.Add<MyWebSocketCommand>();//添加WebSocket快捷实现，常规WS客户端发送文本“Add 10 20”即可得到30。
+                    a.Add<XmlRpcParserPlugin>().SetXmlRpcUrl("/xmlrpc");
+                    a.Add<JsonRpcParserPlugin>().SetJsonRpcUrl("/jsonrpc");
+                    a.Add<WebApiParserPlugin>();
+                })
                 .BuildWithHttpTouchRpcService();
 
             service.Logger.Info("Http服务器已启动");
-
-            service.AddPlugin<WebSocketServerPlugin>().//添加WebSocket功能
-                    SetWSUrl("/ws");
             service.Logger.Info($"WS插件已加载，使用 ws://127.0.0.1:{port}/ws 连接");
-
-            service.AddPlugin<MyWebSocketPlug>();//添加WebSocket业务数据接收插件
-            service.AddPlugin<MyWebSocketCommand>();//添加WebSocket快捷实现，常规WS客户端发送文本“Add 10 20”即可得到30。
             service.Logger.Info("WS命令行插件已加载，使用WS发送文本“Add 10 20”获取答案");
 
-            IRpcParser jsonRpcParser = service.AddPlugin<JsonRpcParserPlugin>()
-                 .SetJsonRpcUrl("/jsonrpc");
             service.Logger.Info($"jsonrpc插件已加载，使用 Http://127.0.0.1:{port}/jsonrpc +JsonRpc规范调用");
-
-            IRpcParser xmlRpcParser = service.AddPlugin<XmlRpcParserPlugin>()
-                .SetXmlRpcUrl("/xmlrpc");
-            service.Logger.Info($"jsonrpc插件已加载，使用 Http://127.0.0.1:{port}/xmlrpc +XmlRpc规范调用");
-
-            IRpcParser webApiParser = service.AddPlugin<WebApiParserPlugin>();
+            service.Logger.Info($"xmlrpc插件已加载，使用 Http://127.0.0.1:{port}/xmlrpc +XmlRpc规范调用");
             service.Logger.Info("WebApi插件已加载");
-
-            RpcStore rpcStore = new RpcStore(new TouchSocket.Core.Dependency.Container());
-            rpcStore.AddRpcParser("httpTouchRpcService", service);
-            rpcStore.AddRpcParser("jsonRpcParser", jsonRpcParser);
-            rpcStore.AddRpcParser("xmlRpcParser", xmlRpcParser);
-            rpcStore.AddRpcParser("webApiParser", webApiParser);
-            rpcStore.RegisterServer<MyServer>();
             service.Logger.Info("RPC注册完成。");
-
-            //rpcStore.ShareProxy(new IPHost(8848));
-            //rpcStore.ProxyUrl = "/proxy";
-            //service.Logger.Message("RPC代理文件已分享，使用 Http://127.0.0.1:8848/proxy?proxy=all 获取");
 
             RegisterConsul(port);
             service.Logger.Info("Consul已成功注册");
