@@ -31,7 +31,7 @@ namespace WebSocketConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add<WebSocketServerPlugin>()//添加WebSocket功能
+                    a.UseWebSocket()//添加WebSocket功能
                            .SetWSUrl("/ws")
                            .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
                     a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
