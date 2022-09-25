@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Core.Config;
+using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -13,6 +15,14 @@ namespace WebApiServerApp
     {
         private static void Main(string[] args)
         {
+            try
+            {
+                Enterprise.ForTest();
+            }
+            catch (Exception)
+            {
+
+            }
             WebApiParserPlugin webApiParser=null;
             HttpService service = new HttpService();
             service.Setup(new TouchSocketConfig()
@@ -39,6 +49,12 @@ namespace WebApiServerApp
 
     public class Server : RpcServer
     {
+        private readonly ILog m_logger;
+
+        public Server(ILog logger)
+        {
+            this.m_logger = logger;
+        }
         [Origin(AllowOrigin ="*")]//跨域设置
         [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
         [Router("[api]/[action]")]//此路由会以"/Server/Sum"实现
@@ -67,6 +83,22 @@ namespace WebApiServerApp
                 return Task.FromResult("ok");
             }
             return Task.FromResult("id不正确。");
+        }
+
+        /// <summary>
+        /// 使用调用上下文，获取实际请求体。
+        /// </summary>
+        /// <param name="callContext"></param>
+        [WebApi(HttpMethodType.POST, MethodFlags = MethodFlags.IncludeCallContext)]
+        [Router("[api]/[action]")]
+        public Task<string> PostContent(IWebApiCallContext callContext)
+        {
+            if (callContext.HttpContext.Request.TryGetContent(out byte[] content))
+            {
+                this.m_logger.Info($"共计：{content.Length}");
+            }
+          
+            return Task.FromResult("ok");
         }
     }
 
