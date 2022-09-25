@@ -200,14 +200,19 @@ namespace TouchSocket.Rpc.WebApi
                 {
                     try
                     {
+                        int index;
                         ps = new object[methodInstance.Parameters.Length];
                         int i = 0;
                         if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                         {
                             ps[i] = callContext;
                             i++;
+                            index = methodInstance.Parameters.Length - 2;
                         }
-
+                        else
+                        {
+                            index = methodInstance.Parameters.Length - 1;
+                        }
                         if (e.Context.Request.Query == null)
                         {
                             for (; i < methodInstance.Parameters.Length - 1; i++)
@@ -230,8 +235,6 @@ namespace TouchSocket.Rpc.WebApi
                                 }
                             }
                         }
-
-                        int index = methodInstance.Parameters.Length - 1;
 
                         if (index >= 0)
                         {
