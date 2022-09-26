@@ -7,6 +7,6 @@
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="TouchSocketPro" Version="0.7.2" />
-    <PackageReference Include="TouchSocketPro.AspNetCore" Version="0.7.1" />
+    <PackageReference Include="TouchSocketPro.AspNetCore" Version="0.7.2" />
   </ItemGroup>
 </Project>
