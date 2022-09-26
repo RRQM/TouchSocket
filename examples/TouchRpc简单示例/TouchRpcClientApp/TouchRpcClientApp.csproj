@@ -8,6 +8,6 @@
     <Compile Include="..\TouchRpcServerApp\RpcProxy.cs" Link="RpcProxy.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="0.7.1" />
+    <PackageReference Include="TouchSocket" Version="0.7.2" />
   </ItemGroup>
 </Project>
