@@ -49,7 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection
             var config = new TouchSocketConfig()
                 .UseAspNetCoreContainer(service);
             configAction?.Invoke(config);
-            ITcpService tcpService = config.Container.Resolve<TcpService>();
+            ITcpService tcpService = new TcpService();
             tcpService.Setup(config)
                 .Start();
 

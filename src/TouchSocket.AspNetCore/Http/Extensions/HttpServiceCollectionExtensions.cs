@@ -51,7 +51,7 @@ namespace Microsoft.Extensions.DependencyInjection
             var config = new TouchSocketConfig()
                 .UseAspNetCoreContainer(service);
             configAction?.Invoke(config);
-            IHttpService tcpService = config.Container.Resolve<HttpService>();
+            IHttpService tcpService = new HttpService();
             tcpService.Setup(config)
                 .Start();
 
