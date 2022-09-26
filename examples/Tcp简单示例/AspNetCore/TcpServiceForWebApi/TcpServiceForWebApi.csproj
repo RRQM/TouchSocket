@@ -9,13 +9,4 @@
     <PackageReference Include="TouchSocketPro" Version="0.7.2" />
     <PackageReference Include="TouchSocketPro.AspNetCore" Version="0.7.1" />
   </ItemGroup>
-
-  <!--<ItemGroup>
-    <Reference Include="TouchSocketPro">
-      <HintPath>..\..\..\..\..\TouchSocketPro\TouchSocketPro\bin\Debug\net5\TouchSocketPro.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocketPro.AspNetCore">
-      <HintPath>..\..\..\..\..\TouchSocketPro\TouchSocketPro.AspNetCore\bin\Debug\net5\TouchSocketPro.AspNetCore.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
 </Project>
