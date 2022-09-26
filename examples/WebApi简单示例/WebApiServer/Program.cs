@@ -15,14 +15,6 @@ namespace WebApiServerApp
     {
         private static void Main(string[] args)
         {
-            try
-            {
-                Enterprise.ForTest();
-            }
-            catch (Exception)
-            {
-
-            }
             WebApiParserPlugin webApiParser=null;
             HttpService service = new HttpService();
             service.Setup(new TouchSocketConfig()
