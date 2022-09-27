@@ -67,7 +67,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 内容填充完成
         /// </summary>
-        public bool? ContentComplated { get; protected set; }
+        public bool? ContentComplated { get; protected set; } = null;
 
         /// <summary>
         /// int类型，内容长度
@@ -177,29 +177,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (this.ContentLength > 0)
-            {
-                if (!this.ContentComplated.HasValue)
-                {
-                    int r = base.Read(buffer, offset, count);
-
-                    if (r == 0)
-                    {
-                        if (this.ContentLength == this.m_readLen)
-                        {
-                            this.ContentComplated = true;
-                        }
-                        else
-                        {
-                            this.ContentComplated = false;
-                        }
-                    }
-                    m_readLen += r;
-
-                    return r;
-                }
-            }
-            return 0;
+           return base.Read(buffer, offset, count);
         }
 
         /// <summary>

@@ -25,12 +25,17 @@ namespace TouchSocket.Http
     /// </summary>
     public class HttpClientDataHandlingAdapter : NormalDataHandlingAdapter
     {
-        private static readonly byte[] m_rnCode = Encoding.UTF8.GetBytes("\r\n");
-
         /// <summary>
         /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="ByteBlock.Dispose"/>后，再置空；
         /// </summary>
         protected ByteBlock tempByteBlock;
+
+        private static readonly byte[] m_rnCode = Encoding.UTF8.GetBytes("\r\n");
+        private HttpResponse m_httpResponse;
+
+        private long m_surLen;
+
+        private Task m_task;
 
         /// <summary>
         /// <inheritdoc/>
@@ -58,9 +63,54 @@ namespace TouchSocket.Http
             }
         }
 
-        private HttpResponse m_httpResponse;
-        private long m_surLen;
-        private Task m_task;
+        private void Cache(ByteBlock byteBlock)
+        {
+            if (byteBlock.CanReadLen > 0)
+            {
+                this.tempByteBlock = new ByteBlock();
+                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                if (this.tempByteBlock.Len > this.MaxPackageSize)
+                {
+                    this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                }
+            }
+        }
+
+        private FilterResult ReadChunk(ByteBlock byteBlock)
+        {
+            int position = byteBlock.Pos;
+            int index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, m_rnCode);
+            if (index > 0)
+            {
+                int headerLength = index - byteBlock.Pos;
+                string hex = Encoding.ASCII.GetString(byteBlock.Buffer, byteBlock.Pos, headerLength - 1);
+                int count = hex.ByHexStringToInt32();
+                byteBlock.Pos += headerLength + 1;
+
+                if (count >= 0)
+                {
+                    if (count > byteBlock.CanReadLen)
+                    {
+                        byteBlock.Pos = position;
+                        return FilterResult.Cache;
+                    }
+
+                    this.m_httpResponse.InternalInput(byteBlock.Buffer, byteBlock.Pos, count);
+                    byteBlock.Pos += count;
+                    byteBlock.Pos += 2;
+                    return FilterResult.GoOn;
+                }
+                else
+                {
+                    byteBlock.Pos += 2;
+                    return FilterResult.Success;
+                }
+            }
+            else
+            {
+                return FilterResult.Cache;
+            }
+        }
 
         private void Single(ByteBlock byteBlock, bool dis)
         {
@@ -74,7 +124,7 @@ namespace TouchSocket.Http
                         if (this.m_httpResponse.ParsingHeader(byteBlock, byteBlock.CanReadLen))
                         {
                             byteBlock.Pos++;
-                            if (!this.m_httpResponse.IsChunk && this.m_httpResponse.ContentLength > byteBlock.CanReadLength)
+                            if (this.m_httpResponse.IsChunk || this.m_httpResponse.ContentLength > byteBlock.CanReadLength)
                             {
                                 this.m_surLen = this.m_httpResponse.ContentLength;
                                 this.m_task = EasyAction.TaskRun(this.m_httpResponse, (res) =>
@@ -152,55 +202,6 @@ namespace TouchSocket.Http
                 {
                     byteBlock.Dispose();
                 }
-            }
-        }
-
-        private void Cache(ByteBlock byteBlock)
-        {
-            if (byteBlock.CanReadLen > 0)
-            {
-                this.tempByteBlock = new ByteBlock();
-                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
-                if (this.tempByteBlock.Len > this.MaxPackageSize)
-                {
-                    this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
-                }
-            }
-        }
-
-        private FilterResult ReadChunk(ByteBlock byteBlock)
-        {
-            int position = byteBlock.Pos;
-            int index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, m_rnCode);
-            if (index > 0)
-            {
-                int headerLength = index - byteBlock.Pos;
-                string hex = Encoding.ASCII.GetString(byteBlock.Buffer, byteBlock.Pos, headerLength - 1);
-                int count = hex.ByHexStringToInt32();
-                byteBlock.Pos += headerLength + 1;
-
-                if (count > 0)
-                {
-                    if (count > byteBlock.CanReadLen)
-                    {
-                        byteBlock.Pos = position;
-                        return FilterResult.Cache;
-                    }
-
-                    this.m_httpResponse.InternalInput(byteBlock.Buffer, byteBlock.Pos, count);
-                    byteBlock.Pos += count;
-                    byteBlock.Pos += 2;
-                    return FilterResult.GoOn;
-                }
-                else
-                {
-                    byteBlock.Pos += 2;
-                    return FilterResult.Success;
-                }
-            }
-            else
-            {
-                return FilterResult.Cache;
             }
         }
     }
