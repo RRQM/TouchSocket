@@ -11,22 +11,20 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using TouchSocket.Sockets;
-
 namespace TouchSocket.Rpc
 {
 
     /// <summary>
     /// TransientRpcServer
     /// </summary>
-    public abstract class TransientRpcServer<T> : RpcServer, ITransientRpcServer where T : SocketClient
+    public abstract class TransientRpcServer<TCallContext> : RpcServer, ITransientRpcServer where TCallContext : ICallContext
     {
         ICallContext ITransientRpcServer.CallContext { get; set; }
 
         /// <summary>
         /// 调用上下文。
         /// </summary>
-        protected T CallContext => (((ITransientRpcServer)this).CallContext is T Transient)?Transient:null;
+        protected TCallContext CallContext => (((ITransientRpcServer)this).CallContext is TCallContext Transient)?Transient:default;
 
     }
 
