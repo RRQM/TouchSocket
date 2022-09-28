@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="RRQMSkin" Version="4.0.0" />
-    <PackageReference Include="TouchSocket" Version="0.7.2" />
+    <PackageReference Include="TouchSocket" Version="0.7.3" />
   </ItemGroup>
 
   <ItemGroup>
