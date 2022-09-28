@@ -46,8 +46,8 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="TouchSocket, Version=0.7.2.0, Culture=neutral, PublicKeyToken=aab106fd42dbd097, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\TouchSocket.0.7.2\lib\net45\TouchSocket.dll</HintPath>
+    <Reference Include="TouchSocket, Version=0.7.3.0, Culture=neutral, PublicKeyToken=aab106fd42dbd097, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\TouchSocket.0.7.3\lib\net45\TouchSocket.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
