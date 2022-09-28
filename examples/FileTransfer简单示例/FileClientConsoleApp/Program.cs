@@ -10,15 +10,15 @@ using TouchSocket.Sockets;
 
 namespace FileClientConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             TcpTouchRpcClient client = new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .SetVerifyToken("File")
                 .UsePlugin()
-                .ConfigurePlugins(a=> 
+                .ConfigurePlugins(a =>
                 {
                     a.Add<TouchRpcActionPlugin<TcpTouchRpcClient>>()//此处的逻辑可用插件替代完成。
                     .SetFileTransfering((client, e) =>

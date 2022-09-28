@@ -1,5 +1,6 @@
-using TouchSocket.Rpc;
 using System.Threading.Tasks;
+using TouchSocket.Rpc;
+
 namespace RpcProxy
 {
     public interface IMyRpcServer : IRemoteServer
@@ -11,6 +12,7 @@ namespace RpcProxy
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
         System.Boolean Login(System.String account, System.String password, IInvokeOption invokeOption = default);
+
         ///<summary>
         ///登录
         ///</summary>
@@ -26,6 +28,7 @@ namespace RpcProxy
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
         System.Int32 Performance(System.Int32 a, IInvokeOption invokeOption = default);
+
         ///<summary>
         ///性能测试
         ///</summary>
@@ -33,15 +36,17 @@ namespace RpcProxy
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
         Task<System.Int32> PerformanceAsync(System.Int32 a, IInvokeOption invokeOption = default);
-
     }
+
     public class MyRpcServer : IMyRpcServer
     {
         public MyRpcServer(IRpcClient client)
         {
             this.Client = client;
         }
+
         public IRpcClient Client { get; private set; }
+
         ///<summary>
         ///登录
         ///</summary>
@@ -62,6 +67,7 @@ namespace RpcProxy
             System.Boolean returnData = Client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.login", invokeOption, parameters);
             return returnData;
         }
+
         ///<summary>
         ///登录
         ///</summary>
@@ -99,6 +105,7 @@ namespace RpcProxy
             System.Int32 returnData = Client.Invoke<System.Int32>("touchrpcserverapp.myrpcserver.performance", invokeOption, parameters);
             return returnData;
         }
+
         ///<summary>
         ///性能测试
         ///</summary>
@@ -115,8 +122,8 @@ namespace RpcProxy
             object[] parameters = new object[] { a };
             return Client.InvokeAsync<System.Int32>("touchrpcserverapp.myrpcserver.performance", invokeOption, parameters);
         }
-
     }
+
     public static class MyRpcServerExtensions
     {
         ///<summary>
@@ -136,6 +143,7 @@ namespace RpcProxy
             System.Boolean returnData = client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.login", invokeOption, parameters);
             return returnData;
         }
+
         ///<summary>
         ///登录
         ///</summary>
@@ -167,6 +175,7 @@ namespace RpcProxy
             System.Int32 returnData = client.Invoke<System.Int32>("touchrpcserverapp.myrpcserver.performance", invokeOption, parameters);
             return returnData;
         }
+
         ///<summary>
         ///性能测试
         ///</summary>
@@ -180,6 +189,5 @@ namespace RpcProxy
             object[] parameters = new object[] { a };
             return client.InvokeAsync<System.Int32>("touchrpcserverapp.myrpcserver.performance", invokeOption, parameters);
         }
-
     }
 }

@@ -1,12 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
-using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Rpc.TouchRpc.Plugins;
@@ -26,7 +23,6 @@ namespace TouchRpcServerApp
             File.WriteAllText("../../../RpcProxy.cs", code);
             Console.ReadKey();
         }
-
 
         private static TcpTouchRpcService CreateTcpTouchRpcService(int port)
         {
@@ -153,7 +149,6 @@ namespace TouchRpcServerApp
 
     public class MyRpcActionFilterAttribute : RpcActionFilterAttribute, IRpcActionFilter
     {
-
         public override void Executing(ICallContext callContext, ref InvokeResult invokeResult)
         {
             if (callContext.Caller is TcpTouchRpcSocketClient client)

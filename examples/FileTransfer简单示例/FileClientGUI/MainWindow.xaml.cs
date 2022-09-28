@@ -19,7 +19,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.IO;
 using TouchSocket.Core.Plugins;
@@ -80,7 +79,7 @@ namespace FileClientGUI
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .SetVerifyToken("FileService")
                 .UsePlugin()
-                .ConfigurePlugins(a=> 
+                .ConfigurePlugins(a =>
                 {
                     a.Add<TouchRpcActionPlugin<TcpTouchRpcClient>>()//此处的逻辑可用插件替代完成。
                        .SetFileTransfering(this.FileClient_BeforeFileTransfer)

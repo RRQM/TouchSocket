@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using TouchSocket.Core;
@@ -14,9 +11,9 @@ using TouchSocket.Sockets.Plugins;
 
 namespace TrafficCounterConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             TcpService service = new TcpService();
             service.Received += (client, byteBlock, requestInfo) =>
@@ -27,7 +24,7 @@ namespace TrafficCounterConsoleApp
                 client.Send(mes);//将收到的信息直接返回给发送方
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置     
+            service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .SetMaxCount(1000)
                 .SetThreadCount(10)
@@ -87,7 +84,7 @@ namespace TrafficCounterConsoleApp
 
         protected override void OnSending(ITcpClientBase client, SendingEventArgs e)
         {
-            client.SetValue(TrafficCounterEx.SendTempTrafficCounterProperty, 
+            client.SetValue(TrafficCounterEx.SendTempTrafficCounterProperty,
                 e.Length + client.GetValue<int>(TrafficCounterEx.SendTempTrafficCounterProperty));
             base.OnSending(client, e);
         }
@@ -135,6 +132,7 @@ namespace TrafficCounterConsoleApp
                 return count;
             }
         }
+
         public static int GetReceivedTrafficCounter(this DependencyObject dependencyObject)
         {
             if (dependencyObject.GetValue<bool>(AutoRefreshProperty))

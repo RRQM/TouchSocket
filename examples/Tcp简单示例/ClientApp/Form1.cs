@@ -50,7 +50,7 @@ namespace ClientApp
                 {
                     a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
                 })
-                .ConfigurePlugins(a=> 
+                .ConfigurePlugins(a =>
                 {
                     if (checkBox1.Checked)
                     {

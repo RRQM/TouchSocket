@@ -1,18 +1,13 @@
 using JsonRpcProxy;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Plugins;
 using TouchSocket.Core.XREF.Newtonsoft.Json.Linq;
 using TouchSocket.Http;
-using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.JsonRpc;
-using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 
 namespace JsonRpcConsoleApp
@@ -38,7 +33,6 @@ namespace JsonRpcConsoleApp
             CreateTcpJsonRpcParser(7705);
             CreateHTTPJsonRpcParser(7706);
 
-
             JsonRpcClientInvokeByTcp();
             JsonRpcClientInvokeByHttp();
             JsonRpcClientInvokeByWebsocket();
@@ -59,7 +53,7 @@ namespace JsonRpcConsoleApp
                  {
                      a.RegisterServer<JsonRpcServer>();
                  })
-                 .ConfigurePlugins(a => 
+                 .ConfigurePlugins(a =>
                  {
                      a.UseWebSocket()//启用websocket。
                      .SetWSUrl("/ws");//使用/ws路由连接。
@@ -196,7 +190,6 @@ namespace JsonRpcConsoleApp
                 var ip = client.IP;
                 var port = client.Port;
                 Console.WriteLine($"HTTP请求{ip}:{port}");
-
             }
             else if (callContext.Caller is SocketClient)
             {
@@ -205,7 +198,6 @@ namespace JsonRpcConsoleApp
                 var ip = client.IP;
                 var port = client.Port;
                 Console.WriteLine($"Tcp请求{ip}:{port}");
-
             }
             return "RRQM" + str;
         }
@@ -232,7 +224,6 @@ namespace JsonRpcConsoleApp
         {
             if (this.CallContext is IJsonRpcCallContext context)
             {
-
             }
             return "RRQM" + str;
         }

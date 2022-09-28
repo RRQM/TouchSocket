@@ -1,25 +1,24 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
+using System.IO;
 using System.Text;
+using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
-using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Rpc;
+using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 using TouchSocket.Sockets.Plugins;
-using TouchSocket.Rpc.TouchRpc.Plugins;
-using System;
-using System.IO;
-using System.Threading;
 
 namespace UnityServerConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             //unitypackage在本级目录下。
             //已发布的apk和exe客户端也在本级目录下。
@@ -30,7 +29,7 @@ namespace UnityServerConsoleApp
             Console.ReadKey();
         }
 
-        static void StartUdpRpc(int port)
+        private static void StartUdpRpc(int port)
         {
             var service = new UdpTouchRpc();
             TouchSocketConfig config = new TouchSocketConfig()//配置
@@ -50,7 +49,7 @@ namespace UnityServerConsoleApp
             service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
         }
 
-        static void StartUdpService(int port)
+        private static void StartUdpService(int port)
         {
             UdpSession udpService = new UdpSession();
             udpService.Received += (remote, byteBlock, requestInfo) =>
@@ -61,7 +60,7 @@ namespace UnityServerConsoleApp
             udpService.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(port))
                  .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())//常规udp
-                 //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
+                                                                                     //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
                  .ConfigureContainer(a =>
                  {
                      a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
@@ -71,7 +70,7 @@ namespace UnityServerConsoleApp
             udpService.Logger.Info($"UdpService已启动，端口：{port}");
         }
 
-        static void StartTcpRpcService(int port)
+        private static void StartTcpRpcService(int port)
         {
             var service = new TcpTouchRpcService();
             TouchSocketConfig config = new TouchSocketConfig()//配置
@@ -104,10 +103,10 @@ namespace UnityServerConsoleApp
             //service.RpcStore.ShareProxy(new IPHost(8848));
         }
 
-        static void StartTcpService(int port)
+        private static void StartTcpService(int port)
         {
             TcpService service = new TcpService();
-            service.Setup(new TouchSocketConfig()//载入配置     
+            service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })//同时监听两个地址
                 .SetMaxCount(10000)
                 .SetThreadCount(10)
@@ -126,7 +125,7 @@ namespace UnityServerConsoleApp
         }
     }
 
-    class MyTcpRpcPlguin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
+    internal class MyTcpRpcPlguin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
     {
         protected override void OnStreamTransfering(TcpTouchRpcSocketClient client, StreamOperationEventArgs e)
         {
@@ -146,12 +145,13 @@ namespace UnityServerConsoleApp
         }
     }
 
-    class MyPlguin : TcpPluginBase<SocketClient>
+    internal class MyPlguin : TcpPluginBase<SocketClient>
     {
         protected override void OnConnected(SocketClient client, TouchSocketEventArgs e)
         {
             client.Logger.Info($"客户端{client.GetInfo()}已连接");
         }
+
         protected override void OnDisconnected(SocketClient client, ClientDisconnectedEventArgs e)
         {
             client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
@@ -178,8 +178,8 @@ namespace UnityServerConsoleApp
             this.m_logger = logger;
         }
 
-        Timer m_timer;
-        int count;
+        private Timer m_timer;
+        private int count;
         private readonly ILog m_logger;
 
         [Description("登录")]
@@ -202,12 +202,14 @@ namespace UnityServerConsoleApp
             return ++i;
         }
     }
+
     public class MyLoginModel
     {
         public string Token { get; set; }
         public string Account { get; set; }
         public string Password { get; set; }
     }
+
     public class MyLoginModelResult
     {
         public byte Status { get; set; }

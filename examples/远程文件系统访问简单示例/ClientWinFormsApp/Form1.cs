@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TouchSocket.Core;
@@ -24,7 +18,8 @@ namespace ClientWinFormsApp
             Control.CheckForIllegalCrossThreadCalls = false;
         }
 
-        TcpTouchRpcClient m_client = new TcpTouchRpcClient();
+        private TcpTouchRpcClient m_client = new TcpTouchRpcClient();
+
         private void Form1_Load(object sender, EventArgs e)
         {
             m_client.Setup(new TouchSocketConfig()
@@ -144,7 +139,7 @@ namespace ClientWinFormsApp
                         using (RemoteStream remoteStream = this.m_client?.LoadRemoteStream(new Metadata()))
                         {
                             long length = 0;
-                            byte[] buffer = new byte[1024*10];
+                            byte[] buffer = new byte[1024 * 10];
                             while (true)
                             {
                                 int r = remoteStream.Read(buffer, 0, buffer.Length);
@@ -155,7 +150,7 @@ namespace ClientWinFormsApp
                                 length += r;
                             }
                             MessageBox.Show(length.ToString());
-                        } 
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -163,7 +158,6 @@ namespace ClientWinFormsApp
                     }
                 });
             }
-
         }
     }
 }

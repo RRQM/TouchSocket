@@ -4,17 +4,17 @@ using TouchSocket.Core.Diagnostics;
 
 namespace BytePoolConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Console.ReadKey();
 
-            BytePool.AddSizeKey(1024*1024);
+            BytePool.AddSizeKey(1024 * 1024);
             //BytePool.AutoZero = true;
             for (int i = 0; i < 5; i++)
             {
-                byte[] data = BytePool.GetByteCore(1024*10,true);
+                byte[] data = BytePool.GetByteCore(1024 * 10, true);
                 BytePool.Recycle(data);
                 using (ByteBlock byteBlock = new ByteBlock(1024 * 10, true))
                 {
@@ -25,7 +25,7 @@ namespace BytePoolConsoleApp
                     byteBlock.Write(3.1415926);
                     byteBlock.Write("Hello TouchSocket");
 
-                   var buffer= byteBlock.ToArray();
+                    var buffer = byteBlock.ToArray();
 
                     byteBlock.Position = 0;
 
@@ -36,11 +36,11 @@ namespace BytePoolConsoleApp
                     var p5 = byteBlock.ReadString();
                 }
             }
-           
+
             Console.ReadKey();
         }
 
-        static void Performance()
+        private static void Performance()
         {
             int count = 1000000;
             TimeSpan timeSpan1 = TimeMeasurer.Run(() =>

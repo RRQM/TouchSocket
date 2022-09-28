@@ -49,7 +49,7 @@ namespace ConsulConsoleApp
                 DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(5),//服务启动多久后注册
                 Interval = TimeSpan.FromSeconds(10),
                 //HTTP = $"http://127.0.0.1:{port}/api/Health",//健康检查地址
-                TCP = $"127.0.0.1:{ port}",
+                TCP = $"127.0.0.1:{port}",
                 Timeout = TimeSpan.FromSeconds(5)
             };
 

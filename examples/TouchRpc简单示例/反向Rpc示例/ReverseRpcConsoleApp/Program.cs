@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
@@ -9,9 +8,9 @@ using TouchSocket.Sockets;
 
 namespace ReverseRpcConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             //创建逻辑服务器
             TcpTouchRpcService tcpTouchRpcService = CreateTcpTouchRpcService(7789);
@@ -64,6 +63,7 @@ namespace ReverseRpcConsoleApp
             return client;
         }
     }
+
     public class ReverseCallbackServer : RpcServer
     {
         [TouchRpc]
@@ -72,5 +72,4 @@ namespace ReverseRpcConsoleApp
             return $"{name},hi";
         }
     }
-
 }

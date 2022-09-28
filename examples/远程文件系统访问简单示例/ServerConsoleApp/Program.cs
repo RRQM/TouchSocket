@@ -11,9 +11,9 @@ using TouchSocket.Sockets;
 
 namespace ServerConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -46,12 +46,12 @@ namespace ServerConsoleApp
         }
     }
 
-    class MyPlugin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
+    internal class MyPlugin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
     {
         protected override void OnRemoteAccessing(TcpTouchRpcSocketClient client, RemoteAccessActionEventArgs e)
         {
             client.Logger.Info($"用户{client.GetInfo()}正在进行文件系统访问，对象：{e.AccessType}，操作：{e.AccessMode}");
-            if (e.AccessMode== RemoteAccessMode.Delete)
+            if (e.AccessMode == RemoteAccessMode.Delete)
             {
                 e.IsPermitOperation = false;
                 e.Handled = true;
@@ -67,8 +67,8 @@ namespace ServerConsoleApp
             //此时，你可以通过e.Metadata判断客户端传递来的数据。
             //最重要的是，对e.Stream进行赋值，因为这个流数据即会被映射到客户端，以供客户端读取和写入。
             MemoryStream memoryStream = new MemoryStream();
-            memoryStream.SetLength(1024*1024*10);
-            e.Stream= memoryStream;
+            memoryStream.SetLength(1024 * 1024 * 10);
+            e.Stream = memoryStream;
             base.OnLoadingStream(client, e);
         }
     }

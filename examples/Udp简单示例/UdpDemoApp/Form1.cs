@@ -32,14 +32,13 @@ namespace UdpDemoApp
                 }
             };
 
-            
             m_udpSession.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(this.textBox2.Text))
-                 .SetUdpDataHandlingAdapter(()=> 
+                 .SetUdpDataHandlingAdapter(() =>
                  {
                      if (checkBox1.Checked)
                      {
-                        return new UdpPackageAdapter();
+                         return new UdpPackageAdapter();
                      }
                      else
                      {
