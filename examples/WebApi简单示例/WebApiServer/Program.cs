@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
@@ -15,7 +14,7 @@ namespace WebApiServerApp
     {
         private static void Main(string[] args)
         {
-            WebApiParserPlugin webApiParser=null;
+            WebApiParserPlugin webApiParser = null;
             HttpService service = new HttpService();
             service.Setup(new TouchSocketConfig()
                .UsePlugin()
@@ -24,9 +23,9 @@ namespace WebApiServerApp
                {
                    a.RegisterServer<Server>();//注册服务
                })
-               .ConfigurePlugins(a=> 
+               .ConfigurePlugins(a =>
                {
-                   webApiParser= a.Add<WebApiParserPlugin>();
+                   webApiParser = a.Add<WebApiParserPlugin>();
                }))
                .Start();
 
@@ -47,7 +46,8 @@ namespace WebApiServerApp
         {
             this.m_logger = logger;
         }
-        [Origin(AllowOrigin ="*")]//跨域设置
+
+        [Origin(AllowOrigin = "*")]//跨域设置
         [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
         [Router("[api]/[action]")]//此路由会以"/Server/Sum"实现
         [WebApi(HttpMethodType.GET)]
@@ -89,7 +89,7 @@ namespace WebApiServerApp
             {
                 this.m_logger.Info($"共计：{content.Length}");
             }
-          
+
             return Task.FromResult("ok");
         }
     }

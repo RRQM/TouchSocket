@@ -35,7 +35,7 @@ namespace ServiceConsoleApp
                 {
                     a.SetSingletonLogger<ConsoleLogger>();
                 })
-                .ConfigureRpcStore(a => 
+                .ConfigureRpcStore(a =>
                 {
                     a.RegisterServer<MyServer>();
                 })

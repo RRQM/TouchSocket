@@ -16,13 +16,14 @@ namespace ScreenUdpSender
     /// </summary>
     public partial class Form1 : Form
     {
-        UdpSession udpSession;
+        private UdpSession udpSession;
+
         public Form1()
         {
-            InitializeComponent();           
+            InitializeComponent();
         }
 
-        Thread m_thread;
+        private Thread m_thread;
 
         private void Tick()
         {
@@ -31,32 +32,33 @@ namespace ScreenUdpSender
                 byte[] byteArray = ImageToByte(getScreen());
                 ByteBlock bb = new ByteBlock(byteArray);
                 udpSession.Send(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb);
-                Thread.Sleep((int)(1000.0/(int)this.numericUpDown1.Value));
+                Thread.Sleep((int)(1000.0 / (int)this.numericUpDown1.Value));
             }
         }
 
-
         #region 屏幕和光标获取
+
         [DllImport("user32.dll")]
-        static extern bool GetCursorInfo(out CURSORINFO pci);
+        private static extern bool GetCursorInfo(out CURSORINFO pci);
 
         private const Int32 CURSOR_SHOWING = 0x00000001;
+
         [StructLayout(LayoutKind.Sequential)]
-        struct POINT
+        private struct POINT
         {
             public Int32 x;
             public Int32 y;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        struct CURSORINFO
+        private struct CURSORINFO
         {
             public Int32 cbSize;
             public Int32 flags;
             public IntPtr hCursor;
             public POINT ptScreenPos;
         }
-      
+
         public Image getScreen(int x = 0, int y = 0, int width = -1, int height = -1, String savePath = "", bool haveCursor = true)
         {
             if (width == -1) width = SystemInformation.VirtualScreen.Width;
@@ -85,9 +87,11 @@ namespace ScreenUdpSender
 
             return tmp;     //返回构建的新图像
         }
-        #endregion
+
+        #endregion 屏幕和光标获取
 
         #region 格式转换
+
         private byte[] ImageToByte(Image Picture)
         {
             MemoryStream ms = new MemoryStream();
@@ -107,7 +111,8 @@ namespace ScreenUdpSender
             System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
             return image;
         }
-        #endregion
+
+        #endregion 格式转换
 
         private void button1_Click(object sender, EventArgs e)
         {

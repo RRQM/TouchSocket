@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Text;
-using TouchSocket.Core.ByteManager;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace ServiceConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = CreateService();
             var client = CreateClient();
@@ -23,7 +20,7 @@ namespace ServiceConsoleApp
             }
         }
 
-        static TcpService CreateService()
+        private static TcpService CreateService()
         {
             TcpService service = new TcpService();
             service.Connecting += (client, e) => { };//有客户端正在连接
@@ -38,7 +35,7 @@ namespace ServiceConsoleApp
                 client.Send(mes);//将收到的信息直接返回给发送方
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置     
+            service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .SetMaxCount(10000)
                 .SetThreadCount(10)
@@ -55,7 +52,7 @@ namespace ServiceConsoleApp
             return service;
         }
 
-        static TcpClient CreateClient()
+        private static TcpClient CreateClient()
         {
             TcpClient tcpClient = new TcpClient();
             tcpClient.Connected += (client, e) => { };//成功连接到服务器

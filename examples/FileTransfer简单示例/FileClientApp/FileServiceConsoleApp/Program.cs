@@ -10,18 +10,18 @@ using TouchSocket.Sockets.Plugins;
 
 namespace FileServiceConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             TcpTouchRpcService service = GetService();
             service.Logger.Info("服务器成功启动");
             Console.ReadKey();
         }
 
-        static TcpTouchRpcService GetService()
+        private static TcpTouchRpcService GetService()
         {
-            var service = new TouchSocketConfig()//配置     
+            var service = new TouchSocketConfig()//配置
                 .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .UsePlugin()
                 .ConfigureContainer(a =>
@@ -40,7 +40,7 @@ namespace FileServiceConsoleApp
         }
     }
 
-    class MyPlugin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
+    internal class MyPlugin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
     {
         protected override void OnFileTransfering(TcpTouchRpcSocketClient client, FileOperationEventArgs e)
         {
@@ -55,6 +55,7 @@ namespace FileServiceConsoleApp
             client.Logger.Info($"客户端传输文件结束，ID={client.ID}，请求类型={e.TransferType}，文件名={e.FileRequest.Path}，请求状态={e.Result}");
             base.OnFileTransfered(client, e);
         }
+
         protected override void OnHandshaked(TcpTouchRpcSocketClient client, MsgEventArgs e)
         {
             client.Logger.Info($"有客户端成功验证，ID={client.ID}");
@@ -62,7 +63,7 @@ namespace FileServiceConsoleApp
         }
     }
 
-    class MyTcpPlugin : TcpPluginBase
+    internal class MyTcpPlugin : TcpPluginBase
     {
         protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {

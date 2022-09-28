@@ -50,7 +50,7 @@ namespace PluginConsoleApp
         }
     }
 
-    class MyPlugin : TcpPluginBase
+    internal class MyPlugin : TcpPluginBase
     {
         protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {

@@ -1,15 +1,11 @@
 ﻿using System;
-using System.IO;
 using System.Text;
-using TouchSocket.Core;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
 using TouchSocket.Core.Plugins;
 using TouchSocket.Http;
 using TouchSocket.Http.Plugins;
-using TouchSocket.Http.WebSockets;
-using TouchSocket.Http.WebSockets.Plugins;
 using TouchSocket.Sockets;
 
 namespace ConsoleApp
@@ -43,8 +39,6 @@ namespace ConsoleApp
             Console.WriteLine("Post访问 http://127.0.0.1:7789/uploadfile 上传文件");
             Console.ReadKey();
         }
-
-
     }
 
     /// <summary>
@@ -83,7 +77,7 @@ namespace ConsoleApp
                 stringBuilder.AppendLine("</div>");
                 stringBuilder.AppendLine("</body>");
                 stringBuilder.AppendLine("</html>");
-               
+
                 e.Context.Response
                          .SetStatus()//必须要有状态
                          .SetContentTypeByExtension(".html")
@@ -99,7 +93,7 @@ namespace ConsoleApp
             {
                 try
                 {
-                    if (e.Context.Request.ContentLen>1024*1024*100)//全部数据体超过100Mb则直接拒绝接收。
+                    if (e.Context.Request.ContentLen > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                     {
                         e.Context.Response
                             .SetStatus("403", "数据过大")
@@ -131,6 +125,4 @@ namespace ConsoleApp
             base.OnPost(client, e);
         }
     }
-
-
 }

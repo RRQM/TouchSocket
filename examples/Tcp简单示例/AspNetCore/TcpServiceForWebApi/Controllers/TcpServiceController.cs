@@ -2,9 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -30,7 +28,7 @@ namespace TcpServiceForWebApi.Controllers
         }
 
         [HttpGet]
-        public ActionResult<TcpResult> SendMsgTo(string id,string msg)
+        public ActionResult<TcpResult> SendMsgTo(string id, string msg)
         {
             try
             {
@@ -57,7 +55,7 @@ namespace TcpServiceForWebApi.Controllers
             {
                 if (this.m_tcpService.SocketClients.TryGetSocketClient(id, out ISocketClient client))
                 {
-                    var result = client.GetWaitingClient(data=> 
+                    var result = client.GetWaitingClient(data =>
                     {
                         return true;//此处可以筛选返回数据。
                     }).SendThenReturn(Encoding.UTF8.GetBytes(msg));

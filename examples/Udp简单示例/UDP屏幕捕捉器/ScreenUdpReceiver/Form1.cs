@@ -11,7 +11,8 @@ namespace ScreenUdpReceiver
     /// </summary>
     public partial class Form1 : Form
     {
-        UdpSession udpSession;
+        private UdpSession udpSession;
+
         public Form1()
         {
             InitializeComponent();

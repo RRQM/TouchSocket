@@ -45,12 +45,14 @@ namespace LimitNumberOfConnectionsConsoleApp
 
             logger.Info($"限制连接插件生效，同一IP限制{max}个连接");
         }
+
         public LimitNumberOfConnectionsPlugin(ILog logger)
         {
             this.m_logger = logger;
         }
 
         public int Max { get; }
+
         protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
             Count count = m_ipToCount.GetOrAdd(client.IP, (s) => { return new Count(); });

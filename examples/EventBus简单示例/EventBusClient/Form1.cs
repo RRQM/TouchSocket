@@ -33,13 +33,14 @@ namespace EERPCClientDemo
         }
 
         private TcpTouchRpcClient tcpRpcClient;
+
         private void button3_Click(object sender, EventArgs e)
         {
             this.tcpRpcClient = new TcpTouchRpcClient();
             this.tcpRpcClient.Disconnected += TcpRpcClient_Disconnected;
             tcpRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigureRpcStore(a=> 
+                .ConfigureRpcStore(a =>
                 {
                     a.RegisterServer<ThisRpcServer>();
                 }))

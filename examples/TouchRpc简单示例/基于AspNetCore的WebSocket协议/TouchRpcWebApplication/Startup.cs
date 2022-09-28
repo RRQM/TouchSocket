@@ -19,7 +19,6 @@ using Microsoft.OpenApi.Models;
 using TouchRpcWebApplication.RpcProviders;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
 using TouchSocket.Rpc;
 
 namespace TouchRpcWebApplication

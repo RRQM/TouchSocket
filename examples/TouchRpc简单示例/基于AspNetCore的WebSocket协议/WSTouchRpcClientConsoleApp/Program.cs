@@ -2,8 +2,6 @@
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Diagnostics;
 using TouchSocket.Core.IO;
-using TouchSocket.Core.Log;
-using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Rpc.TouchRpc.AspNetCore;
 using TouchSocket.Sockets;
 

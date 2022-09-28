@@ -36,7 +36,7 @@ namespace NATServiceConsoleApp
                 //实际上，这个方法可以随时调用。
                 socketClient.AddTargetClient(new TouchSocketConfig()
                     .SetRemoteIPHost("127.0.0.1:7789")
-                    .ConfigurePlugins(a=> 
+                    .ConfigurePlugins(a =>
                     {
                         //在企业版中，使用以下任意方式，可实现转发客户端的断线重连。
                         a.Add<PollingKeepAlivePlugin<TcpClient>>()

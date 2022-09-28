@@ -3,19 +3,19 @@ using TouchSocket.Core;
 using TouchSocket.Core.Config;
 using TouchSocket.Core.Dependency;
 using TouchSocket.Core.Log;
+using TouchSocket.Core.Plugins;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Http.WebSockets.Plugins;
-using TouchSocket.Sockets;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.WebApi;
+using TouchSocket.Sockets;
 
 namespace WebSocketConsoleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()//加载配置
@@ -25,7 +25,7 @@ namespace WebSocketConsoleApp
                 {
                     a.SetSingletonLogger<ConsoleLogger>();
                 })
-                .ConfigureRpcStore(a=> 
+                .ConfigureRpcStore(a =>
                 {
                     a.RegisterServer<MyServer>();
                 })
@@ -154,7 +154,7 @@ namespace WebSocketConsoleApp
         {
         }
 
-        public int AddCommand(IHttpClientBase client,int a, int b)
+        public int AddCommand(IHttpClientBase client, int a, int b)
         {
             return a + b;
         }
