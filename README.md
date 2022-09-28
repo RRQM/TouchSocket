@@ -185,34 +185,6 @@ TouchSocketBitConverter.DefaultEndianType = EndianType.Little;
 
 用户自定义不固定包头适配器，主要帮助用户解决具有包头不固定的数据帧信息。例如：最典型的HTTP数据包，其数据头和数据体由“\r\n”隔开，而数据头又因为请求者的请求信息的不同，头部数据也不固定，而数据体的长度，也是由数据头的ContentLength的值显式指定的，所以可以考虑使用CustomUnfixedHeaderDataHandlingAdapter解析，也是仅通过简单的开发，就能实现。
 
-
- **【Http服务器】** 
-```
-var service = new HttpService();
-
-service.AddPlugin<MyHttpPlug>();
-service.AddPlugin<HttpStaticPagePlugin>().
-   AddFolder("../../../../../api");//添加静态页面
-
-service.AddPlugin<WebSocketServerPlugin>().//添加WebSocket功能
-   SetWSUrl("/ws");
-
-service.AddPlugin<MyWebSocketPlugin>();//添加WS事务触发。
-
-service.AddPlugin<MyWSCommandLinePlugin>();//添加WS命令行事务。
-
-var config = new RRQMConfig();
-config.UsePlugin()
-    .SetReceiveType(ReceiveType.Auto)
-    .SetListenIPHosts(new IPHost[] { new IPHost(7789) });
-
-service.Setup(config).Start();
-Console.WriteLine("Http服务器已启动");
-Console.WriteLine("浏览器访问：http://127.0.0.1:7789/index.html");
-Console.WriteLine("WS访问：ws://127.0.0.1:7789");
-```
-
-
 ## 🧲应用场景模拟
 [场景入口](https://www.yuque.com/rrqm/touchsocket/wrwx9k)
 
