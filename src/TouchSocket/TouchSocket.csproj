@@ -4,7 +4,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>0.7.3</Version>
+		<Version>0.7.4</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -20,15 +20,11 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 附带其Github：https://github.com/JamesNK/Newtonsoft.Json</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/touchsocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<PackageIcon>logo.png</PackageIcon>
 		<Authors>若汝棋茗</Authors>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-		<RepositoryUrl>https://gitee.com/dotnetchina/touchsocket</RepositoryUrl>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<RepositoryType>Gitee</RepositoryType>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -46,7 +42,6 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
 		<DocumentationFile>bin\Debug\net45\TouchSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
-		<DefineConstants>TRACE;DEBUG</DefineConstants>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Optimize>false</Optimize>
 	</PropertyGroup>
@@ -69,17 +64,6 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-		<DocumentationFile>bin\Debug\netcoreapp3.1\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
-		<DocumentationFile>bin\Release\netcoreapp3.1\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
 	<ItemGroup>
 		<None Include="LICENSE.txt">
 			<Pack>True</Pack>
