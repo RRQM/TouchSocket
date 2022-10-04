@@ -107,5 +107,20 @@ namespace TLVWinFormsApp
                 this.m_client.Logger.Exception(ex);
             }
         }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                try
+                {
+                    this.m_client?.Send(new ValueTLVDataFrame((ushort)this.numericUpDown1.Value, Encoding.UTF8.GetBytes(i.ToString())));
+                }
+                catch (Exception ex)
+                {
+                    this.m_client?.Logger.Exception(ex);
+                }
+            } 
+        }
     }
 }
