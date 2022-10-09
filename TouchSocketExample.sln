@@ -142,7 +142,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AspNetCore", "AspNetCore", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpServiceForWebApi", "examples\Tcp简单示例\AspNetCore\TcpServiceForWebApi\TcpServiceForWebApi.csproj", "{E629B642-AF9B-4FB6-AFE3-6258E2F0B953}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TLVWinFormsApp", "examples\Adapter简单示例\TLVWinFormsApp\TLVWinFormsApp.csproj", "{E72ADFB6-4AA5-4210-BC6B-A68927644526}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TLVWinFormsApp", "examples\Adapter简单示例\TLVWinFormsApp\TLVWinFormsApp.csproj", "{E72ADFB6-4AA5-4210-BC6B-A68927644526}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AppMessenger简单示例", "AppMessenger简单示例", "{DFAE990A-30E8-4974-A130-D66E9B3486B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinAppForAppMessenger", "examples\AppMessenger简单示例\WinAppForAppMessenger\WinAppForAppMessenger.csproj", "{66849ED5-C951-450A-8867-AE5FA8109FC3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -318,6 +322,10 @@ Global
 		{E72ADFB6-4AA5-4210-BC6B-A68927644526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E72ADFB6-4AA5-4210-BC6B-A68927644526}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E72ADFB6-4AA5-4210-BC6B-A68927644526}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66849ED5-C951-450A-8867-AE5FA8109FC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66849ED5-C951-450A-8867-AE5FA8109FC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66849ED5-C951-450A-8867-AE5FA8109FC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66849ED5-C951-450A-8867-AE5FA8109FC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -373,6 +381,7 @@ Global
 		{97C928E3-54D6-4FAE-A314-775BE9E25A14} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
 		{E629B642-AF9B-4FB6-AFE3-6258E2F0B953} = {97C928E3-54D6-4FAE-A314-775BE9E25A14}
 		{E72ADFB6-4AA5-4210-BC6B-A68927644526} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{66849ED5-C951-450A-8867-AE5FA8109FC3} = {DFAE990A-30E8-4974-A130-D66E9B3486B7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
