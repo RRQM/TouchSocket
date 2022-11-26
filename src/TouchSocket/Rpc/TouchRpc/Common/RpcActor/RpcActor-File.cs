@@ -572,93 +572,100 @@ namespace TouchSocket.Rpc.TouchRpc
 
             ThreadPool.QueueUserWorkItem(a =>
             {
-                FileTransferStatusEventArgs e;
-                if (this.m_eventArgs.TryRemove(waitTransfer.EventHashCode, out object obj) && obj is FileOperationEventArgs args)
+                try
                 {
-                    try
+                    FileTransferStatusEventArgs e;
+                    if (this.m_eventArgs.TryRemove(waitTransfer.EventHashCode, out object obj) && obj is FileOperationEventArgs args)
                     {
-                        using (FileStorageReader reader = FilePool.GetReader(waitTransfer.Path))
+                        try
                         {
-                            if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
+                            using (FileStorageReader reader = FilePool.GetReader(waitTransfer.Path))
                             {
-                                ByteBlock byteBlock = BytePool.GetByteBlock(TouchRpcUtility.TransferPackage);
-                                FileOperator fileOperator = args.FileOperator;
-                                try
+                                if (this.TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
                                 {
-                                    waitTransfer.Status = 1;
-                                    this.SendFastObject(responseOrder, waitTransfer);
-                                    long position = waitTransfer.Position;
-                                    reader.Position = position;
-                                    fileOperator.SetFileCompletedLength(position);
-                                    while (true)
+                                    ByteBlock byteBlock = BytePool.GetByteBlock(TouchRpcUtility.TransferPackage);
+                                    FileOperator fileOperator = args.FileOperator;
+                                    try
                                     {
-                                        if (fileOperator.Token.IsCancellationRequested)
+                                        waitTransfer.Status = 1;
+                                        this.SendFastObject(responseOrder, waitTransfer);
+                                        long position = waitTransfer.Position;
+                                        reader.Position = position;
+                                        fileOperator.SetFileCompletedLength(position);
+                                        while (true)
                                         {
-                                            channel.Cancel("主动取消");
-                                            fileOperator.SetFileResult(new Result(ResultCode.Canceled));
-                                            break;
-                                        }
-                                        int r = reader.Read(byteBlock.Buffer, 0,
-                                            (int)Math.Min(TouchRpcUtility.TransferPackage, fileOperator.MaxSpeed / 10.0));
-                                        if (r == 0)
-                                        {
-                                            channel.Complete();
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            position += r;
-                                            if (channel.TryWrite(byteBlock.Buffer, 0, r))
+                                            if (fileOperator.Token.IsCancellationRequested)
                                             {
-                                                fileOperator.AddFileFlow(r, reader.FileStorage.FileInfo.Length);
+                                                channel.Cancel("主动取消");
+                                                fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                                                break;
+                                            }
+                                            int r = reader.Read(byteBlock.Buffer, 0,
+                                                (int)Math.Min(TouchRpcUtility.TransferPackage, fileOperator.MaxSpeed / 10.0));
+                                            if (r == 0)
+                                            {
+                                                channel.Complete();
+                                                break;
                                             }
                                             else
                                             {
-                                                break;
+                                                position += r;
+                                                if (channel.TryWrite(byteBlock.Buffer, 0, r))
+                                                {
+                                                    fileOperator.AddFileFlow(r, reader.FileStorage.FileInfo.Length);
+                                                }
+                                                else
+                                                {
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                catch
-                                {
-                                }
-                                finally
-                                {
-                                    byteBlock.Dispose();
+                                    catch
+                                    {
+                                    }
+                                    finally
+                                    {
+                                        byteBlock.Dispose();
 
-                                    e = new FileTransferStatusEventArgs(TransferType.Pull, args.FileRequest, args.Metadata,
-                                       fileOperator.SetFileResult(new Result(channel.Status.ToResultCode())), null);
-                                    this.OnFileTransfered?.Invoke(this, e);
-                                }
+                                        e = new FileTransferStatusEventArgs(TransferType.Pull, args.FileRequest, args.Metadata,
+                                           fileOperator.SetFileResult(new Result(channel.Status.ToResultCode())), null);
+                                        this.OnFileTransfered?.Invoke(this, e);
+                                    }
 
-                                return;
-                            }
-                            else
-                            {
-                                waitTransfer.Status = 4;
-                                e = new FileTransferStatusEventArgs(TransferType.Pull,
-                                    args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(TouchSocketRes.SetChannelFail)), null);
+                                    return;
+                                }
+                                else
+                                {
+                                    waitTransfer.Status = 4;
+                                    e = new FileTransferStatusEventArgs(TransferType.Pull,
+                                        args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(TouchSocketRes.SetChannelFail)), null);
+                                }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            waitTransfer.Status = 2;
+                            waitTransfer.Message = ex.Message;
+                            e = new FileTransferStatusEventArgs(TransferType.Pull,
+                                 args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(TouchSocketRes.LoadStreamFail)), null);
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        waitTransfer.Status = 2;
-                        waitTransfer.Message = ex.Message;
-                        e = new FileTransferStatusEventArgs(TransferType.Pull,
-                             args.FileRequest, args.Metadata, new Result(ResultCode.Error, StringResStore.GetDescription(TouchSocketRes.LoadStreamFail)), null);
+                        e = new FileTransferStatusEventArgs(TransferType.Pull, null, null,
+                            new Result(ResultCode.Overtime, StringResStore.GetDescription(TouchSocketRes.GetEventArgsFail)), null);
+                        waitTransfer.Status = 3;
                     }
+
+                    this.SendFastObject(responseOrder, waitTransfer);
+
+                    this.OnFileTransfered?.Invoke(this, e);
                 }
-                else
+                catch
                 {
-                    e = new FileTransferStatusEventArgs(TransferType.Pull, null, null,
-                        new Result(ResultCode.Overtime, StringResStore.GetDescription(TouchSocketRes.GetEventArgsFail)), null);
-                    waitTransfer.Status = 3;
+
                 }
-
-                this.SendFastObject(responseOrder, waitTransfer);
-
-                this.OnFileTransfered?.Invoke(this, e);
             }, null);
         }
 
@@ -962,127 +969,135 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             ThreadPool.QueueUserWorkItem(o =>
             {
-                if (this.ResponseType == ResponseType.None || this.ResponseType == ResponseType.Pull)
+                try
                 {
-                    this.SendFastObject(responseOrder, new WaitTransfer() { Sign = waitRemoteFileInfo.Sign, Status = 6 });
-                    return;
-                }
-                FileRequest fileRequest = waitRemoteFileInfo.FileRequest;
-                Metadata metadata = waitRemoteFileInfo.Metadata;
-                TouchRpcFileInfo fileInfo = waitRemoteFileInfo.FileInfo;
-
-                if (!Path.IsPathRooted(fileRequest.SavePath))
-                {
-                    fileRequest.SavePath = Path.GetFullPath(Path.Combine(this.m_rootPath, fileRequest.SavePath));
-                }
-
-                FileOperator fileOperator = new FileOperator();
-                FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Push, fileRequest,
-                    fileOperator, metadata, fileInfo);
-                this.OnFileTransfering?.Invoke(this, args);
-
-                WaitTransfer waitTransfer = new WaitTransfer()
-                {
-                    Message = args.Message,
-                    Sign = waitRemoteFileInfo.Sign,
-                    Path = args.FileRequest.Path,
-                    ClientID = waitRemoteFileInfo.ClientID,
-                    EventHashCode = args.GetHashCode()
-                };
-
-                if (args.IsPermitOperation)
-                {
-                    try
+                    if (this.ResponseType == ResponseType.None || this.ResponseType == ResponseType.Pull)
                     {
-                        using (TouchRpcFileStream stream = TouchRpcFileStream.Create(fileRequest.SavePath, ref fileInfo, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume)))
+                        this.SendFastObject(responseOrder, new WaitTransfer() { Sign = waitRemoteFileInfo.Sign, Status = 6 });
+                        return;
+                    }
+                    FileRequest fileRequest = waitRemoteFileInfo.FileRequest;
+                    Metadata metadata = waitRemoteFileInfo.Metadata;
+                    TouchRpcFileInfo fileInfo = waitRemoteFileInfo.FileInfo;
+
+                    if (!Path.IsPathRooted(fileRequest.SavePath))
+                    {
+                        fileRequest.SavePath = Path.GetFullPath(Path.Combine(this.m_rootPath, fileRequest.SavePath));
+                    }
+
+                    FileOperator fileOperator = new FileOperator();
+                    FileOperationEventArgs args = new FileOperationEventArgs(TransferType.Push, fileRequest,
+                        fileOperator, metadata, fileInfo);
+                    this.OnFileTransfering?.Invoke(this, args);
+
+                    WaitTransfer waitTransfer = new WaitTransfer()
+                    {
+                        Message = args.Message,
+                        Sign = waitRemoteFileInfo.Sign,
+                        Path = args.FileRequest.Path,
+                        ClientID = waitRemoteFileInfo.ClientID,
+                        EventHashCode = args.GetHashCode()
+                    };
+
+                    if (args.IsPermitOperation)
+                    {
+                        try
                         {
-                            Channel channel = null;
-                            try
+                            using (TouchRpcFileStream stream = TouchRpcFileStream.Create(fileRequest.SavePath, ref fileInfo, fileRequest.Flags.HasFlag(TransferFlags.BreakpointResume)))
                             {
-                                if (responseOrder == TouchRpcUtility.P_1502_PushFile_Response)
+                                Channel channel = null;
+                                try
                                 {
-                                    channel = this.CreateChannel();
-                                }
-                                else
-                                {
-                                    channel = this.CreateChannel(waitTransfer.ClientID);
-                                }
-
-                                waitTransfer.ChannelID = channel.ID;
-                                waitTransfer.Position = fileInfo.Position;
-                                waitTransfer.Status = 1;
-                                this.SendFastObject(responseOrder, waitTransfer);
-
-                                fileOperator.SetFileCompletedLength(fileInfo.Position);
-                                while (channel.MoveNext())
-                                {
-                                    if (fileOperator.Token.IsCancellationRequested)
+                                    if (responseOrder == TouchRpcUtility.P_1502_PushFile_Response)
                                     {
-                                        channel.Cancel();
-                                        fileOperator.SetFileResult(new Result(ResultCode.Canceled));
-                                        break;
+                                        channel = this.CreateChannel();
                                     }
-                                    ByteBlock block = channel.GetCurrentByteBlock();
-                                    block.Pos = 6;
-
-                                    if (block.TryReadBytesPackageInfo(out int pos, out int len))
+                                    else
                                     {
-                                        stream.Write(block.Buffer, pos, len);
-                                        fileInfo.Position = stream.FileWriter.Position;
-                                        fileOperator.AddFileFlow(len, fileInfo.FileLength);
+                                        channel = this.CreateChannel(waitTransfer.ClientID);
                                     }
-                                    block.SetHolding(false);
+
+                                    waitTransfer.ChannelID = channel.ID;
+                                    waitTransfer.Position = fileInfo.Position;
+                                    waitTransfer.Status = 1;
+                                    this.SendFastObject(responseOrder, waitTransfer);
+
+                                    fileOperator.SetFileCompletedLength(fileInfo.Position);
+                                    while (channel.MoveNext())
+                                    {
+                                        if (fileOperator.Token.IsCancellationRequested)
+                                        {
+                                            channel.Cancel();
+                                            fileOperator.SetFileResult(new Result(ResultCode.Canceled));
+                                            break;
+                                        }
+                                        ByteBlock block = channel.GetCurrentByteBlock();
+                                        block.Pos = 6;
+
+                                        if (block.TryReadBytesPackageInfo(out int pos, out int len))
+                                        {
+                                            stream.Write(block.Buffer, pos, len);
+                                            fileInfo.Position = stream.FileWriter.Position;
+                                            fileOperator.AddFileFlow(len, fileInfo.FileLength);
+                                        }
+                                        block.SetHolding(false);
+                                    }
+
+                                    if (channel.Status == ChannelStatus.Completed)
+                                    {
+                                        stream.FinishStream();
+                                        fileOperator.SetFileResult(new Result(ResultCode.Success));
+                                    }
+                                    else
+                                    {
+                                        fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
+                                    if (channel != null)
+                                    {
+                                        channel.Cancel(ex.Message);
+                                    }
+                                }
+                                finally
+                                {
+                                    channel.SafeDispose();
                                 }
 
-                                if (channel.Status == ChannelStatus.Completed)
+                                this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
+                                this.SendFastObject(TouchRpcUtility.P_509_PushFileAck_Request, new WaitResult()
                                 {
-                                    stream.FinishStream();
-                                    fileOperator.SetFileResult(new Result(ResultCode.Success));
-                                }
-                                else
-                                {
-                                    fileOperator.SetFileResult(new Result(channel.Status.ToResultCode()));
-                                }
+                                    Sign = args.GetHashCode(),
+                                    Status = (byte)(fileOperator.Result.ResultCode == ResultCode.Success ? 1 : 0),
+                                    Message = fileOperator.Result.Message
+                                });
+                                return;
                             }
-                            catch (Exception ex)
-                            {
-                                fileOperator.SetFileResult(new Result(ResultCode.Error, ex.Message));
-                                if (channel != null)
-                                {
-                                    channel.Cancel(ex.Message);
-                                }
-                            }
-                            finally
-                            {
-                                channel.SafeDispose();
-                            }
-
+                        }
+                        catch (Exception ex)
+                        {
+                            waitTransfer.Status = 4;
+                            waitTransfer.Message = ex.Message;
+                            fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.LoadStreamFail.GetDescription(fileRequest.SavePath, ex.Message)));
                             this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
-                            this.SendFastObject(TouchRpcUtility.P_509_PushFileAck_Request, new WaitResult()
-                            {
-                                Sign = args.GetHashCode(),
-                                Status = (byte)(fileOperator.Result.ResultCode == ResultCode.Success ? 1 : 0),
-                                Message = fileOperator.Result.Message
-                            });
-                            return;
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        waitTransfer.Status = 4;
-                        waitTransfer.Message = ex.Message;
-                        fileOperator.SetFileResult(new Result(ResultCode.Error, TouchSocketRes.LoadStreamFail.GetDescription(fileRequest.SavePath, ex.Message)));
+                        waitTransfer.Message = args.Message;
+                        waitTransfer.Status = 2;
                         this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
                     }
-                }
-                else
-                {
-                    waitTransfer.Message = args.Message;
-                    waitTransfer.Status = 2;
-                    this.OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(args.TransferType, args.FileRequest, args.Metadata, fileOperator.Result, args.FileInfo));
-                }
 
-                this.SendFastObject(responseOrder, waitTransfer);
+                    this.SendFastObject(responseOrder, waitTransfer);
+                }
+                catch
+                {
+
+                  
+                }
             }, null);
         }
 
