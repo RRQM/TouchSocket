@@ -566,6 +566,10 @@ namespace TouchSocket.Sockets
             int threadCount = this.Config.GetValue<int>(TouchSocketConfigExtension.ThreadCountProperty);
             while (!ThreadPool.SetMinThreads(threadCount, threadCount))
             {
+                if (threadCount<1)
+                {
+                    break;
+                }
                 threadCount--;
             }
         }
