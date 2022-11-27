@@ -154,7 +154,7 @@ namespace AdapterConsoleApp
                     m_surPlusLength = (byte)(length - recedSurPlusLength);
                     this.m_tempByteBlock.Write(dataBuffer, index + 1, recedSurPlusLength);
                 }
-                index += length + 1;
+                index = length + 1;
             }
         }
     }

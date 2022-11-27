@@ -24,7 +24,7 @@ namespace ScreenUdpReceiver
             {
                 udpSession = new UdpSession();
 
-                udpSession.Received += (endpoint, byteBlock, requestInfo) =>
+                udpSession.Received = (endpoint, byteBlock, requestInfo) =>
                 {
                     pictureBox1.Image = Image.FromStream(byteBlock);
                 };

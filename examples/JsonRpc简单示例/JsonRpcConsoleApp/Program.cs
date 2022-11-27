@@ -67,17 +67,17 @@ namespace JsonRpcConsoleApp
         private static void CreateTcpJsonRpcParser(int port)
         {
             TcpService service = new TcpService();
-            service.Connecting += (client, e) =>
+            service.Connecting = (client, e) =>
             {
                 Console.WriteLine("客户端连接成功");
                 Console.WriteLine(client.ID);
             };
-            service.Connected += (SocketClient client, TouchSocketEventArgs e) =>
+            service.Connected = (SocketClient client, TouchSocketEventArgs e) =>
             {
                 Console.WriteLine(client.ID);
                 Console.WriteLine("客户端连接完成");
             };
-            service.Disconnected += (client, e) =>
+            service.Disconnected = (client, e) =>
             {
                 Console.WriteLine("客户端连接断开");
                 Console.WriteLine(client.ID);

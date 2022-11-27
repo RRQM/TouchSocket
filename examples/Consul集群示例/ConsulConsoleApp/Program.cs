@@ -12,13 +12,13 @@ namespace ConsulConsoleApp
         private static void Main(string[] args)
         {
             TcpService service = new TcpService();
-            service.Connecting += (client, e) =>
+            service.Connecting = (client, e) =>
             {
                 service.Logger.Info("Connecting");
             };//有客户端正在连接
-            service.Connected += (client, e) => { service.Logger.Info("Connected"); };//有客户端连接
-            service.Disconnected += (client, e) => { service.Logger.Info("Disconnected"); };//有客户端断开连接
-            service.Received += (client, byteBlock, requestInfo) =>
+            service.Connected = (client, e) => { service.Logger.Info("Connected"); };//有客户端连接
+            service.Disconnected = (client, e) => { service.Logger.Info("Disconnected"); };//有客户端断开连接
+            service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);

@@ -74,7 +74,7 @@ namespace FileClientGUI
         private void ConButton_Click(object sender, RoutedEventArgs e)
         {
             fileClient = new TcpTouchRpcClient();
-            fileClient.Disconnected += this.FileClient_Disconnected;
+            fileClient.Disconnected = this.FileClient_Disconnected;
             fileClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .SetVerifyToken("FileService")

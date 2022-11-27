@@ -52,7 +52,7 @@ namespace UnityServerConsoleApp
         private static void StartUdpService(int port)
         {
             UdpSession udpService = new UdpSession();
-            udpService.Received += (remote, byteBlock, requestInfo) =>
+            udpService.Received = (remote, byteBlock, requestInfo) =>
             {
                 udpService.Send(remote, byteBlock);
                 Console.WriteLine($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");

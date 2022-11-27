@@ -42,9 +42,9 @@ namespace AdapterConsoleApp
         private static void StartTcpService()
         {
             TcpService service = new TcpService();
-            service.Connected += (client, e) => { };//有客户端连接
-            service.Disconnected += (client, e) => { };//有客户端断开连接
-            service.Received += (client, byteBlock, requestInfo) =>
+            service.Connected = (client, e) => { };//有客户端连接
+            service.Disconnected = (client, e) => { };//有客户端断开连接
+            service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
                 if (requestInfo is MyBetweenAndRequestInfo info)

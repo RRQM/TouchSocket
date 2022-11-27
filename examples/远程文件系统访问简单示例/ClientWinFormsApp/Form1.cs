@@ -147,7 +147,7 @@ namespace ClientWinFormsApp
                                 {
                                     break;
                                 }
-                                length += r;
+                                length = r;
                             }
                             MessageBox.Show(length.ToString());
                         }
