@@ -87,7 +87,7 @@ TouchSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的
 ## 👑功能导图
 
 <p align="center">
-<img src="https://s1.328888.xyz/2022/09/04/1aFaw.png" alt="图片名称" align=center />
+<img src="images/1.png" alt="图片名称" align=center />
 </p>
 
 ## ✨简单示例
