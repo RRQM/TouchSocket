@@ -29,8 +29,8 @@ namespace WSClientApp
             myWSClient.SafeDispose();
 
             myWSClient = new WebSocketClient();
-            myWSClient.Received += this.MyWSClient_Received;
-            myWSClient.Handshaked += this.MyWSClient_Handshaked;
+            myWSClient.Received = this.MyWSClient_Received;
+            myWSClient.Handshaked = this.MyWSClient_Handshaked;
 
             myWSClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(this.textBox3.Text)

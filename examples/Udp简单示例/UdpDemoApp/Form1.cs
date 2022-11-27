@@ -20,7 +20,7 @@ namespace UdpDemoApp
 
         private void button1_Click(object sender, EventArgs e)
         {
-            m_udpSession.Received += (remote, byteBlock, requestInfo) =>
+            m_udpSession.Received = (remote, byteBlock, requestInfo) =>
             {
                 if (byteBlock.Len > 1024)
                 {

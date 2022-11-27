@@ -83,8 +83,8 @@ namespace FileServiceGUI
                 return;
             }
             this.fileService = new TcpTouchRpcService();
-            this.fileService.Connected += this.FileService_Connected;
-            this.fileService.Disconnected += this.FileService_Disconnected;
+            this.fileService.Connected = this.FileService_Connected;
+            this.fileService.Disconnected = this.FileService_Disconnected;
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .SetVerifyToken("FileService")

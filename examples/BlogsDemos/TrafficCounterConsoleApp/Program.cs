@@ -16,7 +16,7 @@ namespace TrafficCounterConsoleApp
         private static void Main(string[] args)
         {
             TcpService service = new TcpService();
-            service.Received += (client, byteBlock, requestInfo) =>
+            service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);

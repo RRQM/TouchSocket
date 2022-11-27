@@ -13,7 +13,7 @@ namespace PluginConsoleApp
         {
             TcpService service = new TcpService();
 
-            service.Connecting += (client, e) =>
+            service.Connecting = (client, e) =>
             {
                 client.SetDataHandlingAdapter(new TerminatorPackageAdapter("\r\n"));//命令行中使用\r\n结尾)
                 //new NormalDataHandlingAdapter();//亦或者省略\r\n，但此时调用方不能高速调用，会粘包

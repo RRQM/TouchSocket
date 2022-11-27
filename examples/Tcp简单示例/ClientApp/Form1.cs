@@ -35,42 +35,48 @@ namespace ClientApp
             client.Logger.Info($"从服务器收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
         }
 
-        private TcpClient m_tcpClient;
+        private TcpClient m_tcpClient=new TcpClient();
 
         private void button1_Click(object sender, EventArgs args)
         {
-            m_tcpClient = new TcpClient();
-
-            //声明配置
-            TouchSocketConfig config = new TouchSocketConfig();
-            config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .UsePlugin()
-                .SetBufferLength(1024 * 10)
-                .ConfigureContainer(a =>
-                {
-                    a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
-                })
-                .ConfigurePlugins(a =>
-                {
-                    if (checkBox1.Checked)
+            try
+            {
+                //声明配置
+                TouchSocketConfig config = new TouchSocketConfig();
+                config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+                    .UsePlugin()
+                    .SetBufferLength(1024 * 10)
+                    .ConfigureContainer(a =>
                     {
-                        a.UseReconnection(5, true, 1000);
-                    }
-                });
+                        a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+                    })
+                    .ConfigurePlugins(a =>
+                    {
+                        if (checkBox1.Checked)
+                        {
+                            a.UseReconnection(5, true, 1000);
+                        }
+                    });
 
-            m_tcpClient.Connected += (client, e) =>
-            {
-                client.Logger.Info("成功连接");
-            };//成功连接到服务器
-            m_tcpClient.Disconnected += (client, e) =>
-            {
-                client.Logger.Info($"断开连接，信息：{e.Message}");
-            };//从服务器断开连接，当连接不成功时不会触发。
-            m_tcpClient.Received += this.TcpClient_Received;
+                m_tcpClient.Connected = (client, e) =>
+                {
+                    client.Logger.Info("成功连接");
+                };//成功连接到服务器
+                m_tcpClient.Disconnected = (client, e) =>
+                {
+                    client.Logger.Info($"断开连接，信息：{e.Message}");
+                };//从服务器断开连接，当连接不成功时不会触发。
+                m_tcpClient.Received = this.TcpClient_Received;
 
-            //载入配置
-            m_tcpClient.Setup(config);
-            m_tcpClient.Connect();
+                //载入配置
+                m_tcpClient.Setup(config);
+                m_tcpClient.Connect();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+           
         }
 
         private void button2_Click(object sender, EventArgs e)

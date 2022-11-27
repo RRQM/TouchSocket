@@ -43,8 +43,8 @@ namespace EERPCServiceDemo
 
             Control.CheckForIllegalCrossThreadCalls = false;
             this.tcpRpcService = new TcpTouchRpcService();
-            this.tcpRpcService.Connected += this.TcpRpcParser_Connected;
-            this.tcpRpcService.Disconnected += this.TcpRpcParser_Disconnected;
+            this.tcpRpcService.Connected = this.TcpRpcParser_Connected;
+            this.tcpRpcService.Disconnected = this.TcpRpcParser_Disconnected;
 
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
