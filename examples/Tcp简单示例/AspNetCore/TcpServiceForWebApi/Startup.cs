@@ -31,16 +31,16 @@ namespace TcpServiceForWebApi
             catch
             {
             }
-            services.AddTcpService(config =>
-            {
-                config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                .UsePlugin()
-                .UseAspNetCoreContainer(services)
-                .ConfigurePlugins(a =>
-                {
-                    a.Add<MyTcpPlugin>();
-                });
-            });
+            var tcpService = services.AddTcpService(config =>
+              {
+                  config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                  .UsePlugin()
+                  .UseAspNetCoreContainer(services)
+                  .ConfigurePlugins(a =>
+                  {
+                      a.Add<MyTcpPlugin>();//此插件就可以处理接收数据
+                  });
+              });
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
