@@ -32,7 +32,6 @@ namespace TouchSocket.Rpc.JsonRpc
     public class JsonRpcParserPlugin : WebSocketPluginBase, IRpcParser
     {
         private readonly ActionMap m_actionMap;
-        private readonly WaitCallback m_invokeWaitCallback;
         private string m_jsonRpcUrl = "/jsonrpc";
         private RpcStore m_rpcStore;
 
@@ -43,7 +42,6 @@ namespace TouchSocket.Rpc.JsonRpc
         {
             this.m_actionMap = new ActionMap();
             rpcStore?.AddRpcParser(this.GetType().Name, this);
-            this.m_invokeWaitCallback = this.InvokeWaitCallback;
         }
 
         /// <summary>
@@ -150,7 +148,7 @@ namespace TouchSocket.Rpc.JsonRpc
                 if (jsonRpcStr.Contains("jsonrpc"))
                 {
                     e.Handled = true;
-                    ThreadPool.QueueUserWorkItem(this.m_invokeWaitCallback, new JsonRpcCallContext()
+                    ThreadPool.QueueUserWorkItem(this.InvokeWaitCallback, new JsonRpcCallContext()
                     {
                         Caller = client,
                         JRPT = JRPT.Websocket,
@@ -170,7 +168,7 @@ namespace TouchSocket.Rpc.JsonRpc
             if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
             {
                 e.Handled = true;
-                ThreadPool.QueueUserWorkItem(this.m_invokeWaitCallback, new JsonRpcCallContext()
+                ThreadPool.QueueUserWorkItem(this.InvokeWaitCallback, new JsonRpcCallContext()
                 {
                     Caller = client,
                     JRPT = JRPT.Http,
@@ -194,7 +192,7 @@ namespace TouchSocket.Rpc.JsonRpc
                 if (jsonRpcStr.Contains("jsonrpc"))
                 {
                     e.Handled = true;
-                    ThreadPool.QueueUserWorkItem(this.m_invokeWaitCallback, new JsonRpcCallContext()
+                    ThreadPool.QueueUserWorkItem(this.InvokeWaitCallback, new JsonRpcCallContext()
                     {
                         Caller = client,
                         JRPT = JRPT.Tcp,
@@ -302,6 +300,10 @@ namespace TouchSocket.Rpc.JsonRpc
 
         private void InvokeWaitCallback(object context)
         {
+            if (context is null)
+            {
+                return;
+            }
             JsonRpcCallContext callContext = (JsonRpcCallContext)context;
             InvokeResult invokeResult = new InvokeResult();
 
@@ -386,48 +388,54 @@ namespace TouchSocket.Rpc.JsonRpc
 
         private void Response(JsonRpcCallContext callContext, object result, error error)
         {
-            using (ByteBlock responseByteBlock = new ByteBlock())
+            try
             {
-                JObject jobject = new JObject();
-                if (error == null)
+                using (ByteBlock responseByteBlock = new ByteBlock())
                 {
-                    //成功
-                    jobject.Add("jsonrpc", JToken.FromObject("2.0"));
-                    if (result != null)
+                    JObject jobject = new JObject();
+                    if (error == null)
                     {
-                        jobject.Add("result", JToken.FromObject(result));
+                        //成功
+                        jobject.Add("jsonrpc", JToken.FromObject("2.0"));
+                        if (result != null)
+                        {
+                            jobject.Add("result", JToken.FromObject(result));
+                        }
+                        else
+                        {
+                            jobject.Add("result", null);
+                        }
+
+                        jobject.Add("id", callContext.JsonRpcPackage.id == null ? null : JToken.FromObject(callContext.JsonRpcPackage.id));
                     }
                     else
                     {
-                        jobject.Add("result", null);
+                        jobject.Add("jsonrpc", JToken.FromObject("2.0"));
+                        jobject.Add("error", JToken.FromObject(error));
+                        jobject.Add("id", callContext.JsonRpcPackage.id == null ? null : JToken.FromObject(callContext.JsonRpcPackage.id));
                     }
 
-                    jobject.Add("id", callContext.JsonRpcPackage.id == null ? null : JToken.FromObject(callContext.JsonRpcPackage.id));
+                    ITcpClientBase client = (ITcpClientBase)callContext.Caller;
+                    if (callContext.JRPT == JRPT.Http)
+                    {
+                        HttpResponse httpResponse = new HttpResponse();
+                        httpResponse.FromJson(jobject.ToString(Formatting.None));
+                        httpResponse.Build(responseByteBlock);
+                        client.DefaultSend(responseByteBlock);
+                    }
+                    else if (callContext.JRPT == JRPT.Websocket)
+                    {
+                        ((HttpSocketClient)client).SendWithWS(jobject.ToString(Formatting.None));
+                    }
+                    else
+                    {
+                        responseByteBlock.Write(jobject.ToString(Formatting.None).ToUTF8Bytes());
+                        client.Send(responseByteBlock);
+                    }
                 }
-                else
-                {
-                    jobject.Add("jsonrpc", JToken.FromObject("2.0"));
-                    jobject.Add("error", JToken.FromObject(error));
-                    jobject.Add("id", callContext.JsonRpcPackage.id == null ? null : JToken.FromObject(callContext.JsonRpcPackage.id));
-                }
-
-                ITcpClientBase client = (ITcpClientBase)callContext.Caller;
-                if (callContext.JRPT == JRPT.Http)
-                {
-                    HttpResponse httpResponse = new HttpResponse();
-                    httpResponse.FromJson(jobject.ToString(Formatting.None));
-                    httpResponse.Build(responseByteBlock);
-                    client.DefaultSend(responseByteBlock);
-                }
-                else if (callContext.JRPT == JRPT.Websocket)
-                {
-                    ((HttpSocketClient)client).SendWithWS(jobject.ToString(Formatting.None));
-                }
-                else
-                {
-                    responseByteBlock.Write(jobject.ToString(Formatting.None).ToUTF8Bytes());
-                    client.Send(responseByteBlock);
-                }
+            }
+            catch
+            {
             }
         }
     }
