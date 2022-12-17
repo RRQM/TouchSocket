@@ -2,12 +2,7 @@
 using System.Text;
 using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace TrafficCounterConsoleApp
 {
@@ -99,23 +94,22 @@ namespace TrafficCounterConsoleApp
 
     public static class TrafficCounterEx
     {
-        public static readonly DependencyProperty SendTrafficCounterProperty =
-            DependencyProperty.Register("SendTrafficCounter", typeof(int), typeof(TrafficCounterEx), 0);
 
-        public static readonly DependencyProperty SendTempTrafficCounterProperty =
-           DependencyProperty.Register("SendTempTrafficCounter", typeof(int), typeof(TrafficCounterEx), 0);
+        public static readonly DependencyProperty<int> SendTrafficCounterProperty =
+            DependencyProperty<int>.Register("SendTrafficCounter", typeof(TrafficCounterEx), 0);
 
-        public static readonly DependencyProperty ReceivedTrafficCounterProperty =
-           DependencyProperty.Register("ReceivedTrafficCounter", typeof(int), typeof(TrafficCounterEx), 0);
+        public static readonly DependencyProperty<int> SendTempTrafficCounterProperty =
+           DependencyProperty<int>.Register("SendTempTrafficCounter", typeof(TrafficCounterEx), 0);
 
-        public static readonly DependencyProperty ReceivedTempTrafficCounterProperty =
-           DependencyProperty.Register("ReceivedTempTrafficCounter", typeof(int), typeof(TrafficCounterEx), 0);
+        public static readonly DependencyProperty<int> ReceivedTrafficCounterProperty = DependencyProperty<int>.Register("ReceivedTrafficCounter", typeof(TrafficCounterEx), 0);
 
-        public static readonly DependencyProperty AutoRefreshProperty =
-           DependencyProperty.Register("AutoRefresh", typeof(bool), typeof(TrafficCounterEx), true);
+        public static readonly DependencyProperty<int> ReceivedTempTrafficCounterProperty = DependencyProperty<int>.Register("ReceivedTempTrafficCounter", typeof(TrafficCounterEx), 0);
 
-        public static readonly DependencyProperty AutoRefreshTimerProperty =
-           DependencyProperty.Register("AutoRefreshTimer", typeof(Timer), typeof(TrafficCounterEx), null);
+        public static readonly DependencyProperty<bool> AutoRefreshProperty =
+           DependencyProperty<bool>.Register("AutoRefresh", typeof(TrafficCounterEx), true);
+
+        public static readonly DependencyProperty<Timer> AutoRefreshTimerProperty =
+           DependencyProperty<Timer>.Register("AutoRefreshTimer", typeof(TrafficCounterEx), null);
 
         public static int GetSendTrafficCounter(this DependencyObject dependencyObject)
         {

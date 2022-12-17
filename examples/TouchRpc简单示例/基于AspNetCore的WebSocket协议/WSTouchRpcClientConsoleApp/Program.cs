@@ -1,8 +1,6 @@
 ﻿using System;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Diagnostics;
-using TouchSocket.Core.IO;
-using TouchSocket.Rpc.TouchRpc.AspNetCore;
+using TouchSocket.Core;
+using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 
 namespace WSTouchRpcClientConsoleApp

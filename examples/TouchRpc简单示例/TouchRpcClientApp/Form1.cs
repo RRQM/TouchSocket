@@ -1,9 +1,7 @@
 ﻿using RpcProxy;
 using System;
 using System.Windows.Forms;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Diagnostics;
-using TouchSocket.Core.Log;
+using TouchSocket.Core;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 

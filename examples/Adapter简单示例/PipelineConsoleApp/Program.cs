@@ -1,12 +1,12 @@
 ﻿using System.Text;
-using TouchSocket.Core.Config;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace PipelineConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             TcpService service = new TcpService();
 
@@ -34,7 +34,6 @@ namespace PipelineConsoleApp
                 }
                 //当Pipeline退出该事件方法时，会被自动释放，下次会投递新的Pipeline实例。
                 // 如果里面还有未Read完的数据，下次会继续投递,如果想直接丢弃，则在此处直接调用Disopose即可。
-
             };
 
             //声明配置

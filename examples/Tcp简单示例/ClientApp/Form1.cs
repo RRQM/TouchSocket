@@ -2,11 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace ClientApp
@@ -35,7 +31,7 @@ namespace ClientApp
             client.Logger.Info($"从服务器收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
         }
 
-        private TcpClient m_tcpClient=new TcpClient();
+        private TcpClient m_tcpClient = new TcpClient();
 
         private void button1_Click(object sender, EventArgs args)
         {
@@ -76,7 +72,6 @@ namespace ClientApp
             {
                 MessageBox.Show(ex.Message);
             }
-           
         }
 
         private void button2_Click(object sender, EventArgs e)

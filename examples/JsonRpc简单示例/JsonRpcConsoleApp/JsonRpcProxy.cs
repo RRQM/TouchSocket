@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
@@ -27,7 +28,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject TestJObject(TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default);
+        Newtonsoft.Json.Linq.JObject TestJObject(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default);
 
         ///<summary>
         ///无注释信息
@@ -35,7 +36,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject> TestJObjectAsync(TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default);
+        Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default);
 
         ///<summary>
         ///无注释信息
@@ -123,7 +124,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject TestJObject(TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default)
+        public Newtonsoft.Json.Linq.JObject TestJObject(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default)
         {
             if (Client == null)
             {
@@ -134,14 +135,14 @@ namespace JsonRpcProxy
                 throw new RpcException("Rpc无法执行。");
             }
             object[] parameters = new object[] { obj };
-            TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject returnData = Client.Invoke<TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
+            Newtonsoft.Json.Linq.JObject returnData = Client.Invoke<Newtonsoft.Json.Linq.JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
             return returnData;
         }
 
         ///<summary>
         ///无注释信息
         ///</summary>
-        public Task<TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject> TestJObjectAsync(TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default)
+        public Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default)
         {
             if (Client == null)
             {
@@ -152,7 +153,7 @@ namespace JsonRpcProxy
                 throw new RpcException("Rpc无法执行。");
             }
             object[] parameters = new object[] { obj };
-            return Client.InvokeAsync<TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
+            return Client.InvokeAsync<Newtonsoft.Json.Linq.JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
         }
 
         ///<summary>
@@ -272,7 +273,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject TestJObject<TClient>(this TClient client, TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default) where TClient :
+        public static Newtonsoft.Json.Linq.JObject TestJObject<TClient>(this TClient client, Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.JsonRpc.IJsonRpcClient
         {
             if (client.TryCanInvoke?.Invoke(client) == false)
@@ -280,14 +281,14 @@ namespace JsonRpcProxy
                 throw new RpcException("Rpc无法执行。");
             }
             object[] parameters = new object[] { obj };
-            TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject returnData = client.Invoke<TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
+            JObject returnData = client.Invoke<JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
             return returnData;
         }
 
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static Task<TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject> TestJObjectAsync<TClient>(this TClient client, TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default) where TClient :
+        public static Task<JObject> TestJObjectAsync<TClient>(this TClient client, Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.JsonRpc.IJsonRpcClient
         {
             if (client.TryCanInvoke?.Invoke(client) == false)
@@ -295,7 +296,7 @@ namespace JsonRpcProxy
                 throw new RpcException("Rpc无法执行。");
             }
             object[] parameters = new object[] { obj };
-            return client.InvokeAsync<TouchSocket.Core.XREF.Newtonsoft.Json.Linq.JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
+            return client.InvokeAsync<JObject>("jsonrpcconsoleapp.jsonrpcserver.testjobject", invokeOption, parameters);
         }
 
         ///<summary>

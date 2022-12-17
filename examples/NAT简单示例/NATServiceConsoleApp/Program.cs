@@ -1,11 +1,6 @@
 ﻿using System;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace NATServiceConsoleApp
 {
@@ -40,7 +35,7 @@ namespace NATServiceConsoleApp
                     {
                         //在企业版中，使用以下任意方式，可实现转发客户端的断线重连。
                         a.Add<PollingKeepAlivePlugin<TcpClient>>()
-                        .SetTick(1000);//每秒检查
+                        .SetTick(TimeSpan.FromSeconds(1));//每秒检查
                         //a.UseReconnection();
                     }));
             }

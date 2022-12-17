@@ -6,8 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using TcpServiceForWebApi.Plugins;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
 
 namespace TcpServiceForWebApi

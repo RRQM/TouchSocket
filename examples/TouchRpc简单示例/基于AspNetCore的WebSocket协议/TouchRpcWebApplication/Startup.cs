@@ -17,8 +17,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using TouchRpcWebApplication.RpcProviders;
+using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
-using TouchSocket.Core.Config;
 using TouchSocket.Rpc;
 
 namespace TouchRpcWebApplication

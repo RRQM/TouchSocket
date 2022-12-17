@@ -1,11 +1,6 @@
 using System.Text;
-using System.Windows.Forms;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace TLVWinFormsApp
 {
@@ -22,7 +17,8 @@ namespace TLVWinFormsApp
             this.listBox1.Items.Insert(0, msg);
         }
 
-        readonly TcpService m_tcpService = new TcpService();
+        private readonly TcpService m_tcpService = new TcpService();
+
         private void button1_Click(object sender, EventArgs e)
         {
             //订阅收到消息事件
@@ -30,7 +26,7 @@ namespace TLVWinFormsApp
             {
                 if (requestInfo is TLVDataFrame frame)
                 {
-                    client.Logger.Info($"服务器收到,Tag={frame.Tag},Len={frame.Length},Value={(frame.Value!=null?Encoding.UTF8.GetString(frame.Value):string.Empty)}") ;
+                    client.Logger.Info($"服务器收到,Tag={frame.Tag},Len={frame.Length},Value={(frame.Value != null ? Encoding.UTF8.GetString(frame.Value) : string.Empty)}");
                 }
             };
 
@@ -55,12 +51,13 @@ namespace TLVWinFormsApp
             m_tcpService.Logger.Info("服务器成功启动。");
         }
 
-        readonly TcpClient m_client = new TcpClient();
+        private readonly TcpClient m_client = new TcpClient();
+
         private void button2_Click(object sender, EventArgs e)
         {
             m_client.Setup(new TouchSocketConfig()
                   .UsePlugin()
-                  .SetMaxPackageSize(1024*1024*10)
+                  .SetMaxPackageSize(1024 * 1024 * 10)
                   .ConfigureContainer(a =>
                   {
                       a.SetSingletonLogger(new EasyLogger(this.ShowMsg));
@@ -72,10 +69,11 @@ namespace TLVWinFormsApp
                       .SetLengthType(FixedHeaderType.Int);//设置支持的最大数据类型，该值还受SetMaxPackageSize影响。
 
                       a.Add<PollingKeepAlivePlugin<TcpClient>>()
-                      .SetTick(1000)
-                      .SetActionForCheck((c) => 
+                      .SetTick(TimeSpan.FromSeconds(1))
+                      .SetActionForCheck((c) =>
                       {
                           c.Logger.Info($"自动ping结果：{c.Ping()}");
+                          return true;
                       });
                   })
                   .SetRemoteIPHost(new IPHost("127.0.0.1:7789")));
@@ -88,7 +86,7 @@ namespace TLVWinFormsApp
         {
             try
             {
-                this.m_client?.Send(new ValueTLVDataFrame((ushort)this.numericUpDown1.Value,Encoding.UTF8.GetBytes(this.textBox1.Text)));
+                this.m_client?.Send(new ValueTLVDataFrame((ushort)this.numericUpDown1.Value, Encoding.UTF8.GetBytes(this.textBox1.Text)));
             }
             catch (Exception ex)
             {
@@ -120,7 +118,7 @@ namespace TLVWinFormsApp
                 {
                     this.m_client?.Logger.Exception(ex);
                 }
-            } 
+            }
         }
     }
 }

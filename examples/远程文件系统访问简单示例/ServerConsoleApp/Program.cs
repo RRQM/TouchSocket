@@ -1,12 +1,7 @@
 ﻿using System;
 using System.IO;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Rpc.TouchRpc;
-using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 
 namespace ServerConsoleApp
@@ -48,7 +43,7 @@ namespace ServerConsoleApp
 
     internal class MyPlugin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
     {
-        protected override void OnRemoteAccessing(TcpTouchRpcSocketClient client, RemoteAccessActionEventArgs e)
+        protected override void OnRemoteAccessing(TcpTouchRpcSocketClient client, RemoteAccessingEventArgs e)
         {
             client.Logger.Info($"用户{client.GetInfo()}正在进行文件系统访问，对象：{e.AccessType}，操作：{e.AccessMode}");
             if (e.AccessMode == RemoteAccessMode.Delete)
@@ -58,7 +53,6 @@ namespace ServerConsoleApp
                 e.Message = "不允许删除文件";
                 return;
             }
-            base.OnRemoteAccessing(client, e);
         }
 
         protected override void OnLoadingStream(TcpTouchRpcSocketClient client, LoadingStreamEventArgs e)

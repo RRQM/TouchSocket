@@ -2,14 +2,7 @@
 using System.Text;
 using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.IO;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace HeartbeatConsoleApp
 {
@@ -87,7 +80,7 @@ namespace HeartbeatConsoleApp
             return new MyRequestInfo();
         }
 
-        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        protected override void PreviewSend(IRequestInfo requestInfo)
         {
             throw new NotImplementedException();
         }
@@ -155,8 +148,8 @@ namespace HeartbeatConsoleApp
     /// </summary>
     internal static class DependencyExtensions
     {
-        public static readonly DependencyProperty HeartbeatTimerProperty =
-            DependencyProperty.Register("HeartbeatTimer", typeof(Timer), typeof(DependencyExtensions), null);
+        public static readonly DependencyProperty<Timer> HeartbeatTimerProperty =
+            DependencyProperty<Timer>.Register("HeartbeatTimer", typeof(DependencyExtensions), null);
 
         public static bool Ping<TClient>(this TClient client) where TClient : ITcpClientBase
         {

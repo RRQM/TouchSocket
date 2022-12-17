@@ -1,5 +1,4 @@
 ﻿using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
@@ -18,7 +17,7 @@ namespace AdapterConsoleApp
             return new SGCCRequestInfo();
         }
 
-        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        protected override void PreviewSend(IRequestInfo requestInfo)
         {
             throw new System.NotImplementedException();
         }

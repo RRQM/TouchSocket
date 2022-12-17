@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;

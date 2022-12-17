@@ -5,8 +5,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace ScreenUdpSender
@@ -30,7 +29,7 @@ namespace ScreenUdpSender
             while (true)
             {
                 byte[] byteArray = ImageToByte(getScreen());
-                ByteBlock bb = new ByteBlock(byteArray);
+                using ByteBlock bb = new ByteBlock(byteArray);
                 udpSession.Send(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb);
                 Thread.Sleep((int)(1000.0 / (int)this.numericUpDown1.Value));
             }
