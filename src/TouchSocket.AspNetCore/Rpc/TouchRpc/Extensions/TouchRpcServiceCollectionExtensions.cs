@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Config;
+using TouchSocket.Core;
 using TouchSocket.Rpc.TouchRpc.AspNetCore;
 
 namespace Microsoft.Extensions.DependencyInjection

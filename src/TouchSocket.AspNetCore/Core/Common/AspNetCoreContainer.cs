@@ -15,7 +15,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TouchSocket.Core.Dependency;
 
 namespace TouchSocket.Core.AspNetCore
 {
@@ -33,7 +32,7 @@ namespace TouchSocket.Core.AspNetCore
         public AspNetCoreContainer(IServiceCollection services)
         {
             services.AddSingleton<IContainer>(this);
-            this.m_services = services;
+            m_services = services;
         }
 
         /// <summary>
@@ -42,7 +41,7 @@ namespace TouchSocket.Core.AspNetCore
         /// <returns></returns>
         public IEnumerator<DependencyDescriptor> GetEnumerator()
         {
-            return this.m_services.ToList().Select(s =>
+            return m_services.ToList().Select(s =>
               {
                   DependencyDescriptor descriptor = new DependencyDescriptor(s.ServiceType, s.ImplementationType, (Lifetime)((int)s.Lifetime));
                   descriptor.ToInstance = s.ImplementationInstance;
@@ -82,9 +81,9 @@ namespace TouchSocket.Core.AspNetCore
         {
             if (!key.IsNullOrEmpty())
             {
-                throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的多实现注入");
+                throw new NotSupportedException($"{GetType().Name}不支持包含Key的多实现注入");
             }
-            if (this.IsRegistered(descriptor.FromType))
+            if (IsRegistered(descriptor.FromType))
             {
                 this.Unregister(descriptor.FromType);
             }
@@ -93,17 +92,17 @@ namespace TouchSocket.Core.AspNetCore
                 case Lifetime.Singleton:
                     if (descriptor.ToInstance != null)
                     {
-                        this.m_services.AddSingleton(descriptor.FromType, descriptor.ToInstance);
+                        m_services.AddSingleton(descriptor.FromType, descriptor.ToInstance);
                     }
                     else
                     {
-                        this.m_services.AddSingleton(descriptor.FromType, descriptor.ToType);
+                        m_services.AddSingleton(descriptor.FromType, descriptor.ToType);
                     }
                     break;
 
                 case Lifetime.Transient:
                 default:
-                    this.m_services.AddTransient(descriptor.FromType, descriptor.ToType);
+                    m_services.AddTransient(descriptor.FromType, descriptor.ToType);
                     break;
             }
         }
@@ -123,9 +122,9 @@ namespace TouchSocket.Core.AspNetCore
             }
             if (fromType == typeof(IServiceProvider))
             {
-                return this.m_services.BuildServiceProvider();
+                return m_services.BuildServiceProvider();
             }
-            ServiceProvider provider = this.m_services.BuildServiceProvider();
+            ServiceProvider provider = m_services.BuildServiceProvider();
 
             return provider.GetService(fromType);
         }
@@ -150,7 +149,7 @@ namespace TouchSocket.Core.AspNetCore
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
     }
 }

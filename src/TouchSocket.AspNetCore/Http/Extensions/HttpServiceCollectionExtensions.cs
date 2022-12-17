@@ -12,11 +12,8 @@
 //------------------------------------------------------------------------------
 using System;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
-
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -26,6 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class HttpServiceCollectionExtensions
     {
         #region HttpService
+
         /// <summary>
         /// 添加HttpService服务。
         /// </summary>

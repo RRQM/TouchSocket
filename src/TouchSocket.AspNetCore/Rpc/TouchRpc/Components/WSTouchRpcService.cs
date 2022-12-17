@@ -13,14 +13,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Plugins;
-using TouchSocket.Core.Serialization;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -38,7 +35,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count => this.m_tokenDic.Count;
+        public int Count => m_tokenDic.Count;
 
         /// <summary>
         /// 获取SocketClient
@@ -50,7 +47,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             get
             {
                 WSTouchRpcSocketClient t;
-                this.TryGetSocketClient(id, out t);
+                TryGetSocketClient(id, out t);
                 return t;
             }
         }
@@ -61,7 +58,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <returns></returns>
         public IEnumerable<WSTouchRpcSocketClient> GetClients()
         {
-            return this.m_tokenDic.Values;
+            return m_tokenDic.Values;
         }
 
         /// <summary>
@@ -70,7 +67,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <returns></returns>
         public string[] GetIDs()
         {
-            return this.m_tokenDic.Keys.ToArray();
+            return m_tokenDic.Keys.ToArray();
         }
 
         /// <summary>
@@ -85,7 +82,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 return false;
             }
 
-            if (this.m_tokenDic.ContainsKey(id))
+            if (m_tokenDic.ContainsKey(id))
             {
                 return true;
             }
@@ -106,12 +103,12 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 return false;
             }
 
-            return this.m_tokenDic.TryGetValue(id, out socketClient);
+            return m_tokenDic.TryGetValue(id, out socketClient);
         }
 
         internal bool TryAdd(string id, WSTouchRpcSocketClient socketClient)
         {
-            return this.m_tokenDic.TryAdd(id, socketClient);
+            return m_tokenDic.TryAdd(id, socketClient);
         }
 
         internal bool TryRemove(string id, out WSTouchRpcSocketClient socketClient)
@@ -121,14 +118,14 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 socketClient = null;
                 return false;
             }
-            return this.m_tokenDic.TryRemove(id, out socketClient);
+            return m_tokenDic.TryRemove(id, out socketClient);
         }
 
         #endregion SocketClient
 
         private readonly ActionMap m_actionMap;
-        private readonly SnowflakeIDGenerator m_iDGenerator;
         private readonly RpcActorGroup m_rpcActorGroup;
+        private long m_idCount;
         private RpcStore m_rpcStore;
 
         /// <summary>
@@ -137,53 +134,52 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="config"></param>
         public WSTouchRpcService(TouchSocketConfig config)
         {
-            this.m_actionMap = new ActionMap();
-            this.m_iDGenerator = new SnowflakeIDGenerator(4);
-            this.Config = config;
-            this.UsePlugin = config.IsUsePlugin;
-            this.PluginsManager = config.PluginsManager;
-            this.VerifyToken = config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty);
+            m_actionMap = new ActionMap();
+            Config = config;
+            UsePlugin = config.IsUsePlugin;
+            PluginsManager = config.PluginsManager;
+            VerifyToken = config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty);
 
-            if (config.GetValue<Func<string>>(Sockets.TouchSocketConfigExtension.GetDefaultNewIDProperty) is Func<string> fun)
+            if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIDProperty) is Func<string> fun)
             {
-                this.GetDefaultNewID = fun;
+                GetDefaultNewID = fun;
             }
             else
             {
-                this.GetDefaultNewID = () => { return this.m_iDGenerator.NextID().ToString(); };
+                GetDefaultNewID = () => { return Interlocked.Increment(ref m_idCount).ToString(); };
             }
 
-            this.m_rpcActorGroup = new RpcActorGroup
+            m_rpcActorGroup = new RpcActorGroup
             {
-                Config = this.Config,
-                OnClose = this.OnRpcServiceClose,
-                OnFileTransfered = this.OnRpcServiceFileTransfered,
-                GetInvokeMethod = this.GetInvokeMethod,
-                OnFileTransfering = this.OnRpcServiceFileTransfering,
-                OnFindRpcActor = this.OnRpcServiceFindRpcActor,
-                OnHandshaked = this.OnRpcServiceHandshaked,
-                OnHandshaking = this.OnRpcServiceHandshaking,
-                OnReceived = this.OnRpcServiceReceived,
-                OnResetID = this.OnRpcServiceResetID,
-                OnStreamTransfered = this.OnRpcServiceStreamTransfered,
-                OnStreamTransfering = this.OnRpcServiceStreamTransfering,
-                OutputSend = this.RpcServiceOutputSend
+                Config = Config,
+                OnClose = OnRpcServiceClose,
+                OnFileTransfered = OnRpcServiceFileTransfered,
+                GetInvokeMethod = GetInvokeMethod,
+                OnFileTransfering = OnRpcServiceFileTransfering,
+                OnFindRpcActor = OnRpcServiceFindRpcActor,
+                OnRouting = OnRpcServiceRouting,
+                OnHandshaked = OnRpcServiceHandshaked,
+                OnHandshaking = OnRpcServiceHandshaking,
+                OnReceived = OnRpcServiceReceived,
+                OnStreamTransfered = OnRpcServiceStreamTransfered,
+                OnStreamTransfering = OnRpcServiceStreamTransfering,
+                OutputSend = RpcServiceOutputSend
             };
 
-            if (config.GetValue<RpcStore>(RpcConfigExtensions.RpcStoreProperty) is RpcStore rpcStore)
+            if (config.GetValue(RpcConfigExtensions.RpcStoreProperty) is RpcStore rpcStore)
             {
-                rpcStore.AddRpcParser(this.GetType().Name, this);
+                rpcStore.AddRpcParser(GetType().Name, this);
             }
             else
             {
-                new RpcStore(config.Container).AddRpcParser(this.GetType().Name, this);
+                new RpcStore(config.Container).AddRpcParser(GetType().Name, this);
             }
         }
 
         /// <summary>
         /// 方法映射表
         /// </summary>
-        public ActionMap ActionMap { get => this.m_actionMap; }
+        public ActionMap ActionMap { get => m_actionMap; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -208,7 +204,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public RpcStore RpcStore => this.m_rpcStore;
+        public RpcStore RpcStore => m_rpcStore;
 
         /// <summary>
         /// <inheritdoc/>
@@ -225,35 +221,35 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="targetID"></param>
+        /// <param name="targetId"></param>
         /// <returns></returns>
-        public Channel CreateChannel(string targetID)
+        public Channel CreateChannel(string targetId)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
                 return client.CreateChannel();
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="targetID"></param>
+        /// <param name="targetId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Channel CreateChannel(string targetID, int id)
+        public Channel CreateChannel(string targetId, int id)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
                 return client.CreateChannel(id);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
@@ -264,20 +260,20 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="targetID"></param>
+        /// <param name="targetId"></param>
         /// <param name="method"></param>
         /// <param name="invokeOption"></param>
         /// <param name="parameters"></param>
         /// <param name="types"></param>
-        public void Invoke(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public void Invoke(string targetId, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
-                client.Invoke(targetID, method, invokeOption, ref parameters, types);
+                client.Invoke(targetId, method, invokeOption, ref parameters, types);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
@@ -285,28 +281,28 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="targetID"></param>
+        /// <param name="targetId"></param>
         /// <param name="method"></param>
         /// <param name="invokeOption"></param>
         /// <param name="parameters"></param>
         /// <param name="types"></param>
         /// <returns></returns>
-        public T Invoke<T>(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public T Invoke<T>(string targetId, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
-                return client.Invoke<T>(targetID, method, invokeOption, ref parameters, types);
+                return client.Invoke<T>(targetId, method, invokeOption, ref parameters, types);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
         /// <summary>
         /// 反向调用客户端Rpc
         /// </summary>
-        /// <param name="targetID">客户端ID</param>
+        /// <param name="targetId">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
@@ -315,22 +311,22 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public void Invoke(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
+        public void Invoke(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
                 client.Invoke(method, invokeOption, parameters);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
         /// <summary>
         /// 反向调用客户端Rpc
         /// </summary>
-        /// <param name="targetID">客户端ID</param>
+        /// <param name="targetId">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
@@ -340,22 +336,22 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
-        public T Invoke<T>(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
+        public T Invoke<T>(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
                 return client.Invoke<T>(method, invokeOption, parameters);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
         /// <summary>
         /// 反向调用客户端Rpc
         /// </summary>
-        /// <param name="targetID">客户端ID</param>
+        /// <param name="targetId">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
@@ -364,22 +360,22 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public Task InvokeAsync(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
+        public Task InvokeAsync(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
                 return client.InvokeAsync(method, invokeOption, parameters);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
         /// <summary>
         /// 反向调用客户端Rpc
         /// </summary>
-        /// <param name="targetID">客户端ID</param>
+        /// <param name="targetId">客户端ID</param>
         /// <param name="method">方法名</param>
         /// <param name="invokeOption">调用配置</param>
         /// <param name="parameters">参数</param>
@@ -389,16 +385,26 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <exception cref="ClientNotFindException">没有找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
-        public Task<T> InvokeAsync<T>(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
+        public Task<T> InvokeAsync<T>(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
                 return client.InvokeAsync<T>(method, invokeOption, parameters);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
+        }
+
+        /// <inheritdoc/>
+        public bool Ping(string targetId, int timeout = 5000)
+        {
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
+            {
+                return client.Ping(timeout);
+            }
+            return false;
         }
 
         #endregion Rpc
@@ -411,7 +417,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             {
                 if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
                 }
             }
         }
@@ -422,109 +428,76 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             {
                 if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
                 {
-                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                    m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
                 }
             }
         }
 
         void IRpcParser.SetRpcStore(RpcStore rpcStore)
         {
-            this.m_rpcActorGroup.RpcStore = rpcStore;
-            this.m_rpcStore = rpcStore;
+            m_rpcActorGroup.RpcStore = rpcStore;
+            m_rpcStore = rpcStore;
         }
 
         #endregion RPC解析器
 
         #region File
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="targetID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result PullFile(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Result PullFile(string targetId, FileOperator fileOperator)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
-                return client.PullFile(fileRequest, fileOperator, metadata);
+                return client.PullFile(fileOperator);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="targetID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> PullFileAsync(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Task<Result> PullFileAsync(string targetId, FileOperator fileOperator)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
-                return client.PullFileAsync(fileRequest, fileOperator, metadata);
+                return client.PullFileAsync(fileOperator);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="targetID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result PushFile(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Result PushFile(string targetId, FileOperator fileOperator)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
-                return client.PushFile(fileRequest, fileOperator, metadata);
+                return client.PushFile(fileOperator);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="targetID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> PushFileAsync(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Task<Result> PushFileAsync(string targetId, FileOperator fileOperator)
         {
-            if (this.TryGetSocketClient(targetID, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
             {
-                return client.PushFileAsync(fileRequest, fileOperator, metadata);
+                return client.PushFileAsync(fileOperator);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(targetID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
 
         #endregion File
 
-        /// <summary>
-        /// 重新设置客户端ID。注意，该效果只作用于服务端。客户端ID不会同步改变。
-        /// 如果想同步，请使用对应的SocketClient进行操作。
-        /// </summary>
-        /// <param name="oldID"></param>
-        /// <param name="newID"></param>
+        /// <inheritdoc/>
         public void ResetID(string oldID, string newID)
         {
             if (string.IsNullOrEmpty(oldID))
@@ -541,23 +514,13 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             {
                 return;
             }
-            if (this.m_tokenDic.TryRemove(oldID, out WSTouchRpcSocketClient socketClient))
+            if (m_tokenDic.TryGetValue(oldID, out WSTouchRpcSocketClient socketClient))
             {
-                socketClient.m_id = newID;
-                if (this.m_tokenDic.TryAdd(newID, socketClient))
-                {
-                    return;
-                }
-                else
-                {
-                    socketClient.m_id = oldID;
-                    this.m_tokenDic.TryAdd(oldID, socketClient);
-                    throw new Exception("ID重复");
-                }
+                socketClient.ResetID(newID);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(oldID));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(oldID));
             }
         }
 
@@ -565,7 +528,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         private MethodInstance GetInvokeMethod(string arg)
         {
-            return this.m_actionMap.GetMethodInstance(arg);
+            return m_actionMap.GetMethodInstance(arg);
         }
 
         private void OnRpcServiceClose(RpcActor actor, string arg2)
@@ -577,112 +540,127 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         private void OnRpcServiceFileTransfered(RpcActor actor, FileTransferStatusEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfered), client, e))
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfered), client, e))
             {
                 return;
             }
-            this.OnFileTransfered(client, e);
+            OnFileTransfered(client, e);
         }
 
         private void OnRpcServiceFileTransfering(RpcActor actor, FileOperationEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfering), client, e))
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnFileTransfering), client, e))
             {
                 return;
             }
-            this.OnFileTransfering(client, e);
+            OnFileTransfering(client, e);
         }
 
         private RpcActor OnRpcServiceFindRpcActor(string id)
         {
-            if (this.TryGetSocketClient(id, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(id, out WSTouchRpcSocketClient client))
             {
-                return client.m_rpcActor;
+                return client.RpcActor;
             }
             return null;
         }
 
-        private void OnRpcServiceHandshaked(RpcActor actor, VerifyOptionEventArgs e)
+        private void OnRpcServiceRouting(RpcActor actor, PackageRouterEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaked), client, e))
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnRouting), client, e))
             {
                 return;
             }
-            this.OnHandshaked(client, e);
+            OnRouting(client, e);
+        }
+
+
+        private void OnRpcServiceHandshaked(RpcActor actor, VerifyOptionEventArgs e)
+        {
+            WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaked), client, e))
+            {
+                return;
+            }
+            OnHandshaked(client, e);
         }
 
         private void OnRpcServiceHandshaking(RpcActor actor, VerifyOptionEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (e.Token == this.VerifyToken)
+            if (e.Token == VerifyToken)
             {
-                e.AddOperation(Operation.Permit);
+                e.IsPermitOperation = true;
             }
             else
             {
                 e.Message = "Token不受理";
             }
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaking), client, e))
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnHandshaking), client, e))
             {
                 return;
             }
-            this.OnHandshaking(client, e);
+            OnHandshaking(client, e);
         }
 
         private void OnRpcServiceReceived(RpcActor actor, short protocol, ByteBlock byteBlock)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnReceivedProtocolData), client, new ProtocolDataEventArgs(protocol, byteBlock)))
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnReceivedProtocolData), client, new ProtocolDataEventArgs(protocol, byteBlock)))
             {
                 return;
             }
 
-            this.OnReceived(client, protocol, byteBlock);
+            OnReceived(client, protocol, byteBlock);
         }
 
-        private void OnRpcServiceResetID(RpcActor actor, WaitSetID arg2)
+        private void OnRpcServiceResetID(bool b, RpcActor actor, WaitSetID arg2)
         {
-            this.ResetID(arg2.OldID, arg2.NewID);
+            ResetID(arg2.OldID, arg2.NewID);
         }
 
         private void OnRpcServiceStreamTransfered(RpcActor actor, StreamStatusEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfered), client, e))
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfered), client, e))
             {
                 return;
             }
-            this.OnStreamTransfered(client, e);
+            OnStreamTransfered(client, e);
         }
 
         private void OnRpcServiceStreamTransfering(RpcActor actor, StreamOperationEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (this.UsePlugin && this.PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfering), client, e))
+            if (UsePlugin && PluginsManager.Raise<ITouchRpcPlugin>(nameof(ITouchRpcPlugin.OnStreamTransfering), client, e))
             {
                 return;
             }
-            this.OnStreamTransfering(client, e);
+            OnStreamTransfering(client, e);
         }
 
         private void PrivateDisconnected(WSTouchRpcSocketClient client, ClientDisconnectedEventArgs e)
         {
-            if (this.TryRemove(client.ID, out _))
+            if (TryRemove(client.ID, out _))
             {
-                if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), client, e))
+                if (UsePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), client, e))
                 {
                     return;
                 }
-                this.OnDisconnected(client, e);
+                OnDisconnected(client, e);
             }
         }
 
-        private void RpcServiceOutputSend(RpcActor actor, bool arg2, ArraySegment<byte>[] arg3)
+        private void RpcServiceOutputSend(RpcActor actor, ArraySegment<byte>[] arg3)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            client.RpcActorSend(arg2, arg3);
+            if (!client.CanSend)
+            {
+                return;
+            }
+            client.RpcActorSend(arg3);
         }
 
         #endregion 内部委托绑定
@@ -694,27 +672,27 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <returns></returns>
         public async Task SwitchClientAsync(System.Net.WebSockets.WebSocket webSocket)
         {
-            string id = this.GetDefaultNewID();
+            string id = GetDefaultNewID();
             WSTouchRpcSocketClient client = new WSTouchRpcSocketClient();
-            if (!this.TryAdd(id, client))
+            if (!TryAdd(id, client))
             {
                 throw new Exception("ID重复");
             }
             client.m_service = this;
-            client.m_usePlugin = this.UsePlugin;
-            this.CheckService();
+            client.m_usePlugin = UsePlugin;
+            CheckService();
 
-            client.m_rpcActor = this.m_rpcActorGroup.CreateRpcActor(client);
-            client.m_rpcActor.ID = id;
-            client.m_internalDisconnected = this.PrivateDisconnected;
-            await client.Start(this.Config, webSocket);
+            client.SetRpcActor(m_rpcActorGroup.CreateRpcActor(client));
+            client.RpcActor.ID = id;
+            client.m_internalDisconnected = PrivateDisconnected;
+            await client.Start(Config, webSocket);
         }
 
         private void CheckService()
         {
-            if (this.m_rpcActorGroup == null)
+            if (m_rpcActorGroup == null)
             {
-                throw new Exception($"{nameof(RpcActorGroup)}未在{nameof(this.RpcStore)}中注册为解析器。");
+                throw new Exception($"{nameof(RpcActorGroup)}未在{nameof(RpcStore)}中注册为解析器。");
             }
         }
 
@@ -757,6 +735,16 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         }
 
         /// <summary>
+        /// 在需要转发路由包时。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        protected virtual void OnRouting(WSTouchRpcSocketClient client, PackageRouterEventArgs e)
+        {
+           
+        }
+
+        /// <summary>
         /// 在验证Token时
         /// </summary>
         /// <param name="client">客户端</param>
@@ -795,108 +783,86 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         #endregion 事件
 
+        #region 小文件
+        /// <inheritdoc/>
+        public PullSmallFileResult PullSmallFile(string targetId, string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
+        {
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
+            {
+                return client.PullSmallFile(path, metadata, timeout, token);
+            }
+            else
+            {
+                return new PullSmallFileResult(ResultCode.Error, TouchSocketStatus.ClientNotFind.GetDescription(targetId));
+            }
+        }
+
+        /// <inheritdoc/>
+        public Task<PullSmallFileResult> PullSmallFileAsync(string targetId, string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
+        {
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
+            {
+                return client.PullSmallFileAsync(path, metadata, timeout, token);
+            }
+            else
+            {
+                return Task.FromResult(new PullSmallFileResult(ResultCode.Error, TouchSocketStatus.ClientNotFind.GetDescription(targetId)));
+            }
+        }
+
+        /// <inheritdoc/>
+        public Result PushSmallFile(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
+        {
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
+            {
+                return client.PushSmallFile(savePath, fileInfo, metadata, timeout, token);
+            }
+            else
+            {
+                return new Result(ResultCode.Error, TouchSocketStatus.ClientNotFind.GetDescription(targetId));
+            }
+        }
+
+        /// <inheritdoc/>
+        public Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
+        {
+            if (TryGetSocketClient(targetId, out WSTouchRpcSocketClient client))
+            {
+                return client.PushSmallFileAsync(savePath, fileInfo, metadata, timeout, token);
+            }
+            else
+            {
+                return Task.FromResult(new Result(ResultCode.Error, TouchSocketStatus.ClientNotFind.GetDescription(targetId)));
+            }
+        }
+        #endregion
+
         #region 发送
 
-        /// <summary>
-        /// 向对应ID的客户端发送
-        /// </summary>
-        /// <param name="id">目标ID</param>
-        /// <param name="protocol">协议</param>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <exception cref="NotConnectedException">未连接异常</exception>
-        /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
-        /// <exception cref="Exception">其他异常</exception>
+        /// <inheritdoc/>
         public void Send(string id, short protocol, byte[] buffer, int offset, int length)
         {
-            if (this.TryGetSocketClient(id, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(id, out WSTouchRpcSocketClient client))
             {
                 client.Send(protocol, buffer, offset, length);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(id));
             }
         }
 
-        /// <summary>
-        /// 向对应ID的客户端发送
-        /// </summary>
-        /// <param name="id">目标ID</param>
-        /// <param name="protocol">协议</param>
-        /// <param name="buffer">数据</param>
-        /// <exception cref="NotConnectedException">未连接异常</exception>
-        /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public void Send(string id, short protocol, byte[] buffer)
+        /// <inheritdoc/>
+        public Task SendAsync(string id, short protocol, byte[] buffer, int offset, int length)
         {
-            this.Send(id, protocol, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 向对应ID的客户端发送
-        /// </summary>
-        /// <param name="id">目标ID</param>
-        /// <param name="protocol">协议</param>
-        /// <param name="byteBlock">数据</param>
-        /// <exception cref="NotConnectedException">未连接异常</exception>
-        /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public void Send(string id, short protocol, ByteBlock byteBlock)
-        {
-            this.Send(id, protocol, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 向对应ID的客户端发送
-        /// </summary>
-        /// <param name="id">目标ID</param>
-        /// <param name="protocol">协议</param>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <exception cref="NotConnectedException">未连接异常</exception>
-        /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public void SendAsync(string id, short protocol, byte[] buffer, int offset, int length)
-        {
-            if (this.TryGetSocketClient(id, out WSTouchRpcSocketClient client))
+            if (TryGetSocketClient(id, out WSTouchRpcSocketClient client))
             {
-                client.SendAsync(protocol, buffer, offset, length);
+                return client.SendAsync(protocol, buffer, offset, length);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(id));
             }
-        }
-
-        /// <summary>
-        /// 向对应ID的客户端发送
-        /// </summary>
-        /// <param name="id">目标ID</param>
-        /// <param name="protocol">协议</param>
-        /// <param name="buffer">数据</param>
-        /// <exception cref="NotConnectedException">未连接异常</exception>
-        /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public void SendAsync(string id, short protocol, byte[] buffer)
-        {
-            this.SendAsync(id, protocol, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 向对应ID的客户端发送
-        /// </summary>
-        /// <param name="id">目标ID</param>
-        /// <param name="protocol">协议</param>
-        /// <param name="byteBlock">数据</param>
-        /// <exception cref="NotConnectedException">未连接异常</exception>
-        /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public void SendAsync(string id, short protocol, ByteBlock byteBlock)
-        {
-            this.SendAsync(id, protocol, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion 发送
