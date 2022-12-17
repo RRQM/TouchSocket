@@ -39,6 +39,7 @@ namespace ServiceConsoleApp
                 .SetThreadCount(10)
                 .ConfigurePlugins(a =>
                 {
+                    a.UseCheckClear();
                     //a.Add();//此处可以添加插件
                 })
                 .ConfigureContainer(a =>
