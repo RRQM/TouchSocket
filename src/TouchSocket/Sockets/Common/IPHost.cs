@@ -35,34 +35,34 @@ namespace TouchSocket.Sockets
         {
             if (TouchSocketUtility.IsURL(host))
             {
-                this.isUri = true;
-                this.uri = new Uri(host);
-                if (this.uri.Port > 0)
+                isUri = true;
+                uri = new Uri(host);
+                if (uri.Port > 0)
                 {
-                    this.Host = $"{this.uri.Host}:{this.uri.Port}";
+                    Host = $"{uri.Host}:{uri.Port}";
                 }
                 else
                 {
-                    this.Host = this.uri.Host;
+                    Host = uri.Host;
                 }
-                if (TouchSocketUtility.IsIPv4(this.uri.Host) || TouchSocketUtility.IsIPV6(this.uri.Host))
+                if (TouchSocketUtility.IsIPv4(uri.Host) || TouchSocketUtility.IsIPV6(uri.Host))
                 {
-                    this.Analysis(this.uri.Host, this.uri.Port.ToString());
+                    Analysis(uri.Host, uri.Port.ToString());
                 }
                 else
                 {
-                    if (HostNameToIP(this.uri.Host, out IPAddress[] addresses))
+                    if (HostNameToIP(uri.Host, out IPAddress[] addresses))
                     {
-                        this.Analysis(addresses[0].ToString(), this.uri.Port.ToString());
+                        Analysis(addresses[0].ToString(), uri.Port.ToString());
                     }
                 }
             }
             else
             {
-                this.Host = host;
+                Host = host;
                 int r = host.LastIndexOf(":");
                 string ip = host.Substring(0, r);
-                this.Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
+                Analysis(ip, host.Substring(r + 1, host.Length - (r + 1)));
             }
         }
 
@@ -106,7 +106,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 是否为Uri
         /// </summary>
-        public bool IsUri => this.isUri;
+        public bool IsUri => isUri;
 
         /// <summary>
         /// 端口号
@@ -116,7 +116,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 统一资源标识
         /// </summary>
-        public Uri Uri => this.uri;
+        public Uri Uri => uri;
 
         /// <summary>
         /// 获取Url全路径
@@ -124,9 +124,9 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public string GetUrlPath()
         {
-            if (this.isUri)
+            if (isUri)
             {
-                return this.uri.PathAndQuery;
+                return uri.PathAndQuery;
             }
             return default;
         }
@@ -137,7 +137,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public override string ToString()
         {
-            return this.EndPoint == null ? null : this.EndPoint.ToString();
+            return EndPoint == null ? null : EndPoint.ToString();
         }
 
         private static bool HostNameToIP(string hostname, out IPAddress[] address)
@@ -168,15 +168,15 @@ namespace TouchSocket.Sockets
                 IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(ip), portNum);
                 if (ip.Contains(":"))
                 {
-                    this.AddressFamily = AddressFamily.InterNetworkV6;
+                    AddressFamily = AddressFamily.InterNetworkV6;
                 }
                 else
                 {
-                    this.AddressFamily = AddressFamily.InterNetwork;
+                    AddressFamily = AddressFamily.InterNetwork;
                 }
-                this.EndPoint = endPoint;
-                this.IP = ip;
-                this.Port = portNum;
+                EndPoint = endPoint;
+                IP = ip;
+                Port = portNum;
             }
             catch (Exception ex)
             {

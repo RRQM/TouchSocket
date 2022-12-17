@@ -10,9 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -22,35 +21,48 @@ namespace TouchSocket.Rpc.TouchRpc
     public static class TouchRpcConfigExtensions
     {
         /// <summary>
-        /// 心跳频率，默认为间隔2000ms，3次。（设置为null时禁止心跳），
-        ///  所需类型<see cref="HeartbeatValue"/>
+        /// 默认使用Id。
         /// </summary>
-        public static readonly DependencyProperty HeartbeatFrequencyProperty =
-            DependencyProperty.Register("HeartbeatFrequency", typeof(HeartbeatValue), typeof(TouchRpcConfigExtensions), new HeartbeatValue() { Interval = 2000, MaxFailCount = 3 });
-
-        /// <summary>
-        /// 序列化转换器, 所需类型<see cref="SerializationSelector"/>
-        /// </summary>
-        public static readonly DependencyProperty SerializationSelectorProperty =
-            DependencyProperty.Register("SerializationSelector", typeof(SerializationSelector), typeof(TouchRpcConfigExtensions), new DefaultSerializationSelector());
-
-        /// <summary>
-        /// 验证超时时间,默认为3000ms, 所需类型<see cref="int"/>
-        /// </summary>
-        public static readonly DependencyProperty VerifyTimeoutProperty =
-            DependencyProperty.Register("VerifyTimeout", typeof(int), typeof(TouchRpcConfigExtensions), 3000);
-
-        /// <summary>
-        /// 连接令箭,当为null或空时，重置为默认值“rrqm”, 所需类型<see cref="string"/>
-        /// </summary>
-        public static readonly DependencyProperty VerifyTokenProperty =
-            DependencyProperty.Register("VerifyToken", typeof(string), typeof(TouchRpcConfigExtensions), "rrqm");
+        public static readonly DependencyProperty<string> DefaultIdProperty =
+            DependencyProperty<string>.Register("DefaultId", typeof(TouchRpcConfigExtensions), null);
 
         /// <summary>
         /// TouchClient连接时的元数据, 所需类型<see cref="Metadata"/>
         /// </summary>
-        public static readonly DependencyProperty MetadataProperty =
-            DependencyProperty.Register("Metadata", typeof(Metadata), typeof(TouchRpcConfigExtensions), null);
+        public static readonly DependencyProperty<Metadata> MetadataProperty = DependencyProperty<Metadata>.Register("Metadata", typeof(TouchRpcConfigExtensions), null);
+
+        /// <summary>
+        /// 序列化转换器, 所需类型<see cref="SerializationSelector"/>
+        /// </summary>
+        public static readonly DependencyProperty<SerializationSelector> SerializationSelectorProperty =
+            DependencyProperty<SerializationSelector>.Register("SerializationSelector", typeof(TouchRpcConfigExtensions), new DefaultSerializationSelector());
+
+        /// <summary>
+        /// 验证超时时间,默认为3000ms, 所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty<int> VerifyTimeoutProperty =
+            DependencyProperty<int>.Register("VerifyTimeout", typeof(TouchRpcConfigExtensions), 3000);
+
+        /// <summary>
+        /// 连接令箭,当为null或空时，重置为默认值“rrqm”, 所需类型<see cref="string"/>
+        /// </summary>
+        public static readonly DependencyProperty<string> VerifyTokenProperty =
+            DependencyProperty<string>.Register("VerifyToken", typeof(TouchRpcConfigExtensions), "rrqm");
+
+        /// <summary>
+        /// 设置默认的使用Id。仅在TouchRpc组件适用。
+        /// <para>
+        /// 使用该功能时，仅在服务器的Handshaking之后生效。且如果id重复，则会连接失败。
+        /// </para>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetDefaultId(this TouchSocketConfig config, string value)
+        {
+            config.SetValue(DefaultIdProperty, value);
+            return config;
+        }
 
         /// <summary>
         /// 心跳频率，默认为间隔2000ms，3次。（设置为null时禁止心跳）
@@ -59,10 +71,10 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig SetHeartbeatFrequency(this TouchSocketConfig config, HeartbeatValue value)
+        [Obsolete("该方法已被弃用。请使用插件UseTouchRpcHeartbeat替代。")]
+        public static TouchSocketConfig SetHeartbeatFrequency(this TouchSocketConfig config, object value)
         {
-            config.SetValue(HeartbeatFrequencyProperty, value);
-            return config;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -115,62 +127,13 @@ namespace TouchSocket.Rpc.TouchRpc
             return config;
         }
 
-        ///// <summary>
-        ///// HttpRpcUrl, 所需类型<see cref="string"/>
-        ///// </summary>
-        //public static readonly DependencyProperty HttpRpcUrlProperty =
-        //    DependencyProperty.Register("HttpRpcUrl", typeof(string), typeof(TouchRpcConfigExtensions), "/HttpRpc");
-
-        ///// <summary>
-        ///// 设置序列化转换器
-        ///// </summary>
-        ///// <param name="config"></param>
-        ///// <param name="value"></param>
-        ///// <returns></returns>
-        //public static TouchSocketConfigBuilder SetHttpRpcUrl(this TouchSocketConfigBuilder config, string value)
-        //{
-        //    if (string.IsNullOrEmpty(value))
-        //    {
-        //        value = "/";
-        //    }
-        //    else
-        //    {
-        //        if (!value.StartsWith("/"))
-        //        {
-        //            value = "/" + value;
-        //        }
-        //    }
-        //    config.SetValue(HttpRpcUrlProperty, value);
-        //    return config;
-        //}
-
         #region FileTransfer
-
-        /// <summary>
-        /// 允许的响应类型,
-        ///  所需类型<see cref="TouchSocket.Rpc.TouchRpc.ResponseType"/>
-        /// </summary>
-        public static readonly DependencyProperty ResponseTypeProperty =
-            DependencyProperty.Register("ResponseType", typeof(ResponseType), typeof(TouchRpcConfigExtensions), ResponseType.Both);
 
         /// <summary>
         /// 根目录
         /// 所需类型<see cref="string"/>
         /// </summary>
-        public static readonly DependencyProperty RootPathProperty =
-            DependencyProperty.Register("RootPath", typeof(string), typeof(TouchRpcConfigExtensions), string.Empty);
-
-        /// <summary>
-        /// 设置允许的响应类型
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetResponseType(this TouchSocketConfig config, ResponseType value)
-        {
-            config.SetValue(ResponseTypeProperty, value);
-            return config;
-        }
+        public static readonly DependencyProperty<string> RootPathProperty = DependencyProperty<string>.Register("RootPath", typeof(TouchRpcConfigExtensions), string.Empty);
 
         /// <summary>
         /// 设置根路径

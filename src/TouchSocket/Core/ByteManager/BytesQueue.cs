@@ -10,11 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace TouchSocket.Core.ByteManager
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 字节块集合
@@ -22,21 +21,21 @@ namespace TouchSocket.Core.ByteManager
     [DebuggerDisplay("Count = {bytesQueue.Count}")]
     internal class BytesQueue
     {
-        internal int size;
+        internal int m_size;
 
         internal BytesQueue(int size)
         {
-            this.size = size;
+            m_size = size;
         }
 
         /// <summary>
         /// 占用空间
         /// </summary>
-        public long FullSize => this.size * this.bytesQueue.Count;
+        public long FullSize => m_size * m_bytesQueue.Count;
 
-        private readonly ConcurrentQueue<byte[]> bytesQueue = new ConcurrentQueue<byte[]>();
+        private readonly ConcurrentQueue<byte[]> m_bytesQueue = new ConcurrentQueue<byte[]>();
 
-        internal long referenced;
+        internal long m_referenced;
 
         /// <summary>
         /// 获取当前实例中的空闲的Block
@@ -44,8 +43,8 @@ namespace TouchSocket.Core.ByteManager
         /// <returns></returns>
         public bool TryGet(out byte[] bytes)
         {
-            this.referenced++;
-            return this.bytesQueue.TryDequeue(out bytes);
+            m_referenced++;
+            return m_bytesQueue.TryDequeue(out bytes);
         }
 
         /// <summary>
@@ -54,12 +53,12 @@ namespace TouchSocket.Core.ByteManager
         /// <param name="bytes"></param>
         public void Add(byte[] bytes)
         {
-            this.bytesQueue.Enqueue(bytes);
+            m_bytesQueue.Enqueue(bytes);
         }
 
         internal void Clear()
         {
-            this.bytesQueue.Clear();
+            m_bytesQueue.Clear();
         }
     }
 }

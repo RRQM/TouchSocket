@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Pool
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 对象池接口

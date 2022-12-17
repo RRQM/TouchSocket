@@ -12,16 +12,12 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.XREF.Newtonsoft.Json;
-using TouchSocket.Core.XREF.Newtonsoft.Json.Linq;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
-using TouchSocket.Http.WebSockets.Plugins;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.JsonRpc
@@ -40,14 +36,14 @@ namespace TouchSocket.Rpc.JsonRpc
         /// </summary>
         public JsonRpcParserPlugin([DependencyParamterInject(true)] RpcStore rpcStore)
         {
-            this.m_actionMap = new ActionMap();
-            rpcStore?.AddRpcParser(this.GetType().Name, this);
+            m_actionMap = new ActionMap();
+            rpcStore?.AddRpcParser(GetType().Name, this);
         }
 
         /// <summary>
         /// JsonRpc的调用键。
         /// </summary>
-        public ActionMap ActionMap => this.m_actionMap;
+        public ActionMap ActionMap => m_actionMap;
 
         /// <summary>
         /// 自动转换协议
@@ -59,14 +55,14 @@ namespace TouchSocket.Rpc.JsonRpc
         /// </summary>
         public string JsonRpcUrl
         {
-            get => this.m_jsonRpcUrl;
-            set => this.m_jsonRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
+            get => m_jsonRpcUrl;
+            set => m_jsonRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public RpcStore RpcStore => this.m_rpcStore;
+        public RpcStore RpcStore => m_rpcStore;
 
         /// <summary>
         /// 不需要自动转化协议。
@@ -75,7 +71,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <returns></returns>
         public JsonRpcParserPlugin NoSwitchProtocol()
         {
-            this.AutoSwitch = false;
+            AutoSwitch = false;
             return this;
         }
 
@@ -87,7 +83,7 @@ namespace TouchSocket.Rpc.JsonRpc
             {
                 if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
                 }
             }
         }
@@ -98,14 +94,14 @@ namespace TouchSocket.Rpc.JsonRpc
             {
                 if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                    m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
                 }
             }
         }
 
         void IRpcParser.SetRpcStore(RpcStore rpcService)
         {
-            this.m_rpcStore = rpcService;
+            m_rpcStore = rpcService;
         }
 
         #endregion RPC解析器
@@ -117,7 +113,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <returns></returns>
         public JsonRpcParserPlugin SetJsonRpcUrl(string jsonRpcUrl)
         {
-            this.JsonRpcUrl = jsonRpcUrl;
+            JsonRpcUrl = jsonRpcUrl;
             return this;
         }
 
@@ -128,7 +124,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <param name="e"></param>
         protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            if (this.AutoSwitch && client.Protocol == Protocol.TCP)
+            if (AutoSwitch && client.Protocol == Protocol.TCP)
             {
                 client.SwitchProtocolToTcpJsonRpc();
             }
@@ -148,7 +144,7 @@ namespace TouchSocket.Rpc.JsonRpc
                 if (jsonRpcStr.Contains("jsonrpc"))
                 {
                     e.Handled = true;
-                    ThreadPool.QueueUserWorkItem(this.InvokeWaitCallback, new JsonRpcCallContext()
+                    ThreadPool.QueueUserWorkItem(InvokeWaitCallback, new JsonRpcCallContext()
                     {
                         Caller = client,
                         JRPT = JRPT.Websocket,
@@ -165,10 +161,10 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <param name="e"></param>
         protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
+            if (m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(m_jsonRpcUrl))
             {
                 e.Handled = true;
-                ThreadPool.QueueUserWorkItem(this.InvokeWaitCallback, new JsonRpcCallContext()
+                ThreadPool.QueueUserWorkItem(InvokeWaitCallback, new JsonRpcCallContext()
                 {
                     Caller = client,
                     JRPT = JRPT.Http,
@@ -192,7 +188,7 @@ namespace TouchSocket.Rpc.JsonRpc
                 if (jsonRpcStr.Contains("jsonrpc"))
                 {
                     e.Handled = true;
-                    ThreadPool.QueueUserWorkItem(this.InvokeWaitCallback, new JsonRpcCallContext()
+                    ThreadPool.QueueUserWorkItem(InvokeWaitCallback, new JsonRpcCallContext()
                     {
                         Caller = client,
                         JRPT = JRPT.Tcp,
@@ -203,19 +199,65 @@ namespace TouchSocket.Rpc.JsonRpc
             base.OnReceivedData(client, e);
         }
 
+        private static void Response(JsonRpcCallContext callContext, object result, error error)
+        {
+            try
+            {
+                using (ByteBlock responseByteBlock = new ByteBlock())
+                {
+                    object jobject = null;
+                    if (error == null)
+                    {
+                        jobject = new JsonRpcSuccessResponse
+                        {
+                            result = result,
+                            id = callContext.JsonRpcContext.id
+                        };
+                    }
+                    else
+                    {
+                        jobject = new JsonRpcErrorResponse
+                        {
+                            error = error,
+                            id = callContext.JsonRpcContext.id
+                        };
+                    }
+                    ITcpClientBase client = (ITcpClientBase)callContext.Caller;
+                    if (callContext.JRPT == JRPT.Http)
+                    {
+                        HttpResponse httpResponse = callContext.HttpContext.Response;
+                        httpResponse.FromJson(jobject.ToJson());
+                        httpResponse.Answer();
+                    }
+                    else if (callContext.JRPT == JRPT.Websocket)
+                    {
+                        ((HttpSocketClient)client).SendWithWS(jobject.ToJson());
+                    }
+                    else
+                    {
+                        responseByteBlock.Write(jobject.ToJson().ToUTF8Bytes());
+                        client.Send(responseByteBlock);
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
         private void BuildRequestContext(ref JsonRpcCallContext callContext)
         {
-            JsonRpcPackage jsonRpcPackage = JsonConvert.DeserializeObject<JsonRpcPackage>(callContext.JsonString);
-            callContext.JsonRpcPackage = jsonRpcPackage;
-            if (jsonRpcPackage.id != null)
+            JsonRpcContext jsonRpcContext = SerializeConvert.JsonDeserializeFromString<JsonRpcContext>(callContext.JsonString);
+            callContext.JsonRpcContext = jsonRpcContext;
+            if (jsonRpcContext.id != null)
             {
-                jsonRpcPackage.needResponse = true;
+                jsonRpcContext.needResponse = true;
             }
 
-            if (this.m_actionMap.TryGetMethodInstance(jsonRpcPackage.method, out MethodInstance methodInstance))
+            if (m_actionMap.TryGetMethodInstance(jsonRpcContext.method, out MethodInstance methodInstance))
             {
                 callContext.MethodInstance = methodInstance;
-                if (jsonRpcPackage.@params == null)
+                if (jsonRpcContext.@params == null)
                 {
                     if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
@@ -225,7 +267,7 @@ namespace TouchSocket.Rpc.JsonRpc
                         }
                         else
                         {
-                            jsonRpcPackage.parameters = new object[] { callContext };
+                            jsonRpcContext.parameters = new object[] { callContext };
                         }
                     }
                     else
@@ -236,27 +278,26 @@ namespace TouchSocket.Rpc.JsonRpc
                         }
                     }
                 }
-                if (jsonRpcPackage.@params.GetType() != typeof(JArray))
+                if (jsonRpcContext.@params is Dictionary<string, object> obj)
                 {
-                    JObject obj = (JObject)jsonRpcPackage.@params;
-                    jsonRpcPackage.parameters = new object[methodInstance.ParameterNames.Length];
+                    jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
                     //内联
                     int i = 0;
                     if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
-                        jsonRpcPackage.parameters[0] = callContext;
+                        jsonRpcContext.parameters[0] = callContext;
                         i = 1;
                     }
                     for (; i < methodInstance.ParameterNames.Length; i++)
                     {
-                        if (obj.TryGetValue(methodInstance.ParameterNames[i], out JToken jToken))
+                        if (obj.TryGetValue(methodInstance.ParameterNames[i], out object jToken))
                         {
                             Type type = methodInstance.ParameterTypes[i];
-                            jsonRpcPackage.parameters[i] = jToken.ToObject(type);
+                            jsonRpcContext.parameters[i] = jToken.ToJson().FromJson(type);
                         }
                         else if (methodInstance.Parameters[i].HasDefaultValue)
                         {
-                            jsonRpcPackage.parameters[i] = methodInstance.Parameters[i].DefaultValue;
+                            jsonRpcContext.parameters[i] = methodInstance.Parameters[i].DefaultValue;
                         }
                         else
                         {
@@ -266,19 +307,19 @@ namespace TouchSocket.Rpc.JsonRpc
                 }
                 else
                 {
-                    JArray array = (JArray)jsonRpcPackage.@params;
+                    IList array = (IList)jsonRpcContext.@params;
                     if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                     {
                         if (array.Count != methodInstance.ParameterNames.Length - 1)
                         {
                             throw new RpcException("调用参数计数不匹配");
                         }
-                        jsonRpcPackage.parameters = new object[methodInstance.ParameterNames.Length];
+                        jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
 
-                        jsonRpcPackage.parameters[0] = callContext;
+                        jsonRpcContext.parameters[0] = callContext;
                         for (int i = 0; i < array.Count; i++)
                         {
-                            jsonRpcPackage.parameters[i + 1] = jsonRpcPackage.@params[i].ToObject(methodInstance.ParameterTypes[i + 1]);
+                            jsonRpcContext.parameters[i + 1] = array[i].ToJson().FromJson(methodInstance.ParameterTypes[i + 1]);
                         }
                     }
                     else
@@ -287,11 +328,11 @@ namespace TouchSocket.Rpc.JsonRpc
                         {
                             throw new RpcException("调用参数计数不匹配");
                         }
-                        jsonRpcPackage.parameters = new object[methodInstance.ParameterNames.Length];
+                        jsonRpcContext.parameters = new object[methodInstance.ParameterNames.Length];
 
                         for (int i = 0; i < array.Count; i++)
                         {
-                            jsonRpcPackage.parameters[i] = jsonRpcPackage.@params[i].ToObject(methodInstance.ParameterTypes[i]);
+                            jsonRpcContext.parameters[i] = array[i].ToJson().FromJson(methodInstance.ParameterTypes[i]);
                         }
                     }
                 }
@@ -309,7 +350,7 @@ namespace TouchSocket.Rpc.JsonRpc
 
             try
             {
-                this.BuildRequestContext(ref callContext);
+                BuildRequestContext(ref callContext);
             }
             catch (Exception ex)
             {
@@ -331,16 +372,16 @@ namespace TouchSocket.Rpc.JsonRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                IRpcServer rpcServer = callContext.MethodInstance.ServerFactory.Create(callContext, callContext.JsonRpcPackage.parameters);
+                IRpcServer rpcServer = callContext.MethodInstance.ServerFactory.Create(callContext, callContext.JsonRpcContext.parameters);
                 if (rpcServer is ITransientRpcServer transientRpcServer)
                 {
                     transientRpcServer.CallContext = callContext;
                 }
 
-                invokeResult = this.m_rpcStore.Execute(rpcServer, callContext.JsonRpcPackage.parameters, callContext);
+                invokeResult = m_rpcStore.Execute(rpcServer, callContext.JsonRpcContext.parameters, callContext);
             }
 
-            if (!callContext.JsonRpcPackage.needResponse)
+            if (!callContext.JsonRpcContext.needResponse)
             {
                 return;
             }
@@ -383,60 +424,7 @@ namespace TouchSocket.Rpc.JsonRpc
                     return;
             }
 
-            this.Response(callContext, invokeResult.Result, error);
-        }
-
-        private void Response(JsonRpcCallContext callContext, object result, error error)
-        {
-            try
-            {
-                using (ByteBlock responseByteBlock = new ByteBlock())
-                {
-                    JObject jobject = new JObject();
-                    if (error == null)
-                    {
-                        //成功
-                        jobject.Add("jsonrpc", JToken.FromObject("2.0"));
-                        if (result != null)
-                        {
-                            jobject.Add("result", JToken.FromObject(result));
-                        }
-                        else
-                        {
-                            jobject.Add("result", null);
-                        }
-
-                        jobject.Add("id", callContext.JsonRpcPackage.id == null ? null : JToken.FromObject(callContext.JsonRpcPackage.id));
-                    }
-                    else
-                    {
-                        jobject.Add("jsonrpc", JToken.FromObject("2.0"));
-                        jobject.Add("error", JToken.FromObject(error));
-                        jobject.Add("id", callContext.JsonRpcPackage.id == null ? null : JToken.FromObject(callContext.JsonRpcPackage.id));
-                    }
-
-                    ITcpClientBase client = (ITcpClientBase)callContext.Caller;
-                    if (callContext.JRPT == JRPT.Http)
-                    {
-                        HttpResponse httpResponse = new HttpResponse();
-                        httpResponse.FromJson(jobject.ToString(Formatting.None));
-                        httpResponse.Build(responseByteBlock);
-                        client.DefaultSend(responseByteBlock);
-                    }
-                    else if (callContext.JRPT == JRPT.Websocket)
-                    {
-                        ((HttpSocketClient)client).SendWithWS(jobject.ToString(Formatting.None));
-                    }
-                    else
-                    {
-                        responseByteBlock.Write(jobject.ToString(Formatting.None).ToUTF8Bytes());
-                        client.Send(responseByteBlock);
-                    }
-                }
-            }
-            catch
-            {
-            }
+            Response(callContext, invokeResult.Result, error);
         }
     }
 }

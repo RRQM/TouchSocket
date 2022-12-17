@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 具有区域效应的容器。

@@ -14,14 +14,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace TouchSocket.Core.Reflection
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 表达式复制
     /// </summary>
     public class ExpressionMapper
     {
-        private static readonly Dictionary<string, object> _Dic = new Dictionary<string, object>();
+        private static readonly Dictionary<string, object> m_dic = new Dictionary<string, object>();
 
         /// <summary>
         /// 字典缓存表达式树
@@ -29,7 +29,7 @@ namespace TouchSocket.Core.Reflection
         public static TOut Trans<TIn, TOut>(TIn tIn)
         {
             string key = string.Format("funckey_{0}_{1}", typeof(TIn).FullName, typeof(TOut).FullName);
-            if (!_Dic.ContainsKey(key))
+            if (!m_dic.ContainsKey(key))
             {
                 ParameterExpression parameterExpression = Expression.Parameter(typeof(TIn), "p");
                 List<MemberBinding> memberBindingList = new List<MemberBinding>();
@@ -48,9 +48,9 @@ namespace TouchSocket.Core.Reflection
                 MemberInitExpression memberInitExpression = Expression.MemberInit(Expression.New(typeof(TOut)), memberBindingList.ToArray());
                 Expression<Func<TIn, TOut>> lambda = Expression.Lambda<Func<TIn, TOut>>(memberInitExpression, parameterExpression);
                 Func<TIn, TOut> func = lambda.Compile();//拼装是一次性的
-                _Dic[key] = func;
+                m_dic[key] = func;
             }
-            return ((Func<TIn, TOut>)_Dic[key]).Invoke(tIn);
+            return ((Func<TIn, TOut>)m_dic[key]).Invoke(tIn);
         }
     }
 }

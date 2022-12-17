@@ -11,10 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Plugins;
 
-namespace TouchSocket.Core.Config
+namespace TouchSocket.Core
 {
     /// <summary>
     /// TouchSocketCoreConfigExtension

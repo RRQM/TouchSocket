@@ -12,20 +12,20 @@
 //------------------------------------------------------------------------------
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
-using TouchSocket.Core.ByteManager;
 
-namespace TouchSocket.Core.Serialization
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 高性能序列化器
     /// </summary>
     public static class SerializeConvert
     {
-#if NET45_OR_GREATER
+#pragma warning disable SYSLIB0011 // 微软觉得不安全，不推荐使用
 
         #region 普通二进制序列化
 
@@ -176,7 +176,7 @@ namespace TouchSocket.Core.Serialization
 
         #endregion 普通二进制反序列化
 
-#endif
+#pragma warning restore SYSLIB0011 // 微软觉得不安全，不推荐使用
 
         #region Fast二进制序列化
 
@@ -188,8 +188,7 @@ namespace TouchSocket.Core.Serialization
         /// <returns></returns>
         public static void FastBinarySerialize(ByteBlock stream, object obj)
         {
-            FastBinaryFormatter bf = new FastBinaryFormatter();
-            bf.Serialize(stream, obj);
+            FastBinaryFormatter.Serialize(stream, obj);
         }
 
         /// <summary>
@@ -219,8 +218,7 @@ namespace TouchSocket.Core.Serialization
         /// <returns></returns>
         public static T FastBinaryDeserialize<T>(byte[] data, int offset)
         {
-            FastBinaryFormatter bf = new FastBinaryFormatter();
-            return (T)bf.Deserialize(data, offset, typeof(T));
+            return (T)FastBinaryFormatter.Deserialize(data, offset, typeof(T));
         }
 
         /// <summary>
@@ -232,8 +230,7 @@ namespace TouchSocket.Core.Serialization
         /// <returns></returns>
         public static object FastBinaryDeserialize(byte[] data, int offset, Type type)
         {
-            FastBinaryFormatter bf = new FastBinaryFormatter();
-            return bf.Deserialize(data, offset, type);
+            return FastBinaryFormatter.Deserialize(data, offset, type);
         }
 
         /// <summary>
@@ -352,11 +349,11 @@ namespace TouchSocket.Core.Serialization
         /// Xml反序列化
         /// </summary>
         /// <typeparam name="T">类型</typeparam>
-        /// <param name="xmlString">xml字符串</param>
+        /// <param name="json">xml字符串</param>
         /// <returns></returns>
-        public static T XmlDeserializeFromString<T>(string xmlString)
+        public static T XmlDeserializeFromString<T>(string json)
         {
-            return XmlDeserializeFromString<T>(xmlString, Encoding.UTF8);
+            return XmlDeserializeFromString<T>(json, Encoding.UTF8);
         }
 
         /// <summary>
@@ -375,5 +372,157 @@ namespace TouchSocket.Core.Serialization
         }
 
         #endregion Xml序列化和反序列化
+
+        #region Json序列化和反序列化
+
+        /// <summary>
+        /// 首先使用NewtonsoftJson.默认True。
+        /// <para>
+        /// 当设置True时，json序列化会优先使用NewtonsoftJson（需要将dll加载到程序）。
+        /// 当设置为FALSE，或者NewtonsoftJson不可用时，netstandard2.0和net45平台将使用<see cref="JsonFastConverter"/>。
+        /// 其他平台将使用System.Text.Json。
+        /// </para>
+        /// </summary>
+        public static bool NewtonsoftJsonFirst { get; set; } = true;
+
+
+        /// <summary>
+        /// 判断是否支持NewtonsoftJson
+        /// </summary>
+        public static bool NewtonsoftJsonIsSupported => JsonNet.IsSupported;
+
+        /// <summary>
+        /// 主动载入NewtonsoftJson。
+        /// </summary>
+        /// <param name="jsonConvertType">传入命名为JsonConvert的类型</param>
+        /// <returns></returns>
+        public static bool LoadNewtonsoftJson(Type jsonConvertType)
+        {
+           return JsonNet.InitJsonNet(jsonConvertType);
+        }
+
+        /// <summary>
+        /// 转换为Json
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public static string ToJson(this object item)
+        {
+            if (NewtonsoftJsonFirst&& JsonNet.IsSupported)
+            {
+               return JsonNet.SerializeObject(item);
+            }
+
+#if NETCOREAPP3_1_OR_GREATER
+            return  System.Text.Json.JsonSerializer.Serialize(item);
+#else
+            return JsonFastConverter.JsonTo(item);
+#endif
+
+        }
+
+        /// <summary>
+        /// 从字符串到json
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static object FromJson(this string json, Type type)
+        {
+            if (NewtonsoftJsonFirst && JsonNet.IsSupported)
+            {
+                return JsonNet.DeserializeObject(json,type);
+            }
+
+#if NETCOREAPP3_1_OR_GREATER
+            return System.Text.Json.JsonSerializer.Deserialize(json,type);
+#else
+            return JsonFastConverter.JsonFrom(json,type);
+#endif
+
+        }
+
+        /// <summary>
+        /// 从字符串到json
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static T FromJson<T>(this string json)
+        {
+            return (T)FromJson(json, typeof(T));
+        }
+
+        /// <summary>
+        /// Json序列化数据对象
+        /// </summary>
+        /// <param name="obj">数据对象</param>
+        /// <returns></returns>
+        public static byte[] JsonSerializeToBytes(object obj)
+        {
+            return ToJson(obj).ToUTF8Bytes();
+        }
+
+        /// <summary>
+        /// Json序列化至文件
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="path"></param>
+        public static void JsonSerializeToFile(object obj, string path)
+        {
+            using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            {
+                var date = JsonSerializeToBytes(obj);
+                fileStream.Write(date, 0, date.Length);
+                fileStream.Close();
+            }
+        }
+
+        /// <summary>
+        /// Json反序列化
+        /// </summary>
+        /// <typeparam name="T">反序列化类型</typeparam>
+        /// <param name="datas">数据</param>
+        /// <returns></returns>
+        public static T JsonDeserializeFromBytes<T>(byte[] datas)
+        {
+            return (T)JsonDeserializeFromBytes(datas, typeof(T));
+        }
+
+        /// <summary>
+        /// Xml反序列化
+        /// </summary>
+        /// <param name="datas"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static object JsonDeserializeFromBytes(byte[] datas, Type type)
+        {
+            return FromJson(Encoding.UTF8.GetString(datas), type);
+        }
+
+        /// <summary>
+        /// Json反序列化
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <param name="json">json字符串</param>
+        /// <returns></returns>
+        public static T JsonDeserializeFromString<T>(string json)
+        {
+            return FromJson<T>(json);
+        }
+
+      
+        /// <summary>
+        /// Json反序列化
+        /// </summary>
+        /// <typeparam name="T">反序列化类型</typeparam>
+        /// <param name="path">文件路径</param>
+        /// <returns></returns>
+        public static T JsonDeserializeFromFile<T>(string path)
+        {
+            return JsonDeserializeFromString<T>(File.ReadAllText(path));
+        }
+
+        #endregion Json序列化和反序列化
     }
 }

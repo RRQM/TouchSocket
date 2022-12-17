@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Net;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -28,7 +28,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         public UdpReceivedDataEventArgs(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock, requestInfo)
         {
-            this.EndPoint = endPoint;
+            EndPoint = endPoint;
         }
 
         /// <summary>

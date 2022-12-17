@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 
 using System.Threading;
-using TouchSocket.Core.Dependency;
+using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
 {
@@ -24,7 +24,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 心跳Timer
         /// </summary>
-        public static readonly DependencyProperty HeartbeatTimerProperty =
-       DependencyProperty.Register("HeartbeatTimer", typeof(Timer), typeof(WebSocketExtensions), null);
+        public static readonly DependencyProperty<Timer> HeartbeatTimerProperty =
+       DependencyProperty<Timer>.Register("HeartbeatTimer", typeof(WebSocketExtensions), null);
     }
 }

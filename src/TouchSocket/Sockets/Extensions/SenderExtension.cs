@@ -13,7 +13,8 @@
 using System;
 using System.Net;
 using System.Text;
-using TouchSocket.Core.ByteManager;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -54,11 +55,6 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static void Send<TClient>(this TClient client, string value) where TClient : ISender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
             client.Send(Encoding.UTF8.GetBytes(value));
         }
 
@@ -68,20 +64,9 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        public static void SendAsync<TClient>(this TClient client, byte[] buffer) where TClient : ISender
+        public static Task SendAsync<TClient>(this TClient client, byte[] buffer) where TClient : ISender
         {
-            client.SendAsync(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 异步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="byteBlock"></param>
-        public static void SendAsync<TClient>(this TClient client, ByteBlock byteBlock) where TClient : ISender
-        {
-            client.SendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+            return client.SendAsync(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -90,14 +75,9 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="value"></param>
-        public static void SendAsync<TClient>(this TClient client, string value) where TClient : ISender
+        public static Task SendAsync<TClient>(this TClient client, string value) where TClient : ISender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            client.SendAsync(Encoding.UTF8.GetBytes(value));
+            return client.SendAsync(Encoding.UTF8.GetBytes(value));
         }
 
         #endregion ISend
@@ -112,11 +92,6 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static void DefaultSend<TClient>(this TClient client, string value) where TClient : IDefaultSender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
             client.DefaultSend(Encoding.UTF8.GetBytes(value));
         }
 
@@ -148,14 +123,9 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="value"></param>
-        public static void DefaultSendAsync<TClient>(this TClient client, string value) where TClient : IDefaultSender
+        public static Task DefaultSendAsync<TClient>(this TClient client, string value) where TClient : IDefaultSender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            client.DefaultSendAsync(Encoding.UTF8.GetBytes(value));
+           return client.DefaultSendAsync(Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -164,22 +134,10 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        public static void DefaultSendAsync<TClient>(this TClient client, byte[] buffer) where TClient : IDefaultSender
+        public static Task DefaultSendAsync<TClient>(this TClient client, byte[] buffer) where TClient : IDefaultSender
         {
-            client.DefaultSendAsync(buffer, 0, buffer.Length);
+            return client.DefaultSendAsync(buffer, 0, buffer.Length);
         }
-
-        /// <summary>
-        /// 异步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="byteBlock"></param>
-        public static void DefaultSendAsync<TClient>(this TClient client, ByteBlock byteBlock) where TClient : IDefaultSender
-        {
-            client.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
         #endregion IDefaultSender
 
         #region IIDSender
@@ -193,11 +151,6 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static void Send<TClient>(this TClient client, string id, string value) where TClient : IIDSender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
             client.Send(id, Encoding.UTF8.GetBytes(value));
         }
 
@@ -232,14 +185,9 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        public static void SendAsync<TClient>(this TClient client, string id, string value) where TClient : IIDSender
+        public static Task SendAsync<TClient>(this TClient client, string id, string value) where TClient : IIDSender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            client.SendAsync(id, Encoding.UTF8.GetBytes(value));
+           return client.SendAsync(id, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -249,23 +197,10 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="id"></param>
         /// <param name="buffer"></param>
-        public static void SendAsync<TClient>(this TClient client, string id, byte[] buffer) where TClient : IIDSender
+        public static Task SendAsync<TClient>(this TClient client, string id, byte[] buffer) where TClient : IIDSender
         {
-            client.SendAsync(id, buffer, 0, buffer.Length);
+           return client.SendAsync(id, buffer, 0, buffer.Length);
         }
-
-        /// <summary>
-        /// 异步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="byteBlock"></param>
-        public static void SendAsync<TClient>(this TClient client, string id, ByteBlock byteBlock) where TClient : IIDSender
-        {
-            client.SendAsync(id, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
         #endregion IIDSender
 
         #region IUdpDefaultSender
@@ -302,34 +237,15 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static void DefaultSend<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
-            where TClient : IUdpDefaultSender
-        {
-            client.DefaultSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
         /// 以UTF-8的编码异步发送字符串。
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="endPoint"></param>
         /// <param name="value"></param>
-        public static void DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpDefaultSender
+        public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpDefaultSender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            client.DefaultSendAsync(endPoint, Encoding.UTF8.GetBytes(value));
+           return client.DefaultSendAsync(endPoint, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -340,10 +256,10 @@ namespace TouchSocket.Sockets
         /// <param name="buffer">数据缓存区</param>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public static void DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
+        public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
             where TClient : IUdpDefaultSender
         {
-            client.DefaultSendAsync(endPoint, buffer, 0, buffer.Length);
+           return client.DefaultSendAsync(endPoint, buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -354,10 +270,10 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public static void DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
+        public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
             where TClient : IUdpDefaultSender
         {
-            client.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+          return  client.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion IUdpDefaultSender
@@ -373,16 +289,11 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static void Send<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
             client.Send(endPoint, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
-        /// 绕过适配器，直接发送字节流
+        /// 发送字节流
         /// </summary>
         /// <param name="client"></param>
         /// <param name="endPoint">目的终结点</param>
@@ -396,11 +307,11 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 绕过适配器，直接发送字节流
+        /// 发送字节流
         /// </summary>
         /// <param name="client"></param>
         /// <param name="endPoint">目的终结点</param>
-        /// <param name="byteBlock"></param>
+        /// <param name="byteBlock">数据区</param>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         public static void Send<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
@@ -416,44 +327,24 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="endPoint"></param>
         /// <param name="value"></param>
-        public static void SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
+        public static Task SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
         {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            client.SendAsync(endPoint, Encoding.UTF8.GetBytes(value));
+           return client.SendAsync(endPoint, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
-        /// 绕过适配器，直接发送字节流
+        /// 发送字节流
         /// </summary>
         /// <param name="client"></param>
         /// <param name="endPoint">目的终结点</param>
         /// <param name="buffer">数据缓存区</param>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public static void SendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
+        public static Task SendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
             where TClient : IUdpClientSender
         {
-            client.SendAsync(endPoint, buffer, 0, buffer.Length);
+           return client.SendAsync(endPoint, buffer, 0, buffer.Length);
         }
-
-        /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static void SendAsync<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
-            where TClient : IUdpClientSender
-        {
-            client.SendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
         #endregion IUdpClientSender
     }
 }

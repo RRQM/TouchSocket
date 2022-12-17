@@ -45,11 +45,11 @@ namespace TouchSocket.Rpc.WebApi
         {
             get
             {
-                if (this.m_tokenSource == null)
+                if (m_tokenSource == null)
                 {
-                    this.m_tokenSource = new CancellationTokenSource();
+                    m_tokenSource = new CancellationTokenSource();
                 }
-                return this.m_tokenSource;
+                return m_tokenSource;
             }
         }
     }

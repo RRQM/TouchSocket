@@ -15,7 +15,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 
-namespace TouchSocket.Core.Reflection
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 表示属性
@@ -48,18 +48,18 @@ namespace TouchSocket.Core.Reflection
         /// <param name="property">属性信息</param>
         public Property(PropertyInfo property)
         {
-            this.Name = property.Name;
-            this.Info = property;
+            Name = property.Name;
+            Info = property;
 
             if (property.CanRead == true)
             {
-                this.CanRead = true;
-                this.m_geter = new PropertyGetter(property);
+                CanRead = true;
+                m_geter = new PropertyGetter(property);
             }
             if (property.CanWrite == true)
             {
-                this.CanWrite = true;
-                this.m_seter = new PropertySetter(property);
+                CanWrite = true;
+                m_seter = new PropertySetter(property);
             }
         }
 
@@ -81,11 +81,11 @@ namespace TouchSocket.Core.Reflection
         /// <returns></returns>
         public object GetValue(object instance)
         {
-            if (this.m_geter == null)
+            if (m_geter == null)
             {
                 throw new NotSupportedException();
             }
-            return this.m_geter.Invoke(instance);
+            return m_geter.Invoke(instance);
         }
 
         /// <summary>
@@ -96,11 +96,11 @@ namespace TouchSocket.Core.Reflection
         /// <exception cref="NotSupportedException"></exception>
         public void SetValue(object instance, object value)
         {
-            if (this.m_seter == null)
+            if (m_seter == null)
             {
-                throw new NotSupportedException($"{this.Name}不允许赋值");
+                throw new NotSupportedException($"{Name}不允许赋值");
             }
-            this.m_seter.Invoke(instance, value);
+            m_seter.Invoke(instance, value);
         }
 
         /// <summary>

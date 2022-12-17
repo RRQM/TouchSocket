@@ -12,7 +12,8 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core.ByteManager;
+
+using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
 {

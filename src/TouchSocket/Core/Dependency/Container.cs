@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
     /// <summary>
     /// IOC容器
@@ -51,7 +51,7 @@ namespace TouchSocket.Core.Dependency
         /// <returns></returns>
         public bool IsRegistered(Type fromType, string key = "")
         {
-            return this.m_registrations.ContainsKey($"{fromType.FullName}{key}");
+            return m_registrations.ContainsKey($"{fromType.FullName}{key}");
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace TouchSocket.Core.Dependency
         public void Register(DependencyDescriptor descriptor, string key = "")
         {
             string k = $"{descriptor.FromType.FullName}{key}";
-            this.m_registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
+            m_registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace TouchSocket.Core.Dependency
         {
             if (fromType == typeof(IContainerProvider))
             {
-                return this.GetScopedContainer();
+                return GetScopedContainer();
             }
             string k;
             DependencyDescriptor descriptor;
@@ -84,9 +84,9 @@ namespace TouchSocket.Core.Dependency
             {
                 Type type = fromType.GetGenericTypeDefinition();
                 k = $"{type.FullName}{key}";
-                if (this.m_registrations.TryGetValue(k, out descriptor))
+                if (m_registrations.TryGetValue(k, out descriptor))
                 {
-                    if (descriptor.ImplementationFactory!=null)
+                    if (descriptor.ImplementationFactory != null)
                     {
                         return descriptor.ImplementationFactory.Invoke(this);
                     }
@@ -104,26 +104,26 @@ namespace TouchSocket.Core.Dependency
                             }
                             if (descriptor.ToType.IsGenericType)
                             {
-                                return descriptor.ToInstance = this.Create(descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()), ps);
+                                return descriptor.ToInstance = Create(descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()), ps);
                             }
                             else
                             {
-                                return descriptor.ToInstance = this.Create(descriptor.ToType, ps);
+                                return descriptor.ToInstance = Create(descriptor.ToType, ps);
                             }
                         }
                     }
                     if (descriptor.ToType.IsGenericType)
                     {
-                        return this.Create(descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()), ps);
+                        return Create(descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()), ps);
                     }
                     else
                     {
-                        return this.Create(descriptor.ToType, ps);
+                        return Create(descriptor.ToType, ps);
                     }
                 }
             }
             k = $"{fromType.FullName}{key}";
-            if (this.m_registrations.TryGetValue(k, out descriptor))
+            if (m_registrations.TryGetValue(k, out descriptor))
             {
                 if (descriptor.ImplementationFactory != null)
                 {
@@ -141,10 +141,10 @@ namespace TouchSocket.Core.Dependency
                         {
                             return descriptor.ToInstance;
                         }
-                        return descriptor.ToInstance = this.Create(descriptor.ToType, ps);
+                        return descriptor.ToInstance = Create(descriptor.ToType, ps);
                     }
                 }
-                return this.Create(descriptor.ToType, ps);
+                return Create(descriptor.ToType, ps);
             }
             else if (fromType.IsPrimitive || fromType == typeof(string))
             {
@@ -154,12 +154,12 @@ namespace TouchSocket.Core.Dependency
             {
                 if (fromType.GetCustomAttribute<DependencyParamterInjectAttribute>() is DependencyParamterInjectAttribute attribute)
                 {
-                    if (attribute.ResolveNullIfNoRegistered && !this.IsRegistered(fromType, key))
+                    if (attribute.ResolveNullIfNoRegistered && !IsRegistered(fromType, key))
                     {
                         return default;
                     }
                 }
-                return this.Create(fromType, ps);
+                return Create(fromType, ps);
             }
             else
             {
@@ -175,7 +175,7 @@ namespace TouchSocket.Core.Dependency
         public void Unregister(DependencyDescriptor descriptor, string key = "")
         {
             string k = $"{descriptor.FromType.FullName}{key}";
-            this.m_registrations.TryRemove(k, out _);
+            m_registrations.TryRemove(k, out _);
         }
 
         /// <summary>
@@ -241,18 +241,18 @@ namespace TouchSocket.Core.Dependency
                                 DependencyParamterInjectAttribute attribute = parameters[i].GetCustomAttribute<DependencyParamterInjectAttribute>();
                                 Type type = attribute.Type == null ? parameters[i].ParameterType : attribute.Type;
 
-                                if (attribute.ResolveNullIfNoRegistered && !this.IsRegistered(type, attribute.Key))
+                                if (attribute.ResolveNullIfNoRegistered && !IsRegistered(type, attribute.Key))
                                 {
                                     ps[i] = default;
                                 }
                                 else
                                 {
-                                    ps[i] = this.Resolve(type, attribute.Ps, attribute.Key);
+                                    ps[i] = Resolve(type, attribute.Ps, attribute.Key);
                                 }
                             }
                             else
                             {
-                                ps[i] = this.Resolve(parameters[i].ParameterType, null);
+                                ps[i] = Resolve(parameters[i].ParameterType, null);
                             }
                         }
                     }
@@ -272,18 +272,18 @@ namespace TouchSocket.Core.Dependency
                         {
                             DependencyParamterInjectAttribute attribute = item.GetCustomAttribute<DependencyParamterInjectAttribute>();
                             Type type = attribute.Type == null ? item.PropertyType : attribute.Type;
-                            if (attribute.ResolveNullIfNoRegistered && !this.IsRegistered(type, attribute.Key))
+                            if (attribute.ResolveNullIfNoRegistered && !IsRegistered(type, attribute.Key))
                             {
                                 obj = null;
                             }
                             else
                             {
-                                obj = this.Resolve(type, attribute.Ps, attribute.Key);
+                                obj = Resolve(type, attribute.Ps, attribute.Key);
                             }
                         }
                         else
                         {
-                            obj = this.Resolve(item.PropertyType, null);
+                            obj = Resolve(item.PropertyType, null);
                         }
                         item.SetValue(instance, obj);
                     }
@@ -324,18 +324,18 @@ namespace TouchSocket.Core.Dependency
                                     DependencyParamterInjectAttribute attribute = parameters[i].GetCustomAttribute<DependencyParamterInjectAttribute>();
                                     Type type = attribute.Type == null ? parameters[i].ParameterType : attribute.Type;
 
-                                    if (attribute.ResolveNullIfNoRegistered && !this.IsRegistered(type, attribute.Key))
+                                    if (attribute.ResolveNullIfNoRegistered && !IsRegistered(type, attribute.Key))
                                     {
                                         ps[i] = default;
                                     }
                                     else
                                     {
-                                        ps[i] = this.Resolve(type, attribute.Ps, attribute.Key);
+                                        ps[i] = Resolve(type, attribute.Ps, attribute.Key);
                                     }
                                 }
                                 else
                                 {
-                                    ps[i] = this.Resolve(parameters[i].ParameterType, null);
+                                    ps[i] = Resolve(parameters[i].ParameterType, null);
                                 }
                             }
                         }
@@ -348,13 +348,13 @@ namespace TouchSocket.Core.Dependency
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         private IContainerProvider GetScopedContainer()
         {
             Container container = new Container();
-            foreach (var item in this.m_registrations)
+            foreach (var item in m_registrations)
             {
                 if (item.Value.Lifetime == Lifetime.Scoped)
                 {

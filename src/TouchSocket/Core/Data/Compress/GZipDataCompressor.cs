@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Data
+namespace TouchSocket.Core
 {
     /// <summary>
     /// GZip压缩算法的压缩机

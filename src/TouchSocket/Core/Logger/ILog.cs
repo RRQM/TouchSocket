@@ -13,7 +13,7 @@
 
 using System;
 
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 日志接口

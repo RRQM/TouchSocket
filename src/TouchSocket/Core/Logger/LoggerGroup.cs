@@ -12,9 +12,8 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using TouchSocket.Core.Collections.Concurrent;
 
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 一组日志记录器
@@ -22,7 +21,6 @@ namespace TouchSocket.Core.Log
     public class LoggerGroup : LoggerBase
     {
         private readonly List<ILog> m_logs;
-
 
         /// <summary>
         /// 一组日志记录器
@@ -35,14 +33,14 @@ namespace TouchSocket.Core.Log
                 throw new ArgumentNullException(nameof(logs));
             }
 
-            this.m_logs = new List<ILog>();
-            this.m_logs.AddRange(logs);
+            m_logs = new List<ILog>();
+            m_logs.AddRange(logs);
         }
 
         /// <summary>
         /// 组内的日志记录器
         /// </summary>
-        public ILog[] Logs => this.m_logs.ToArray();
+        public ILog[] Logs => m_logs.ToArray();
 
         /// <summary>
         /// 添加日志组件
@@ -50,7 +48,7 @@ namespace TouchSocket.Core.Log
         /// <param name="logger"></param>
         public void AddLogger(ILog logger)
         {
-            this.m_logs.Add(logger);
+            m_logs.Add(logger);
         }
 
         /// <summary>
@@ -59,7 +57,7 @@ namespace TouchSocket.Core.Log
         /// <param name="logger"></param>
         public void RemoveLogger(ILog logger)
         {
-            this.m_logs.Remove(logger);
+            m_logs.Remove(logger);
         }
 
         /// <summary>
@@ -71,9 +69,9 @@ namespace TouchSocket.Core.Log
         /// <param name="exception"></param>
         public void Log<TLog>(LogType logType, object source, string message, Exception exception) where TLog : ILog
         {
-            for (int i = 0; i < this.m_logs.Count; i++)
+            for (int i = 0; i < m_logs.Count; i++)
             {
-                ILog log = this.Logs[i];
+                ILog log = Logs[i];
                 if (log.GetType() == typeof(TLog))
                 {
                     log.Log(logType, source, message, exception);
@@ -90,9 +88,9 @@ namespace TouchSocket.Core.Log
         /// <param name="exception"></param>
         protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
-            for (int i = 0; i < this.m_logs.Count; i++)
+            for (int i = 0; i < m_logs.Count; i++)
             {
-                this.Logs[i].Log(logType, source, message, exception);
+                Logs[i].Log(logType, source, message, exception);
             }
         }
     }

@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 注入依赖对象
@@ -26,10 +26,10 @@ namespace TouchSocket.Core.Dependency
         /// <param name="instance"></param>
         public DependencyDescriptor(Type fromType, object instance)
         {
-            this.FromType = fromType;
-            this.ToInstance = instance;
-            this.Lifetime = Lifetime.Singleton;
-            this.ToType = instance.GetType();
+            FromType = fromType;
+            ToInstance = instance;
+            Lifetime = Lifetime.Singleton;
+            ToType = instance.GetType();
         }
 
         /// <summary>
@@ -40,9 +40,9 @@ namespace TouchSocket.Core.Dependency
         /// <param name="lifetime"></param>
         public DependencyDescriptor(Type fromType, Type toType, Lifetime lifetime)
         {
-            this.FromType = fromType;
-            this.Lifetime = lifetime;
-            this.ToType = toType;
+            FromType = fromType;
+            Lifetime = lifetime;
+            ToType = toType;
         }
 
         /// <summary>
@@ -51,13 +51,13 @@ namespace TouchSocket.Core.Dependency
         /// <param name="fromType"></param>
         public DependencyDescriptor(Type fromType)
         {
-            this.FromType = fromType;
+            FromType = fromType;
         }
 
         /// <summary>
         /// 实例化工厂委托
         /// </summary>
-        public Func<IContainer,object> ImplementationFactory { get; set; }
+        public Func<IContainer, object> ImplementationFactory { get; set; }
 
         /// <summary>
         /// 实例类型

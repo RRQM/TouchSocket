@@ -13,7 +13,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace TouchSocket.Core.Collections.Concurrent
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 智能安全队列
@@ -31,18 +31,18 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="maxCount"></param>
         public IntelligentConcurrentQueue(int maxCount)
         {
-            this.m_maxCount = maxCount;
+            m_maxCount = maxCount;
         }
 
         /// <summary>
         /// 允许的最大长度
         /// </summary>
-        public int MaxCount => this.m_maxCount;
+        public int MaxCount => m_maxCount;
 
         /// <summary>
         /// 长度
         /// </summary>
-        public new int Count => this.m_count;
+        public new int Count => m_count;
 
         /// <summary>
         /// 入队
@@ -50,8 +50,8 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="item"></param>
         public new void Enqueue(T item)
         {
-            SpinWait.SpinUntil(this.Check);
-            Interlocked.Increment(ref this.m_count);
+            SpinWait.SpinUntil(Check);
+            Interlocked.Increment(ref m_count);
             base.Enqueue(item);
         }
 
@@ -64,7 +64,7 @@ namespace TouchSocket.Core.Collections.Concurrent
         {
             if (base.TryDequeue(out result))
             {
-                Interlocked.Decrement(ref this.m_count);
+                Interlocked.Decrement(ref m_count);
                 return true;
             }
             return false;
@@ -72,7 +72,7 @@ namespace TouchSocket.Core.Collections.Concurrent
 
         private bool Check()
         {
-            return this.m_count < this.m_maxCount;
+            return m_count < m_maxCount;
         }
     }
 }

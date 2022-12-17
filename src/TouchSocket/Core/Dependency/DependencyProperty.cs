@@ -14,13 +14,35 @@
 using System;
 using System.Diagnostics;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
+    /// <summary>
+    /// IDependencyProperty
+    /// </summary>
+    /// <typeparam name="TValue"></typeparam>
+    public interface IDependencyProperty<out TValue>
+    {
+        /// <summary>
+        /// 默认值
+        /// </summary>
+        TValue DefauleValue { get; }
+
+        /// <summary>
+        /// 属性名称
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// 所属类型
+        /// </summary>
+        Type Owner { get; }
+    }
+
     /// <summary>
     /// 依赖项属性
     /// </summary>
     [DebuggerDisplay("Name={Name},Type={ValueType}")]
-    public class DependencyProperty
+    public class DependencyProperty<TValue> : IDependencyProperty<TValue>
     {
         /// <summary>
         /// 属性名称
@@ -32,80 +54,46 @@ namespace TouchSocket.Core.Dependency
         /// </summary>
         protected Type m_owner;
 
-        /// <summary>
-        /// 值类型
-        /// </summary>
-        protected Type m_valueType;
-
-        private object m_value;
+        private TValue m_value;
 
         /// <summary>
         /// 依赖项属性
         /// </summary>
-        private DependencyProperty()
+        protected DependencyProperty()
         {
         }
 
         /// <summary>
-        /// 默认值
+        /// <inheritdoc/>
         /// </summary>
-        public object DefauleValue => this.m_value;
+        public TValue DefauleValue => m_value;
 
         /// <summary>
-        /// 属性名
+        ///<inheritdoc/>
         /// </summary>
-        public string Name => this.m_name;
+        public string Name => m_name;
 
         /// <summary>
-        /// 所属类型
+        /// <inheritdoc/>
         /// </summary>
-        public Type Owner => this.m_owner;
-
-        /// <summary>
-        /// 值类型
-        /// </summary>
-        public Type ValueType => this.m_valueType;
-
-
-        internal void DataValidation(object value)
-        {
-            if (value == null)
-            {
-                if (typeof(ValueType).IsAssignableFrom(this.m_valueType))
-                {
-                    throw new Exception($"属性“{this.m_name}”赋值类型不允许出现Null");
-                }
-            }
-            else if (!this.m_valueType.IsAssignableFrom(value.GetType()))
-            {
-                throw new Exception($"属性“{this.m_name}”赋值类型与注册类型不一致，应当注入“{this.m_valueType}”类型");
-            }
-        }
-
-        internal void SetDefauleValue(object value)
-        {
-            this.DataValidation(value);
-            this.m_value = value;
-        }
+        public Type Owner => m_owner;
 
         /// <summary>
         /// 注册依赖项属性。
         /// <para>依赖属性的默认值，可能会应用于所有的<see cref="IDependencyObject"/></para>
         /// </summary>
         /// <param name="propertyName"></param>
-        /// <param name="valueType"></param>
         /// <param name="owner"></param>
         /// <param name="value">依赖项属性值，一般该值应该是值类型，因为它可能会被用于多个依赖对象。</param>
         /// <returns></returns>
-        public static DependencyProperty Register(string propertyName, Type valueType, Type owner, object value)
+        public static DependencyProperty<TValue> Register(string propertyName, Type owner, TValue value)
         {
-            DependencyProperty dp = new DependencyProperty
+            DependencyProperty<TValue> dp = new DependencyProperty<TValue>
             {
                 m_name = propertyName,
-                m_valueType = valueType,
-                m_owner = owner
+                m_owner = owner,
+                m_value = value
             };
-            dp.SetDefauleValue(value);
             return dp;
         }
     }

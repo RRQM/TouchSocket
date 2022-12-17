@@ -11,10 +11,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
+
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
-    /// 文件信息
+    /// TouchRpcFileInfo
     /// </summary>
     public class TouchRpcFileInfo : RemoteFileInfo
     {
@@ -22,5 +24,19 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 流位置
         /// </summary>
         public long Position { get; set; }
+
+        /// <inheritdoc/>
+        public override void Package(ByteBlock byteBlock)
+        {
+            base.Package(byteBlock);
+            byteBlock.Write(Position);
+        }
+
+        /// <inheritdoc/>
+        public override void Unpackage(ByteBlock byteBlock)
+        {
+            base.Unpackage(byteBlock);
+            Position = byteBlock.ReadInt64();
+        }
     }
 }

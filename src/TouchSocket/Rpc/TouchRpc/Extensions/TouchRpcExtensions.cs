@@ -11,10 +11,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.Run;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -22,8 +23,286 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// RPC辅助扩展
     /// </summary>
-    public static class TouchRpcExtensions
+    public static partial class TouchRpcExtensions
     {
+        /// <summary>
+        /// 创建一个直接向目标地址请求的Rpc客户端。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="targetId"></param>
+        public static IRpcClient CreateIDRpcClient<TRpcActor>(this TRpcActor client, string targetId) where TRpcActor : IRpcActor
+        {
+            return new IDRpcActor(targetId, client);
+        }
+
+        #region 批量传输（弃用）
+        /// <summary>
+        /// 批量拉取文件
+        /// </summary>
+        /// <param name="client">终端</param>
+        /// <param name="multipleCount">并行数量</param>
+        /// <param name="fileOperators">批量操作器</param>
+        [Obsolete("此方法因为特殊原因已被弃用。")]
+        public static void PullFiles(this IRpcActor client, int multipleCount, FileOperator[] fileOperators)
+        {
+            if (multipleCount < 1)
+            {
+                throw new Exception("并行数量不能小于1。");
+            }
+
+            if (fileOperators is null)
+            {
+                throw new ArgumentNullException(nameof(fileOperators));
+            }
+
+            int index = 0;
+            int t = 0;
+            int complatedLen = 0;
+            List<Task<Result>> results = new List<Task<Result>>();
+
+            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
+            {
+                int st = multipleCount - t;
+                for (int i = 0; i < st; i++)
+                {
+                    if (index == fileOperators.Length)
+                    {
+                        break;
+                    }
+                    Task<Result> result = client.PullFileAsync(fileOperators[index]);
+                    results.Add(result);
+                    index++;
+                    t++;
+                }
+
+                List<Task<Result>> cr = new List<Task<Result>>();
+
+                foreach (var item in results)
+                {
+                    if (item.IsCompleted)
+                    {
+                        cr.Add(item);
+                        t--;
+                        complatedLen++;
+                        if (complatedLen == fileOperators.Length)
+                        {
+                            loop.Dispose();
+                        }
+                    }
+                }
+
+                foreach (var item in cr)
+                {
+                    results.Remove(item);
+                }
+            });
+
+            loopAction.Run();
+        }
+
+        /// <summary>
+        /// 异步批量拉取文件
+        /// </summary>
+        /// <param name="client">终端</param>
+        /// <param name="multipleCount">并行数量</param>
+        /// <param name="fileOperators">批量操作器</param>
+        [Obsolete("此方法因为特殊原因已被弃用。")]
+        public static void PullFilesAsync(this IRpcActor client, int multipleCount, FileOperator[] fileOperators)
+        {
+            if (multipleCount < 1)
+            {
+                throw new Exception("并行数量不能小于1。");
+            }
+
+            if (fileOperators is null)
+            {
+                throw new ArgumentNullException(nameof(fileOperators));
+            }
+
+            int index = 0;
+            int t = 0;
+            int complatedLen = 0;
+            List<Task<Result>> results = new List<Task<Result>>();
+
+            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
+            {
+                int st = multipleCount - t;
+                for (int i = 0; i < st; i++)
+                {
+                    if (index == fileOperators.Length)
+                    {
+                        break;
+                    }
+                    Task<Result> result = client.PullFileAsync(fileOperators[index]);
+                    results.Add(result);
+                    index++;
+                    t++;
+                }
+
+                List<Task<Result>> cr = new List<Task<Result>>();
+
+                foreach (var item in results)
+                {
+                    if (item.IsCompleted)
+                    {
+                        cr.Add(item);
+                        t--;
+                        complatedLen++;
+                        if (complatedLen == fileOperators.Length)
+                        {
+                            loop.Dispose();
+                        }
+                    }
+                }
+
+                foreach (var item in cr)
+                {
+                    results.Remove(item);
+                }
+            });
+
+            loopAction.RunAsync();
+        }
+
+        /// <summary>
+        /// 批量推送文件
+        /// </summary>
+        /// <param name="client">终端</param>
+        /// <param name="multipleCount">并行数量</param>
+        /// <param name="fileOperators">批量操作器</param>
+        [Obsolete("此方法因为特殊原因已被弃用。")]
+        public static void PushFiles(this IRpcActor client, int multipleCount, FileOperator[] fileOperators)
+        {
+            if (multipleCount < 1)
+            {
+                throw new Exception("并行数量不能小于1。");
+            }
+
+            if (fileOperators is null)
+            {
+                throw new ArgumentNullException(nameof(fileOperators));
+            }
+
+            int index = 0;
+            int t = 0;
+            int complatedLen = 0;
+            List<Task<Result>> results = new List<Task<Result>>();
+
+            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
+            {
+                int st = multipleCount - t;
+                for (int i = 0; i < st; i++)
+                {
+                    if (index == fileOperators.Length)
+                    {
+                        break;
+                    }
+                    Task<Result> result = client.PushFileAsync(fileOperators[index]);
+                    results.Add(result);
+                    index++;
+                    t++;
+                }
+
+                List<Task<Result>> cr = new List<Task<Result>>();
+
+                foreach (var item in results)
+                {
+                    if (item.IsCompleted)
+                    {
+                        cr.Add(item);
+                        t--;
+                        complatedLen++;
+                        if (complatedLen == fileOperators.Length)
+                        {
+                            loop.Dispose();
+                        }
+                    }
+                }
+
+                foreach (var item in cr)
+                {
+                    results.Remove(item);
+                }
+            });
+
+            loopAction.Run();
+        }
+
+        /// <summary>
+        /// 异步批量推送文件
+        /// </summary>
+        /// <param name="client">终端</param>
+        /// <param name="multipleCount">并行数量</param>
+        /// <param name="fileOperators">批量操作器</param>
+        [Obsolete("此方法因为特殊原因已被弃用。")]
+        public static void PushFilesAsync(this IRpcActor client, int multipleCount, FileOperator[] fileOperators)
+        {
+            if (multipleCount < 1)
+            {
+                throw new Exception("并行数量不能小于1。");
+            }
+
+            if (fileOperators is null)
+            {
+                throw new ArgumentNullException(nameof(fileOperators));
+            }
+
+            int index = 0;
+            int t = 0;
+            int complatedLen = 0;
+            List<Task<Result>> results = new List<Task<Result>>();
+
+            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
+            {
+                int st = multipleCount - t;
+                for (int i = 0; i < st; i++)
+                {
+                    if (index == fileOperators.Length)
+                    {
+                        break;
+                    }
+                    Task<Result> result = client.PushFileAsync(fileOperators[index]);
+                    results.Add(result);
+                    index++;
+                    t++;
+                }
+
+                List<Task<Result>> cr = new List<Task<Result>>();
+
+                foreach (var item in results)
+                {
+                    if (item.IsCompleted)
+                    {
+                        cr.Add(item);
+                        t--;
+                        complatedLen++;
+                        if (complatedLen == fileOperators.Length)
+                        {
+                            loop.Dispose();
+                        }
+                    }
+                }
+
+                foreach (var item in cr)
+                {
+                    results.Remove(item);
+                }
+            });
+
+            loopAction.RunAsync();
+        }
+        #endregion
+
+        /// <summary>
+        /// 转化Protocol协议标识为TouchRpc
+        /// </summary>
+        /// <param name="client"></param>
+        public static void SwitchProtocolToTouchRpc(this ITcpClientBase client)
+        {
+            client.SetDataHandlingAdapter(new FixedHeaderPackageAdapter());
+            client.Protocol = TouchRpcUtility.TouchRpcProtocol;
+        }
+
         /// <summary>
         /// 转为ResultCode
         /// </summary>
@@ -50,326 +329,6 @@ namespace TouchSocket.Rpc.TouchRpc
                 default:
                     return ResultCode.Error;
             }
-        }
-
-        /// <summary>
-        /// 批量推送文件
-        /// </summary>
-        /// <param name="client">终端</param>
-        /// <param name="multipleCount">并行数量</param>
-        /// <param name="fileRequests">批量请求头</param>
-        /// <param name="fileOperators">批量操作器</param>
-        /// <param name="metadatas">批量元数据</param>
-        public static void PushFiles(this IRpcActor client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
-        {
-            if (multipleCount < 1)
-            {
-                throw new Exception("并行数量不能小于1。");
-            }
-
-            if (fileRequests is null)
-            {
-                throw new ArgumentNullException(nameof(fileRequests));
-            }
-
-            if (fileOperators is null)
-            {
-                throw new ArgumentNullException(nameof(fileOperators));
-            }
-
-            if (!(fileRequests.Length == fileOperators.Length && metadatas.Length == fileOperators.Length))
-            {
-                throw new Exception("FileRequest、FileOperator和Metadata数量必须一致。");
-            }
-
-            int index = 0;
-            int t = 0;
-            int complatedLen = 0;
-            List<Task<Result>> results = new List<Task<Result>>();
-
-            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
-            {
-                int st = multipleCount - t;
-                for (int i = 0; i < st; i++)
-                {
-                    if (index == fileRequests.Length)
-                    {
-                        break;
-                    }
-                    Task<Result> result = client.PushFileAsync(fileRequests[index], fileOperators[index], metadatas[index]);
-                    results.Add(result);
-                    index++;
-                    t++;
-                }
-
-                List<Task<Result>> cr = new List<Task<Result>>();
-
-                foreach (var item in results)
-                {
-                    if (item.IsCompleted)
-                    {
-                        cr.Add(item);
-                        t--;
-                        complatedLen++;
-                        if (complatedLen == fileRequests.Length)
-                        {
-                            loop.Dispose();
-                        }
-                    }
-                }
-
-                foreach (var item in cr)
-                {
-                    results.Remove(item);
-                }
-            });
-
-            loopAction.Run();
-        }
-
-        /// <summary>
-        /// 批量拉取文件
-        /// </summary>
-        /// <param name="client">终端</param>
-        /// <param name="multipleCount">并行数量</param>
-        /// <param name="fileRequests">批量请求头</param>
-        /// <param name="fileOperators">批量操作器</param>
-        /// <param name="metadatas">批量元数据</param>
-        public static void PullFiles(this IRpcActor client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
-        {
-            if (multipleCount < 1)
-            {
-                throw new Exception("并行数量不能小于1。");
-            }
-
-            if (fileRequests is null)
-            {
-                throw new ArgumentNullException(nameof(fileRequests));
-            }
-
-            if (fileOperators is null)
-            {
-                throw new ArgumentNullException(nameof(fileOperators));
-            }
-
-            if (!(fileRequests.Length == fileOperators.Length && metadatas.Length == fileOperators.Length))
-            {
-                throw new Exception("FileRequest、FileOperator和Metadata数量必须一致。");
-            }
-
-            int index = 0;
-            int t = 0;
-            int complatedLen = 0;
-            List<Task<Result>> results = new List<Task<Result>>();
-
-            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
-            {
-                int st = multipleCount - t;
-                for (int i = 0; i < st; i++)
-                {
-                    if (index == fileRequests.Length)
-                    {
-                        break;
-                    }
-                    Task<Result> result = client.PullFileAsync(fileRequests[index], fileOperators[index], metadatas[index]);
-                    results.Add(result);
-                    index++;
-                    t++;
-                }
-
-                List<Task<Result>> cr = new List<Task<Result>>();
-
-                foreach (var item in results)
-                {
-                    if (item.IsCompleted)
-                    {
-                        cr.Add(item);
-                        t--;
-                        complatedLen++;
-                        if (complatedLen == fileRequests.Length)
-                        {
-                            loop.Dispose();
-                        }
-                    }
-                }
-
-                foreach (var item in cr)
-                {
-                    results.Remove(item);
-                }
-            });
-
-            loopAction.Run();
-        }
-
-        /// <summary>
-        /// 异步批量推送文件
-        /// </summary>
-        /// <param name="client">终端</param>
-        /// <param name="multipleCount">并行数量</param>
-        /// <param name="fileRequests">批量请求头</param>
-        /// <param name="fileOperators">批量操作器</param>
-        /// <param name="metadatas">批量元数据</param>
-        public static void PushFilesAsync(this IRpcActor client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
-        {
-            if (multipleCount < 1)
-            {
-                throw new Exception("并行数量不能小于1。");
-            }
-
-            if (fileRequests is null)
-            {
-                throw new ArgumentNullException(nameof(fileRequests));
-            }
-
-            if (fileOperators is null)
-            {
-                throw new ArgumentNullException(nameof(fileOperators));
-            }
-
-            if (!(fileRequests.Length == fileOperators.Length && metadatas.Length == fileOperators.Length))
-            {
-                throw new Exception("FileRequest、FileOperator和Metadata数量必须一致。");
-            }
-
-            int index = 0;
-            int t = 0;
-            int complatedLen = 0;
-            List<Task<Result>> results = new List<Task<Result>>();
-
-            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
-            {
-                int st = multipleCount - t;
-                for (int i = 0; i < st; i++)
-                {
-                    if (index == fileRequests.Length)
-                    {
-                        break;
-                    }
-                    Task<Result> result = client.PushFileAsync(fileRequests[index], fileOperators[index], metadatas[index]);
-                    results.Add(result);
-                    index++;
-                    t++;
-                }
-
-                List<Task<Result>> cr = new List<Task<Result>>();
-
-                foreach (var item in results)
-                {
-                    if (item.IsCompleted)
-                    {
-                        cr.Add(item);
-                        t--;
-                        complatedLen++;
-                        if (complatedLen == fileRequests.Length)
-                        {
-                            loop.Dispose();
-                        }
-                    }
-                }
-
-                foreach (var item in cr)
-                {
-                    results.Remove(item);
-                }
-            });
-
-            loopAction.RunAsync();
-        }
-
-        /// <summary>
-        /// 异步批量拉取文件
-        /// </summary>
-        /// <param name="client">终端</param>
-        /// <param name="multipleCount">并行数量</param>
-        /// <param name="fileRequests">批量请求头</param>
-        /// <param name="fileOperators">批量操作器</param>
-        /// <param name="metadatas">批量元数据</param>
-        public static void PullFilesAsync(this IRpcActor client, int multipleCount, FileRequest[] fileRequests, FileOperator[] fileOperators, Metadata[] metadatas)
-        {
-            if (multipleCount < 1)
-            {
-                throw new Exception("并行数量不能小于1。");
-            }
-
-            if (fileRequests is null)
-            {
-                throw new ArgumentNullException(nameof(fileRequests));
-            }
-
-            if (fileOperators is null)
-            {
-                throw new ArgumentNullException(nameof(fileOperators));
-            }
-
-            if (!(fileRequests.Length == fileOperators.Length && metadatas.Length == fileOperators.Length))
-            {
-                throw new Exception("FileRequest、FileOperator和Metadata数量必须一致。");
-            }
-
-            int index = 0;
-            int t = 0;
-            int complatedLen = 0;
-            List<Task<Result>> results = new List<Task<Result>>();
-
-            LoopAction loopAction = LoopAction.CreateLoopAction(-1, 100, (loop) =>
-            {
-                int st = multipleCount - t;
-                for (int i = 0; i < st; i++)
-                {
-                    if (index == fileRequests.Length)
-                    {
-                        break;
-                    }
-                    Task<Result> result = client.PullFileAsync(fileRequests[index], fileOperators[index], metadatas[index]);
-                    results.Add(result);
-                    index++;
-                    t++;
-                }
-
-                List<Task<Result>> cr = new List<Task<Result>>();
-
-                foreach (var item in results)
-                {
-                    if (item.IsCompleted)
-                    {
-                        cr.Add(item);
-                        t--;
-                        complatedLen++;
-                        if (complatedLen == fileRequests.Length)
-                        {
-                            loop.Dispose();
-                        }
-                    }
-                }
-
-                foreach (var item in cr)
-                {
-                    results.Remove(item);
-                }
-            });
-
-            loopAction.RunAsync();
-        }
-
-        /// <summary>
-        /// 转化Protocol协议标识为TouchRpc
-        /// </summary>
-        /// <param name="client"></param>
-        public static void SwitchProtocolToTouchRpc(this ITcpClientBase client)
-        {
-            client.SetDataHandlingAdapter(new FixedHeaderPackageAdapter());
-            client.Protocol = TouchRpcUtility.TouchRpcProtocol;
-        }
-
-        /// <summary>
-        /// 创建一个直接向目标地址请求的Rpc客户端。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="targetID"></param>
-        public static IRpcClient CreateIDRpcClient<TRpcActor>(this TRpcActor client, string targetID) where TRpcActor : IRpcActor
-        {
-            return new IDRpcActor(targetID, client);
         }
     }
 }

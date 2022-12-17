@@ -12,8 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Core.Converter;
-using TouchSocket.Core.Extensions;
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc.TouchRpc;
 
@@ -29,7 +28,7 @@ namespace TouchSocket.Rpc.WebApi
         /// </summary>
         public WebApiClient()
         {
-            this.m_stringConverter = new StringConverter();
+            m_stringConverter = new StringConverter();
         }
 
         /// <summary>
@@ -43,7 +42,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <summary>
         /// 字符串转化器
         /// </summary>
-        public StringConverter StringConverter => this.m_stringConverter;
+        public StringConverter StringConverter => m_stringConverter;
 
         #region RPC调用
 
@@ -77,7 +76,7 @@ namespace TouchSocket.Rpc.WebApi
                 case TouchSocketHttpUtility.Get:
                     {
                         request.InitHeaders()
-                            .SetHost(this.RemoteIPHost.Host)
+                            .SetHost(RemoteIPHost.Host)
                             .SetUrl(strs[1].Format(parameters))
                             .AsGet();
                         break;
@@ -85,12 +84,12 @@ namespace TouchSocket.Rpc.WebApi
                 case TouchSocketHttpUtility.Post:
                     {
                         request.InitHeaders()
-                            .SetHost(this.RemoteIPHost.Host)
+                            .SetHost(RemoteIPHost.Host)
                             .SetUrl(strs[1].Format(parameters))
                             .AsPost();
                         if (parameters.Length > 0)
                         {
-                            request.FromJson(parameters[parameters.Length - 1].ToJsonString());
+                            request.FromJson(parameters[parameters.Length - 1].ToJson());
                         }
                         break;
                     }
@@ -98,7 +97,7 @@ namespace TouchSocket.Rpc.WebApi
                     break;
             }
 
-            HttpResponse response = this.RequestContent(request, false, invokeOption.Timeout, invokeOption.Token);
+            HttpResponse response = RequestContent(request, false, invokeOption.Timeout, invokeOption.Token);
 
             if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
             {
@@ -107,11 +106,11 @@ namespace TouchSocket.Rpc.WebApi
 
             if (response.StatusCode == "200")
             {
-                return (T)this.m_stringConverter.ConvertFrom(response.GetBody(), typeof(T));
+                return (T)m_stringConverter.ConvertFrom(response.GetBody(), typeof(T));
             }
             else if (response.StatusCode == "422")
             {
-                throw new RpcException(response.GetBody().ToJsonObject<ActionResult>().Message);
+                throw new RpcException(response.GetBody().FromJson<ActionResult>().Message);
             }
             else
             {
@@ -148,7 +147,7 @@ namespace TouchSocket.Rpc.WebApi
                 case TouchSocketHttpUtility.Get:
                     {
                         request.InitHeaders()
-                            .SetHost(this.RemoteIPHost.Host)
+                            .SetHost(RemoteIPHost.Host)
                             .SetUrl(strs[1].Format(parameters))
                             .AsGet();
                         break;
@@ -156,19 +155,19 @@ namespace TouchSocket.Rpc.WebApi
                 case TouchSocketHttpUtility.Post:
                     {
                         request.InitHeaders()
-                        .SetHost(this.RemoteIPHost.Host)
+                        .SetHost(RemoteIPHost.Host)
                         .SetUrl(strs[1].Format(parameters))
                         .AsPost();
                         if (parameters.Length > 0)
                         {
-                            request.FromJson(parameters[parameters.Length - 1].ToJsonString());
+                            request.FromJson(parameters[parameters.Length - 1].ToJson());
                         }
                         break;
                     }
                 default:
                     break;
             }
-            HttpResponse response = this.RequestContent(request, false, invokeOption.Timeout, invokeOption.Token);
+            HttpResponse response = RequestContent(request, false, invokeOption.Timeout, invokeOption.Token);
             if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
             {
                 return;
@@ -180,7 +179,7 @@ namespace TouchSocket.Rpc.WebApi
             }
             else if (response.StatusCode == "422")
             {
-                throw new RpcException(response.GetBody().ToJsonObject<ActionResult>().Message);
+                throw new RpcException(response.GetBody().FromJson<ActionResult>().Message);
             }
             else
             {
@@ -199,7 +198,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <exception cref="Exception"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            this.Invoke(method, invokeOption, ref parameters, null);
+            Invoke(method, invokeOption, ref parameters, null);
         }
 
         /// <summary>
@@ -214,7 +213,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.Invoke<T>(method, invokeOption, ref parameters, null);
+            return Invoke<T>(method, invokeOption, ref parameters, null);
         }
 
         /// <summary>
@@ -228,9 +227,9 @@ namespace TouchSocket.Rpc.WebApi
         /// <exception cref="Exception"></exception>
         public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                this.Invoke(method, invokeOption, parameters);
+                Invoke(method, invokeOption, parameters);
             });
         }
 
@@ -246,9 +245,9 @@ namespace TouchSocket.Rpc.WebApi
         /// <returns>服务器返回结果</returns>
         public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                return this.Invoke<T>(method, invokeOption, parameters);
+                return Invoke<T>(method, invokeOption, parameters);
             });
         }
 

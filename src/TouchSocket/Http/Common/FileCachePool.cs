@@ -40,12 +40,12 @@ namespace TouchSocket.Http
         /// <summary>
         /// Is the file cache empty?
         /// </summary>
-        public bool Empty => this.entriesByKey.Count == 0;
+        public bool Empty => entriesByKey.Count == 0;
 
         /// <summary>
         /// Get the file cache size
         /// </summary>
-        public int Size => this.entriesByKey.Count;
+        public int Size => entriesByKey.Count;
 
         /// <summary>
         /// Add a new cache value with the given timeout into the file cache
@@ -56,13 +56,13 @@ namespace TouchSocket.Http
         /// <returns>'true' if the cache value was added, 'false' if the given key was not added</returns>
         public bool Add(string key, byte[] value, TimeSpan timeout = new TimeSpan())
         {
-            using (new WriteLock(this.lockEx))
+            using (new WriteLock(lockEx))
             {
                 // Try to find and remove the previous key
-                this.entriesByKey.Remove(key);
+                entriesByKey.Remove(key);
 
                 // Update the cache entry
-                this.entriesByKey.Add(key, new MemCacheEntry(value, timeout));
+                entriesByKey.Add(key, new MemCacheEntry(value, timeout));
 
                 return true;
             }
@@ -76,10 +76,10 @@ namespace TouchSocket.Http
         /// <returns>'true' and cache value if the cache value was found, 'false' if the given key was not found</returns>
         public bool Find(string key, out byte[] data)
         {
-            using (new ReadLock(this.lockEx))
+            using (new ReadLock(lockEx))
             {
                 // Try to find the given key
-                if (!this.entriesByKey.TryGetValue(key, out var cacheValue))
+                if (!entriesByKey.TryGetValue(key, out var cacheValue))
                 {
                     data = null;
                     return false;
@@ -96,9 +96,9 @@ namespace TouchSocket.Http
         /// <returns>'true' if the cache value was removed, 'false' if the given key was not found</returns>
         public bool Remove(string key)
         {
-            using (new WriteLock(this.lockEx))
+            using (new WriteLock(lockEx))
             {
-                return this.entriesByKey.Remove(key);
+                return entriesByKey.Remove(key);
             }
         }
 
@@ -120,18 +120,18 @@ namespace TouchSocket.Http
             handler ??= (FileCachePool cache, string key, byte[] value, TimeSpan timespan) => cache.Add(key, value, timespan);
 
             // Try to find and remove the previous path
-            this.RemovePathInternal(path);
+            RemovePathInternal(path);
 
-            using (new WriteLock(this.lockEx))
+            using (new WriteLock(lockEx))
             {
                 // Add the given path to the cache
-                this.pathsByKey.Add(path, new FileCacheEntry(this, prefix, path, filter, handler, timeout));
+                pathsByKey.Add(path, new FileCacheEntry(this, prefix, path, filter, handler, timeout));
                 // Create entries by path map
-                this.entriesByPath[path] = new HashSet<string>();
+                entriesByPath[path] = new HashSet<string>();
             }
 
             // Insert the cache path
-            if (!this.InsertPathInternal(path, path, prefix, timeout, handler))
+            if (!InsertPathInternal(path, path, prefix, timeout, handler))
                 return false;
 
             return true;
@@ -144,10 +144,10 @@ namespace TouchSocket.Http
         /// <returns>'true' if the cache path was found, 'false' if the given path was not found</returns>
         public bool FindPath(string path)
         {
-            using (new ReadLock(this.lockEx))
+            using (new ReadLock(lockEx))
             {
                 // Try to find the given key
-                return this.pathsByKey.ContainsKey(path);
+                return pathsByKey.ContainsKey(path);
             }
         }
 
@@ -158,7 +158,7 @@ namespace TouchSocket.Http
         /// <returns>'true' if the cache path was removed, 'false' if the given path was not found</returns>
         public bool RemovePath(string path)
         {
-            return this.RemovePathInternal(path);
+            return RemovePathInternal(path);
         }
 
         /// <summary>
@@ -166,16 +166,16 @@ namespace TouchSocket.Http
         /// </summary>
         public void Clear()
         {
-            using (new WriteLock(this.lockEx))
+            using (new WriteLock(lockEx))
             {
                 // Stop all file system watchers
-                foreach (var fileCacheEntry in this.pathsByKey)
+                foreach (var fileCacheEntry in pathsByKey)
                     fileCacheEntry.Value.StopWatcher();
 
                 // Clear all cache entries
-                this.entriesByKey.Clear();
-                this.entriesByPath.Clear();
-                this.pathsByKey.Clear();
+                entriesByKey.Clear();
+                entriesByPath.Clear();
+                pathsByKey.Clear();
             }
         }
 
@@ -193,19 +193,19 @@ namespace TouchSocket.Http
             private readonly byte[] _value;
             private readonly TimeSpan _timespan;
 
-            public byte[] Value => this._value;
-            public TimeSpan Timespan => this._timespan;
+            public byte[] Value => _value;
+            public TimeSpan Timespan => _timespan;
 
             public MemCacheEntry(byte[] value, TimeSpan timespan = new TimeSpan())
             {
-                this._value = value;
-                this._timespan = timespan;
+                _value = value;
+                _timespan = timespan;
             }
 
             public MemCacheEntry(string value, TimeSpan timespan = new TimeSpan())
             {
-                this._value = Encoding.UTF8.GetBytes(value);
-                this._timespan = timespan;
+                _value = Encoding.UTF8.GetBytes(value);
+                _timespan = timespan;
             }
         };
 
@@ -219,14 +219,14 @@ namespace TouchSocket.Http
 
             public FileCacheEntry(FileCachePool cache, string prefix, string path, string filter, InsertHandler handler, TimeSpan timespan)
             {
-                this._prefix = prefix;
-                this._path = path;
-                this._handler = handler;
-                this._timespan = timespan;
-                this._watcher = new FileSystemWatcher();
+                _prefix = prefix;
+                _path = path;
+                _handler = handler;
+                _timespan = timespan;
+                _watcher = new FileSystemWatcher();
 
                 // Start the filesystem watcher
-                this.StartWatcher(cache, path, filter);
+                StartWatcher(cache, path, filter);
             }
 
             private void StartWatcher(FileCachePool cache, string path, string filter)
@@ -234,20 +234,20 @@ namespace TouchSocket.Http
                 FileCacheEntry entry = this;
 
                 // Initialize a new filesystem watcher
-                this._watcher.Created += (sender, e) => OnCreated(sender, e, cache, entry);
-                this._watcher.Changed += (sender, e) => OnChanged(sender, e, cache, entry);
-                this._watcher.Deleted += (sender, e) => OnDeleted(sender, e, cache, entry);
-                this._watcher.Renamed += (sender, e) => OnRenamed(sender, e, cache, entry);
-                this._watcher.Path = path;
-                this._watcher.IncludeSubdirectories = true;
-                this._watcher.Filter = filter;
-                this._watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
-                this._watcher.EnableRaisingEvents = true;
+                _watcher.Created += (sender, e) => OnCreated(sender, e, cache, entry);
+                _watcher.Changed += (sender, e) => OnChanged(sender, e, cache, entry);
+                _watcher.Deleted += (sender, e) => OnDeleted(sender, e, cache, entry);
+                _watcher.Renamed += (sender, e) => OnRenamed(sender, e, cache, entry);
+                _watcher.Path = path;
+                _watcher.IncludeSubdirectories = true;
+                _watcher.Filter = filter;
+                _watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+                _watcher.EnableRaisingEvents = true;
             }
 
             public void StopWatcher()
             {
-                this._watcher.Dispose();
+                _watcher.Dispose();
             }
 
             private static bool IsDirectory(string path)
@@ -335,10 +335,10 @@ namespace TouchSocket.Http
                 if (!handler(this, key, content, timeout))
                     return false;
 
-                using (new WriteLock(this.lockEx))
+                using (new WriteLock(lockEx))
                 {
                     // Update entries by path map
-                    this.entriesByPath[path].Add(key);
+                    entriesByPath[path].Add(key);
                 }
 
                 return true;
@@ -352,13 +352,13 @@ namespace TouchSocket.Http
             {
                 key = key.Replace('\\', '/');
 
-                using (new WriteLock(this.lockEx))
+                using (new WriteLock(lockEx))
                 {
                     // Update entries by path map
-                    this.entriesByPath[path].Remove(key);
+                    entriesByPath[path].Remove(key);
                 }
 
-                return this.Remove(key);
+                return Remove(key);
             }
             catch (Exception) { return false; }
         }
@@ -375,7 +375,7 @@ namespace TouchSocket.Http
                     string key = keyPrefix + HttpUtility.UrlDecode(Path.GetFileName(item));
 
                     // Recursively insert sub-directory
-                    if (!this.InsertPathInternal(root, item, key, timeout, handler))
+                    if (!InsertPathInternal(root, item, key, timeout, handler))
                         return false;
                 }
 
@@ -384,7 +384,7 @@ namespace TouchSocket.Http
                     string key = keyPrefix + HttpUtility.UrlDecode(Path.GetFileName(item));
 
                     // Insert file into the cache
-                    if (!this.InsertFileInternal(root, item, key, timeout, handler))
+                    if (!InsertFileInternal(root, item, key, timeout, handler))
                         return false;
                 }
 
@@ -395,22 +395,22 @@ namespace TouchSocket.Http
 
         private bool RemovePathInternal(string path)
         {
-            using (new WriteLock(this.lockEx))
+            using (new WriteLock(lockEx))
             {
                 // Try to find the given path
-                if (!this.pathsByKey.TryGetValue(path, out var cacheValue))
+                if (!pathsByKey.TryGetValue(path, out var cacheValue))
                     return false;
 
                 // Stop the file system watcher
                 cacheValue.StopWatcher();
 
                 // Remove path entries
-                foreach (var entryKey in this.entriesByPath[path])
-                    this.entriesByKey.Remove(entryKey);
-                this.entriesByPath.Remove(path);
+                foreach (var entryKey in entriesByPath[path])
+                    entriesByKey.Remove(entryKey);
+                entriesByPath.Remove(path);
 
                 // Remove cache path
-                this.pathsByKey.Remove(path);
+                pathsByKey.Remove(path);
 
                 return true;
             }
@@ -426,7 +426,7 @@ namespace TouchSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.Clear();
+            Clear();
             base.Dispose(disposing);
         }
 
@@ -436,7 +436,7 @@ namespace TouchSocket.Http
         ~FileCachePool()
         {
             // Simply call Dispose(false).
-            this.Dispose(false);
+            Dispose(false);
         }
 
         #endregion IDisposable implementation

@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -38,7 +39,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual Task ExecutedAsync(ICallContext callContext, ref InvokeResult invokeResult)
         {
-            return Task.FromResult(string.Empty);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -61,7 +62,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual Task ExecutExceptionAsync(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
         {
-            return Task.FromResult(string.Empty);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual Task ExecutingAsync(ICallContext callContext, ref InvokeResult invokeResult)
         {
-            return Task.FromResult(string.Empty);
+            return EasyTask.CompletedTask;
         }
     }
 }

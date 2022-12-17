@@ -14,12 +14,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TouchSocket.Core.Converter;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Reflection;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets.Plugins
+namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
     /// WS命令行插件。
@@ -45,7 +43,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <returns></returns>
         public WSCommandLinePlugin NoReturnException()
         {
-            this.ReturnException = false;
+            ReturnException = false;
             return this;
         }
 
@@ -56,12 +54,12 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <exception cref="ArgumentNullException"></exception>
         protected WSCommandLinePlugin(ILog logger)
         {
-            this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Converter = new StringConverter();
-            var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
+            m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            Converter = new StringConverter();
+            var ms = GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
             foreach (var item in ms)
             {
-                this.pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
+                pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
             }
         }
 
@@ -77,7 +75,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
                 try
                 {
                     string[] strs = e.DataFrame.ToText().Split(' ');
-                    if (strs.Length > 0 && this.pairs.TryGetValue(strs[0], out Method method))
+                    if (strs.Length > 0 && pairs.TryGetValue(strs[0], out Method method))
                     {
                         var ps = method.Info.GetParameters();
                         object[] os = new object[ps.Length];
@@ -90,7 +88,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
                             }
                             else
                             {
-                                os[i] = this.Converter.ConvertFrom(strs[index + 1], ps[i].ParameterType);
+                                os[i] = Converter.ConvertFrom(strs[index + 1], ps[i].ParameterType);
                                 index++;
                             }
                         }
@@ -104,25 +102,25 @@ namespace TouchSocket.Http.WebSockets.Plugins
                             {
                                 if (client is HttpClient httpClient)
                                 {
-                                    httpClient.SendWithWS(this.Converter.ConvertTo(result));
+                                    httpClient.SendWithWS(Converter.ConvertTo(result));
                                 }
                                 else if (client is HttpSocketClient httpSocketClient)
                                 {
-                                    httpSocketClient.SendWithWS(this.Converter.ConvertTo(result));
+                                    httpSocketClient.SendWithWS(Converter.ConvertTo(result));
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            if (this.ReturnException)
+                            if (ReturnException)
                             {
                                 if (client is HttpClient httpClient)
                                 {
-                                    httpClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
+                                    httpClient.SendWithWS(Converter.ConvertTo(ex.Message));
                                 }
                                 else if (client is HttpSocketClient httpSocketClient)
                                 {
-                                    httpSocketClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
+                                    httpSocketClient.SendWithWS(Converter.ConvertTo(ex.Message));
                                 }
                             }
                         }
@@ -130,7 +128,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
                 }
                 catch (Exception ex)
                 {
-                    this.m_logger.Log(Core.Log.LogType.Error, this, ex.Message, ex);
+                    m_logger.Exception(this,ex);
                 }
             }
 

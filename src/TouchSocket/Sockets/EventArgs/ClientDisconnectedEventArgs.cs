@@ -26,7 +26,7 @@ namespace TouchSocket.Sockets
         /// <param name="mes"></param>
         public ClientDisconnectedEventArgs(bool manual, string mes) : base(mes)
         {
-            this.Manual = manual;
+            Manual = manual;
         }
 
         /// <summary>

@@ -17,11 +17,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Log;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -29,21 +24,22 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// UDP Rpc解释器
     /// </summary>
-    public class UdpTouchRpc : UdpSessionBase, IUdpTouchRpc
+    public partial class UdpTouchRpc : UdpSessionBase, IUdpTouchRpc
     {
+        private readonly ActionMap m_actionMap;
         private readonly Timer m_timer;
         private readonly ConcurrentDictionary<EndPoint, UdpRpcActor> m_udpRpcActors;
-        private readonly ActionMap m_actionMap;
         private RpcStore m_rpcStore;
         private SerializationSelector m_serializationSelector;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         public UdpTouchRpc()
         {
-            this.m_timer = new Timer((obj) =>
+            m_timer = new Timer((obj) =>
             {
-                this.m_udpRpcActors.Remove((kv) =>
+                m_udpRpcActors.Remove((kv) =>
                 {
                     if (--kv.Value.Tick < 0)
                     {
@@ -52,322 +48,33 @@ namespace TouchSocket.Rpc.TouchRpc
                     return false;
                 });
             }, null, 1000 * 30, 1000 * 30);
-            this.m_actionMap = new ActionMap();
-            this.m_udpRpcActors = new ConcurrentDictionary<EndPoint, UdpRpcActor>();
+            m_actionMap = new ActionMap();
+            m_udpRpcActors = new ConcurrentDictionary<EndPoint, UdpRpcActor>();
         }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public RpcStore RpcStore => this.m_rpcStore;
-
-        /// <summary>
-        /// 序列化选择器
-        /// </summary>
-        public SerializationSelector SerializationSelector => this.m_serializationSelector;
-
-        bool IRpcActor.IsHandshaked => throw new NotImplementedException();
-
-        string IRpcActor.RootPath { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        ResponseType IRpcActor.ResponseType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        RpcActor ITouchRpc.RpcActor => throw new NotImplementedException();
 
         /// <summary>
         /// 方法映射表
         /// </summary>
-        public ActionMap ActionMap { get => this.m_actionMap; }
+        public ActionMap ActionMap { get => m_actionMap; }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 不需要握手，所以此值一直为True。
         /// </summary>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            this.GetUdpRpcActor().Invoke(method, invokeOption, parameters);
-        }
+        public bool IsHandshaked => true;
 
-        /// <summary>
+        string IRpcActor.RootPath { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.GetUdpRpcActor().Invoke<T>(method, invokeOption, parameters);
-        }
+        public RpcActor RpcActor => GetUdpRpcActor();
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <param name="types"></param>
-        /// <returns></returns>
-        public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            return this.GetUdpRpcActor().Invoke<T>(method, invokeOption, ref parameters, types);
-        }
+        public RpcStore RpcStore => m_rpcStore;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <param name="types"></param>
-        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            this.GetUdpRpcActor().Invoke(method, invokeOption, ref parameters, types);
-        }
+        public SerializationSelector SerializationSelector => m_serializationSelector;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.GetUdpRpcActor().InvokeAsync(method, invokeOption, parameters);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.GetUdpRpcActor().InvokeAsync<T>(method, invokeOption, parameters);
-        }
-
-        #region RPC解析器
-        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
-                {
-                    this.m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
-                }
-            }
-        }
-
-        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
-                {
-                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
-                }
-            }
-        }
-        void IRpcParser.SetRpcStore(RpcStore rpcService)
-        {
-            this.m_rpcStore = rpcService;
-        }
-
-        #endregion
-
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public bool Ping(int timeout = 5000)
-        {
-            return this.GetUdpRpcActor().Ping(timeout);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        public void Send(short protocol, byte[] buffer)
-        {
-            this.GetUdpRpcActor().Send(protocol, buffer);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void Send(short protocol, byte[] buffer, int offset, int length)
-        {
-            this.GetUdpRpcActor().Send(protocol, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="dataByteBlock"></param>
-        public void Send(short protocol, ByteBlock dataByteBlock)
-        {
-            this.GetUdpRpcActor().Send(protocol, dataByteBlock);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        public void Send(short protocol)
-        {
-            this.GetUdpRpcActor().Send(protocol);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        public void SendAsync(short protocol, byte[] buffer)
-        {
-            this.GetUdpRpcActor().SendAsync(protocol, buffer);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void SendAsync(short protocol, byte[] buffer, int offset, int length)
-        {
-            this.GetUdpRpcActor().SendAsync(protocol, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="dataByteBlock"></param>
-        public void SendAsync(short protocol, ByteBlock dataByteBlock)
-        {
-            this.GetUdpRpcActor().SendAsync(protocol, dataByteBlock);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        public void SendAsync(short protocol)
-        {
-            this.GetUdpRpcActor().SendAsync(protocol);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            this.m_timer.SafeDispose();
-            this.m_udpRpcActors.Clear();
-            base.Dispose(disposing);
-        }
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="remoteEndPoint"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.GetUdpRpcActor(remoteEndPoint).InputReceivedData(byteBlock);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="config"></param>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            this.m_serializationSelector = (SerializationSelector)config.GetValue(TouchRpcConfigExtensions.SerializationSelectorProperty);
-
-            if (config.GetValue<RpcStore>(RpcConfigExtensions.RpcStoreProperty) is RpcStore rpcStore)
-            {
-                rpcStore.AddRpcParser(this.GetType().Name, this);
-            }
-            else
-            {
-                new RpcStore(config.Container).AddRpcParser(this.GetType().Name, this);
-            }
-            base.LoadConfig(config);
-        }
-
-        private UdpRpcActor GetUdpRpcActor(EndPoint endPoint)
-        {
-            if (!this.m_udpRpcActors.TryGetValue(endPoint, out UdpRpcActor udpRpcActor))
-            {
-                udpRpcActor = new UdpRpcActor(this, endPoint, this.Container.Resolve<ILog>());
-                udpRpcActor.Caller = new UdpCaller(this, endPoint);
-                udpRpcActor.RpcStore = this.m_rpcStore;
-                udpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
-                udpRpcActor.SerializationSelector = this.m_serializationSelector;
-                this.m_udpRpcActors.TryAdd(endPoint, udpRpcActor);
-            }
-            udpRpcActor.Tick++;
-            return udpRpcActor;
-        }
-
-        private MethodInstance GetInvokeMethod(string arg)
-        {
-            return this.m_actionMap.GetMethodInstance(arg);
-        }
-
-        private UdpRpcActor GetUdpRpcActor()
-        {
-            if (this.RemoteIPHost == null)
-            {
-                throw new ArgumentNullException(nameof(this.RemoteIPHost));
-            }
-            return this.GetUdpRpcActor(this.RemoteIPHost.EndPoint);
-        }
-
-        Result IRpcActor.PullFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<Result> IRpcActor.PullFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
-        {
-            throw new NotImplementedException();
-        }
-
-        Result IRpcActor.PushFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<Result> IRpcActor.PushFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
-        {
-            throw new NotImplementedException();
-        }
+        public Func<IRpcClient, bool> TryCanInvoke { get; set; }
 
         bool IRpcActor.ChannelExisted(int id)
         {
@@ -382,6 +89,221 @@ namespace TouchSocket.Rpc.TouchRpc
         Channel IRpcActor.CreateChannel(int id)
         {
             throw new NotImplementedException();
+        }
+
+        Channel ITargetRpcActor.CreateChannel(string targetId)
+        {
+            throw new NotImplementedException();
+        }
+
+        Channel ITargetRpcActor.CreateChannel(string targetId, int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            GetUdpRpcActor().Invoke(method, invokeOption, parameters);
+        }
+
+        /// <inheritdoc/>
+        public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return GetUdpRpcActor().Invoke<T>(method, invokeOption, parameters);
+        }
+
+        /// <inheritdoc/>
+        public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        {
+            return GetUdpRpcActor().Invoke<T>(method, invokeOption, ref parameters, types);
+        }
+
+        /// <inheritdoc/>
+        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        {
+            GetUdpRpcActor().Invoke(method, invokeOption, ref parameters, types);
+        }
+
+        void ITargetRpcClient.Invoke(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        T ITargetRpcClient.Invoke<T>(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        void ITargetRpcClient.Invoke(string targetId, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        {
+            throw new NotImplementedException();
+        }
+
+        T ITargetRpcClient.Invoke<T>(string targetId, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return GetUdpRpcActor().InvokeAsync(method, invokeOption, parameters);
+        }
+
+        /// <inheritdoc/>
+        public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            return GetUdpRpcActor().InvokeAsync<T>(method, invokeOption, parameters);
+        }
+
+        #region RPC解析器
+
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
+        }
+
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<TouchRpcAttribute>() is TouchRpcAttribute attribute)
+                {
+                    m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                }
+            }
+        }
+
+        void IRpcParser.SetRpcStore(RpcStore rpcService)
+        {
+            m_rpcStore = rpcService;
+        }
+
+        #endregion RPC解析器
+
+        Task ITargetRpcClient.InvokeAsync(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<T> ITargetRpcClient.InvokeAsync<T>(string targetId, string method, IInvokeOption invokeOption, params object[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public bool Ping(int timeout = 5000)
+        {
+            return GetUdpRpcActor().Ping(timeout);
+        }
+
+        bool ITargetRpcActor.Ping(string targetId, int timeout)
+        {
+            throw new NotImplementedException();
+        }
+
+        Result IRpcActor.PullFile(FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        Result ITargetRpcActor.PullFile(string targetId, FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<Result> IRpcActor.PullFileAsync(FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<Result> ITargetRpcActor.PullFileAsync(string targetId, FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        PullSmallFileResult IRpcActor.PullSmallFile(string path, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        PullSmallFileResult ITargetRpcActor.PullSmallFile(string targetId, string path, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<PullSmallFileResult> IRpcActor.PullSmallFileAsync(string path, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<PullSmallFileResult> ITargetRpcActor.PullSmallFileAsync(string targetId, string path, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        Result IRpcActor.PushFile(FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        Result ITargetRpcActor.PushFile(string targetId, FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<Result> IRpcActor.PushFileAsync(FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<Result> ITargetRpcActor.PushFileAsync(string targetId, FileOperator fileOperator)
+        {
+            throw new NotImplementedException();
+        }
+
+        Result IRpcActor.PushSmallFile(string savePath, FileInfo fileInfo, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        Result ITargetRpcActor.PushSmallFile(string targetId, string savePath, FileInfo fileInfo, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<Result> IRpcActor.PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<Result> ITargetRpcActor.PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata, int timeout, CancellationToken token)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IRpcActor.ResetID(string newID)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public void Send(short protocol, byte[] buffer, int offset, int length)
+        {
+            GetUdpRpcActor().Send(protocol, buffer, offset, length);
+        }
+
+        /// <inheritdoc/>
+        public Task SendAsync(short protocol, byte[] buffer, int offset, int length)
+        {
+            return GetUdpRpcActor().SendAsync(protocol, buffer, offset, length);
         }
 
         Result IRpcActor.SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata)
@@ -399,70 +321,65 @@ namespace TouchSocket.Rpc.TouchRpc
             throw new NotImplementedException();
         }
 
-        void IRpcActor.ResetID(string newID, CancellationToken cancellationToken)
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
         {
-            throw new NotImplementedException();
+            m_timer.SafeDispose();
+            m_udpRpcActors.Clear();
+            base.Dispose(disposing);
         }
 
-        Channel IIDRpcActor.CreateChannel(string targetID)
+        /// <inheritdoc/>
+        protected override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            throw new NotImplementedException();
+            GetUdpRpcActor(remoteEndPoint).InputReceivedData(byteBlock);
         }
 
-        Channel IIDRpcActor.CreateChannel(string targetID, int id)
+        /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
         {
-            throw new NotImplementedException();
+            m_serializationSelector = config.GetValue(TouchRpcConfigExtensions.SerializationSelectorProperty);
+
+            if (config.GetValue(RpcConfigExtensions.RpcStoreProperty) is RpcStore rpcStore)
+            {
+                rpcStore.AddRpcParser(GetType().Name, this);
+            }
+            else
+            {
+                new RpcStore(config.Container).AddRpcParser(GetType().Name, this);
+            }
+            base.LoadConfig(config);
         }
 
-        Result IIDRpcActor.PullFile(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
+        private MethodInstance GetInvokeMethod(string arg)
         {
-            throw new NotImplementedException();
+            return m_actionMap.GetMethodInstance(arg);
         }
 
-        Task<Result> IIDRpcActor.PullFileAsync(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
+        private UdpRpcActor GetUdpRpcActor(EndPoint endPoint)
         {
-            throw new NotImplementedException();
+            if (!m_udpRpcActors.TryGetValue(endPoint, out UdpRpcActor udpRpcActor))
+            {
+                udpRpcActor = new UdpRpcActor(this, endPoint, Container.Resolve<ILog>())
+                {
+                    Caller = new UdpCaller(this, endPoint),
+                    RpcStore = m_rpcStore,
+                    GetInvokeMethod = GetInvokeMethod,
+                    SerializationSelector = m_serializationSelector
+                };
+                m_udpRpcActors.TryAdd(endPoint, udpRpcActor);
+            }
+            udpRpcActor.Tick++;
+            return udpRpcActor;
         }
 
-        Result IIDRpcActor.PushFile(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
+        private UdpRpcActor GetUdpRpcActor()
         {
-            throw new NotImplementedException();
-        }
-
-        Task<Result> IIDRpcActor.PushFileAsync(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task IIDRpcActor.InvokeAsync(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<T> IIDRpcActor.InvokeAsync<T>(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IIDRpcActor.Invoke(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        T IIDRpcActor.Invoke<T>(string targetID, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        void IIDRpcActor.Invoke(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            throw new NotImplementedException();
-        }
-
-        T IIDRpcActor.Invoke<T>(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            throw new NotImplementedException();
+            if (RemoteIPHost == null)
+            {
+                throw new ArgumentNullException(nameof(RemoteIPHost));
+            }
+            return GetUdpRpcActor(RemoteIPHost.EndPoint);
         }
     }
 }

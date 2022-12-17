@@ -26,8 +26,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public X509Certificate Certificate
         {
-            get => this.certificate;
-            set => this.certificate = value;
+            get => certificate;
+            set => certificate = value;
         }
 
         private bool clientCertificateRequired;
@@ -37,8 +37,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public bool ClientCertificateRequired
         {
-            get => this.clientCertificateRequired;
-            set => this.clientCertificateRequired = value;
+            get => clientCertificateRequired;
+            set => clientCertificateRequired = value;
         }
     }
 }

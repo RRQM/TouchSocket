@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Data
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 数据压缩机接口

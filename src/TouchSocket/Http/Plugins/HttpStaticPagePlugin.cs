@@ -14,7 +14,7 @@ using System;
 using System.IO;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.Plugins
+namespace TouchSocket.Http
 {
     /// <summary>
     /// Http静态内容插件
@@ -28,13 +28,13 @@ namespace TouchSocket.Http.Plugins
         /// </summary>
         public HttpStaticPagePlugin()
         {
-            this.fileCache = new FileCachePool();
+            fileCache = new FileCachePool();
         }
 
         /// <summary>
         /// 静态文件缓存。
         /// </summary>
-        public FileCachePool FileCache => this.fileCache;
+        public FileCachePool FileCache => fileCache;
 
         /// <summary>
         /// 添加静态
@@ -47,7 +47,7 @@ namespace TouchSocket.Http.Plugins
         {
             timeout ??= TimeSpan.FromHours(1);
 
-            this.fileCache.InsertPath(path, prefix, filter, timeout.Value, null);
+            fileCache.InsertPath(path, prefix, filter, timeout.Value, null);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace TouchSocket.Http.Plugins
         /// </summary>
         public void ClearFolder()
         {
-            this.fileCache.Clear();
+            fileCache.Clear();
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace TouchSocket.Http.Plugins
         /// <param name="path">Static content path</param>
         public void RemoveFolder(string path)
         {
-            this.fileCache.RemovePath(path);
+            fileCache.RemovePath(path);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace TouchSocket.Http.Plugins
         /// <param name="e"></param>
         protected override void OnGet(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (this.fileCache.Find(e.Context.Request.RelativeURL, out byte[] data))
+            if (fileCache.Find(e.Context.Request.RelativeURL, out byte[] data))
             {
                 e.Context.Response
                     .SetStatus()

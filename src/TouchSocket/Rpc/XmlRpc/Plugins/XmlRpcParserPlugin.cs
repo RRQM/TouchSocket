@@ -13,10 +13,8 @@
 using System;
 using System.Net.Sockets;
 using System.Xml;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Dependency;
+using TouchSocket.Core;
 using TouchSocket.Http;
-using TouchSocket.Http.Plugins;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.XmlRpc
@@ -35,27 +33,27 @@ namespace TouchSocket.Rpc.XmlRpc
         /// </summary>
         public XmlRpcParserPlugin([DependencyParamterInject(true)] RpcStore rpcStore)
         {
-            this.m_actionMap = new ActionMap();
-            rpcStore?.AddRpcParser(this.GetType().Name, this);
+            m_actionMap = new ActionMap();
+            rpcStore?.AddRpcParser(GetType().Name, this);
         }
 
         /// <summary>
         /// XmlRpc调用
         /// </summary>
-        public ActionMap ActionMap => this.m_actionMap;
+        public ActionMap ActionMap => m_actionMap;
 
         /// <summary>
         /// 所属服务器
         /// </summary>
-        public RpcStore RpcStore => this.m_rpcStore;
+        public RpcStore RpcStore => m_rpcStore;
 
         /// <summary>
         /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
         /// </summary>
         public string XmlRpcUrl
         {
-            get => this.m_xmlRpcUrl;
-            set => this.m_xmlRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
+            get => m_xmlRpcUrl;
+            set => m_xmlRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
         }
 
         #region RPC解析器
@@ -66,7 +64,7 @@ namespace TouchSocket.Rpc.XmlRpc
             {
                 if (methodInstance.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
                 {
-                    this.m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    m_actionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
                 }
             }
         }
@@ -77,14 +75,14 @@ namespace TouchSocket.Rpc.XmlRpc
             {
                 if (methodInstance.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
                 {
-                    this.m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                    m_actionMap.Remove(attribute.GetInvokenKey(methodInstance));
                 }
             }
         }
 
         void IRpcParser.SetRpcStore(RpcStore rpcService)
         {
-            this.m_rpcStore = rpcService;
+            m_rpcStore = rpcService;
         }
 
         #endregion RPC解析器
@@ -96,7 +94,7 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <returns></returns>
         public XmlRpcParserPlugin SetXmlRpcUrl(string xmlRpcUrl)
         {
-            this.XmlRpcUrl = xmlRpcUrl;
+            XmlRpcUrl = xmlRpcUrl;
             return this;
         }
 
@@ -107,7 +105,7 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <param name="e"></param>
         protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (this.m_xmlRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_xmlRpcUrl))
+            if (m_xmlRpcUrl == "/" || e.Context.Request.UrlEquals(m_xmlRpcUrl))
             {
                 e.Handled = true;
 
@@ -121,7 +119,7 @@ namespace TouchSocket.Rpc.XmlRpc
                 InvokeResult invokeResult = new InvokeResult();
                 XmlRpcCallContext callContext = null;
 
-                if (this.m_actionMap.TryGetMethodInstance(actionKey, out MethodInstance methodInstance))
+                if (m_actionMap.TryGetMethodInstance(actionKey, out MethodInstance methodInstance))
                 {
                     if (methodInstance.IsEnable)
                     {
@@ -184,10 +182,10 @@ namespace TouchSocket.Rpc.XmlRpc
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult = this.m_rpcStore.Execute(rpcServer, ps, callContext);
+                    invokeResult = m_rpcStore.Execute(rpcServer, ps, callContext);
                 }
 
-                HttpResponse httpResponse = new HttpResponse();
+                HttpResponse httpResponse = e.Context.Response;
 
                 ByteBlock byteBlock = new ByteBlock();
 
@@ -202,8 +200,7 @@ namespace TouchSocket.Rpc.XmlRpc
                 }
                 try
                 {
-                    httpResponse.Build(byteBlock);
-                    client.DefaultSend(byteBlock);
+                    httpResponse.Answer();
                 }
                 finally
                 {

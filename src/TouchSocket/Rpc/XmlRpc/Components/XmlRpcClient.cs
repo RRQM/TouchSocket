@@ -13,7 +13,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Xml;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc.TouchRpc;
 
@@ -44,17 +44,17 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            lock (this.m_invokeLocker)
+            lock (m_invokeLocker)
             {
                 if (invokeOption == default)
                 {
                     invokeOption = InvokeOption.WaitInvoke;
                 }
-                using (ByteBlock byteBlock = new ByteBlock(this.BufferLength))
+                using (ByteBlock byteBlock = new ByteBlock(BufferLength))
                 {
-                    HttpRequest request = XmlDataTool.CreateRequest(this.RemoteIPHost.Host, this.RemoteIPHost.GetUrlPath(), method, parameters);
+                    HttpRequest request = XmlDataTool.CreateRequest(RemoteIPHost.Host, RemoteIPHost.GetUrlPath(), method, parameters);
 
-                    HttpResponse response = this.RequestContent(request, invokeOption.FeedbackType == FeedbackType.OnlySend, invokeOption.Timeout, invokeOption.Token);
+                    HttpResponse response = RequestContent(request, invokeOption.FeedbackType == FeedbackType.OnlySend, invokeOption.Timeout, invokeOption.Token);
                     if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                     {
                         return default;
@@ -91,17 +91,17 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <exception cref="Exception"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            lock (this.m_invokeLocker)
+            lock (m_invokeLocker)
             {
                 if (invokeOption == default)
                 {
                     invokeOption = InvokeOption.WaitInvoke;
                 }
 
-                using (ByteBlock byteBlock = new ByteBlock(this.BufferLength))
+                using (ByteBlock byteBlock = new ByteBlock(BufferLength))
                 {
-                    HttpRequest request = XmlDataTool.CreateRequest(this.RemoteIPHost.Host, this.RemoteIPHost.GetUrlPath(), method, parameters);
-                    var response = this.RequestContent(request, invokeOption.FeedbackType == FeedbackType.OnlySend, invokeOption.Timeout, invokeOption.Token);
+                    HttpRequest request = XmlDataTool.CreateRequest(RemoteIPHost.Host, RemoteIPHost.GetUrlPath(), method, parameters);
+                    var response = RequestContent(request, invokeOption.FeedbackType == FeedbackType.OnlySend, invokeOption.Timeout, invokeOption.Token);
                     if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                     {
                         return;
@@ -125,7 +125,7 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <exception cref="Exception"></exception>
         public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            this.Invoke(method, invokeOption, ref parameters, null);
+            Invoke(method, invokeOption, ref parameters, null);
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.Invoke<T>(method, invokeOption, ref parameters, null);
+            return Invoke<T>(method, invokeOption, ref parameters, null);
         }
 
         /// <summary>
@@ -155,9 +155,9 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <exception cref="Exception"></exception>
         public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                this.Invoke(method, invokeOption, parameters);
+                Invoke(method, invokeOption, parameters);
             });
         }
 
@@ -174,9 +174,9 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <returns>服务器返回结果</returns>
         public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                return this.Invoke<T>(method, invokeOption, parameters);
+                return Invoke<T>(method, invokeOption, parameters);
             });
         }
     }

@@ -11,151 +11,74 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Diagnostics;
+using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Collections.Concurrent;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
     /// 通道
     /// </summary>
-    public class Channel : DisposableObject
+    [DebuggerDisplay("ID={ID},Status={Status}")]
+    public abstract class Channel : DisposableObject
     {
-        private readonly IInternalRpc m_client;
-        private int m_cacheCapacity;
-
-        private volatile bool m_canFree;
-        private ByteBlock m_currentByteBlock;
-
-        private IntelligentDataQueue<ChannelData> m_dataQueue;
-        private int m_id;
-
-        private string m_lastOperationMes;
-        private AutoResetEvent m_moveWaitHandle;
-        private ChannelStatus m_status;
-        private string m_targetClientID;
-        private bool m_using;
-
-        internal Channel(IInternalRpc client, string targetClientID)
-        {
-            this.m_client = client;
-            this.OnCreate(targetClientID);
-        }
-
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~Channel()
-        {
-            this.Dispose(false);
-        }
-
         /// <summary>
         /// 是否具有数据可读
         /// </summary>
-        public bool Available => this.m_dataQueue.Count > 0 ? true : false;
+        public abstract int Available { get; }
 
         /// <summary>
         /// 缓存容量
         /// </summary>
-        public int CacheCapacity
-        {
-            get => this.m_cacheCapacity;
-            set
-            {
-                if (value < 0)
-                {
-                    value = 1024;
-                }
-                this.m_cacheCapacity = value;
-                this.m_dataQueue.MaxSize = value;
-            }
-        }
+        public abstract int CacheCapacity { get; set; }
 
         /// <summary>
         /// 判断当前通道能否调用<see cref="MoveNext()"/>
         /// </summary>
-        public bool CanMoveNext
-        {
-            get
-            {
-                if ((byte)this.m_status >= 4)
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
+        public abstract bool CanMoveNext { get; }
 
         /// <summary>
         /// 能否写入
         /// </summary>
-        public bool CanWrite => (byte)this.m_status > 3 ? false : true;
+        public abstract bool CanWrite { get; }
 
         /// <summary>
-        /// ID
+        /// 通道ID
         /// </summary>
-        public int ID => this.m_id;
+        public abstract int ID { get; }
 
         /// <summary>
         /// 最后一次操作时显示消息
         /// </summary>
-        public string LastOperationMes
-        {
-            get => this.m_lastOperationMes;
-            set => this.m_lastOperationMes = value;
-        }
+        public abstract string LastOperationMes { get; }
 
         /// <summary>
         /// 状态
         /// </summary>
-        public ChannelStatus Status => this.m_status;
+        public abstract ChannelStatus Status { get; }
 
         /// <summary>
-        /// 目的ID地址。
+        /// 目的ID地址。仅当该通道由两个客户端打通时有效。
         /// </summary>
-        public string TargetClientID => this.m_targetClientID;
+        public abstract string TargetId { get; }
 
         /// <summary>
         /// 超时时间，默认1000*10ms。
         /// </summary>
-        public int Timeout { get; set; } = 1000 * 10;
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// 是否被使用
         /// </summary>
-        public bool Using => this.m_using;
+        public abstract bool Using { get; }
 
         /// <summary>
         /// 取消
         /// </summary>
-        public void Cancel(string operationMes = null)
-        {
-            if ((byte)this.m_status > 3)
-            {
-                return;
-            }
-
-            ByteBlock byteBlock = new ByteBlock();
-            try
-            {
-                this.RequestCancel();
-                if (this.m_targetClientID != null)
-                {
-                    byteBlock.Write(this.m_targetClientID);
-                }
-                byteBlock.Write(this.m_id);
-                byteBlock.Write(operationMes);
-                this.m_client.SocketSend(this.m_targetClientID == null ? TouchRpcUtility.P_103_CancelOrder : TouchRpcUtility.P_113_CancelOrder_2C, byteBlock);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
+        public abstract void Cancel(string operationMes = null);
 
         /// <summary>
         /// 异步取消
@@ -163,39 +86,16 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public Task CancelAsync(string operationMes = null)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                this.Cancel(operationMes);
+                Cancel(operationMes);
             });
         }
 
         /// <summary>
         /// 完成操作
         /// </summary>
-        public void Complete(string operationMes = null)
-        {
-            if ((byte)this.m_status > 3)
-            {
-                return;
-            }
-
-            ByteBlock byteBlock = new ByteBlock();
-            try
-            {
-                this.RequestComplete();
-                if (this.m_targetClientID != null)
-                {
-                    byteBlock.Write(this.m_targetClientID);
-                }
-                byteBlock.Write(this.m_id);
-                byteBlock.Write(operationMes);
-                this.m_client.SocketSend(this.m_targetClientID == null ? TouchRpcUtility.P_102_CompleteOrder : TouchRpcUtility.P_112_CompleteOrder_2C, byteBlock.Buffer, 0, byteBlock.Len);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
+        public abstract void Complete(string operationMes = null);
 
         /// <summary>
         /// 异步完成操作
@@ -203,77 +103,23 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public Task CompleteAsync(string operationMes = null)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
              {
-                 this.Complete(operationMes);
+                 Complete(operationMes);
              });
-        }
-
-        /// <summary>
-        /// 异步释放
-        /// </summary>
-        /// <returns></returns>
-        public Task DisposeAsync()
-        {
-            return Task.Run(() =>
-            {
-                this.Dispose();
-            });
         }
 
         /// <summary>
         /// 获取当前的数据
         /// </summary>
-        public byte[] GetCurrent()
-        {
-            if (this.m_currentByteBlock != null && this.m_currentByteBlock.CanRead)
-            {
-                this.m_currentByteBlock.Pos = 6;
-                byte[] data = this.m_currentByteBlock.ReadBytesPackage();
-                this.m_currentByteBlock.SetHolding(false);
-                return data;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// 获取当前数据的存储块，设置pos=6，调用ReadBytesPackage获取数据。
-        /// 使用完成后的数据必须调用SetHolding(false)进行释放。
-        /// </summary>
-        /// <returns></returns>
-        public ByteBlock GetCurrentByteBlock()
-        {
-            return this.m_currentByteBlock;
-        }
+        public abstract byte[] GetCurrent();
 
         /// <summary>
         /// 继续。
         /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
         /// </summary>
         /// <param name="operationMes"></param>
-        public void HoldOn(string operationMes = null)
-        {
-            if ((byte)this.m_status > 3)
-            {
-                return;
-            }
-
-            ByteBlock byteBlock = new ByteBlock();
-            try
-            {
-                if (this.m_targetClientID != null)
-                {
-                    byteBlock.Write(this.m_targetClientID);
-                }
-                byteBlock.Write(this.m_id);
-                byteBlock.Write(operationMes);
-                this.m_client.SocketSend(this.m_targetClientID == null ? TouchRpcUtility.P_105_HoldOnOrder : TouchRpcUtility.P_115_HoldOnOrder_2C, byteBlock.Buffer, 0, byteBlock.Len);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
+        public abstract void HoldOn(string operationMes = null);
 
         /// <summary>
         /// 异步调用继续
@@ -282,9 +128,9 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public Task HoldOnAsync(string operationMes = null)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                this.HoldOn(operationMes);
+                HoldOn(operationMes);
             });
         }
 
@@ -292,65 +138,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 转向下个元素
         /// </summary>
         /// <returns></returns>
-        public bool MoveNext()
-        {
-            if (this.m_status == ChannelStatus.HoldOn || this.m_status == ChannelStatus.Default)
-            {
-                this.m_lastOperationMes = null;
-                this.m_status = ChannelStatus.Moving;
-            }
-            if (this.m_status != ChannelStatus.Moving)
-            {
-                return false;
-            }
-
-            if (this.m_dataQueue.TryDequeue(out ChannelData channelData))
-            {
-                if (channelData.type == TouchRpcUtility.P_101_DataOrder)
-                {
-                    this.m_currentByteBlock = channelData.byteBlock;
-                    return true;
-                }
-                else if (channelData.type == TouchRpcUtility.P_102_CompleteOrder)
-                {
-                    this.RequestComplete();
-                    return false;
-                }
-                else if (channelData.type == TouchRpcUtility.P_103_CancelOrder)
-                {
-                    this.RequestCancel();
-                    return false;
-                }
-                else if (channelData.type == TouchRpcUtility.P_104_DisposeOrder)
-                {
-                    this.RequestDispose();
-                    return false;
-                }
-                else if (channelData.type == TouchRpcUtility.P_105_HoldOnOrder)
-                {
-                    channelData.byteBlock.Pos = 6;
-                    this.m_lastOperationMes = channelData.byteBlock.ReadString();
-                    channelData.byteBlock.Dispose();
-                    this.m_status = ChannelStatus.HoldOn;
-                    return false;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            this.m_moveWaitHandle.Reset();
-            if (this.m_moveWaitHandle.WaitOne(this.Timeout))
-            {
-                return this.MoveNext();
-            }
-            else
-            {
-                this.m_status = ChannelStatus.Overtime;
-                return false;
-            }
-        }
+        public abstract bool MoveNext();
 
         /// <summary>
         /// 转向下个元素
@@ -358,9 +146,9 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public Task<bool> MoveNextAsync()
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                return this.MoveNext();
+                return MoveNext();
             });
         }
 
@@ -370,11 +158,11 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public Task<byte[]> ReadAsync()
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
              {
-                 if (this.MoveNext())
+                 if (MoveNext())
                  {
-                     return this.GetCurrent();
+                     return GetCurrent();
                  }
                  return null;
              });
@@ -389,11 +177,11 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public bool TryWrite(byte[] data, int offset, int length)
         {
-            if (this.CanWrite)
+            if (CanWrite)
             {
                 try
                 {
-                    this.Write(data, offset, length);
+                    Write(data, offset, length);
                     return true;
                 }
                 catch
@@ -410,7 +198,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public bool TryWrite(byte[] data)
         {
-            return this.TryWrite(data, 0, data.Length);
+            return TryWrite(data, 0, data.Length);
         }
 
         /// <summary>
@@ -420,13 +208,13 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public bool TryWriteAsync(byte[] data, int offset, int length)
+        public async Task<bool> TryWriteAsync(byte[] data, int offset, int length)
         {
-            if (this.CanWrite)
+            if (CanWrite)
             {
                 try
                 {
-                    this.WriteAsync(data, offset, length);
+                    await WriteAsync(data, offset, length);
                     return true;
                 }
                 catch
@@ -441,9 +229,9 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public bool TryWriteAsync(byte[] data)
+        public Task<bool> TryWriteAsync(byte[] data)
         {
-            return this.TryWriteAsync(data, 0, data.Length);
+            return TryWriteAsync(data, 0, data.Length);
         }
 
         /// <summary>
@@ -452,33 +240,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void Write(byte[] data, int offset, int length)
-        {
-            if ((byte)this.m_status > 3)
-            {
-                throw new Exception($"通道已{this.m_status}");
-            }
-
-            if (!SpinWait.SpinUntil(() => { return this.m_canFree; }, this.Timeout))
-            {
-                throw new TimeoutException();
-            }
-            ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
-            try
-            {
-                if (this.m_targetClientID != null)
-                {
-                    byteBlock.Write(this.m_targetClientID);
-                }
-                byteBlock.Write(this.m_id);
-                byteBlock.WriteBytesPackage(data, offset, length);
-                this.m_client.SocketSend(this.m_targetClientID == null ? TouchRpcUtility.P_101_DataOrder : TouchRpcUtility.P_111_DataOrder_2C, byteBlock.Buffer, 0, byteBlock.Len);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
+        public abstract void Write(byte[] data, int offset, int length);
 
         /// <summary>
         /// 写入通道
@@ -486,7 +248,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="data"></param>
         public void Write(byte[] data)
         {
-            this.Write(data, 0, data.Length);
+            Write(data, 0, data.Length);
         }
 
         /// <summary>
@@ -495,32 +257,12 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public void WriteAsync(byte[] data, int offset, int length)
+        public Task WriteAsync(byte[] data, int offset, int length)
         {
-            if ((byte)this.m_status > 3)
-            {
-                throw new Exception($"通道已{this.m_status}");
-            }
-
-            ByteBlock byteBlock = BytePool.GetByteBlock(length + 4);
-            try
-            {
-                if (this.m_targetClientID != null)
-                {
-                    byteBlock.Write(this.m_targetClientID);
-                }
-                byteBlock.Write(this.m_id);
-                byteBlock.WriteBytesPackage(data, offset, length);
-                this.m_client.SocketSendAsync(this.m_targetClientID == null ? TouchRpcUtility.P_101_DataOrder : TouchRpcUtility.P_111_DataOrder_2C, byteBlock.Buffer, 0, byteBlock.Len);
-            }
-            catch (System.Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            return Task.Run(() =>
+             {
+                 this.Write(data, offset, length);
+             });
         }
 
         /// <summary>
@@ -529,58 +271,213 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="data"></param>
         public void WriteAsync(byte[] data)
         {
-            this.WriteAsync(data, 0, data.Length);
+            WriteAsync(data, 0, data.Length);
+        }
+    }
+
+    internal class InternalChannel : Channel
+    {
+        private readonly RpcActor m_actor;
+        private readonly IntelligentDataQueue<ChannelPackage> m_dataQueue;
+
+        private readonly AutoResetEvent m_moveWaitHandle;
+        private readonly string m_targetId;
+        private readonly Timer m_timer;
+        private int m_cacheCapacity;
+        private volatile bool m_canFree;
+        private byte[] m_currentData;
+        private int m_id;
+        private string m_lastOperationMes;
+        private DateTime m_lastOperationTime;
+        private ChannelStatus m_status;
+        private bool m_using;
+
+        public InternalChannel(RpcActor client, string targetId)
+        {
+            m_actor = client;
+            m_lastOperationTime = DateTime.Now;
+            m_targetId = targetId;
+            m_status = ChannelStatus.Default;
+            m_cacheCapacity = 1024 * 1024 * 5;
+            m_dataQueue = new IntelligentDataQueue<ChannelPackage>(m_cacheCapacity)
+            {
+                OverflowWait = false,
+                OnQueueChanged = OnQueueChanged
+            };
+            m_moveWaitHandle = new AutoResetEvent(false);
+            m_canFree = true;
+            m_timer = new Timer((o) =>
+            {
+                if (DateTime.Now - m_lastOperationTime > TimeSpan.FromTicks(Timeout.Ticks * 3))
+                {
+                    this.SafeDispose();
+                }
+            }, null, 1000, 1000);
         }
 
-        internal void ReceivedData(ChannelData data)
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~InternalChannel()
         {
-            if (this.m_status != ChannelStatus.Moving)
-            {
-                if (data.type == TouchRpcUtility.P_102_CompleteOrder)
-                {
-                    data.byteBlock.Pos = 6;
-                    this.m_lastOperationMes = data.byteBlock.ReadString();
-                    data.byteBlock.SetHolding(false);
+            Dispose(false);
+        }
 
-                    this.RequestComplete();
-                    return;
-                }
-                else if (data.type == TouchRpcUtility.P_103_CancelOrder)
+        /// <summary>
+        /// 是否具有数据可读
+        /// </summary>
+        public override int Available => m_dataQueue.Count;
+
+        /// <summary>
+        /// 缓存容量
+        /// </summary>
+        public override int CacheCapacity
+        {
+            get => m_cacheCapacity;
+            set
+            {
+                if (value < 0)
                 {
-                    data.byteBlock.Pos = 6;
-                    this.m_lastOperationMes = data.byteBlock.ReadString();
-                    data.byteBlock.SetHolding(false);
-                    this.RequestCancel();
-                    return;
+                    value = 1024;
                 }
-                else if (data.type == TouchRpcUtility.P_104_DisposeOrder)
+                m_cacheCapacity = value;
+                m_dataQueue.MaxSize = value;
+            }
+        }
+
+        /// <summary>
+        /// 判断当前通道能否调用<see cref="MoveNext()"/>
+        /// </summary>
+        public override bool CanMoveNext
+        {
+            get
+            {
+                if (Available > 0)
                 {
-                    data.byteBlock.Pos = 6;
-                    data.byteBlock.SetHolding(false);
-                    this.RequestDispose();
-                    return;
+                    return true;
                 }
-                else if (data.type == TouchRpcUtility.P_106_QueueChangedOrder)
+                if ((byte)m_status >= 4)
                 {
-                    data.byteBlock.Pos = 6;
-                    this.m_canFree = data.byteBlock.ReadBoolean();
-                    data.byteBlock.SetHolding(false);
-                    return;
+                    return false;
                 }
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 能否写入
+        /// </summary>
+        public override bool CanWrite => (byte)m_status <= 3;
+
+        /// <summary>
+        /// ID
+        /// </summary>
+        public override int ID => m_id;
+
+        /// <summary>
+        /// 最后一次操作时显示消息
+        /// </summary>
+        public override string LastOperationMes
+        {
+            get => m_lastOperationMes;
+        }
+
+        /// <summary>
+        /// 状态
+        /// </summary>
+        public override ChannelStatus Status => m_status;
+
+        /// <summary>
+        /// 目的ID地址。
+        /// </summary>
+        public override string TargetId => m_targetId;
+
+        /// <summary>
+        /// 是否被使用
+        /// </summary>
+        public override bool Using => m_using;
+
+        #region 操作
+
+        /// <summary>
+        /// 取消
+        /// </summary>
+        public override void Cancel(string operationMes = null)
+        {
+            if ((byte)m_status > 3)
+            {
+                return;
+            }
+            try
+            {
+                this.RequestCancel(true);
+                ChannelPackage channelPackage = new ChannelPackage()
+                {
+                    ChannelId = this.m_id,
+                    RunNow = true,
+                    DataType = ChannelDataType.CancelOrder,
+                    Message = operationMes,
+                    SourceId = this.m_actor.ID,
+                    TargetId = this.m_targetId,
+                    Route = this.m_targetId.HasValue()
+                };
+                this.m_actor.SendChannelPackage(channelPackage);
+                m_lastOperationTime = DateTime.Now;
+            }
+            catch
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 完成操作
+        /// </summary>
+        public override void Complete(string operationMes = null)
+        {
+            if ((byte)m_status > 3)
+            {
+                return;
             }
 
-            this.m_dataQueue.Enqueue(data);
-            this.m_moveWaitHandle.Set();
+            this.RequestComplete(true);
+            ChannelPackage channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.m_id,
+                RunNow = true,
+                DataType = ChannelDataType.CompleteOrder,
+                Message = operationMes,
+                SourceId = this.m_actor.ID,
+                TargetId = this.m_targetId,
+                Route = this.m_targetId.HasValue()
+            };
+            this.m_actor.SendChannelPackage(channelPackage);
+            m_lastOperationTime = DateTime.Now;
         }
 
-        internal void SetID(int id)
+        /// <summary>
+        /// 继续。
+        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
+        /// </summary>
+        /// <param name="operationMes"></param>
+        public override void HoldOn(string operationMes = null)
         {
-            this.m_id = id;
-        }
-
-        internal void SetUsing()
-        {
-            this.m_using = true;
+            if ((byte)m_status > 3)
+            {
+                return;
+            }
+            ChannelPackage channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.m_id,
+                RunNow = true,
+                DataType = ChannelDataType.HoldOnOrder,
+                Message = operationMes,
+                SourceId = this.m_actor.ID,
+                TargetId = this.m_targetId,
+                Route = this.m_targetId.HasValue()
+            };
+            this.m_actor.SendChannelPackage(channelPackage);
+            m_lastOperationTime = DateTime.Now;
         }
 
         /// <summary>
@@ -589,29 +486,184 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            if ((byte)this.m_status > 3)
+            if ((byte)m_status > 3)
             {
                 return;
             }
-            ByteBlock byteBlock = new ByteBlock();
+            m_timer.SafeDispose();
+
             try
             {
-                this.RequestDispose();
-                if (this.m_targetClientID != null)
+                this.RequestDispose(true);
+                ChannelPackage channelPackage = new ChannelPackage()
                 {
-                    byteBlock.Write(this.m_targetClientID);
-                }
-                byteBlock.Write(this.m_id);
-                this.m_client.SocketSend(this.m_targetClientID == null ? TouchRpcUtility.P_104_DisposeOrder : TouchRpcUtility.P_114_DisposeOrder_2C, byteBlock);
+                    ChannelId = this.m_id,
+                    RunNow = true,
+                    DataType = ChannelDataType.HoldOnOrder,
+                    SourceId = this.m_actor.ID,
+                    TargetId = this.m_targetId,
+                    Route = this.m_targetId.HasValue()
+                };
+                this.m_actor.SendChannelPackage(channelPackage);
+                m_lastOperationTime = DateTime.Now;
             }
             catch
             {
-            }
-            finally
-            {
-                byteBlock.Dispose();
+
             }
             base.Dispose(disposing);
+        }
+
+        #endregion 操作
+
+        /// <summary>
+        /// 获取当前的数据
+        /// </summary>
+        public override byte[] GetCurrent()
+        {
+            return this.m_currentData;
+        }
+
+        /// <summary>
+        /// 转向下个元素
+        /// </summary>
+        /// <returns></returns>
+        public override bool MoveNext()
+        {
+            if (!this.CanMoveNext)
+            {
+                return false;
+            }
+            if (m_dataQueue.TryDequeue(out ChannelPackage channelPackage))
+            {
+                switch (channelPackage.DataType)
+                {
+                    case ChannelDataType.DataOrder:
+                        {
+                            m_currentData = channelPackage.Data.Array;
+                            return true;
+                        }
+                    case ChannelDataType.CompleteOrder:
+                        RequestComplete(true);
+                        return false;
+
+                    case ChannelDataType.CancelOrder:
+                        RequestCancel(true);
+                        return false;
+
+                    case ChannelDataType.DisposeOrder:
+                        RequestDispose(true);
+                        return false;
+
+                    case ChannelDataType.HoldOnOrder:
+                        m_status = ChannelStatus.HoldOn;
+                        return false;
+
+                    case ChannelDataType.QueueRun:
+                        this.m_canFree = true;
+                        return false;
+
+                    case ChannelDataType.QueuePause:
+                        this.m_canFree = false;
+                        return false;
+
+                    default:
+                        return false;
+                }
+            }
+
+            m_moveWaitHandle.Reset();
+            if (m_moveWaitHandle.WaitOne(Timeout))
+            {
+                return MoveNext();
+            }
+            else
+            {
+                m_status = ChannelStatus.Overtime;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 写入通道
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public override void Write(byte[] data, int offset, int length)
+        {
+            if ((byte)m_status > 3)
+            {
+                throw new Exception($"通道已{m_status}");
+            }
+
+            if (!SpinWait.SpinUntil(() => { return m_canFree; }, Timeout))
+            {
+                throw new TimeoutException();
+            }
+            ChannelPackage channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.m_id,
+                DataType = ChannelDataType.DataOrder,
+                Data = new ArraySegment<byte>(data, offset, length),
+                SourceId = this.m_actor.ID,
+                TargetId = this.m_targetId,
+                Route = this.m_targetId.HasValue()
+            };
+            this.m_actor.SendChannelPackage(channelPackage);
+            m_lastOperationTime = DateTime.Now;
+        }
+
+        internal void ReceivedData(ChannelPackage channelPackage)
+        {
+            m_lastOperationTime = DateTime.Now;
+            if (channelPackage.RunNow)
+            {
+                switch (channelPackage.DataType)
+                {
+                    case ChannelDataType.CompleteOrder:
+                        this.m_lastOperationMes = channelPackage.Message;
+                        RequestComplete(false);
+                        break;
+
+                    case ChannelDataType.CancelOrder:
+                        this.m_lastOperationMes = channelPackage.Message;
+                        RequestCancel(false);
+                        break;
+
+                    case ChannelDataType.DisposeOrder:
+                        RequestDispose(false);
+                        break;
+
+                    case ChannelDataType.HoldOnOrder:
+                        this.m_lastOperationMes = channelPackage.Message;
+                        m_status = ChannelStatus.HoldOn;
+                        break;
+
+                    case ChannelDataType.QueueRun:
+                        this.m_canFree = true;
+                        return;
+
+                    case ChannelDataType.QueuePause:
+                        this.m_canFree = false;
+                        return;
+
+                    default:
+                        return;
+                }
+            }
+            m_dataQueue.Enqueue(channelPackage);
+            m_moveWaitHandle.Set();
+        }
+
+        internal void SetID(int id)
+        {
+            m_id = id;
+        }
+
+        internal void SetUsing()
+        {
+            m_using = true;
         }
 
         private void Clear()
@@ -620,105 +672,73 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 lock (this)
                 {
-                    this.m_moveWaitHandle.Set();
-                    this.m_moveWaitHandle.Dispose();
-                    this.m_client.RemoveChannel(this.m_id);
-                    this.m_dataQueue.Clear((data) =>
-                    {
-                        if (data.byteBlock != null)
-                        {
-                            data.byteBlock.SetHolding(false);
-                        }
-                    });
+                    m_moveWaitHandle.Set();
+                    m_moveWaitHandle.SafeDispose();
+                    m_actor.RemoveChannel(m_id);
+                    m_dataQueue.Clear();
                 }
             }
             catch
             {
             }
-        }
-
-        private void OnCreate(string targetClientID)
-        {
-            this.m_targetClientID = targetClientID;
-
-            //if (upgrade)
-            //{
-            //    this.m_dataOrder = TouchRpcUtility.P_111_DataOrder_2C;
-            //    this.m_completeOrder = TouchRpcUtility.P_112_CompleteOrder_2C;
-            //    this.m_cancelOrder = TouchRpcUtility.P_113_CancelOrder_2C;
-            //    this.m_disposeOrder = TouchRpcUtility.P_114_DisposeOrder_2C;
-            //    this.m_holdOnOrder = TouchRpcUtility.P_115_HoldOnOrder_2C;
-            //    this.m_queueChangedOrder = TouchRpcUtility.P_116_QueueChangedOrder_2C;
-            //}
-            //else
-            //{
-            //    this.m_dataOrder = TouchRpcUtility.P_101_DataOrder;
-            //    this.m_completeOrder = TouchRpcUtility.P_102_CompleteOrder;
-            //    this.m_cancelOrder = TouchRpcUtility.P_103_CancelOrder;
-            //    this.m_disposeOrder = TouchRpcUtility.P_104_DisposeOrder;
-            //    this.m_holdOnOrder = TouchRpcUtility.P_105_HoldOnOrder;
-            //    this.m_queueChangedOrder = TouchRpcUtility.P_106_QueueChangedOrder;
-            //}
-
-            this.m_status = ChannelStatus.Default;
-            this.m_cacheCapacity = 1024 * 1024 * 10;
-            this.m_dataQueue = new IntelligentDataQueue<ChannelData>(this.m_cacheCapacity)
-            {
-                OverflowWait = false,
-
-                OnQueueChanged = OnQueueChanged
-            };
-            this.m_moveWaitHandle = new AutoResetEvent(false);
-            this.m_canFree = true;
         }
 
         private void OnQueueChanged(bool free)
         {
-            if ((byte)this.m_status > 3)
+            if ((byte)m_status > 3)
             {
                 return;
             }
 
-            ByteBlock byteBlock = new ByteBlock();
             try
             {
-                if (this.m_targetClientID != null)
+                ChannelPackage channelPackage = new ChannelPackage()
                 {
-                    byteBlock.Write(this.m_targetClientID);
-                }
-                byteBlock.Write(this.m_id);
-                byteBlock.Write(free);
-                this.m_client.SocketSend(this.m_targetClientID == null ? TouchRpcUtility.P_106_QueueChangedOrder : TouchRpcUtility.P_116_QueueChangedOrder_2C, byteBlock.Buffer, 0, byteBlock.Len);
+                    ChannelId = this.m_id,
+                    RunNow = true,
+                    DataType = free ? ChannelDataType.QueueRun : ChannelDataType.QueuePause,
+                    SourceId = this.m_actor.ID,
+                    TargetId = this.m_targetId,
+                    Route = this.m_targetId.HasValue()
+                };
+                this.m_actor.SendChannelPackage(channelPackage);
+                m_lastOperationTime = DateTime.Now;
             }
             catch
             {
+
             }
-            finally
+        }
+
+        private void RequestCancel(bool clear)
+        {
+            m_status = ChannelStatus.Cancel;
+            if (clear)
             {
-                byteBlock.Dispose();
+                Clear();
             }
         }
 
-        private void RequestCancel()
+        private void RequestComplete(bool clear)
         {
-            this.m_status = ChannelStatus.Cancel;
-            this.Clear();
+            m_status = ChannelStatus.Completed;
+            if (clear)
+            {
+                Clear();
+            }
         }
 
-        private void RequestComplete()
+        internal void RequestDispose(bool clear)
         {
-            this.m_status = ChannelStatus.Completed;
-            this.Clear();
-        }
-
-        private void RequestDispose()
-        {
-            if ((byte)this.m_status > 3)
+            if ((byte)m_status > 3)
             {
                 return;
             }
-            this.m_status = ChannelStatus.Disposed;
-            this.Clear();
+            m_status = ChannelStatus.Disposed;
+            if (clear)
+            {
+                Clear();
+            }
         }
     }
 }

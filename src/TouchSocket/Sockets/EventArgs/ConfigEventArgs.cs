@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
 
 namespace TouchSocket.Sockets
 {
@@ -26,7 +25,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         public ConfigEventArgs(TouchSocketConfig config)
         {
-            this.Config = config;
+            Config = config;
         }
 
         /// <summary>

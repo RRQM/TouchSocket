@@ -13,7 +13,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using TouchSocket.Core.Reflection;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -92,7 +92,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public T GetAttribute<T>()
         {
-            object attribute = this.RpcAttributes.FirstOrDefault((a) => { return typeof(T).IsAssignableFrom(a.GetType()); });
+            object attribute = RpcAttributes.FirstOrDefault((a) => { return typeof(T).IsAssignableFrom(a.GetType()); });
             if (attribute == null)
             {
                 return default;
@@ -107,7 +107,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public object GetAttribute(Type attributeType)
         {
-            object attribute = this.RpcAttributes.FirstOrDefault((a) => { return attributeType.IsAssignableFrom(a.GetType()); });
+            object attribute = RpcAttributes.FirstOrDefault((a) => { return attributeType.IsAssignableFrom(a.GetType()); });
             if (attribute == null)
             {
                 return default;

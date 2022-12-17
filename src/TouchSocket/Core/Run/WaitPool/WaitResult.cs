@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Run
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 等待返回类

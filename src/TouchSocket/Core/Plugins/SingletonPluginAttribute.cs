@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 标识插件只能注册一次。

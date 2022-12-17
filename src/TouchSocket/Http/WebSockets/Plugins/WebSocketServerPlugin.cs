@@ -11,9 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Plugins;
-using TouchSocket.Http.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -28,14 +26,14 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 表示是否完成WS握手
         /// </summary>
-        public static readonly DependencyProperty HandshakedProperty =
-            DependencyProperty.Register("Handshaked", typeof(bool), typeof(WebSocketServerPlugin), false);
+        public static readonly DependencyProperty<bool> HandshakedProperty =
+            DependencyProperty<bool>.Register("Handshaked", typeof(WebSocketServerPlugin), false);
 
         /// <summary>
         /// 表示WebSocketVersion
         /// </summary>
-        public static readonly DependencyProperty WebSocketVersionProperty =
-            DependencyProperty.Register("WebSocketVersion", typeof(string), typeof(WebSocketServerPlugin), "13");
+        public static readonly DependencyProperty<string> WebSocketVersionProperty =
+            DependencyProperty<string>.Register("WebSocketVersion", typeof(WebSocketServerPlugin), "13");
 
         private readonly IPluginsManager m_pluginsManager;
 
@@ -47,7 +45,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="pluginsManager"></param>
         public WebSocketServerPlugin(IPluginsManager pluginsManager)
         {
-            this.m_pluginsManager = pluginsManager ?? throw new ArgumentNullException(nameof(pluginsManager));
+            m_pluginsManager = pluginsManager ?? throw new ArgumentNullException(nameof(pluginsManager));
         }
 
         /// <summary>
@@ -66,8 +64,8 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public string WSUrl
         {
-            get => this.m_wSUrl;
-            set => this.m_wSUrl = string.IsNullOrEmpty(value) ? "/" : value;
+            get => m_wSUrl;
+            set => m_wSUrl = string.IsNullOrEmpty(value) ? "/" : value;
         }
 
         /// <summary>
@@ -76,7 +74,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public WebSocketServerPlugin NoAutoClose()
         {
-            this.AutoClose = false;
+            AutoClose = false;
             return this;
         }
 
@@ -86,7 +84,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="action"></param>
         public WebSocketServerPlugin SetCallback(Action<ITcpClientBase, WSDataFrameEventArgs> action)
         {
-            this.HandleWSDataFrameCallback = action;
+            HandleWSDataFrameCallback = action;
             return this;
         }
 
@@ -98,7 +96,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public WebSocketServerPlugin SetWSUrl(string url)
         {
-            this.WSUrl = url;
+            WSUrl = url;
             return this;
         }
 
@@ -109,7 +107,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         protected override void OnGet(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (this.WSUrl == "/" || e.Context.Request.UrlEquals(this.WSUrl))
+            if (WSUrl == "/" || e.Context.Request.UrlEquals(WSUrl))
             {
                 if (client.Protocol == Protocol.Http)
                 {
@@ -130,19 +128,19 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         protected virtual void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
         {
-            if (e.DataFrame.Opcode == WSDataType.Close && this.AutoClose)
+            if (e.DataFrame.Opcode == WSDataType.Close && AutoClose)
             {
                 string msg = e.DataFrame.PayloadData?.ToString();
-                this.m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnClosing), client, new MsgEventArgs() { Message = msg });
+                m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnClosing), client, new MsgEventArgs() { Message = msg });
                 client.Close(msg);
                 return;
             }
 
-            if (this.m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandleWSDataFrame), client, e))
+            if (m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandleWSDataFrame), client, e))
             {
                 return;
             }
-            this.HandleWSDataFrameCallback?.Invoke(client, e);
+            HandleWSDataFrameCallback?.Invoke(client, e);
         }
 
         /// <summary>
@@ -157,7 +155,7 @@ namespace TouchSocket.Http.WebSockets
                 if (e.RequestInfo is WSDataFrame dataFrame)
                 {
                     e.Handled = true;
-                    this.OnHandleWSDataFrame(client, new WSDataFrameEventArgs(dataFrame));
+                    OnHandleWSDataFrame(client, new WSDataFrameEventArgs(dataFrame));
                 }
             }
             base.OnReceivedData(client, e);

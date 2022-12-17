@@ -38,8 +38,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="metadata"></param>
         public VerifyOptionEventArgs(string token, Metadata metadata)
         {
-            this.Token = token;
-            this.Metadata = metadata;
+            Token = token;
+            Metadata = metadata;
         }
     }
 }

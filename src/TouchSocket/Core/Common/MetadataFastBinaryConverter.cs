@@ -1,8 +1,4 @@
-﻿using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Serialization;
-
-namespace TouchSocket.Core
+﻿namespace TouchSocket.Core
 {
     /// <summary>
     /// MetadataFastBinaryConverter
@@ -14,11 +10,11 @@ namespace TouchSocket.Core
             ByteBlock byteBlock = new ByteBlock(buffer);
             byteBlock.Pos = offset;
             Metadata metadata = new Metadata();
-            while (byteBlock.Pos<offset+len)
+            while (byteBlock.Pos < offset + len)
             {
-                metadata.Add(byteBlock.ReadString(),byteBlock.ReadString());
+                metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
             }
-           return metadata;
+            return metadata;
         }
 
         protected override int Write(ByteBlock byteBlock, Metadata obj)

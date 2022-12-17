@@ -10,21 +10,41 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Threading.Tasks;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.IO;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
+    /// <summary>
+    /// Pipeline读取管道
+    /// </summary>
+    public abstract class Pipeline : BlockReadStream, IRequestInfo
+    {
+        /// <summary>
+        /// Pipeline读取管道
+        /// </summary>
+        /// <param name="client"></param>
+        protected Pipeline(ITcpClientBase client)
+        {
+            Client = client;
+        }
+
+        /// <summary>
+        /// 当前支持此管道的客户端。
+        /// </summary>
+        public ITcpClientBase Client { get; set; }
+    }
+
     /// <summary>
     /// 管道数据处理适配器。
     /// 使用该适配器后，<see cref="IRequestInfo"/>将为<see cref="Pipeline"/>.
     /// </summary>
     public class PipelineDataHandlingAdapter : NormalDataHandlingAdapter
     {
+        private byte[] m_buffer;
         private InternalPipeline m_pipeline;
 
+        private Task m_task;
 
         /// <summary>
         /// 管道数据处理适配器。
@@ -34,128 +54,106 @@ namespace TouchSocket.Sockets
         {
         }
 
-        private byte[] m_buffer;
-        private Task m_task;
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
-        {
-            if (this.m_pipeline == null || !this.m_pipeline.Enable)
-            {
-                this.m_task?.GetAwaiter().GetResult();
-                this.m_pipeline = new InternalPipeline(this.Client);
-                this.m_task = Task.Run(() =>
-                  {
-                      try
-                      {
-                          this.GoReceived(default, this.m_pipeline);
-                          if (this.m_pipeline.CanReadLen > 0)
-                          {
-                              this.m_buffer = new byte[this.m_pipeline.CanReadLen];
-                              this.m_pipeline.Read(this.m_buffer, 0, this.m_buffer.Length);
-                          }
-                      }
-                      catch
-                      {
-
-                      }
-                      finally
-                      {
-                          this.m_pipeline.SafeDispose();
-                      }
-                  });
-            }
-            if (this.m_buffer != null)
-            {
-                this.m_pipeline.InternalInput(this.m_buffer, 0, this.m_buffer.Length);
-                this.m_buffer = null;
-            }
-            this.m_pipeline.InternalInput(byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_pipeline.SafeDispose();
+            m_pipeline.SafeDispose();
             base.Dispose(disposing);
         }
-    }
-
-    /// <summary>
-    /// Pipeline读取管道
-    /// </summary>
-    public abstract class Pipeline : BlockReadStream, IRequestInfo
-    {
-        /// <summary>
-        /// 当前支持此管道的客户端。
-        /// </summary>
-        public ITcpClientBase Client { get; set; }
 
         /// <summary>
-        /// Pipeline读取管道
+        /// <inheritdoc/>
         /// </summary>
-        /// <param name="client"></param>
-        protected Pipeline(ITcpClientBase client)
+        /// <param name="byteBlock"></param>
+        protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            this.Client = client;
+            if (m_pipeline == null || !m_pipeline.Enable)
+            {
+                m_task?.Wait();
+                m_pipeline = new InternalPipeline(Client);
+                m_task = EasyTask.Run(() =>
+                  {
+                      try
+                      {
+                          GoReceived(default, m_pipeline);
+                          if (m_pipeline.CanReadLen > 0)
+                          {
+                              m_buffer = new byte[m_pipeline.CanReadLen];
+                              m_pipeline.Read(m_buffer, 0, m_buffer.Length);
+                          }
+                      }
+                      catch
+                      {
+                      }
+                      finally
+                      {
+                          m_pipeline.SafeDispose();
+                      }
+                  });
+            }
+            if (m_buffer != null)
+            {
+                m_pipeline.InternalInput(m_buffer, 0, m_buffer.Length);
+                m_buffer = null;
+            }
+            m_pipeline.InternalInput(byteBlock.Buffer, 0, byteBlock.Len);
         }
     }
 
     internal class InternalPipeline : Pipeline
     {
+        private readonly object m_locker = new object();
+
+        private bool m_disposedValue;
+
         /// <summary>
         /// Pipeline读取管道
         /// </summary>
         /// <param name="client"></param>
         public InternalPipeline(ITcpClientBase client) : base(client)
         {
-            this.ReadTimeout = 60 * 1000;
+            ReadTimeout = 60 * 1000;
         }
-        private readonly object m_locker = new object();
-        private bool m_disposedValue;
+
+        public override bool CanRead => Enable;
+
+        public override bool CanWrite => Client.CanSend;
 
         public bool Enable
         {
             get
             {
-                lock (this.m_locker)
+                lock (m_locker)
                 {
-                    return !this.m_disposedValue;
+                    return !m_disposedValue;
                 }
-            }
-        }
-
-        public override bool CanWrite => this.Client.CanSend;
-
-        public override bool CanRead => this.Enable;
-
-        internal void InternalInput(byte[] buffer, int offset, int length)
-        {
-            this.Input(buffer, offset, length);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            lock (this.m_locker)
-            {
-                this.m_disposedValue = true;
-                base.Dispose(disposing);
             }
         }
 
         public override void Flush()
         {
-
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            this.Client.DefaultSend(buffer, offset, count);
+            Client.DefaultSend(buffer, offset, count);
+        }
+
+        internal void InternalInput(byte[] buffer, int offset, int length)
+        {
+            Input(buffer, offset, length);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            lock (m_locker)
+            {
+                m_disposedValue = true;
+                base.Dispose(disposing);
+            }
         }
     }
 }

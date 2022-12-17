@@ -36,13 +36,13 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 监听地址组
         /// </summary>
-        public IPHost IPHost => this.iPHost;
+        public IPHost IPHost => iPHost;
 
         private readonly Socket socket;
 
         /// <summary>
         /// Socket组件
         /// </summary>
-        public Socket Socket => this.socket;
+        public Socket Socket => socket;
     }
 }

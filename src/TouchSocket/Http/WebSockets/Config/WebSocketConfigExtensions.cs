@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
+using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 
 namespace TouchSocket.Sockets

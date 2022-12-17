@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TouchSocketPro.Core
+namespace TouchSocket.Core
 {
     /// <summary>
     /// DateExtensions
@@ -19,7 +13,7 @@ namespace TouchSocketPro.Core
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ConvertTime(this in DateTime time)
         {
             return (uint)(Convert.ToInt64(time.Subtract(m_utc_time).TotalMilliseconds) & 0xffffffff);
@@ -32,7 +26,7 @@ namespace TouchSocketPro.Core
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ConvertTime(this in DateTimeOffset time)
         {
             return (uint)(Convert.ToInt64(time.Subtract(m_utc1970).TotalMilliseconds) & 0xffffffff);

@@ -10,9 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Dependency;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Core
 {
     /// <summary>
     /// PluginsManagerExtension

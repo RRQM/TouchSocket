@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http

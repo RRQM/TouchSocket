@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Run
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 注册为消息
@@ -33,7 +33,7 @@ namespace TouchSocket.Core.Run
         /// <param name="token"></param>
         public AppMessageAttribute(string token)
         {
-            this.Token = token;
+            Token = token;
         }
 
         /// <summary>

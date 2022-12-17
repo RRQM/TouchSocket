@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
@@ -45,7 +46,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
+        Task SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
 
         /// <summary>
         /// 同步组合发送数据。
@@ -72,6 +73,6 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void SendAsync(EndPoint endPoint, byte[] buffer, int offset, int length);
+        Task SendAsync(EndPoint endPoint, byte[] buffer, int offset, int length);
     }
 }

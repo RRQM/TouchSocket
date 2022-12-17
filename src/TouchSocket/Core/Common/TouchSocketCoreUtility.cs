@@ -43,6 +43,8 @@ namespace TouchSocket.Core
         public static readonly Type arrayType = typeof(Array);
         public static readonly Type listType = typeof(IList);
         public static readonly Type nullableType = typeof(Nullable<>);
+
+        public static readonly byte[] ZeroBytes = new byte[0];
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释
     }
 }

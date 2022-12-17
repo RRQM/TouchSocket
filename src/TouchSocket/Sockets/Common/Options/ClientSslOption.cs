@@ -26,7 +26,7 @@ namespace TouchSocket.Sockets
         {
             X509Store store = new X509Store(StoreName.Root);
             store.Open(OpenFlags.ReadWrite);
-            this.ClientCertificates = store.Certificates;
+            ClientCertificates = store.Certificates;
             store.Close();
         }
 
@@ -37,8 +37,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public string TargetHost
         {
-            get => this.targetHost;
-            set => this.targetHost = value;
+            get => targetHost;
+            set => targetHost = value;
         }
 
         private X509CertificateCollection clientCertificates;
@@ -48,8 +48,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public X509CertificateCollection ClientCertificates
         {
-            get => this.clientCertificates;
-            set => this.clientCertificates = value;
+            get => clientCertificates;
+            set => clientCertificates = value;
         }
     }
 }

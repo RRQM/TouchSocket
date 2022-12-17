@@ -27,8 +27,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public SslProtocols SslProtocols
         {
-            get => this.sslProtocols;
-            set => this.sslProtocols = value;
+            get => sslProtocols;
+            set => sslProtocols = value;
         }
 
         private bool checkCertificateRevocation;
@@ -38,8 +38,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public bool CheckCertificateRevocation
         {
-            get => this.checkCertificateRevocation;
-            set => this.checkCertificateRevocation = value;
+            get => checkCertificateRevocation;
+            set => checkCertificateRevocation = value;
         }
 
         /// <summary>

@@ -10,97 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.Data.Security;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
-    /// 流操作
+    /// 流传输操作器
     /// </summary>
-    public class StreamOperator
+    public class StreamOperator : FlowOperator
     {
-        /// <summary>
-        /// 已完成长度
-        /// </summary>
-        protected long completedLength;
-
-        /// <summary>
-        /// 结果
-        /// </summary>
-        protected Result result;
-
-        private long speed;
-
-        /// <summary>
-        /// 临时速度
-        /// </summary>
-        protected long speedTemp;
-
-        /// <summary>
-        /// 进度
-        /// </summary>
-        protected float progress;
-
-        /// <summary>
-        /// 已完成长度
-        /// </summary>
-        /// <returns></returns>
-        public long CompletedLength => this.completedLength;
-
-        /// <summary>
-        /// 最大传输速度（企业版默认1024*1024字节，开源版不限速，所以此值无效。）
-        /// </summary>
-        public int MaxSpeed => int.MaxValue;
-
-        /// <summary>
-        /// 超时时间，默认10*1000ms。
-        /// </summary>
-        public int Timeout { get; set; } = 10 * 1000;
-
-        /// <summary>
-        /// 进度
-        /// </summary>
-        public float Progress => this.progress;
-
-        /// <summary>
-        /// 执行结果
-        /// </summary>
-        public Result Result => this.result;
-
-        /// <summary>
-        /// 可取消令箭
-        /// </summary>
-        public CancellationToken Token { get; set; }
-
-
-        /// <summary>
-        /// 从上次获取到此次获得的速度
-        /// </summary>
-        /// <returns></returns>
-        public long Speed()
-        {
-            this.speed = this.speedTemp;
-            this.speedTemp = 0;
-            return this.speed;
-        }
-
-        internal void AddStreamFlow(int flow, long length)
-        {
-            this.speedTemp += flow;
-            this.completedLength += flow;
-        }
-
-        /// <summary>
-        /// 设置状态
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        internal Result SetStreamResult(Result result)
-        {
-            this.result = result;
-            return result;
-        }
+       
     }
 }

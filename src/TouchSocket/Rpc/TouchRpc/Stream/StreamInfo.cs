@@ -25,8 +25,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="streamType"></param>
         public StreamInfo(long size, string streamType)
         {
-            this.Size = size;
-            this.StreamType = streamType;
+            Size = size;
+            StreamType = streamType;
         }
 
         /// <summary>

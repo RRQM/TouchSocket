@@ -11,12 +11,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using System;
 using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -59,11 +57,6 @@ namespace TouchSocket.Sockets
         /// 主通信器
         /// </summary>
         Socket MainSocket { get; }
-
-        /// <summary>
-        /// 适配器能接收的最大数据包长度。
-        /// </summary>
-        int MaxPackageSize { get; }
 
         /// <summary>
         /// 判断是否在线

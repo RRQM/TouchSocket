@@ -30,7 +30,7 @@ namespace TouchSocket.Http
         /// <param name="context"></param>
         public HttpContextEventArgs(HttpContext context)
         {
-            this.Context = context;
+            Context = context;
         }
     }
 }

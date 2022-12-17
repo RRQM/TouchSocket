@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -29,11 +29,6 @@ namespace TouchSocket.Sockets
         /// 缓存池大小
         /// </summary>
         int BufferLength { get; }
-
-        /// <summary>
-        /// 适配器能接收的最大数据包长度。
-        /// </summary>
-        int MaxPackageSize { get; }
 
         /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。

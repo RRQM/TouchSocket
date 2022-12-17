@@ -14,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TouchSocket.Core.IO
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 控制台行为
@@ -31,17 +31,17 @@ namespace TouchSocket.Core.IO
         {
             this.helpOrder = helpOrder;
 
-            this.Add(helpOrder, "帮助信息", this.ShowAll);
+            Add(helpOrder, "帮助信息", ShowAll);
 
             string title = $@"
 
-  _______                   _       _____               _          _   
- |__   __|                 | |     / ____|             | |        | |  
-    | |  ___   _   _   ___ | |__  | (___    ___    ___ | | __ ___ | |_ 
+  _______                   _       _____               _          _
+ |__   __|                 | |     / ____|             | |        | |
+    | |  ___   _   _   ___ | |__  | (___    ___    ___ | | __ ___ | |_
     | | / _ \ | | | | / __|| '_ \  \___ \  / _ \  / __|| |/ // _ \| __|
-    | || (_) || |_| || (__ | | | | ____) || (_) || (__ |   <|  __/| |_ 
+    | || (_) || |_| || (__ | | | | ____) || (_) || (__ |   <|  __/| |_
     |_| \___/  \__,_| \___||_| |_||_____/  \___/  \___||_|\_\\___| \__|
-                                                                       
+
  -------------------------------------------------------------------
      Author     :   若汝棋茗
      Version    :   {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()}
@@ -58,10 +58,10 @@ namespace TouchSocket.Core.IO
         /// </summary>
         public void ShowAll()
         {
-            int max = this.actions.Values.Max(a => a.FullOrder.Length) + 8;
+            int max = actions.Values.Max(a => a.FullOrder.Length) + 8;
 
             List<string> s = new List<string>();
-            foreach (var item in this.actions)
+            foreach (var item in actions)
             {
                 if (!s.Contains(item.Value.FullOrder.ToLower()))
                 {
@@ -79,7 +79,7 @@ namespace TouchSocket.Core.IO
         /// <summary>
         /// 帮助信息指令
         /// </summary>
-        public string HelpOrder => this.helpOrder;
+        public string HelpOrder => helpOrder;
 
         private readonly Dictionary<string, VAction> actions = new Dictionary<string, VAction>();
 
@@ -94,7 +94,7 @@ namespace TouchSocket.Core.IO
             string[] orders = order.ToLower().Split('|');
             foreach (var item in orders)
             {
-                this.actions.Add(item, new VAction(description, order, action));
+                actions.Add(item, new VAction(description, order, action));
             }
         }
 
@@ -110,7 +110,7 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public bool Run(string order)
         {
-            if (this.actions.TryGetValue(order.ToLower(), out VAction vAction))
+            if (actions.TryGetValue(order.ToLower(), out VAction vAction))
             {
                 try
                 {
@@ -118,7 +118,7 @@ namespace TouchSocket.Core.IO
                 }
                 catch (Exception ex)
                 {
-                    this.OnException?.Invoke(ex);
+                    OnException?.Invoke(ex);
                 }
                 return true;
             }
@@ -133,11 +133,11 @@ namespace TouchSocket.Core.IO
     {
         private readonly Action action;
 
-        public Action Action => this.action;
+        public Action Action => action;
 
         private readonly string fullOrder;
 
-        public string FullOrder => this.fullOrder;
+        public string FullOrder => fullOrder;
 
         private readonly string description;
 
@@ -154,6 +154,6 @@ namespace TouchSocket.Core.IO
             this.description = description ?? throw new ArgumentNullException(nameof(description));
         }
 
-        public string Description => this.description;
+        public string Description => description;
     }
 }

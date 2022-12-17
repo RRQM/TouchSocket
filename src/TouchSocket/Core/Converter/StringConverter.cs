@@ -10,11 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.XREF.Newtonsoft.Json;
 
-namespace TouchSocket.Core.Converter
+using System;
+
+namespace TouchSocket.Core
 {
     /// <summary>
     /// String类型数据转换器
@@ -26,8 +25,8 @@ namespace TouchSocket.Core.Converter
         /// </summary>
         public StringConverter()
         {
-            this.Add(new StringToPrimitiveConverter());
-            this.Add(new JsonStringToClassConverter());
+            Add(new StringToPrimitiveConverter());
+            Add(new JsonStringToClassConverter());
         }
     }
 
@@ -102,7 +101,7 @@ namespace TouchSocket.Core.Converter
         {
             try
             {
-                target = JsonConvert.DeserializeObject(source, targetType);
+                target = source.FromJson(targetType);
                 return true;
             }
             catch
@@ -122,7 +121,7 @@ namespace TouchSocket.Core.Converter
         {
             try
             {
-                source = target.ToJsonString();
+                source = target.ToJson();
                 return true;
             }
             catch (Exception)

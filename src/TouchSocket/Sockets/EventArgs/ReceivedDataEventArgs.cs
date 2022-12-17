@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -26,7 +26,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock)
         {
-            this.RequestInfo = requestInfo;
+            RequestInfo = requestInfo;
         }
         /// <summary>
         /// 对象载体

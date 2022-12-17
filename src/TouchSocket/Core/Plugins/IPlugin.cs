@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 插件接口

@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using TouchSocket.Core.Log;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {

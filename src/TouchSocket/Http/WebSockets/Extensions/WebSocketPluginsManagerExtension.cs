@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using TouchSocket.Http.WebSockets;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Core
 {
     /// <summary>
     /// WebSocketPluginsManagerExtension

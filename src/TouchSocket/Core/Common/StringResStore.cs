@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using TouchSocket.Core.Extensions;
 
 namespace TouchSocket.Core
 {

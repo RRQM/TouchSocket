@@ -27,7 +27,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <param name="methodInvoke"></param>
         public JsonRpcAttribute(bool methodInvoke = false)
         {
-            this.MethodInvoke = methodInvoke;
+            MethodInvoke = methodInvoke;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <param name="invokenKey"></param>
         public JsonRpcAttribute(string invokenKey)
         {
-            this.InvokenKey = invokenKey;
+            InvokenKey = invokenKey;
         }
 
         /// <summary>
@@ -60,9 +60,9 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <returns></returns>
         public override string GetInvokenKey(MethodInstance methodInstance)
         {
-            if (this.MethodInvoke)
+            if (MethodInvoke)
             {
-                return this.GetMethodName(methodInstance, false);
+                return GetMethodName(methodInstance, false);
             }
             else
             {

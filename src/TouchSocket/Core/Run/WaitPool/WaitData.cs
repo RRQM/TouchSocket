@@ -14,7 +14,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core.Run
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 等待数据对象
@@ -31,7 +31,7 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public WaitData()
         {
-            this.m_waitHandle = new AutoResetEvent(false);
+            m_waitHandle = new AutoResetEvent(false);
         }
 
         /// <summary>
@@ -42,22 +42,22 @@ namespace TouchSocket.Core.Run
         /// <summary>
         /// 状态
         /// </summary>
-        public WaitDataStatus Status => this.m_status;
+        public WaitDataStatus Status => m_status;
 
         /// <summary>
         /// 等待数据结果
         /// </summary>
-        public T WaitResult => this.m_waitResult;
+        public T WaitResult => m_waitResult;
 
         /// <summary>
         /// 取消任务
         /// </summary>
         public void Cancel()
         {
-            this.m_status = WaitDataStatus.Canceled;
-            if (!this.DelayModel)
+            m_status = WaitDataStatus.Canceled;
+            if (!DelayModel)
             {
-                this.m_waitHandle.Set();
+                m_waitHandle.Set();
             }
         }
 
@@ -67,11 +67,11 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public bool Reset()
         {
-            this.m_status = WaitDataStatus.Default;
-            this.m_waitResult = default;
-            if (!this.DelayModel)
+            m_status = WaitDataStatus.Default;
+            m_waitResult = default;
+            if (!DelayModel)
             {
-                return this.m_waitHandle.Reset();
+                return m_waitHandle.Reset();
             }
             return true;
         }
@@ -81,10 +81,10 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public bool Set()
         {
-            this.m_status = WaitDataStatus.SetRunning;
-            if (!this.DelayModel)
+            m_status = WaitDataStatus.SetRunning;
+            if (!DelayModel)
             {
-                return this.m_waitHandle.Set();
+                return m_waitHandle.Set();
             }
             return true;
         }
@@ -95,11 +95,11 @@ namespace TouchSocket.Core.Run
         /// <param name="waitResult">等待结果</param>
         public bool Set(T waitResult)
         {
-            this.m_waitResult = waitResult;
-            this.m_status = WaitDataStatus.SetRunning;
-            if (!this.DelayModel)
+            m_waitResult = waitResult;
+            m_status = WaitDataStatus.SetRunning;
+            if (!DelayModel)
             {
-                return this.m_waitHandle.Set();
+                return m_waitHandle.Set();
             }
             return true;
         }
@@ -112,7 +112,7 @@ namespace TouchSocket.Core.Run
         {
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(this.Cancel);
+                cancellationToken.Register(Cancel);
             }
         }
 
@@ -121,7 +121,16 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public void SetResult(T result)
         {
-            this.m_waitResult = result;
+            m_waitResult = result;
+        }
+
+        /// <summary>
+        /// 等待指定时间
+        /// </summary>
+        /// <param name="timeSpan"></param>
+        public WaitDataStatus Wait(TimeSpan timeSpan)
+        {
+            return this.Wait((int)timeSpan.TotalMilliseconds);
         }
 
         /// <summary>
@@ -130,27 +139,37 @@ namespace TouchSocket.Core.Run
         /// <param name="millisecond"></param>
         public WaitDataStatus Wait(int millisecond)
         {
-            if (this.DelayModel)
+            if (DelayModel)
             {
                 for (int i = 0; i < millisecond / 10.0; i++)
                 {
-                    if (this.m_status != WaitDataStatus.Default)
+                    if (m_status != WaitDataStatus.Default)
                     {
-                        return this.m_status;
+                        return m_status;
                     }
                     Task.Delay(10).GetAwaiter().GetResult();
                 }
-                this.m_status = WaitDataStatus.Overtime;
-                return this.m_status;
+                m_status = WaitDataStatus.Overtime;
+                return m_status;
             }
             else
             {
-                if (!this.m_waitHandle.WaitOne(millisecond))
+                if (!m_waitHandle.WaitOne(millisecond))
                 {
-                    this.m_status = WaitDataStatus.Overtime;
+                    m_status = WaitDataStatus.Overtime;
                 }
-                return this.m_status;
+                return m_status;
             }
+        }
+
+        /// <summary>
+        /// 等待指定时间
+        /// </summary>
+        /// <param name="timeSpan"></param>
+        /// <returns></returns>
+        public Task<WaitDataStatus> WaitAsync(TimeSpan timeSpan)
+        {
+            return this.WaitAsync((int)timeSpan.TotalMilliseconds);
         }
 
         /// <summary>
@@ -159,26 +178,26 @@ namespace TouchSocket.Core.Run
         /// <param name="millisecond"></param>
         public async Task<WaitDataStatus> WaitAsync(int millisecond)
         {
-            if (this.DelayModel)
+            if (DelayModel)
             {
                 for (int i = 0; i < millisecond / 10.0; i++)
                 {
-                    if (this.m_status != WaitDataStatus.Default)
+                    if (m_status != WaitDataStatus.Default)
                     {
-                        return this.m_status;
+                        return m_status;
                     }
                     await Task.Delay(10);
                 }
-                this.m_status = WaitDataStatus.Overtime;
-                return this.m_status;
+                m_status = WaitDataStatus.Overtime;
+                return m_status;
             }
             else
             {
-                if (!this.m_waitHandle.WaitOne(millisecond))
+                if (!m_waitHandle.WaitOne(millisecond))
                 {
-                    this.m_status = WaitDataStatus.Overtime;
+                    m_status = WaitDataStatus.Overtime;
                 }
-                return this.m_status;
+                return m_status;
             }
         }
 
@@ -188,9 +207,9 @@ namespace TouchSocket.Core.Run
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_status = WaitDataStatus.Disposed;
-            this.m_waitResult = default;
-            this.m_waitHandle.SafeDispose();
+            m_status = WaitDataStatus.Disposed;
+            m_waitResult = default;
+            m_waitHandle.SafeDispose();
             base.Dispose(disposing);
         }
     }

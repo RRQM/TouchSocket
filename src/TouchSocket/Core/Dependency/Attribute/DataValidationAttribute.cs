@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 依赖属性数据验证

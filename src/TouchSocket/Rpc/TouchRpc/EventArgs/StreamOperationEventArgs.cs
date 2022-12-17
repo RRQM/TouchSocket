@@ -29,8 +29,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="streamInfo"></param>
         public StreamOperationEventArgs(StreamOperator streamOperator, Metadata metadata, StreamInfo streamInfo) : base(metadata, streamInfo)
         {
-            this.StreamOperator = streamOperator ?? throw new ArgumentNullException(nameof(streamOperator));
-            this.AddOperation(Operation.Permit);
+            StreamOperator = streamOperator ?? throw new ArgumentNullException(nameof(streamOperator));
+            IsPermitOperation = true;
         }
 
 

@@ -11,31 +11,111 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
     /// 操作文件事件类
     /// </summary>
-    public class FileOperationEventArgs : FileTransferEventArgs
+    public class FileOperationEventArgs : MsgEventArgs
     {
+        private string m_savePath;
+        private string m_resourcePath;
+        private readonly Metadata m_metadata;
+
         /// <summary>
-        /// 构造函数
+        /// FileOperationEventArgs
         /// </summary>
         /// <param name="transferType"></param>
-        /// <param name="fileRequest"></param>
         /// <param name="fileOperator"></param>
+        /// <param name="fileInfo"></param>
+        public FileOperationEventArgs(TransferType transferType, FileOperator fileOperator, RemoteFileInfo fileInfo)
+        {
+            FileOperator = fileOperator;
+            TransferType = transferType;
+            FileInfo = fileInfo;
+        }
+
+        /// <summary>
+        /// FileOperationEventArgs
+        /// </summary>
+        /// <param name="transferType"></param>
         /// <param name="metadata"></param>
         /// <param name="fileInfo"></param>
-        public FileOperationEventArgs(TransferType transferType, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata, TouchRpcFileInfo fileInfo)
-            : base(transferType, fileRequest, metadata, fileInfo)
+        public FileOperationEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo)
         {
-            this.FileOperator = fileOperator;
+            FileOperator = default;
+            TransferType = transferType;
+            FileInfo = fileInfo;
+            m_metadata = metadata;
         }
+
+        /// <summary>
+        /// 存放路径，
+        /// 可输入绝对路径，也可以输入相对路径。
+        /// 但是必须包含文件名及扩展名。
+        /// </summary>
+        public string SavePath
+        {
+            get => FileOperator == null ? m_savePath : FileOperator.SavePath;
+            set
+            {
+                if (FileOperator == null)
+                {
+                    m_savePath = value;
+                }
+                else
+                {
+                    FileOperator.SavePath = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 请求文件路径，
+        /// 可输入绝对路径，也可以输入相对路径。
+        /// </summary>
+        public string ResourcePath
+        {
+            get => FileOperator == null ? m_resourcePath : FileOperator.ResourcePath;
+            set
+            {
+                if (FileOperator == null)
+                {
+                    m_resourcePath = value;
+                }
+                else
+                {
+                    FileOperator.ResourcePath = value;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 元数据
+        /// </summary>
+        public Metadata Metadata => FileOperator == null ? m_metadata : FileOperator.Metadata;
 
         /// <summary>
         /// 文件操作器
         /// </summary>
         public FileOperator FileOperator { get; private set; }
+
+        /// <summary>
+        /// 文件信息
+        /// </summary>
+        public RemoteFileInfo FileInfo { get; private set; }
+
+        /// <summary>
+        /// 传输标识
+        /// </summary>
+        public TransferFlags Flags { get => FileOperator == null ? TransferFlags.None : FileOperator.Flags; }
+
+        /// <summary>
+        /// 传输类型
+        /// </summary>
+        public TransferType TransferType { get; private set; }
     }
 }

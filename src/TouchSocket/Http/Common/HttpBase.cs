@@ -10,18 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Collections;
-using TouchSocket.Core.Data;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.IO;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -44,14 +38,13 @@ namespace TouchSocket.Http
         private static readonly byte[] m_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
 
         private IgnoreCaseNameValueCollection m_headers;
-        private long m_readLen;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public HttpBase()
         {
-            this.ReadTimeout = 1000 * 30;
+            ReadTimeout = 1000 * 30;
         }
 
         /// <summary>
@@ -74,8 +67,8 @@ namespace TouchSocket.Http
         /// </summary>
         public int ContentLen
         {
-            get => (int)this.m_contentLength;
-            set => this.m_contentLength = value;
+            get => (int)m_contentLength;
+            set => m_contentLength = value;
         }
 
         /// <summary>
@@ -83,8 +76,8 @@ namespace TouchSocket.Http
         /// </summary>
         public long ContentLength
         {
-            get => this.m_contentLength;
-            set => this.m_contentLength = value;
+            get => m_contentLength;
+            set => m_contentLength = value;
         }
 
         /// <summary>
@@ -104,8 +97,8 @@ namespace TouchSocket.Http
         {
             get
             {
-                this.m_headers ??= new IgnoreCaseNameValueCollection();
-                return this.m_headers;
+                m_headers ??= new IgnoreCaseNameValueCollection();
+                return m_headers;
             }
         }
 
@@ -131,7 +124,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public string GetHeader(string fieldName)
         {
-            return this.GetHeaderByKey(fieldName);
+            return GetHeaderByKey(fieldName);
         }
 
         /// <summary>
@@ -143,7 +136,7 @@ namespace TouchSocket.Http
         {
             var fieldName = header.GetDescription();
             if (fieldName == null) return null;
-            return this.Headers.Get(fieldName);
+            return Headers.Get(fieldName);
         }
 
         /// <summary>
@@ -158,7 +151,7 @@ namespace TouchSocket.Http
             if (index > 0)
             {
                 int headerLength = index - byteBlock.Pos;
-                this.ReadHeaders(byteBlock.Buffer, byteBlock.Pos, headerLength);
+                ReadHeaders(byteBlock.Buffer, byteBlock.Pos, headerLength);
                 byteBlock.Pos += headerLength;
                 return true;
             }
@@ -177,7 +170,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-           return base.Read(buffer, offset, count);
+            return base.Read(buffer, offset, count);
         }
 
         /// <summary>
@@ -192,12 +185,12 @@ namespace TouchSocket.Http
             string[] rows = Regex.Split(data, "\r\n");
 
             //Request URL & Method & Version
-            this.RequestLine = rows[0];
+            RequestLine = rows[0];
 
             //Request Headers
-            this.GetRequestHeaders(rows);
-            long.TryParse(this.GetHeader(HttpHeaders.ContentLength), out this.m_contentLength);
-            this.LoadHeaderProterties();
+            GetRequestHeaders(rows);
+            long.TryParse(GetHeader(HttpHeaders.ContentLength), out m_contentLength);
+            LoadHeaderProterties();
         }
 
         /// <summary>
@@ -212,10 +205,11 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="fieldName"></param>
         /// <param name="value"></param>
-        public void SetHeaderByKey(string fieldName, string value)
+        public HttpBase SetHeaderByKey(string fieldName, string value)
         {
-            if (string.IsNullOrEmpty(fieldName)) return;
-            this.Headers.Add(fieldName, value);
+            if (string.IsNullOrEmpty(fieldName)) return this;
+            Headers.Add(fieldName, value);
+            return this;
         }
 
         /// <summary>
@@ -234,7 +228,7 @@ namespace TouchSocket.Http
 
         internal bool InternalInput(byte[] buffer, int offset, int length)
         {
-            return this.Input(buffer, offset, length);
+            return Input(buffer, offset, length);
         }
 
         /// <summary>
@@ -243,9 +237,9 @@ namespace TouchSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            if (!this.m_disposedValue && this.CanRead)
+            if (!DisposedValue && CanRead)
             {
-                this.TryGetContent(out _);
+                TryGetContent(out _);
             }
 
             base.Dispose(disposing);
@@ -259,7 +253,7 @@ namespace TouchSocket.Http
         private string GetHeaderByKey(string fieldName)
         {
             if (string.IsNullOrEmpty(fieldName)) return null;
-            return this.Headers.Get(fieldName);
+            return Headers.Get(fieldName);
         }
 
         private void GetRequestHeaders(IEnumerable<string> rows)
@@ -275,11 +269,11 @@ namespace TouchSocket.Http
                 if (kv.Length == 2)
                 {
                     string key = kv[0].ToLower();
-                    this.Headers.Add(key, kv[1]);
+                    Headers.Add(key, kv[1]);
                 }
             }
 
-            this.ContentType = this.GetHeader(HttpHeaders.ContentType);
+            ContentType = GetHeader(HttpHeaders.ContentType);
         }
     }
 }

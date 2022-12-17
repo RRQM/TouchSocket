@@ -13,7 +13,7 @@
 using System.IO;
 using System.Linq;
 
-namespace TouchSocket.Core.IO
+namespace TouchSocket.Core
 {
     /// <summary>
     /// DirectoryUtility

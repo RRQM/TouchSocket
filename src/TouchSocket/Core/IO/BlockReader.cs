@@ -13,7 +13,7 @@
 using System;
 using System.Threading;
 
-namespace TouchSocket.Core.IO
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 阻塞式读取。
@@ -31,9 +31,9 @@ namespace TouchSocket.Core.IO
         /// </summary>
         public BlockReader()
         {
-            this.m_readEvent = new AutoResetEvent(false);
-            this.m_inputEvent = new AutoResetEvent(false);
-            this.ReadTimeout = 5000;
+            m_readEvent = new AutoResetEvent(false);
+            m_inputEvent = new AutoResetEvent(false);
+            ReadTimeout = 5000;
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public virtual int PeekRead(byte[] buffer, int offset, int count)
         {
-            return this.PrivateRead(true, buffer, offset, count);
+            return PrivateRead(true, buffer, offset, count);
         }
 
         /// <summary>
@@ -67,72 +67,70 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public virtual int Read(byte[] buffer, int offset, int count)
         {
-            return this.PrivateRead(false,buffer,offset,count);
+            return PrivateRead(false, buffer, offset, count);
         }
 
-        private int PrivateRead(bool peek,byte[] buffer, int offset, int count)
+        private int PrivateRead(bool peek, byte[] buffer, int offset, int count)
         {
-            if (!this.CanRead)
+            if (!CanRead)
             {
                 throw new Exception("该流不允许读取。");
             }
             int r;
-            if (this.m_surLength > 0)
+            if (m_surLength > 0)
             {
-                if (this.m_surLength > count)
+                if (m_surLength > count)
                 {
                     //按count读取
-                    Array.Copy(this.m_buffer, this.m_offset, buffer, offset, count);
+                    Array.Copy(m_buffer, m_offset, buffer, offset, count);
                     if (!peek)
                     {
-                        this.m_surLength -= count;
-                        this.m_offset += count;
+                        m_surLength -= count;
+                        m_offset += count;
                     }
                     r = count;
                 }
                 else
                 {
                     //会读完本次
-                    Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_surLength);
-                    r = this.m_surLength;
+                    Array.Copy(m_buffer, m_offset, buffer, offset, m_surLength);
+                    r = m_surLength;
                     if (!peek)
                     {
-                        this.Reset();
+                        Reset();
                     }
-                   
                 }
             }
             else
             {
                 //无数据，须等待
-                if (this.m_readEvent.WaitOne(this.ReadTimeout))
+                if (m_readEvent.WaitOne(ReadTimeout))
                 {
-                    if (this.m_surLength == 0)
+                    if (m_surLength == 0)
                     {
-                        this.Reset();
+                        Reset();
                         r = 0;
                     }
-                    else if (this.m_surLength > count)
+                    else if (m_surLength > count)
                     {
                         //按count读取
-                        Array.Copy(this.m_buffer, this.m_offset, buffer, offset, count);
+                        Array.Copy(m_buffer, m_offset, buffer, offset, count);
                         if (!peek)
                         {
-                            this.m_surLength -= count;
-                            this.m_offset += count;
+                            m_surLength -= count;
+                            m_offset += count;
                         }
                         r = count;
                     }
                     else
                     {
                         //会读完本次
-                        Array.Copy(this.m_buffer, this.m_offset, buffer, offset, this.m_surLength);
-                        r = this.m_surLength;
+                        Array.Copy(m_buffer, m_offset, buffer, offset, m_surLength);
+                        r = m_surLength;
                         if (!peek)
                         {
-                            this.Reset();
+                            Reset();
                         }
-                        
                     }
                 }
                 else
@@ -158,12 +156,12 @@ namespace TouchSocket.Core.IO
             //{
             //    return false;
             //}
-            this.m_inputEvent.Reset();
-            this.m_buffer = buffer;
-            this.m_offset = offset;
-            this.m_surLength = length;
-            this.m_readEvent.Set();
-            return this.m_inputEvent.WaitOne(this.ReadTimeout);
+            m_inputEvent.Reset();
+            m_buffer = buffer;
+            m_offset = offset;
+            m_surLength = length;
+            m_readEvent.Set();
+            return m_inputEvent.WaitOne(ReadTimeout);
         }
 
         /// <summary>
@@ -171,16 +169,16 @@ namespace TouchSocket.Core.IO
         /// </summary>
         protected bool InputComplate()
         {
-            return this.Input(new byte[0], 0, 0);
+            return Input(new byte[0], 0, 0);
         }
 
         private void Reset()
         {
-            this.m_buffer = null;
-            this.m_offset = 0;
-            this.m_surLength = 0;
-            this.m_readEvent.Reset();
-            this.m_inputEvent.Set();
+            m_buffer = null;
+            m_offset = 0;
+            m_surLength = 0;
+            m_readEvent.Reset();
+            m_inputEvent.Set();
         }
 
         /// <summary>
@@ -189,9 +187,9 @@ namespace TouchSocket.Core.IO
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.Reset();
-            this.m_readEvent.SafeDispose();
-            this.m_inputEvent.SafeDispose();
+            Reset();
+            m_readEvent.SafeDispose();
+            m_inputEvent.SafeDispose();
             base.Dispose(disposing);
         }
 
@@ -201,7 +199,7 @@ namespace TouchSocket.Core.IO
         ~BlockReader()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: false);
+            Dispose(disposing: false);
         }
     }
 }

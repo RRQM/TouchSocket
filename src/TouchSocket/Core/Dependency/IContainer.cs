@@ -13,12 +13,12 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 注入容器接口
     /// </summary>
-    public interface IContainer : IContainerProvider,IEnumerable<DependencyDescriptor>
+    public interface IContainer : IContainerProvider, IEnumerable<DependencyDescriptor>
     {
         /// <summary>
         /// 添加类型描述符。

@@ -15,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using TouchSocket.Core.Extensions;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -32,10 +32,10 @@ namespace TouchSocket.Rpc
         /// </summary>
         public RpcAttribute()
         {
-            this.MethodFlags = MethodFlags.None;
-            this.m_exceptions.Add(typeof(TimeoutException), "调用超时");
-            this.m_exceptions.Add(typeof(RpcInvokeException), "Rpc调用异常");
-            this.m_exceptions.Add(typeof(Exception), "其他异常");
+            MethodFlags = MethodFlags.None;
+            m_exceptions.Add(typeof(TimeoutException), "调用超时");
+            m_exceptions.Add(typeof(RpcInvokeException), "Rpc调用异常");
+            m_exceptions.Add(typeof(Exception), "其他异常");
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 异常提示
         /// </summary>
-        public Dictionary<Type, string> Exceptions => this.m_exceptions;
+        public Dictionary<Type, string> Exceptions => m_exceptions;
 
         /// <summary>
         /// 生成代码
@@ -98,27 +98,27 @@ namespace TouchSocket.Rpc
         {
             StringBuilder codeString = new StringBuilder();
 
-            string description = this.GetDescription(methodInstance);
+            string description = GetDescription(methodInstance);
             bool isOut;
             bool isRef;
 
             ParameterInfo[] parameters;
-            List<string> parametersStr = this.GetParameters(methodInstance, out isOut, out isRef, out parameters);
-            var InterfaceTypes = this.GetGenericInterfaceTypes();
-            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
+            List<string> parametersStr = GetParameters(methodInstance, out isOut, out isRef, out parameters);
+            var InterfaceTypes = GetGenericInterfaceTypes();
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
                 codeString.AppendLine("///</summary>");
-                foreach (var item in this.Exceptions)
+                foreach (var item in Exceptions)
                 {
                     codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
                 }
 
                 codeString.Append("public static ");
-                codeString.Append(this.GetReturn(methodInstance, false));
+                codeString.Append(GetReturn(methodInstance, false));
                 codeString.Append(" ");
-                codeString.Append(this.GetMethodName(methodInstance, false));
+                codeString.Append(GetMethodName(methodInstance, false));
                 codeString.Append("<TClient>(");//方法参数
 
                 codeString.Append($"this TClient client");
@@ -137,7 +137,7 @@ namespace TouchSocket.Rpc
                 {
                     codeString.Append(",");
                 }
-                codeString.Append(this.GetInvokeOption());
+                codeString.Append(GetInvokeOption());
                 codeString.AppendLine(") where TClient:");
 
                 for (int i = 0; i < InterfaceTypes.Length; i++)
@@ -154,7 +154,7 @@ namespace TouchSocket.Rpc
 
                 codeString.AppendLine("if (client.TryCanInvoke?.Invoke(client)==false)");
                 codeString.AppendLine("{");
-                codeString.AppendLine(this.GetCannotInvoke(methodInstance));
+                codeString.AppendLine(GetCannotInvoke(methodInstance));
                 codeString.AppendLine("}");
 
                 if (parametersStr.Count > 0)
@@ -166,7 +166,7 @@ namespace TouchSocket.Rpc
                     {
                         if (parameter.ParameterType.Name.Contains("&") && parameter.IsOut)
                         {
-                            codeString.Append($"default({this.GetProxyTypeName(parameter.ParameterType)})");
+                            codeString.Append($"default({GetProxyTypeName(parameter.ParameterType)})");
                         }
                         else
                         {
@@ -185,7 +185,7 @@ namespace TouchSocket.Rpc
                         codeString.Append("{");
                         foreach (ParameterInfo parameter in parameters)
                         {
-                            codeString.Append($"typeof({this.GetProxyTypeName(parameter.ParameterType)})");
+                            codeString.Append($"typeof({GetProxyTypeName(parameter.ParameterType)})");
                             if (parameter != parameters[parameters.Length - 1])
                             {
                                 codeString.Append(",");
@@ -199,23 +199,23 @@ namespace TouchSocket.Rpc
                 {
                     if (parametersStr.Count == 0)
                     {
-                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else if (isOut || isRef)
                     {
-                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption,ref parameters,types);");
                     }
                     else
                     {
-                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=client.Invoke<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -224,19 +224,19 @@ namespace TouchSocket.Rpc
                     if (parametersStr.Count == 0)
                     {
                         codeString.Append("client.Invoke(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else if (isOut || isRef)
                     {
                         codeString.Append("client.Invoke(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption,ref parameters,types);");
                     }
                     else
                     {
                         codeString.Append("client.Invoke(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -246,7 +246,7 @@ namespace TouchSocket.Rpc
                     codeString.AppendLine("{");
                     for (int i = 0; i < parameters.Length; i++)
                     {
-                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType), i));
+                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, GetProxyTypeName(parameters[i].ParameterType), i));
                     }
                     codeString.AppendLine("}");
                     if (isOut)
@@ -257,7 +257,7 @@ namespace TouchSocket.Rpc
                         {
                             if (parameters[i].IsOut)
                             {
-                                codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType)));
+                                codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, GetProxyTypeName(parameters[i].ParameterType)));
                             }
                         }
                         codeString.AppendLine("}");
@@ -273,15 +273,15 @@ namespace TouchSocket.Rpc
             }
 
             //以下生成异步
-            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync) && !isOut && !isRef)//没有out或者ref
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync) && !isOut && !isRef)//没有out或者ref
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
                 codeString.AppendLine("///</summary>");
                 codeString.Append("public static ");
-                codeString.Append(this.GetReturn(methodInstance, true));
+                codeString.Append(GetReturn(methodInstance, true));
                 codeString.Append(" ");
-                codeString.Append(this.GetMethodName(methodInstance, true));
+                codeString.Append(GetMethodName(methodInstance, true));
                 codeString.Append("<TClient>(");//方法参数
 
                 codeString.Append($"this TClient client");
@@ -299,7 +299,7 @@ namespace TouchSocket.Rpc
                 {
                     codeString.Append(",");
                 }
-                codeString.Append(this.GetInvokeOption());
+                codeString.Append(GetInvokeOption());
                 codeString.AppendLine(") where TClient:");
 
                 for (int i = 0; i < InterfaceTypes.Length; i++)
@@ -338,16 +338,16 @@ namespace TouchSocket.Rpc
                 {
                     if (parametersStr.Count == 0)
                     {
-                        codeString.Append(string.Format("return client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("return client.InvokeAsync<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else
                     {
-                        codeString.Append(string.Format("return client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("return client.InvokeAsync<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -356,13 +356,13 @@ namespace TouchSocket.Rpc
                     if (parametersStr.Count == 0)
                     {
                         codeString.Append("return client.InvokeAsync(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else
                     {
                         codeString.Append("return client.InvokeAsync(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -389,25 +389,25 @@ namespace TouchSocket.Rpc
         {
             StringBuilder codeString = new StringBuilder();
 
-            string description = this.GetDescription(methodInstance);
+            string description = GetDescription(methodInstance);
             ParameterInfo[] parameters;
             bool isOut;
             bool isRef;
-            List<string> parametersStr = this.GetParameters(methodInstance, out isOut, out isRef, out parameters);
-            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
+            List<string> parametersStr = GetParameters(methodInstance, out isOut, out isRef, out parameters);
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
                 codeString.AppendLine("///</summary>");
-                foreach (var item in this.Exceptions)
+                foreach (var item in Exceptions)
                 {
                     codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
                 }
 
                 codeString.Append("public ");
-                codeString.Append(this.GetReturn(methodInstance, false));
+                codeString.Append(GetReturn(methodInstance, false));
                 codeString.Append(" ");
-                codeString.Append(this.GetMethodName(methodInstance, false));
+                codeString.Append(GetMethodName(methodInstance, false));
                 codeString.Append("(");//方法参数
 
                 for (int i = 0; i < parametersStr.Count; i++)
@@ -422,7 +422,7 @@ namespace TouchSocket.Rpc
                 {
                     codeString.Append(",");
                 }
-                codeString.Append(this.GetInvokeOption());
+                codeString.Append(GetInvokeOption());
                 codeString.AppendLine(")");
 
                 codeString.AppendLine("{");//方法开始
@@ -445,7 +445,7 @@ namespace TouchSocket.Rpc
                     {
                         if (parameter.ParameterType.Name.Contains("&") && parameter.IsOut)
                         {
-                            codeString.Append($"default({this.GetProxyTypeName(parameter.ParameterType)})");
+                            codeString.Append($"default({GetProxyTypeName(parameter.ParameterType)})");
                         }
                         else
                         {
@@ -464,7 +464,7 @@ namespace TouchSocket.Rpc
                         codeString.Append("{");
                         foreach (ParameterInfo parameter in parameters)
                         {
-                            codeString.Append($"typeof({this.GetProxyTypeName(parameter.ParameterType)})");
+                            codeString.Append($"typeof({GetProxyTypeName(parameter.ParameterType)})");
                             if (parameter != parameters[parameters.Length - 1])
                             {
                                 codeString.Append(",");
@@ -478,23 +478,23 @@ namespace TouchSocket.Rpc
                 {
                     if (parametersStr.Count == 0)
                     {
-                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else if (isOut || isRef)
                     {
-                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption,ref parameters,types);");
                     }
                     else
                     {
-                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("{0} returnData=Client.Invoke<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -503,19 +503,19 @@ namespace TouchSocket.Rpc
                     if (parametersStr.Count == 0)
                     {
                         codeString.Append("Client.Invoke(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else if (isOut || isRef)
                     {
                         codeString.Append("Client.Invoke(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption,ref parameters,types);");
                     }
                     else
                     {
                         codeString.Append("Client.Invoke(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -525,7 +525,7 @@ namespace TouchSocket.Rpc
                     codeString.AppendLine("{");
                     for (int i = 0; i < parameters.Length; i++)
                     {
-                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType), i));
+                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, GetProxyTypeName(parameters[i].ParameterType), i));
                     }
                     codeString.AppendLine("}");
                     if (isOut)
@@ -536,7 +536,7 @@ namespace TouchSocket.Rpc
                         {
                             if (parameters[i].IsOut)
                             {
-                                codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, this.GetProxyTypeName(parameters[i].ParameterType)));
+                                codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, GetProxyTypeName(parameters[i].ParameterType)));
                             }
                         }
                         codeString.AppendLine("}");
@@ -552,15 +552,15 @@ namespace TouchSocket.Rpc
             }
 
             //以下生成异步
-            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
                 codeString.AppendLine("///</summary>");
                 codeString.Append("public ");
-                codeString.Append(this.GetReturn(methodInstance, true));
+                codeString.Append(GetReturn(methodInstance, true));
                 codeString.Append(" ");
-                codeString.Append(this.GetMethodName(methodInstance, true));
+                codeString.Append(GetMethodName(methodInstance, true));
                 codeString.Append("(");//方法参数
 
                 for (int i = 0; i < parametersStr.Count; i++)
@@ -575,7 +575,7 @@ namespace TouchSocket.Rpc
                 {
                     codeString.Append(",");
                 }
-                codeString.Append(this.GetInvokeOption());
+                codeString.Append(GetInvokeOption());
                 codeString.AppendLine(")");
 
                 codeString.AppendLine("{");//方法开始
@@ -609,16 +609,16 @@ namespace TouchSocket.Rpc
                 {
                     if (parametersStr.Count == 0)
                     {
-                        codeString.Append(string.Format("return Client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("return Client.InvokeAsync<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else
                     {
-                        codeString.Append(string.Format("return Client.InvokeAsync<{0}>", this.GetProxyTypeName(methodInstance.ReturnType)));
+                        codeString.Append(string.Format("return Client.InvokeAsync<{0}>", GetProxyTypeName(methodInstance.ReturnType)));
                         codeString.Append("(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -627,13 +627,13 @@ namespace TouchSocket.Rpc
                     if (parametersStr.Count == 0)
                     {
                         codeString.Append("return Client.InvokeAsync(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
                     else
                     {
                         codeString.Append("return Client.InvokeAsync(");
-                        codeString.Append($"\"{this.GetInvokenKey(methodInstance)}\"");
+                        codeString.Append($"\"{GetInvokenKey(methodInstance)}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
                     }
                 }
@@ -652,21 +652,21 @@ namespace TouchSocket.Rpc
             StringBuilder codeString = new StringBuilder();
             bool isOut = false;
             bool isRef = false;
-            string description = this.GetDescription(methodInstance);
-            List<string> parameters = this.GetParameters(methodInstance, out isOut, out isRef, out _);
-            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
+            string description = GetDescription(methodInstance);
+            List<string> parameters = GetParameters(methodInstance, out isOut, out isRef, out _);
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
                 codeString.AppendLine("///</summary>");
-                foreach (var item in this.Exceptions)
+                foreach (var item in Exceptions)
                 {
                     codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
                 }
 
-                codeString.Append(this.GetReturn(methodInstance, false));
+                codeString.Append(GetReturn(methodInstance, false));
                 codeString.Append(" ");
-                codeString.Append(this.GetMethodName(methodInstance, false));
+                codeString.Append(GetMethodName(methodInstance, false));
                 codeString.Append("(");//方法参数
                 for (int i = 0; i < parameters.Count; i++)
                 {
@@ -680,23 +680,23 @@ namespace TouchSocket.Rpc
                 {
                     codeString.Append(",");
                 }
-                codeString.Append(this.GetInvokeOption());
+                codeString.Append(GetInvokeOption());
                 codeString.AppendLine(");");
             }
 
-            if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
                 codeString.AppendLine("///</summary>");
-                foreach (var item in this.Exceptions)
+                foreach (var item in Exceptions)
                 {
                     codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
                 }
 
-                codeString.Append(this.GetReturn(methodInstance, true));
+                codeString.Append(GetReturn(methodInstance, true));
                 codeString.Append(" ");
-                codeString.Append(this.GetMethodName(methodInstance, true));
+                codeString.Append(GetMethodName(methodInstance, true));
                 codeString.Append("(");//方法参数
 
                 for (int i = 0; i < parameters.Count; i++)
@@ -711,7 +711,7 @@ namespace TouchSocket.Rpc
                 {
                     codeString.Append(",");
                 }
-                codeString.Append(this.GetInvokeOption());
+                codeString.Append(GetInvokeOption());
                 codeString.AppendLine(");");
             }
 
@@ -725,9 +725,9 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetInvokenKey(MethodInstance methodInstance)
         {
-            if (!this.InvokenKey.IsNullOrEmpty())
+            if (!InvokenKey.IsNullOrEmpty())
             {
-                return this.InvokenKey;
+                return InvokenKey;
             }
             return $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
         }
@@ -750,13 +750,13 @@ namespace TouchSocket.Rpc
         public virtual string GetMethodName(MethodInstance methodInstance, bool isAsync)
         {
             string name;
-            if (string.IsNullOrEmpty(this.MethodName))
+            if (string.IsNullOrEmpty(MethodName))
             {
                 name = methodInstance.Name;
             }
             else
             {
-                name = this.MethodName.Format(methodInstance.Name);
+                name = MethodName.Format(methodInstance.Name);
             }
             return isAsync ? name + "Async" : name;
         }
@@ -794,17 +794,17 @@ namespace TouchSocket.Rpc
                     if (parameters[i].IsOut)
                     {
                         isOut = true;
-                        codeString.Append(string.Format("out {0} {1}", this.GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
+                        codeString.Append(string.Format("out {0} {1}", GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
                     }
                     else
                     {
                         isRef = true;
-                        codeString.Append(string.Format("ref {0} {1}", this.GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
+                        codeString.Append(string.Format("ref {0} {1}", GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
                     }
                 }
                 else
                 {
-                    codeString.Append(string.Format("{0} {1}", this.GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
+                    codeString.Append(string.Format("{0} {1}", GetProxyTypeName(parameters[i].ParameterType), parameters[i].Name));
                 }
 
                 if (parameters[i].HasDefaultValue)
@@ -845,7 +845,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetProxyTypeName(Type type)
         {
-            return this.ClassCodeGenerator.GetTypeFullName(type);
+            return ClassCodeGenerator.GetTypeFullName(type);
         }
 
         /// <summary>
@@ -864,7 +864,7 @@ namespace TouchSocket.Rpc
                 }
                 else
                 {
-                    return $"Task<{this.GetProxyTypeName(methodInstance.ReturnType)}>";
+                    return $"Task<{GetProxyTypeName(methodInstance.ReturnType)}>";
                 }
             }
             else
@@ -875,14 +875,14 @@ namespace TouchSocket.Rpc
                 }
                 else
                 {
-                    return this.GetProxyTypeName(methodInstance.ReturnType);
+                    return GetProxyTypeName(methodInstance.ReturnType);
                 }
             }
         }
 
         internal void SetClassCodeGenerator(ClassCodeGenerator classCodeGenerator)
         {
-            this.ClassCodeGenerator = classCodeGenerator;
+            ClassCodeGenerator = classCodeGenerator;
         }
     }
 }

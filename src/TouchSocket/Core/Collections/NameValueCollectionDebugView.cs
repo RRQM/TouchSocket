@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core.Extensions;
 
-namespace TouchSocket.Core.Collections
+namespace TouchSocket.Core
 {
     /// <summary>
     /// NameValueCollectionDebugView
@@ -23,7 +18,7 @@ namespace TouchSocket.Core.Collections
         /// <param name="nameValue"></param>
         public NameValueCollectionDebugView(NameValueCollection nameValue)
         {
-            this.m_nameValue = nameValue;
+            m_nameValue = nameValue;
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]

@@ -17,27 +17,48 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// 文件传输状态
     /// </summary>
-    public class FileTransferStatusEventArgs : FileTransferEventArgs
+    public class FileTransferStatusEventArgs : FileOperationEventArgs
     {
-        private Result m_result;
-
         /// <summary>
-        /// 构造函数
+        /// FileTransferStatusEventArgs
         /// </summary>
         /// <param name="transferType"></param>
-        /// <param name="fileRequest"></param>
+        /// <param name="result"></param>
         /// <param name="metadata"></param>
+        /// <param name="fileInfo"></param>
+        public FileTransferStatusEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo, Result result)
+            : base(transferType, metadata, fileInfo)
+        {
+            Result = result;
+        }
+
+        /// <summary>
+        /// FileTransferStatusEventArgs
+        /// </summary>
+        /// <param name="transferType"></param>
         /// <param name="result"></param>
         /// <param name="fileInfo"></param>
-        public FileTransferStatusEventArgs(TransferType transferType, FileRequest fileRequest, Metadata metadata, Result result, TouchRpcFileInfo fileInfo)
-            : base(transferType, fileRequest, metadata, fileInfo)
+        /// <param name="fileOperator"></param>
+        public FileTransferStatusEventArgs(TransferType transferType, Result result, RemoteFileInfo fileInfo, FileOperator fileOperator)
+            : base(transferType, fileOperator, fileInfo)
         {
-            this.m_result = result;
+            Result = result;
+        }
+
+        /// <summary>
+        /// FileTransferStatusEventArgs
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="args"></param>
+        public FileTransferStatusEventArgs(Result result, FileOperationEventArgs args)
+            : base(args.TransferType, args.FileOperator, args.FileInfo)
+        {
+            Result = result;
         }
 
         /// <summary>
         /// 结果
         /// </summary>
-        public Result Result => this.m_result;
+        public Result Result { get; private set; }
     }
 }

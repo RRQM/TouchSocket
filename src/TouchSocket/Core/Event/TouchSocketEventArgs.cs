@@ -16,72 +16,18 @@ using System;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 若汝棋茗所有事件基类
+    /// TouchSocketEventArgs
     /// </summary>
     public class TouchSocketEventArgs : EventArgs
     {
         /// <summary>
         /// 是否允许操作
         /// </summary>
-        public bool IsPermitOperation
-        {
-            get => this.Operation.HasFlag(Operation.Permit);
-            set
-            {
-                if (value)
-                {
-                    this.AddOperation(Operation.Permit);
-                }
-                else
-                {
-                    this.RemoveOperation(Operation.Permit);
-                }
-            }
-        }
+        public bool IsPermitOperation { get; set; }
 
         /// <summary>
         /// 是否已处理
         /// </summary>
-        public bool Handled
-        {
-            get => this.Operation.HasFlag(Operation.Handled);
-            set
-            {
-                if (value)
-                {
-                    this.AddOperation(Operation.Handled);
-                }
-                else
-                {
-                    this.RemoveOperation(Operation.Handled);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 操作类型。
-        /// </summary>
-        public Operation Operation { get; private set; }
-
-        /// <summary>
-        /// 添加操作
-        /// </summary>
-        /// <param name="operation"></param>
-        public void AddOperation(Operation operation)
-        {
-            this.Operation |= operation;
-        }
-
-        /// <summary>
-        /// 移除操作
-        /// </summary>
-        /// <param name="operation"></param>
-        public void RemoveOperation(Operation operation)
-        {
-            if (this.Operation.HasFlag(operation))
-            {
-                this.Operation ^= operation;
-            }
-        }
+        public bool Handled { get; set; }
     }
 }

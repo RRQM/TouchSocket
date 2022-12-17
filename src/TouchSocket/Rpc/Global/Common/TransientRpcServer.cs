@@ -24,7 +24,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 调用上下文。
         /// </summary>
-        protected TCallContext CallContext => (((ITransientRpcServer)this).CallContext is TCallContext Transient)?Transient:default;
+        protected TCallContext CallContext => (((ITransientRpcServer)this).CallContext is TCallContext Transient) ? Transient : default;
 
     }
 

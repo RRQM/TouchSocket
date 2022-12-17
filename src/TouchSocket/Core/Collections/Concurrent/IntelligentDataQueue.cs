@@ -14,7 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace TouchSocket.Core.Collections.Concurrent
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 队列数据
@@ -40,10 +40,10 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="length"></param>
         public QueueDataBytes(byte[] buffer, int offset, int length)
         {
-            this.Offset = offset;
-            this.Length = length;
-            this.Buffer = buffer;
-            this.Size = length;
+            Offset = offset;
+            Length = length;
+            Buffer = buffer;
+            Size = length;
         }
 
         /// <summary>
@@ -107,9 +107,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <param name="maxSize"></param>
         public IntelligentDataQueue(long maxSize)
         {
-            this.m_free = true;
-            this.m_overflowWait = true;
-            this.MaxSize = maxSize;
+            m_free = true;
+            m_overflowWait = true;
+            MaxSize = maxSize;
         }
 
         /// <summary>
@@ -122,26 +122,26 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <summary>
         /// 实际尺寸
         /// </summary>
-        public long ActualSize => this.m_actualSize;
+        public long ActualSize => m_actualSize;
 
         /// <summary>
         /// 是否有空位允许入队
         /// </summary>
-        public bool Free => this.m_free;
+        public bool Free => m_free;
 
         /// <summary>
         /// 允许的最大长度
         /// </summary>
         public long MaxSize
         {
-            get => this.m_maxSize;
+            get => m_maxSize;
             set
             {
                 if (value < 1)
                 {
                     value = 1;
                 }
-                this.m_maxSize = value;
+                m_maxSize = value;
             }
         }
 
@@ -150,8 +150,8 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// </summary>
         public Action<bool> OnQueueChanged
         {
-            get => this.m_onQueueChanged;
-            set => this.m_onQueueChanged = value;
+            get => m_onQueueChanged;
+            set => m_onQueueChanged = value;
         }
 
         /// <summary>
@@ -159,8 +159,8 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// </summary>
         public bool OverflowWait
         {
-            get => this.m_overflowWait;
-            set => this.m_overflowWait = value;
+            get => m_overflowWait;
+            set => m_overflowWait = value;
         }
 
         /// <summary>
@@ -187,19 +187,19 @@ namespace TouchSocket.Core.Collections.Concurrent
         {
             lock (this)
             {
-                bool free = this.m_actualSize < this.m_maxSize;
-                if (this.m_free != free)
+                bool free = m_actualSize < m_maxSize;
+                if (m_free != free)
                 {
-                    this.m_free = free;
-                    this.m_onQueueChanged?.Invoke(this.m_free);
+                    m_free = free;
+                    m_onQueueChanged?.Invoke(m_free);
                 }
 
-                if (this.m_overflowWait)
+                if (m_overflowWait)
                 {
-                    SpinWait.SpinUntil(this.Check, this.Timeout);
+                    SpinWait.SpinUntil(Check, Timeout);
                 }
 
-                Interlocked.Add(ref this.m_actualSize, item.Size);
+                Interlocked.Add(ref m_actualSize, item.Size);
                 base.Enqueue(item);
             }
         }
@@ -213,12 +213,12 @@ namespace TouchSocket.Core.Collections.Concurrent
         {
             if (base.TryDequeue(out result))
             {
-                Interlocked.Add(ref this.m_actualSize, -result.Size);
-                bool free = this.m_actualSize < this.m_maxSize;
-                if (this.m_free != free)
+                Interlocked.Add(ref m_actualSize, -result.Size);
+                bool free = m_actualSize < m_maxSize;
+                if (m_free != free)
                 {
-                    this.m_free = free;
-                    this.m_onQueueChanged?.Invoke(this.m_free);
+                    m_free = free;
+                    m_onQueueChanged?.Invoke(m_free);
                 }
                 return true;
             }
@@ -227,7 +227,7 @@ namespace TouchSocket.Core.Collections.Concurrent
 
         private bool Check()
         {
-            return this.m_actualSize < this.m_maxSize;
+            return m_actualSize < m_maxSize;
         }
     }
 }

@@ -19,12 +19,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Http;
-using TouchSocket.Http.Plugins;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc
@@ -62,12 +57,12 @@ namespace TouchSocket.Rpc
         /// </summary>
         public RpcStore(IContainer container)
         {
-            this.Container = container ?? throw new ArgumentNullException(nameof(container));
-            this.Container.RegisterSingleton<RpcStore>(this);
+            Container = container ?? throw new ArgumentNullException(nameof(container));
+            Container.RegisterSingleton<RpcStore>(this);
 
             if (!container.IsRegistered(typeof(IRpcServerFactory)))
             {
-                this.Container.RegisterSingleton<IRpcServerFactory, RpcServerFactory>();
+                Container.RegisterSingleton<IRpcServerFactory, RpcServerFactory>();
             }
 
             SearchAttribute();
@@ -87,7 +82,7 @@ namespace TouchSocket.Rpc
         /// 解析器集合。
         /// <para>如果想快速获得对象，请使用<see cref="TryGetRpcParser(string, out IRpcParser)"/>，一般key为对象类型名称，或自定义的。</para>
         /// </summary>
-        public IRpcParser[] RpcParsers => this.m_parsers.Values.ToArray();
+        public IRpcParser[] RpcParsers => m_parsers.Values.ToArray();
 
         /// <summary>
         /// 请求代理。
@@ -100,28 +95,28 @@ namespace TouchSocket.Rpc
         /// </summary>
         public string ProxyUrl
         {
-            get => this.m_proxyUrl;
+            get => m_proxyUrl;
             set
             {
                 if (string.IsNullOrEmpty(value))
                 {
                     value = "/";
                 }
-                this.m_proxyUrl = value;
+                m_proxyUrl = value;
             }
         }
 
         /// <summary>
         /// 服务类型
         /// </summary>
-        public Type[] ServerTypes => this.m_serverTypes.Keys.ToArray();
+        public Type[] ServerTypes => m_serverTypes.Keys.ToArray();
 
         /// <summary>
         /// 获取IRpcParser
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public IRpcParser this[string key] => this.m_parsers[key];
+        public IRpcParser this[string key] => m_parsers[key];
 
         /// <summary>
         /// 从远程获取代理
@@ -146,18 +141,18 @@ namespace TouchSocket.Rpc
         /// <param name="applyServer">是否应用已注册服务</param>
         public void AddRpcParser(string key, IRpcParser parser, bool applyServer = true)
         {
-            if (this.m_disposedValue)
+            if (DisposedValue)
             {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
             }
-            if (!this.m_parsers.TryAdd(key, parser))
+            if (!m_parsers.TryAdd(key, parser))
             {
                 throw new Exception("相同键值得解析器已经存在。");
             }
             parser.SetRpcStore(this);
             if (applyServer)
             {
-                foreach (var item in this.m_serverTypes)
+                foreach (var item in m_serverTypes)
                 {
                     parser.OnRegisterServer(item.Value.ToArray());
                 }
@@ -171,7 +166,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public MethodInstance[] GetServerMethodInstances(Type serverType)
         {
-            return this.m_serverTypes[serverType].ToArray();
+            return m_serverTypes[serverType].ToArray();
         }
 
         /// <summary>
@@ -183,9 +178,9 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public InvokeResult Execute(IRpcServer rpcServer, object[] ps, ICallContext callContext)
         {
-            if (this.m_disposedValue)
+            if (DisposedValue)
             {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
             }
             InvokeResult invokeResult = new InvokeResult();
             try
@@ -265,7 +260,7 @@ namespace TouchSocket.Rpc
         public MethodInstance[] GetAllMethods()
         {
             List<MethodInstance> methods = new List<MethodInstance>();
-            foreach (var item in this.m_serverTypes.Values)
+            foreach (var item in m_serverTypes.Values)
             {
                 methods.AddRange(item);
             }
@@ -275,7 +270,7 @@ namespace TouchSocket.Rpc
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.m_parsers.Values.GetEnumerator();
+            return m_parsers.Values.GetEnumerator();
         }
 
         /// <summary>
@@ -284,7 +279,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         IEnumerator<IRpcParser> IEnumerable<IRpcParser>.GetEnumerator()
         {
-            return this.m_parsers.Values.GetEnumerator();
+            return m_parsers.Values.GetEnumerator();
         }
 
         /// <summary>
@@ -295,7 +290,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public string GetProxyCodes(string @namespace, Type[] attrbuteTypes)
         {
-            var cellCodes = this.GetProxyInfo(attrbuteTypes == null ? ProxyAttributeMap.Values.ToArray() : attrbuteTypes);
+            var cellCodes = GetProxyInfo(attrbuteTypes == null ? ProxyAttributeMap.Values.ToArray() : attrbuteTypes);
             return CodeGenerator.ConvertToCode(@namespace, cellCodes);
         }
 
@@ -306,7 +301,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public string GetProxyCodes(string @namespace)
         {
-            return this.GetProxyCodes(@namespace, null);
+            return GetProxyCodes(@namespace, null);
         }
 
         /// <summary>
@@ -315,7 +310,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public ServerCellCode[] GetProxyInfo()
         {
-            return this.GetProxyInfo(ProxyAttributeMap.Values.ToArray());
+            return GetProxyInfo(ProxyAttributeMap.Values.ToArray());
         }
 
         /// <summary>
@@ -325,16 +320,16 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public ServerCellCode[] GetProxyInfo(Type[] attrbuteType)
         {
-            if (this.m_disposedValue)
+            if (DisposedValue)
             {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
             }
 
             List<ServerCellCode> codes = new List<ServerCellCode>();
 
             foreach (var attrbute in attrbuteType)
             {
-                foreach (var item in this.m_serverTypes.Keys)
+                foreach (var item in m_serverTypes.Keys)
                 {
                     ServerCellCode serverCellCode = CodeGenerator.Generator(item, attrbute);
                     codes.Add(serverCellCode);
@@ -351,7 +346,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public bool RemoveRpcParser(string parserName, out IRpcParser parser)
         {
-            return this.m_parsers.TryRemove(parserName, out parser);
+            return m_parsers.TryRemove(parserName, out parser);
         }
 
         /// <summary>
@@ -361,7 +356,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public bool RemoveRpcParser(string parserName)
         {
-            return this.RemoveRpcParser(parserName, out _);
+            return RemoveRpcParser(parserName, out _);
         }
 
         /// <summary>
@@ -370,21 +365,21 @@ namespace TouchSocket.Rpc
         /// <param name="iPHost"></param>
         public void ShareProxy(IPHost iPHost)
         {
-            if (this.m_disposedValue)
+            if (DisposedValue)
             {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
             }
 
-            if (this.m_service != null)
+            if (m_service != null)
             {
                 return;
             }
-            this.m_service = new HttpService();
-            this.m_service.Setup(new TouchSocketConfig()
+            m_service = new HttpService();
+            m_service.Setup(new TouchSocketConfig()
                 .SetListenIPHosts(new IPHost[] { iPHost }))
                 .Start();
 
-            this.m_service.AddPlugin(new InternalPlugin(this));
+            m_service.AddPlugin(new InternalPlugin(this));
         }
 
         /// <summary>
@@ -392,7 +387,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         public void StopShareProxy()
         {
-            this.m_service.SafeDispose();
+            m_service.SafeDispose();
         }
 
         /// <summary>
@@ -403,11 +398,11 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public bool TryGetRpcParser(string key, out IRpcParser parser)
         {
-            if (this.m_disposedValue)
+            if (DisposedValue)
             {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
             }
-            return this.m_parsers.TryGetValue(key, out parser);
+            return m_parsers.TryGetValue(key, out parser);
         }
 
         /// <summary>
@@ -417,7 +412,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public int UnregisterServer(IRpcServer provider)
         {
-            return this.UnregisterServer(provider.GetType());
+            return UnregisterServer(provider.GetType());
         }
 
         /// <summary>
@@ -427,9 +422,9 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public int UnregisterServer(Type providerType)
         {
-            if (this.m_disposedValue)
+            if (DisposedValue)
             {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
             }
 
             if (!typeof(IRpcServer).IsAssignableFrom(providerType))
@@ -437,7 +432,7 @@ namespace TouchSocket.Rpc
                 throw new RpcException("类型不相符");
             }
 
-            if (this.RemoveServer(providerType, out MethodInstance[] instances))
+            if (RemoveServer(providerType, out MethodInstance[] instances))
             {
                 foreach (var parser in this)
                 {
@@ -456,12 +451,12 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public int UnregisterServer<T>() where T : RpcServer
         {
-            return this.UnregisterServer(typeof(T));
+            return UnregisterServer(typeof(T));
         }
 
         internal bool TryRemove(string key, out IRpcParser parser)
         {
-            return this.m_parsers.TryRemove(key, out parser);
+            return m_parsers.TryRemove(key, out parser);
         }
 
         /// <summary>
@@ -470,9 +465,9 @@ namespace TouchSocket.Rpc
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            if (!this.m_disposedValue)
+            if (!DisposedValue)
             {
-                this.StopShareProxy();
+                StopShareProxy();
                 foreach (var item in this)
                 {
                     item.SafeDispose();
@@ -529,11 +524,11 @@ namespace TouchSocket.Rpc
 
         private bool RemoveServer(Type type, out MethodInstance[] methodInstances)
         {
-            foreach (var newType in this.m_serverTypes.Keys)
+            foreach (var newType in m_serverTypes.Keys)
             {
                 if (newType.FullName == type.FullName)
                 {
-                    this.m_serverTypes.TryRemove(newType, out var list);
+                    m_serverTypes.TryRemove(newType, out var list);
                     methodInstances = list.ToArray();
                     return true;
                 }
@@ -561,7 +556,7 @@ namespace TouchSocket.Rpc
             {
                 throw new RpcException("实例类型必须与注册类型有继承关系。");
             }
-            foreach (var item in this.m_serverTypes.Keys)
+            foreach (var item in m_serverTypes.Keys)
             {
                 if (item.FullName == serverFromType.FullName)
                 {
@@ -573,10 +568,11 @@ namespace TouchSocket.Rpc
             foreach (var item in methodInstances)
             {
                 item.IsSingleton = true;
-                item.ServerFactory = new RpcServerFactory(this.Container);
+                //item.ServerFactory = new RpcServerFactory(this.Container);
+                item.ServerFactory = Container.Resolve<IRpcServerFactory>() ?? throw new ArgumentNullException($"{nameof(IRpcServerFactory)}");
             }
-            this.m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
-            this.Container.RegisterSingleton(serverFromType, rpcServer);
+            m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
+            Container.RegisterSingleton(serverFromType, rpcServer);
 
             foreach (var parser in this)
             {
@@ -602,7 +598,7 @@ namespace TouchSocket.Rpc
                 throw new RpcException("实例类型必须与注册类型有继承关系。");
             }
 
-            foreach (var item in this.m_serverTypes.Keys)
+            foreach (var item in m_serverTypes.Keys)
             {
                 if (item.FullName == serverFromType.FullName)
                 {
@@ -614,22 +610,23 @@ namespace TouchSocket.Rpc
             if (typeof(ITransientRpcServer).IsAssignableFrom(serverFromType))
             {
                 singleton = false;
-                this.Container.RegisterTransient(serverFromType, serverToType);
+                Container.RegisterTransient(serverFromType, serverToType);
             }
             else
             {
                 singleton = true;
-                this.Container.RegisterSingleton(serverFromType, serverToType);
+                Container.RegisterSingleton(serverFromType, serverToType);
             }
             MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType);
 
             foreach (var item in methodInstances)
             {
                 item.IsSingleton = singleton;
-                item.ServerFactory = new RpcServerFactory(this.Container);
+                //item.ServerFactory = new RpcServerFactory(this.Container);
+                item.ServerFactory = Container.Resolve<IRpcServerFactory>() ?? throw new ArgumentNullException($"{nameof(IRpcServerFactory)}");
             }
 
-            this.m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
+            m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
 
             foreach (var parser in this)
             {
@@ -646,14 +643,14 @@ namespace TouchSocket.Rpc
 
         public InternalPlugin(RpcStore rpcCerter)
         {
-            this.m_rpcStore = rpcCerter;
+            m_rpcStore = rpcCerter;
         }
 
         protected override void OnGet(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (e.Context.Request.UrlEquals(this.m_rpcStore.ProxyUrl))
+            if (e.Context.Request.UrlEquals(m_rpcStore.ProxyUrl))
             {
-                bool? b = this.m_rpcStore.OnRequestProxy?.Invoke(e.Context.Request);
+                bool? b = m_rpcStore.OnRequestProxy?.Invoke(e.Context.Request);
                 if (b == false)
                 {
                     using (ByteBlock byteBlock = new ByteBlock())
@@ -689,7 +686,7 @@ namespace TouchSocket.Rpc
 
                 names = string.IsNullOrEmpty(names) ? "RRQMProxy" : names;
 
-                string code = CodeGenerator.ConvertToCode(names, this.m_rpcStore.GetProxyInfo(types.ToArray()));
+                string code = CodeGenerator.ConvertToCode(names, m_rpcStore.GetProxyInfo(types.ToArray()));
 
                 using (ByteBlock byteBlock = new ByteBlock())
                 {

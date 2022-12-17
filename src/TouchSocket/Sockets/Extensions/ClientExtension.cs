@@ -14,6 +14,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -24,7 +26,7 @@ namespace TouchSocket.Sockets
     {
         /// <summary>
         /// 获取相关信息。格式：
-        ///<para>IPPort=IP:Port，ID=id，Protocol=Protocol</para>
+        ///<para>IPPort=IP:Port,ID=id,Protocol=Protocol</para>
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="client"></param>
@@ -42,7 +44,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static IEnumerable<string> GetOtherIDs<T>(this T client) where T : ISocketClient
         {
-            return client.Service.GetIDs().Where(id=>id!=client.ID);
+            return client.Service.GetIDs().Where(id => id != client.ID);
         }
 
         /// <summary>
@@ -62,15 +64,36 @@ namespace TouchSocket.Sockets
         /// <typeparam name="T"></typeparam>
         /// <param name="client"></param>
         /// <param name="how"></param>
-        public static void SafeShutdown<T>(this T client, SocketShutdown how = SocketShutdown.Both) where T : ITcpClientBase
+        public static bool TryShutdown<T>(this T client, SocketShutdown how = SocketShutdown.Both) where T : ITcpClientBase
         {
             try
             {
                 if (!client.MainSocket.Connected)
                 {
-                    return;
+                    return false;
                 }
                 client?.MainSocket?.Shutdown(how);
+                return true;
+            }
+            catch
+            {
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 安全性关闭。不会抛出异常。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="client"></param>
+        /// <param name="msg"></param>
+        public static void SafeClose<T>(this T client, string msg) where T : ITcpClientBase
+        {
+            try
+            {
+                client.Close(msg);
+
             }
             catch
             {
@@ -87,5 +110,48 @@ namespace TouchSocket.Sockets
         {
             return $"{client.IP}:{client.Port}";
         }
+
+        #region 连接
+
+        /// <summary>
+        /// 尝试连接。不会抛出异常。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="client"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public static Result TryConnect<TClient>(this TClient client, int timeout = 5000) where TClient : ITcpClient
+        {
+            try
+            {
+                client.Connect(timeout);
+                return new Result(ResultCode.Success);
+            }
+            catch (Exception ex)
+            {
+                return new Result(ResultCode.Exception, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 尝试连接。不会抛出异常。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="client"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public static async Task<Result> TryConnectAsync<TClient>(this TClient client, int timeout = 5000) where TClient : ITcpClient
+        {
+            try
+            {
+                await client.ConnectAsync(timeout);
+                return new Result(ResultCode.Success);
+            }
+            catch (Exception ex)
+            {
+                return new Result(ResultCode.Exception, ex.Message);
+            }
+        }
+        #endregion
     }
 }

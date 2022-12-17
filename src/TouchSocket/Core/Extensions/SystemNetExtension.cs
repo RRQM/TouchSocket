@@ -11,14 +11,16 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace System.Net
+using System;
+using System.Net;
+
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 其他扩展
     /// </summary>
     public static class SystemNetExtension
     {
-
         /// <summary>
         /// 从<see cref="EndPoint"/>中获得IP地址。
         /// </summary>

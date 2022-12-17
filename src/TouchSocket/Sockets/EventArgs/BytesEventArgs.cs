@@ -27,7 +27,7 @@ namespace TouchSocket.Sockets
         /// <param name="data"></param>
         public BytesEventArgs(byte[] data)
         {
-            this.ReceivedDataBytes = data;
+            ReceivedDataBytes = data;
         }
 
         /// <summary>

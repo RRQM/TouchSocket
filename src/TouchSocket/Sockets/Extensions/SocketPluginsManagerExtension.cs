@@ -12,11 +12,9 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading;
-using TouchSocket.Core.Log;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Core
 {
     /// <summary>
     /// IPluginsManagerExtension
@@ -75,6 +73,18 @@ namespace TouchSocket.Core.Plugins
         }
 
         /// <summary>
+        ///  检查连接客户端活性插件。
+        ///  <para>当在设置的周期内，没有接收/发送任何数据，则判定该客户端掉线。执行清理。默认配置：60秒为一个周期，同时检测发送和接收。</para>
+        ///  仅服务器适用。
+        /// </summary>
+        /// <param name="pluginsManager"></param>
+        /// <returns></returns>
+        public static CheckClearPlugin UseCheckClear(this IPluginsManager pluginsManager)
+        {
+            return pluginsManager.Add<CheckClearPlugin>();
+        }
+
+        /// <summary>
         /// 使用断线重连。
         /// <para>该效果仅客户端在完成首次连接，且为被动断开时有效。</para>
         /// </summary>
@@ -124,6 +134,5 @@ namespace TouchSocket.Core.Plugins
             pluginsManager.Add(reconnectionPlugin);
             return pluginsManager;
         }
-
     }
 }

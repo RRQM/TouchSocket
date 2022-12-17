@@ -12,11 +12,9 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
@@ -39,7 +37,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public int Count => this.SocketClients.Count;
+        public int Count => SocketClients.Count;
 
         /// <summary>
         /// <inheritdoc/>
@@ -74,16 +72,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract int ClearInterval { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract ClearType ClearType { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public abstract Func<string> GetDefaultNewID { get; }
 
         /// <summary>
@@ -107,7 +95,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public string[] GetIDs()
         {
-            return this.SocketClients.GetIDs();
+            return SocketClients.GetIDs().ToArray();
         }
 
         /// <summary>
@@ -145,22 +133,22 @@ namespace TouchSocket.Sockets
 
         internal void OnInternalConnected(ISocketClient socketClient, TouchSocketEventArgs e)
         {
-            this.OnClientConnected(socketClient, e);
+            OnClientConnected(socketClient, e);
         }
 
         internal void OnInternalConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
         {
-            this.OnClientConnecting(socketClient, e);
+            OnClientConnecting(socketClient, e);
         }
 
         internal void OnInternalDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
         {
-            this.OnClientDisconnected(socketClient, e);
+            OnClientDisconnected(socketClient, e);
         }
 
         internal void OnInternalReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.OnClientReceivedData(socketClient, byteBlock, requestInfo);
+            OnClientReceivedData(socketClient, byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -207,13 +195,13 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public void Send(string id, byte[] buffer, int offset, int length)
         {
-            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            if (SocketClients.TryGetSocketClient(id, out ISocketClient client))
             {
                 client.Send(buffer, offset, length);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -224,13 +212,13 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         public void Send(string id, IRequestInfo requestInfo)
         {
-            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            if (SocketClients.TryGetSocketClient(id, out ISocketClient client))
             {
                 client.Send(requestInfo);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -245,15 +233,15 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        public void SendAsync(string id, byte[] buffer, int offset, int length)
+        public Task SendAsync(string id, byte[] buffer, int offset, int length)
         {
-            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            if (SocketClients.TryGetSocketClient(id, out ISocketClient client))
             {
-                client.SendAsync(buffer, offset, length);
+                return client.SendAsync(buffer, offset, length);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(id));
             }
         }
 
@@ -262,15 +250,15 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="id"></param>
         /// <param name="requestInfo"></param>
-        public void SendAsync(string id, IRequestInfo requestInfo)
+        public Task SendAsync(string id, IRequestInfo requestInfo)
         {
-            if (this.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+            if (SocketClients.TryGetSocketClient(id, out ISocketClient client))
             {
-                client.SendAsync(requestInfo);
+                return client.SendAsync(requestInfo);
             }
             else
             {
-                throw new ClientNotFindException(TouchSocketRes.ClientNotFind.GetDescription(id));
+                throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(id));
             }
         }
 

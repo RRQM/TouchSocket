@@ -14,8 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Log;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -25,8 +24,6 @@ namespace TouchSocket.Sockets
     public abstract class UdpDataHandlingAdapter
     {
         internal IUdpSession m_owner;
-
-        private int m_maxPackageSize = 1024 * 1024;
 
         /// <summary>
         /// 是否允许发送<see cref="IRequestInfo"/>对象。
@@ -41,16 +38,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
         /// </summary>
-        public int MaxPackageSize
-        {
-            get => this.m_maxPackageSize;
-            set => this.m_maxPackageSize = value;
-        }
+        public int MaxPackageSize { get; set; } = 1024 * 1024;
 
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public IUdpSession Owner => this.m_owner;
+        public IUdpSession Owner => m_owner;
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -60,7 +53,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行发送
         /// </summary>
-        public Action<EndPoint, byte[], int, int, bool> SendCallBack { get; set; }
+        public Action<EndPoint, byte[], int, int> SendCallBack { get; set; }
 
         /// <summary>
         /// 收到数据的切入点，该方法由框架自动调用。
@@ -71,11 +64,11 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                this.PreviewReceived(remoteEndPoint, byteBlock);
+                PreviewReceived(remoteEndPoint, byteBlock);
             }
             catch (Exception ex)
             {
-                this.OnError(ex.Message);
+                OnError(ex.Message);
             }
         }
 
@@ -83,10 +76,9 @@ namespace TouchSocket.Sockets
         /// 发送数据的切入点，该方法由框架自动调用。
         /// </summary>
         /// <param name="requestInfo"></param>
-        /// <param name="isAsync"></param>
-        public void SendInput(IRequestInfo requestInfo, bool isAsync)
+        public void SendInput(IRequestInfo requestInfo)
         {
-            this.PreviewSend(requestInfo, isAsync);
+            PreviewSend(requestInfo);
         }
 
         /// <summary>
@@ -96,10 +88,9 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        /// <param name="isAsync"></param>
-        public void SendInput(EndPoint endPoint, byte[] buffer, int offset, int length, bool isAsync)
+        public void SendInput(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            this.PreviewSend(endPoint, buffer, offset, length, isAsync);
+            PreviewSend(endPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -107,10 +98,9 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="transferBytes"></param>
-        /// <param name="isAsync"></param>
-        public void SendInput(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes, bool isAsync)
+        public void SendInput(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
-            this.PreviewSend(endPoint, transferBytes, isAsync);
+            PreviewSend(endPoint, transferBytes);
         }
 
         /// <summary>
@@ -121,7 +111,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo">以解析实例传递</param>
         protected void GoReceived(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
+            ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -131,10 +121,9 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected void GoSend(EndPoint endPoint, byte[] buffer, int offset, int length, bool isAsync)
+        protected void GoSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            this.SendCallBack.Invoke(endPoint, buffer, offset, length, isAsync);
+            SendCallBack.Invoke(endPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -147,11 +136,11 @@ namespace TouchSocket.Sockets
         {
             if (reset)
             {
-                this.Reset();
+                Reset();
             }
-            if (log && this.m_owner != null && this.m_owner.Logger != null)
+            if (log && m_owner != null && m_owner.Logger != null)
             {
-                this.m_owner.Logger.Error(error);
+                m_owner.Logger.Error(error);
             }
         }
 
@@ -166,8 +155,7 @@ namespace TouchSocket.Sockets
         /// 当发送数据前预先处理数据
         /// </summary>
         /// <param name="requestInfo"></param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(IRequestInfo requestInfo, bool isAsync);
+        protected abstract void PreviewSend(IRequestInfo requestInfo);
 
         /// <summary>
         /// 当发送数据前预先处理数据
@@ -176,8 +164,7 @@ namespace TouchSocket.Sockets
         /// <param name="buffer">数据</param>
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length, bool isAsync);
+        protected abstract void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length);
 
         /// <summary>
         /// 组合发送预处理数据，
@@ -185,8 +172,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="transferBytes">代发送数据组合</param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes, bool isAsync);
+        protected abstract void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
 
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。

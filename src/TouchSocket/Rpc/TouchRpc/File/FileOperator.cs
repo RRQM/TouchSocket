@@ -10,36 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
     /// 文件传输操作器
     /// </summary>
-    public class FileOperator : StreamOperator
+    public class FileOperator : RemoteFileOperator
     {
-        internal void AddFileFlow(int flow, long length)
-        {
-            this.speedTemp += flow;
-            this.completedLength += flow;
-            this.progress = (float)((double)this.completedLength / length);
-        }
-
-        internal void SetFileCompletedLength(long completedLength)
-        {
-            this.completedLength = completedLength;
-        }
 
         /// <summary>
-        /// 设置状态
+        /// 传输标识
         /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        internal Result SetFileResult(Result result)
-        {
-            this.result = result;
-            return result;
-        }
+        public TransferFlags Flags { get; set; }
+
+        /// <summary>
+        /// 存放路径，
+        /// 可输入绝对路径，也可以输入相对路径。
+        /// 但是必须包含文件名及扩展名。
+        /// </summary>
+        public string SavePath { get; set; }
+
+        /// <summary>
+        /// 资源文件路径，
+        /// 可输入绝对路径，也可以输入相对路径。
+        /// </summary>
+        public string ResourcePath { get; set; }
     }
 }

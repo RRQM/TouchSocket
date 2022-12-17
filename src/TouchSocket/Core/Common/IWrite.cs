@@ -25,5 +25,11 @@ namespace TouchSocket.Core
         /// <param name="offset"></param>
         /// <param name="length"></param>
         void Write(byte[] buffer, int offset, int length);
+
+        /// <summary>
+        /// 写入
+        /// </summary>
+        /// <param name="buffer"></param>
+        void Write(byte[] buffer);
     }
 }

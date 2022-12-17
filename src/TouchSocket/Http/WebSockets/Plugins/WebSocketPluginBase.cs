@@ -11,10 +11,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
-using TouchSocket.Http.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets.Plugins
+namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
     /// WS插件基类
@@ -47,7 +47,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <returns></returns>
         protected virtual Task OnClosingAsync(ITcpClientBase client, MsgEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <returns></returns>
         protected virtual Task OnHandleWSDataFrameAsync(TClient client, WSDataFrameEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <returns></returns>
         protected virtual Task OnHandshakedAsync(TClient client, HttpContextEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -109,49 +109,49 @@ namespace TouchSocket.Http.WebSockets.Plugins
         /// <returns></returns>
         protected virtual Task OnHandshakingAsync(TClient client, HttpContextEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         #endregion 虚函数
 
         void IWebSocketPlugin.OnClosing(ITcpClientBase client, MsgEventArgs e)
         {
-            this.OnClosing(client, e);
+            OnClosing(client, e);
         }
 
         Task IWebSocketPlugin.OnClosingAsync(ITcpClientBase client, MsgEventArgs e)
         {
-            return this.OnClosingAsync(client, e);
+            return OnClosingAsync(client, e);
         }
 
         void IWebSocketPlugin.OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
         {
-            this.OnHandleWSDataFrame((TClient)client, e);
+            OnHandleWSDataFrame((TClient)client, e);
         }
 
         Task IWebSocketPlugin.OnHandleWSDataFrameAsync(ITcpClientBase client, WSDataFrameEventArgs e)
         {
-            return this.OnHandleWSDataFrameAsync((TClient)client, e);
+            return OnHandleWSDataFrameAsync((TClient)client, e);
         }
 
         void IWebSocketPlugin.OnHandshaked(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnHandshaked((TClient)client, e);
+            OnHandshaked((TClient)client, e);
         }
 
         Task IWebSocketPlugin.OnHandshakedAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnHandshakedAsync((TClient)client, e);
+            return OnHandshakedAsync((TClient)client, e);
         }
 
         void IWebSocketPlugin.OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnHandshaking((TClient)client, e);
+            OnHandshaking((TClient)client, e);
         }
 
         Task IWebSocketPlugin.OnHandshakingAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnHandshakingAsync((TClient)client, e);
+            return OnHandshakingAsync((TClient)client, e);
         }
     }
 }

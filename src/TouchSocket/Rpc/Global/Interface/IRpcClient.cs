@@ -40,37 +40,6 @@ namespace TouchSocket.Rpc
         /// <exception cref="RpcInvokeException">Rpc异常</exception>
         /// <exception cref="RpcNoRegisterException">Rpc服务器未注册</exception>
         /// <exception cref="Exception">其他异常</exception>
-        Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters);
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="RpcNoRegisterException">Rpc服务器未注册</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>服务器返回结果</returns>
-        Task<T> InvokeAsync<T>(string invokeKey, IInvokeOption invokeOption, params object[] parameters);
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcSerializationException">序列化异常</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="RpcNoRegisterException">Rpc服务器未注册</exception>
-        /// <exception cref="Exception">其他异常</exception>
         void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
@@ -119,5 +88,36 @@ namespace TouchSocket.Rpc
         /// <exception cref="RpcNoRegisterException">Rpc服务器未注册</exception>
         /// <exception cref="Exception">其他异常</exception>
         void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
+
+        /// <summary>
+        /// Rpc调用
+        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
+        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
+        /// </summary>
+        /// <param name="invokeKey">调用键</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
+        /// <exception cref="TimeoutException">调用超时</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RpcInvokeException">Rpc异常</exception>
+        /// <exception cref="RpcNoRegisterException">Rpc服务器未注册</exception>
+        /// <exception cref="Exception">其他异常</exception>
+        Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+
+        /// <summary>
+        /// Rpc调用
+        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
+        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
+        /// </summary>
+        /// <param name="invokeKey">调用键</param>
+        /// <param name="parameters">参数</param>
+        /// <param name="invokeOption">Rpc调用设置</param>
+        /// <exception cref="TimeoutException">调用超时</exception>
+        /// <exception cref="RpcSerializationException">序列化异常</exception>
+        /// <exception cref="RpcInvokeException">Rpc异常</exception>
+        /// <exception cref="RpcNoRegisterException">Rpc服务器未注册</exception>
+        /// <exception cref="Exception">其他异常</exception>
+        /// <returns>服务器返回结果</returns>
+        Task<T> InvokeAsync<T>(string invokeKey, IInvokeOption invokeOption, params object[] parameters);
     }
 }

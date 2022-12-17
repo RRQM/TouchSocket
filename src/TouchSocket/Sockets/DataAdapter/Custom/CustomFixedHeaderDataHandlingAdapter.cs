@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -57,13 +57,13 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                if (this.HeaderLength > byteBlock.CanReadLen)
+                if (HeaderLength > byteBlock.CanReadLen)
                 {
                     return FilterResult.Cache;
                 }
 
-                TFixedHeaderRequestInfo requestInfo = this.GetInstance();
-                byteBlock.Read(out byte[] header, this.HeaderLength);
+                TFixedHeaderRequestInfo requestInfo = GetInstance();
+                byteBlock.Read(out byte[] header, HeaderLength);
                 if (requestInfo.OnParsingHeader(header))
                 {
                     request = requestInfo;

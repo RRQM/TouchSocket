@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
@@ -31,6 +32,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         void DefaultSend(EndPoint endPoint, byte[] buffer, int offset, int length);
+
         /// <summary>
         /// 绕过适配器，直接发送字节流
         /// </summary>
@@ -41,6 +43,6 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length);
+        Task DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length);
     }
 }

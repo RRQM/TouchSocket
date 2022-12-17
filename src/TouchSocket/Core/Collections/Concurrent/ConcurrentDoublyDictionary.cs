@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System.Collections.Concurrent;
 
-namespace TouchSocket.Core.Collections.Concurrent
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 安全双向字典
@@ -27,19 +27,19 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// </summary>
         public ConcurrentDoublyDictionary()
         {
-            this.m_keyToValue = new ConcurrentDictionary<TKey, TValue>();
-            this.m_valueToKey = new ConcurrentDictionary<TValue, TKey>();
+            m_keyToValue = new ConcurrentDictionary<TKey, TValue>();
+            m_valueToKey = new ConcurrentDictionary<TValue, TKey>();
         }
 
         /// <summary>
         /// 由键指向值得集合
         /// </summary>
-        public ConcurrentDictionary<TKey, TValue> KeyToValue => this.m_keyToValue;
+        public ConcurrentDictionary<TKey, TValue> KeyToValue => m_keyToValue;
 
         /// <summary>
         /// 由值指向键的集合
         /// </summary>
-        public ConcurrentDictionary<TValue, TKey> ValueToKey => this.m_valueToKey;
+        public ConcurrentDictionary<TValue, TKey> ValueToKey => m_valueToKey;
 
         /// <summary>
         ///  尝试将指定的键和值添加到字典中。
@@ -49,15 +49,15 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool TryAdd(TKey key, TValue value)
         {
-            if (this.m_keyToValue.TryAdd(key, value))
+            if (m_keyToValue.TryAdd(key, value))
             {
-                if (this.m_valueToKey.TryAdd(value, key))
+                if (m_valueToKey.TryAdd(value, key))
                 {
                     return true;
                 }
                 else
                 {
-                    this.m_keyToValue.TryRemove(key, out _);
+                    m_keyToValue.TryRemove(key, out _);
                     return false;
                 }
             }
@@ -72,9 +72,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool TryRemoveFromKey(TKey key, out TValue value)
         {
-            if (this.m_keyToValue.TryRemove(key, out value))
+            if (m_keyToValue.TryRemove(key, out value))
             {
-                if (this.m_valueToKey.TryRemove(value, out _))
+                if (m_valueToKey.TryRemove(value, out _))
                 {
                     return true;
                 }
@@ -90,9 +90,9 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool TryRemoveFromValue(TValue value, out TKey key)
         {
-            if (this.m_valueToKey.TryRemove(value, out key))
+            if (m_valueToKey.TryRemove(value, out key))
             {
-                if (this.m_keyToValue.TryRemove(key, out _))
+                if (m_keyToValue.TryRemove(key, out _))
                 {
                     return true;
                 }
@@ -108,7 +108,7 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool TryGetFromKey(TKey key, out TValue value)
         {
-            return this.m_keyToValue.TryGetValue(key, out value);
+            return m_keyToValue.TryGetValue(key, out value);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace TouchSocket.Core.Collections.Concurrent
         /// <returns></returns>
         public bool TryGetFromValue(TValue value, out TKey key)
         {
-            return this.m_valueToKey.TryGetValue(value, out key);
+            return m_valueToKey.TryGetValue(value, out key);
         }
     }
 }

@@ -14,8 +14,6 @@ using System;
 using System.IO;
 using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.IO;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -28,19 +26,12 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private TouchRpcFileInfo m_fileInfo;
 
+        private FileStorageWriter m_fileWriter;
         private TimeSpan m_lastTime;
 
         private string m_path;
 
         private bool m_resume;
-
-        private FileStorageWriter m_fileWriter;
-
-        protected override void Dispose(bool disposing)
-        {
-            this.m_fileWriter.SafeDispose();
-            base.Dispose(disposing);
-        }
 
         /// <summary>
         /// 进度保存时间，默认1000毫秒。
@@ -58,13 +49,12 @@ namespace TouchSocket.Rpc.TouchRpc
             }
         }
 
-        public FileStorageWriter FileWriter => this.m_fileWriter;
+        public FileStorageWriter FileWriter => m_fileWriter;
 
         public static TouchRpcFileStream Create(string path, ref TouchRpcFileInfo fileInfo, bool resume)
         {
             TouchRpcFileStream stream = new TouchRpcFileStream();
-            FileTool.TryReadTempInfo(path, ref fileInfo);
-            stream.m_fileWriter = FilePool.GetWriter(path + ".rrqm", true);
+            stream.m_fileWriter = FilePool.GetWriter(path + ".rrqm");
             stream.m_fileWriter.Position = fileInfo.Position;
             stream.m_fileInfo = fileInfo;
             stream.m_path = path;
@@ -72,35 +62,29 @@ namespace TouchSocket.Rpc.TouchRpc
             return stream;
         }
 
-        public void Write(byte[] buffer, int offset, int length)
-        {
-            this.m_fileWriter.Write(buffer, offset, length);
-            this.SaveProgress();
-        }
-
         public void FinishStream()
         {
-            if (this.m_fileWriter.Position != this.m_fileInfo.FileLength)
+            if (m_fileWriter.Position != m_fileInfo.Length)
             {
                 throw new Exception("已完成传输，但是文件长度不对。");
             }
-            if (File.Exists(this.m_path))
+            if (File.Exists(m_path))
             {
-                File.Delete(this.m_path);
+                File.Delete(m_path);
             }
-            this.m_fileWriter.SafeDispose();
+            m_fileWriter.SafeDispose();
 
-            string rrqmPath = this.m_path + ".rrqm";
-            string tempPath = this.m_path + ".temp";
+            string rrqmPath = m_path + ".rrqm";
+            string tempPath = m_path + ".temp";
 
             if (!SpinWait.SpinUntil(() =>
             {
-                File.Move(rrqmPath, this.m_path);
+                File.Move(rrqmPath, m_path);
                 if (File.Exists(tempPath))
                 {
                     File.Delete(tempPath);
                 }
-                if (File.Exists(this.m_path))
+                if (File.Exists(m_path))
                 {
                     return true;
                 }
@@ -109,7 +93,18 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 throw new IOException("已完成传输，但是在保存路径并未检测到文件存在。");
             }
+        }
 
+        public void Write(byte[] buffer, int offset, int length)
+        {
+            m_fileWriter.Write(buffer, offset, length);
+            SaveProgress();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            m_fileWriter.SafeDispose();
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -117,14 +112,14 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         private void SaveProgress()
         {
-            if (this.m_resume)
+            if (m_resume)
             {
-                if (DateTime.Now.TimeOfDay - this.m_lastTime > TimeSpan.FromMilliseconds(m_saveInterval))
+                if (DateTime.Now.TimeOfDay - m_lastTime > TimeSpan.FromMilliseconds(m_saveInterval))
                 {
                     try
                     {
-                        File.WriteAllText(this.m_path + ".temp", this.m_fileInfo.ToJsonString());
-                        this.m_lastTime = DateTime.Now.TimeOfDay;
+                        File.WriteAllText(m_path + ".temp", m_fileInfo.ToJson());
+                        m_lastTime = DateTime.Now.TimeOfDay;
                     }
                     catch
                     {

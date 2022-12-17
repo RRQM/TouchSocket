@@ -12,12 +12,12 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Serialization
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 忽略的Fast序列化
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property| AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public class FastNonSerializedAttribute : Attribute
     {
     }

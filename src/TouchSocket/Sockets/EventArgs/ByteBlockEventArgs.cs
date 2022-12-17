@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 
 
 namespace TouchSocket.Sockets
@@ -26,7 +25,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public ByteBlockEventArgs(ByteBlock byteBlock)
         {
-            this.ByteBlock = byteBlock;
+            ByteBlock = byteBlock;
         }
 
         /// <summary>

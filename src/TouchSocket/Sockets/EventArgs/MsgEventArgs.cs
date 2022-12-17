@@ -27,7 +27,7 @@ namespace TouchSocket.Sockets
         /// <param name="mes"></param>
         public MsgEventArgs(string mes)
         {
-            this.Message = mes;
+            Message = mes;
         }
 
         /// <summary>

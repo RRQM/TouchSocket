@@ -11,13 +11,39 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System.IO;
+using TouchSocket.Core;
+
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
-    /// 文件信息
+    /// RemoteFileInfo
     /// </summary>
     public class RemoteFileInfo : RemoteFileSystemInfo
     {
+        /// <summary>
+        /// 初始化一个RemoteFileInfo
+        /// </summary>
+        public RemoteFileInfo()
+        {
+
+        }
+
+        /// <summary>
+        /// 从FileInfo初始化一个RemoteFileInfo
+        /// </summary>
+        /// <param name="fileInfo"></param>
+        public RemoteFileInfo(FileInfo fileInfo)
+        {
+            FullName = fileInfo.FullName;
+            Name = fileInfo.Name;
+            Length = fileInfo.Length;
+            Attributes = fileInfo.Attributes;
+            CreationTime = fileInfo.CreationTime;
+            LastWriteTime = fileInfo.LastWriteTime;
+            LastAccessTime = fileInfo.LastAccessTime;
+        }
+
         /// <summary>
         /// 文件MD5
         /// </summary>
@@ -26,16 +52,22 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 文件大小
         /// </summary>
-        public long FileLength { get; set; }
+        public long Length { get; set; }
 
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        public string FileName { get; set; }
+        /// <inheritdoc/>
+        public override void Package(ByteBlock byteBlock)
+        {
+            base.Package(byteBlock);
+            byteBlock.Write(MD5);
+            byteBlock.Write(Length);
+        }
 
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string FilePath { get; set; }
+        /// <inheritdoc/>
+        public override void Unpackage(ByteBlock byteBlock)
+        {
+            base.Unpackage(byteBlock);
+            MD5 = byteBlock.ReadString();
+            Length = byteBlock.ReadInt64();
+        }
     }
 }

@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core.IO
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 文件写入器。
@@ -27,7 +27,16 @@ namespace TouchSocket.Core.IO
         /// <param name="fileStorage"></param>
         public FileStorageWriter(FileStorage fileStorage)
         {
-            this.m_fileStorage = fileStorage;
+            m_fileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="buffer"></param>
+        public virtual void Write(byte[] buffer)
+        {
+            Write(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -36,31 +45,21 @@ namespace TouchSocket.Core.IO
         ~FileStorageWriter()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: false);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            FilePool.TryReleaseFile(this.m_fileStorage?.Path);
-            base.Dispose(disposing);
+            Dispose(disposing: false);
         }
 
         /// <summary>
         /// 文件存储器
         /// </summary>
-        public FileStorage FileStorage => this.m_fileStorage;
+        public FileStorage FileStorage => m_fileStorage;
 
         /// <summary>
         /// 游标位置
         /// </summary>
         public int Pos
         {
-            get => (int)this.m_position;
-            set => this.m_position = value;
+            get => (int)m_position;
+            set => m_position = value;
         }
 
         /// <summary>
@@ -68,8 +67,8 @@ namespace TouchSocket.Core.IO
         /// </summary>
         public long Position
         {
-            get => this.m_position;
-            set => this.m_position = value;
+            get => m_position;
+            set => m_position = value;
         }
 
         /// <summary>
@@ -78,7 +77,7 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public long SeekToEnd()
         {
-            return this.Position = this.FileStorage.Length;
+            return Position = FileStorage.Length;
         }
 
         /// <summary>
@@ -90,10 +89,18 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public void Write(byte[] buffer, int offset, int length)
         {
-            this.m_fileStorage.Write(this.m_position, buffer, offset, length);
-            this.m_position += length;
+            m_fileStorage.Write(m_position, buffer, offset, length);
+            m_position += length;
         }
 
-
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            FilePool.TryReleaseFile(m_fileStorage.Path);
+            base.Dispose(disposing);
+        }
     }
 }

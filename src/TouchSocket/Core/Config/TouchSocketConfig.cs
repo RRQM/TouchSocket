@@ -10,33 +10,62 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 
-namespace TouchSocket.Core.Config
+using System;
+using System.Collections.Concurrent;
+using System.Threading;
+
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 配置文件基类
     /// </summary>
     public class TouchSocketConfig : DependencyObject
     {
+        //private bool built;
         private IContainer m_container;
 
         private IPluginsManager m_pluginsManager;
+
+        //ConcurrentQueue<Tuple<Delegate, object[]>> actions = new ConcurrentQueue<Tuple<Delegate, object[]>>();
+        
+        ///// <summary>
+        ///// 添加构建委托，该委托会在<see cref="Build"/>时调用。
+        ///// </summary>
+        ///// <param name="action"></param>
+        ///// <param name="ps"></param>
+        //public void AddBuildAction(Delegate action,params object[] ps)
+        //{
+        //    actions.Enqueue(Tuple.Create(action,ps)) ;
+        //}
+
+        ///// <summary>
+        ///// 构建配置
+        ///// </summary>
+        //public void Build()
+        //{
+        //    if (!built)
+        //    {
+        //        built = true;
+        //        while (actions.TryDequeue(out var action))
+        //        {
+        //            action.Item1.DynamicInvoke(action.Item2);
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public TouchSocketConfig()
         {
-            this.SetContainer(new Container());
+            SetContainer(new Container());
         }
 
         /// <summary>
         /// IOC容器。
         /// </summary>
-        public IContainer Container => this.m_container;
+        public IContainer Container => m_container;
 
         /// <summary>
         /// 使用插件
@@ -46,7 +75,7 @@ namespace TouchSocket.Core.Config
         /// <summary>
         /// 插件管理器
         /// </summary>
-        public IPluginsManager PluginsManager => this.m_pluginsManager;
+        public IPluginsManager PluginsManager => m_pluginsManager;
 
         /// <summary>
         /// 设置注入容器。
@@ -55,9 +84,12 @@ namespace TouchSocket.Core.Config
         /// <returns></returns>
         public TouchSocketConfig SetContainer(IContainer value)
         {
-            this.m_container = value;
-            this.m_container.RegisterTransient<ILog, ConsoleLogger>();
-            this.SetPluginsManager(new PluginsManager(this.m_container));
+            m_container = value;
+            if (!value.IsRegistered(typeof(ILog)))
+            {
+                m_container.RegisterSingleton<ILog, EmptyLogger>();
+            }
+            SetPluginsManager(new PluginsManager(m_container));
             return this;
         }
 
@@ -68,8 +100,8 @@ namespace TouchSocket.Core.Config
         /// <returns></returns>
         public TouchSocketConfig SetPluginsManager(IPluginsManager value)
         {
-            this.m_pluginsManager = value;
-            this.m_container.RegisterSingleton<IPluginsManager>(value);
+            m_pluginsManager = value;
+            m_container.RegisterSingleton<IPluginsManager>(value);
             return this;
         }
 
@@ -79,7 +111,7 @@ namespace TouchSocket.Core.Config
         /// <returns></returns>
         public TouchSocketConfig UsePlugin()
         {
-            this.IsUsePlugin = true;
+            IsUsePlugin = true;
             return this;
         }
     }

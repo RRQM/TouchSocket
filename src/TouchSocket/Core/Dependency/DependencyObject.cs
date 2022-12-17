@@ -10,36 +10,45 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Concurrent;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 依赖对象接口
     /// </summary>
-    public interface IDependencyObject : System.IDisposable
+    public interface IDependencyObject : IDisposable
     {
         /// <summary>
         /// 获取依赖注入的值
         /// </summary>
+        /// <typeparam name="TValue"></typeparam>
         /// <param name="dp"></param>
         /// <returns></returns>
-        object GetValue(DependencyProperty dp);
+        public TValue GetValue<TValue>(IDependencyProperty<TValue> dp);
 
         /// <summary>
-        /// 获取依赖注入的值
+        /// 是否有值。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="dp"></param>
         /// <returns></returns>
-        public T GetValue<T>(DependencyProperty dp);
+        public bool HasValue<TValue>(IDependencyProperty<TValue> dp);
+
+        /// <summary>
+        /// 重置属性值。
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="dp"></param>
+        /// <returns></returns>
+        public DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp);
 
         /// <summary>
         /// 设置依赖注入的值
         /// </summary>
         /// <param name="dp"></param>
         /// <param name="value"></param>
-        public DependencyObject SetValue(DependencyProperty dp, object value);
+        public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value);
     }
 
     /// <summary>
@@ -48,27 +57,27 @@ namespace TouchSocket.Core.Dependency
     /// </summary>
     public class DependencyObject : DisposableObject, IDependencyObject, System.IDisposable
     {
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+        private readonly ConcurrentDictionary<object, object> m_dp;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         public DependencyObject()
         {
-            this.m_dp = new ConcurrentDictionary<DependencyProperty, object>();
+            m_dp = new ConcurrentDictionary<object, object>();
         }
-
-        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        private readonly ConcurrentDictionary<DependencyProperty, object> m_dp;
 
         /// <summary>
         /// 获取依赖注入的值
         /// </summary>
         /// <param name="dp"></param>
         /// <returns></returns>
-        public object GetValue(DependencyProperty dp)
+        public TValue GetValue<TValue>(IDependencyProperty<TValue> dp)
         {
-            if (this.m_dp.TryGetValue(dp, out object value))
+            if (m_dp.TryGetValue(dp, out object value))
             {
-                return value;
+                return (TValue)value;
             }
             else
             {
@@ -77,21 +86,25 @@ namespace TouchSocket.Core.Dependency
         }
 
         /// <summary>
-        /// 获取依赖注入的值
+        /// <inheritdoc/>
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="dp"></param>
         /// <returns></returns>
-        public T GetValue<T>(DependencyProperty dp)
+        public bool HasValue<TValue>(IDependencyProperty<TValue> dp)
         {
-            try
-            {
-                return (T)this.GetValue(dp);
-            }
-            catch
-            {
-                return default;
-            }
+            return m_dp.ContainsKey(dp);
+        }
+
+        /// <summary>
+        /// 移除设定值。
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="dp"></param>
+        /// <returns></returns>
+        public DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp)
+        {
+            m_dp.TryRemove(dp, out _);
+            return this;
         }
 
         /// <summary>
@@ -99,17 +112,9 @@ namespace TouchSocket.Core.Dependency
         /// </summary>
         /// <param name="dp"></param>
         /// <param name="value"></param>
-        public DependencyObject SetValue(DependencyProperty dp, object value)
+        public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value)
         {
-            dp.DataValidation(value);
-            if (this.m_dp.ContainsKey(dp))
-            {
-                this.m_dp[dp] = value;
-            }
-            else
-            {
-                this.m_dp.TryAdd(dp, value);
-            }
+            m_dp.AddOrUpdate(dp, value, (k, v) => v);
             return this;
         }
 
@@ -119,7 +124,7 @@ namespace TouchSocket.Core.Dependency
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_dp.Clear();
+            m_dp.Clear();
             base.Dispose(disposing);
         }
     }

@@ -25,7 +25,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         public WSDataFrameEventArgs(WSDataFrame dataFrame)
         {
-            this.DataFrame = dataFrame;
+            DataFrame = dataFrame;
         }
 
         /// <summary>

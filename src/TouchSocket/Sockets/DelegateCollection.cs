@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System.Net;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 using TouchSocket.Sockets;
 
 /// <summary>

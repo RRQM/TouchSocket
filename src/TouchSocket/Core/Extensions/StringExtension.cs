@@ -17,14 +17,42 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace TouchSocket.Core.Extensions
+namespace TouchSocket.Core
 {
     /// <summary>
     /// StringExtension
     /// </summary>
     public static class StringExtension
     {
-        #region 字符串扩展
+        /// <summary>
+        /// IsNullOrEmpty
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool IsNullOrEmpty(this string str)
+        {
+            return string.IsNullOrEmpty(str);
+        }
+
+        /// <summary>
+        /// IsNullOrWhiteSpace
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool IsNullOrWhiteSpace(this string str)
+        {
+            return string.IsNullOrWhiteSpace(str);
+        }
+
+        /// <summary>
+        /// 当不为null，且不为空。
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool HasValue(this string str)
+        {
+            return !string.IsNullOrWhiteSpace(str);
+        }
 
         ///<summary>
         ///  将字符串格式化成指定的数据类型
@@ -253,8 +281,10 @@ namespace TouchSocket.Core.Extensions
         /// <returns></returns>
         public static byte[] ToSha1(this string value, Encoding encoding)
         {
-            SHA1 sha1 = new SHA1CryptoServiceProvider();
-            return sha1.ComputeHash(encoding.GetBytes(value));
+            using (SHA1 sha1 = SHA1.Create())
+            {
+                return sha1.ComputeHash(encoding.GetBytes(value));
+            }
         }
 
         /// <summary>
@@ -315,7 +345,5 @@ namespace TouchSocket.Core.Extensions
         {
             return Convert.FromBase64String(value);
         }
-
-        #endregion 字符串扩展
     }
 }

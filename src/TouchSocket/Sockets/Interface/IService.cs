@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core.Config;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {

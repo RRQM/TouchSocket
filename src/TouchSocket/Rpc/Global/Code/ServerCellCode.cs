@@ -24,8 +24,8 @@ namespace TouchSocket.Rpc
         /// </summary>
         public ServerCellCode()
         {
-            this.methods = new Dictionary<string, MethodCellCode>();
-            this.classCellCodes = new Dictionary<string, ClassCellCode>();
+            methods = new Dictionary<string, MethodCellCode>();
+            classCellCodes = new Dictionary<string, ClassCellCode>();
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace TouchSocket.Rpc
         /// </summary>
         public Dictionary<string, MethodCellCode> Methods
         {
-            get => this.methods;
-            set => this.methods = value;
+            get => methods;
+            set => methods = value;
         }
 
         private Dictionary<string, ClassCellCode> classCellCodes;
@@ -66,8 +66,8 @@ namespace TouchSocket.Rpc
         /// </summary>
         public Dictionary<string, ClassCellCode> ClassCellCodes
         {
-            get => this.classCellCodes;
-            set => this.classCellCodes = value;
+            get => classCellCodes;
+            set => classCellCodes = value;
         }
     }
 }

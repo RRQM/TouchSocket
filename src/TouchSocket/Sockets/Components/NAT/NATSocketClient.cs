@@ -13,10 +13,6 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Collections.Concurrent;
-using TouchSocket.Core.Config;
-using TouchSocket.Sockets.Plugins;
 
 namespace TouchSocket.Sockets
 {
@@ -38,13 +34,13 @@ namespace TouchSocket.Sockets
         public ITcpClient AddTargetClient(TouchSocketConfig config, Action<ITcpClient> setupAction = default)
         {
             TcpClient tcpClient = new TcpClient();
-            tcpClient.Disconnected += this.TcpClient_Disconnected;
-            tcpClient.Received += this.TcpClient_Received;
+            tcpClient.Disconnected += TcpClient_Disconnected;
+            tcpClient.Received += TcpClient_Received;
             tcpClient.Setup(config);
             setupAction?.Invoke(tcpClient);
             tcpClient.Connect();
 
-            this.m_targetClients.Add(tcpClient);
+            m_targetClients.Add(tcpClient);
             return tcpClient;
         }
 
@@ -56,9 +52,9 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public Task<ITcpClient> AddTargetClientAsync(TouchSocketConfig config, Action<ITcpClient> setupAction = default)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                return this.AddTargetClient(config, setupAction);
+                return AddTargetClient(config, setupAction);
             });
         }
 
@@ -68,7 +64,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public ITcpClient[] GetTargetClients()
         {
-            return this.m_targetClients.ToArray();
+            return m_targetClients.ToArray();
         }
 
         /// <summary>
@@ -79,7 +75,7 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public void SendToTargetClient(byte[] buffer, int offset, int length)
         {
-            foreach (var socket in this.m_targetClients)
+            foreach (var socket in m_targetClients)
             {
                 try
                 {
@@ -97,9 +93,9 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         protected override void OnDisconnected(ClientDisconnectedEventArgs e)
         {
-            foreach (var client in this.m_targetClients)
+            foreach (var client in m_targetClients)
             {
-                client.SafeShutdown();
+                client.TryShutdown();
                 client.SafeDispose();
             }
             base.OnDisconnected(e);
@@ -107,24 +103,24 @@ namespace TouchSocket.Sockets
 
         private void TcpClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            client.SafeDispose();
-            this.m_targetClients.Remove((ITcpClient)client);
-            this.m_internalDis?.Invoke(this, (ITcpClient)client, e);
+            client.Dispose();
+            m_targetClients.Remove((ITcpClient)client);
+            m_internalDis?.Invoke(this, (ITcpClient)client, e);
         }
 
         private void TcpClient_Received(TcpClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.m_disposedValue)
+            if (DisposedValue)
             {
                 return;
             }
 
             try
             {
-                var data = this.m_internalTargetClientRev?.Invoke(this, client, byteBlock, requestInfo);
+                var data = m_internalTargetClientRev?.Invoke(this, client, byteBlock, requestInfo);
                 if (data != null)
                 {
-                    if (this.Online)
+                    if (Online)
                     {
                         this.Send(data);
                     }
