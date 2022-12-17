@@ -13,7 +13,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using TouchSocket.Core.AspNetCore;
 
-namespace TouchSocket.Core.Config
+namespace TouchSocket.Core
 {
     /// <summary>
     /// AspNetCoreConfigExtension

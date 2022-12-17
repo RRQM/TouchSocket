@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>0.7.2</Version>
+		<AssemblyOriginatorKeyFile>D:\MyStore\13_Doc\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
+		<Version>1.0.0-beta</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -30,14 +30,14 @@ API：https://www.yuque.com/rrqm/touchsocket/index</Description>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 	</PropertyGroup>
 	
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6|AnyCPU'">
-		<DocumentationFile>bin\Debug\net6\TouchSocket.AspNetCore.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
+		<DocumentationFile>bin\Debug\net7.0\TouchSocket.AspNetCore.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6|AnyCPU'">
-		<DocumentationFile>bin\Release\net6\TouchSocket.AspNetCore.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+		<DocumentationFile>bin\Release\net7.0\TouchSocket.AspNetCore.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
@@ -69,6 +69,6 @@ API：https://www.yuque.com/rrqm/touchsocket/index</Description>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.26" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
-		<PackageReference Include="TouchSocket" Version="0.7.2" />
+		<PackageReference Include="TouchSocket" Version="1.0.0-beta" />
 	</ItemGroup>
 </Project>

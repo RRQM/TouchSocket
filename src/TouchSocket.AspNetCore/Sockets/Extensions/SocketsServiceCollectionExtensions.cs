@@ -12,8 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
 using TouchSocket.Sockets;
 
 namespace Microsoft.Extensions.DependencyInjection

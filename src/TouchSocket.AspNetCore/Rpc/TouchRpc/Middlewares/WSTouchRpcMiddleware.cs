@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-
 namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 {
     /// <summary>
@@ -36,16 +35,16 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="loggerFactory"></param>
         public WSTouchRpcMiddleware(string m_url, RequestDelegate next, IWSTouchRpcService rpcService, ILoggerFactory loggerFactory)
         {
-            this.Url = m_url;
-            this.m_next = next ?? throw new ArgumentNullException(nameof(next));
-            this.m_rpcService = rpcService;
-            this.m_logger = loggerFactory.CreateLogger<WSTouchRpcMiddleware>();
+            Url = m_url;
+            m_next = next ?? throw new ArgumentNullException(nameof(next));
+            m_rpcService = rpcService;
+            m_logger = loggerFactory.CreateLogger<WSTouchRpcMiddleware>();
         }
 
         /// <summary>
         /// Url
         /// </summary>
-        public string Url { get => this.m_url; set => this.m_url = string.IsNullOrEmpty(value) ? "/wstouchrpc" : value; }
+        public string Url { get => m_url; set => m_url = string.IsNullOrEmpty(value) ? "/wstouchrpc" : value; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -54,18 +53,18 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <returns></returns>
         public async Task<Task> Invoke(HttpContext context)
         {
-            if (context.Request.Path.Equals(this.Url, StringComparison.CurrentCultureIgnoreCase))
+            if (context.Request.Path.Equals(Url, StringComparison.CurrentCultureIgnoreCase))
             {
                 if (context.WebSockets.IsWebSocketRequest)
                 {
                     var webSocket = await context.WebSockets.AcceptWebSocketAsync();
                     try
                     {
-                        await this.m_rpcService.SwitchClientAsync(webSocket);
+                        await m_rpcService.SwitchClientAsync(webSocket);
                     }
                     catch (Exception ex)
                     {
-                        this.m_logger.LogError(ex.Message);
+                        m_logger.LogError(ex.Message);
                     }
                 }
                 else
@@ -76,7 +75,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             }
             else
             {
-                return this.m_next(context);
+                return m_next(context);
             }
         }
     }
