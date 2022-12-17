@@ -16,8 +16,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Run;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -25,427 +23,285 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// Rpc服务器辅助类
     /// </summary>
-    public class TcpTouchRpcSocketClient : SocketClient, ITcpRpcClientBase
+    public partial class TcpTouchRpcSocketClient : SocketClient, ITcpTouchRpcSocketClient
     {
-        internal RpcActor m_rpcActor;
+        private RpcActor m_rpcActor;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        public bool IsHandshaked => this.m_rpcActor == null ? false : this.m_rpcActor.IsHandshaked;
+        public bool IsHandshaked => m_rpcActor == null ? false : m_rpcActor.IsHandshaked;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        public ResponseType ResponseType { get => this.m_rpcActor.ResponseType; set => this.m_rpcActor.ResponseType = value; }
+        public string RootPath { get => m_rpcActor.RootPath; set => m_rpcActor.RootPath = value; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        public string RootPath { get => this.m_rpcActor.RootPath; set => this.m_rpcActor.RootPath = value; }
+        public RpcActor RpcActor => m_rpcActor;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        public RpcActor RpcActor => this.m_rpcActor;
+        public SerializationSelector SerializationSelector => m_rpcActor.SerializationSelector;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        public SerializationSelector SerializationSelector => this.m_rpcActor.SerializationSelector;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public Func<IRpcClient, bool> TryCanInvoke { get; set; }
 
         /// <summary>
         /// 验证超时时间,默认为3000ms
         /// </summary>
-        public int VerifyTimeout => this.Config.GetValue<int>(TouchRpcConfigExtensions.VerifyTimeoutProperty);
+        public int VerifyTimeout => Config.GetValue<int>(TouchRpcConfigExtensions.VerifyTimeoutProperty);
 
         /// <summary>
         /// 连接令箭
         /// </summary>
-        public string VerifyToken => this.Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty);
+        public string VerifyToken => Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty);
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         public bool ChannelExisted(int id)
         {
-            return this.m_rpcActor.ChannelExisted(id);
+            return m_rpcActor.ChannelExisted(id);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
         public Channel CreateChannel()
         {
-            return this.m_rpcActor.CreateChannel();
+            return m_rpcActor.CreateChannel();
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         public Channel CreateChannel(int id)
         {
-            return this.m_rpcActor.CreateChannel(id);
+            return m_rpcActor.CreateChannel(id);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="clientID"></param>
-        /// <returns></returns>
-        public Channel CreateChannel(string clientID)
+        public Channel CreateChannel(string targetId)
         {
-            return this.m_rpcActor.CreateChannel(clientID);
+            return m_rpcActor.CreateChannel(targetId);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="clientID"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public Channel CreateChannel(string clientID, int id)
+        public Channel CreateChannel(string targetId, int id)
         {
-            return this.m_rpcActor.CreateChannel(clientID, id);
+            return m_rpcActor.CreateChannel(targetId, id);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
         public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            this.m_rpcActor.Invoke(method, invokeOption, parameters);
+            m_rpcActor.Invoke(method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.m_rpcActor.Invoke<T>(method, invokeOption, parameters);
+            return m_rpcActor.Invoke<T>(method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <param name="types"></param>
-        /// <returns></returns>
         public T Invoke<T>(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            return this.m_rpcActor.Invoke<T>(method, invokeOption, ref parameters, types);
+            return m_rpcActor.Invoke<T>(method, invokeOption, ref parameters, types);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="targetID"></param>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <param name="types"></param>
-        public void Invoke(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public void Invoke(string targetId, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            this.m_rpcActor.Invoke(targetID, method, invokeOption, ref parameters, types);
+            m_rpcActor.Invoke(targetId, method, invokeOption, ref parameters, types);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="targetID"></param>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <param name="types"></param>
-        /// <returns></returns>
-        public T Invoke<T>(string targetID, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public T Invoke<T>(string targetId, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            return this.m_rpcActor.Invoke<T>(targetID, method, invokeOption, ref parameters, types);
+            return m_rpcActor.Invoke<T>(targetId, method, invokeOption, ref parameters, types);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <param name="types"></param>
         public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            this.m_rpcActor.Invoke(method, invokeOption, ref parameters, types);
+            m_rpcActor.Invoke(method, invokeOption, ref parameters, types);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
         public void Invoke(string id, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            this.m_rpcActor.Invoke(id, method, invokeOption, parameters);
+            m_rpcActor.Invoke(id, method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="id"></param>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
         public T Invoke<T>(string id, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.m_rpcActor.Invoke<T>(id, method, invokeOption, parameters);
+            return m_rpcActor.Invoke<T>(id, method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
         public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.m_rpcActor.InvokeAsync(method, invokeOption, parameters);
+            return m_rpcActor.InvokeAsync(method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
         public Task<T> InvokeAsync<T>(string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.m_rpcActor.InvokeAsync<T>(method, invokeOption, parameters);
+            return m_rpcActor.InvokeAsync<T>(method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
         public Task InvokeAsync(string id, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.m_rpcActor.InvokeAsync(id, method, invokeOption, parameters);
+            return m_rpcActor.InvokeAsync(id, method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="id"></param>
-        /// <param name="method"></param>
-        /// <param name="invokeOption"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
         public Task<T> InvokeAsync<T>(string id, string method, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.m_rpcActor.InvokeAsync<T>(id, method, invokeOption, parameters);
+            return m_rpcActor.InvokeAsync<T>(id, method, invokeOption, parameters);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
+        public bool Ping(string targetId, int timeout = 5000)
+        {
+            return m_rpcActor.Ping(targetId, timeout);
+        }
+
+        /// <inheritdoc/>
         public bool Ping(int timeout = 5000)
         {
-            return this.m_rpcActor.Ping(timeout);
+            return m_rpcActor.Ping(timeout);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result PullFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Result PullFile(FileOperator fileOperator)
         {
-            return this.m_rpcActor.PullFile(fileRequest, fileOperator, metadata);
+            return m_rpcActor.PullFile(fileOperator);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="clientID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result PullFile(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Result PullFile(string targetId, FileOperator fileOperator)
         {
-            return this.m_rpcActor.PullFile(clientID, fileRequest, fileOperator, metadata);
+            return m_rpcActor.PullFile(targetId, fileOperator);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> PullFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Task<Result> PullFileAsync(FileOperator fileOperator)
         {
-            return this.m_rpcActor.PullFileAsync(fileRequest, fileOperator, metadata);
+            return m_rpcActor.PullFileAsync(fileOperator);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="clientID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> PullFileAsync(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Task<Result> PullFileAsync(string targetId, FileOperator fileOperator)
         {
-            return this.m_rpcActor.PullFileAsync(clientID, fileRequest, fileOperator, metadata);
+            return m_rpcActor.PullFileAsync(targetId, fileOperator);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result PushFile(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Result PushFile(FileOperator fileOperator)
         {
-            return this.m_rpcActor.PushFile(fileRequest, fileOperator, metadata);
+            return m_rpcActor.PushFile(fileOperator);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="targetID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result PushFile(string targetID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Result PushFile(string targetId, FileOperator fileOperator)
         {
-            return this.m_rpcActor.PushFile(targetID, fileRequest, fileOperator, metadata);
+            return m_rpcActor.PushFile(targetId, fileOperator);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> PushFileAsync(FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Task<Result> PushFileAsync(FileOperator fileOperator)
         {
-            return this.m_rpcActor.PushFileAsync(fileRequest, fileOperator, metadata);
+            return m_rpcActor.PushFileAsync(fileOperator);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="clientID"></param>
-        /// <param name="fileRequest"></param>
-        /// <param name="fileOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> PushFileAsync(string clientID, FileRequest fileRequest, FileOperator fileOperator, Metadata metadata = null)
+        public Task<Result> PushFileAsync(string targetId, FileOperator fileOperator)
         {
-            return this.m_rpcActor.PushFileAsync(clientID, fileRequest, fileOperator, metadata);
+            return m_rpcActor.PushFileAsync(targetId, fileOperator);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="newID"></param>
+        ///<inheritdoc/>
         public override void ResetID(string newID)
         {
-            this.ResetID(newID, default);
+            m_rpcActor.ResetID(newID);
+            DirectResetID(newID);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="newID"></param>
-        /// <param name="cancellationToken"></param>
-        public void ResetID(string newID, CancellationToken cancellationToken = default)
+        public Result SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
         {
-            this.m_rpcActor.ResetID(newID, cancellationToken);
-            base.ResetID(newID);
+            return m_rpcActor.SendStream(stream, streamOperator, metadata);
+        }
+
+        /// <inheritdoc/>
+        public Task<Result> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
+        {
+            return m_rpcActor.SendStreamAsync(stream, streamOperator, metadata);
+        }
+
+        /// <inheritdoc/>
+        public bool TrySubscribeChannel(int id, out Channel channel)
+        {
+            return m_rpcActor.TrySubscribeChannel(id, out channel);
+        }
+
+        internal void RpcActorSend(ArraySegment<byte>[] transferBytes)
+        {
+            base.Send(transferBytes);
+        }
+
+        internal void SetRpcActor(RpcActor rpcActor)
+        {
+            m_rpcActor = rpcActor;
+            m_rpcActor.OnResetID = ThisOnResetID;
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            m_rpcActor.SafeDispose();
+            base.Dispose(disposing);
+        }
+
+        /// <inheritdoc/>
+        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            m_rpcActor.InputReceivedData(byteBlock);
+        }
+
+        /// <inheritdoc/>
+        protected override void OnConnected(TouchSocketEventArgs e)
+        {
+            EasyTask.DelayRun(VerifyTimeout, this, (client) =>
+             {
+                 if (!client.IsHandshaked)
+                 {
+                     client.Close("验证超时");
+                 }
+             });
+            m_rpcActor.ID = ID;
+            base.OnConnected(e);
+        }
+
+        /// <inheritdoc/>
+        protected override void OnConnecting(ClientOperationEventArgs e)
+        {
+            this.SwitchProtocolToTouchRpc();
+            base.OnConnecting(e);
+        }
+
+        /// <inheritdoc/>
+        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        {
+            m_rpcActor.Close(e.Message);
+            base.OnDisconnected(e);
+        }
+
+        private void ThisOnResetID(bool first, RpcActor rpcActor, WaitSetID waitSetID)
+        {
+            DirectResetID(waitSetID.NewID);
         }
 
         #region 发送
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        public void Send(short protocol, byte[] buffer)
-        {
-            this.m_rpcActor.Send(protocol, buffer);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
         public void Send(short protocol, byte[] buffer, int offset, int length)
         {
-            this.m_rpcActor.Send(protocol, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="dataByteBlock"></param>
-        public void Send(short protocol, ByteBlock dataByteBlock)
-        {
-            this.m_rpcActor.Send(protocol, dataByteBlock);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        public void Send(short protocol)
-        {
-            this.m_rpcActor.Send(protocol);
+            m_rpcActor.Send(protocol, buffer, offset, length);
         }
 
         /// <summary>
@@ -468,45 +324,10 @@ namespace TouchSocket.Rpc.TouchRpc
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        public void SendAsync(short protocol, byte[] buffer)
+        public Task SendAsync(short protocol, byte[] buffer, int offset, int length)
         {
-            this.m_rpcActor.SendAsync(protocol, buffer);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void SendAsync(short protocol, byte[] buffer, int offset, int length)
-        {
-            this.m_rpcActor.SendAsync(protocol, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="dataByteBlock"></param>
-        public void SendAsync(short protocol, ByteBlock dataByteBlock)
-        {
-            this.m_rpcActor.SendAsync(protocol, dataByteBlock);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="protocol"></param>
-        public void SendAsync(short protocol)
-        {
-            this.m_rpcActor.SendAsync(protocol);
+            return m_rpcActor.SendAsync(protocol, buffer, offset, length);
         }
 
         /// <summary>
@@ -515,7 +336,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public override void SendAsync(byte[] buffer, int offset, int length)
+        public override Task SendAsync(byte[] buffer, int offset, int length)
         {
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
@@ -524,116 +345,63 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 不允许直接发送
         /// </summary>
         /// <param name="transferBytes"></param>
-        public override void SendAsync(IList<ArraySegment<byte>> transferBytes)
+        public override Task SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
         }
 
         #endregion 发送
 
-        /// <summary>
+        #region 小文件
+
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="streamOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Result SendStream(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
+        public PullSmallFileResult PullSmallFile(string targetId, string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            return this.m_rpcActor.SendStream(stream, streamOperator, metadata);
+            return m_rpcActor.PullSmallFile(targetId, path, metadata, timeout, token);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="streamOperator"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        public Task<Result> SendStreamAsync(Stream stream, StreamOperator streamOperator, Metadata metadata = null)
+        public PullSmallFileResult PullSmallFile(string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            return this.m_rpcActor.SendStreamAsync(stream, streamOperator, metadata);
+            return m_rpcActor.PullSmallFile(path, metadata, timeout, token);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="channel"></param>
-        /// <returns></returns>
-        public bool TrySubscribeChannel(int id, out Channel channel)
+        public Task<PullSmallFileResult> PullSmallFileAsync(string targetId, string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            return this.m_rpcActor.TrySubscribeChannel(id, out channel);
+            return m_rpcActor.PullSmallFileAsync(targetId, path, metadata, timeout, token);
         }
 
-        internal void RpcActorSend(bool isAsync, ArraySegment<byte>[] transferBytes)
+        /// <inheritdoc/>
+        public Task<PullSmallFileResult> PullSmallFileAsync(string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            if (isAsync)
-            {
-                base.SendAsync(transferBytes);
-            }
-            else
-            {
-                base.Send(transferBytes);
-            }
+            return m_rpcActor.PullSmallFileAsync(path, metadata, timeout, token);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        public Result PushSmallFile(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            this.m_rpcActor.SafeDispose();
-            base.Dispose(disposing);
+            return m_rpcActor.PushSmallFile(targetId, savePath, fileInfo, metadata, timeout, token);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        public Result PushSmallFile(string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            this.m_rpcActor.InputReceivedData(byteBlock);
+            return m_rpcActor.PushSmallFile(savePath, fileInfo, metadata, timeout, token);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnConnected(TouchSocketEventArgs e)
+        public Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            EasyAction.DelayRun(this.VerifyTimeout, this, (client) =>
-             {
-                 if (!client.IsHandshaked)
-                 {
-                     client.Close("验证超时");
-                 }
-             });
-            this.m_rpcActor.ID = this.ID;
-            base.OnConnected(e);
+            return m_rpcActor.PushSmallFileAsync(targetId, savePath, fileInfo, metadata, timeout, token);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnConnecting(ClientOperationEventArgs e)
+        public Task<Result> PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
-            this.SwitchProtocolToTouchRpc();
-            this.SetDataHandlingAdapter(new FixedHeaderPackageAdapter());
-            base.OnConnecting(e);
+            return m_rpcActor.PushSmallFileAsync(savePath, fileInfo, metadata, timeout, token);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
-        {
-            this.m_rpcActor.Close(e.Message);
-            base.OnDisconnected(e);
-        }
+        #endregion 小文件
     }
 }

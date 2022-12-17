@@ -34,6 +34,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 新初始化的通信器
         /// </summary>
-        public Socket Socket => this.socket;
+        public Socket Socket => socket;
     }
 }

@@ -12,14 +12,25 @@
 //------------------------------------------------------------------------------
 using System;
 using System.IO;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
     /// 远程文件系统信息
     /// </summary>
-    public abstract class RemoteFileSystemInfo
+    public abstract class RemoteFileSystemInfo : PackageBase
     {
+        /// <summary>
+        /// 目录或文件的名称。
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// 目录或文件的完整目录。
+        /// </summary>
+        public string FullName { get; set; }
+
         /// <summary>
         /// 上次写入当前文件或目录的时间
         /// </summary>
@@ -39,5 +50,27 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 当前文件或目录的特性
         /// </summary>
         public FileAttributes Attributes { get; set; }
+
+        /// <inheritdoc/>
+        public override void Package(ByteBlock byteBlock)
+        {
+            byteBlock.Write(LastWriteTime);
+            byteBlock.Write(LastAccessTime);
+            byteBlock.Write(CreationTime);
+            byteBlock.Write((int)Attributes);
+            byteBlock.Write(FullName);
+            byteBlock.Write(Name);
+        }
+
+        /// <inheritdoc/>
+        public override void Unpackage(ByteBlock byteBlock)
+        {
+            LastWriteTime = byteBlock.ReadDateTime();
+            LastAccessTime = byteBlock.ReadDateTime();
+            CreationTime = byteBlock.ReadDateTime();
+            Attributes = (FileAttributes)byteBlock.ReadInt32();
+            FullName = byteBlock.ReadString();
+            Name = byteBlock.ReadString();
+        }
     }
 }

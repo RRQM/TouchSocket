@@ -14,18 +14,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TouchSocket.Core.Converter;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Reflection;
+using TouchSocket.Core;
 
-namespace TouchSocket.Sockets.Plugins
+namespace TouchSocket.Sockets
 {
     /// <summary>
     /// TCP命令行插件。
     /// </summary>
     public abstract class TcpCommandLinePlugin : TcpPluginBase
     {
-        private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, TouchSocket.Core.Reflection.Method>();
+        private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, TouchSocket.Core.Method>();
         private ILog m_logger;
 
         /// <summary>
@@ -35,12 +33,12 @@ namespace TouchSocket.Sockets.Plugins
         /// <exception cref="ArgumentNullException"></exception>
         protected TcpCommandLinePlugin(ILog logger)
         {
-            this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Converter = new StringConverter();
-            var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
+            m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            Converter = new StringConverter();
+            var ms = GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
             foreach (var item in ms)
             {
-                this.m_pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
+                m_pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
             }
         }
 
@@ -60,7 +58,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         public TcpCommandLinePlugin NoReturnException()
         {
-            this.ReturnException = false;
+            ReturnException = false;
             return this;
         }
 
@@ -74,7 +72,7 @@ namespace TouchSocket.Sockets.Plugins
             try
             {
                 string[] strs = e.ByteBlock.ToString().Split(' ');
-                if (strs.Length > 0 && this.m_pairs.TryGetValue(strs[0], out Method method))
+                if (strs.Length > 0 && m_pairs.TryGetValue(strs[0], out Method method))
                 {
                     var ps = method.Info.GetParameters();
                     object[] os = new object[ps.Length];
@@ -87,7 +85,7 @@ namespace TouchSocket.Sockets.Plugins
                         }
                         else
                         {
-                            os[i] = this.Converter.ConvertFrom(strs[index + 1], ps[i].ParameterType);
+                            os[i] = Converter.ConvertFrom(strs[index + 1], ps[i].ParameterType);
                             index++;
                         }
                     }
@@ -98,12 +96,12 @@ namespace TouchSocket.Sockets.Plugins
                         object result = method.Invoke(this, os);
                         if (method.HasReturn)
                         {
-                            client.Send(this.Converter.ConvertTo(result));
+                            client.Send(Converter.ConvertTo(result));
                         }
                     }
                     catch (Exception ex)
                     {
-                        if (this.ReturnException)
+                        if (ReturnException)
                         {
                             client.Send(ex.Message);
                         }
@@ -112,7 +110,7 @@ namespace TouchSocket.Sockets.Plugins
             }
             catch (Exception ex)
             {
-                this.m_logger.Log(Core.Log.LogType.Error, this, ex.Message, ex);
+                m_logger.Log(LogType.Error, this, ex.Message, ex);
             }
             base.OnReceivedData(client, e);
         }

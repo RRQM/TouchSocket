@@ -13,9 +13,8 @@
 using System;
 using System.IO;
 using System.Text;
-using TouchSocket.Core.IO;
 
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 文件日志记录器
@@ -41,7 +40,7 @@ namespace TouchSocket.Core.Log
                 }
                 else if (m_rootPath != Path.Combine(rootPath, "logs"))
                 {
-                    throw new Exception($"{this.GetType().Name}无法指向不同的根路径。");
+                    throw new Exception($"{GetType().Name}无法指向不同的根路径。");
                 }
             }
         }
@@ -70,10 +69,11 @@ namespace TouchSocket.Core.Log
             }
             stringBuilder.AppendLine();
 
-            this.Print(stringBuilder.ToString());
+            Print(stringBuilder.ToString());
         }
 
         private static FileStorageWriter m_writer;
+
         private void Print(string logString)
         {
             try

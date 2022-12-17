@@ -24,7 +24,7 @@
 //    /// </summary>
 //    public static class ThrowHelper
 //    {
-//        private static readonly ConcurrentDictionary<Enum, Func<string, Exception, Exception>> m_pairs = 
+//        private static readonly ConcurrentDictionary<Enum, Func<string, Exception, Exception>> m_pairs =
 //            new ConcurrentDictionary<Enum, Func<string, Exception, Exception>>();
 
 //        /// <summary>
@@ -49,8 +49,7 @@
 //        }
 
 //        public static Exception Throw(Enum @enum,string msg,Exception exception)
-//        { 
-
+//        {
 //        }
 
 //    }

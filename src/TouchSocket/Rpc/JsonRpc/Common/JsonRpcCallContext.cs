@@ -36,7 +36,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <summary>
         /// JsonRpc上下文
         /// </summary>
-        public JsonRpcPackage JsonRpcPackage { get; internal set; }
+        public JsonRpcContext JsonRpcContext { get; internal set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -50,11 +50,11 @@ namespace TouchSocket.Rpc.JsonRpc
         {
             get
             {
-                if (this.m_tokenSource == null)
+                if (m_tokenSource == null)
                 {
-                    this.m_tokenSource = new CancellationTokenSource();
+                    m_tokenSource = new CancellationTokenSource();
                 }
-                return this.m_tokenSource;
+                return m_tokenSource;
             }
         }
 

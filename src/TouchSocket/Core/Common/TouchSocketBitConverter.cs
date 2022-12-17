@@ -85,7 +85,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 指定大小端。
         /// </summary>
-        public EndianType EndianType => this.endianType;
+        public EndianType EndianType => endianType;
 
         /// <summary>
         /// 判断当前系统是否为设置的大小端
@@ -93,7 +93,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public bool IsSameOfSet()
         {
-            return !(BitConverter.IsLittleEndian ^ (this.endianType == EndianType.Little));
+            return !(BitConverter.IsLittleEndian ^ (endianType == EndianType.Little));
         }
 
         #region ushort
@@ -106,7 +106,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(ushort value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -123,7 +123,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[2];
             Array.Copy(buffer, offset, bytes, 0, 2);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -142,7 +142,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(ulong value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -160,7 +160,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[8];
             Array.Copy(buffer, offset, bytes, 0, 8);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -204,7 +204,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(char value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -222,7 +222,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[2];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -241,7 +241,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(short value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -259,7 +259,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[2];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -278,7 +278,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(int value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -296,7 +296,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[4];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -315,7 +315,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(long value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -333,7 +333,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[8];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -352,7 +352,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(uint value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -370,7 +370,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[4];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -389,7 +389,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(float value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -407,7 +407,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[4];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -426,7 +426,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(double value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }
@@ -444,7 +444,7 @@ namespace TouchSocket.Core
         {
             byte[] bytes = new byte[8];
             Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!this.IsSameOfSet())
+            if (!IsSameOfSet())
             {
                 Array.Reverse(bytes);
             }

@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -20,6 +19,13 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class BaseSocket : DependencyObject, ISocket
     {
+        /// <summary>
+        /// 通讯基类
+        /// </summary>
+        public BaseSocket()
+        {
+            SyncRoot = new object();
+        }
         private int m_bufferLength;
 
         /// <summary>
@@ -27,16 +33,21 @@ namespace TouchSocket.Sockets
         /// </summary>
         public virtual int BufferLength
         {
-            get => this.m_bufferLength;
+            get => m_bufferLength;
             set
             {
                 if (value < 1024)
                 {
                     value = 1024 * 10;
                 }
-                this.m_bufferLength = value;
+                m_bufferLength = value;
             }
         }
+
+        /// <summary>
+        /// 同步根。
+        /// </summary>
+        protected object SyncRoot;
 
         /// <summary>
         /// 日志记录器

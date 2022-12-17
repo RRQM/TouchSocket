@@ -12,10 +12,8 @@
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 
-namespace TouchSocket.Sockets.Plugins
+namespace TouchSocket.Sockets
 {
     /// <summary>
     /// UdpSessionPluginBase
@@ -51,12 +49,12 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="e"></param>
         void IUdpSessionPlugin.OnReceivedData(IUdpSession client, UdpReceivedDataEventArgs e)
         {
-            this.OnReceivedData((TSession)client, e);
+            OnReceivedData((TSession)client, e);
         }
 
         Task IUdpSessionPlugin.OnReceivedDataAsync(IUdpSession client, UdpReceivedDataEventArgs e)
         {
-            return this.OnReceivedDataAsync((TSession)client, e);
+            return OnReceivedDataAsync((TSession)client, e);
         }
 
         /// <summary>
@@ -76,7 +74,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnReceivedDataAsync(TSession client, UdpReceivedDataEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
     }
 }

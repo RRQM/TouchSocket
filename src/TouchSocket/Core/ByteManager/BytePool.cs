@@ -14,9 +14,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace TouchSocket.Core.ByteManager
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 字节池
@@ -40,6 +41,12 @@ namespace TouchSocket.Core.ByteManager
             SetBlockSize(1024, 1024 * 1024 * 20);
             AddSizeKey(10240);
         }
+
+        /// <summary>
+        /// 表示内存池是否可用。
+        /// <para>当业务太轻量级，且要求超高并发时（千万数量级别），可禁用内存池。</para>
+        /// </summary>
+        public static bool Disabled { get; set; }
 
         /// <summary>
         /// 回收内存时，自动归零
@@ -127,8 +134,18 @@ namespace TouchSocket.Core.ByteManager
         /// <returns></returns>
         public static ByteBlock GetByteBlock(int byteSize, bool equalSize)
         {
-            ByteBlock byteBlock = new ByteBlock(byteSize, equalSize);
-            return byteBlock;
+            return new ByteBlock(byteSize, equalSize);
+        }
+
+        /// <summary>
+        ///  获取ValueByteBlock
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <param name="equalSize"></param>
+        /// <returns></returns>
+        public static ValueByteBlock GetValueByteBlock(int byteSize, bool equalSize)
+        {
+            return new ValueByteBlock(byteSize, equalSize);
         }
 
         /// <summary>
@@ -138,11 +155,17 @@ namespace TouchSocket.Core.ByteManager
         /// <returns></returns>
         public static ByteBlock GetByteBlock(int byteSize)
         {
-            if (byteSize < MinBlockSize)
-            {
-                byteSize = MinBlockSize;
-            }
-            return GetByteBlock(byteSize, false);
+            return new ByteBlock(byteSize, false);
+        }
+
+        /// <summary>
+        /// 获取ValueByteBlock
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <returns></returns>
+        public static ValueByteBlock GetValueByteBlock(int byteSize)
+        {
+            return new ValueByteBlock(byteSize, false);
         }
 
         /// <summary>
@@ -154,6 +177,11 @@ namespace TouchSocket.Core.ByteManager
         /// <returns></returns>
         public static byte[] GetByteCore(int byteSize, bool equalSize = false)
         {
+            if (Disabled)
+            {
+                return new byte[byteSize];
+            }
+
             BytesQueue bytesCollection;
             if (equalSize)
             {
@@ -207,11 +235,16 @@ namespace TouchSocket.Core.ByteManager
         }
 
         /// <summary>
-        /// 回收内存核心
+        /// 回收内存核心。
+        /// <para>注意：回收的内存，必须百分百确定该对象没有再被其他引用。不然这属于危险操作。</para>
         /// </summary>
         /// <param name="bytes"></param>
         public static void Recycle(byte[] bytes)
         {
+            if (Disabled)
+            {
+                return;
+            }
             if (bytes == null || bytes.Length > MaxBlockSize || bytes.Length < MinBlockSize)
             {
                 return;
@@ -279,10 +312,10 @@ namespace TouchSocket.Core.ByteManager
             else
             {
                 List<BytesQueue> bytesQueues = bytesDictionary.Values.ToList();
-                bytesQueues.Sort((x, y) => { return x.referenced > y.referenced ? -1 : 1; });
+                bytesQueues.Sort((x, y) => { return x.m_referenced > y.m_referenced ? -1 : 1; });
                 for (int i = (int)(bytesQueues.Count * 0.2); i < bytesQueues.Count; i++)
                 {
-                    if (bytesDictionary.TryRemove(bytesQueues[i].size, out BytesQueue queue))
+                    if (bytesDictionary.TryRemove(bytesQueues[i].m_size, out BytesQueue queue))
                     {
                         queue.Clear();
                     }
@@ -290,91 +323,13 @@ namespace TouchSocket.Core.ByteManager
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int HitSize(int num)
         {
-            //switch (num)
-            //{
-            //    case <= 1024:
-            //        {
-            //            return 1024;
-            //        }
-            //    case <= 2048:
-            //        {
-            //            return 2048;
-            //        }
-            //    case <= 4096:
-            //        {
-            //            return 4096;
-            //        }
-            //    case <= 8192:
-            //        {
-            //            return 8192;
-            //        }
-            //    case <= 10240:
-            //        {
-            //            return 10240;
-            //        }
-            //    case <= 16384:
-            //        {
-            //            return 16384;
-            //        }
-            //    case <= 32768:
-            //        {
-            //            return 32768;
-            //        }
-            //    case <= 65536:
-            //        {
-            //            return 65536;
-            //        }
-            //    case <= 131072:
-            //        {
-            //            return 131072;
-            //        }
-            //    case <= 262144:
-            //        {
-            //            return 262144;
-            //        }
-            //    case <= 524288:
-            //        {
-            //            return 524288;
-            //        }
-            //    case <= 1048576:
-            //        {
-            //            return 1048576;
-            //        }
-            //    case <= 2097152:
-            //        {
-            //            return 2097152;
-            //        }
-            //    case <= 4194304:
-            //        {
-            //            return 4194304;
-            //        }
-            //    case <= 8388608:
-            //        {
-            //            return 8388608;
-            //        }
-            //    case <= 16777216:
-            //        {
-            //            return 16777216;
-            //        }
-            //    case <= 33554432:
-            //        {
-            //            return 33554432;
-            //        }
-            //    case <= 67108864:
-            //        {
-            //            return 67108864;
-            //        }
-            //    case <= 134217728:
-            //        {
-            //            return 134217728;
-            //        }
-            //    default:
-            //        return num;
-            //}
-
-            //U3D无法编译时替换。
+            if (num < MinBlockSize)
+            {
+                num = MinBlockSize;
+            }
 
             if (num <= 10240)//10k
             {
@@ -396,17 +351,65 @@ namespace TouchSocket.Core.ByteManager
             {
                 return 1048576;
             }
-            else if (num <= 5242880)//5Mb
+            else if (num <= 1048576*2)//2Mb
             {
-                return 5242880;
+                return 1048576 * 2;
+            }
+            else if (num <= 1048576 * 3)//3Mb
+            {
+                return 1048576 * 3;
+            }
+            else if (num <= 1048576 * 4)//4Mb
+            {
+                return 1048576 * 4;
+            }
+            else if (num <= 1048576 * 5)//5Mb
+            {
+                return 1048576 * 5;
+            }
+            else if (num <= 1048576 * 6)//6Mb
+            {
+                return 1048576 * 6;
+            }
+            else if (num <= 1048576 * 7)//7Mb
+            {
+                return 1048576 * 7;
+            }
+            else if (num <= 1048576 * 8)//8Mb
+            {
+                return 1048576 * 8;
+            }
+            else if (num <= 1048576 * 9)//9Mb
+            {
+                return 1048576 * 9;
             }
             else if (num <= 10485760)//10Mb
             {
                 return 10485760;
             }
+            else if (num <= 1024 * 1024 * 12)//12Mb
+            {
+                return 1024 * 1024 * 12;
+            }
+            else if (num <= 1024 * 1024 * 15)//15Mb
+            {
+                return 1024 * 1024 * 15;
+            }
+            else if (num <= 1024 * 1024 * 18)//18Mb
+            {
+                return 1024 * 1024 * 18;
+            }
             else if (num <= 1024 * 1024 * 20)//20Mb
             {
                 return 1024 * 1024 * 20;
+            }
+            else if (num <= 1024 * 1024 * 30)//30Mb
+            {
+                return 1024 * 1024 * 30;
+            }
+            else if (num <= 1024 * 1024 * 40)//40Mb
+            {
+                return 1024 * 1024 * 40;
             }
             else if (num <= 1024 * 1024 * 50)//50Mb
             {

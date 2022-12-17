@@ -24,7 +24,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public ClientOperationEventArgs()
         {
-            this.AddOperation(Operation.Permit);
+            IsPermitOperation = true;
         }
 
         /// <summary>

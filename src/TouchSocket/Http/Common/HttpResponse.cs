@@ -15,7 +15,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -40,16 +39,16 @@ namespace TouchSocket.Http
         /// <param name="isServer"></param>
         public HttpResponse(ITcpClientBase client, bool isServer = true)
         {
-            this.m_client = client;
+            m_client = client;
             if (isServer)
             {
-                this.m_canRead = false;
-                this.m_canWrite = true;
+                m_canRead = false;
+                m_canWrite = true;
             }
             else
             {
-                this.m_canRead = true;
-                this.m_canWrite = false;
+                m_canRead = true;
+                m_canWrite = false;
             }
         }
 
@@ -58,24 +57,24 @@ namespace TouchSocket.Http
         /// </summary>
         public HttpResponse()
         {
-            this.m_canRead = false;
-            this.m_canWrite = false;
+            m_canRead = false;
+            m_canWrite = false;
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanRead => this.m_canRead;
+        public override bool CanRead => m_canRead;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanWrite => this.m_canWrite;
+        public override bool CanWrite => m_canWrite;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override ITcpClientBase Client => this.m_client;
+        public override ITcpClientBase Client => m_client;
 
         /// <summary>
         /// 关闭会话请求
@@ -84,7 +83,7 @@ namespace TouchSocket.Http
         {
             get
             {
-                return this.GetHeader(HttpHeaders.Connection).Equals("close", StringComparison.CurrentCultureIgnoreCase);
+                return GetHeader(HttpHeaders.Connection).Equals("close", StringComparison.CurrentCultureIgnoreCase);
             }
         }
 
@@ -100,7 +99,7 @@ namespace TouchSocket.Http
         {
             get
             {
-                return this.StatusCode == "407";
+                return StatusCode == "407";
             }
         }
 
@@ -111,14 +110,14 @@ namespace TouchSocket.Http
         {
             get
             {
-                return this.StatusCode == "301" || this.StatusCode == "302";
+                return StatusCode == "301" || StatusCode == "302";
             }
         }
 
         /// <summary>
         /// 是否已经响应数据。
         /// </summary>
-        public bool Responsed => this.m_responsed;
+        public bool Responsed => m_responsed;
 
         /// <summary>
         /// 状态码，默认200
@@ -136,11 +135,18 @@ namespace TouchSocket.Http
         /// </summary>
         public void Answer()
         {
+            if (m_responsed)
+            {
+                return;
+            }
             using (ByteBlock byteBlock = new ByteBlock())
             {
-                this.Build(byteBlock);
-                this.m_client.DefaultSend(byteBlock);
-                this.m_responsed = true;
+                Build(byteBlock);
+                if (m_client.CanSend)
+                {
+                    m_client.DefaultSend(byteBlock);
+                }
+                m_responsed = true;
             }
         }
 
@@ -152,14 +158,14 @@ namespace TouchSocket.Http
         /// <param name="responsed"></param>
         public void Build(ByteBlock byteBlock, bool responsed = true)
         {
-            if (this.m_responsed)
+            if (m_responsed)
             {
                 throw new Exception("该对象已被响应。");
             }
 
-            this.BuildHeader(byteBlock);
-            this.BuildContent(byteBlock);
-            this.m_responsed = responsed;
+            BuildHeader(byteBlock);
+            BuildContent(byteBlock);
+            m_responsed = responsed;
         }
 
         /// <summary>
@@ -170,7 +176,7 @@ namespace TouchSocket.Http
         {
             using (ByteBlock byteBlock = new ByteBlock())
             {
-                this.Build(byteBlock);
+                Build(byteBlock);
                 return byteBlock.ToArray();
             }
         }
@@ -180,15 +186,15 @@ namespace TouchSocket.Http
         /// </summary>
         public void Complete()
         {
-            this.m_canWrite = false;
-            if (this.IsChunk)
+            m_canWrite = false;
+            if (IsChunk)
             {
                 using (ByteBlock byteBlock = new ByteBlock())
                 {
                     byteBlock.Write(Encoding.UTF8.GetBytes($"{0:X}\r\n"));
                     byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-                    this.m_client.DefaultSend(byteBlock);
-                    this.m_responsed = true;
+                    m_client.DefaultSend(byteBlock);
+                    m_responsed = true;
                 }
             }
         }
@@ -199,9 +205,9 @@ namespace TouchSocket.Http
         /// <param name="content"></param>
         public override void SetContent(byte[] content)
         {
-            this.m_content = content;
-            this.ContentLength = content.Length;
-            this.ContentComplated = true;
+            m_content = content;
+            ContentLength = content.Length;
+            ContentComplated = true;
         }
 
         /// <summary>
@@ -210,12 +216,12 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override bool TryGetContent(out byte[] content)
         {
-            if (!this.ContentComplated.HasValue)
+            if (!ContentComplated.HasValue)
             {
-                if (!this.IsChunk && this.m_contentLength == 0)
+                if (!IsChunk && m_contentLength == 0)
                 {
-                    this.m_content = new byte[0];
-                    content = this.m_content;
+                    m_content = new byte[0];
+                    content = m_content;
                     return true;
                 }
 
@@ -228,33 +234,34 @@ namespace TouchSocket.Http
                             byte[] buffer = block2.Buffer;
                             while (true)
                             {
-                                int r = this.Read(buffer, 0, buffer.Length);
+                                int r = Read(buffer, 0, buffer.Length);
                                 if (r == 0)
                                 {
                                     break;
                                 }
                                 block1.Write(buffer, 0, r);
                             }
-                            this.m_content = block1.ToArray();
-                            content = this.m_content;
+                            ContentComplated = true;
+                            m_content = block1.ToArray();
+                            content = m_content;
                             return true;
                         }
                     }
                 }
                 catch
                 {
-                    this.ContentComplated = false;
+                    ContentComplated = false;
                     content = null;
                     return false;
                 }
                 finally
                 {
-                    this.m_canRead = false;
+                    m_canRead = false;
                 }
             }
-            else if (this.ContentComplated == true)
+            else if (ContentComplated == true)
             {
-                content = this.m_content;
+                content = m_content;
                 return true;
             }
             else
@@ -272,46 +279,46 @@ namespace TouchSocket.Http
         /// <param name="count"></param>
         public override void WriteContent(byte[] buffer, int offset, int count)
         {
-            if (this.m_responsed)
+            if (m_responsed)
             {
                 throw new Exception("该对象已被响应。");
             }
 
-            if (!this.CanWrite)
+            if (!CanWrite)
             {
                 throw new NotSupportedException("该对象不支持持续写入内容。");
             }
 
-            if (!this.m_sentHeader)
+            if (!m_sentHeader)
             {
                 using (ByteBlock byteBlock = new ByteBlock())
                 {
-                    this.BuildHeader(byteBlock);
-                    this.m_client.DefaultSend(byteBlock);
+                    BuildHeader(byteBlock);
+                    m_client.DefaultSend(byteBlock);
                 }
-                this.m_sentHeader = true;
+                m_sentHeader = true;
             }
-            if (this.IsChunk)
+            if (IsChunk)
             {
                 using (ByteBlock byteBlock = new ByteBlock(count + 1024))
                 {
                     byteBlock.Write(Encoding.UTF8.GetBytes($"{count.ToString("X")}\r\n"));
                     byteBlock.Write(buffer, offset, count);
                     byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-                    this.m_client.DefaultSend(byteBlock);
-                    this.m_sentLength += count;
+                    m_client.DefaultSend(byteBlock);
+                    m_sentLength += count;
                 }
             }
             else
             {
-                if (this.m_sentLength + count <= this.m_contentLength)
+                if (m_sentLength + count <= m_contentLength)
                 {
-                    this.m_client.DefaultSend(buffer, offset, count);
-                    this.m_sentLength += count;
-                    if (this.m_sentLength == this.ContentLength)
+                    m_client.DefaultSend(buffer, offset, count);
+                    m_sentLength += count;
+                    if (m_sentLength == ContentLength)
                     {
-                        this.m_canWrite = false;
-                        this.m_responsed = true;
+                        m_canWrite = false;
+                        m_responsed = true;
                     }
                 }
             }
@@ -323,7 +330,7 @@ namespace TouchSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_client = null;
+            m_client = null;
             base.Dispose(disposing);
         }
 
@@ -332,39 +339,39 @@ namespace TouchSocket.Http
         /// </summary>
         protected override void LoadHeaderProterties()
         {
-            var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
+            var first = Regex.Split(RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
             if (first.Length > 0)
             {
                 string[] ps = first[0].Split('/');
                 if (ps.Length == 2)
                 {
-                    this.Protocols = ps[0];
-                    this.ProtocolVersion = ps[1];
+                    Protocols = ps[0];
+                    ProtocolVersion = ps[1];
                 }
             }
             if (first.Length > 1)
             {
-                this.StatusCode = first[1];
+                StatusCode = first[1];
             }
             string msg = string.Empty;
             for (int i = 2; i < first.Length; i++)
             {
                 msg += first[i] + " ";
             }
-            this.StatusMessage = msg;
+            StatusMessage = msg;
 
-            string transferEncoding = this.GetHeader(HttpHeaders.TransferEncoding);
+            string transferEncoding = GetHeader(HttpHeaders.TransferEncoding);
             if ("chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase))
             {
-                this.IsChunk = true;
+                IsChunk = true;
             }
         }
 
         private void BuildContent(ByteBlock byteBlock)
         {
-            if (this.ContentLength > 0)
+            if (ContentLength > 0)
             {
-                byteBlock.Write(this.m_content);
+                byteBlock.Write(m_content);
             }
         }
 
@@ -375,20 +382,20 @@ namespace TouchSocket.Http
         private void BuildHeader(ByteBlock byteBlock)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}\r\n");
+            stringBuilder.Append($"HTTP/{ProtocolVersion} {StatusCode} {StatusMessage}\r\n");
 
-            if (this.ContentLength > 0)
+            if (ContentLength > 0)
             {
-                this.SetHeader(HttpHeaders.ContentLength, this.ContentLength.ToString());
+                this.SetHeader(HttpHeaders.ContentLength, ContentLength.ToString());
             }
-            if (this.IsChunk)
+            if (IsChunk)
             {
                 this.SetHeader(HttpHeaders.TransferEncoding, "chunked");
             }
-            foreach (var headerkey in this.Headers.AllKeys)
+            foreach (var headerkey in Headers.AllKeys)
             {
                 stringBuilder.Append($"{headerkey}: ");
-                stringBuilder.Append(this.Headers[headerkey] + "\r\n");
+                stringBuilder.Append(Headers[headerkey] + "\r\n");
             }
 
             stringBuilder.Append("\r\n");

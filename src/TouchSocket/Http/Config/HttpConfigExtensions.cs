@@ -11,8 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
+using TouchSocket.Core;
 using TouchSocket.Http;
 
 namespace TouchSocket.Sockets
@@ -77,8 +76,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// Http代理
         /// </summary>
-        public static readonly DependencyProperty HttpProxyProperty =
-            DependencyProperty.Register("HttpProxy", typeof(HttpProxy), typeof(HttpConfigExtensions), null);
+        public static readonly DependencyProperty<HttpProxy> HttpProxyProperty =
+            DependencyProperty<HttpProxy>.Register("HttpProxy", typeof(HttpConfigExtensions), null);
 
         /// <summary>
         ///设置Http代理

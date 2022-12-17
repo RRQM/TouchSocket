@@ -14,9 +14,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TouchSocket.Core.Reflection;
 
-namespace TouchSocket.Core.Serialization
+namespace TouchSocket.Core
 {
     internal class SerializObject
     {
@@ -27,7 +26,8 @@ namespace TouchSocket.Core.Serialization
         public Type[] ArgTypes { get; set; }
         public Type ArrayType { get; set; }
         public Dictionary<string, FieldInfo> FieldInfosDic { get; set; }
-        public FieldInfo[] FieldInfos 
+
+        public FieldInfo[] FieldInfos
         {
             get
             {
@@ -44,13 +44,14 @@ namespace TouchSocket.Core.Serialization
                 return m_properties;
             }
         }
+
         public InstanceType instanceType { get; set; }
         public Dictionary<string, PropertyInfo> PropertiesDic { get; set; }
         public Type Type { get; set; }
 
         public object GetInstance()
         {
-            return Activator.CreateInstance(this.Type);
+            return Activator.CreateInstance(Type);
         }
     }
 }

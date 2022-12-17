@@ -32,7 +32,7 @@ namespace TouchSocket.Rpc
                 throw new ArgumentException($"“{nameof(className)}”不能为 null 或空。", nameof(className));
             }
 
-            this.ClassName = className;
+            ClassName = className;
         }
 
         /// <summary>

@@ -12,12 +12,8 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Net.Sockets;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Converter;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Extensions;
+using TouchSocket.Core;
 using TouchSocket.Http;
-using TouchSocket.Http.Plugins;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.WebApi
@@ -36,25 +32,25 @@ namespace TouchSocket.Rpc.WebApi
         /// </summary>
         public WebApiParserPlugin([DependencyParamterInject(true)] RpcStore rpcStore)
         {
-            this.m_actionMap = new ActionMap();
-            this.m_converter = new StringConverter();
-            rpcStore?.AddRpcParser(this.GetType().Name, this);
+            m_actionMap = new ActionMap();
+            m_converter = new StringConverter();
+            rpcStore?.AddRpcParser(GetType().Name, this);
         }
 
         /// <summary>
         /// 转化器
         /// </summary>
-        public StringConverter Converter => this.m_converter;
+        public StringConverter Converter => m_converter;
 
         /// <summary>
         /// 获取路由映射图
         /// </summary>
-        public ActionMap RouteMap => this.m_actionMap;
+        public ActionMap RouteMap => m_actionMap;
 
         /// <summary>
         /// 所属服务器
         /// </summary>
-        public RpcStore RpcStore => this.m_rpcStore;
+        public RpcStore RpcStore => m_rpcStore;
 
         /// <summary>
         /// <inheritdoc/>
@@ -63,7 +59,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <param name="e"></param>
         protected override void OnGet(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (this.m_actionMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
+            if (m_actionMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
             {
                 e.Handled = true;
 
@@ -100,7 +96,7 @@ namespace TouchSocket.Rpc.WebApi
                                 string value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
                                 if (!value.IsNullOrEmpty())
                                 {
-                                    ps[i] = this.m_converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
+                                    ps[i] = m_converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
                                 }
                                 else
                                 {
@@ -126,7 +122,7 @@ namespace TouchSocket.Rpc.WebApi
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult = this.m_rpcStore.Execute(rpcServer, ps, callContext);
+                    invokeResult = m_rpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
@@ -138,25 +134,25 @@ namespace TouchSocket.Rpc.WebApi
                 {
                     case InvokeStatus.Success:
                         {
-                            httpResponse.FromJson(this.m_converter.ConvertTo(invokeResult.Result)).SetStatus();
+                            httpResponse.FromJson(m_converter.ConvertTo(invokeResult.Result)).SetStatus();
                             break;
                         }
                     case InvokeStatus.UnFound:
                         {
-                            string jsonString = this.m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                            string jsonString = m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
                             httpResponse.FromJson(jsonString).SetStatus("404");
                             break;
                         }
                     case InvokeStatus.UnEnable:
                         {
-                            string jsonString = this.m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                            string jsonString = m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
                             httpResponse.FromJson(jsonString).SetStatus("405");
                             break;
                         }
                     case InvokeStatus.InvocationException:
                     case InvokeStatus.Exception:
                         {
-                            string jsonString = this.m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                            string jsonString = m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
                             httpResponse.FromJson(jsonString).SetStatus("422");
                             break;
                         }
@@ -184,7 +180,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <param name="e"></param>
         protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (this.m_actionMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
+            if (m_actionMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
             {
                 e.Handled = true;
 
@@ -227,7 +223,7 @@ namespace TouchSocket.Rpc.WebApi
                                 string value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
                                 if (!value.IsNullOrEmpty())
                                 {
-                                    ps[i] = this.m_converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
+                                    ps[i] = m_converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
                                 }
                                 else
                                 {
@@ -239,7 +235,7 @@ namespace TouchSocket.Rpc.WebApi
                         if (index >= 0)
                         {
                             string str = e.Context.Request.GetBody();
-                            ps[index] = this.m_converter.ConvertFrom(str, methodInstance.ParameterTypes[index]);
+                            ps[index] = m_converter.ConvertFrom(str, methodInstance.ParameterTypes[index]);
                         }
                     }
                     catch (Exception ex)
@@ -259,7 +255,7 @@ namespace TouchSocket.Rpc.WebApi
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult = this.m_rpcStore.Execute(rpcServer, ps, callContext);
+                    invokeResult = m_rpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
@@ -271,25 +267,25 @@ namespace TouchSocket.Rpc.WebApi
                 {
                     case InvokeStatus.Success:
                         {
-                            httpResponse.FromJson(this.m_converter.ConvertTo(invokeResult.Result)).SetStatus();
+                            httpResponse.FromJson(m_converter.ConvertTo(invokeResult.Result)).SetStatus();
                             break;
                         }
                     case InvokeStatus.UnFound:
                         {
-                            string jsonString = this.m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                            string jsonString = m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
                             httpResponse.FromJson(jsonString).SetStatus("404", invokeResult.Status.ToString());
                             break;
                         }
                     case InvokeStatus.UnEnable:
                         {
-                            string jsonString = this.m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                            string jsonString = m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
                             httpResponse.FromJson(jsonString).SetStatus("405", invokeResult.Status.ToString());
                             break;
                         }
                     case InvokeStatus.InvocationException:
                     case InvokeStatus.Exception:
                         {
-                            string jsonString = this.m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                            string jsonString = m_converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
                             httpResponse.FromJson(jsonString).SetStatus("422", invokeResult.Status.ToString());
                             break;
                         }
@@ -323,7 +319,7 @@ namespace TouchSocket.Rpc.WebApi
                     {
                         foreach (var item in actionUrls)
                         {
-                            this.m_actionMap.Add(item, methodInstance);
+                            m_actionMap.Add(item, methodInstance);
                         }
                     }
                 }
@@ -341,7 +337,7 @@ namespace TouchSocket.Rpc.WebApi
                     {
                         foreach (var item in actionUrls)
                         {
-                            this.m_actionMap.Remove(item);
+                            m_actionMap.Remove(item);
                         }
                     }
                 }
@@ -350,7 +346,7 @@ namespace TouchSocket.Rpc.WebApi
 
         void IRpcParser.SetRpcStore(RpcStore rpcService)
         {
-            this.m_rpcStore = rpcService;
+            m_rpcStore = rpcService;
         }
 
         #endregion RPC解析器

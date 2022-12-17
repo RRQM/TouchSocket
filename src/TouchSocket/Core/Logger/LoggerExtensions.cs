@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// <inheritdoc/>
@@ -20,6 +20,7 @@ namespace TouchSocket.Core.Log
     public static class LoggerExtensions
     {
         #region LoggerGroup日志
+
         /// <summary>
         /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出中断日志
         /// </summary>
@@ -89,7 +90,7 @@ namespace TouchSocket.Core.Log
         /// <param name="msg"></param>
         public static void Info<TLog>(this ILog logger, string msg) where TLog : ILog
         {
-            logger.Log<TLog>(LogType.Information, null, msg, null);
+            logger.Log<TLog>(LogType.Info, null, msg, null);
         }
 
         /// <summary>
@@ -100,7 +101,7 @@ namespace TouchSocket.Core.Log
         /// <param name="msg"></param>
         public static void Info<TLog>(this ILog logger, object source, string msg) where TLog : ILog
         {
-            logger.Log<TLog>(LogType.Information, source, msg, null);
+            logger.Log<TLog>(LogType.Info, source, msg, null);
         }
 
         /// <summary>
@@ -118,7 +119,7 @@ namespace TouchSocket.Core.Log
                 loggerGroup.Log<TLog>(logType, source, message, exception);
             }
         }
-       
+
         /// <summary>
         /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出详细日志
         /// </summary>
@@ -149,7 +150,6 @@ namespace TouchSocket.Core.Log
         {
             logger.Log<TLog>(LogType.Warning, source, msg, null);
         }
-
 
         #endregion LoggerGroup日志
 
@@ -224,7 +224,7 @@ namespace TouchSocket.Core.Log
         /// <param name="msg"></param>
         public static void Info(this ILog logger, string msg)
         {
-            logger.Log(LogType.Information, null, msg, null);
+            logger.Log(LogType.Info, null, msg, null);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace TouchSocket.Core.Log
         /// <param name="msg"></param>
         public static void Info(this ILog logger, object source, string msg)
         {
-            logger.Log(LogType.Information, source, msg, null);
+            logger.Log(LogType.Info, source, msg, null);
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace TouchSocket.Core.Log
         [Obsolete("该方法已被弃用，请使用“Info”替代。")]
         public static void Message(this ILog logger, string msg)
         {
-            logger.Log(LogType.Information, null, msg, null);
+            logger.Log(LogType.Info, null, msg, null);
         }
 
         /// <summary>
@@ -258,7 +258,7 @@ namespace TouchSocket.Core.Log
         [Obsolete("该方法已被弃用，请使用“Info”替代。")]
         public static void Message(this ILog logger, object source, string msg)
         {
-            logger.Log(LogType.Information, source, msg, null);
+            logger.Log(LogType.Info, source, msg, null);
         }
 
         /// <summary>

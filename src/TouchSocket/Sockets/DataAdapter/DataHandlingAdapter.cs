@@ -13,8 +13,6 @@
 using System;
 using System.Collections.Generic;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Log;
 
 namespace TouchSocket.Sockets
 {
@@ -25,7 +23,30 @@ namespace TouchSocket.Sockets
     {
         private ITcpClientBase m_client;
 
-        
+        /// <summary>
+        /// 最后缓存的时间
+        /// </summary>
+        protected DateTime LastCacheTime { get; set; }
+
+        /// <summary>
+        /// 是否在收到数据时，即刷新缓存时间。默认true。
+        /// <list type="number">
+        /// <item>当设为true时，将弱化<see cref="CacheTimeout"/>的作用，只要一直有数据，则缓存不会过期。</item>
+        /// <item>当设为false时，则在<see cref="CacheTimeout"/>的时效内。必须完成单个缓存的数据。</item>
+        /// </list>
+        /// </summary>
+        public bool UpdateCacheTimeWhenRev { get; set; } = true;
+
+        /// <summary>
+        /// 缓存超时时间。默认1秒。
+        /// </summary>
+        public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// 是否启用缓存超时。默认true。
+        /// </summary>
+        public bool CacheTimeoutEnable { get; set; } = true;
+
         /// <summary>
         /// 当插件在被第一次加载时调用。
         /// </summary>
@@ -33,14 +54,12 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">此适配器已被其他终端使用，请重新创建对象。</exception>
         public virtual void OnLoaded(ITcpClientBase client)
         {
-            if (this.m_client != null)
+            if (m_client != null)
             {
                 throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
             }
-            this.m_client = client;
+            m_client = client;
         }
-
-        private int m_maxPackageSize = 1024 * 1024;
 
         /// <summary>
         /// 拼接发送
@@ -55,16 +74,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 获取或设置适配器能接收的最大数据包长度。
         /// </summary>
-        public int MaxPackageSize
-        {
-            get => this.m_maxPackageSize;
-            set => this.m_maxPackageSize = value;
-        }
+        public int MaxPackageSize { get; set; } = 1024 * 1024 * 10;
 
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public ITcpClientBase Client => this.m_client;
+        public ITcpClientBase Client => m_client;
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -74,7 +89,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行发送
         /// </summary>
-        public Action<byte[], int, int, bool> SendCallBack { get; set; }
+        public Action<byte[], int, int> SendCallBack { get; set; }
 
         /// <summary>
         /// 收到数据的切入点，该方法由框架自动调用。
@@ -84,11 +99,11 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                this.PreviewReceived(byteBlock);
+                PreviewReceived(byteBlock);
             }
             catch (Exception ex)
             {
-                this.OnError(ex.Message);
+                OnError(ex.Message);
             }
         }
 
@@ -98,30 +113,27 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        /// <param name="isAsync"></param>
-        public void SendInput(byte[] buffer, int offset, int length, bool isAsync)
+        public void SendInput(byte[] buffer, int offset, int length)
         {
-            this.PreviewSend(buffer, offset, length, isAsync);
+            PreviewSend(buffer, offset, length);
         }
 
         /// <summary>
         /// 发送数据的切入点，该方法由框架自动调用。
         /// </summary>
         /// <param name="transferBytes"></param>
-        /// <param name="isAsync"></param>
-        public void SendInput(IList<ArraySegment<byte>> transferBytes, bool isAsync)
+        public void SendInput(IList<ArraySegment<byte>> transferBytes)
         {
-            this.PreviewSend(transferBytes, isAsync);
+            PreviewSend(transferBytes);
         }
 
         /// <summary>
         /// 发送数据的切入点，该方法由框架自动调用。
         /// </summary>
         /// <param name="requestInfo"></param>
-        /// <param name="isAsync"></param>
-        public void SendInput(IRequestInfo requestInfo, bool isAsync)
+        public void SendInput(IRequestInfo requestInfo)
         {
-            this.PreviewSend(requestInfo, isAsync);
+            PreviewSend(requestInfo);
         }
 
         /// <summary>
@@ -131,7 +143,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo">以解析实例传递</param>
         protected void GoReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.ReceivedCallBack.Invoke(byteBlock, requestInfo);
+            ReceivedCallBack.Invoke(byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -140,10 +152,9 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected void GoSend(byte[] buffer, int offset, int length, bool isAsync)
+        protected void GoSend(byte[] buffer, int offset, int length)
         {
-            this.SendCallBack.Invoke(buffer, offset, length, isAsync);
+            SendCallBack.Invoke(buffer, offset, length);
         }
 
         /// <summary>
@@ -156,11 +167,11 @@ namespace TouchSocket.Sockets
         {
             if (reset)
             {
-                this.Reset();
+                Reset();
             }
-            if (log && this.m_client != null && this.m_client.Logger != null)
+            if (log && m_client != null && m_client.Logger != null)
             {
-                this.m_client.Logger.Error(error);
+                m_client.Logger.Error(error);
             }
         }
 
@@ -176,23 +187,20 @@ namespace TouchSocket.Sockets
         /// <param name="buffer">数据</param>
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(byte[] buffer, int offset, int length, bool isAsync);
+        protected abstract void PreviewSend(byte[] buffer, int offset, int length);
 
         /// <summary>
         /// 当发送数据前预先处理数据
         /// </summary>
         /// <param name="requestInfo"></param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(IRequestInfo requestInfo, bool isAsync);
+        protected abstract void PreviewSend(IRequestInfo requestInfo);
 
         /// <summary>
         /// 组合发送预处理数据，
         /// 当属性SplicingSend实现为True时，系统才会调用该方法。
         /// </summary>
         /// <param name="transferBytes">代发送数据组合</param>
-        /// <param name="isAsync">是否使用IOCP发送</param>
-        protected abstract void PreviewSend(IList<ArraySegment<byte>> transferBytes, bool isAsync);
+        protected abstract void PreviewSend(IList<ArraySegment<byte>> transferBytes);
 
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。

@@ -10,47 +10,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 
-namespace System
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 为System提供扩展。
     /// </summary>
     public static class SystemExtensions
     {
-        /// <summary>
-        /// IsNullOrEmpty
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static bool IsNullOrEmpty(this string str)
-        {
-            return string.IsNullOrEmpty(str);
-        }
-
-        /// <summary>
-        /// IsNullOrWhiteSpace
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static bool IsNullOrWhiteSpace(this string str)
-        {
-            return string.IsNullOrWhiteSpace(str);
-        }
-
-        /// <summary>
-        /// 当不为null，且不为空。
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static bool HasValue(this string str)
-        {
-            return !string.IsNullOrWhiteSpace(str);
-        }
-
         #region 其他
 
         /// <summary>
@@ -102,6 +73,8 @@ namespace System
             return dt.ToString("r", CultureInfo.InvariantCulture);
         }
 
+#if !NETCOREAPP3_1_OR_GREATER
+
         /// <summary>
         /// 清除所有成员
         /// </summary>
@@ -109,13 +82,25 @@ namespace System
         /// <param name="queue"></param>
         public static void Clear<T>(this ConcurrentQueue<T> queue)
         {
-#if NETCOREAPP3_1_OR_GREATER
-            queue.Clear();
-#else
             while (queue.TryDequeue(out _))
             {
             }
+        }
+
 #endif
+
+        /// <summary>
+        /// 清除所有成员
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="queue"></param>
+        /// <param name="action"></param>
+        public static void Clear<T>(this ConcurrentQueue<T> queue, Action<T> action)
+        {
+            while (queue.TryDequeue(out T t))
+            {
+                action?.Invoke(t);
+            }
         }
 
         /// <summary>
@@ -126,7 +111,7 @@ namespace System
         /// <returns></returns>
         public static int GetBit(this byte @this, short index)
         {
-            byte x = 1;
+            byte x;
             switch (index)
             {
                 case 0: { x = 0x01; } break;

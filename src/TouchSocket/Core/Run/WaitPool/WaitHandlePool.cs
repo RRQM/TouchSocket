@@ -13,8 +13,9 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
-namespace TouchSocket.Core.Run
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 等待处理数据
@@ -22,7 +23,6 @@ namespace TouchSocket.Core.Run
     /// <typeparam name="T"></typeparam>
     public class WaitHandlePool<T> : IDisposable where T : IWaitResult
     {
-        private readonly SnowflakeIDGenerator m_idGenerator;
         private readonly ConcurrentDictionary<long, WaitData<T>> m_waitDic;
         private readonly ConcurrentQueue<WaitData<T>> m_waitQueue;
 
@@ -31,9 +31,8 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public WaitHandlePool()
         {
-            this.m_waitDic = new ConcurrentDictionary<long, WaitData<T>>();
-            this.m_waitQueue = new ConcurrentQueue<WaitData<T>>();
-            this.m_idGenerator = new SnowflakeIDGenerator(4);
+            m_waitDic = new ConcurrentDictionary<long, WaitData<T>>();
+            m_waitQueue = new ConcurrentQueue<WaitData<T>>();
         }
 
         /// <summary>
@@ -46,10 +45,10 @@ namespace TouchSocket.Core.Run
             {
                 throw new ObjectDisposedException(nameof(waitData));
             }
-            if (this.m_waitDic.TryRemove(waitData.WaitResult.Sign, out _))
+            if (m_waitDic.TryRemove(waitData.WaitResult.Sign, out _))
             {
                 waitData.Reset();
-                this.m_waitQueue.Enqueue(waitData);
+                m_waitQueue.Enqueue(waitData);
             }
         }
 
@@ -58,17 +57,17 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public void Dispose()
         {
-            foreach (var item in this.m_waitDic.Values)
+            foreach (var item in m_waitDic.Values)
             {
                 item.Dispose();
             }
-            foreach (var item in this.m_waitQueue)
+            foreach (var item in m_waitQueue)
             {
                 item.Dispose();
             }
-            this.m_waitDic.Clear();
+            m_waitDic.Clear();
 
-            this.m_waitQueue.Clear();
+            m_waitQueue.Clear();
         }
 
         /// <summary>
@@ -76,7 +75,7 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public void CancelAll()
         {
-            foreach (var item in this.m_waitDic.Values)
+            foreach (var item in m_waitDic.Values)
             {
                 item.Cancel();
             }
@@ -87,6 +86,9 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public bool DelayModel { get; set; } = false;
 
+        private long m_waitCount;
+        private long m_waitReverseCount;
+
         /// <summary>
         ///  获取一个可等待对象
         /// </summary>
@@ -95,25 +97,55 @@ namespace TouchSocket.Core.Run
         /// <returns></returns>
         public WaitData<T> GetWaitData(T result, bool autoSign = true)
         {
-            if (this.m_waitQueue.TryDequeue(out var waitData))
+            if (m_waitQueue.TryDequeue(out var waitData))
             {
                 if (autoSign)
                 {
-                    result.Sign = this.m_idGenerator.NextID();
+                    result.Sign = Interlocked.Increment(ref m_waitCount);
                 }
                 waitData.SetResult(result);
-                this.m_waitDic.TryAdd(result.Sign, waitData);
+                m_waitDic.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitData<T>();
-            waitData.DelayModel = this.DelayModel;
+            waitData.DelayModel = DelayModel;
             if (autoSign)
             {
-                result.Sign = this.m_idGenerator.NextID();
+                result.Sign = Interlocked.Increment(ref m_waitCount);
             }
             waitData.SetResult(result);
-            this.m_waitDic.TryAdd(result.Sign, waitData);
+            m_waitDic.TryAdd(result.Sign, waitData);
+            return waitData;
+        }
+
+        /// <summary>
+        ///  获取一个Sign为负数的可等待对象
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="autoSign">设置为false时，不会生成sign</param>
+        /// <returns></returns>
+        public WaitData<T> GetReverseWaitData(T result, bool autoSign = true)
+        {
+            if (m_waitQueue.TryDequeue(out var waitData))
+            {
+                if (autoSign)
+                {
+                    result.Sign = Interlocked.Decrement(ref m_waitReverseCount);
+                }
+                waitData.SetResult(result);
+                m_waitDic.TryAdd(result.Sign, waitData);
+                return waitData;
+            }
+
+            waitData = new WaitData<T>();
+            waitData.DelayModel = DelayModel;
+            if (autoSign)
+            {
+                result.Sign = Interlocked.Decrement(ref m_waitReverseCount);
+            }
+            waitData.SetResult(result);
+            m_waitDic.TryAdd(result.Sign, waitData);
             return waitData;
         }
 
@@ -124,7 +156,7 @@ namespace TouchSocket.Core.Run
         public void SetRun(long sign)
         {
             WaitData<T> waitData;
-            if (this.m_waitDic.TryGetValue(sign, out waitData))
+            if (m_waitDic.TryGetValue(sign, out waitData))
             {
                 waitData.Set();
             }
@@ -138,7 +170,7 @@ namespace TouchSocket.Core.Run
         public void SetRun(long sign, T waitResult)
         {
             WaitData<T> waitData;
-            if (this.m_waitDic.TryGetValue(sign, out waitData))
+            if (m_waitDic.TryGetValue(sign, out waitData))
             {
                 waitData.Set(waitResult);
             }
@@ -150,8 +182,7 @@ namespace TouchSocket.Core.Run
         /// <param name="waitResult"></param>
         public void SetRun(T waitResult)
         {
-            WaitData<T> waitData;
-            if (this.m_waitDic.TryGetValue(waitResult.Sign, out waitData))
+            if (m_waitDic.TryGetValue(waitResult.Sign, out WaitData<T> waitData))
             {
                 waitData.Set(waitResult);
             }

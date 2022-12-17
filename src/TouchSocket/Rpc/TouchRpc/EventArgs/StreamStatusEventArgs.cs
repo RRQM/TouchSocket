@@ -24,7 +24,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 结果
         /// </summary>
-        public Result Result => this.result;
+        public Result Result => result;
 
         /// <summary>
         /// 构造函数

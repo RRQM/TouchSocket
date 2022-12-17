@@ -16,7 +16,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-namespace TouchSocket.Core.IO
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 文件操作
@@ -24,7 +24,8 @@ namespace TouchSocket.Core.IO
     public static class FileUtility
     {
         /// <summary>
-        /// 获取不重复文件名
+        /// 获取不重复文件名。
+        /// <para>例如：New.txt已存在时，会返回New(1).txt</para>
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
@@ -48,7 +49,8 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
-        /// 获取不重复文件夹名称
+        /// 获取不重复文件夹名称.
+        /// <para>例如：NewDir已存在时，会返回NewDir(1)</para>
         /// </summary>
         /// <param name="dirName"></param>
         /// <returns></returns>
@@ -116,7 +118,7 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public static string GetStreamMD5(Stream fileStream)
         {
-            using (HashAlgorithm hash = MD5.Create())
+            using (HashAlgorithm hash = System.Security.Cryptography.MD5.Create())
             {
                 return GetStreamHash(fileStream, hash);
             }
@@ -205,13 +207,66 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
-        /// 获取文件夹下一级文件名称，不含路径。
+        /// 获取仅当前文件夹中包含的文件名称，不含全路径。
         /// </summary>
-        /// <param name="sourceFolder"></param>
+        /// <param name="dirPath"></param>
         /// <returns></returns>
-        public static string[] GetFiles(string sourceFolder)
+        public static string[] GetIncludeFileNames(string dirPath)
         {
-            return Directory.GetFiles(sourceFolder).Select(s => Path.GetFileName(s)).ToArray();
+            return Directory.GetFiles(dirPath).Select(s => Path.GetFileName(s)).ToArray();
+        }
+
+        /// <summary>
+        /// 获取相对路径。
+        /// </summary>
+        /// <param name="relativeTo"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static string GetRelativePath(string relativeTo, string path)
+        {
+            if (string.IsNullOrEmpty(relativeTo)) throw new ArgumentNullException(nameof(relativeTo));
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+
+            var fromUri = new Uri(relativeTo);
+            var toUri = new Uri(path);
+
+            if (fromUri.Scheme != toUri.Scheme)
+            {
+                // 不是同一种路径，无法转换成相对路径。
+                return path;
+            }
+
+            if (fromUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase)
+                && !relativeTo.EndsWith("/", StringComparison.OrdinalIgnoreCase)
+                && !relativeTo.EndsWith("\\", StringComparison.OrdinalIgnoreCase))
+            {
+                // 如果是文件系统，则视来源路径为文件夹。
+                fromUri = new Uri(relativeTo + Path.DirectorySeparatorChar);
+            }
+
+            var relativeUri = fromUri.MakeRelativeUri(toUri);
+            var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            if (toUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+            {
+                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+
+            return relativePath;
+        }
+
+        /// <summary>
+        /// 删除路径文件
+        /// </summary>
+        /// <param name="path"></param>
+        public static void Delete(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.SetAttributes(path, FileAttributes.Normal);
+                File.Delete(path);
+            }
         }
 
 # if NET45_OR_GREATER

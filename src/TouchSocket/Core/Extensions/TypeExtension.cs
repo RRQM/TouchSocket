@@ -13,7 +13,7 @@
 
 using System;
 
-namespace TouchSocket.Core.Extensions
+namespace TouchSocket.Core
 {
     /// <summary>
     /// TypeExtension
@@ -47,6 +47,16 @@ namespace TouchSocket.Core.Extensions
         public static object GetDefault(this Type targetType)
         {
             return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+        }
+
+        /// <summary>
+        /// 判断是否为静态类。
+        /// </summary>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        public static bool IsStatic(this Type targetType)
+        {
+            return targetType.IsAbstract && targetType.IsSealed;
         }
 
         /// <summary>

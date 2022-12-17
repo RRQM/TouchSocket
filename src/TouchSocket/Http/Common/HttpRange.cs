@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-
 namespace TouchSocket.Http
 {
     /// <summary>

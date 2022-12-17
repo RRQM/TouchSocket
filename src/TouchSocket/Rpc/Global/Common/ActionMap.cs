@@ -27,7 +27,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 服务键集合
         /// </summary>
-        public IEnumerable<string> ActionKeys => this.m_actionMap.Keys;
+        public IEnumerable<string> ActionKeys => m_actionMap.Keys;
 
         /// <summary>
         /// 添加调用
@@ -36,11 +36,11 @@ namespace TouchSocket.Rpc
         /// <param name="methodInstance"></param>
         public void Add(string actionKey, MethodInstance methodInstance)
         {
-            if (this.m_actionMap.ContainsKey(actionKey))
+            if (m_actionMap.ContainsKey(actionKey))
             {
                 throw new System.Exception($"调用键为{actionKey}的函数已存在。");
             }
-            this.m_actionMap.TryAdd(actionKey, methodInstance);
+            m_actionMap.TryAdd(actionKey, methodInstance);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public MethodInstance[] GetAllMethodInstances()
         {
-            return this.m_actionMap.Values.ToArray();
+            return m_actionMap.Values.ToArray();
         }
 
         /// <summary>
@@ -58,12 +58,12 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public IEnumerator<KeyValuePair<string, MethodInstance>> GetEnumerator()
         {
-            return this.m_actionMap.GetEnumerator();
+            return m_actionMap.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.m_actionMap.GetEnumerator();
+            return m_actionMap.GetEnumerator();
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public MethodInstance GetMethodInstance(string actionKey)
         {
-            this.m_actionMap.TryGetValue(actionKey, out MethodInstance methodInstance);
+            m_actionMap.TryGetValue(actionKey, out MethodInstance methodInstance);
             return methodInstance;
         }
 
@@ -84,7 +84,7 @@ namespace TouchSocket.Rpc
         /// <param name="methodInstance"></param>
         public bool Remove(string actionKey, out MethodInstance methodInstance)
         {
-            return this.m_actionMap.TryRemove(actionKey, out methodInstance);
+            return m_actionMap.TryRemove(actionKey, out methodInstance);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public bool Remove(string actionKey)
         {
-            return this.m_actionMap.TryRemove(actionKey, out _);
+            return m_actionMap.TryRemove(actionKey, out _);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public bool TryGetMethodInstance(string actionKey, out MethodInstance methodInstance)
         {
-            return this.m_actionMap.TryGetValue(actionKey, out methodInstance);
+            return m_actionMap.TryGetValue(actionKey, out methodInstance);
         }
     }
 }

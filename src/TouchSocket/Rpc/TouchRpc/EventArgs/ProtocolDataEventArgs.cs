@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -27,8 +26,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="byteBlock"></param>
         public ProtocolDataEventArgs(short protocol, ByteBlock byteBlock)
         {
-            this.Protocol = protocol;
-            this.ByteBlock = byteBlock;
+            Protocol = protocol;
+            ByteBlock = byteBlock;
         }
 
         /// <summary>

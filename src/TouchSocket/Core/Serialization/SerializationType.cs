@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core.Serialization
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 序列化类型
@@ -31,6 +31,11 @@ namespace TouchSocket.Core.Serialization
         /// <summary>
         /// Xml
         /// </summary>
-        Xml
+        Xml,
+
+        /// <summary>
+        /// 系统二进制。微软认为这是不安全的，所以谨慎使用。
+        /// </summary>
+        SystemBinary
     }
 }

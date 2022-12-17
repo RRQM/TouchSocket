@@ -11,10 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Threading.Tasks;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 
-namespace TouchSocket.Sockets.Plugins
+namespace TouchSocket.Sockets
 {
     /// <summary>
     /// 重连插件
@@ -30,8 +29,8 @@ namespace TouchSocket.Sockets.Plugins
         /// <param name="tryCon">无论如何，只要返回True，则结束本轮尝试</param>
         public ReconnectionPlugin(Func<TClient, bool> tryCon)
         {
-            this.Order = int.MinValue;
-            this.m_tryCon = tryCon;
+            Order = int.MinValue;
+            m_tryCon = tryCon;
         }
 
         /// <summary>
@@ -49,13 +48,13 @@ namespace TouchSocket.Sockets.Plugins
                 {
                     return;
                 }
-                Task.Run(() =>
+                EasyTask.Run(() =>
                 {
                     while (true)
                     {
                         try
                         {
-                            if (this.m_tryCon.Invoke((TClient)tcpClient))
+                            if (m_tryCon.Invoke((TClient)tcpClient))
                             {
                                 break;
                             }

@@ -12,13 +12,11 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.Extensions;
 
 namespace TouchSocket.Rpc
 {
@@ -30,23 +28,33 @@ namespace TouchSocket.Rpc
         private static readonly string[] m_dicType = { "Dictionary`2", "IDictionary`2" };
         private static readonly string[] m_listType = { "List`1", "HashSet`1", "IList`1", "ISet`1", "ICollection`1", "IEnumerable`1" };
         private readonly Assembly[] m_assembly;
-        private readonly ConcurrentDictionary<Type, string> m_genericTypeDic;
-        private readonly ConcurrentDictionary<Type, ClassCellCode> m_propertyDic;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="assembly"></param>
         public ClassCodeGenerator(Assembly[] assembly)
         {
-            this.m_assembly = assembly;
-            this.m_propertyDic = new ConcurrentDictionary<Type, ClassCellCode>();
-            this.m_genericTypeDic = new ConcurrentDictionary<Type, string>();
+            m_assembly = assembly;
+            PropertyDic = new ConcurrentDictionary<Type, ClassCellCode>();
+            GenericTypeDic = new ConcurrentDictionary<Type, string>();
         }
 
         /// <summary>
         /// 程序集
         /// </summary>
-        public Assembly[] Assembly => this.m_assembly;
+        public Assembly[] Assembly => m_assembly;
+
+        /// <summary>
+        /// 泛型类型字典
+        /// </summary>
+        public ConcurrentDictionary<Type, string> GenericTypeDic { get; private set; }
+
+
+        /// <summary>
+        /// 属性类型字典。
+        /// </summary>
+        public ConcurrentDictionary<Type, ClassCellCode> PropertyDic { get; private set; }
 
         /// <summary>
         /// 获取类单元参数
@@ -54,7 +62,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public ClassCellCode[] GetClassCellCodes()
         {
-            return this.m_propertyDic.Values.ToArray();
+            return PropertyDic.Values.ToArray();
         }
 
         /// <summary>
@@ -87,18 +95,18 @@ namespace TouchSocket.Rpc
             else if (type.IsArray)
             {
                 Type elementType = type.GetElementType();
-                return this.GetTypeFullName(elementType) + type.Name.Replace(elementType.Name, string.Empty);
+                return GetTypeFullName(elementType) + type.Name.Replace(elementType.Name, string.Empty);
             }
             else if (type.FullName.StartsWith("System.ValueTuple"))
             {
                 Type[] elementType = type.GetGenericArguments();
 
-                var strs = elementType.Select(e => this.GetTypeFullName(e));
+                var strs = elementType.Select(e => GetTypeFullName(e));
                 return $"({string.Join(",", strs)})";
             }
             else if (type.IsByRef)
             {
-                return this.GetTypeFullName(type.GetElementType());
+                return GetTypeFullName(type.GetElementType());
             }
             else if (type.IsPrimitive || type == typeof(string))
             {
@@ -106,11 +114,11 @@ namespace TouchSocket.Rpc
             }
             else if (m_listType.Contains(type.Name) || m_dicType.Contains(type.Name))
             {
-                return this.m_genericTypeDic[type];
+                return GenericTypeDic[type];
             }
-            else if (this.m_propertyDic.ContainsKey(type))
+            else if (PropertyDic.ContainsKey(type))
             {
-                return this.m_propertyDic[type].Name;
+                return PropertyDic[type].Name;
             }
             else
             {
@@ -120,34 +128,14 @@ namespace TouchSocket.Rpc
 
         internal void CheckDeep()
         {
-            foreach (var strItem in this.m_genericTypeDic)
+            foreach (var strItem in GenericTypeDic)
             {
                 bool goon = true;
-                string strItemNew= strItem.Value;
+                string strItemNew = strItem.Value;
                 while (goon)
                 {
                     goon = false;
-                    foreach (var item in this.m_genericTypeDic.Keys)
-                    {
-                        if (strItemNew.Contains(item.FullName))
-                        {
-                           strItemNew = strItemNew.Replace(item.FullName, item.Name);
-                            goon = true;
-                        }
-                    }
-                    
-                }
-                this.m_genericTypeDic[strItem.Key] = strItemNew;
-            }
-
-            foreach (var strItem in this.m_propertyDic)
-            {
-                bool goon = true;
-                string strItemNew = strItem.Value.Code;
-                while (goon)
-                {
-                    goon = false;
-                    foreach (var item in this.m_propertyDic.Keys)
+                    foreach (var item in GenericTypeDic.Keys)
                     {
                         if (strItemNew.Contains(item.FullName))
                         {
@@ -157,14 +145,42 @@ namespace TouchSocket.Rpc
                     }
 
                 }
-                this.m_propertyDic[strItem.Key].Code = strItemNew;
+                GenericTypeDic[strItem.Key] = strItemNew;
+            }
+
+            foreach (var strItem in PropertyDic)
+            {
+                bool goon = true;
+                string strItemNew = strItem.Value.Code;
+                while (goon)
+                {
+                    goon = false;
+                    foreach (var item in PropertyDic.Keys)
+                    {
+                        if (strItemNew.Contains(item.FullName))
+                        {
+                            strItemNew = strItemNew.Replace(item.FullName, item.Name);
+                            goon = true;
+                        }
+                    }
+
+                }
+                PropertyDic[strItem.Key].Code = strItemNew;
             }
         }
 
-        internal void AddTypeString(Type type,ref int deep)
+        internal void AddTypeString(Type type, ref int deep)
         {
+            if (CodeGenerator.m_ignoreTypes.Contains(type))
+            {
+                return;
+            }
+            if (CodeGenerator.m_ignoreAssemblies.Contains(type.Assembly))
+            {
+                return;
+            }
             deep++;
-            if (deep>50)
+            if (deep > 50)
             {
                 return;
             }
@@ -173,116 +189,102 @@ namespace TouchSocket.Rpc
                 type = type.GetRefOutType();
             }
 
-            if (!type.IsPrimitive && type != typeof(string))
+            if (type.IsPrimitive && type == typeof(string))
             {
-                if (type.IsArray)
-                {
-                    this.AddTypeString(type.GetElementType(),ref deep);
-                }
-                else if (type.IsGenericType)
-                {
-                    Type[] types = type.GetGenericArguments();
-                    foreach (Type itemType in types)
-                    {
-                        this.AddTypeString(itemType, ref deep);
-                    }
+                return;
+            }
 
-                    if (m_listType.Contains(type.Name))
-                    {
-                        string typeInnerString = this.GetTypeFullName(types[0]);
-                        string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
-                        if (!this.m_genericTypeDic.ContainsKey(type))
-                        {
-                            this.m_genericTypeDic.TryAdd(type, typeString);
-                        }
-                    }
-                    else if (m_dicType.Contains(type.Name))
-                    {
-                        string keyString = this.GetTypeFullName(types[0]);
-                        string valueString = this.GetTypeFullName(types[1]);
-                        string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
-                        if (!this.m_genericTypeDic.ContainsKey(type))
-                        {
-                            this.m_genericTypeDic.TryAdd(type, typeString);
-                        }
-                    }
-                }
-                else if (type.IsInterface || type.IsAbstract)
+            if (type == TouchSocketCoreUtility.objType)
+            {
+                return;
+            }
+            if (type.IsInterface || type.IsAbstract)
+            {
+                return;
+            }
+            if (type.IsArray)
+            {
+                AddTypeString(type.GetElementType(), ref deep);
+            }
+            else if (type.IsGenericType)
+            {
+                Type[] types = type.GetGenericArguments();
+                foreach (Type itemType in types)
                 {
-                    throw new RpcException("服务参数类型不允许接口或抽象类");
+                    AddTypeString(itemType, ref deep);
                 }
-                else if (type.IsEnum)
-                {
-                    Type baseType = Enum.GetUnderlyingType(type);
-                    StringBuilder stringBuilder = new StringBuilder();
-                    if (baseType == TouchSocketCoreUtility.byteType)
-                    {
-                        stringBuilder.AppendLine($"public enum {type.Name}:byte");
-                        stringBuilder.AppendLine("{");
-                        Array array = Enum.GetValues(type);
-                        foreach (object item in array)
-                        {
-                            string enumString = item.ToString();
-                            stringBuilder.AppendLine($"{enumString}={(byte)item},");
-                        }
-                    }
-                    else if (baseType == TouchSocketCoreUtility.shortType)
-                    {
-                        stringBuilder.AppendLine($"public enum {type.Name}:short");
-                        stringBuilder.AppendLine("{");
-                        Array array = Enum.GetValues(type);
-                        foreach (object item in array)
-                        {
-                            string enumString = item.ToString();
-                            stringBuilder.AppendLine($"{enumString}={(short)item},");
-                        }
-                    }
-                    else if (baseType == TouchSocketCoreUtility.intType)
-                    {
-                        stringBuilder.AppendLine($"public enum {type.Name}:int");
-                        stringBuilder.AppendLine("{");
-                        Array array = Enum.GetValues(type);
-                        foreach (object item in array)
-                        {
-                            string enumString = item.ToString();
-                            stringBuilder.AppendLine($"{enumString}={(int)item},");
-                        }
-                    }
-                    else if (baseType == TouchSocketCoreUtility.longType)
-                    {
-                        stringBuilder.AppendLine($"public enum {type.Name}:long");
-                        stringBuilder.AppendLine("{");
-                        Array array = Enum.GetValues(type);
-                        foreach (object item in array)
-                        {
-                            string enumString = item.ToString();
-                            stringBuilder.AppendLine($"{enumString}={(long)item},");
-                        }
-                    }
 
-                    stringBuilder.AppendLine("}");
-                    if (!this.m_propertyDic.ContainsKey(type))
+                if (m_listType.Contains(type.Name))
+                {
+                    string typeInnerString = GetTypeFullName(types[0]);
+                    string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
+                    if (!GenericTypeDic.ContainsKey(type))
                     {
-                        string className;
-                        if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
-                        {
-                            className = attribute.ClassName ?? type.Name;
-                        }
-                        else if (CodeGenerator.TryGetProxyTypeName(type, out className))
-                        {
-                        }
-                        else if (this.AllowGen(type.Assembly))
-                        {
-                            className = type.Name;
-                        }
-                        else
-                        {
-                            return;
-                        }
-                        this.m_propertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
+                        GenericTypeDic.TryAdd(type, typeString);
                     }
                 }
-                else
+                else if (m_dicType.Contains(type.Name))
+                {
+                    string keyString = GetTypeFullName(types[0]);
+                    string valueString = GetTypeFullName(types[1]);
+                    string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
+                    if (!GenericTypeDic.ContainsKey(type))
+                    {
+                        GenericTypeDic.TryAdd(type, typeString);
+                    }
+                }
+            }
+            else if (type.IsEnum)
+            {
+                Type baseType = Enum.GetUnderlyingType(type);
+                StringBuilder stringBuilder = new StringBuilder();
+                if (baseType == TouchSocketCoreUtility.byteType)
+                {
+                    stringBuilder.AppendLine($"public enum {type.Name}:byte");
+                    stringBuilder.AppendLine("{");
+                    Array array = Enum.GetValues(type);
+                    foreach (object item in array)
+                    {
+                        string enumString = item.ToString();
+                        stringBuilder.AppendLine($"{enumString}={(byte)item},");
+                    }
+                }
+                else if (baseType == TouchSocketCoreUtility.shortType)
+                {
+                    stringBuilder.AppendLine($"public enum {type.Name}:short");
+                    stringBuilder.AppendLine("{");
+                    Array array = Enum.GetValues(type);
+                    foreach (object item in array)
+                    {
+                        string enumString = item.ToString();
+                        stringBuilder.AppendLine($"{enumString}={(short)item},");
+                    }
+                }
+                else if (baseType == TouchSocketCoreUtility.intType)
+                {
+                    stringBuilder.AppendLine($"public enum {type.Name}:int");
+                    stringBuilder.AppendLine("{");
+                    Array array = Enum.GetValues(type);
+                    foreach (object item in array)
+                    {
+                        string enumString = item.ToString();
+                        stringBuilder.AppendLine($"{enumString}={(int)item},");
+                    }
+                }
+                else if (baseType == TouchSocketCoreUtility.longType)
+                {
+                    stringBuilder.AppendLine($"public enum {type.Name}:long");
+                    stringBuilder.AppendLine("{");
+                    Array array = Enum.GetValues(type);
+                    foreach (object item in array)
+                    {
+                        string enumString = item.ToString();
+                        stringBuilder.AppendLine($"{enumString}={(long)item},");
+                    }
+                }
+
+                stringBuilder.AppendLine("}");
+                if (!PropertyDic.ContainsKey(type))
                 {
                     string className;
                     if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
@@ -292,7 +294,7 @@ namespace TouchSocket.Rpc
                     else if (CodeGenerator.TryGetProxyTypeName(type, out className))
                     {
                     }
-                    else if (this.AllowGen(type.Assembly))
+                    else if (AllowGen(type.Assembly))
                     {
                         className = type.Name;
                     }
@@ -300,98 +302,118 @@ namespace TouchSocket.Rpc
                     {
                         return;
                     }
-                    StringBuilder stringBuilder = new StringBuilder();
+                    PropertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
+                }
+            }
+            else
+            {
+                string className;
+                if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
+                {
+                    className = attribute.ClassName ?? type.Name;
+                }
+                else if (CodeGenerator.TryGetProxyTypeName(type, out className))
+                {
+                }
+                else if (AllowGen(type.Assembly))
+                {
+                    className = type.Name;
+                }
+                else
+                {
+                    return;
+                }
+                StringBuilder stringBuilder = new StringBuilder();
 
-                    stringBuilder.AppendLine("");
-                    if (type.IsStruct())
+                stringBuilder.AppendLine("");
+                if (type.IsStruct())
+                {
+                    stringBuilder.AppendLine($"public struct {className}");
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"public class {className}");
+                }
+
+                if (!type.IsStruct() && type.BaseType != typeof(object))
+                {
+                    AddTypeString(type.BaseType, ref deep);
+                    if (type.BaseType.IsGenericType)
                     {
-                        stringBuilder.AppendLine($"public struct {className}");
+                        Type[] types = type.BaseType.GetGenericArguments();
+                        foreach (Type itemType in types)
+                        {
+                            AddTypeString(itemType, ref deep);
+                        }
+                        if (m_listType.Contains(type.BaseType.Name))
+                        {
+                            string typeString = GetTypeFullName(types[0]);
+                            stringBuilder.Append($":{type.BaseType.Name.Replace("`1", string.Empty)}<{typeString}>");
+                        }
+                        else if (m_dicType.Contains(type.BaseType.Name))
+                        {
+                            string keyString = GetTypeFullName(types[0]);
+                            string valueString = GetTypeFullName(types[1]);
+                            stringBuilder.Append($": {type.BaseType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>");
+                        }
+                    }
+                    else if (type.BaseType.IsClass)
+                    {
+                        stringBuilder.AppendLine($": {GetTypeFullName(type.BaseType)}");
+                    }
+                }
+
+                stringBuilder.AppendLine("{");
+                PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty);
+
+                foreach (PropertyInfo itemProperty in propertyInfos)
+                {
+                    AddTypeString(itemProperty.PropertyType, ref deep);
+                    if (PropertyDic.ContainsKey(itemProperty.PropertyType))
+                    {
+                        stringBuilder.Append($"public {itemProperty.PropertyType.Name} {itemProperty.Name}");
+                    }
+                    else if (itemProperty.PropertyType.IsGenericType)
+                    {
+                        Type[] types = itemProperty.PropertyType.GetGenericArguments();
+                        foreach (Type itemType in types)
+                        {
+                            AddTypeString(itemType, ref deep);
+                        }
+
+                        if (m_listType.Contains(itemProperty.PropertyType.Name))
+                        {
+                            string typeString = GetTypeFullName(types[0]);
+                            stringBuilder.Append($"public {itemProperty.PropertyType.Name.Replace("`1", string.Empty)}<{typeString}> {itemProperty.Name}");
+                        }
+                        else if (m_dicType.Contains(itemProperty.PropertyType.Name))
+                        {
+                            string keyString = GetTypeFullName(types[0]);
+                            string valueString = GetTypeFullName(types[1]);
+                            stringBuilder.Append($"public {itemProperty.PropertyType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}> {itemProperty.Name}");
+                        }
                     }
                     else
                     {
-                        stringBuilder.AppendLine($"public class {className}");
+                        AddTypeString(itemProperty.PropertyType, ref deep);
+                        stringBuilder.Append($"public {GetTypeFullName(itemProperty.PropertyType)} {itemProperty.Name}");
                     }
 
-                    if (!type.IsStruct() && type.BaseType != typeof(object))
-                    {
-                        this.AddTypeString(type.BaseType, ref deep);
-                        if (type.BaseType.IsGenericType)
-                        {
-                            Type[] types = type.BaseType.GetGenericArguments();
-                            foreach (Type itemType in types)
-                            {
-                                this.AddTypeString(itemType,ref deep);
-                            }
-                            if (m_listType.Contains(type.BaseType.Name))
-                            {
-                                string typeString = this.GetTypeFullName(types[0]);
-                                stringBuilder.Append($":{type.BaseType.Name.Replace("`1", string.Empty)}<{typeString}>");
-                            }
-                            else if (m_dicType.Contains(type.BaseType.Name))
-                            {
-                                string keyString = this.GetTypeFullName(types[0]);
-                                string valueString = this.GetTypeFullName(types[1]);
-                                stringBuilder.Append($": {type.BaseType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>");
-                            }
-                        }
-                        else if (type.BaseType.IsClass)
-                        {
-                            stringBuilder.AppendLine($": {this.GetTypeFullName(type.BaseType)}");
-                        }
-                    }
+                    stringBuilder.AppendLine("{get;set;}");
+                }
 
-                    stringBuilder.AppendLine("{");
-                    PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty);
+                stringBuilder.AppendLine("}");
 
-                    foreach (PropertyInfo itemProperty in propertyInfos)
-                    {
-                        this.AddTypeString(itemProperty.PropertyType, ref deep);
-                        if (this.m_propertyDic.ContainsKey(itemProperty.PropertyType))
-                        {
-                            stringBuilder.Append($"public {itemProperty.PropertyType.Name} {itemProperty.Name}");
-                        }
-                        else if (itemProperty.PropertyType.IsGenericType)
-                        {
-                            Type[] types = itemProperty.PropertyType.GetGenericArguments();
-                            foreach (Type itemType in types)
-                            {
-                                this.AddTypeString(itemType, ref deep);
-                            }
-
-                            if (m_listType.Contains(itemProperty.PropertyType.Name))
-                            {
-                                string typeString = this.GetTypeFullName(types[0]);
-                                stringBuilder.Append($"public {itemProperty.PropertyType.Name.Replace("`1", string.Empty)}<{typeString}> {itemProperty.Name}");
-                            }
-                            else if (m_dicType.Contains(itemProperty.PropertyType.Name))
-                            {
-                                string keyString = this.GetTypeFullName(types[0]);
-                                string valueString = this.GetTypeFullName(types[1]);
-                                stringBuilder.Append($"public {itemProperty.PropertyType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}> {itemProperty.Name}");
-                            }
-                        }
-                        else
-                        {
-                            this.AddTypeString(itemProperty.PropertyType, ref deep);
-                            stringBuilder.Append($"public {this.GetTypeFullName(itemProperty.PropertyType)} {itemProperty.Name}");
-                        }
-
-                        stringBuilder.AppendLine("{get;set;}");
-                    }
-
-                    stringBuilder.AppendLine("}");
-
-                    if (!this.m_propertyDic.ContainsKey(type))
-                    {
-                        this.m_propertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
-                    }
+                if (!PropertyDic.ContainsKey(type))
+                {
+                    PropertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
                 }
             }
         }
 
         private bool AllowGen(Assembly assembly)
         {
-            foreach (var item in this.m_assembly)
+            foreach (var item in m_assembly)
             {
                 if (assembly == item)
                 {

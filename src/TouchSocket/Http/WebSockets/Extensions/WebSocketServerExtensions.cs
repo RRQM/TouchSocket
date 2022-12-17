@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -44,7 +44,7 @@ namespace TouchSocket.Http.WebSockets
 
                     if (args.IsPermitOperation)
                     {
-                        client.SetDataHandlingAdapter(new WebSocketDataHandlingAdapter() { MaxPackageSize = client.MaxPackageSize });
+                        client.SetDataHandlingAdapter(new WebSocketDataHandlingAdapter());
                         client.Protocol = Protocol.WebSocket;
                         client.SetValue(WebSocketServerPlugin.HandshakedProperty, true);//设置握手状态
 
@@ -83,7 +83,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="httpContext">Http上下文</param>
         public static Task<bool> SwitchProtocolToWebSocketAsync<TClient>(this TClient client, HttpContext httpContext) where TClient : HttpSocketClient
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
              {
                  return SwitchProtocolToWebSocket(client, httpContext);
              });

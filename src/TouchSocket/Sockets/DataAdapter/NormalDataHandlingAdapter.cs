@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -37,7 +37,7 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock">数据流</param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            this.GoReceived(byteBlock, null);
+            GoReceived(byteBlock, null);
         }
 
         /// <summary>
@@ -46,18 +46,16 @@ namespace TouchSocket.Sockets
         /// <param name="buffer">数据</param>
         /// <param name="offset">偏移</param>
         /// <param name="length">长度</param>
-        /// <param name="isAsync"></param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
+        protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            this.GoSend(buffer, offset, length, isAsync);
+            GoSend(buffer, offset, length);
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="transferBytes"></param>
-        /// <param name="isAsync"></param>
-        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes, bool isAsync)
+        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
         {
             throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
         }
@@ -66,8 +64,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         /// <param name="requestInfo"></param>
-        /// <param name="isAsync"></param>
-        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        protected override void PreviewSend(IRequestInfo requestInfo)
         {
             throw new System.NotImplementedException();
         }

@@ -13,20 +13,31 @@
 
 namespace TouchSocket.Rpc.JsonRpc
 {
-#pragma warning disable CS1591
 
     /// <summary>
     /// JsonRpc响应器
     /// </summary>
     public class JsonResponseContext
     {
-        public string jsonrpc;
+        /// <summary>
+        /// jsonrpc
+        /// </summary>
+        public string jsonrpc { get; set; }
 
-        public object result;
+        /// <summary>
+        /// result
+        /// </summary>
+        public object result { get; set; }
 
-        public error error;
+        /// <summary>
+        /// error
+        /// </summary>
+        public error error { get; set; }
 
-        public string id;
+        /// <summary>
+        /// id
+        /// </summary>
+        public string id { get; set; }
     }
 
     /// <summary>
@@ -34,8 +45,14 @@ namespace TouchSocket.Rpc.JsonRpc
     /// </summary>
     public class error
     {
-        public int code;
+        /// <summary>
+        /// code
+        /// </summary>
+        public int code { get; set; }
 
-        public string message;
+        /// <summary>
+        /// message
+        /// </summary>
+        public string message { get; set; }
     }
 }

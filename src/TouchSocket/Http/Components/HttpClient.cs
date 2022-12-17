@@ -13,8 +13,6 @@
 using System;
 using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Run;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -41,7 +39,7 @@ namespace TouchSocket.Http
         /// </summary>
         public HttpClientBase()
         {
-            this.m_waitData = new WaitData<HttpResponse>();
+            m_waitData = new WaitData<HttpResponse>();
         }
 
         /// <summary>
@@ -54,15 +52,15 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public HttpResponse Request(HttpRequest request, bool onlyRequest = false, int timeout = 10 * 1000, CancellationToken token = default)
         {
-            lock (this.m_requestLocker)
+            lock (m_requestLocker)
             {
-                this.m_getContent = false;
+                m_getContent = false;
                 using (ByteBlock byteBlock = new ByteBlock())
                 {
                     request.Build(byteBlock);
 
-                    this.m_waitData.Reset();
-                    this.m_waitData.SetCancellationToken(token);
+                    m_waitData.Reset();
+                    m_waitData.SetCancellationToken(token);
 
                     this.DefaultSend(byteBlock);
                     if (onlyRequest)
@@ -70,20 +68,20 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (this.m_waitData.Wait(timeout))
+                    switch (m_waitData.Wait(timeout))
                     {
                         case WaitDataStatus.SetRunning:
-                            return this.m_waitData.WaitResult;
+                            return m_waitData.WaitResult;
 
                         case WaitDataStatus.Overtime:
-                            throw new TimeoutException(TouchSocketRes.Overtime.GetDescription());
+                            throw new TimeoutException(TouchSocketStatus.Overtime.GetDescription());
                         case WaitDataStatus.Canceled:
                             return default;
 
                         case WaitDataStatus.Default:
                         case WaitDataStatus.Disposed:
                         default:
-                            throw new Exception(TouchSocketRes.UnknownError.GetDescription());
+                            throw new Exception(TouchSocketStatus.UnknownError.GetDescription());
                     }
                 }
             }
@@ -99,15 +97,15 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public HttpResponse RequestContent(HttpRequest request, bool onlyRequest = false, int timeout = 10 * 1000, CancellationToken token = default)
         {
-            lock (this.m_requestLocker)
+            lock (m_requestLocker)
             {
-                this.m_getContent = true;
+                m_getContent = true;
                 using (ByteBlock byteBlock = new ByteBlock())
                 {
                     request.Build(byteBlock);
 
-                    this.m_waitData.Reset();
-                    this.m_waitData.SetCancellationToken(token);
+                    m_waitData.Reset();
+                    m_waitData.SetCancellationToken(token);
 
                     this.DefaultSend(byteBlock);
                     if (onlyRequest)
@@ -115,20 +113,20 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (this.m_waitData.Wait(timeout))
+                    switch (m_waitData.Wait(timeout))
                     {
                         case WaitDataStatus.SetRunning:
-                            return this.m_waitData.WaitResult;
+                            return m_waitData.WaitResult;
 
                         case WaitDataStatus.Overtime:
-                            throw new TimeoutException(TouchSocketRes.Overtime.GetDescription());
+                            throw new TimeoutException(TouchSocketStatus.Overtime.GetDescription());
                         case WaitDataStatus.Canceled:
                             return default;
 
                         case WaitDataStatus.Default:
                         case WaitDataStatus.Disposed:
                         default:
-                            throw new Exception(TouchSocketRes.UnknownError.GetDescription());
+                            throw new Exception(TouchSocketStatus.UnknownError.GetDescription());
                     }
                 }
             }
@@ -140,7 +138,7 @@ namespace TouchSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_waitData?.Dispose();
+            m_waitData?.Dispose();
             base.Dispose(disposing);
         }
 
@@ -151,21 +149,21 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override ITcpClient Connect(int timeout = 5000)
         {
-            if (this.Config.GetValue<HttpProxy>(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
+            if (Config.GetValue<HttpProxy>(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
             {
                 IPHost proxyHost = httpProxy.Host;
                 var credential = httpProxy.Credential;
-                IPHost remoteHost = this.Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
+                IPHost remoteHost = Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
                 try
                 {
-                    this.Config.SetRemoteIPHost(proxyHost);
+                    Config.SetRemoteIPHost(proxyHost);
                     base.Connect(timeout);
                     HttpRequest httpRequest = new HttpRequest();
                     httpRequest.InitHeaders()
                         .SetHost(remoteHost.Host)
                         .SetUrl(remoteHost.Host, true)
                         .AsMethod("CONNECT");
-                    var response = this.Request(httpRequest, timeout: timeout);
+                    var response = Request(httpRequest, timeout: timeout);
                     if (response.IsProxyAuthenticationRequired)
                     {
                         if (credential is null)
@@ -187,7 +185,7 @@ namespace TouchSocket.Http
                             base.Connect(timeout);
                         }
 
-                        response = this.Request(httpRequest, timeout: timeout);
+                        response = Request(httpRequest, timeout: timeout);
                     }
 
                     if (response.StatusCode != "200")
@@ -197,7 +195,7 @@ namespace TouchSocket.Http
                 }
                 finally
                 {
-                    this.Config.SetRemoteIPHost(remoteHost);
+                    Config.SetRemoteIPHost(remoteHost);
                 }
             }
             else
@@ -218,11 +216,11 @@ namespace TouchSocket.Http
 
             if (requestInfo is HttpResponse response)
             {
-                if (this.m_getContent)
+                if (m_getContent)
                 {
                     response.TryGetContent(out _);
                 }
-                this.m_waitData.Set(response);
+                m_waitData.Set(response);
             }
         }
 
@@ -232,8 +230,8 @@ namespace TouchSocket.Http
         /// <param name="e"></param>
         protected override void OnConnecting(ClientConnectingEventArgs e)
         {
-            this.Protocol = Protocol.Http;
-            this.SetDataHandlingAdapter(new HttpClientDataHandlingAdapter());
+            Protocol = Protocol.Http;
+            SetDataHandlingAdapter(new HttpClientDataHandlingAdapter());
             base.OnConnecting(e);
         }
     }

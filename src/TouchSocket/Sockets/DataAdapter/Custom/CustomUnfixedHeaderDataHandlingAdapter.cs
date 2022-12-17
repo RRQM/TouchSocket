@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -52,7 +52,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                TUnfixedHeaderRequestInfo requestInfo = this.GetInstance();
+                TUnfixedHeaderRequestInfo requestInfo = GetInstance();
                 if (requestInfo.OnParsingHeader(byteBlock))
                 {
                     request = requestInfo;

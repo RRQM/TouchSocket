@@ -27,7 +27,7 @@ namespace TouchSocket.Http
         /// <param name="request"></param>
         public HttpContext(HttpRequest request)
         {
-            this.Request = request ?? throw new ArgumentNullException(nameof(request));
+            Request = request ?? throw new ArgumentNullException(nameof(request));
         }
 
         /// <summary>
@@ -37,8 +37,8 @@ namespace TouchSocket.Http
         /// <param name="response"></param>
         public HttpContext(HttpRequest request, HttpResponse response)
         {
-            this.Request = request ?? throw new ArgumentNullException(nameof(request));
-            this.m_response = response ?? throw new ArgumentNullException(nameof(response));
+            Request = request ?? throw new ArgumentNullException(nameof(request));
+            m_response = response ?? throw new ArgumentNullException(nameof(response));
         }
 
         /// <summary>
@@ -55,11 +55,11 @@ namespace TouchSocket.Http
             {
                 lock (this)
                 {
-                    if (this.m_response == null)
+                    if (m_response == null)
                     {
-                        this.m_response = new HttpResponse(this.Request.Client, true);
+                        m_response = new HttpResponse(Request.Client, true);
                     }
-                    return this.m_response;
+                    return m_response;
                 }
             }
         }

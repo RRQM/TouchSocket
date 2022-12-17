@@ -15,80 +15,82 @@ using System.IO;
 using System.Threading;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Core.IO
+namespace TouchSocket.Core
 {
     /// <summary>
-    /// 文件存储器。
+    /// 文件存储器。在该存储器中，读写线程安全。
     /// </summary>
-    public class FileStorage : IDisposable
+    public class FileStorage
     {
-        internal int m_reference;
-        private bool m_cache;
-        private bool m_disposedValue;
-        private FileAccess? m_fileAccess;
-        private byte[] m_fileData;
-        private FileInfo m_fileInfo;
-        private FileStream m_fileStream;
+        internal volatile int m_reference;
         private readonly ReaderWriterLockSlim m_lockSlim;
-        private string m_path;
+        private bool m_disposedValue;
+        private byte[] m_fileData;
+
+        /// <summary>
+        /// 初始化一个文件存储器。在该存储器中，读写线程安全。
+        /// </summary>
+        internal FileStorage(FileInfo fileInfo, FileAccess fileAccess) : this()
+        {
+            FileAccess = fileAccess;
+            FileInfo = fileInfo;
+            Path = fileInfo.FullName;
+            m_reference = 0;
+            FileStream = fileAccess == FileAccess.Read ? fileInfo.OpenRead() : fileInfo.OpenWrite();
+            m_lockSlim = new ReaderWriterLockSlim();
+        }
 
         private FileStorage()
         {
-            this.m_lockSlim = new ReaderWriterLockSlim();
+            AccessTime = DateTime.Now;
+            AccessTimeout = TimeSpan.FromSeconds(60);
         }
 
         /// <summary>
-        /// 析构函数
+        /// 最后访问时间。
         /// </summary>
-        ~FileStorage()
-        {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: false);
-        }
+        public DateTime AccessTime { get; private set; }
 
         /// <summary>
-        /// 写入时清空缓存区
+        /// 访问超时时间。默认10s
         /// </summary>
-        public void Flush()
-        {
-            this.m_fileStream.Flush();
-        }
-
-        /// <summary>
-        /// 访问属性
-        /// </summary>
-        public FileAccess? Access => this.m_fileAccess;
+        public TimeSpan AccessTimeout { get; set; }
 
         /// <summary>
         /// 是否为缓存型。为false时，意味着该文件句柄正在被该程序占用。
         /// </summary>
-        public bool Cache => this.m_cache;
+        public bool Cache { get; private set; }
+
+        /// <summary>
+        /// 访问属性
+        /// </summary>
+        public FileAccess FileAccess { get; private set; }
 
         /// <summary>
         /// 文件信息
         /// </summary>
-        public FileInfo FileInfo => this.m_fileInfo;
-
-        /// <summary>
-        /// 文件长度
-        /// </summary>
-        public long Length => this.m_fileStream.Length;
-
-        /// <summary>
-        /// 文件路径
-        /// </summary>
-        public string Path => this.m_path;
-
-        /// <summary>
-        /// 引用次数。
-        /// </summary>
-        public int Reference => this.m_reference;
+        public FileInfo FileInfo { get; private set; }
 
         /// <summary>
         /// 文件流。
         /// 一般情况下，请不要直接访问该对象。否则有可能会产生不可预测的错误。
         /// </summary>
-        public FileStream FileStream { get => this.m_fileStream; }
+        public FileStream FileStream { get; private set; }
+
+        /// <summary>
+        /// 文件长度
+        /// </summary>
+        public long Length => FileStream.Length;
+
+        /// <summary>
+        /// 文件路径
+        /// </summary>
+        public string Path { get; private set; }
+
+        /// <summary>
+        /// 引用次数。
+        /// </summary>
+        public int Reference => m_reference;
 
         /// <summary>
         /// 创建一个只读的、已经缓存的文件信息。该操作不会占用文件句柄。
@@ -103,17 +105,17 @@ namespace TouchSocket.Core.IO
             if (!File.Exists(path))
             {
                 fileStorage = null;
-                msg = TouchSocketRes.FileNotExists.GetDescription(path);
+                msg = TouchSocketStatus.FileNotExists.GetDescription(path);
                 return false;
             }
             try
             {
                 fileStorage = new FileStorage()
                 {
-                    m_cache = true,
-                    m_fileAccess = FileAccess.Read,
-                    m_fileInfo = new FileInfo(path),
-                    m_path = path,
+                    Cache = true,
+                    FileAccess = FileAccess.Read,
+                    FileInfo = new FileInfo(path),
+                    Path = path,
                     m_reference = 0,
                     m_fileData = File.ReadAllBytes(path)
                 };
@@ -129,55 +131,12 @@ namespace TouchSocket.Core.IO
         }
 
         /// <summary>
-        /// 创建一个文件流句柄
+        /// 写入时清空缓存区
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="fileAccess"></param>
-        /// <param name="fileStorage"></param>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        public static bool TryCreateFileStorage(string path, FileAccess fileAccess, out FileStorage fileStorage, out string msg)
+        public void Flush()
         {
-            path = System.IO.Path.GetFullPath(path);
-            if (fileAccess == FileAccess.Read && !File.Exists(path))
-            {
-                fileStorage = null;
-                msg = TouchSocketRes.FileNotExists.GetDescription(path);
-                return false;
-            }
-            try
-            {
-                fileStorage = new FileStorage()
-                {
-                    m_fileAccess = fileAccess,
-                    m_fileInfo = new FileInfo(path),
-                    m_path = path,
-                    m_reference = 0,
-                    m_fileStream = new FileStream(path, FileMode.OpenOrCreate, fileAccess)
-                };
-                msg = null;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                fileStorage = null;
-                msg = ex.Message;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            if (this.m_reference > 0)
-            {
-                throw new Exception("当前对象引用次数不为0，请先降低其引用。");
-            }
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            AccessTime = DateTime.Now;
+            FileStream.Flush();
         }
 
         /// <summary>
@@ -190,28 +149,41 @@ namespace TouchSocket.Core.IO
         /// <returns></returns>
         public int Read(long stratPos, byte[] buffer, int offset, int length)
         {
-            using (WriteLock writeLock = new WriteLock(this.m_lockSlim))
+            AccessTime = DateTime.Now;
+            using (WriteLock writeLock = new WriteLock(m_lockSlim))
             {
-                if (this.m_disposedValue)
+                if (m_disposedValue)
                 {
-                    throw new ObjectDisposedException(this.GetType().FullName);
+                    throw new ObjectDisposedException(GetType().FullName);
                 }
-                if (this.m_fileAccess != FileAccess.Read)
+                if (FileAccess == FileAccess.Write)
                 {
                     throw new Exception("该流不允许读取。");
                 }
-                if (this.m_cache)
+                if (Cache)
                 {
-                    int r = (int)Math.Min(this.m_fileData.Length - stratPos, length);
-                    Array.Copy(this.m_fileData, stratPos, buffer, offset, r);
+                    int r = (int)Math.Min(m_fileData.Length - stratPos, length);
+                    Array.Copy(m_fileData, stratPos, buffer, offset, r);
                     return r;
                 }
                 else
                 {
-                    this.m_fileStream.Position = stratPos;
-                    return this.m_fileStream.Read(buffer, offset, length);
+                    FileStream.Position = stratPos;
+                    return FileStream.Read(buffer, offset, length);
                 }
             }
+        }
+
+        /// <summary>
+        /// 减少引用次数，并尝试释放流。
+        /// </summary>
+        /// <param name="delayTime">延迟释放时间。当设置为0时，立即释放,单位毫秒。</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="Exception"></exception>
+        public Result TryReleaseFile(int delayTime = 0)
+        {
+            return FilePool.TryReleaseFile(Path, delayTime);
         }
 
         /// <summary>
@@ -223,42 +195,34 @@ namespace TouchSocket.Core.IO
         /// <param name="length"></param>
         public void Write(long stratPos, byte[] buffer, int offset, int length)
         {
-            using (WriteLock writeLock = new WriteLock(this.m_lockSlim))
+            AccessTime = DateTime.Now;
+            using (WriteLock writeLock = new WriteLock(m_lockSlim))
             {
-                if (this.m_disposedValue)
+                if (m_disposedValue)
                 {
-                    throw new ObjectDisposedException(this.GetType().FullName);
+                    throw new ObjectDisposedException(GetType().FullName);
                 }
-                if (this.m_fileAccess != FileAccess.Write)
+                if (FileAccess == FileAccess.Read)
                 {
                     throw new Exception("该流不允许写入。");
                 }
-                this.m_fileStream.Position = stratPos;
-                this.m_fileStream.Write(buffer, offset, length);
-                this.m_fileStream.Flush();
+                FileStream.Position = stratPos;
+                FileStream.Write(buffer, offset, length);
+                FileStream.Flush();
             }
         }
 
-        /// <summary>
-        /// 释放
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        internal void Dispose()
         {
-            using (WriteLock writeLock = new WriteLock(this.m_lockSlim))
+            if (m_disposedValue)
             {
-                if (!this.m_disposedValue)
-                {
-                    if (disposing)
-                    {
-                        // TODO: 释放托管状态(托管对象)
-                    }
-                    this.m_fileStream.SafeDispose();
-                    this.m_fileData = null;
-                    // TODO: 释放未托管的资源(未托管的对象)并重写终结器
-                    // TODO: 将大型字段设置为 null
-                    this.m_disposedValue = true;
-                }
+                return;
+            }
+            using (WriteLock writeLock = new WriteLock(m_lockSlim))
+            {
+                m_disposedValue = true;
+                FileStream.SafeDispose();
+                m_fileData = null;
             }
         }
     }

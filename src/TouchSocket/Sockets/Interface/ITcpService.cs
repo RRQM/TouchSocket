@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -50,16 +50,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface ITcpService : IService, IIDSender, IIDRequsetInfoSender, IPluginObject
     {
-        /// <summary>
-        /// 获取清理无数据交互的SocketClient，默认60。如果不想清除，可使用-1。
-        /// </summary>
-        int ClearInterval { get; }
-
-        /// <summary>
-        /// 清理客户端类型
-        /// </summary>
-        ClearType ClearType { get; }
-
         /// <summary>
         /// 当前在线客户端数量
         /// </summary>

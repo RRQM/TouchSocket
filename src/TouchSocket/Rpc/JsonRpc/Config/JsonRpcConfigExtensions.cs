@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
+using TouchSocket.Core;
 using TouchSocket.Rpc.JsonRpc;
 
 namespace TouchSocket.Sockets
@@ -62,8 +61,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 设置JsonRpc的协议。
         /// </summary>
-        public static readonly DependencyProperty JRPTProperty =
-            DependencyProperty.Register("JRPT", typeof(JRPT), typeof(JsonRpcConfigExtensions), JRPT.Tcp);
+        public static readonly DependencyProperty<JRPT> JRPTProperty =
+            DependencyProperty<JRPT>.Register("JRPT", typeof(JsonRpcConfigExtensions), JRPT.Tcp);
 
         /// <summary>
         /// 设置JsonRpc的协议。默认为<see cref="JRPT.Tcp"/>

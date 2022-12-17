@@ -18,16 +18,28 @@ namespace TouchSocket.Rpc.TouchRpc
     /// 传输标识
     /// </summary>
     [Flags]
-    public enum TransferFlags
+    public enum TransferFlags:byte
     {
         /// <summary>
         /// 无任何标识
         /// </summary>
-        None = 1,
+        None = 0,
 
         /// <summary>
-        /// 断点续传
+        /// 断点续传。
+        /// <para>使用该标识时，会使用文件长度验证续传的有效性。如果需要，也可以附加<see cref="TransferFlags.MD5Verify"/>验证。</para>
         /// </summary>
-        BreakpointResume = 2
+        BreakpointResume = 1,
+
+        /// <summary>
+        /// MD5验证。该标识在文件传输完成时，也会再次验证文件长度。
+        /// </summary>
+        MD5Verify=2,
+
+        /// <summary>
+        /// 当传输失败时，删除所有缓存文件。
+        /// <para>注意：当启用断点续传时，该标识无效</para>
+        /// </summary>
+        DeleteWhenFail=4
     }
 }

@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -76,20 +76,20 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public bool Build(ByteBlock byteBlock, bool masked)
         {
-            if (this.PayloadData != null)
+            if (PayloadData != null)
             {
-                this.PayloadLength = this.PayloadData.Len;
+                PayloadLength = PayloadData.Len;
             }
             else
             {
-                this.PayloadLength = 0;
+                PayloadLength = 0;
             }
 
-            if (this.PayloadData == null)
+            if (PayloadData == null)
             {
                 return WSTools.Build(byteBlock, this, new byte[0], 0, 0);
             }
-            return WSTools.Build(byteBlock, this, this.PayloadData.Buffer, 0, this.PayloadLength);
+            return WSTools.Build(byteBlock, this, PayloadData.Buffer, 0, PayloadLength);
         }
 
         /// <summary>
@@ -98,15 +98,15 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!this.m_disposedValue)
+            if (!m_disposedValue)
             {
                 if (disposing)
                 {
                     // TODO: 释放托管状态(托管对象)
                 }
 
-                this.PayloadData?.Dispose();
-                this.m_disposedValue = true;
+                PayloadData?.Dispose();
+                m_disposedValue = true;
             }
         }
 
@@ -116,7 +116,7 @@ namespace TouchSocket.Http.WebSockets
         ~WSDataFrame()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: false);
+            Dispose(disposing: false);
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace TouchSocket.Http.WebSockets
         public void Dispose()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

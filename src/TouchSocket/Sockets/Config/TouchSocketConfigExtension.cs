@@ -13,8 +13,8 @@
 using System;
 using System.Security.Authentication;
 using System.Threading;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
+using TouchSocket.Core;
+
 
 namespace TouchSocket.Sockets
 {
@@ -33,16 +33,14 @@ namespace TouchSocket.Sockets
         /// </list>
         /// 所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty BufferLengthProperty =
-            DependencyProperty.Register("BufferLength", typeof(int), typeof(TouchSocketConfigExtension), 1024 * 64);
+        public static readonly DependencyProperty<int> BufferLengthProperty =
+            DependencyProperty<int>.Register("BufferLength", typeof(TouchSocketConfigExtension), 1024 * 64);
 
         /// <summary>
         /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty DataHandlingAdapterProperty =
-            DependencyProperty.Register("DataHandlingAdapter", typeof(Func<DataHandlingAdapter>), typeof(TouchSocketConfigExtension),
-               (Func<DataHandlingAdapter>)(() => { return new NormalDataHandlingAdapter(); }));
+        public static readonly DependencyProperty<Func<DataHandlingAdapter>> DataHandlingAdapterProperty = DependencyProperty<Func<DataHandlingAdapter>>.Register("DataHandlingAdapter", typeof(TouchSocketConfigExtension), (Func<DataHandlingAdapter>)(() => { return new NormalDataHandlingAdapter(); }));
 
         /// <summary>
         /// 接收类型，默认为<see cref="ReceiveType.Auto"/>
@@ -50,19 +48,16 @@ namespace TouchSocket.Sockets
         /// <para><see cref="ReceiveType.None"/>为不投递IO接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。注意：连接端不会感知主动断开</para>
         /// 所需类型<see cref="TouchSocket.Sockets. ReceiveType"/>
         /// </summary>
-        public static readonly DependencyProperty ReceiveTypeProperty =
-            DependencyProperty.Register("ReceiveType", typeof(ReceiveType), typeof(TouchSocketConfigExtension), ReceiveType.Auto);
+        public static readonly DependencyProperty<ReceiveType> ReceiveTypeProperty = DependencyProperty<ReceiveType>.Register("ReceiveType", typeof(TouchSocketConfigExtension), ReceiveType.Auto);
 
         /// <summary>
         /// 数据处理适配器，默认为获取<see cref="UdpDataHandlingAdapter"/>
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty UdpDataHandlingAdapterProperty =
-            DependencyProperty.Register("UdpDataHandlingAdapter", typeof(Func<UdpDataHandlingAdapter>), typeof(TouchSocketConfigExtension),
-               (Func<UdpDataHandlingAdapter>)(() => { return new NormalUdpDataHandlingAdapter(); }));
+        public static readonly DependencyProperty<Func<UdpDataHandlingAdapter>> UdpDataHandlingAdapterProperty = DependencyProperty<Func<UdpDataHandlingAdapter>>.Register("UdpDataHandlingAdapter", typeof(TouchSocketConfigExtension), (Func<UdpDataHandlingAdapter>)(() => { return new NormalUdpDataHandlingAdapter(); }));
 
         /// <summary>
-        /// 接收缓存容量，默认1024*10，其作用有两个：
+        /// 接收缓存容量，默认1024*64，其作用有两个：
         /// <list type="number">
         /// <item>指示单次可接受的最大数据量</item>
         /// <item>指示常规申请内存块的长度</item>
@@ -122,17 +117,15 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 服务名称，用于标识，无实际意义，所需类型<see cref="string"/>
         /// </summary>
-        public static readonly DependencyProperty ServerNameProperty =
-            DependencyProperty.Register("ServerName", typeof(string), typeof(TouchSocketConfigExtension), "RRQMServer");
+        public static readonly DependencyProperty<string> ServerNameProperty = DependencyProperty<string>.Register("ServerName", typeof(TouchSocketConfigExtension), "TouchSocketServer");
 
         /// <summary>
-        /// 多线程数量，默认为10。
+        /// 多线程数量。
         /// <para>TCP模式中，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/></para>
         /// <para>UDP模式中，该值为重叠IO并发数</para>
         /// 所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty ThreadCountProperty =
-            DependencyProperty.Register("ThreadCount", typeof(int), typeof(TouchSocketConfigExtension), 10);
+        public static readonly DependencyProperty<int> ThreadCountProperty = DependencyProperty<int>.Register("ThreadCount", typeof(TouchSocketConfigExtension), -1);
 
         /// <summary>
         /// 服务名称，用于标识，无实际意义
@@ -147,7 +140,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 多线程数量，默认为10。
+        /// 多线程数量，默认为-1缺省，实际上在tcp中相当于值10，udp中相当于1。
         /// <para>TCP模式中，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/></para>
         /// <para>UDP模式中，该值为重叠IO并发数</para>
         /// </summary>
@@ -162,54 +155,114 @@ namespace TouchSocket.Sockets
 
         #endregion ServiceBase
 
+        #region 适配器配置
+        /// <summary>
+        /// 适配器数据包缓存启用。默认为缺省（null），如果有正常值会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.CacheTimeout"/>
+        /// </summary>
+        public static readonly DependencyProperty<bool?> CacheTimeoutEnableProperty = DependencyProperty<bool?>.Register("CacheTimeoutEnable", typeof(TouchSocketConfigExtension), null);
+
+        /// <summary>
+        /// 适配器数据包缓存启用。默认为缺省（null），如果有正常值会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.CacheTimeoutEnable"/>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetCacheTimeoutEnable(this TouchSocketConfig config, bool value)
+        {
+            config.SetValue(CacheTimeoutEnableProperty, value);
+            return config;
+        }
+
+        /// <summary>
+        /// 适配器数据包缓存时长。默认为缺省（<see cref="TimeSpan.Zero"/>）。当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.CacheTimeout"/>
+        /// </summary>
+        public static readonly DependencyProperty<TimeSpan> CacheTimeoutProperty = DependencyProperty<TimeSpan>.Register("CacheTimeout", typeof(TouchSocketConfigExtension), TimeSpan.Zero);
+
+        /// <summary>
+        /// 适配器数据包缓存时长。默认为缺省（<see cref="TimeSpan.Zero"/>）。当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.CacheTimeout"/>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetCacheTimeout(this TouchSocketConfig config, TimeSpan value)
+        {
+            config.SetValue(CacheTimeoutProperty, value);
+            return config;
+        }
+
+        /// <summary>
+        /// 适配器数据包缓存策略。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.UpdateCacheTimeWhenRev"/>
+        /// </summary>
+        public static readonly DependencyProperty<bool?> UpdateCacheTimeWhenRevProperty = DependencyProperty<bool?>.Register("UpdateCacheTimeWhenRev", typeof(TouchSocketConfigExtension), null);
+
+        /// <summary>
+        /// 适配器数据包缓存策略。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.UpdateCacheTimeWhenRev"/>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetUpdateCacheTimeWhenRev(this TouchSocketConfig config, bool value)
+        {
+            config.SetValue(UpdateCacheTimeWhenRevProperty, value);
+            return config;
+        }
+
+        /// <summary>
+        /// 适配器数据包最大值。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
+        /// </summary>
+        public static readonly DependencyProperty<int?> MaxPackageSizeProperty = DependencyProperty<int?>.Register("MaxPackageSize", typeof(TouchSocketConfigExtension), null);
+
+        /// <summary>
+        /// 适配器数据包最大值。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetMaxPackageSize(this TouchSocketConfig config, int value)
+        {
+            config.SetValue(MaxPackageSizeProperty, value);
+            return config;
+        }
+        #endregion
+
         #region TcpClient
 
         /// <summary>
         /// TCP固定端口绑定，
         /// 所需类型<see cref="IPHost"/>
         /// </summary>
-        public static readonly DependencyProperty BindIPHostProperty =
-            DependencyProperty.Register("BindIPHost", typeof(IPHost), typeof(TouchSocketConfigExtension), null);
+        public static readonly DependencyProperty<IPHost> BindIPHostProperty = DependencyProperty<IPHost>.Register("BindIPHost", typeof(TouchSocketConfigExtension), null);
 
         /// <summary>
-        /// 在Socket配置KeepAlive属性，
+        /// 在Socket配置KeepAlive属性，这个是操作tcp底层的，如果你对底层不了解，建议不要动。
         /// 所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty KeepAliveValueProperty =
-            DependencyProperty.Register("KeepAliveValue", typeof(KeepAliveValue), typeof(TouchSocketConfigExtension), new KeepAliveValue());
+        public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = DependencyProperty<KeepAliveValue>.Register("KeepAliveValue", typeof(TouchSocketConfigExtension), new KeepAliveValue());
 
-        /// <summary>
-        /// 数据包最大值。该值会在适当时间，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
-        /// </summary>
-        public static readonly DependencyProperty MaxPackageSizeProperty =
-           DependencyProperty.Register("MaxPackageSize", typeof(int), typeof(TouchSocketConfigExtension), 1024 * 1024 * 10);
+
 
         /// <summary>
         /// 设置Socket不使用Delay算法，
         /// 所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty NoDelayProperty =
-            DependencyProperty.Register("NoDelay", typeof(bool), typeof(TouchSocketConfigExtension), false);
+        public static readonly DependencyProperty<bool> NoDelayProperty = DependencyProperty<bool>.Register("NoDelay", typeof(TouchSocketConfigExtension), false);
 
         /// <summary>
         /// 远程目标地址，所需类型<see cref="IPHost"/>
         /// </summary>
-        public static readonly DependencyProperty RemoteIPHostProperty =
-            DependencyProperty.Register("RemoteIPHost", typeof(IPHost), typeof(TouchSocketConfigExtension), null);
+        public static readonly DependencyProperty<IPHost> RemoteIPHostProperty = DependencyProperty<IPHost>.Register("RemoteIPHost", typeof(TouchSocketConfigExtension), null);
 
         /// <summary>
         /// Ssl配置，为Null时则不启用
         /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
         /// </summary>
-        public static readonly DependencyProperty SslOptionProperty =
-            DependencyProperty.Register("SslOption", typeof(SslOption), typeof(TouchSocketConfigExtension), null);
+        public static readonly DependencyProperty<SslOption> SslOptionProperty = DependencyProperty<SslOption>.Register("SslOption", typeof(TouchSocketConfigExtension), null);
 
         /// <summary>
         /// 是否使用延迟合并发送。默认null。不开启
         /// 所需类型<see cref="DelaySenderOption"/>
         /// </summary>
-        public static readonly DependencyProperty DelaySenderProperty =
-            DependencyProperty.Register("DelaySender", typeof(DelaySenderOption), typeof(TouchSocketConfigExtension), null);
+        public static readonly DependencyProperty<DelaySenderOption> DelaySenderProperty = DependencyProperty<DelaySenderOption>.Register("DelaySender", typeof(TouchSocketConfigExtension), null);
 
         /// <summary>
         /// 使用默认配置延迟合并发送。
@@ -284,6 +337,7 @@ namespace TouchSocket.Sockets
 
         /// <summary>
         /// 在Socket的KeepAlive属性。
+        /// <para>注意：这个是操作tcp底层的，如果你对底层不了解，建议不要动。</para>
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
@@ -291,18 +345,6 @@ namespace TouchSocket.Sockets
         public static TouchSocketConfig SetKeepAliveValue(this TouchSocketConfig config, KeepAliveValue value)
         {
             config.SetValue(KeepAliveValueProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 数据包最大值，默认1024*1024*10。该值会在适当时间，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetMaxPackageSize(this TouchSocketConfig config, int value)
-        {
-            config.SetValue(MaxPackageSizeProperty, value);
             return config;
         }
 
@@ -354,49 +396,27 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 挂起连接队列的最大长度，所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty BacklogProperty =
-            DependencyProperty.Register("Backlog", typeof(int), typeof(TouchSocketConfigExtension), 100);
-
-        /// <summary>
-        /// 获取或设置清理无数据交互的SocketClient，默认60*1000 ms。如果不想清除，可使用-1。
-        /// 所需类型<see cref="int"/>
-        /// </summary>
-        public static readonly DependencyProperty ClearIntervalProperty =
-            DependencyProperty.Register("ClearInterval", typeof(int), typeof(TouchSocketConfigExtension), 60 * 1000);
-
-        /// <summary>
-        /// 清理统计类型。
-        /// <para><see cref="ClearType.Receive"/>为在收到数据时，刷新统计，如果一直有数据接收，则不会被主动清理断开</para>
-        /// <para><see cref="ClearType.Send"/>为在发送数据时，刷新统计，如果一直有数据发送，则不会被主动清理断开</para>
-        /// <para>二者可叠加使用。</para>
-        /// 所需类型<see cref="TouchSocket.Sockets.ClearType"/>
-        /// </summary>
-        public static readonly DependencyProperty ClearTypeProperty =
-            DependencyProperty.Register("ClearType", typeof(ClearType), typeof(TouchSocketConfigExtension), ClearType.Send | ClearType.Receive);
+        public static readonly DependencyProperty<int> BacklogProperty = DependencyProperty<int>.Register("Backlog", typeof(TouchSocketConfigExtension), 100);
 
         /// <summary>
         /// 设置默认ID的获取方式，所需类型<see cref="Func{T, TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty GetDefaultNewIDProperty =
-            DependencyProperty.Register("GetDefaultNewID", typeof(Func<string>), typeof(TouchSocketConfigExtension), null);
+        public static readonly DependencyProperty<Func<string>> GetDefaultNewIDProperty = DependencyProperty<Func<string>>.Register("GetDefaultNewID", typeof(TouchSocketConfigExtension), null);
 
         /// <summary>
         /// 服务器负责监听的地址组。所需类型<see cref="IPHost"/>数组
         /// </summary>
-        public static readonly DependencyProperty ListenIPHostsProperty =
-            DependencyProperty.Register("ListenIPHosts", typeof(IPHost[]), typeof(TouchSocketConfigExtension), null);
+        public static readonly DependencyProperty<IPHost[]> ListenIPHostsProperty = DependencyProperty<IPHost[]>.Register("ListenIPHosts", typeof(TouchSocketConfigExtension), null);
 
         /// <summary>
         /// 最大可连接数，默认为10000，所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty MaxCountProperty =
-            DependencyProperty.Register("MaxCount", typeof(int), typeof(TouchSocketConfigExtension), 10000);
+        public static readonly DependencyProperty<int> MaxCountProperty = DependencyProperty<int>.Register("MaxCount", typeof(TouchSocketConfigExtension), 10000);
 
         /// <summary>
         /// 端口复用，默认为false，所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty ReuseAddressProperty =
-            DependencyProperty.Register("ReuseAddress", typeof(bool), typeof(TouchSocketConfigExtension), false);
+        public static readonly DependencyProperty<bool> ReuseAddressProperty = DependencyProperty<bool>.Register("ReuseAddress", typeof(TouchSocketConfigExtension), false);
 
         /// <summary>
         /// 启用端口复用。
@@ -428,29 +448,29 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。")]
         public static TouchSocketConfig SetClearInterval(this TouchSocketConfig config, int value)
         {
-            config.SetValue(ClearIntervalProperty, value);
-            return config;
+            throw new NotImplementedException();
         }
 
         /// <summary>
         /// 清理统计类型。
-        /// <para><see cref="ClearType.Receive"/>为在收到数据时，刷新统计，如果一直有数据接收，则不会被主动清理断开</para>
-        /// <para><see cref="ClearType.Send"/>为在发送数据时，刷新统计，如果一直有数据发送，则不会被主动清理断开</para>
+        /// <para><see cref="CheckClearType.OnlyReceive"/>为在收到数据时，刷新统计，如果一直有数据接收，则不会被主动清理断开</para>
+        /// <para><see cref="CheckClearType.OnlySend"/>为在发送数据时，刷新统计，如果一直有数据发送，则不会被主动清理断开</para>
         /// <para>二者可叠加使用。</para>
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig SetClearType(this TouchSocketConfig config, ClearType value)
+        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。")]
+        public static TouchSocketConfig SetClearType(this TouchSocketConfig config, CheckClearType value)
         {
-            config.SetValue(ClearTypeProperty, value);
-            return config;
+            throw new NotImplementedException();
         }
 
         /// <summary>
-        /// 设置默认ID的获取方式。
+        /// 设置默认ID的获取方式。仅服务器生效。
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
@@ -504,8 +524,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
         /// </summary>
-        public static readonly DependencyProperty EnableBroadcastProperty =
-            DependencyProperty.Register("EnableBroadcast", typeof(bool), typeof(TouchSocketConfigExtension), false);
+        public static readonly DependencyProperty<bool> EnableBroadcastProperty = DependencyProperty<bool>.Register("EnableBroadcast", typeof(TouchSocketConfigExtension), false);
 
         /// <summary>
         /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。

@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;net6;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net45;netstandard2.0;netcoreapp3.1;net7.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>RRQM.pfx</AssemblyOriginatorKeyFile>
-		<Version>0.7.7</Version>
+		<AssemblyOriginatorKeyFile>D:\MyStore\13_Doc\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
+		<Version>1.0.0-beta</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -13,11 +13,7 @@
 
 This is a lightweight, plug-in - enabled comprehensive network communication library. Basic communication functions include Tcp, Udp, Ssl, Rpc, and Http. HTTP server supports WebSocket, static web page, XmlRpc, WebApi, JsonRpc and other extension plug-ins. And custom protocol TouchRpc, support Ssl encryption, asynchronous call, permission management, error status return, service callback, distributed call, etc. It takes 3.8 seconds for 100,000 calls when the no-load function is executing, and 0.9 seconds when the state is not returned.
 
-API：https://www.yuque.com/rrqm/touchsocket/index
-
-特别说明：本程序集在源码里内嵌了Newtonsoft.Json 11.0.3，但为防止冲突，已修改其命名空间。
-特此感谢其作者！！！
-附带其Github：https://github.com/JamesNK/Newtonsoft.Json</Description>
+API：https://www.yuque.com/rrqm/touchsocket/index</Description>
 		<PackageProjectUrl>https://gitee.com/dotnetchina/touchsocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<PackageIcon>logo.png</PackageIcon>
@@ -42,6 +38,7 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
 		<DocumentationFile>bin\Debug\net45\TouchSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
+		<DefineConstants>TRACE;DEBUG</DefineConstants>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Optimize>false</Optimize>
 	</PropertyGroup>
@@ -52,14 +49,26 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6|AnyCPU'">
-		<DocumentationFile>bin\Debug\net6\TouchSocket.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
+		<DocumentationFile>bin\Debug\net7.0\TouchSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6|AnyCPU'">
-		<DocumentationFile>bin\Release\net6\TouchSocket.xml</DocumentationFile>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+		<DocumentationFile>bin\Release\net7.0\TouchSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Debug\netcoreapp3.1\TouchSocket.xml</DocumentationFile>
+		<OutputPath></OutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+		<DocumentationFile>bin\Release\netcoreapp3.1\TouchSocket.xml</DocumentationFile>
 		<OutputPath></OutputPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
@@ -77,5 +86,11 @@ API：https://www.yuque.com/rrqm/touchsocket/index
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
 		<Reference Include="System.Web" />
+		<Reference Include="Microsoft.CSharp" />
 	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="All" />
+	</ItemGroup>
+
 </Project>

@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Dependency
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 指定依赖类型。
@@ -26,7 +26,7 @@ namespace TouchSocket.Core.Dependency
         /// <param name="type">可以叠加位域</param>
         public DependencyTypeAttribute(DependencyType type)
         {
-            this.Type = type;
+            Type = type;
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace TouchSocket.Core.Dependency
         /// <param name="ps"></param>
         public DependencyInjectAttribute(params object[] ps)
         {
-            this.Ps = ps;
+            Ps = ps;
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace TouchSocket.Core.Dependency
         /// <param name="ps"></param>
         public DependencyParamterInjectAttribute(string key, params object[] ps) : base(ps)
         {
-            this.Key = key;
+            Key = key;
         }
 
         /// <summary>
@@ -102,8 +102,8 @@ namespace TouchSocket.Core.Dependency
         /// <param name="ps"></param>
         public DependencyParamterInjectAttribute(Type type, string key, params object[] ps) : base(ps)
         {
-            this.Key = key;
-            this.Type = type;
+            Key = key;
+            Type = type;
         }
 
         /// <summary>
@@ -113,8 +113,8 @@ namespace TouchSocket.Core.Dependency
         /// <param name="ps"></param>
         public DependencyParamterInjectAttribute(Type type, params object[] ps) : base(ps)
         {
-            this.Key = string.Empty;
-            this.Type = type;
+            Key = string.Empty;
+            Type = type;
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace TouchSocket.Core.Dependency
         /// <param name="resolveNullIfNoRegistered"></param>
         public DependencyParamterInjectAttribute(bool resolveNullIfNoRegistered)
         {
-            this.ResolveNullIfNoRegistered = resolveNullIfNoRegistered;
+            ResolveNullIfNoRegistered = resolveNullIfNoRegistered;
         }
 
         /// <summary>

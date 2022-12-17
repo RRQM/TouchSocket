@@ -13,9 +13,7 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Run;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -48,18 +46,18 @@ namespace TouchSocket.Http
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            if (this.tempByteBlock == null)
+            if (tempByteBlock == null)
             {
                 byteBlock.Pos = 0;
-                this.Single(byteBlock, false);
+                Single(byteBlock, false);
             }
             else
             {
-                this.tempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
-                ByteBlock block = this.tempByteBlock;
-                this.tempByteBlock = null;
+                tempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
+                ByteBlock block = tempByteBlock;
+                tempByteBlock = null;
                 block.Pos = 0;
-                this.Single(block, true);
+                Single(block, true);
             }
         }
 
@@ -67,11 +65,11 @@ namespace TouchSocket.Http
         {
             if (byteBlock.CanReadLen > 0)
             {
-                this.tempByteBlock = new ByteBlock();
-                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
-                if (this.tempByteBlock.Len > this.MaxPackageSize)
+                tempByteBlock = new ByteBlock();
+                tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                if (tempByteBlock.Len > MaxPackageSize)
                 {
-                    this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                    OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
                 }
             }
         }
@@ -95,7 +93,7 @@ namespace TouchSocket.Http
                         return FilterResult.Cache;
                     }
 
-                    this.m_httpResponse.InternalInput(byteBlock.Buffer, byteBlock.Pos, count);
+                    m_httpResponse.InternalInput(byteBlock.Buffer, byteBlock.Pos, count);
                     byteBlock.Pos += count;
                     byteBlock.Pos += 2;
                     return FilterResult.GoOn;
@@ -118,51 +116,51 @@ namespace TouchSocket.Http
             {
                 while (byteBlock.CanReadLen > 0)
                 {
-                    if (this.m_httpResponse == null)
+                    if (m_httpResponse == null)
                     {
-                        this.m_httpResponse = new HttpResponse(this.Client, false);
-                        if (this.m_httpResponse.ParsingHeader(byteBlock, byteBlock.CanReadLen))
+                        m_httpResponse = new HttpResponse(Client, false);
+                        if (m_httpResponse.ParsingHeader(byteBlock, byteBlock.CanReadLen))
                         {
                             byteBlock.Pos++;
-                            if (this.m_httpResponse.IsChunk || this.m_httpResponse.ContentLength > byteBlock.CanReadLength)
+                            if (m_httpResponse.IsChunk || m_httpResponse.ContentLength > byteBlock.CanReadLength)
                             {
-                                this.m_surLen = this.m_httpResponse.ContentLength;
-                                this.m_task = EasyAction.TaskRun(this.m_httpResponse, (res) =>
+                                m_surLen = m_httpResponse.ContentLength;
+                                m_task = EasyTask.Run(m_httpResponse, (res) =>
                                 {
-                                    this.GoReceived(null, res);
+                                    GoReceived(null, res);
                                 });
                             }
                             else
                             {
-                                byteBlock.Read(out byte[] buffer, (int)this.m_httpResponse.ContentLength);
-                                this.m_httpResponse.SetContent(buffer);
-                                this.GoReceived(null, this.m_httpResponse);
-                                this.m_httpResponse = null;
+                                byteBlock.Read(out byte[] buffer, (int)m_httpResponse.ContentLength);
+                                m_httpResponse.SetContent(buffer);
+                                GoReceived(null, m_httpResponse);
+                                m_httpResponse = null;
                             }
                         }
                         else
                         {
-                            this.Cache(byteBlock);
-                            this.m_httpResponse = null;
-                            this.m_task?.Wait();
-                            this.m_task = null;
+                            Cache(byteBlock);
+                            m_httpResponse = null;
+                            m_task?.Wait();
+                            m_task = null;
                             return;
                         }
                     }
-                    if (this.m_httpResponse != null)
+                    if (m_httpResponse != null)
                     {
-                        if (this.m_httpResponse.IsChunk)
+                        if (m_httpResponse.IsChunk)
                         {
-                            switch (this.ReadChunk(byteBlock))
+                            switch (ReadChunk(byteBlock))
                             {
                                 case FilterResult.Cache:
-                                    this.Cache(byteBlock);
+                                    Cache(byteBlock);
                                     return;
 
                                 case FilterResult.Success:
-                                    this.m_httpResponse = null;
-                                    this.m_task?.Wait();
-                                    this.m_task = null;
+                                    m_httpResponse = null;
+                                    m_task?.Wait();
+                                    m_task = null;
                                     break;
 
                                 case FilterResult.GoOn:
@@ -170,28 +168,28 @@ namespace TouchSocket.Http
                                     break;
                             }
                         }
-                        else if (this.m_surLen > 0)
+                        else if (m_surLen > 0)
                         {
                             if (byteBlock.CanRead)
                             {
-                                int len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                                this.m_httpResponse.InternalInput(byteBlock.Buffer, byteBlock.Pos, len);
-                                this.m_surLen -= len;
+                                int len = (int)Math.Min(m_surLen, byteBlock.CanReadLength);
+                                m_httpResponse.InternalInput(byteBlock.Buffer, byteBlock.Pos, len);
+                                m_surLen -= len;
                                 byteBlock.Pos += len;
-                                if (this.m_surLen == 0)
+                                if (m_surLen == 0)
                                 {
-                                    this.m_httpResponse.InternalInput(null, 0, 0);
-                                    this.m_httpResponse = null;
-                                    this.m_task?.Wait();
-                                    this.m_task = null;
+                                    m_httpResponse.InternalInput(null, 0, 0);
+                                    m_httpResponse = null;
+                                    m_task?.Wait();
+                                    m_task = null;
                                 }
                             }
                         }
                         else
                         {
-                            this.m_httpResponse = null;
-                            this.m_task?.Wait();
-                            this.m_task = null;
+                            m_httpResponse = null;
+                            m_task?.Wait();
+                            m_task = null;
                         }
                     }
                 }

@@ -12,8 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Run;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -39,18 +38,18 @@ namespace TouchSocket.Http
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            if (this.tempByteBlock == null)
+            if (tempByteBlock == null)
             {
                 byteBlock.Pos = 0;
-                this.Single(byteBlock, false);
+                Single(byteBlock, false);
             }
             else
             {
-                this.tempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
-                ByteBlock block = this.tempByteBlock;
-                this.tempByteBlock = null;
+                tempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
+                ByteBlock block = tempByteBlock;
+                tempByteBlock = null;
                 block.Pos = 0;
-                this.Single(block, true);
+                Single(block, true);
             }
         }
 
@@ -64,61 +63,61 @@ namespace TouchSocket.Http
             {
                 while (byteBlock.CanReadLen > 0)
                 {
-                    if (this.m_httpRequest == null)
+                    if (m_httpRequest == null)
                     {
-                        this.m_httpRequest = new HttpRequest(this.Client, true);
-                        if (this.m_httpRequest.ParsingHeader(byteBlock, byteBlock.CanReadLen))
+                        m_httpRequest = new HttpRequest(Client, true);
+                        if (m_httpRequest.ParsingHeader(byteBlock, byteBlock.CanReadLen))
                         {
                             byteBlock.Pos++;
-                            if (this.m_httpRequest.ContentLength > byteBlock.CanReadLength)
+                            if (m_httpRequest.ContentLength > byteBlock.CanReadLength)
                             {
-                                this.m_surLen = this.m_httpRequest.ContentLength;
+                                m_surLen = m_httpRequest.ContentLength;
 
-                                this.m_task = EasyAction.TaskRun(this.m_httpRequest, (res) =>
+                                m_task = EasyTask.Run(m_httpRequest, (res) =>
                                 {
-                                    this.GoReceived(null, res);
+                                    GoReceived(null, res);
                                 });
                             }
                             else
                             {
-                                byteBlock.Read(out byte[] buffer, (int)this.m_httpRequest.ContentLength);
-                                this.m_httpRequest.SetContent(buffer);
-                                this.GoReceived(null, this.m_httpRequest);
-                                this.m_httpRequest = null;
+                                byteBlock.Read(out byte[] buffer, (int)m_httpRequest.ContentLength);
+                                m_httpRequest.SetContent(buffer);
+                                GoReceived(null, m_httpRequest);
+                                m_httpRequest = null;
                             }
                         }
                         else
                         {
-                            this.Cache(byteBlock);
-                            this.m_httpRequest = null;
-                            this.m_task?.Wait();
-                            this.m_task = null;
+                            Cache(byteBlock);
+                            m_httpRequest = null;
+                            m_task?.Wait();
+                            m_task = null;
                             return;
                         }
                     }
 
-                    if (this.m_surLen > 0)
+                    if (m_surLen > 0)
                     {
                         if (byteBlock.CanRead)
                         {
-                            int len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                            this.m_httpRequest.InternalInput(byteBlock.Buffer, byteBlock.Pos, len);
-                            this.m_surLen -= len;
+                            int len = (int)Math.Min(m_surLen, byteBlock.CanReadLength);
+                            m_httpRequest.InternalInput(byteBlock.Buffer, byteBlock.Pos, len);
+                            m_surLen -= len;
                             byteBlock.Pos += len;
-                            if (this.m_surLen == 0)
+                            if (m_surLen == 0)
                             {
-                                this.m_httpRequest.InternalInput(null, 0, 0);
-                                this.m_httpRequest = null;
-                                this.m_task?.Wait();
-                                this.m_task = null;
+                                m_httpRequest.InternalInput(null, 0, 0);
+                                m_httpRequest = null;
+                                m_task?.Wait();
+                                m_task = null;
                             }
                         }
                     }
                     else
                     {
-                        this.m_httpRequest = null;
-                        this.m_task?.Wait();
-                        this.m_task = null;
+                        m_httpRequest = null;
+                        m_task?.Wait();
+                        m_task = null;
                     }
                 }
             }
@@ -135,11 +134,11 @@ namespace TouchSocket.Http
         {
             if (byteBlock.CanReadLen > 0)
             {
-                this.tempByteBlock = new ByteBlock();
-                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
-                if (this.tempByteBlock.Len > this.MaxPackageSize)
+                tempByteBlock = new ByteBlock();
+                tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                if (tempByteBlock.Len > MaxPackageSize)
                 {
-                    this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                    OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
                 }
             }
         }

@@ -31,7 +31,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <param name="method"></param>
         public WebApiAttribute(HttpMethodType method)
         {
-            this.m_method = method;
+            m_method = method;
         }
 
 
@@ -47,7 +47,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <summary>
         /// 函数类型。
         /// </summary>
-        public HttpMethodType Method => this.m_method;
+        public HttpMethodType Method => m_method;
 
         /// <summary>
         /// <inheritdoc/>
@@ -61,9 +61,9 @@ namespace TouchSocket.Rpc.WebApi
             {
                 i = 1;
             }
-            if (this.m_method == HttpMethodType.GET)
+            if (m_method == HttpMethodType.GET)
             {
-                string actionUrl = this.GetRouteUrls(methodInstance)[0];
+                string actionUrl = GetRouteUrls(methodInstance)[0];
                 if (methodInstance.ParameterNames.Length > i)
                 {
                     StringBuilder stringBuilder = new StringBuilder();
@@ -81,9 +81,9 @@ namespace TouchSocket.Rpc.WebApi
                 }
                 return $"GET:{actionUrl}";
             }
-            else if (this.m_method == HttpMethodType.POST)
+            else if (m_method == HttpMethodType.POST)
             {
-                string actionUrl = this.GetRouteUrls(methodInstance)[0];
+                string actionUrl = GetRouteUrls(methodInstance)[0];
                 if (methodInstance.ParameterNames.Length > i + 1)
                 {
                     StringBuilder stringBuilder = new StringBuilder();

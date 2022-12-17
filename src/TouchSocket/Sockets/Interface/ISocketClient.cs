@@ -25,11 +25,6 @@ namespace TouchSocket.Sockets
         void ResetID(string newID);
 
         /// <summary>
-        /// 选择清理类型
-        /// </summary>
-        ClearType ClearType { get; set; }
-
-        /// <summary>
         /// 用于索引的ID
         /// </summary>
         string ID { get; }

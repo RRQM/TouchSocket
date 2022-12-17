@@ -24,8 +24,28 @@ namespace TouchSocket.Rpc.TouchRpc
         Push,
 
         /// <summary>
-        /// 拉去
+        /// 拉取
         /// </summary>
         Pull,
+
+        /// <summary>
+        /// 分块推送
+        /// </summary>
+        SectionPush,
+
+        /// <summary>
+        /// 分块拉取
+        /// </summary>
+        SectionPull,
+
+        /// <summary>
+        /// 小文件推送
+        /// </summary>
+        SmallPush,
+
+        /// <summary>
+        /// 小文件拉取
+        /// </summary>
+        SmallPull
     }
 }

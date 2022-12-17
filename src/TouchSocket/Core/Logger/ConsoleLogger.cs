@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 控制台日志记录器
@@ -24,8 +24,8 @@ namespace TouchSocket.Core.Log
         /// </summary>
         public ConsoleLogger()
         {
-            this.m_consoleForegroundColor = Console.ForegroundColor;
-            this.m_consoleBackgroundColor = Console.BackgroundColor;
+            m_consoleForegroundColor = Console.ForegroundColor;
+            m_consoleBackgroundColor = Console.BackgroundColor;
         }
 
         private readonly ConsoleColor m_consoleForegroundColor;
@@ -54,13 +54,13 @@ namespace TouchSocket.Core.Log
                         Console.ForegroundColor = ConsoleColor.Red;
                         break;
 
-                    case LogType.Information:
+                    case LogType.Info:
                     default:
-                        Console.ForegroundColor = this.m_consoleForegroundColor;
+                        Console.ForegroundColor = m_consoleForegroundColor;
                         break;
                 }
                 Console.Write(logType.ToString());
-                Console.ForegroundColor = this.m_consoleForegroundColor;
+                Console.ForegroundColor = m_consoleForegroundColor;
                 Console.Write(" | ");
                 Console.Write(message);
 
@@ -72,8 +72,8 @@ namespace TouchSocket.Core.Log
                 }
                 Console.WriteLine();
 
-                Console.ForegroundColor = this.m_consoleForegroundColor;
-                Console.BackgroundColor = this.m_consoleBackgroundColor;
+                Console.ForegroundColor = m_consoleForegroundColor;
+                Console.BackgroundColor = m_consoleBackgroundColor;
             }
         }
     }

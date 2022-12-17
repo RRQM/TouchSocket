@@ -11,10 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Sockets.Plugins;
 
-namespace TouchSocket.Core.Plugins
+namespace TouchSocket.Core
 {
     /// <summary>
     /// PlguinObjectExtension

@@ -15,7 +15,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace TouchSocket.Core.Pool
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 对象池
@@ -35,7 +35,7 @@ namespace TouchSocket.Core.Pool
         /// <param name="capacity"></param>
         public ObjectPool(int capacity)
         {
-            this.Capacity = capacity;
+            Capacity = capacity;
         }
 
         /// <summary>
@@ -50,8 +50,8 @@ namespace TouchSocket.Core.Pool
         /// </summary>
         public bool AutoCreate
         {
-            get => this.m_autoCreate;
-            set => this.m_autoCreate = value;
+            get => m_autoCreate;
+            set => m_autoCreate = value;
         }
 
         /// <summary>
@@ -62,14 +62,14 @@ namespace TouchSocket.Core.Pool
         /// <summary>
         /// 可使用（创建）数量
         /// </summary>
-        public int FreeSize => this.m_freeSize;
+        public int FreeSize => m_freeSize;
 
         /// <summary>
         /// 清除池中所有对象
         /// </summary>
         public void Clear()
         {
-            while (this.m_queue.TryDequeue(out _))
+            while (m_queue.TryDequeue(out _))
             {
             }
         }
@@ -81,10 +81,10 @@ namespace TouchSocket.Core.Pool
         public void DestroyObject(T t)
         {
             t.Destroy();
-            if (this.m_freeSize < this.Capacity)
+            if (m_freeSize < Capacity)
             {
-                Interlocked.Increment(ref this.m_freeSize);
-                this.m_queue.Enqueue(t);
+                Interlocked.Increment(ref m_freeSize);
+                m_queue.Enqueue(t);
             }
         }
 
@@ -93,7 +93,7 @@ namespace TouchSocket.Core.Pool
         /// </summary>
         public void Dispose()
         {
-            this.Clear();
+            Clear();
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace TouchSocket.Core.Pool
         public T[] GetAllObject()
         {
             List<T> ts = new List<T>();
-            while (this.m_queue.TryDequeue(out T t))
+            while (m_queue.TryDequeue(out T t))
             {
                 ts.Add(t);
             }
@@ -116,14 +116,14 @@ namespace TouchSocket.Core.Pool
         /// <returns></returns>
         public T GetObject()
         {
-            if (this.m_queue.TryDequeue(out T t))
+            if (m_queue.TryDequeue(out T t))
             {
                 t.Recreate();
                 t.NewCreate = false;
-                Interlocked.Decrement(ref this.m_freeSize);
+                Interlocked.Decrement(ref m_freeSize);
                 return t;
             }
-            if (this.m_autoCreate)
+            if (m_autoCreate)
             {
                 t = (T)Activator.CreateInstance(typeof(T));
                 t.Create();
@@ -138,7 +138,7 @@ namespace TouchSocket.Core.Pool
         /// <returns></returns>
         public T PreviewGetObject()
         {
-            this.m_queue.TryPeek(out T t);
+            m_queue.TryPeek(out T t);
             return t;
         }
     }

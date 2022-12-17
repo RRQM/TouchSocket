@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 日志基类
@@ -22,14 +22,14 @@ namespace TouchSocket.Core.Log
         /// <summary>
         /// 全部的日志类型
         /// </summary>
-        public const LogType All = LogType.None | LogType.Trace | LogType.Debug | LogType.Information | LogType.Warning | LogType.Error | LogType.Critical;
+        public const LogType All = LogType.None | LogType.Trace | LogType.Debug | LogType.Info | LogType.Warning | LogType.Error | LogType.Critical;
 
         /// <summary>
         /// 日志基类
         /// </summary>
         protected LoggerBase()
         {
-            this.LogType = All;
+            LogType = All;
         }
 
         /// <summary>
@@ -46,9 +46,9 @@ namespace TouchSocket.Core.Log
         /// <param name="exception"></param>
         public void Log(LogType logType, object source, string message, Exception exception)
         {
-            if (this.LogType.HasFlag(logType))
+            if (LogType.HasFlag(logType))
             {
-                this.WriteLog(logType, source, message, exception);
+                WriteLog(logType, source, message, exception);
             }
         }
 

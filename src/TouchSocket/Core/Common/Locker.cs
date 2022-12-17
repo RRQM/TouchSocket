@@ -28,8 +28,8 @@ namespace TouchSocket.Core
         /// <param name="locks"></param>
         public ReadLock(ReaderWriterLockSlim locks)
         {
-            this.m_locks = locks;
-            this.m_locks.EnterReadLock();
+            m_locks = locks;
+            m_locks.EnterReadLock();
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void Dispose()
         {
-            this.m_locks.ExitReadLock();
+            m_locks.ExitReadLock();
         }
     }
 
@@ -54,8 +54,8 @@ namespace TouchSocket.Core
         /// <param name="locks"></param>
         public WriteLock(ReaderWriterLockSlim locks)
         {
-            this.m_locks = locks;
-            this.m_locks.EnterWriteLock();
+            m_locks = locks;
+            m_locks.EnterWriteLock();
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void Dispose()
         {
-            this.m_locks.ExitWriteLock();
+            m_locks.ExitWriteLock();
         }
     }
 }

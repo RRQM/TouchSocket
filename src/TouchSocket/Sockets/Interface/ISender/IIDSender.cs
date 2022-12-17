@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
@@ -41,7 +42,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">未连接异常</exception>
         /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void SendAsync(string id, byte[] buffer, int offset, int length);
+        Task SendAsync(string id, byte[] buffer, int offset, int length);
 
         /// <summary>
         /// 向对应ID的客户端发送
@@ -61,6 +62,6 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">未连接异常</exception>
         /// <exception cref="ClientNotFindException">未找到ID对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void SendAsync(string id, IRequestInfo requestInfo);
+        Task SendAsync(string id, IRequestInfo requestInfo);
     }
 }

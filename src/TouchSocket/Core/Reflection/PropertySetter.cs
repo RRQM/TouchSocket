@@ -14,7 +14,7 @@ using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace TouchSocket.Core.Reflection
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 表示属性的设置器
@@ -37,7 +37,7 @@ namespace TouchSocket.Core.Reflection
             {
                 throw new ArgumentNullException(nameof(property));
             }
-            this.setFunc = CreateSetterDelegate(property);
+            setFunc = CreateSetterDelegate(property);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace TouchSocket.Core.Reflection
         /// <returns></returns>
         public void Invoke(object instance, object value)
         {
-            this.setFunc.Invoke(instance, value);
+            setFunc.Invoke(instance, value);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace TouchSocket.Core.Reflection
 
             var body_instance = Expression.Convert(param_instance, property.DeclaringType);
             var body_value = Expression.Convert(param_value, property.PropertyType);
-            var body_call = Expression.Call(body_instance, property.GetSetMethod(), body_value);
+            var body_call = Expression.Call(body_instance, property.GetSetMethod(true), body_value);
 
             return Expression.Lambda<Action<object, object>>(body_call, param_instance, param_value).Compile();
         }

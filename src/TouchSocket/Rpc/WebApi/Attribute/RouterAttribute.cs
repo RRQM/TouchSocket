@@ -40,7 +40,7 @@ namespace TouchSocket.Rpc.WebApi
             {
                 routeTemple = routeTemple.Insert(0, "/");
             }
-            this.RouteTemple = routeTemple;
+            RouteTemple = routeTemple;
         }
 
         /// <summary>

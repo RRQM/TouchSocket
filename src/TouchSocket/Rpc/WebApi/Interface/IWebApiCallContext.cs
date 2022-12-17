@@ -10,18 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Http;
 
 namespace TouchSocket.Rpc.WebApi
 {
     /// <summary>
     /// IWebApiCallContext
     /// </summary>
-    public interface IWebApiCallContext : ICallContext
+    public interface IWebApiCallContext : IHttpCallContext
     {
-        /// <summary>
-        /// Http上下文
-        /// </summary>
-        HttpContext HttpContext { get; }
+
     }
 }

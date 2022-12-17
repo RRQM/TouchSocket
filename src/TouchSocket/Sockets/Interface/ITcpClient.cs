@@ -13,8 +13,7 @@
 
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -41,12 +40,14 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 连接服务器
         /// </summary>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="Exception"></exception>
         ITcpClient Connect(int timeout = 5000);
 
         /// <summary>
         /// 异步连接服务器
         /// </summary>
+        /// <exception cref="TimeoutException"></exception>
         /// <exception cref="Exception"></exception>
         Task<ITcpClient> ConnectAsync(int timeout = 5000);
 

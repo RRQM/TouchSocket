@@ -11,11 +11,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Threading;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets.Plugins
+namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
     /// WebSocketHeartbeatPlugin
@@ -32,7 +31,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
         [DependencyInject(1000 * 5)]
         public WebSocketHeartbeatPlugin(int interval)
         {
-            this.m_timeTick = interval;
+            m_timeTick = interval;
         }
 
         /// <summary>
@@ -51,7 +50,7 @@ namespace TouchSocket.Http.WebSockets.Plugins
                 client.SetValue(WebSocketExtensions.HeartbeatTimerProperty, new Timer((o) =>
                 {
                     httpClientBase.Ping();
-                }, null, 0, this.m_timeTick));
+                }, null, 0, m_timeTick));
             }
             base.OnHandshaked(client, e);
         }

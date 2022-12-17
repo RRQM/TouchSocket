@@ -12,11 +12,8 @@
 //------------------------------------------------------------------------------
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.IO;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -110,10 +107,10 @@ namespace TouchSocket.Http
                 return string.Empty;
             }
             string[] strs = httpBase.ContentType.Split(';');
-            if (strs.Length==2)
+            if (strs.Length == 2)
             {
-                strs= strs[1].Split('=');
-                if (strs.Length==2)
+                strs = strs[1].Split('=');
+                if (strs.Length == 2)
                 {
                     return strs[1].Trim();
                 }
@@ -339,7 +336,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        public static TResponse FileNotFind<TResponse>(this TResponse response) where TResponse : HttpResponse
+        public static TResponse UrlNotFind<TResponse>(this TResponse response) where TResponse : HttpResponse
         {
             response.SetContent("<html><body><h1>404 -RRQM Not Found</h1></body></html>");
             response.StatusCode = "404";
@@ -397,6 +394,9 @@ namespace TouchSocket.Http
                     }
                     reader.Position = httpRange.Start;
                     long surLen = httpRange.Length;
+                    FlowGate flowGate = new FlowGate();
+                    flowGate.Maximum = maxSpeed;
+
                     using (ByteBlock block = new ByteBlock(bufferLen))
                     {
                         while (surLen > 0)
@@ -406,6 +406,7 @@ namespace TouchSocket.Http
                             {
                                 break;
                             }
+                            flowGate.AddCheckWait(r);
                             response.WriteContent(block.Buffer, 0, r);
                             surLen -= r;
                         }

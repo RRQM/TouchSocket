@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
-namespace TouchSocket.Core.Data.XML
+namespace TouchSocket.Core
 {
     /// <summary>
     /// xml主类
@@ -43,10 +43,10 @@ namespace TouchSocket.Core.Data.XML
         /// <param name="Attribute_value">属性值</param>
         public void AttributeStorage(string NodeName, string Attribute_name, string Attribute_value)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {//存在Xml的文件
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 bool N = false;//节点判断变量
@@ -69,7 +69,7 @@ namespace TouchSocket.Core.Data.XML
                     XmlNode PointName = xml.SelectSingleNode("Root/" + NodeName);
                     PointName.Attributes[Attribute_name].Value = Attribute_value;
                 }
-                xml.Save(this.path);
+                xml.Save(path);
             }
             else
             {
@@ -81,7 +81,7 @@ namespace TouchSocket.Core.Data.XML
                 XmlElement PointName = xml.CreateElement(NodeName);
                 PointName.SetAttribute(Attribute_name, Attribute_value);
                 root.AppendChild(PointName);
-                xml.Save(this.path);
+                xml.Save(path);
             }
         }
 
@@ -98,10 +98,10 @@ namespace TouchSocket.Core.Data.XML
                 Console.WriteLine("属性名数量和属性值数量不一致，无法储存");
                 return;
             }
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {//存在Xml的文件
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 bool N = false;//节点变量
@@ -130,7 +130,7 @@ namespace TouchSocket.Core.Data.XML
                         PointName.Attributes[Attribute_name[i]].Value = Attribute_value[i];
                     }
                 }
-                xml.Save(this.path);
+                xml.Save(path);
             }
             else
             {
@@ -145,7 +145,7 @@ namespace TouchSocket.Core.Data.XML
                     PointName.SetAttribute(Attribute_name[i], Attribute_value[i]);
                     root.AppendChild(PointName);
                 }
-                xml.Save(this.path);
+                xml.Save(path);
             }
         }
 
@@ -162,10 +162,10 @@ namespace TouchSocket.Core.Data.XML
                 Console.WriteLine("属性名数量和属性值数量不一致，无法储存");
                 return;
             }
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {//存在Xml的文件
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 for (int i = 0; i < NodeName.Length; i++)
@@ -192,7 +192,7 @@ namespace TouchSocket.Core.Data.XML
 
                         PointName.Attributes[Attribute_name[i]].Value = Attribute_value[i];
                     }
-                    xml.Save(this.path);
+                    xml.Save(path);
                 }
             }
             else
@@ -207,7 +207,7 @@ namespace TouchSocket.Core.Data.XML
                     PointName.SetAttribute(Attribute_name[i], Attribute_value[i]);
                     root.AppendChild(PointName);
 
-                    xml.Save(this.path);
+                    xml.Save(path);
                 }
             }
         }
@@ -221,11 +221,11 @@ namespace TouchSocket.Core.Data.XML
         /// <param name="Attribute_value">属性值集合</param>
         public void AttributeStorage(string[] NodeName, string[] Attribute_name, int AttributeNumber, params string[][] Attribute_value)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 //存在Xml的文件
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 for (int i = 0; i < NodeName.Length; i++)
@@ -259,7 +259,7 @@ namespace TouchSocket.Core.Data.XML
                         }
                     }
                 }
-                xml.Save(this.path);
+                xml.Save(path);
             }
             else
             {
@@ -276,7 +276,7 @@ namespace TouchSocket.Core.Data.XML
                     }
                     root.AppendChild(PointName);
 
-                    xml.Save(this.path);
+                    xml.Save(path);
                 }
             }
         }
@@ -288,10 +288,10 @@ namespace TouchSocket.Core.Data.XML
         /// <param name="Text">文本</param>
         public void NodeStorage(string NodeName, string Text)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 bool n = false;
@@ -310,7 +310,7 @@ namespace TouchSocket.Core.Data.XML
                     other.InnerText = Text;
                     root.AppendChild(other);
                 }
-                xml.Save(this.path);
+                xml.Save(path);
             }
             else
             {
@@ -323,7 +323,7 @@ namespace TouchSocket.Core.Data.XML
                 Node.InnerText = Text;
                 Root.AppendChild(Node);
 
-                doc.Save(this.path);
+                doc.Save(path);
             }
         }
 
@@ -338,10 +338,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>取值失败返回null</returns>
         public string SearchNode(string NodeName)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -363,10 +363,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>取值失败返回0</returns>
         public int SearchNumber(string NodeName, string Attribute_name)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -391,10 +391,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>取值失败返回null</returns>
         public string SearchWords(string NodeName, string Attribute_name)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -419,10 +419,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>返回查找结果，查询失败返回false</returns>
         public bool SearchBoolean(string NodeName, string Attribute_name)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -454,11 +454,11 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>文件不在返回null，单个属性不在返回“空”</returns>
         public string[] SearchWords(string[] NodeName, string[] Attribute_name)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 string[] s = new string[NodeName.Length];
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 for (int i = 0; i < NodeName.Length; i++)
@@ -493,10 +493,10 @@ namespace TouchSocket.Core.Data.XML
         public string[] SearchWords(string Attribute_name1, string Attribute_value, string Attribute_name2)
         {
             List<string> values = new List<string>();
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -524,10 +524,10 @@ namespace TouchSocket.Core.Data.XML
         public Dictionary<string, string> SearchAllAttributes(string NodeName)
         {
             Dictionary<string, string> Attributes = new Dictionary<string, string>();
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -558,10 +558,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>待查布尔值，失败返回false</returns>
         public bool SearchBoolean(string Attribute_name1, string Attribute_value, string Attribute_name2)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -594,10 +594,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>是否移除成功</returns>
         public bool RemoveNode(string NodeName)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -605,7 +605,7 @@ namespace TouchSocket.Core.Data.XML
                     if (item.Name == NodeName)
                     {
                         root.RemoveChild(item);
-                        xml.Save(this.path);
+                        xml.Save(path);
                         return true;
                     }
                 }
@@ -621,10 +621,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>是否移除成功</returns>
         public bool RemoveNode(string Attribute_name, string Attribute_value)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -634,7 +634,7 @@ namespace TouchSocket.Core.Data.XML
                         if (item.Attributes[Attribute_name].Value == Attribute_value)
                         {
                             root.RemoveChild(item);
-                            xml.Save(this.path);
+                            xml.Save(path);
                             return true;
                         }
                     }
@@ -651,10 +651,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>是否删除成功</returns>
         public bool RemoveNode(string Attribute_name, DateTime dateTime)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 for (int i = 0; i < nodeList.Count; i++)
@@ -668,7 +668,7 @@ namespace TouchSocket.Core.Data.XML
                         }
                     }
                 }
-                xml.Save(this.path);
+                xml.Save(path);
 
                 return true;
             }
@@ -682,10 +682,10 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>返回结果</returns>
         public bool NodeExist(string NodeName)
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 XmlNodeList nodeList = root.ChildNodes;
                 foreach (XmlNode item in nodeList)
@@ -705,13 +705,13 @@ namespace TouchSocket.Core.Data.XML
         /// <returns>返回删除是否成功</returns>
         public bool RemoveAllNode()
         {
-            if (File.Exists(this.path))
+            if (File.Exists(path))
             {
                 XmlDocument xml = new XmlDocument();
-                xml.Load(this.path);
+                xml.Load(path);
                 XmlElement root = xml.DocumentElement;
                 root.RemoveAll();
-                xml.Save(this.path);
+                xml.Save(path);
 
                 return true;
             }

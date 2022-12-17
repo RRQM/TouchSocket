@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 
-namespace TouchSocket.Core.Converter
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 转换器接口

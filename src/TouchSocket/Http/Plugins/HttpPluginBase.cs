@@ -11,10 +11,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
-namespace TouchSocket.Http.Plugins
+namespace TouchSocket.Http
 {
     /// <summary>
     /// Http扩展基类
@@ -30,52 +30,52 @@ namespace TouchSocket.Http.Plugins
     {
         void IHttpPlugin.OnDelete(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnDelete((TClient)client, e);
+            OnDelete((TClient)client, e);
         }
 
         Task IHttpPlugin.OnDeleteAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnDeleteAsync((TClient)client, e);
+            return OnDeleteAsync((TClient)client, e);
         }
 
         void IHttpPlugin.OnGet(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnGet((TClient)client, e);
+            OnGet((TClient)client, e);
         }
 
         Task IHttpPlugin.OnGetAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnGetAsync((TClient)client, e);
+            return OnGetAsync((TClient)client, e);
         }
 
         void IHttpPlugin.OnPost(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnPost((TClient)client, e);
+            OnPost((TClient)client, e);
         }
 
         Task IHttpPlugin.OnPostAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnPostAsync((TClient)client, e);
+            return OnPostAsync((TClient)client, e);
         }
 
         void IHttpPlugin.OnPut(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnPut((TClient)client, e);
+            OnPut((TClient)client, e);
         }
 
         Task IHttpPlugin.OnPutAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnPutAsync((TClient)client, e);
+            return OnPutAsync((TClient)client, e);
         }
 
         void IHttpPlugin.OnReceivedOtherHttpRequest(ITcpClientBase client, HttpContextEventArgs e)
         {
-            this.OnReceivedOtherHttpRequest((TClient)client, e);
+            OnReceivedOtherHttpRequest((TClient)client, e);
         }
 
         Task IHttpPlugin.OnReceivedOtherHttpRequestAsync(ITcpClientBase client, HttpContextEventArgs e)
         {
-            return this.OnReceivedOtherHttpRequestAsync((TClient)client, e);
+            return OnReceivedOtherHttpRequestAsync((TClient)client, e);
         }
 
         #region 虚函数
@@ -97,7 +97,7 @@ namespace TouchSocket.Http.Plugins
         /// <returns></returns>
         protected virtual Task OnDeleteAsync(TClient client, HttpContextEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace TouchSocket.Http.Plugins
         /// <returns></returns>
         protected virtual Task OnGetAsync(TClient client, HttpContextEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace TouchSocket.Http.Plugins
         /// <returns></returns>
         protected virtual Task OnPostAsync(TClient client, HttpContextEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace TouchSocket.Http.Plugins
         /// <returns></returns>
         protected virtual Task OnPutAsync(TClient client, HttpContextEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace TouchSocket.Http.Plugins
         /// <returns></returns>
         protected virtual Task OnReceivedOtherHttpRequestAsync(TClient client, HttpContextEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         #endregion 虚函数

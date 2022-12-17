@@ -26,7 +26,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="token"></param>
         public HttpVerifyOptionEventArgs(HttpContext context, string token) : base(context)
         {
-            this.Token = token;
+            Token = token;
         }
 
         /// <summary>

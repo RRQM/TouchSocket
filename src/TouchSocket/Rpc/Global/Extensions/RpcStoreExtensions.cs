@@ -85,7 +85,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <typeparam name="TFrom"></typeparam>
         /// <returns></returns>
-        public static void RegisterServer<TFrom>(this RpcStore rpcStore, IRpcServer rpcServer) where TFrom : class, IRpcServer
+        public static void RegisterServer<TFrom>(this RpcStore rpcStore, TFrom rpcServer) where TFrom : class, IRpcServer
         {
             rpcStore.RegisterServer(typeof(TFrom), rpcServer);
         }

@@ -27,10 +27,10 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public SendingEventArgs(byte[] buffer, int offset, int length)
         {
-            this.Buffer = buffer;
-            this.Offset = offset;
-            this.Length = length;
-            this.AddOperation(Operation.Permit);
+            Buffer = buffer;
+            Offset = offset;
+            Length = length;
+            IsPermitOperation = true;
         }
 
         /// <summary>

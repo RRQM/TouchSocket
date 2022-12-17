@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 日志类型。
@@ -36,7 +36,7 @@ namespace TouchSocket.Core.Log
         /// <summary>
         /// 消息类日志输出
         /// </summary>
-        Information = 4,
+        Info = 4,
 
         /// <summary>
         /// 警告类日志输出

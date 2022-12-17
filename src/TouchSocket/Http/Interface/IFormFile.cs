@@ -50,16 +50,16 @@ namespace TouchSocket.Http
 
     internal class InternalFormFile : IFormFile
     {
-        public string ContentDisposition => this.DataPair["Content-Disposition"];
+        public string ContentDisposition => DataPair["Content-Disposition"];
 
-        public string ContentType => this.DataPair["Content-Type"];
+        public string ContentType => DataPair["Content-Type"];
 
         public byte[] Data { get; set; }
         public NameValueCollection DataPair { get; set; }
-        public string FileName => this.DataPair["filename"];
+        public string FileName => DataPair["filename"];
         public long Length => Data == null ? 0 : Data.Length;
 
-        public string Name => this.DataPair["name"];
+        public string Name => DataPair["name"];
         //public int Read(byte[] buffer, int offset, int count)
         //{
         //    return this.ReadAction(buffer, offset, count);

@@ -13,6 +13,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -21,8 +22,6 @@ namespace TouchSocket.Core
     /// </summary>
     public class FlowGate
     {
-        private long m_maximum;
-
         private readonly Stopwatch m_stopwatch;
 
         private long m_timeTick;
@@ -34,43 +33,13 @@ namespace TouchSocket.Core
         /// </summary>
         public FlowGate()
         {
-            this.m_stopwatch = new Stopwatch(); 
+            m_stopwatch = new Stopwatch();
         }
 
         /// <summary>
         /// 最大值
         /// </summary>
-        public long Maximum
-        {
-            get => this.m_maximum;
-            set => this.m_maximum = value;
-        }
-
-        /// <summary>
-        /// 检测等待
-        /// </summary>
-        public void AddCheckWait(int increment)
-        {
-            this.m_transferLength += increment;
-            if (this.GetNowTick() - this.m_timeTick > 0)
-            {
-                //时间过了一秒
-                this.m_timeTick = this.GetNowTick();
-                this.m_transferLength = 0;
-                this.m_stopwatch.Restart();
-            }
-            else
-            {
-                //在这一秒中
-                if (this.m_transferLength > this.m_maximum)
-                {
-                    //上传饱和
-                    this.m_stopwatch.Stop();
-                    int sleepTime = 1000 - (int)this.m_stopwatch.ElapsedMilliseconds <= 0 ? 0 : this.GetBaseNum() - (int)this.m_stopwatch.ElapsedMilliseconds;
-                    Thread.Sleep(sleepTime);
-                }
-            }
-        }
+        public long Maximum { get; set; } = long.MaxValue;
 
         /// <summary>
         /// 最长休眠周期。默认为5*1000ms.
@@ -78,14 +47,66 @@ namespace TouchSocket.Core
         /// </summary>
         public int MaximumPeriod { get; set; } = 5000;
 
-        private int GetBaseNum()
+        /// <summary>
+        /// 检测等待
+        /// </summary>
+        public void AddCheckWait(int increment)
         {
-            return Math.Min((int)((double)this.m_transferLength / this.m_maximum * 1000), this.MaximumPeriod);
+            if (GetNowTick() - m_timeTick > 0)
+            {
+                //时间过了一秒
+                m_timeTick = FlowGate.GetNowTick();
+                m_transferLength = 0;
+                m_stopwatch.Restart();
+            }
+            else
+            {
+                //在这一秒中
+                if (Interlocked.Add(ref m_transferLength, increment) > Maximum)
+                {
+                    //上传饱和
+                    m_stopwatch.Stop();
+                    int sleepTime = 1000 - (int)m_stopwatch.ElapsedMilliseconds <= 0 ? 0 : GetBaseNum() - (int)m_stopwatch.ElapsedMilliseconds;
+                    Thread.Sleep(sleepTime);
+                }
+            }
         }
 
-        private long GetNowTick()
+        /// <summary>
+        /// 检测等待
+        /// </summary>
+        /// <param name="increment"></param>
+        /// <returns></returns>
+        public async Task AddCheckWaitAsync(int increment)
+        {
+            if (GetNowTick() - m_timeTick > 0)
+            {
+                //时间过了一秒
+                m_timeTick = FlowGate.GetNowTick();
+                m_transferLength = 0;
+                m_stopwatch.Restart();
+            }
+            else
+            {
+                //在这一秒中
+                if (Interlocked.Add(ref m_transferLength, increment) > Maximum)
+                {
+                    //上传饱和
+                    m_stopwatch.Stop();
+                    int sleepTime = 1000 - (int)m_stopwatch.ElapsedMilliseconds <= 0 ? 0 : GetBaseNum() - (int)m_stopwatch.ElapsedMilliseconds;
+                    await Task.Delay(sleepTime);
+                }
+            }
+        }
+
+        private static long GetNowTick()
         {
             return DateTime.Now.Ticks / 10000000;
+        }
+
+        private int GetBaseNum()
+        {
+            return Math.Min((int)((double)m_transferLength / Maximum * 1000), MaximumPeriod);
         }
     }
 }

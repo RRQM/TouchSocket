@@ -11,31 +11,77 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Core.Run
+namespace TouchSocket.Core
 {
     /// <summary>
-    /// 消息通知类
+    /// 消息通知类。内部全为弱引用。
     /// </summary>
-    public class AppMessenger<TMessage> where TMessage : IMessage
+    public class AppMessenger
     {
-        private bool allowMultiple = false;
+        private static AppMessenger m_instance;
+        private readonly ReaderWriterLockSlim m_lockSlim = new ReaderWriterLockSlim();
+        private readonly Dictionary<string, List<MessageInstance>> m_tokenAndInstance = new Dictionary<string, List<MessageInstance>>();
 
-        private readonly ConcurrentDictionary<string, List<TokenInstance>> tokenAndInstance = new ConcurrentDictionary<string, List<TokenInstance>>();
+        /// <summary>
+        /// 默认单例实例
+        /// </summary>
+        public static AppMessenger Default
+        {
+            get
+            {
+                if (m_instance != null)
+                {
+                    return m_instance;
+                }
+                lock (typeof(AppMessenger))
+                {
+                    if (m_instance != null)
+                    {
+                        return m_instance;
+                    }
+                    m_instance = new AppMessenger();
+                    return m_instance;
+                }
+            }
+        }
 
         /// <summary>
         /// 允许多广播注册
         /// </summary>
-        public bool AllowMultiple
+        public bool AllowMultiple { get; set; }
+
+        /// <summary>
+        /// 添加
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="messageInstance"></param>
+        /// <exception cref="MessageRegisteredException"></exception>
+        public void Add(string token, MessageInstance messageInstance)
         {
-            get => this.allowMultiple;
-            set => this.allowMultiple = value;
+            using (WriteLock writeLock = new WriteLock(m_lockSlim))
+            {
+                if (m_tokenAndInstance.ContainsKey(token))
+                {
+                    if (!AllowMultiple)
+                    {
+                        throw new MessageRegisteredException(TouchSocketStatus.TokenExisted.GetDescription(token));
+                    }
+                    m_tokenAndInstance[token].Add(messageInstance);
+                }
+                else
+                {
+                    m_tokenAndInstance.Add(token, new List<MessageInstance>()
+                    {
+                     messageInstance
+                    });
+                }
+            }
         }
 
         /// <summary>
@@ -45,7 +91,10 @@ namespace TouchSocket.Core.Run
         /// <returns></returns>
         public bool CanSendMessage(string token)
         {
-            return this.tokenAndInstance.ContainsKey(token);
+            using (ReadLock readLock = new ReadLock(m_lockSlim))
+            {
+                return m_tokenAndInstance.ContainsKey(token);
+            }
         }
 
         /// <summary>
@@ -53,7 +102,10 @@ namespace TouchSocket.Core.Run
         /// </summary>
         public void Clear()
         {
-            this.tokenAndInstance.Clear();
+            using (WriteLock writeLock = new WriteLock(m_lockSlim))
+            {
+                m_tokenAndInstance.Clear();
+            }
         }
 
         /// <summary>
@@ -62,205 +114,53 @@ namespace TouchSocket.Core.Run
         /// <returns></returns>
         public string[] GetAllMessage()
         {
-            return this.tokenAndInstance.Keys.ToArray();
-        }
-
-        /// <summary>
-        /// 注册已加载程序集中直接或间接继承自IMassage接口的所有类，并创建新实例
-        /// </summary>
-        public void RegistAll()
-        {
-            List<Type> types = new List<Type>();
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var assembly in assemblies)
+            using (ReadLock readLock = new ReadLock(m_lockSlim))
             {
-                try
-                {
-                    Type[] t1 = assembly.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(TMessage))).ToArray();
-                    types.AddRange(t1);
-                }
-                catch
-                {
-                }
-            }
-            foreach (var v in types)
-            {
-                TMessage message = (TMessage)Activator.CreateInstance(v);
-                this.Register(message);
+                return m_tokenAndInstance.Keys.ToArray();
             }
         }
 
         /// <summary>
-        /// 注册消息
+        /// 移除
         /// </summary>
-        /// <param name="messageObject"></param>
-        /// <param name="action"></param>
-        public void Register(TMessage messageObject, Action action)
-        {
-            this.Register(messageObject, action.Method.Name, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public void Register<T>() where T : TMessage
-        {
-            this.Register((T)Activator.CreateInstance(typeof(T)));
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <param name="messageObject"></param>
         /// <param name="token"></param>
-        /// <param name="action"></param>
-        /// <exception cref="MessageRegisteredException"></exception>
-        public void Register(TMessage messageObject, string token, Action action)
+        public void Remove(string token)
         {
-            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
+            using (WriteLock writeLock = new WriteLock(m_lockSlim))
             {
-                TokenInstance tokenInstance = new TokenInstance();
-                tokenInstance.MessageObject = messageObject;
-                tokenInstance.Method = new Reflection.Method(action.Method);
-                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
-                list.Add(tokenInstance);
-            }
-            else
-            {
-                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
+                m_tokenAndInstance.Remove(token);
             }
         }
 
         /// <summary>
-        /// 注册消息
+        /// 按对象移除
         /// </summary>
         /// <param name="messageObject"></param>
-        public void Register(TMessage messageObject)
+        public void Remove(IMessageObject messageObject)
         {
-            MethodInfo[] methods = messageObject.GetType().GetMethods();
-            foreach (var method in methods)
+            using (WriteLock writeLock = new WriteLock(m_lockSlim))
             {
-                IEnumerable<Attribute> attributes = method.GetCustomAttributes();
-                foreach (var attribute in attributes)
+                List<string> key = new List<string>();
+
+                foreach (var item in m_tokenAndInstance.Keys)
                 {
-                    if (attribute is AppMessageAttribute att)
+                    foreach (var item2 in m_tokenAndInstance[item].ToArray())
                     {
-                        if (string.IsNullOrEmpty(att.Token))
+                        if (messageObject == item2.MessageObject)
                         {
-                            this.Register(messageObject, method.Name, method);
-                        }
-                        else
-                        {
-                            this.Register(messageObject, att.Token, method);
+                            m_tokenAndInstance[item].Remove(item2);
+                            if (m_tokenAndInstance[item].Count == 0)
+                            {
+                                key.Add(item);
+                            }
                         }
                     }
                 }
-            }
-        }
 
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="methodInfo"></param>
-        /// <exception cref="MessageRegisteredException"></exception>
-        public void Register(TMessage messageObject, string token, MethodInfo methodInfo)
-        {
-            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
-            {
-                TokenInstance tokenInstance = new TokenInstance();
-                tokenInstance.MessageObject = messageObject;
-                tokenInstance.Method = new Reflection.Method(methodInfo);
-                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
-                list.Add(tokenInstance);
-            }
-            else
-            {
-                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
-            }
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="messageObject"></param>
-        /// <param name="action"></param>
-        public void Register<T>(TMessage messageObject, Action<T> action)
-        {
-            this.Register(messageObject, action.Method.Name, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T">参数类型</typeparam>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="action"></param>
-        /// <exception cref="MessageRegisteredException"></exception>
-        public void Register<T>(TMessage messageObject, string token, Action<T> action)
-        {
-            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
-            {
-                TokenInstance tokenInstance = new TokenInstance();
-                tokenInstance.MessageObject = messageObject;
-                tokenInstance.Method = new Reflection.Method(action.Method);
-                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
-                list.Add(tokenInstance);
-            }
-            else
-            {
-                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
-            }
-        }
-
-        /// <summary>
-        /// 注册
-        /// </summary>
-        /// <typeparam name="T">参数类型</typeparam>
-        /// <typeparam name="TReturn">返回值类型</typeparam>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="action"></param>
-        public void Register<T, TReturn>(TMessage messageObject, string token, Func<T, TReturn> action)
-        {
-            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
-            {
-                TokenInstance tokenInstance = new TokenInstance();
-                tokenInstance.MessageObject = messageObject;
-                tokenInstance.Method = new Reflection.Method(action.Method);
-                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
-                list.Add(tokenInstance);
-            }
-            else
-            {
-                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
-            }
-        }
-
-        /// <summary>
-        /// 注册
-        /// </summary>
-        /// <typeparam name="TReturn">返回值类型</typeparam>
-        /// <param name="messageObject"></param>
-        /// <param name="token"></param>
-        /// <param name="action"></param>
-        public void Register<TReturn>(TMessage messageObject, string token, Func<TReturn> action)
-        {
-            if (this.allowMultiple || !this.tokenAndInstance.ContainsKey(token))
-            {
-                TokenInstance tokenInstance = new TokenInstance();
-                tokenInstance.MessageObject = messageObject;
-                tokenInstance.Method = new Reflection.Method(action.Method);
-                var list = this.tokenAndInstance.GetOrAdd(token, (s) => { return new List<TokenInstance>(); });
-                list.Add(tokenInstance);
-            }
-            else
-            {
-                throw new MessageRegisteredException(TouchSocketRes.TokenExisted.GetDescription(token));
+                foreach (var item in key)
+                {
+                    m_tokenAndInstance.Remove(item);
+                }
             }
         }
 
@@ -270,19 +170,43 @@ namespace TouchSocket.Core.Run
         /// <param name="token"></param>
         /// <param name="parameters"></param>
         /// <exception cref="MessageNotFoundException"></exception>
-        public void Send(string token, params object[] parameters)
+        public Task SendAsync(string token, params object[] parameters)
         {
-            if (this.tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
-            {
-                foreach (var item in list)
-                {
-                    item.Method.Invoke(item.MessageObject, parameters);
-                }
-            }
-            else
-            {
-                throw new MessageNotFoundException(TouchSocketRes.MessageNotFound.GetDescription(token));
-            }
+            return EasyTask.Run(() =>
+             {
+                 using (ReadLock readLock = new ReadLock(m_lockSlim))
+                 {
+                     if (m_tokenAndInstance.TryGetValue(token, out List<MessageInstance> list))
+                     {
+                         List<MessageInstance> clear = new List<MessageInstance>();
+
+                         foreach (var item in list)
+                         {
+                             if (!item.Static && !item.WeakReference.TryGetTarget(out _))
+                             {
+                                 clear.Add(item);
+                                 continue;
+                             }
+                             try
+                             {
+                                 item.Invoke(item.MessageObject, parameters);
+                             }
+                             catch
+                             {
+                             }
+                         }
+
+                         foreach (var item in clear)
+                         {
+                             list.Remove(item);
+                         }
+                     }
+                     else
+                     {
+                         throw new MessageNotFoundException(TouchSocketStatus.MessageNotFound.GetDescription(token));
+                     }
+                 }
+             });
         }
 
         /// <summary>
@@ -293,89 +217,53 @@ namespace TouchSocket.Core.Run
         /// <param name="parameters"></param>
         /// <returns></returns>
         /// <exception cref="MessageNotFoundException"></exception>
-        public T Send<T>(string token, params object[] parameters)
+        public Task<T> SendAsync<T>(string token, params object[] parameters)
         {
-            if (this.tokenAndInstance.TryGetValue(token, out List<TokenInstance> list))
-            {
-                for (int i = 0; i < list.Count; i++)
-                {
-                    var item = list[i];
-                    if (i == list.Count - 1)
-                    {
-                        return (T)item.Method.Invoke(item.MessageObject, parameters);
-                    }
-                    else
-                    {
-                        item.Method.Invoke(item.MessageObject, parameters);
-                    }
-                }
-                return default;
-            }
-            else
-            {
-                throw new MessageNotFoundException(TouchSocketRes.MessageNotFound.GetDescription(token));
-            }
-        }
+            return EasyTask.Run(() =>
+             {
+                 using (ReadLock readLock = new ReadLock(m_lockSlim))
+                 {
+                     if (m_tokenAndInstance.TryGetValue(token, out List<MessageInstance> list))
+                     {
+                         T result = default;
+                         List<MessageInstance> clear = new List<MessageInstance>();
+                         for (int i = 0; i < list.Count; i++)
+                         {
+                             var item = list[i];
+                             if (!item.Static && !item.WeakReference.TryGetTarget(out _))
+                             {
+                                 clear.Add(item);
+                                 continue;
+                             }
 
-        /// <summary>
-        /// 卸载消息
-        /// </summary>
-        /// <param name="messageObject"></param>
-        public void Unregister(TMessage messageObject)
-        {
-            List<string> key = new List<string>();
+                             try
+                             {
+                                 if (i == list.Count - 1)
+                                 {
+                                     result = (T)item.Invoke(item.MessageObject, parameters);
+                                 }
+                                 else
+                                 {
+                                     item.Invoke(item.MessageObject, parameters);
+                                 }
+                             }
+                             catch
+                             {
+                             }
+                         }
 
-            foreach (var item in this.tokenAndInstance.Keys)
-            {
-                foreach (var item2 in this.tokenAndInstance[item].ToArray())
-                {
-                    if ((IMessage)messageObject == item2.MessageObject)
-                    {
-                        this.tokenAndInstance[item].Remove(item2);
-                        if (this.tokenAndInstance[item].Count == 0)
-                        {
-                            key.Add(item);
-                        }
-                    }
-                }
-            }
-
-            foreach (var item in key)
-            {
-                this.tokenAndInstance.TryRemove(item, out _);
-            }
-        }
-
-        /// <summary>
-        /// 卸载消息
-        /// </summary>
-        public void Unregister(string token)
-        {
-            this.tokenAndInstance.TryRemove(token, out _);
-        }
-    }
-
-    /// <summary>
-    /// 消息通知类
-    /// </summary>
-    public class AppMessenger : AppMessenger<IMessage>
-    {
-        private static AppMessenger instance;
-
-        /// <summary>
-        /// 默认单例实例
-        /// </summary>
-        public static AppMessenger Default
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new AppMessenger();
-                }
-
-                return instance;
-            }
+                         foreach (var item in clear)
+                         {
+                             list.Remove(item);
+                         }
+                         return result;
+                     }
+                     else
+                     {
+                         throw new MessageNotFoundException(TouchSocketStatus.MessageNotFound.GetDescription(token));
+                     }
+                 }
+             });
         }
     }
 }

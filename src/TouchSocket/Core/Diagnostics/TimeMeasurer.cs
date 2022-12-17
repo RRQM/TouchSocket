@@ -14,7 +14,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core.Diagnostics
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 时间测量器
@@ -42,7 +42,7 @@ namespace TouchSocket.Core.Diagnostics
         /// <returns></returns>
         public static Task<TimeSpan> RunAsync(Action action)
         {
-            return Task.Run(() => { return Run(action); });
+            return EasyTask.Run(() => { return Run(action); });
         }
     }
 }

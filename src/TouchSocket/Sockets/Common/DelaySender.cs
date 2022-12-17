@@ -14,8 +14,6 @@ using System;
 using System.Net.Sockets;
 using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Collections.Concurrent;
 
 namespace TouchSocket.Sockets
 {
@@ -24,12 +22,11 @@ namespace TouchSocket.Sockets
     /// </summary>
     public sealed class DelaySender : DisposableObject
     {
-        private readonly IntelligentDataQueue<QueueDataBytes> m_queueDatas;
         private readonly ReaderWriterLockSlim m_lockSlim;
         private readonly Action<Exception> m_onError;
+        private readonly IntelligentDataQueue<QueueDataBytes> m_queueDatas;
         private readonly Socket m_socket;
-        private readonly WaitCallback m_waitCallback_Send;
-        private readonly EventWaitHandle m_waitHandle;
+        private readonly Timer m_timer;
         private volatile bool m_sending;
 
         /// <summary>
@@ -40,12 +37,11 @@ namespace TouchSocket.Sockets
         /// <param name="onError"></param>
         public DelaySender(Socket socket, int queueLength, Action<Exception> onError)
         {
-            this.m_socket = socket;
-            this.m_onError = onError;
-            this.m_queueDatas = new IntelligentDataQueue<QueueDataBytes>(queueLength);
-            this.m_waitHandle = new AutoResetEvent(false);
-            this.m_waitCallback_Send = this.BeginSend;
-            this.m_lockSlim = new ReaderWriterLockSlim();
+            m_socket = socket;
+            m_onError = onError;
+            m_queueDatas = new IntelligentDataQueue<QueueDataBytes>(queueLength);
+            m_lockSlim = new ReaderWriterLockSlim();
+            m_timer = new Timer(TimerRun, null, 10, 10);
         }
 
         /// <summary>
@@ -60,17 +56,17 @@ namespace TouchSocket.Sockets
         {
             get
             {
-                using (new ReadLock(this.m_lockSlim))
+                using (new ReadLock(m_lockSlim))
                 {
-                    return this.m_sending;
+                    return m_sending;
                 }
             }
 
             private set
             {
-                using (new WriteLock(this.m_lockSlim))
+                using (new WriteLock(m_lockSlim))
                 {
-                    this.m_sending = value;
+                    m_sending = value;
                 }
             }
         }
@@ -80,14 +76,10 @@ namespace TouchSocket.Sockets
         /// </summary>
         public void Send(QueueDataBytes dataBytes)
         {
-            //this.m_socket.AbsoluteSend(dataBytes.Buffer, dataBytes.Offset, dataBytes.Length);
-            //return;
-            this.m_queueDatas.Enqueue(dataBytes);
-            if (!this.Sending)
+            m_queueDatas.Enqueue(dataBytes);
+            if (SwitchToRun())
             {
-                this.Sending = true;
-                this.m_waitHandle.Set();
-                ThreadPool.QueueUserWorkItem(this.m_waitCallback_Send);
+                ThreadPool.QueueUserWorkItem(BeginSend);
             }
         }
 
@@ -97,36 +89,67 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_queueDatas.Clear();
-            this.m_waitHandle.Set();
-            this.m_waitHandle.SafeDispose();
+            m_timer.SafeDispose();
+            m_queueDatas.Clear();
             base.Dispose(disposing);
         }
 
         private void BeginSend(object o)
         {
-            byte[] buffer = BytePool.GetByteCore(this.DelayLength);
-            while (!this.DisposedValue)
+            try
             {
-                try
+                byte[] buffer = BytePool.GetByteCore(DelayLength);
+                while (!DisposedValue)
                 {
-                    if (this.TryGet(buffer, out QueueDataBytes asyncByte))
+                    try
                     {
-                        this.m_socket.AbsoluteSend(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
+                        if (TryGet(buffer, out QueueDataBytes asyncByte))
+                        {
+                            m_socket.AbsoluteSend(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
+                        m_onError?.Invoke(ex);
                         break;
                     }
                 }
-                catch (Exception ex)
+                BytePool.Recycle(buffer);
+                Sending = false;
+            }
+            catch
+            {
+
+            }
+           
+        }
+
+        private bool SwitchToRun()
+        {
+            using (new WriteLock(m_lockSlim))
+            {
+                if (m_sending)
                 {
-                    this.m_onError?.Invoke(ex);
-                    break;
+                    return false;
+                }
+                else
+                {
+                    m_sending = true;
+                    return true;
                 }
             }
-            BytePool.Recycle(buffer);
-            this.Sending = false;
+        }
+
+        private void TimerRun(object state)
+        {
+            if (SwitchToRun())
+            {
+                BeginSend(null);
+            }
         }
 
         private bool TryGet(byte[] buffer, out QueueDataBytes asyncByteDe)
@@ -135,11 +158,11 @@ namespace TouchSocket.Sockets
             int surLen = buffer.Length;
             while (true)
             {
-                if (this.m_queueDatas.TryPeek(out QueueDataBytes asyncB))
+                if (m_queueDatas.TryPeek(out QueueDataBytes asyncB))
                 {
                     if (surLen > asyncB.Length)
                     {
-                        if (this.m_queueDatas.TryDequeue(out QueueDataBytes asyncByte))
+                        if (m_queueDatas.TryDequeue(out QueueDataBytes asyncByte))
                         {
                             Array.Copy(asyncByte.Buffer, asyncByte.Offset, buffer, len, asyncByte.Length);
                             len += asyncByte.Length;

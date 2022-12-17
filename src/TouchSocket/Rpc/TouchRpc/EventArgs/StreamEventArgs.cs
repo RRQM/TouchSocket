@@ -29,8 +29,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="streamInfo"></param>
         public StreamEventArgs(Metadata metadata, StreamInfo streamInfo)
         {
-            this.Metadata = metadata;
-            this.StreamInfo = streamInfo;
+            Metadata = metadata;
+            StreamInfo = streamInfo;
         }
 
         /// <summary>

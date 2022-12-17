@@ -12,8 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Text;
-
-namespace TouchSocket.Core.Log
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 快捷日志
@@ -29,7 +28,7 @@ namespace TouchSocket.Core.Log
         /// <param name="action">参数依次为：日志类型，触发源，消息，异常</param>
         public EasyLogger(Action<LogType, object, string, Exception> action)
         {
-            this.m_action = action;
+            m_action = action;
         }
 
         /// <summary>
@@ -38,9 +37,8 @@ namespace TouchSocket.Core.Log
         /// <param name="action">参数为日志消息输出。</param>
         public EasyLogger(Action<string> action)
         {
-            this.m_action1 = action;
+            m_action1 = action;
         }
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -53,12 +51,12 @@ namespace TouchSocket.Core.Log
         {
             try
             {
-                if (this.m_action != null)
+                if (m_action != null)
                 {
-                    this.m_action.Invoke(logType, source, message, exception);
+                    m_action.Invoke(logType, source, message, exception);
                     return;
                 }
-                if (this.m_action1 != null)
+                if (m_action1 != null)
                 {
                     StringBuilder stringBuilder = new StringBuilder();
                     stringBuilder.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff"));
@@ -74,7 +72,7 @@ namespace TouchSocket.Core.Log
                         stringBuilder.Append($"【堆栈】：{(exception == null ? "未知" : exception.StackTrace)}");
                     }
                     stringBuilder.AppendLine();
-                    this.m_action1.Invoke(stringBuilder.ToString());
+                    m_action1.Invoke(stringBuilder.ToString());
                     return;
                 }
             }

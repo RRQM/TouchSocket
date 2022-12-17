@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-//using TouchSocket.Core.ByteManager;
+//using TouchSocket.Core;
 //using System.Collections.Generic;
 //using System.Text;
 //using System.Text.RegularExpressions;

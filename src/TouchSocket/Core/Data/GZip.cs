@@ -12,9 +12,8 @@
 //------------------------------------------------------------------------------
 using System.IO;
 using System.IO.Compression;
-using TouchSocket.Core.ByteManager;
 
-namespace TouchSocket.Core.Data
+namespace TouchSocket.Core
 {
     /// <summary>
     /// Gzip操作类

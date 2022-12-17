@@ -19,41 +19,56 @@ namespace TouchSocket.Core
     /// </summary>
     public class SnowflakeIDGenerator
     {
-        //机器ID
-        private static long workerId;
-
-        private readonly long twepoch = 687888001020L; //唯一时间，这是一个避免重复的随机量，自行设定不要大于当前时间戳
-        private static long sequence = 0L;
-        private static readonly int workerIdBits = 4; //机器码字节数。4个字节用来保存机器码(定义为Long类型会出现，最大偏移64位，所以左移64位没有意义)
-
-        /// <summary>
-        /// 最大机器ID
-        /// </summary>
-        public static long maxWorkerId = -1L ^ (-1L << workerIdBits); //最大机器ID
-
-        private static readonly int sequenceBits = 10; //计数器字节数，10个字节用来保存计数码
-        private static readonly int workerIdShift = sequenceBits; //机器码数据左移位数，就是后面计数器占用的位数
-        private static readonly int timestampLeftShift = sequenceBits + workerIdBits; //时间戳左移动位数就是机器码和计数器总字节数
+        private const int SequenceBits = 10;
 
         /// <summary>
         /// 一微秒内可以产生计数，如果达到该值则等到下一微妙在进行生成
         /// </summary>
-        public static long sequenceMask = -1L ^ -1L << sequenceBits; //一微秒内可以产生计数，如果达到该值则等到下一微妙在进行生成
+        private const long SequenceMask = -1L ^ -1L << SequenceBits;
 
-        private long lastTimestamp = -1L;
+        private const int TimestampLeftShift = SequenceBits + WorkerIdBits;
 
+        private const int WorkerIdBits = 4;
+
+        //计数器字节数，10个字节用来保存计数码
+        private const int WorkerIdShift = SequenceBits;
+
+        private static long Sequence = 0L;
+
+        //机器ID
+        private static long WorkerId;
+
+        private readonly long Twepoch = 687888001020L;
+
+        private long m_lastTimestamp = -1L;
+
+        static SnowflakeIDGenerator()
+        {
+        }
+
+        //一微秒内可以产生计数，如果达到该值则等到下一微妙在进行生成
         /// <summary>
         /// 机器码
         /// </summary>
         /// <param name="workerId"></param>
         public SnowflakeIDGenerator(long workerId)
         {
-            if (workerId > maxWorkerId || workerId < 0)
-                throw new Exception(string.Format("worker Id can't be greater than {0} or less than 0 ", maxWorkerId));
-            SnowflakeIDGenerator.workerId = workerId;
-            this.twepoch = DateTime.Now.Ticks - 10000;
+            if (workerId > MaxWorkerId || workerId < 0)
+                throw new Exception(string.Format("worker Id can't be greater than {0} or less than 0 ", MaxWorkerId));
+            SnowflakeIDGenerator.WorkerId = workerId;
+            Twepoch = DateTime.Now.Ticks - 10000;
         }
 
+        /// <summary>
+        /// 最大机器ID
+        /// </summary>
+        public static long MaxWorkerId { get; private set; } = -1L ^ (-1L << WorkerIdBits); //最大机器ID
+
+        //唯一时间，这是一个避免重复的随机量，自行设定不要大于当前时间戳
+        //机器码字节数。4个字节用来保存机器码(定义为Long类型会出现，最大偏移64位，所以左移64位没有意义)
+
+        //机器码数据左移位数，就是后面计数器占用的位数
+        //时间戳左移动位数就是机器码和计数器总字节数
         /// <summary>
         /// 获取ID
         /// </summary>
@@ -62,27 +77,27 @@ namespace TouchSocket.Core
         {
             lock (this)
             {
-                long timestamp = this.timeGen();
-                if (this.lastTimestamp == timestamp)
+                long timestamp = timeGen();
+                if (m_lastTimestamp == timestamp)
                 { //同一微妙中生成ID
-                    sequence = (sequence + 1) & sequenceMask; //用&运算计算该微秒内产生的计数是否已经到达上限
-                    if (sequence == 0)
+                    Sequence = (Sequence + 1) & SequenceMask; //用&运算计算该微秒内产生的计数是否已经到达上限
+                    if (Sequence == 0)
                     {
                         //一微妙内产生的ID计数已达上限，等待下一微妙
-                        timestamp = this.tillNextMillis(this.lastTimestamp);
+                        timestamp = tillNextMillis(m_lastTimestamp);
                     }
                 }
                 else
                 { //不同微秒生成ID
-                    sequence = 0; //计数清0
+                    Sequence = 0; //计数清0
                 }
-                if (timestamp < this.lastTimestamp)
+                if (timestamp < m_lastTimestamp)
                 { //如果当前时间戳比上一次生成ID时时间戳还小，抛出异常，因为不能保证现在生成的ID之前没有生成过
                     throw new Exception(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds",
-                        this.lastTimestamp - timestamp));
+                        m_lastTimestamp - timestamp));
                 }
-                this.lastTimestamp = timestamp; //把当前时间戳保存为最后生成ID的时间戳
-                long nextId = (timestamp - this.twepoch << timestampLeftShift) | workerId << workerIdShift | sequence;
+                m_lastTimestamp = timestamp; //把当前时间戳保存为最后生成ID的时间戳
+                long nextId = (timestamp - Twepoch << TimestampLeftShift) | WorkerId << WorkerIdShift | Sequence;
                 return nextId;
             }
         }
@@ -94,10 +109,10 @@ namespace TouchSocket.Core
         /// <returns></returns>
         private long tillNextMillis(long lastTimestamp)
         {
-            long timestamp = this.timeGen();
+            long timestamp = timeGen();
             while (timestamp <= lastTimestamp)
             {
-                timestamp = this.timeGen();
+                timestamp = timeGen();
             }
             return timestamp;
         }
@@ -108,7 +123,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         private long timeGen()
         {
-            return (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+            return Environment.TickCount;
         }
     }
 }

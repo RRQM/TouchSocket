@@ -11,10 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -35,7 +34,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         protected override void OnHandleWSDataFrame(WSDataFrame dataFrame)
         {
-            this.Received?.Invoke(this, dataFrame);
+            Received?.Invoke(this, dataFrame);
             base.OnHandleWSDataFrame(dataFrame);
         }
     }
@@ -51,7 +50,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public override ITcpClient Connect(int timeout = 5000)
         {
-            return this.Connect(default, timeout);
+            return Connect(default, timeout);
         }
 
         /// <summary>
@@ -64,18 +63,18 @@ namespace TouchSocket.Http.WebSockets
         {
             lock (this)
             {
-                if (!this.Online)
+                if (!Online)
                 {
                     base.Connect(timeout);
                 }
 
                 string base64Key;
-                IPHost iPHost = this.Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
+                IPHost iPHost = Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
                 string url = iPHost.IsUri ? iPHost.Uri.PathAndQuery : string.Empty;
-                HttpRequest request = WSTools.GetWSRequest(this.RemoteIPHost.ToString(), url, this.GetWebSocketVersion(), out base64Key);
-                this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
+                HttpRequest request = WSTools.GetWSRequest(RemoteIPHost.ToString(), url, this.GetWebSocketVersion(), out base64Key);
+                OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
 
-                var response = this.Request(request, timeout: timeout, token: token);
+                var response = Request(request, timeout: timeout, token: token);
                 if (!response.StatusCode.Trim().Equals("101"))
                 {
                     throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
@@ -83,14 +82,14 @@ namespace TouchSocket.Http.WebSockets
                 string accept = response.GetHeader("sec-websocket-accept").Trim();
                 if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    this.MainSocket.SafeDispose();
+                    MainSocket.SafeDispose();
                     throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
                 }
 
-                this.SetAdapter(new WebSocketDataHandlingAdapter());
-                this.SetValue(WebSocketServerPlugin.HandshakedProperty, true);
+                SetAdapter(new WebSocketDataHandlingAdapter());
+                SetValue(WebSocketServerPlugin.HandshakedProperty, true);
                 response.Flag = true;
-                this.OnHandshaked(new HttpContextEventArgs(new HttpContext(request, response)));
+                OnHandshaked(new HttpContextEventArgs(new HttpContext(request, response)));
                 return this;
             }
         }
@@ -103,9 +102,9 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public Task<ITcpClient> ConnectAsync(CancellationToken token, int timeout = 5000)
         {
-            return Task.Run(() =>
+            return EasyTask.Run(() =>
             {
-                return this.Connect(token, timeout);
+                return Connect(token, timeout);
             });
         }
 
@@ -127,11 +126,11 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         protected virtual void OnHandshaking(HttpContextEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<IWebSocketPlugin>("OnHandshaking", this, e))
+            if (UsePlugin && PluginsManager.Raise<IWebSocketPlugin>("OnHandshaking", this, e))
             {
                 return;
             }
-            this.Handshaking?.Invoke(this, e);
+            Handshaking?.Invoke(this, e);
         }
 
         /// <summary>
@@ -140,11 +139,11 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         protected virtual void OnHandshaked(HttpContextEventArgs e)
         {
-            if (this.UsePlugin && this.PluginsManager.Raise<IWebSocketPlugin>("OnHandshaked", this, e))
+            if (UsePlugin && PluginsManager.Raise<IWebSocketPlugin>("OnHandshaked", this, e))
             {
                 return;
             }
-            this.Handshaked?.Invoke(this, e);
+            Handshaked?.Invoke(this, e);
         }
 
         #endregion 事件
@@ -155,9 +154,9 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         protected virtual void OnHandleWSDataFrame(WSDataFrame dataFrame)
         {
-            if (this.UsePlugin)
+            if (UsePlugin)
             {
-                this.PluginsManager.Raise<IWebSocketPlugin>("OnHandleWSDataFrame", this, new WSDataFrameEventArgs(dataFrame));
+                PluginsManager.Raise<IWebSocketPlugin>("OnHandleWSDataFrame", this, new WSDataFrameEventArgs(dataFrame));
             }
         }
 
@@ -171,7 +170,7 @@ namespace TouchSocket.Http.WebSockets
             if (this.GetHandshaked())
             {
                 WSDataFrame dataFrame = (WSDataFrame)requestInfo;
-                this.OnHandleWSDataFrame(dataFrame);
+                OnHandleWSDataFrame(dataFrame);
             }
             else
             {
@@ -193,7 +192,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         protected override void OnDisconnected(ClientDisconnectedEventArgs e)
         {
-            this.SetValue(WebSocketServerPlugin.HandshakedProperty, false);
+            SetValue(WebSocketServerPlugin.HandshakedProperty, false);
             base.OnDisconnected(e);
         }
     }

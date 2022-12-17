@@ -16,7 +16,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using TouchSocket.Core.Extensions;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -25,16 +25,28 @@ namespace TouchSocket.Rpc
     /// </summary>
     public static class CodeGenerator
     {
-        private static readonly Dictionary<Type, string> m_proxyType = new Dictionary<Type, string>();
-        private static readonly List<Assembly> m_assemblies = new List<Assembly>();
+        internal static readonly Dictionary<Type, string> m_proxyType = new Dictionary<Type, string>();
+        internal static readonly List<Assembly> m_assemblies = new List<Assembly>();
+        internal static readonly List<Assembly> m_ignoreAssemblies = new List<Assembly>();
+        internal static readonly List<Type> m_ignoreTypes = new List<Type>();
+
         /// <summary>
-        /// 生成回调。
+        /// 添加不需要代理的程序集
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="methodInstance"></param>
-        /// <param name="methodCellCode"></param>
-        /// <returns></returns>
-        public delegate bool GeneratorCallback<T>(MethodInstance methodInstance, MethodCellCode methodCellCode) where T : RpcAttribute;
+        /// <param name="assembly"></param>
+        public static void AddIgnoreProxyAssembly(Assembly assembly)
+        {
+            m_ignoreAssemblies.Add(assembly);
+        }
+
+        /// <summary>
+        /// 添加不需要代理的类型
+        /// </summary>
+        /// <param name="type"></param>
+        public static void AddIgnoreProxyType(Type type)
+        {
+            m_ignoreTypes.Add(type);
+        }
 
         /// <summary>
         /// 添加需要代理的程序集
@@ -245,8 +257,14 @@ namespace TouchSocket.Rpc
             ServerCellCode serverCellCode = new ServerCellCode();
             MethodInstance[] methodInstances = GetMethodInstances(serverType);
 
-            List<Assembly> assemblies=new List<Assembly>(m_assemblies);
+            List<Assembly> assemblies = new List<Assembly>(m_assemblies);
             assemblies.Add(serverType.Assembly);
+
+            foreach (var item in m_ignoreAssemblies)
+            {
+                assemblies.Remove(item);
+            }
+
             ClassCodeGenerator classCodeGenerator = new ClassCodeGenerator(assemblies.ToArray());
 
             serverCellCode.Name = serverType.IsInterface ?
@@ -256,7 +274,7 @@ namespace TouchSocket.Rpc
             foreach (var item in m_proxyType.Keys)
             {
                 int deep = 0;
-                classCodeGenerator.AddTypeString(item,ref deep);
+                classCodeGenerator.AddTypeString(item, ref deep);
             }
 
             foreach (MethodInstance methodInstance in methodInstances)
@@ -268,7 +286,7 @@ namespace TouchSocket.Rpc
                         if (methodInstance.ReturnType != null)
                         {
                             int deep = 0;
-                            classCodeGenerator.AddTypeString(methodInstance.ReturnType,ref deep);
+                            classCodeGenerator.AddTypeString(methodInstance.ReturnType, ref deep);
                         }
 
                         int i = 0;
@@ -279,7 +297,7 @@ namespace TouchSocket.Rpc
                         for (; i < methodInstance.ParameterTypes.Length; i++)
                         {
                             int deep = 0;
-                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i],ref deep);
+                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i], ref deep);
                         }
 
                         instances.Add(methodInstance);
@@ -289,6 +307,34 @@ namespace TouchSocket.Rpc
             }
 
             classCodeGenerator.CheckDeep();
+
+            foreach (var item in classCodeGenerator.GenericTypeDic.Keys.ToArray())
+            {
+                if (m_ignoreTypes.Contains(item))
+                {
+                    classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
+                }
+
+                if (m_ignoreAssemblies.Contains(item.Assembly))
+                {
+                    classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
+                }
+            }
+
+            foreach (var item in classCodeGenerator.PropertyDic.Keys.ToArray())
+            {
+                if (m_ignoreTypes.Contains(item))
+                {
+                    classCodeGenerator.PropertyDic.TryRemove(item, out _);
+                }
+
+                if (m_ignoreAssemblies.Contains(item.Assembly))
+                {
+                    classCodeGenerator.PropertyDic.TryRemove(item, out _);
+                }
+            }
+
+
             foreach (var item in classCodeGenerator.GetClassCellCodes())
             {
                 serverCellCode.ClassCellCodes.Add(item.Name, item);
@@ -296,12 +342,14 @@ namespace TouchSocket.Rpc
 
             //ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
 
+
+
             bool first = true;
             foreach (var item in instances)
             {
                 MethodCellCode methodCellCode = new MethodCellCode();
                 RpcAttribute rpcAttribute = (RpcAttribute)item.GetAttribute(attributeType);
-                if (rpcAttribute==null)
+                if (rpcAttribute == null)
                 {
                     continue;
                 }
@@ -350,17 +398,17 @@ namespace TouchSocket.Rpc
         /// <param name="serverTypes"></param>
         /// <param name="attributeTypes"></param>
         /// <returns></returns>
-        public static string GetProxyCodes(string @namespace,Type[] serverTypes, Type[] attributeTypes)
+        public static string GetProxyCodes(string @namespace, Type[] serverTypes, Type[] attributeTypes)
         {
-            List< ServerCellCode > serverCellCodeList = new List< ServerCellCode >();
+            List<ServerCellCode> serverCellCodeList = new List<ServerCellCode>();
             foreach (var item in serverTypes)
             {
                 foreach (var item1 in attributeTypes)
                 {
-                    serverCellCodeList.Add(Generator(item,item1));
+                    serverCellCodeList.Add(Generator(item, item1));
                 }
             }
-            return ConvertToCode(@namespace,serverCellCodeList.ToArray());
+            return ConvertToCode(@namespace, serverCellCodeList.ToArray());
         }
 
         /// <summary>

@@ -29,8 +29,8 @@ namespace TouchSocket.Http
         /// <param name="nonceCount">暂时不知道是什么</param>
         public AuthenticationChallenge(string value, NetworkCredential credential, uint nonceCount = 0)
         {
-            this.Parse(value, credential);
-            this.NonceCount = nonceCount;
+            Parse(value, credential);
+            NonceCount = nonceCount;
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace TouchSocket.Http
         /// <exception cref="Exception"></exception>
         public override string ToString()
         {
-            if (this.Type == AuthenticationType.Basic)
-                return this.ToBasicString();
+            if (Type == AuthenticationType.Basic)
+                return ToBasicString();
             else
                 throw new Exception("该凭证类型不支持");
         }
@@ -68,12 +68,12 @@ namespace TouchSocket.Http
                 throw new Exception("该凭证类型不支持");
 
             var schm = chal[0].ToLower();
-            this.Parameters = this.ParseParameters(chal[1]);
+            Parameters = ParseParameters(chal[1]);
 
-            if (this.Parameters.ContainsKey("username") == false)
-                this.Parameters.Add("username", credential.Username);
-            if (this.Parameters.ContainsKey("password") == false)
-                this.Parameters.Add("password", credential.Password);
+            if (Parameters.ContainsKey("username") == false)
+                Parameters.Add("username", credential.Username);
+            if (Parameters.ContainsKey("password") == false)
+                Parameters.Add("password", credential.Password);
 
             /*
              *   Basic基本类型貌似只需要用户名密码即可
@@ -82,7 +82,7 @@ namespace TouchSocket.Http
 
             if (schm == "basic")
             {
-                this.Type = AuthenticationType.Basic;
+                Type = AuthenticationType.Basic;
             }
             else
                 throw new Exception("该凭证类型不支持");
@@ -91,7 +91,7 @@ namespace TouchSocket.Http
         private Dictionary<string, string> ParseParameters(string value)
         {
             var res = new Dictionary<string, string>();
-            IEnumerable<string> values = this.SplitHeaderValue(value, ',');
+            IEnumerable<string> values = SplitHeaderValue(value, ',');
             foreach (var param in values)
             {
                 var i = param.IndexOf('=');
@@ -153,7 +153,7 @@ namespace TouchSocket.Http
 
         private string ToBasicString()
         {
-            var userPass = $"{this.Parameters["username"]}:{this.Parameters["password"]}";
+            var userPass = $"{Parameters["username"]}:{Parameters["password"]}";
             var cred = Convert.ToBase64String(Encoding.UTF8.GetBytes(userPass));
             return "Basic " + cred;
         }

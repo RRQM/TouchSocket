@@ -35,16 +35,18 @@ namespace TouchSocket.Http
 
             if (username.Length == 0)
                 throw new ArgumentException("An empty string.", "username");
-            this.Username = username;
-            this.Password = password;
-            this.Domain = domain;
-            this.Roles = roles;
+            Username = username;
+            Password = password;
+            Domain = domain;
+            Roles = roles;
         }
+
         /// <summary>
         /// 凭证用户名
         /// </summary>
 
         public string Username { get; }
+
         /// <summary>
         /// 凭证密码
         /// </summary>

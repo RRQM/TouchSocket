@@ -4,7 +4,6 @@
 
 例如：
 1、SnowflakeIDGenerator类代码，来源于网络，所以已在类注释中说明。
-2、Newtonsoft.Json 11.0.3代码，来源于https://github.com/JamesNK/Newtonsoft.Json，已归于XREF命名空间下。
 
 
 感谢！！

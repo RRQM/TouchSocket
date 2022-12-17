@@ -13,7 +13,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {

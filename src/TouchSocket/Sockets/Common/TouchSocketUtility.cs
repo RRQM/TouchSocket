@@ -12,7 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Text.RegularExpressions;
-using TouchSocket.Core.Extensions;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -100,6 +100,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 大数据边界
         /// </summary>
-        public const int BigDataBoundary = 1024 * 512;
+        public const int BigDataBoundary = 1024 * 64;
     }
 }

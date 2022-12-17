@@ -15,8 +15,7 @@ using System.Collections;
 using System.Reflection;
 using System.Text;
 using System.Xml;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
+using TouchSocket.Core;
 using TouchSocket.Http;
 
 namespace TouchSocket.Rpc.XmlRpc

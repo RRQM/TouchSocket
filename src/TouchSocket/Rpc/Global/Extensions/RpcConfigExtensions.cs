@@ -12,10 +12,9 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core.Dependency;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Core.Config
+namespace TouchSocket.Core
 {
     /// <summary>
     /// RpcExtensions
@@ -25,8 +24,8 @@ namespace TouchSocket.Core.Config
         /// <summary>
         /// 指定RpcStore的创建。
         /// </summary>
-        public static readonly DependencyProperty RpcStoreProperty =
-            DependencyProperty.Register("RpcStore", typeof(RpcStore), typeof(RpcConfigExtensions), null);
+        public static readonly DependencyProperty<RpcStore> RpcStoreProperty =
+            DependencyProperty<RpcStore>.Register("RpcStore", typeof(RpcConfigExtensions), null);
 
         /// <summary>
         /// 配置RpcStore的创建。

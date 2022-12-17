@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -26,8 +26,8 @@ namespace TouchSocket.Sockets
         protected override NATSocketClient GetClientInstence()
         {
             var client = base.GetClientInstence();
-            client.m_internalDis = this.OnTargetClientDisconnected;
-            client.m_internalTargetClientRev = this.OnTargetClientReceived;
+            client.m_internalDis = OnTargetClientDisconnected;
+            client.m_internalTargetClientRev = OnTargetClientReceived;
             return client;
         }
 
@@ -51,7 +51,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         protected sealed override void OnReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            var data = this.OnNATReceived(socketClient, byteBlock, requestInfo);
+            var data = OnNATReceived(socketClient, byteBlock, requestInfo);
             if (data != null)
             {
                 socketClient.SendToTargetClient(data, 0, data.Length);

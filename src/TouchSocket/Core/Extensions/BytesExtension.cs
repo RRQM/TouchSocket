@@ -12,8 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-
-namespace TouchSocket.Core.Extensions
+namespace TouchSocket.Core
 {
     /// <summary>
     /// BytesExtension

@@ -23,29 +23,20 @@ namespace TouchSocket.Core
         /// <summary>
         /// 判断是否已释放。
         /// </summary>
-        protected volatile bool m_disposedValue;
+        private volatile bool m_disposedValue;
 
         /// <summary>
-        /// 是否已释放
+        /// 标识该对象是否已被释放
         /// </summary>
-        public bool DisposedValue { get => this.m_disposedValue; }
+        public bool DisposedValue { get => m_disposedValue; }
 
         /// <summary>
-        /// 释放
+        /// 调用释放，切换释放状态。
         /// </summary>
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!this.m_disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: 释放托管状态(托管对象)
-                }
-                // TODO: 释放未托管的资源(未托管的对象)并重写终结器
-                // TODO: 将大型字段设置为 null
-                this.m_disposedValue = true;
-            }
+            m_disposedValue = true;
         }
 
         /// <summary>
@@ -53,8 +44,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void Dispose()
         {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -18,14 +18,14 @@ namespace TouchSocket.Http
     /// <summary>
     /// http辅助类
     /// </summary>
-    public class HttpSocketClient : SocketClient, IHttpClientBase
+    public class HttpSocketClient : SocketClient, IHttpSocketClient
     {
         /// <summary>
         /// 构造函数
         /// </summary>
         public HttpSocketClient()
         {
-            this.Protocol = Protocol.Http;
+            Protocol = Protocol.Http;
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace TouchSocket.Http
         /// <param name="e"></param>
         protected override void OnConnecting(ClientOperationEventArgs e)
         {
-            this.SetDataHandlingAdapter(new HttpServerDataHandlingAdapter());
+            SetDataHandlingAdapter(new HttpServerDataHandlingAdapter());
             base.OnConnecting(e);
         }
 
@@ -47,7 +47,7 @@ namespace TouchSocket.Http
         {
             if (requestInfo is HttpRequest request)
             {
-                this.OnReceivedHttpRequest(request);
+                OnReceivedHttpRequest(request);
             }
         }
 
@@ -62,26 +62,26 @@ namespace TouchSocket.Http
             {
                 case TouchSocketHttpUtility.Get:
                     {
-                        this.PluginsManager.Raise<IHttpPlugin>("OnGet", this, args);
+                        PluginsManager.Raise<IHttpPlugin>("OnGet", this, args);
                         break;
                     }
                 case TouchSocketHttpUtility.Post:
                     {
-                        this.PluginsManager.Raise<IHttpPlugin>("OnPost", this, args);
+                        PluginsManager.Raise<IHttpPlugin>("OnPost", this, args);
                         break;
                     }
                 case TouchSocketHttpUtility.Put:
                     {
-                        this.PluginsManager.Raise<IHttpPlugin>("OnPut", this, args);
+                        PluginsManager.Raise<IHttpPlugin>("OnPut", this, args);
                         break;
                     }
                 case TouchSocketHttpUtility.Delete:
                     {
-                        this.PluginsManager.Raise<IHttpPlugin>("OnDelete", this, args);
+                        PluginsManager.Raise<IHttpPlugin>("OnDelete", this, args);
                         break;
                     }
                 default:
-                    this.PluginsManager.Raise<IHttpPlugin>("OnReceivedOtherHttpRequest", this, args);
+                    PluginsManager.Raise<IHttpPlugin>("OnReceivedOtherHttpRequest", this, args);
                     break;
             }
         }

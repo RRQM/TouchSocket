@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.XREF.Newtonsoft.Json;
 
 namespace TouchSocket.Core
 {
@@ -37,7 +36,7 @@ namespace TouchSocket.Core
                 throw new ArgumentException($"“{nameof(fullPath)}”不能为 null 或空。", nameof(fullPath));
             }
 
-            this.m_fullPath = fullPath;
+            m_fullPath = fullPath;
         }
 
         /// <summary>
@@ -48,14 +47,14 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public bool Save(bool overwrite, out string msg)
         {
-            if (overwrite == false && File.Exists(this.m_fullPath))
+            if (overwrite == false && File.Exists(m_fullPath))
             {
                 msg = null;
                 return true;
             }
             try
             {
-                File.WriteAllBytes(this.m_fullPath, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this, Formatting.Indented)));
+                File.WriteAllText(m_fullPath, this.ToJson());
                 msg = null;
                 return true;
             }
@@ -75,12 +74,12 @@ namespace TouchSocket.Core
         {
             try
             {
-                if (!File.Exists(this.m_fullPath))
+                if (!File.Exists(m_fullPath))
                 {
-                    this.Save(false, out _);
+                    Save(false, out _);
                 }
-                var obj = File.ReadAllText(this.m_fullPath).ToJsonObject(this.GetType());
-                var ps = this.GetType().GetProperties();
+                var obj = File.ReadAllText(m_fullPath).FromJson(GetType());
+                var ps = GetType().GetProperties();
 
                 foreach (var item in ps)
                 {

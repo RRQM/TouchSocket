@@ -13,7 +13,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace TouchSocket.Sockets
 {
@@ -23,25 +22,25 @@ namespace TouchSocket.Sockets
     [DebuggerDisplay("Count={Count}")]
     public sealed class SocketClientCollection
     {
+        private readonly ConcurrentDictionary<string, ISocketClient> m_tokenDic = new ConcurrentDictionary<string, ISocketClient>();
+
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count => this.tokenDic.Count;
-
-        private readonly ConcurrentDictionary<string, ISocketClient> tokenDic = new ConcurrentDictionary<string, ISocketClient>();
-
-        internal bool TryAdd(ISocketClient socketClient)
-        {
-            return this.tokenDic.TryAdd(socketClient.ID, socketClient);
-        }
+        public int Count => m_tokenDic.Count;
 
         /// <summary>
-        /// 获取ID集合
+        /// 获取SocketClient
         /// </summary>
+        /// <param name="id"></param>
         /// <returns></returns>
-        public string[] GetIDs()
+        public ISocketClient this[string id]
         {
-            return this.tokenDic.Keys.ToArray();
+            get
+            {
+                TryGetSocketClient(id, out ISocketClient t);
+                return t;
+            }
         }
 
         /// <summary>
@@ -50,33 +49,34 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public IEnumerable<ISocketClient> GetClients()
         {
-            return this.tokenDic.Values;
+            return m_tokenDic.Values;
         }
 
-        internal bool TryRemove(string id, out ISocketClient socketClient)
+        /// <summary>
+        /// 获取ID集合
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetIDs()
+        {
+            return m_tokenDic.Keys;
+        }
+
+        /// <summary>
+        /// 根据ID判断SocketClient是否存在
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool SocketClientExist(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                socketClient = null;
-                return false;
-            }
-            return this.tokenDic.TryRemove(id, out socketClient);
-        }
-
-        internal bool TryRemove<TClient>(string id, out TClient socketClient) where TClient : ISocketClient
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                socketClient = default;
                 return false;
             }
 
-            if (this.tokenDic.TryRemove(id, out ISocketClient client))
+            if (m_tokenDic.ContainsKey(id))
             {
-                socketClient = (TClient)client;
                 return true;
             }
-            socketClient = default;
             return false;
         }
 
@@ -94,7 +94,7 @@ namespace TouchSocket.Sockets
                 return false;
             }
 
-            return this.tokenDic.TryGetValue(id, out socketClient);
+            return m_tokenDic.TryGetValue(id, out socketClient);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace TouchSocket.Sockets
                 return false;
             }
 
-            if (this.tokenDic.TryGetValue(id, out ISocketClient client))
+            if (m_tokenDic.TryGetValue(id, out ISocketClient client))
             {
                 socketClient = (TClient)client;
                 return true;
@@ -121,38 +121,36 @@ namespace TouchSocket.Sockets
             return false;
         }
 
-        /// <summary>
-        /// 根据ID判断SocketClient是否存在
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public bool SocketClientExist(string id)
+        internal bool TryAdd(ISocketClient socketClient)
+        {
+            return m_tokenDic.TryAdd(socketClient.ID, socketClient);
+        }
+
+        internal bool TryRemove(string id, out ISocketClient socketClient)
         {
             if (string.IsNullOrEmpty(id))
             {
+                socketClient = null;
+                return false;
+            }
+            return m_tokenDic.TryRemove(id, out socketClient);
+        }
+
+        internal bool TryRemove<TClient>(string id, out TClient socketClient) where TClient : ISocketClient
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                socketClient = default;
                 return false;
             }
 
-            if (this.tokenDic.ContainsKey(id))
+            if (m_tokenDic.TryRemove(id, out ISocketClient client))
             {
+                socketClient = (TClient)client;
                 return true;
             }
+            socketClient = default;
             return false;
-        }
-
-        /// <summary>
-        /// 获取SocketClient
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public ISocketClient this[string id]
-        {
-            get
-            {
-                ISocketClient t;
-                this.TryGetSocketClient(id, out t);
-                return t;
-            }
         }
     }
 }

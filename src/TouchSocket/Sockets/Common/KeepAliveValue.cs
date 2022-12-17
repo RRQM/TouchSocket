@@ -30,8 +30,8 @@ namespace TouchSocket.Sockets
                 uint dummy = 0;
                 byte[] inOptionValues = new byte[Marshal.SizeOf(dummy) * 3];
                 BitConverter.GetBytes((uint)1).CopyTo(inOptionValues, 0);
-                BitConverter.GetBytes(this.Interval).CopyTo(inOptionValues, Marshal.SizeOf(dummy));
-                BitConverter.GetBytes(this.AckInterval).CopyTo(inOptionValues, Marshal.SizeOf(dummy) * 2);
+                BitConverter.GetBytes(Interval).CopyTo(inOptionValues, Marshal.SizeOf(dummy));
+                BitConverter.GetBytes(AckInterval).CopyTo(inOptionValues, Marshal.SizeOf(dummy) * 2);
                 return inOptionValues;
             }
         }

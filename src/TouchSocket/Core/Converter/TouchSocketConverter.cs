@@ -13,14 +13,14 @@
 using System;
 using System.Collections.Generic;
 
-namespace TouchSocket.Core.Converter
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 转换器
     /// </summary>
     public class TouchSocketConverter<TSource>
     {
-        private readonly List<IConverter<TSource>> converters = new List<IConverter<TSource>>();
+        private readonly List<IConverter<TSource>> m_converters = new List<IConverter<TSource>>();
 
         /// <summary>
         /// 添加插件
@@ -33,7 +33,7 @@ namespace TouchSocket.Core.Converter
             {
                 throw new ArgumentNullException();
             }
-            foreach (var item in this.converters)
+            foreach (var item in m_converters)
             {
                 if (item.GetType() == converter.GetType())
                 {
@@ -41,9 +41,9 @@ namespace TouchSocket.Core.Converter
                 }
             }
 
-            this.converters.Add(converter);
+            m_converters.Add(converter);
 
-            this.converters.Sort(delegate (IConverter<TSource> x, IConverter<TSource> y)
+            m_converters.Sort(delegate (IConverter<TSource> x, IConverter<TSource> y)
             {
                 if (x.Order == y.Order) return 0;
                 else if (x.Order > y.Order) return 1;
@@ -56,7 +56,7 @@ namespace TouchSocket.Core.Converter
         /// </summary>
         public void Clear()
         {
-            this.converters.Clear();
+            m_converters.Clear();
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace TouchSocket.Core.Converter
         public object ConvertFrom(TSource source, Type targetType)
         {
             object result;
-            foreach (var item in this.converters)
+            foreach (var item in m_converters)
             {
                 if (item.TryConvertFrom(source, targetType, out result))
                 {
@@ -86,7 +86,7 @@ namespace TouchSocket.Core.Converter
         /// <returns></returns>
         public TSource ConvertTo(object target)
         {
-            foreach (var item in this.converters)
+            foreach (var item in m_converters)
             {
                 if (item.TryConvertTo(target, out TSource source))
                 {
@@ -107,7 +107,7 @@ namespace TouchSocket.Core.Converter
             {
                 throw new ArgumentNullException();
             }
-            this.converters.Remove(converter);
+            m_converters.Remove(converter);
         }
 
         /// <summary>
@@ -116,12 +116,12 @@ namespace TouchSocket.Core.Converter
         /// <param name="type"></param>
         public void Remove(Type type)
         {
-            for (int i = this.converters.Count - 1; i >= 0; i--)
+            for (int i = m_converters.Count - 1; i >= 0; i--)
             {
-                IConverter<TSource> plugin = this.converters[i];
+                IConverter<TSource> plugin = m_converters[i];
                 if (plugin.GetType() == type)
                 {
-                    this.converters.RemoveAt(i);
+                    m_converters.RemoveAt(i);
                 }
             }
         }

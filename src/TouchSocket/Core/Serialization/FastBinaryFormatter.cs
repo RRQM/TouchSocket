@@ -13,23 +13,24 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.Reflection;
 
-namespace TouchSocket.Core.Serialization
+namespace TouchSocket.Core
 {
     /// <summary>
-    /// 该序列化以二进制方式进行，但是不支持接口、抽象类、继承类等成员的序列化。
+    /// 快速二进制序列化。
     /// </summary>
-    public class FastBinaryFormatter
+    public static class FastBinaryFormatter
     {
         private static readonly ConcurrentDictionary<string, SerializObject> m_instanceCache = new ConcurrentDictionary<string, SerializObject>();
         private static readonly ConcurrentDictionary<Type, IFastBinaryConverter> m_typeToConverter = new ConcurrentDictionary<Type, IFastBinaryConverter>();
+
+        static FastBinaryFormatter()
+        {
+            AddFastBinaryConverter(typeof(Metadata), new MetadataFastBinaryConverter());
+        }
 
         /// <summary>
         /// 添加转换器。
@@ -66,15 +67,15 @@ namespace TouchSocket.Core.Serialization
         /// </summary>
         /// <param name="byteBlock">流</param>
         /// <param name="graph">对象</param>
-        public void Serialize(ByteBlock byteBlock, object graph)
+        public static void Serialize(ByteBlock byteBlock, object graph)
         {
             byteBlock.Position = 1;
-            this.SerializeObject(byteBlock, graph);
+            SerializeObject(byteBlock, graph);
             byteBlock.Buffer[0] = 1;
             byteBlock.SetLength(byteBlock.Position);
         }
 
-        private int SerializeClass(ByteBlock stream, object obj, Type type)
+        private static int SerializeClass(ByteBlock stream, object obj, Type type)
         {
             int len = 0;
             if (obj != null)
@@ -95,7 +96,7 @@ namespace TouchSocket.Core.Serialization
                     stream.Write(lenBytes);
                     stream.Write(propertyBytes, 0, propertyBytes.Length);
                     len += propertyBytes.Length + 1;
-                    len += this.SerializeObject(stream, property.GetValue(obj, null));
+                    len += SerializeObject(stream, property.GetValue(obj, null));
                 }
 
                 foreach (FieldInfo fieldInfo in serializObject.FieldInfos)
@@ -113,13 +114,37 @@ namespace TouchSocket.Core.Serialization
                     stream.Write(lenBytes);
                     stream.Write(propertyBytes, 0, propertyBytes.Length);
                     len += propertyBytes.Length + 1;
-                    len += this.SerializeObject(stream, fieldInfo.GetValue(obj));
+                    len += SerializeObject(stream, fieldInfo.GetValue(obj));
                 }
             }
             return len;
         }
 
-        private int SerializeIEnumerable(ByteBlock stream, IEnumerable param)
+        private static int SerializeDictionary(ByteBlock stream, IEnumerable param)
+        {
+            int len = 0;
+            if (param != null)
+            {
+                long oldPosition = stream.Position;
+                stream.Position += 4;
+                len += 4;
+                uint paramLen = 0;
+
+                foreach (dynamic item in param)
+                {
+                    len += SerializeObject(stream, item.Key);
+                    len += SerializeObject(stream, item.Value);
+                    paramLen++;
+                }
+                long newPosition = stream.Position;
+                stream.Position = oldPosition;
+                stream.Write(TouchSocketBitConverter.Default.GetBytes(paramLen));
+                stream.Position = newPosition;
+            }
+            return len;
+        }
+
+        private static int SerializeIListOrArray(ByteBlock stream, IEnumerable param)
         {
             int len = 0;
             if (param != null)
@@ -132,7 +157,7 @@ namespace TouchSocket.Core.Serialization
                 foreach (object item in param)
                 {
                     paramLen++;
-                    len += this.SerializeObject(stream, item);
+                    len += SerializeObject(stream, item);
                 }
                 long newPosition = stream.Position;
                 stream.Position = oldPosition;
@@ -142,7 +167,7 @@ namespace TouchSocket.Core.Serialization
             return len;
         }
 
-        private int SerializeObject(ByteBlock byteBlock, object graph)
+        private static int SerializeObject(ByteBlock byteBlock, object graph)
         {
             int len = 0;
             byte[] data = null;
@@ -228,9 +253,9 @@ namespace TouchSocket.Core.Serialization
                         data = TouchSocketBitConverter.Default.GetBytes((long)graph);
                     }
                 }
-                else if (graph is byte[])
+                else if (graph is byte[] bytes)
                 {
-                    data = (byte[])graph;
+                    data = bytes;
                 }
                 else
                 {
@@ -242,19 +267,25 @@ namespace TouchSocket.Core.Serialization
                     }
                     else
                     {
-                        if (type.GetCustomAttribute<FastConverterAttribute>() is FastConverterAttribute attribute)
+                        var serializeObj = GetOrAddInstance(type);
+                        switch (serializeObj.instanceType)
                         {
-                            IFastBinaryConverter binaryConverter = (IFastBinaryConverter)Activator.CreateInstance(attribute.Type);
-                            AddFastBinaryConverter(type, binaryConverter);
-                            len += binaryConverter.Write(byteBlock, graph);
-                        }
-                        else if (typeof(IEnumerable).IsAssignableFrom(type))
-                        {
-                            len += this.SerializeIEnumerable(byteBlock, (IEnumerable)graph);
-                        }
-                        else
-                        {
-                            len += this.SerializeClass(byteBlock, graph, type);
+                            case InstanceType.List:
+                                len += SerializeIListOrArray(byteBlock, (IEnumerable)graph);
+                                break;
+
+                            case InstanceType.Array:
+                                len += SerializeIListOrArray(byteBlock, (IEnumerable)graph);
+                                break;
+
+                            case InstanceType.Dictionary:
+                                len += SerializeDictionary(byteBlock, (IEnumerable)graph);
+                                break;
+
+                            default:
+                            case InstanceType.Class:
+                                len += SerializeClass(byteBlock, graph, type);
+                                break;
                         }
                     }
                 }
@@ -297,17 +328,17 @@ namespace TouchSocket.Core.Serialization
         /// <param name="offset"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public object Deserialize(byte[] data, int offset, Type type)
+        public static object Deserialize(byte[] data, int offset, Type type)
         {
             if (data[offset] != 1)
             {
-                throw new Exception("数据流解析错误");
+                throw new Exception("Fast反序列化数据流解析错误。");
             }
             offset += 1;
-            return this.Deserialize(type, data, ref offset);
+            return Deserialize(type, data, ref offset);
         }
 
-        private dynamic Deserialize(Type type, byte[] datas, ref int offset)
+        private static object Deserialize(Type type, byte[] datas, ref int offset)
         {
             bool nullable = type.IsNullableType();
             if (nullable)
@@ -422,9 +453,8 @@ namespace TouchSocket.Core.Serialization
                         }
                         else
                         {
-                            obj = this.DeserializeClass(type, datas, offset, len);
+                            obj = DeserializeClass(type, datas, offset, len);
                         }
-
                     }
                 }
                 else
@@ -447,7 +477,7 @@ namespace TouchSocket.Core.Serialization
             return obj;
         }
 
-        private dynamic DeserializeClass(Type type, byte[] datas, int offset, int length)
+        private static object DeserializeClass(Type type, byte[] datas, int offset, int length)
         {
             SerializObject instanceObject = GetOrAddInstance(type);
 
@@ -467,13 +497,13 @@ namespace TouchSocket.Core.Serialization
                             if (instanceObject.PropertiesDic.ContainsKey(propertyName))
                             {
                                 PropertyInfo property = instanceObject.PropertiesDic[propertyName];
-                                object obj = this.Deserialize(property.PropertyType, datas, ref offset);
+                                object obj = Deserialize(property.PropertyType, datas, ref offset);
                                 property.SetValue(instance, obj);
                             }
                             else if (instanceObject.FieldInfosDic.ContainsKey(propertyName))
                             {
                                 FieldInfo property = instanceObject.FieldInfosDic[propertyName];
-                                object obj = this.Deserialize(property.FieldType, datas, ref offset);
+                                object obj = Deserialize(property.FieldType, datas, ref offset);
                                 property.SetValue(instance, obj);
                             }
                             else
@@ -494,7 +524,7 @@ namespace TouchSocket.Core.Serialization
                             offset += 4;
                             for (uint i = 0; i < paramLen; i++)
                             {
-                                object obj = this.Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
+                                object obj = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
                                 instanceObject.AddMethod.Invoke(instance, new object[] { obj });
                             }
                         }
@@ -514,7 +544,7 @@ namespace TouchSocket.Core.Serialization
                             offset += 4;
                             for (uint i = 0; i < paramLen; i++)
                             {
-                                object obj = this.Deserialize(instanceObject.ArrayType, datas, ref offset);
+                                object obj = Deserialize(instanceObject.ArrayType, datas, ref offset);
                                 array.SetValue(obj, i);
                             }
                             instance = array;
@@ -534,17 +564,29 @@ namespace TouchSocket.Core.Serialization
                             offset += 4;
                             for (uint i = 0; i < paramLen; i++)
                             {
-                                offset += 4;
-                                offset += datas[offset] + 1;
-                                object key = this.Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
-
-                                offset += datas[offset] + 1;
-                                object value = this.Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
+                                object key = Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
+                                object value = Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
                                 if (key != null)
                                 {
                                     instanceObject.AddMethod.Invoke(instance, new object[] { key, value });
                                 }
                             }
+
+                            //uint paramLen = TouchSocketBitConverter.Default.ToUInt32(datas, offset);
+                            //offset += 4;
+                            //for (uint i = 0; i < paramLen; i++)
+                            //{
+                            //    offset += 4;
+                            //    offset += datas[offset] + 1;
+                            //    object key = this.Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
+
+                            //    offset += datas[offset] + 1;
+                            //    object value = this.Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
+                            //    if (key != null)
+                            //    {
+                            //        instanceObject.AddMethod.Invoke(instance, new object[] { key, value });
+                            //    }
+                            //}
                         }
                         else
                         {
@@ -649,12 +691,16 @@ namespace TouchSocket.Core.Serialization
 
         private static PropertyInfo[] GetProperties(Type type)
         {
-            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            //return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            //    .ToArray();
+
+            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                          .Where(p => p.CanWrite && p.CanRead).ToArray();
         }
 
         private static FieldInfo[] GetFieldInfos(Type type)
         {
-            return type.GetFields(BindingFlags.Instance | BindingFlags.Public);
+            return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(p => !p.IsInitOnly).ToArray();
         }
     }
 }

@@ -27,7 +27,7 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <param name="methodInvoke"></param>
         public XmlRpcAttribute(bool methodInvoke = false)
         {
-            this.MethodInvoke = methodInvoke;
+            MethodInvoke = methodInvoke;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <param name="invokenKey"></param>
         public XmlRpcAttribute(string invokenKey)
         {
-            this.InvokenKey = invokenKey;
+            InvokenKey = invokenKey;
         }
         /// <summary>
         /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
@@ -59,9 +59,9 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <returns></returns>
         public override string GetInvokenKey(MethodInstance methodInstance)
         {
-            if (this.MethodInvoke)
+            if (MethodInvoke)
             {
-                return this.GetMethodName(methodInstance, false);
+                return GetMethodName(methodInstance, false);
             }
             else
             {

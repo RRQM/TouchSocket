@@ -69,11 +69,11 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public override string ToString()
         {
-            if (string.IsNullOrEmpty(this.value))
+            if (string.IsNullOrEmpty(value))
             {
                 return "None";
             }
-            return this.value;
+            return value;
         }
 
         /// <summary>
@@ -82,11 +82,11 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public override int GetHashCode()
         {
-            if (this.value == null)
+            if (value == null)
             {
                 return string.Empty.GetHashCode();
             }
-            return this.value.ToLower().GetHashCode();
+            return value.ToLower().GetHashCode();
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace TouchSocket.Sockets
         {
             if (obj is Protocol)
             {
-                return this.GetHashCode() == obj.GetHashCode();
+                return GetHashCode() == obj.GetHashCode();
             }
             return false;
         }

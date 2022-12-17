@@ -28,7 +28,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="context"></param>
         public WebSocketConnectException(string mes, HttpContext context) : base(mes)
         {
-            this.Context = context;
+            Context = context;
         }
 
         /// <summary>

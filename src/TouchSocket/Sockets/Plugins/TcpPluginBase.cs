@@ -12,11 +12,8 @@
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
 
-namespace TouchSocket.Sockets.Plugins
+namespace TouchSocket.Sockets
 {
     /// <summary>
     /// 插件实现基类
@@ -38,92 +35,92 @@ namespace TouchSocket.Sockets.Plugins
 
         void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            this.OnConnected((TClient)client, e);
+            OnConnected((TClient)client, e);
         }
 
         Task ITcpPlugin.OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
         {
-            return this.OnConnectedAsync((TClient)client, e);
+            return OnConnectedAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            this.OnConnecting((TClient)client, e);
+            OnConnecting((TClient)client, e);
         }
 
         Task ITcpPlugin.OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
         {
-            return this.OnConnectingAsync((TClient)client, e);
+            return OnConnectingAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            this.OnDisconnected((TClient)client, e);
+            OnDisconnected((TClient)client, e);
         }
 
         Task ITcpPlugin.OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
-            return this.OnDisconnectedAsync((TClient)client, e);
+            return OnDisconnectedAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnIDChanged(ITcpClientBase client, IDChangedEventArgs e)
         {
-            this.OnIDChanged((TClient)client, e);
+            OnIDChanged((TClient)client, e);
         }
 
         Task ITcpPlugin.OnIDChangedAsync(ITcpClientBase client, IDChangedEventArgs e)
         {
-            return this.OnIDChangedAsync((TClient)client, e);
+            return OnIDChangedAsync((TClient)client, e);
         }
 
         void IConfigPlugin.OnLoadedConfig(object sender, ConfigEventArgs e)
         {
-            this.OnLoadedConfig(sender, e);
+            OnLoadedConfig(sender, e);
         }
 
         Task IConfigPlugin.OnLoadedConfigAsync(object sender, ConfigEventArgs e)
         {
-            return this.OnLoadedConfigAsync(sender, e);
+            return OnLoadedConfigAsync(sender, e);
         }
 
         void IConfigPlugin.OnLoadingConfig(object sender, ConfigEventArgs e)
         {
-            this.OnLoadingConfig(sender, e);
+            OnLoadingConfig(sender, e);
         }
 
         Task IConfigPlugin.OnLoadingConfigAsync(object sender, ConfigEventArgs e)
         {
-            return this.OnLoadingConfigAsync(sender, e);
+            return OnLoadingConfigAsync(sender, e);
         }
 
         void ITcpPlugin.OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            this.OnReceivedData((TClient)client, e);
+            OnReceivedData((TClient)client, e);
         }
 
         Task ITcpPlugin.OnReceivedDataAsync(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            return this.OnReceivedDataAsync((TClient)client, e);
+            return OnReceivedDataAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            this.OnReceivingData((TClient)client, e);
+            OnReceivingData((TClient)client, e);
         }
 
         Task ITcpPlugin.OnReceivingDataAsync(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            return this.OnReceivingDataAsync((TClient)client, e);
+            return OnReceivingDataAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnSendingData(ITcpClientBase client, SendingEventArgs e)
         {
-            this.OnSending((TClient)client, e);
+            OnSending((TClient)client, e);
         }
 
         Task ITcpPlugin.OnSendingDataAsync(ITcpClientBase client, SendingEventArgs e)
         {
-            return this.OnSendingDataAsync((TClient)client, e);
+            return OnSendingDataAsync((TClient)client, e);
         }
 
         #region 虚函数实现
@@ -145,7 +142,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnConnectedAsync(TClient client, TouchSocketEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -165,7 +162,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnConnectingAsync(TClient client, ClientOperationEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -185,7 +182,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnDisconnectedAsync(TClient client, ClientDisconnectedEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -205,7 +202,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnIDChangedAsync(TClient client, TouchSocketEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -225,7 +222,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnLoadedConfigAsync(object sender, ConfigEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -245,7 +242,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnLoadingConfigAsync(object sender, ConfigEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -265,7 +262,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnReceivedDataAsync(TClient client, ReceivedDataEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -285,7 +282,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnReceivingDataAsync(TClient client, ByteBlockEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -305,7 +302,7 @@ namespace TouchSocket.Sockets.Plugins
         /// <returns></returns>
         protected virtual Task OnSendingDataAsync(TClient client, SendingEventArgs e)
         {
-            return Task.FromResult(0);
+            return EasyTask.CompletedTask;
         }
 
         #endregion 虚函数实现

@@ -14,7 +14,7 @@ using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace TouchSocket.Core.Reflection
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 表示属性的Getter
@@ -53,7 +53,7 @@ namespace TouchSocket.Core.Reflection
             {
                 throw new ArgumentNullException(nameof(propertyName));
             }
-            this.getFunc = CreateGetterDelegate(declaringType, propertyName);
+            getFunc = CreateGetterDelegate(declaringType, propertyName);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace TouchSocket.Core.Reflection
         /// <returns></returns>
         public object Invoke(object instance)
         {
-            return this.getFunc.Invoke(instance);
+            return getFunc.Invoke(instance);
         }
 
         /// <summary>

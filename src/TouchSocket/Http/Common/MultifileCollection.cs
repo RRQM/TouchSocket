@@ -2,11 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.IO;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using TouchSocket.Core.Extensions;
+using TouchSocket.Core;
 
 namespace TouchSocket.Http
 {
@@ -23,7 +20,7 @@ namespace TouchSocket.Http
         /// <param name="httpRequest"></param>
         public MultifileCollection(HttpRequest httpRequest)
         {
-            this.m_httpRequest = httpRequest;
+            m_httpRequest = httpRequest;
         }
 
         /// <summary>
@@ -32,11 +29,11 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public IEnumerator<IFormFile> GetEnumerator()
         {
-            if (this.m_httpRequest.ContentComplated == null || this.m_httpRequest.ContentComplated == true)
+            if (m_httpRequest.ContentComplated == null || m_httpRequest.ContentComplated == true)
             {
-                if (this.m_httpRequest.TryGetContent(out byte[] context))
+                if (m_httpRequest.TryGetContent(out byte[] context))
                 {
-                    byte[] boundary = $"--{this.m_httpRequest.GetBoundary()}".ToUTF8Bytes();
+                    byte[] boundary = $"--{m_httpRequest.GetBoundary()}".ToUTF8Bytes();
                     var indexs = context.IndexOfInclude(0, context.Length, boundary);
                     if (indexs.Count <= 0)
                     {
@@ -58,7 +55,7 @@ namespace TouchSocket.Http
                                 string[] kv = item.Split(new char[] { ':', '=' });
                                 if (kv.Length == 2)
                                 {
-                                    internalFormFile.DataPair.Add(kv[0].Trim(), kv[1].Replace("\"",String.Empty).Trim());
+                                    internalFormFile.DataPair.Add(kv[0].Trim(), kv[1].Replace("\"", String.Empty).Trim());
                                 }
                             }
 
@@ -82,7 +79,7 @@ namespace TouchSocket.Http
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
     }
 }

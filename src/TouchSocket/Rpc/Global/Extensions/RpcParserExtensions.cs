@@ -98,7 +98,7 @@ namespace TouchSocket.Rpc
         /// <typeparam name="TFrom"></typeparam>
         /// <param name="rpcParser"></param>
         /// <param name="serverProvider"></param>
-        public static void RegisterServer<TFrom>(this IRpcParser rpcParser, IRpcServer serverProvider) where TFrom : class, IRpcServer
+        public static void RegisterServer<TFrom>(this IRpcParser rpcParser, TFrom serverProvider) where TFrom : class, IRpcServer
         {
             if (rpcParser.RpcStore == null)
             {

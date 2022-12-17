@@ -44,11 +44,11 @@ namespace TouchSocket.Rpc.WebApi
         /// <param name="invokeResult"></param>
         public override void Executed(ICallContext callContext, ref InvokeResult invokeResult)
         {
-            if (callContext is IWebApiCallContext webApiCallContext)
+            if (callContext is IHttpCallContext httpCallContext && httpCallContext.HttpContext != default)
             {
-                webApiCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Origin", this.AllowOrigin);
-                webApiCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Methods", this.AllowMethods);
-                webApiCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Credentials", this.AllowCredentials.ToString().ToLower());
+                httpCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Origin", AllowOrigin);
+                httpCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Methods", AllowMethods);
+                httpCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Credentials", AllowCredentials.ToString().ToLower());
             }
             base.Executed(callContext, ref invokeResult);
         }

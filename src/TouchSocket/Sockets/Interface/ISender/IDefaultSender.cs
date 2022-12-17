@@ -11,15 +11,15 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// 具有直接发送功能
     /// </summary>
-    public interface IDefaultSender : ISenderBase
+    public interface IDefaultSender
     {
-        #region 默认发送
         /// <summary>
         /// 绕过适配器，直接发送字节流
         /// </summary>
@@ -30,9 +30,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         void DefaultSend(byte[] buffer, int offset, int length);
-        #endregion
 
-        #region 默认发送
         /// <summary>
         /// 绕过适配器，直接发送字节流
         /// </summary>
@@ -42,7 +40,6 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void DefaultSendAsync(byte[] buffer, int offset, int length);
-        #endregion
+        Task DefaultSendAsync(byte[] buffer, int offset, int length);
     }
 }

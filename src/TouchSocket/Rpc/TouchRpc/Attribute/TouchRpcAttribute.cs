@@ -27,7 +27,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="methodInvoke"></param>
         public TouchRpcAttribute(bool methodInvoke = false)
         {
-            this.MethodInvoke = methodInvoke;
+            MethodInvoke = methodInvoke;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="invokenKey"></param>
         public TouchRpcAttribute(string invokenKey)
         {
-            this.InvokenKey = invokenKey;
+            InvokenKey = invokenKey;
         }
 
         /// <summary>
@@ -51,9 +51,9 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         public override string GetInvokenKey(MethodInstance methodInstance)
         {
-            if (this.MethodInvoke)
+            if (MethodInvoke)
             {
-                return this.GetMethodName(methodInstance, false);
+                return GetMethodName(methodInstance, false);
             }
             else
             {

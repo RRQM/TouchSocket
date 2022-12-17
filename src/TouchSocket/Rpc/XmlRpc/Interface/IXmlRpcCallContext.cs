@@ -10,23 +10,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Http;
+using TouchSocket.Rpc.WebApi;
 
 namespace TouchSocket.Rpc.XmlRpc
 {
     /// <summary>
     /// IXmlRpcCallContext
     /// </summary>
-    public interface IXmlRpcCallContext : ICallContext
+    public interface IXmlRpcCallContext : IHttpCallContext
     {
         /// <summary>
         /// XmlRpc的调用字符串。
         /// </summary>
         string XmlString { get; }
-
-        /// <summary>
-        /// 表明Http上下文。
-        /// </summary>
-        HttpContext HttpContext { get; }
     }
 }

@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core.Dependency;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -27,12 +27,12 @@ namespace TouchSocket.Rpc
         /// <param name="container"></param>
         public RpcServerFactory(IContainer container)
         {
-            this.m_container = container;
+            m_container = container;
         }
 
         IRpcServer IRpcServerFactory.Create(ICallContext callContext, object[] ps)
         {
-            return (IRpcServer)this.m_container.Resolve(callContext.MethodInstance.ServerType);
+            return (IRpcServer)m_container.Resolve(callContext.MethodInstance.ServerType);
         }
     }
 }

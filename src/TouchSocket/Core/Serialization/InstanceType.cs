@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core.Serialization
+namespace TouchSocket.Core
 {
     internal enum InstanceType
     {
