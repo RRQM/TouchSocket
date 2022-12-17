@@ -1,12 +1,7 @@
 ﻿using System;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Rpc.TouchRpc;
-using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace FileServiceConsoleApp
 {
@@ -56,7 +51,7 @@ namespace FileServiceConsoleApp
             base.OnFileTransfered(client, e);
         }
 
-        protected override void OnHandshaked(TcpTouchRpcSocketClient client, MsgEventArgs e)
+        protected override void OnHandshaked(TcpTouchRpcSocketClient client, VerifyOptionEventArgs e)
         {
             client.Logger.Info($"有客户端成功验证，ID={client.ID}");
             base.OnHandshaked(client, e);

@@ -1,8 +1,6 @@
 ﻿using System;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Http;
-using TouchSocket.Http.Plugins;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.XmlRpc;
 using TouchSocket.Sockets;
@@ -13,7 +11,7 @@ namespace XmlRpcServerApp
     {
         private static void Main(string[] args)
         {
-            RpcStore rpcStore = new RpcStore(new TouchSocket.Core.Dependency.Container());
+            RpcStore rpcStore = new RpcStore(new Container());
 
             //添加解析器，解析器根据传输协议，序列化方式的不同，调用RPC服务
             rpcStore.AddRpcParser("xmlRpcParser ", CreateXmlRpcRpcParser());

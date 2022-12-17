@@ -13,7 +13,6 @@
 using System;
 using System.Windows.Forms;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;

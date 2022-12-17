@@ -17,7 +17,7 @@ namespace AdapterConsoleApp
             return new MyBigFixedHeaderRequestInfo();
         }
 
-        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        protected override void PreviewSend(IRequestInfo requestInfo)
         {
             throw new NotImplementedException();
         }

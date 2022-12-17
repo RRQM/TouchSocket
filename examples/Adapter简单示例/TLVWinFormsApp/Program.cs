@@ -8,7 +8,7 @@ namespace TLVWinFormsApp
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             try
             {

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Text;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Sockets;
-using TouchSocket.Sockets.Plugins;
 
 namespace ThrottlingConsoleApp
 {
@@ -48,8 +44,8 @@ namespace ThrottlingConsoleApp
     /// </summary>
     internal static class DependencyExtensions
     {
-        public static readonly DependencyProperty FlowGateProperty =
-            DependencyProperty.Register("FlowGate", typeof(FlowGate), typeof(DependencyExtensions), null);
+        public static readonly DependencyProperty<FlowGate> FlowGateProperty =
+            DependencyProperty<FlowGate>.Register("FlowGate", typeof(DependencyExtensions), null);
 
         public static void InitFlowGate(this IDependencyObject dependencyObject, int max)
         {

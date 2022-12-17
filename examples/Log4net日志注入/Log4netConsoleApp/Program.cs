@@ -1,15 +1,14 @@
 ﻿using System.Text;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
+
 namespace Log4netConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = CreateService();
             Console.ReadKey();
@@ -48,9 +47,9 @@ namespace Log4netConsoleApp
         }
     }
 
-    class Mylog4netLogger : ILog
+    internal class Mylog4netLogger : ILog
     {
-        public LogType LogType { get; set; } = LogType.Trace | LogType.Debug | LogType.Information;//需要什么类型，就叠加
+        public LogType LogType { get; set; } = LogType.Trace | LogType.Debug | LogType.Info;//需要什么类型，就叠加
 
         void ILog.Log(LogType logType, object source, string message, Exception exception)
         {
@@ -62,25 +61,30 @@ namespace Log4netConsoleApp
 
                 switch (logType)
                 {
-
                     case LogType.Trace:
                         log.Debug(message, exception);
                         break;
+
                     case LogType.Debug:
                         log.Debug(message, exception);
                         break;
-                    case LogType.Information:
+
+                    case LogType.Info:
                         log.Info(message, exception);
                         break;
+
                     case LogType.Warning:
                         log.Warn(message, exception);
                         break;
+
                     case LogType.Error:
                         log.Error(message, exception);
                         break;
+
                     case LogType.Critical:
                         log.Error(message, exception);
                         break;
+
                     case LogType.None:
                     default:
                         break;

@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Consul" Version="1.6.10.7" />
-    <PackageReference Include="TouchSocket" Version="0.7.6" />
+    <PackageReference Include="Consul" Version="1.6.10.8" />
+    <PackageReference Include="TouchSocket" Version="1.0.0-beta" />
   </ItemGroup>
 
 </Project>

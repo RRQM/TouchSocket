@@ -19,11 +19,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.IO;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Rpc.TouchRpc;
-using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 
 namespace FileClientGUI

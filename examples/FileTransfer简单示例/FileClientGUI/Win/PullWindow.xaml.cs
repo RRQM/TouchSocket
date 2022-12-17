@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System.Windows;
 using System.Windows.Controls;
-using TouchSocket.Rpc.TouchRpc;
 
 namespace FileClientGUI.Win
 {

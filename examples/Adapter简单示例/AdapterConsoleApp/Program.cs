@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Extensions;
-using TouchSocket.Core.IO;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Text;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Dependency;
-using TouchSocket.Core.Log;
-using TouchSocket.Core.Plugins;
+using TouchSocket.Core;
 using TouchSocket.Http;
-using TouchSocket.Http.Plugins;
 using TouchSocket.Sockets;
 
 namespace ConsoleApp

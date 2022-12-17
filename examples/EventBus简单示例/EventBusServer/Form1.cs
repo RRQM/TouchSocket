@@ -14,10 +14,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using TouchSocket.Core;
-using TouchSocket.Core.Config;
-using TouchSocket.Core.Plugins;
 using TouchSocket.Rpc.TouchRpc;
-using TouchSocket.Rpc.TouchRpc.Plugins;
 using TouchSocket.Sockets;
 
 namespace EERPCServiceDemo

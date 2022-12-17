@@ -1,6 +1,5 @@
 ﻿using System;
-using TouchSocket.Core.ByteManager;
-using TouchSocket.Core.Diagnostics;
+using TouchSocket.Core;
 
 namespace BytePoolConsoleApp
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using TouchSocket.Core.ByteManager;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
@@ -70,7 +70,7 @@ namespace AdapterConsoleApp
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <param name="isAsync"></param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length, bool isAsync)
+        protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
             int dataLen = length - offset;//先获取需要发送的实际数据长度
             if (dataLen > byte.MaxValue)//超长判断
@@ -83,15 +83,7 @@ namespace AdapterConsoleApp
             {
                 byteBlock.Write((byte)dataLen);//先写长度
                 byteBlock.Write(buffer, offset, length);//再写数据
-                if (isAsync)//判断异步
-                {
-                    byte[] data = byteBlock.ToArray();//使用异步时不能将byteBlock.Buffer进行发送，应当ToArray成新的Byte[]。
-                    this.GoSend(data, 0, data.Length, isAsync);//调用GoSend，实际发送
-                }
-                else
-                {
-                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len, isAsync);
-                }
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
             }
             finally
             {
@@ -99,12 +91,12 @@ namespace AdapterConsoleApp
             }
         }
 
-        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes, bool isAsync)
+        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
         {
             //暂时不实现。
         }
 
-        protected override void PreviewSend(IRequestInfo requestInfo, bool isAsync)
+        protected override void PreviewSend(IRequestInfo requestInfo)
         {
             throw new System.NotImplementedException();
         }
