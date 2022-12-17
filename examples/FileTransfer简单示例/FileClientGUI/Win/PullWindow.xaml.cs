@@ -25,31 +25,34 @@ namespace FileClientGUI.Win
             InitializeComponent();
         }
 
-        public bool SelectRequest(out FileRequest fileRequest, out string clientID)
-        {
-            this.ShowDialog();
-            fileRequest = this.fileRequest;
-            clientID = this.clientID;
-            return this.go;
-        }
+
 
         private void tb1_TextChanged(object sender, TextChangedEventArgs e)
         {
             this.tb2.Text = System.IO.Path.GetFileName(this.tb1.Text);
         }
 
-        private FileRequest fileRequest;
+        public bool SelectRequest(out string path, out string savePath, out string targetId)
+        {
+            this.ShowDialog();
+            path = this.path;
+            savePath = this.savePath;
+            targetId = this.targetId;
+            return this.go;
+        }
+
+        private string savePath;
+        private string path;
+        private string targetId;
+
+        //private FileRequest fileRequest;
         private bool go;
-        private string clientID;
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            fileRequest = new FileRequest()
-            {
-                Path = this.tb1.Text,
-                SavePath = this.tb2.Text
-            };
-            this.clientID = this.tb3.Text;
+            this.targetId = this.tb3.Text;
+            this.path = this.tb1.Text;
+            this.savePath = this.tb2.Text;
             this.go = true;
             this.Close();
         }

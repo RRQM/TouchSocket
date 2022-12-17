@@ -25,28 +25,34 @@ namespace FileServiceGUI.Win
             this.InitializeComponent();
         }
 
-        public bool SelectRequest(out FileRequest fileRequest)
+        public bool SelectRequest(out string path, out string savePath)
         {
             this.ShowDialog();
-            fileRequest = this.fileRequest;
+            path = this.path;
+            savePath = this.savePath;
             return this.go;
         }
 
+        private string savePath;
+        private string path;
         private void tb1_TextChanged(object sender, TextChangedEventArgs e)
         {
             this.tb2.Text = System.IO.Path.GetFileName(this.tb1.Text);
         }
 
-        private FileRequest fileRequest;
+        //private FileRequest fileRequest;
         private bool go;
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.fileRequest = new FileRequest()
-            {
-                Path = this.tb1.Text,
-                SavePath = this.tb2.Text
-            };
+            //this.fileRequest = new FileRequest()
+            //{
+            //    Path = this.tb1.Text,
+            //    SavePath = this.tb2.Text
+            //};
+
+            this.path = this.tb1.Text;
+            this.savePath = this.tb2.Text;
             this.go = true;
             this.Close();
         }

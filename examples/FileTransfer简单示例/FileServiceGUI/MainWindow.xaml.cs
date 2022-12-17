@@ -45,6 +45,16 @@ namespace FileServiceGUI
             this.ListBox_RemoteTransfer.ItemsSource = this.remoteModels;
             this.ListBox_LocalTransfer.ItemsSource = this.localModels;
 
+
+            //try
+            //{
+            //    Enterprise.ForTest();
+            //}
+            //catch (Exception ex)
+            //{
+            //    this.ShowMsg(ex.Message);
+            //}
+
             this.Start();
         }
 
@@ -78,17 +88,19 @@ namespace FileServiceGUI
                 return;
             }
             this.fileService = new TcpTouchRpcService();
-            this.fileService.Connected = this.FileService_Connected;
-            this.fileService.Disconnected = this.FileService_Disconnected;
+            //this.fileService.Received += this.FileService_Received;
+            this.fileService.Connected += this.FileService_Connected;
+            this.fileService.Disconnected += this.FileService_Disconnected;
+            //this.fileService.FileTransfering += this.FileService_FileTransfering;
+
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .SetVerifyToken("FileService")
-                 .UsePlugin()
-                .ConfigurePlugins(a =>
+                .UsePlugin()
+                .SetBufferLength(1024*1024)
+                .ConfigurePlugins(a => 
                 {
-                    a.Add<TouchRpcActionPlugin<TcpTouchRpcSocketClient>>()//此处的逻辑可用插件替代完成。
-                       .SetFileTransfering(this.FileService_FileTransfering)
-                       .SetReceivedProtocolData(this.FileService_Received);
+                    a.Add<MyPlugin>();
                 });
 
             try
@@ -103,16 +115,16 @@ namespace FileServiceGUI
             }
         }
 
-        private void FileService_Received(TcpTouchRpcSocketClient socketClient, ProtocolDataEventArgs e)
+        private void FileService_Received(TcpTouchRpcSocketClient socketClient, short protocol, ByteBlock byteBlock)
         {
-            this.ShowMsg($"收到数据：协议={e.Protocol},数据长度:{e.ByteBlock.Len - 2}");
-            if (e.Protocol == -1)
+            this.ShowMsg($"收到数据：协议={protocol},数据长度:{byteBlock.Len - 2}");
+            if (protocol == -1)
             {
-                socketClient.Send(e.ByteBlock.ToArray(2));
+                socketClient.Send(byteBlock.ToArray(2));
             }
             else
             {
-                socketClient.Send(e.Protocol, e.ByteBlock.ToArray(2));
+                socketClient.Send(protocol, byteBlock.ToArray(2));
             }
         }
 
@@ -125,13 +137,13 @@ namespace FileServiceGUI
             switch (e.TransferType)
             {
                 case TransferType.Push:
-                    model.FilePath = e.FileRequest.SavePath;
-                    model.FileLength = FileUtility.ToFileLengthString(e.FileInfo.FileLength);
+                    model.FilePath = e.SavePath;
+                    model.FileLength = FileUtility.ToFileLengthString(e.FileInfo.Length);
                     break;
 
                 case TransferType.Pull:
-                    model.FilePath = e.FileRequest.Path;
-                    model.FileLength = FileUtility.ToFileLengthString(new FileInfo(e.FileRequest.Path).Length);
+                    model.FilePath = e.ResourcePath;
+                    model.FileLength = FileUtility.ToFileLengthString(new FileInfo(e.ResourcePath).Length);
                     break;
 
                 default:
@@ -219,27 +231,31 @@ namespace FileServiceGUI
             if (this.ListBox_Clients.SelectedItem is TcpTouchRpcSocketClient client)
             {
                 PushWindow pushWindow = new PushWindow();
-                if (pushWindow.SelectRequest(out FileRequest fileRequest))
+                if (pushWindow.SelectRequest(out var path, out var savePath))
                 {
+                    FileOperator fileOperator = new FileOperator()
+                    {
+                        ResourcePath = path,
+                        SavePath = savePath
+                    };
                     if (this.cb_resume.IsChecked == true)
                     {
-                        fileRequest.Flags = TransferFlags.BreakpointResume;
+                        fileOperator.Flags = TransferFlags.BreakpointResume;
                     }
-                    FileOperator fileOperator = new FileOperator();
 
-                    FileInfo fileInfo = new FileInfo(fileRequest.Path);
+                    FileInfo fileInfo = new FileInfo(path);
 
                     TransferModel model = new TransferModel()
                     {
                         FileLength = FileUtility.ToFileLengthString(fileInfo.Length),
-                        FilePath = fileRequest.Path,
+                        FilePath = path,
                         FileOperator = fileOperator,
                         TransferType = TransferType.Push
                     };
                     model.Start();
 
                     this.localModels.Add(model);
-                    client.PushFileAsync(fileRequest, fileOperator);
+                    client.PushFileAsync(fileOperator);
                 }
             }
             else
@@ -254,25 +270,29 @@ namespace FileServiceGUI
             if (this.ListBox_Clients.SelectedItem is TcpTouchRpcSocketClient client)
             {
                 PullWindow pullWindow = new PullWindow();
-                if (pullWindow.SelectRequest(out FileRequest fileRequest))
+                if (pullWindow.SelectRequest(out var path, out var savePath))
                 {
+                    FileOperator fileOperator = new FileOperator()
+                    {
+                        SavePath = savePath,
+                        ResourcePath = path
+                    };
                     if (this.cb_resume.IsChecked == true)
                     {
-                        fileRequest.Flags = TransferFlags.BreakpointResume;
+                        fileOperator.Flags = TransferFlags.BreakpointResume;
                     }
-                    FileOperator fileOperator = new FileOperator();
 
                     TransferModel model = new TransferModel()
                     {
                         FileLength = "未知",
-                        FilePath = fileRequest.Path,
+                        FilePath = path,
                         FileOperator = fileOperator,
                         TransferType = TransferType.Pull
                     };
                     model.Start();
 
                     this.localModels.Add(model);
-                    client.PullFileAsync(fileRequest, fileOperator);
+                    client.PullFileAsync(fileOperator);
                 }
             }
             else
