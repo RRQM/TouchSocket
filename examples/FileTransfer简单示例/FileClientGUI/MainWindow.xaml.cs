@@ -42,6 +42,15 @@ namespace FileClientGUI
 
             this.ListBox_RemoteTransfer.ItemsSource = this.remoteModels;
             this.ListBox_LocalTransfer.ItemsSource = this.localModels;
+
+            //try
+            //{
+            //    Enterprise.ForTest();
+            //}
+            //catch (Exception ex)
+            //{
+            //    this.ShowMsg(ex.Message);
+            //}
         }
 
         private RRQMList<TransferModel> remoteModels;
@@ -70,16 +79,17 @@ namespace FileClientGUI
         private void ConButton_Click(object sender, RoutedEventArgs e)
         {
             fileClient = new TcpTouchRpcClient();
-            fileClient.Disconnected = this.FileClient_Disconnected;
+            //fileClient.FileTransfering += this.FileClient_BeforeFileTransfer;
+            //fileClient.Received += FileClient_Received;
+            fileClient.Disconnected += this.FileClient_Disconnected;
             fileClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .SetVerifyToken("FileService")
+                .SetBufferLength(1024 * 1024)
                 .UsePlugin()
                 .ConfigurePlugins(a =>
                 {
-                    a.Add<TouchRpcActionPlugin<TcpTouchRpcClient>>()//此处的逻辑可用插件替代完成。
-                       .SetFileTransfering(this.FileClient_BeforeFileTransfer)
-                       .SetReceivedProtocolData(FileClient_Received);
+                    a.Add<MyPlugin>();
                 }));
 
             try
@@ -101,9 +111,9 @@ namespace FileClientGUI
         {
         }
 
-        private void FileClient_Received(TcpTouchRpcClient client, ProtocolDataEventArgs e)
+        private void FileClient_Received(TcpTouchRpcClient client, short protocol, ByteBlock byteBlock)
         {
-            ShowMsg($"收到数据：协议={e.Protocol},数据长度:{e.ByteBlock.Len - 2}");
+            ShowMsg($"收到数据：协议={protocol},数据长度:{byteBlock.Len - 2}");
         }
 
         private void FileClient_BeforeFileTransfer(TcpTouchRpcClient client, FileOperationEventArgs e)
@@ -115,13 +125,13 @@ namespace FileClientGUI
             switch (e.TransferType)
             {
                 case TransferType.Push:
-                    model.FilePath = e.FileRequest.SavePath;
-                    model.FileLength = FileUtility.ToFileLengthString(e.FileInfo.FileLength);
+                    model.FilePath = e.SavePath;
+                    model.FileLength = FileUtility.ToFileLengthString(e.FileInfo.Length);
                     break;
 
                 case TransferType.Pull:
-                    model.FilePath = e.FileRequest.Path;
-                    model.FileLength = FileUtility.ToFileLengthString(new FileInfo(e.FileRequest.Path).Length);
+                    model.FilePath = e.ResourcePath;
+                    model.FileLength = FileUtility.ToFileLengthString(new FileInfo(e.ResourcePath).Length);
                     break;
 
                 default:
@@ -170,19 +180,24 @@ namespace FileClientGUI
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             PushWindow pushWindow = new PushWindow();
-            if (pushWindow.SelectRequest(out FileRequest fileRequest, out string clientID))
+            if (pushWindow.SelectRequest(out var path, out var savePath, out string clientID))
             {
+
+                FileOperator fileOperator = new FileOperator()
+                {
+                    ResourcePath = path,
+                    SavePath = savePath
+                };
                 if (this.cb_resume.IsChecked == true)
                 {
-                    fileRequest.Flags = TransferFlags.BreakpointResume;
+                    fileOperator.Flags = TransferFlags.BreakpointResume;
                 }
-                FileOperator fileOperator = new FileOperator();
-                //fileOperator.SetMaxSpeed(10240);
-                FileInfo fileInfo = new FileInfo(fileRequest.Path);
+
+                FileInfo fileInfo = new FileInfo(path);
                 TransferModel model = new TransferModel()
                 {
                     FileLength = FileUtility.ToFileLengthString(fileInfo.Length),
-                    FilePath = fileRequest.Path,
+                    FilePath = path,
                     FileOperator = fileOperator,
                     TransferType = TransferType.Push
                 };
@@ -191,11 +206,11 @@ namespace FileClientGUI
                 this.localModels.Add(model);
                 if (string.IsNullOrEmpty(clientID))
                 {
-                    this.fileClient.PushFileAsync(fileRequest, fileOperator);
+                    this.fileClient.PushFileAsync(fileOperator);
                 }
                 else
                 {
-                    this.fileClient.PushFileAsync(clientID, fileRequest, fileOperator);
+                    this.fileClient.PushFileAsync(clientID, fileOperator);
                 }
             }
         }
@@ -203,18 +218,23 @@ namespace FileClientGUI
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
             PullWindow pullWindow = new PullWindow();
-            if (pullWindow.SelectRequest(out FileRequest fileRequest, out string clientID))
+            if (pullWindow.SelectRequest(out var path, out var savePath, out string clientID))
             {
+                FileOperator fileOperator = new FileOperator()
+                {
+                    ResourcePath = path,
+                    SavePath = savePath
+                };
+
                 if (this.cb_resume.IsChecked == true)
                 {
-                    fileRequest.Flags = TransferFlags.BreakpointResume;
+                    fileOperator.Flags = TransferFlags.BreakpointResume;
                 }
-                FileOperator fileOperator = new FileOperator();
 
                 TransferModel model = new TransferModel()
                 {
                     FileLength = "未知",
-                    FilePath = fileRequest.Path,
+                    FilePath = path,
                     FileOperator = fileOperator,
                     TransferType = TransferType.Pull
                 };
@@ -224,11 +244,11 @@ namespace FileClientGUI
 
                 if (string.IsNullOrEmpty(clientID))
                 {
-                    this.fileClient.PullFileAsync(fileRequest, fileOperator);
+                    this.fileClient.PullFileAsync(fileOperator);
                 }
                 else
                 {
-                    this.fileClient.PullFileAsync(clientID, fileRequest, fileOperator);
+                    this.fileClient.PullFileAsync(clientID, fileOperator);
                 }
             }
         }

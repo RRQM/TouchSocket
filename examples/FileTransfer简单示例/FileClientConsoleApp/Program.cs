@@ -31,14 +31,20 @@ namespace FileClientConsoleApp
 
             client.Logger.Info("连接成功");
 
-            //第一个参数是请求路径，第二个是保存路径。
-            FileRequest fileRequest = new FileRequest(@"D:\System\Windows.iso", $@"Windows.iso");
+            Metadata metadata = new Metadata();//传递到服务器的元数据
+            metadata.Add("1", "1");
+            metadata.Add("2", "2");
 
-            fileRequest.Flags = TransferFlags.BreakpointResume;//尝试断点续传，使用断点续传时，会验证MD5值
+            FileOperator fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+            {
+                Flags = TransferFlags.BreakpointResume,//尝试断点续传，使用断点续传时，会验证MD5值
+                SavePath = $@"Windows.iso",//保存路径
+                ResourcePath = @"D:\System\Windows.iso",//请求路径
+                Metadata= metadata//传递到服务器的元数据
 
-            FileOperator fileOperator = new FileOperator();//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+            };
 
-            fileOperator.Timeout = 60 * 1000;//当传输大文件，且启用断点续传时，服务器可能会先计算MD5，而延时响应，所以需要设置超时时间。
+            fileOperator.Timeout = TimeSpan.FromSeconds(60);//当传输大文件，且启用断点续传时，服务器可能会先计算MD5，而延时响应，所以需要设置超时时间。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             LoopAction loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -53,12 +59,10 @@ namespace FileClientConsoleApp
 
             loopAction.RunAsync();
 
-            Metadata metadata = new Metadata();//传递到服务器的元数据
-            metadata.Add("1", "1");
-            metadata.Add("2", "2");
+           
 
             //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-            IResult result = client.PullFile(fileRequest, fileOperator, metadata);
+            IResult result = client.PullFile(fileOperator);
 
             client.Logger.Info(result.ToString());
             Console.ReadKey();
