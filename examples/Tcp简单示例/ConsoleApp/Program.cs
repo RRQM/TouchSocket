@@ -36,15 +36,17 @@ namespace ServiceConsoleApp
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .SetMaxCount(10000)
-                .SetThreadCount(10)
                 .ConfigurePlugins(a =>
                 {
-                    a.UseCheckClear();
+                    a.UseCheckClear()//启用定时清理无数据交互的客户端
+                    .SetCheckClearType( CheckClearType.All)//设置检验接收和发送
+                    .SetDuration(TimeSpan.FromSeconds(60));//检验时间为60秒
+                   
                     //a.Add();//此处可以添加插件
                 })
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
+                    a.UseConsoleLogger();//添加一个日志注入
                 }))
                 .Start();//启动
             service.Logger.Info("服务器成功启动");
@@ -69,7 +71,7 @@ namespace ServiceConsoleApp
                 .UsePlugin()
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
+                    a.UseConsoleLogger();//添加一个日志注入
                 }))
                 .Connect();
             tcpClient.Logger.Info("客户端成功连接");

@@ -23,7 +23,7 @@ namespace WebApiServerApp
                })
                .ConfigurePlugins(a =>
                {
-                   webApiParser = a.Add<WebApiParserPlugin>();
+                   webApiParser = a.UseWebApi();
                }))
                .Start();
 

@@ -30,7 +30,7 @@ namespace UnityServerConsoleApp
                    .SetBindIPHost(new IPHost(port))
                    .ConfigureContainer(a =>
                    {
-                       a.SetSingletonLogger<ConsoleLogger>();//注册一个日志组
+                       a.UseConsoleLogger();//注册一个日志组
                    })
                    .ConfigureRpcStore(a =>
                    {
@@ -57,7 +57,7 @@ namespace UnityServerConsoleApp
                                                                                      //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
                  .ConfigureContainer(a =>
                  {
-                     a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
+                     a.UseConsoleLogger();//添加一个日志注入
                  }))
                  .Start();
 
@@ -112,7 +112,7 @@ namespace UnityServerConsoleApp
                 })
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger<ConsoleLogger>();//添加一个日志注入
+                    a.UseConsoleLogger();//添加一个日志注入
                 }))
                 .Start();//启动
             service.Logger.Info($"Tcp服务器已启动，端口{port}");
