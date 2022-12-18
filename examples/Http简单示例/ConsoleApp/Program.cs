@@ -20,7 +20,7 @@ namespace ConsoleApp
                 .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger<ConsoleLogger>();
+                    a.UseConsoleLogger();
                 })
                 .ConfigurePlugins(a =>
                 {

@@ -18,7 +18,7 @@ namespace WebSocketConsoleApp
                 .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger<ConsoleLogger>();
+                    a.UseConsoleLogger();
                 })
                 .ConfigureRpcStore(a =>
                 {
@@ -31,7 +31,7 @@ namespace WebSocketConsoleApp
                            .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
                     a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
                     a.Add<MyWSCommandLinePlugin>();
-                    a.Add<WebApiParserPlugin>();
+                    a.UseWebApi();
                 }))
                 .Start();
 
