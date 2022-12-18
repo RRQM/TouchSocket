@@ -24,6 +24,7 @@ namespace TcpServiceForWebApi
         {
             try
             {
+                //此处是企业版测试授权，在本示例中，除了GetWaitingClient功能，其余的开源包都完全支持。
                 Enterprise.ForTest();
             }
             catch
