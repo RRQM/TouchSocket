@@ -22,34 +22,41 @@ namespace ServiceConsoleApp
         {
             TcpService service = new TcpService();
             service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端连接
+            service.Connected = (client, e) => { };//有客户端成功连接
             service.Disconnected = (client, e) => { };//有客户端断开连接
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                service.Logger.Info($"服务器已从{client.ID}接收到信息：{mes}");
+                client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
 
                 client.Send(mes);//将收到的信息直接返回给发送方
+
+                //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+
+                var ids = service.GetIDs();
+                foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
+                {
+                    if (clientId != client.ID)//不给自己发
+                    {
+                        service.Send(clientId, mes);
+                    }
+                }
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                .SetMaxCount(10000)
+            service.Setup(new TouchSocketConfig()//载入配置     
+                .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+                .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+                {
+                    a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseCheckClear()//启用定时清理无数据交互的客户端
-                    .SetCheckClearType( CheckClearType.All)//设置检验接收和发送
-                    .SetDuration(TimeSpan.FromSeconds(60));//检验时间为60秒
-                   
                     //a.Add();//此处可以添加插件
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.UseConsoleLogger();//添加一个日志注入
                 }))
                 .Start();//启动
-            service.Logger.Info("服务器成功启动");
+
+            service.Logger.Info("服务器已启动");
             return service;
         }
 

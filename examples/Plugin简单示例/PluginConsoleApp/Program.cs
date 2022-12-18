@@ -9,28 +9,18 @@ namespace PluginConsoleApp
         private static void Main(string[] args)
         {
             TcpService service = new TcpService();
-
-            service.Connecting = (client, e) =>
-            {
-                client.SetDataHandlingAdapter(new TerminatorPackageAdapter("\r\n"));//命令行中使用\r\n结尾)
-                //new NormalDataHandlingAdapter();//亦或者省略\r\n，但此时调用方不能高速调用，会粘包
-            };
-
-            //声明配置
-            var config = new TouchSocketConfig();
-            config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }) //同时监听两个地址
-                .UsePlugin();
-
-            //载入配置
-            service.Setup(config);
-
-            service.AddPlugin<MyCommandLinePlugin>();
-
-            //启动
-            service.Start();
-
-            Console.WriteLine($"TCP命令行插件服务器启动成功");
-
+            service.Setup(new TouchSocketConfig()
+                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })
+                .UsePlugin()
+                .ConfigureContainer(a=>
+                {
+                    a.UseConsoleLogger();
+                })
+                .ConfigurePlugins(a => 
+                {
+                    a.Add<MyPlugin>();
+                }))
+                .Start();
             Console.ReadKey();
         }
     }
@@ -47,12 +37,27 @@ namespace PluginConsoleApp
         }
     }
 
-    internal class MyPlugin : TcpPluginBase
+    public class MyPlugin : TcpPluginBase<SocketClient>
     {
-        protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+        public MyPlugin()
+        {
+            this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
+        }
+        protected override void OnConnecting(SocketClient client, ClientOperationEventArgs e)
         {
             client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
             base.OnConnecting(client, e);
+        }
+
+        protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
+        {
+            //这里处理数据接收
+            //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+            ByteBlock byteBlock = e.ByteBlock;
+            IRequestInfo requestInfo = e.RequestInfo;
+
+            //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
+            base.OnReceivedData(client, e);
         }
     }
 }
