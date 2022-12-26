@@ -30,6 +30,7 @@ namespace TcpServiceForWebApi
             catch
             {
             }
+
             var tcpService = services.AddTcpService(config =>
               {
                   config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
