@@ -381,7 +381,7 @@ namespace TouchSocket.Rpc.JsonRpc
                     {
                         if (byteBlock == null)
                         {
-                            break;
+                            return true;
                         }
                         else
                         {

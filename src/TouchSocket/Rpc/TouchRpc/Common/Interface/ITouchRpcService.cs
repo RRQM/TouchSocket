@@ -19,7 +19,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// ITouchRpcService
     /// </summary>
-    public interface ITouchRpcService :  IRpcParser, ITargetRpcActor
+    public interface ITouchRpcService : IRpcParser, ITargetRpcActor
     {
         /// <summary>
         /// 向对应ID的客户端发送

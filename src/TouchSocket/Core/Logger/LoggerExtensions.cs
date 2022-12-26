@@ -239,29 +239,6 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 输出消息日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="msg"></param>
-        [Obsolete("该方法已被弃用，请使用“Info”替代。")]
-        public static void Message(this ILog logger, string msg)
-        {
-            logger.Log(LogType.Info, null, msg, null);
-        }
-
-        /// <summary>
-        /// 输出消息日志
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="source"></param>
-        /// <param name="msg"></param>
-        [Obsolete("该方法已被弃用，请使用“Info”替代。")]
-        public static void Message(this ILog logger, object source, string msg)
-        {
-            logger.Log(LogType.Info, source, msg, null);
-        }
-
-        /// <summary>
         /// 输出详细日志
         /// </summary>
         /// <param name="logger"></param>

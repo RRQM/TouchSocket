@@ -190,7 +190,7 @@ namespace TouchSocket.Rpc
                     for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
                         callContext.MethodInstance.Filters[i].Executing(callContext, ref invokeResult);
-                        callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ref invokeResult).Wait();
+                        callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ref invokeResult).Wait();
                     }
                 }
 

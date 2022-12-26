@@ -998,7 +998,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 以包进行写入。
+        /// 以包进行写入。允许null值。
         /// 读取时调用<see cref="ReadPackage"/>，解包。或者先判断<see cref="ReadIsNull"/>，然后自行解包。
         /// </summary>
         /// <typeparam name="TPackage"></typeparam>

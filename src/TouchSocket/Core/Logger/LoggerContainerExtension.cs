@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using static System.Collections.Specialized.BitVector32;
 
 namespace TouchSocket.Core
 {
@@ -59,49 +60,66 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 使用控制台日志。
+        /// 添加控制台日志到日志组。
         /// </summary>
         /// <param name="container"></param>
         /// <returns></returns>
-        public static IContainer UseConsoleLogger(this IContainer container)
+        public static IContainer AddConsoleLogger(this IContainer container)
         {
-            container.RegisterSingleton<ILog, ConsoleLogger>();
+            LoggerGroup loggerGroup = (LoggerGroup)container.Resolve<ILog>();
+            loggerGroup.AddLogger(new ConsoleLogger());
             return container;
         }
 
         /// <summary>
-        /// 使用委托输出的日志
-        /// </summary>
-        /// <param name="container"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static IContainer UseEasyLogger(this IContainer container, Action<LogType, object, string, System.Exception> action)
-        {
-            container.RegisterSingleton<ILog>(new EasyLogger(action));
-            return container;
-        }
-
-        /// <summary>
-        /// 使用委托输出的日志
+        /// 添加委托日志到日志组。
         /// </summary>
         /// <param name="container"></param>
         /// <param name="action"></param>
         /// <returns></returns>
-        public static IContainer UseEasyLogger(this IContainer container, Action<string> action)
+        public static IContainer AddEasyLogger(this IContainer container, Action<LogType, object, string, Exception> action)
         {
-            container.RegisterSingleton<ILog>(new EasyLogger(action));
+            LoggerGroup loggerGroup = (LoggerGroup)container.Resolve<ILog>();
+            loggerGroup.AddLogger(new EasyLogger(action));
             return container;
         }
 
         /// <summary>
-        /// 使用文件日志。
+        /// 添加委托日志到日志组。
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public static IContainer AddEasyLogger(this IContainer container, Action<string> action)
+        {
+            LoggerGroup loggerGroup = (LoggerGroup)container.Resolve<ILog>();
+            loggerGroup.AddLogger(new EasyLogger(action));
+            return container;
+        }
+
+        /// <summary>
+        /// 添加文件日志到日志组。
         /// </summary>
         /// <param name="container"></param>
         /// <param name="rootPath"></param>
         /// <returns></returns>
-        public static IContainer UseFileLogger(this IContainer container, string rootPath = null)
+        public static IContainer AddFileLogger(this IContainer container, string rootPath = null)
         {
-            container.RegisterSingleton<ILog>(new FileLogger(rootPath));
+            LoggerGroup loggerGroup = (LoggerGroup)container.Resolve<ILog>();
+            loggerGroup.AddLogger(new FileLogger(rootPath));
+            return container;
+        }
+
+        /// <summary>
+        /// 添加日志到日志组。
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public static IContainer AddLogger(this IContainer container,ILog logger)
+        {
+            LoggerGroup loggerGroup = (LoggerGroup)container.Resolve<ILog>();
+            loggerGroup.AddLogger(logger);
             return container;
         }
     }

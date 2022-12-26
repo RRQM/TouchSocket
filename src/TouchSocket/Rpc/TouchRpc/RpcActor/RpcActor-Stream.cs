@@ -23,6 +23,8 @@ namespace TouchSocket.Rpc.TouchRpc
 {
     public partial class RpcActor
     {
+       
+
         /// <summary>
         /// 发送流数据
         /// </summary>

@@ -57,9 +57,9 @@ namespace TouchSocket.Core
     }
 
     /// <summary>
-    /// 指定依赖构造函数，可用于构造函数，属性，方法。
+    /// 指定依赖类型，构造函数，可用于构造函数，属性，方法。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Class| AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method)]
     public class DependencyInjectAttribute : Attribute
     {
         /// <summary>
@@ -73,9 +73,23 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="resolveNullIfNoRegistered"></param>
+        public DependencyInjectAttribute(bool resolveNullIfNoRegistered)
+        {
+            ResolveNullIfNoRegistered = resolveNullIfNoRegistered;
+        }
+
+        /// <summary>
         /// 构造参数
         /// </summary>
         public object[] Ps { get; }
+
+        /// <summary>
+        /// 如果没有注册则返回为空
+        /// </summary>
+        public bool ResolveNullIfNoRegistered { get; set; }
     }
 
     /// <summary>
@@ -122,10 +136,7 @@ namespace TouchSocket.Core
         /// </summary>
         public Type Type { get; }
 
-        /// <summary>
-        /// 如果没有注册则返回为空
-        /// </summary>
-        public bool ResolveNullIfNoRegistered { get; set; }
+
 
         /// <summary>
         /// 构造函数

@@ -526,10 +526,6 @@ namespace TouchSocket.Rpc.TouchRpc
         private void RpcServiceOutputSend(RpcActor actor, ArraySegment<byte>[] arg3)
         {
             TClient client = (TClient)actor.Caller;
-            if (!client.CanSend)
-            {
-                return;
-            }
             client.RpcActorSend(arg3);
         }
 

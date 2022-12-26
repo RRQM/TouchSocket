@@ -132,7 +132,7 @@ namespace TouchSocket.Resources
         /// <summary>
         /// 接收流容器为空
         /// </summary>
-        [Description("接收流容器为空。")]
+        [Description("流容器为空。")]
         StreamBucketNull,
 
         /// <summary>

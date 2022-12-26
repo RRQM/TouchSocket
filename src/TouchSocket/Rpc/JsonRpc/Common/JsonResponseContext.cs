@@ -43,7 +43,9 @@ namespace TouchSocket.Rpc.JsonRpc
     /// <summary>
     /// 错误
     /// </summary>
+#pragma warning disable IDE1006 // 命名样式
     public class error
+#pragma warning restore IDE1006 // 命名样式
     {
         /// <summary>
         /// code

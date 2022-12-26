@@ -11,41 +11,60 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
     /// 传输类型
     /// </summary>
+    [Flags]
     public enum TransferType
     {
         /// <summary>
         /// 推送
         /// </summary>
-        Push,
+        Push = 0,
 
         /// <summary>
         /// 拉取
         /// </summary>
-        Pull,
+        Pull = 1,
 
         /// <summary>
         /// 分块推送
         /// </summary>
-        SectionPush,
+        SectionPush = 2,
 
         /// <summary>
         /// 分块拉取
         /// </summary>
-        SectionPull,
+        SectionPull = 4,
 
         /// <summary>
         /// 小文件推送
         /// </summary>
-        SmallPush,
+        SmallPush = 8,
 
         /// <summary>
         /// 小文件拉取
         /// </summary>
-        SmallPull
+        SmallPull = 16
+    }
+
+    /// <summary>
+    /// TransferTypeExtension
+    /// </summary>
+    public static class TransferTypeExtension
+    {
+        /// <summary>
+        /// 表示当前传输类型是否属于<see cref="TransferType.Pull"/>、<see cref="TransferType.SectionPull"/>、<see cref="TransferType.SmallPull"/>其中的一种。
+        /// </summary>
+        /// <param name="transferType"></param>
+        /// <returns></returns>
+        public static bool IsPull(this TransferType transferType)
+        {
+            return transferType == TransferType.Pull || transferType == TransferType.SmallPull || transferType == TransferType.SectionPull;
+        }
     }
 }

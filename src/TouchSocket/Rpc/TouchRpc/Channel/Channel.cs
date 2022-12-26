@@ -279,7 +279,6 @@ namespace TouchSocket.Rpc.TouchRpc
     {
         private readonly RpcActor m_actor;
         private readonly IntelligentDataQueue<ChannelPackage> m_dataQueue;
-
         private readonly AutoResetEvent m_moveWaitHandle;
         private readonly string m_targetId;
         private readonly Timer m_timer;
