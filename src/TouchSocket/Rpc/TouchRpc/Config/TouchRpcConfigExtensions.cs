@@ -71,7 +71,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        [Obsolete("该方法已被弃用。请使用插件UseTouchRpcHeartbeat替代。")]
+        [Obsolete("该方法已被弃用。请使用插件UseTouchRpcHeartbeat替代。",true)]
         public static TouchSocketConfig SetHeartbeatFrequency(this TouchSocketConfig config, object value)
         {
             throw new NotImplementedException();

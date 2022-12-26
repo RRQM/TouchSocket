@@ -20,40 +20,53 @@ namespace TouchSocket.Sockets
 {
     /// <summary>
     /// IP解析映射
+    /// <para>
+    /// 支持端口，ip，域名等。具体格式如下：
+    /// <list type=" number">
+    /// <item>端口：直接按<see cref="int"/>入参，该操作一般在监听时使用。</item>
+    /// <item>ip：按127.0.0.1:7789入参。</item>
+    /// <item>域名：按tcp://127.0.0.1:7789、或者http://baidu.com入参。</item>
+    /// </list>
+    /// </para>
     /// </summary>
     public class IPHost
     {
-        private readonly bool isUri;
-
-        private readonly Uri uri;
 
         /// <summary>
-        /// 构造函数
+        /// IP解析映射
+        /// <para>
+        /// 支持端口，ip，域名等。具体格式如下：
+        /// <list type=" number">
+        /// <item>端口：直接按<see cref="int"/>入参，该操作一般在监听时使用。</item>
+        /// <item>ip：按127.0.0.1:7789入参。</item>
+        /// <item>域名：按tcp://127.0.0.1:7789、或者http://baidu.com入参。</item>
+        /// </list>
+        /// </para>
         /// </summary>
-        /// <param name="host">可以输入类似“127.0.0.1:7789”、“http://baidu.com”类型的参数</param>
+        /// <param name="host"></param>
         public IPHost(string host)
         {
             if (TouchSocketUtility.IsURL(host))
             {
-                isUri = true;
-                uri = new Uri(host);
-                if (uri.Port > 0)
+                IsUri = true;
+                Uri = new Uri(host);
+                if (Uri.Port > 0)
                 {
-                    Host = $"{uri.Host}:{uri.Port}";
+                    Host = $"{Uri.Host}:{Uri.Port}";
                 }
                 else
                 {
-                    Host = uri.Host;
+                    Host = Uri.Host;
                 }
-                if (TouchSocketUtility.IsIPv4(uri.Host) || TouchSocketUtility.IsIPV6(uri.Host))
+                if (TouchSocketUtility.IsIPv4(Uri.Host) || TouchSocketUtility.IsIPV6(Uri.Host))
                 {
-                    Analysis(uri.Host, uri.Port.ToString());
+                    Analysis(Uri.Host, Uri.Port.ToString());
                 }
                 else
                 {
-                    if (HostNameToIP(uri.Host, out IPAddress[] addresses))
+                    if (HostNameToIP(Uri.Host, out IPAddress[] addresses))
                     {
-                        Analysis(addresses[0].ToString(), uri.Port.ToString());
+                        Analysis(addresses[0].ToString(), Uri.Port.ToString());
                     }
                 }
             }
@@ -76,17 +89,12 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 从端口号创建
+        /// 从端口号创建。
         /// </summary>
         /// <param name="port"></param>
         public IPHost(int port) : this($"0.0.0.0:{port}")
         {
         }
-
-        /// <summary>
-        /// 具有端口信息的host
-        /// </summary>
-        public string Host { get; private set; }
 
         /// <summary>
         /// 寻址方案
@@ -99,6 +107,10 @@ namespace TouchSocket.Sockets
         public IPEndPoint EndPoint { get; private set; }
 
         /// <summary>
+        /// 具有端口信息的host
+        /// </summary>
+        public string Host { get; private set; }
+        /// <summary>
         /// IP
         /// </summary>
         public string IP { get; private set; }
@@ -106,7 +118,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 是否为Uri
         /// </summary>
-        public bool IsUri => isUri;
+        public bool IsUri { get; private set; }
 
         /// <summary>
         /// 端口号
@@ -116,7 +128,22 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 统一资源标识
         /// </summary>
-        public Uri Uri => uri;
+        public Uri Uri { get; private set; }
+
+        /// <summary>
+        /// 解析一个组的地址。
+        /// </summary>
+        /// <param name="strs"></param>
+        /// <returns></returns>
+        public static IPHost[] ParseIPHosts(string[] strs)
+        {
+            List<IPHost> iPs = new List<IPHost>();
+            foreach (var item in strs)
+            {
+                iPs.Add(new IPHost(item));
+            }
+            return iPs.ToArray();
+        }
 
         /// <summary>
         /// 获取Url全路径
@@ -124,9 +151,9 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public string GetUrlPath()
         {
-            if (isUri)
+            if (IsUri)
             {
-                return uri.PathAndQuery;
+                return Uri.PathAndQuery;
             }
             return default;
         }
@@ -182,21 +209,6 @@ namespace TouchSocket.Sockets
             {
                 throw new Exception($"IPHost初始化失败，信息:{ex.Message}", ex);
             }
-        }
-
-        /// <summary>
-        /// 解析一个组的地址。
-        /// </summary>
-        /// <param name="strs"></param>
-        /// <returns></returns>
-        public static IPHost[] ParseIPHosts(string[] strs)
-        {
-            List<IPHost> iPs = new List<IPHost>();
-            foreach (var item in strs)
-            {
-                iPs.Add(new IPHost(item));
-            }
-            return iPs.ToArray();
         }
     }
 }

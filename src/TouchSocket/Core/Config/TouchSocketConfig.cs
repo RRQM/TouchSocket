@@ -87,7 +87,7 @@ namespace TouchSocket.Core
             m_container = value;
             if (!value.IsRegistered(typeof(ILog)))
             {
-                m_container.RegisterSingleton<ILog, EmptyLogger>();
+                m_container.RegisterSingleton<ILog, LoggerGroup>();
             }
             SetPluginsManager(new PluginsManager(m_container));
             return this;

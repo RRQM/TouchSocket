@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TouchSocket.Core
 {
@@ -20,7 +21,7 @@ namespace TouchSocket.Core
     /// </summary>
     public class LoggerGroup : LoggerBase
     {
-        private readonly List<ILog> m_logs;
+        private readonly Dictionary<string, ILog> m_logs=new Dictionary<string, ILog>();
 
         /// <summary>
         /// 一组日志记录器
@@ -32,15 +33,35 @@ namespace TouchSocket.Core
             {
                 throw new ArgumentNullException(nameof(logs));
             }
+            foreach (var log in logs)
+            {
+                this.AddLogger(log);
+            }
+        }
 
-            m_logs = new List<ILog>();
-            m_logs.AddRange(logs);
+        /// <summary>
+        ///  一组日志记录器
+        /// </summary>
+        [DependencyInject]
+        public LoggerGroup()
+        {
+          
         }
 
         /// <summary>
         /// 组内的日志记录器
         /// </summary>
-        public ILog[] Logs => m_logs.ToArray();
+        public ILog[] Logs => m_logs.Values.ToArray();
+
+        /// <summary>
+        /// 添加日志组件
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="logger"></param>
+        public void AddLogger(string key, ILog logger)
+        {
+            m_logs.Add(key, logger);
+        }
 
         /// <summary>
         /// 添加日志组件
@@ -48,16 +69,7 @@ namespace TouchSocket.Core
         /// <param name="logger"></param>
         public void AddLogger(ILog logger)
         {
-            m_logs.Add(logger);
-        }
-
-        /// <summary>
-        /// 移除日志
-        /// </summary>
-        /// <param name="logger"></param>
-        public void RemoveLogger(ILog logger)
-        {
-            m_logs.Remove(logger);
+            m_logs.Add(logger.GetType().FullName, logger);
         }
 
         /// <summary>
@@ -69,14 +81,47 @@ namespace TouchSocket.Core
         /// <param name="exception"></param>
         public void Log<TLog>(LogType logType, object source, string message, Exception exception) where TLog : ILog
         {
-            for (int i = 0; i < m_logs.Count; i++)
+            try
             {
-                ILog log = Logs[i];
-                if (log.GetType() == typeof(TLog))
+                for (int i = 0; i < m_logs.Count; i++)
                 {
-                    log.Log(logType, source, message, exception);
+                    ILog log = Logs[i];
+                    if (log.GetType() == typeof(TLog))
+                    {
+                        log.Log(logType, source, message, exception);
+                    }
                 }
             }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// 移除日志
+        /// </summary>
+        /// <param name="logger"></param>
+        public bool RemoveLogger(ILog logger)
+        {
+            return this.RemoveLogger(logger.GetType().FullName);
+        }
+
+        /// <summary>
+        /// 移除日志
+        /// </summary>
+        public bool RemoveLogger(Type loggerType)
+        {
+            return this.RemoveLogger(loggerType.FullName);
+        }
+
+        /// <summary>
+        /// 移除对应键的日志
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool RemoveLogger(string key)
+        {
+            return m_logs.Remove(key);
         }
 
         /// <summary>
@@ -88,9 +133,15 @@ namespace TouchSocket.Core
         /// <param name="exception"></param>
         protected override void WriteLog(LogType logType, object source, string message, Exception exception)
         {
-            for (int i = 0; i < m_logs.Count; i++)
+            try
             {
-                Logs[i].Log(logType, source, message, exception);
+                for (int i = 0; i < m_logs.Count; i++)
+                {
+                    Logs[i].Log(logType, source, message, exception);
+                }
+            }
+            catch
+            {
             }
         }
     }

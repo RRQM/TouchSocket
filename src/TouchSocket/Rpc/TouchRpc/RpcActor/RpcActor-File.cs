@@ -331,6 +331,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         long position = waitTransfer.Position;
                         reader.Position = position;
                         fileOperator.SetFileCompletedLength(waitTransfer.Position);
+
                         channel.Timeout = fileOperator.Timeout;
                         while (true)
                         {

@@ -448,7 +448,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。")]
+        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。", true)]
         public static TouchSocketConfig SetClearInterval(this TouchSocketConfig config, int value)
         {
             throw new NotImplementedException();
@@ -463,7 +463,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。")]
+        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。",true)]
         public static TouchSocketConfig SetClearType(this TouchSocketConfig config, CheckClearType value)
         {
             throw new NotImplementedException();

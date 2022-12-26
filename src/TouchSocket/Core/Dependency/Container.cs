@@ -152,7 +152,7 @@ namespace TouchSocket.Core
             }
             else if (fromType.IsClass && !fromType.IsAbstract)
             {
-                if (fromType.GetCustomAttribute<DependencyParamterInjectAttribute>() is DependencyParamterInjectAttribute attribute)
+                if (fromType.GetCustomAttribute<DependencyInjectAttribute>() is DependencyInjectAttribute attribute)
                 {
                     if (attribute.ResolveNullIfNoRegistered && !IsRegistered(fromType, key))
                     {
