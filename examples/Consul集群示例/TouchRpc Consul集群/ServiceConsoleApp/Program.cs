@@ -29,7 +29,7 @@ namespace ServiceConsoleApp
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .ConfigureContainer(a =>
                 {
-                    a.UseConsoleLogger();
+                    a.AddConsoleLogger();
                 })
                 .ConfigureRpcStore(a =>
                 {

@@ -30,7 +30,7 @@ namespace TrafficCounterConsoleApp
                 })
                 .ConfigureContainer(a =>
                 {
-                    a.UseConsoleLogger();//添加一个日志注入
+                    a.AddConsoleLogger();//添加一个日志注入
                 }))
                 .Start();//启动
             Timer timer = new Timer((s) =>

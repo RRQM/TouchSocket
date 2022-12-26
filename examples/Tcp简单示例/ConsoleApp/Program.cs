@@ -48,7 +48,7 @@ namespace ServiceConsoleApp
                 .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
-                    a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                    a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -78,7 +78,7 @@ namespace ServiceConsoleApp
                 .UsePlugin()
                 .ConfigureContainer(a =>
                 {
-                    a.UseConsoleLogger();//添加一个日志注入
+                    a.AddConsoleLogger();//添加一个日志注入
                 }))
                 .Connect();
             tcpClient.Logger.Info("客户端成功连接");
