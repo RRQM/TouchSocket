@@ -36,10 +36,12 @@ namespace TouchRpcWebApplication
         public void ConfigureServices(IServiceCollection services)
         {
             //向Asp服务中添加IWSTouchRpcService
-            var touchRpcService = services.AddWSTouchRpc(new TouchSocketConfig()
-                .SetContainer(new AspNetCoreContainer(services)));//设置IOC容器
-
-            touchRpcService.RegisterServer<MyRpcServer>();//注册所有服务。
+            services.AddWSTouchRpc(new TouchSocketConfig()
+                .UseAspNetCoreContainer(services)//设置IOC容器
+                .ConfigureRpcStore(a =>
+                {
+                    a.RegisterServer<MyRpcServer>();//注册rpc服务。
+                }));
 
             services.AddControllers();
 
