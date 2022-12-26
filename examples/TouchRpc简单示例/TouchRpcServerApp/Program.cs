@@ -24,11 +24,12 @@ namespace TouchRpcServerApp
         private static TcpTouchRpcService CreateTcpTouchRpcService(int port)
         {
             var service = new TcpTouchRpcService();
-            TouchSocketConfig config = new TouchSocketConfig()//配置
+            var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .ConfigureContainer(a =>
                    {
-                       a.SetLogger<LoggerGroup<ConsoleLogger, FileLogger>>();//注册一个日志组
+                       a.AddConsoleLogger();
+                       a.AddFileLogger();
                    })
                    .ConfigureRpcStore(a =>
                    {
@@ -50,7 +51,8 @@ namespace TouchRpcServerApp
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .ConfigureContainer(a =>
                    {
-                       a.SetLogger<LoggerGroup<ConsoleLogger, FileLogger>>();//注册一个日志组
+                       a.AddConsoleLogger();
+                       a.AddFileLogger();
                    })
                    .ConfigureRpcStore(a =>
                    {
@@ -72,7 +74,8 @@ namespace TouchRpcServerApp
                    .SetBindIPHost(new IPHost(port))
                    .ConfigureContainer(a =>
                    {
-                       a.SetLogger<LoggerGroup<ConsoleLogger, FileLogger>>();//注册一个日志组
+                       a.AddConsoleLogger();
+                       a.AddFileLogger();
                    })
                    .ConfigureRpcStore(a =>
                    {
