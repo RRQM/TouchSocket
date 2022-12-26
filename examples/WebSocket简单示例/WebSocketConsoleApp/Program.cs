@@ -18,7 +18,7 @@ namespace WebSocketConsoleApp
                 .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .ConfigureContainer(a =>
                 {
-                    a.UseConsoleLogger();
+                    a.AddConsoleLogger();
                 })
                 .ConfigureRpcStore(a =>
                 {

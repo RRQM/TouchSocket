@@ -14,7 +14,7 @@ namespace PluginConsoleApp
                 .UsePlugin()
                 .ConfigureContainer(a=>
                 {
-                    a.UseConsoleLogger();
+                    a.AddConsoleLogger();
                 })
                 .ConfigurePlugins(a => 
                 {
