@@ -38,11 +38,11 @@ namespace ServiceApp
         {
             m_service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                .SetMaxCount(10000)
-                .SetThreadCount(10)
+                .SetMaxCount(1000)
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+                    a.AddFileLogger();
+                    a.AddEasyLogger(this.ShowMsg);
                 }))
                 .Start();//启动
             m_service.Logger.Info("服务器成功启动");

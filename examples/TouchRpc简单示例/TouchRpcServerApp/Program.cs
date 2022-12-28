@@ -93,6 +93,21 @@ namespace TouchRpcServerApp
     public class MyRpcServer : RpcServer
     {
         [Description("登录")]
+        [TouchRpc("Login")]
+        public bool Login(string account, string password)
+        {
+            if (account == "123" && password == "abc")
+            {
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    public class MyRpcServer : TransientRpcServer
+    {
+        [Description("登录")]
         [TouchRpc(MethodFlags = MethodFlags.IncludeCallContext)]//使用调用上才文
         [MyRpcActionFilter]
         public bool Login(ICallContext callContext, string account, string password)
@@ -182,6 +197,13 @@ namespace TouchRpcServerApp
     {
         protected override void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e)
         {
+            //if (e.Metadata["a"] != "a")
+            //{
+            //    e.IsPermitOperation = false;//不允许连接
+            //    e.Message = "元数据不对";//同时返回消息
+            //    e.Handled= true;//表示该消息已在此处处理。
+            //    return;
+            //}
             if (e.Token == "123")
             {
                 e.IsPermitOperation = true;
