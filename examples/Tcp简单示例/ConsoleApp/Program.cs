@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -49,6 +50,7 @@ namespace ServiceConsoleApp
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                    a.RegisterSingleton(service);//将服务器以单例注入。便于插件或其他地方获取。
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -83,6 +85,25 @@ namespace ServiceConsoleApp
                 .Connect();
             tcpClient.Logger.Info("客户端成功连接");
             return tcpClient;
+        }
+    }
+
+    class MyPluginClass:TcpPluginBase<SocketClient>
+    {
+        private readonly TcpService m_service;
+
+        public MyPluginClass(TcpService service)
+        {
+            this.m_service = service;
+        }
+
+        protected override void OnConnecting(SocketClient client, ClientOperationEventArgs e)
+        {
+            if (client.Service.SocketClients.Count>1000)
+            {
+
+            }
+            base.OnConnecting(client, e);
         }
     }
 }
