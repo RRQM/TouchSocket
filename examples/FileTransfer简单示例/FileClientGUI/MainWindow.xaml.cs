@@ -12,8 +12,8 @@
 //------------------------------------------------------------------------------
 using FileClientGUI.Models;
 using FileClientGUI.Win;
-using RRQMSkin.MVVM;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
 using System.Windows;
@@ -29,147 +29,36 @@ namespace FileClientGUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static int id = 0;
+
+        private TcpTouchRpcClient fileClient;
+
+        private ObservableCollection<TransferModel> m_localModels;
+
+        private ObservableCollection<TransferModel> m_remoteModels;
+
+        private TransferModel m_transferModel;
+
         public MainWindow()
         {
             InitializeComponent();
             this.Loaded += this.MainWindow_Loaded;
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.remoteModels = new RRQMList<TransferModel>();
-            this.localModels = new RRQMList<TransferModel>();
-
-            this.ListBox_RemoteTransfer.ItemsSource = this.remoteModels;
-            this.ListBox_LocalTransfer.ItemsSource = this.localModels;
-
-            //try
-            //{
-            //    Enterprise.ForTest();
-            //}
-            //catch (Exception ex)
-            //{
-            //    this.ShowMsg(ex.Message);
-            //}
-        }
-
-        private RRQMList<TransferModel> remoteModels;
-        private RRQMList<TransferModel> localModels;
-
-        private void ShowMsg(string msg)
-        {
-            this.UIInvoke(() =>
-            {
-                this.msgBox.AppendText($"{msg}\r\n");
-            });
-        }
-
-        private void UIInvoke(Action action)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                action.Invoke();
-            });
-        }
-
-        private TcpTouchRpcClient fileClient;
-
-        private static int id = 0;
-
-        private void ConButton_Click(object sender, RoutedEventArgs e)
-        {
-            fileClient = new TcpTouchRpcClient();
-            //fileClient.FileTransfering += this.FileClient_BeforeFileTransfer;
-            //fileClient.Received += FileClient_Received;
-            fileClient.Disconnected += this.FileClient_Disconnected;
-            fileClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .SetVerifyToken("FileService")
-                .SetBufferLength(1024 * 1024)
-                .UsePlugin()
-                .ConfigurePlugins(a =>
-                {
-                    a.Add<MyPlugin>();
-                }));
-
-            try
-            {
-                fileClient.Connect();
-
-                ((Button)sender).IsEnabled = false;
-
-                fileClient.ResetID((++id).ToString());
-                ShowMsg($"连接成功，ID={this.fileClient.ID}");
-            }
-            catch (Exception ex)
-            {
-                ShowMsg(ex.Message);
-            }
-        }
-
-        private void FileClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
-        {
-        }
-
-        private void FileClient_Received(TcpTouchRpcClient client, short protocol, ByteBlock byteBlock)
-        {
-            ShowMsg($"收到数据：协议={protocol},数据长度:{byteBlock.Len - 2}");
-        }
-
-        private void FileClient_BeforeFileTransfer(TcpTouchRpcClient client, FileOperationEventArgs e)
-        {
-            TransferModel model = new TransferModel();
-            model.FileOperator = e.FileOperator;
-            model.TransferType = e.TransferType;
-
-            switch (e.TransferType)
-            {
-                case TransferType.Push:
-                    model.FilePath = e.SavePath;
-                    model.FileLength = FileUtility.ToFileLengthString(e.FileInfo.Length);
-                    break;
-
-                case TransferType.Pull:
-                    model.FilePath = e.ResourcePath;
-                    model.FileLength = FileUtility.ToFileLengthString(new FileInfo(e.ResourcePath).Length);
-                    break;
-
-                default:
-                    break;
-            }
-            model.Start();
-
-            UIInvoke(() =>
-            {
-                this.remoteModels.Add(model);
-            });
-        }
-
-        private TransferModel transferModel;
-
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (((ListBox)sender).SelectedItem is TransferModel transferModel)
-            {
-                this.transferModel = transferModel;
-            }
-        }
-
-        private void InputBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (transferModel == null || transferModel.FileOperator.Result.ResultCode != ResultCode.Default)
+            //取消
+            if (m_transferModel == null || m_transferModel.FileOperator.Result.ResultCode != ResultCode.Default)
             {
                 MessageBox.Show("请选择一个条目，然后控制。");
                 return;
             }
-
             try
             {
-                if (string.IsNullOrEmpty(((TextBox)sender).Text))
-                {
-                    return;
-                }
-                //this.transferModel.FileOperator.SetMaxSpeed(int.Parse(((TextBox)sender).Text));
+                CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+                this.m_transferModel.FileOperator.Token = tokenSource.Token;
+                tokenSource.Cancel();
             }
             catch (Exception ex)
             {
@@ -203,7 +92,7 @@ namespace FileClientGUI
                 };
                 model.Start();
 
-                this.localModels.Add(model);
+                this.m_localModels.Add(model);
                 if (string.IsNullOrEmpty(clientID))
                 {
                     this.fileClient.PushFileAsync(fileOperator);
@@ -240,7 +129,7 @@ namespace FileClientGUI
                 };
                 model.Start();
 
-                this.localModels.Add(model);
+                this.m_localModels.Add(model);
 
                 if (string.IsNullOrEmpty(clientID))
                 {
@@ -253,20 +142,35 @@ namespace FileClientGUI
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Button_Click_4(object sender, RoutedEventArgs e)
         {
-            //取消
-            if (transferModel == null || transferModel.FileOperator.Result.ResultCode != ResultCode.Default)
-            {
-                MessageBox.Show("请选择一个条目，然后控制。");
-                return;
-            }
+            this.fileClient.Send(10, new byte[] { 1, 2, 3 });
+        }
+
+        private void ConButton_Click(object sender, RoutedEventArgs e)
+        {
+            fileClient = new TcpTouchRpcClient();
+            //fileClient.FileTransfering += this.FileClient_BeforeFileTransfer;
+            //fileClient.Received += FileClient_Received;
+            fileClient.Disconnected += this.FileClient_Disconnected;
+            fileClient.Setup(new TouchSocketConfig()
+                .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+                .SetVerifyToken("FileService")
+                .SetBufferLength(1024 * 1024)
+                .UsePlugin()
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<MyPlugin>();
+                }));
+
             try
             {
-                CancellationTokenSource tokenSource = new CancellationTokenSource();
+                fileClient.Connect();
 
-                this.transferModel.FileOperator.Token = tokenSource.Token;
-                tokenSource.Cancel();
+                ((Button)sender).IsEnabled = false;
+
+                fileClient.ResetID((++id).ToString());
+                ShowMsg($"连接成功，ID={this.fileClient.ID}");
             }
             catch (Exception ex)
             {
@@ -274,14 +178,110 @@ namespace FileClientGUI
             }
         }
 
-        private void Button_Click_4(object sender, RoutedEventArgs e)
+        private void FileClient_BeforeFileTransfer(TcpTouchRpcClient client, FileOperationEventArgs e)
         {
-            this.fileClient.Send(10, new byte[] { 1, 2, 3 });
+            TransferModel model = new TransferModel();
+            model.FileOperator = e.FileOperator;
+            model.TransferType = e.TransferType;
+
+            switch (e.TransferType)
+            {
+                case TransferType.Push:
+                    model.FilePath = e.SavePath;
+                    model.FileLength = FileUtility.ToFileLengthString(e.FileInfo.Length);
+                    break;
+
+                case TransferType.Pull:
+                    model.FilePath = e.ResourcePath;
+                    model.FileLength = FileUtility.ToFileLengthString(new FileInfo(e.ResourcePath).Length);
+                    break;
+
+                default:
+                    break;
+            }
+            model.Start();
+
+            UIInvoke(() =>
+            {
+                this.m_remoteModels.Add(model);
+            });
         }
 
+        private void FileClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        {
+        }
+
+        private void FileClient_Received(TcpTouchRpcClient client, short protocol, ByteBlock byteBlock)
+        {
+            ShowMsg($"收到数据：协议={protocol},数据长度:{byteBlock.Len - 2}");
+        }
+
+        private void InputBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (m_transferModel == null || m_transferModel.FileOperator.Result.ResultCode != ResultCode.Default)
+            {
+                MessageBox.Show("请选择一个条目，然后控制。");
+                return;
+            }
+
+            try
+            {
+                if (string.IsNullOrEmpty(((TextBox)sender).Text))
+                {
+                    return;
+                }
+                //this.transferModel.FileOperator.SetMaxSpeed(int.Parse(((TextBox)sender).Text));
+            }
+            catch (Exception ex)
+            {
+                ShowMsg(ex.Message);
+            }
+        }
+
+        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (((ListBox)sender).SelectedItem is TransferModel transferModel)
+            {
+                this.m_transferModel = transferModel;
+            }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.m_remoteModels = new ObservableCollection<TransferModel>();
+            this.m_localModels = new ObservableCollection<TransferModel>();
+
+            this.ListBox_RemoteTransfer.ItemsSource = this.m_remoteModels;
+            this.ListBox_LocalTransfer.ItemsSource = this.m_localModels;
+
+            //try
+            //{
+            //    Enterprise.ForTest();
+            //}
+            //catch (Exception ex)
+            //{
+            //    this.ShowMsg(ex.Message);
+            //}
+        }
         private void PingButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(this.fileClient.Ping().ToString());
+        }
+
+        private void ShowMsg(string msg)
+        {
+            this.UIInvoke(() =>
+            {
+                this.msgBox.AppendText($"{msg}\r\n");
+            });
+        }
+
+        private void UIInvoke(Action action)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                action.Invoke();
+            });
         }
     }
 }

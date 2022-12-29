@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.IO;
 using System.Windows.Media;
@@ -19,7 +20,7 @@ using TouchSocket.Rpc.TouchRpc;
 
 namespace FileServiceGUI.Models
 {
-    public class TransferModel : RRQMSkin.MVVM.ObservableObject
+    public class TransferModel : ObservableObject
     {
         public string FileName => string.IsNullOrEmpty(this.FilePath) ? null : Path.GetFileName(this.FilePath);
         public string FilePath { get; set; }
