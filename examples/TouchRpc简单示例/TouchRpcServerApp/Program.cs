@@ -15,7 +15,6 @@ namespace TouchRpcServerApp
             TcpTouchRpcService tcpTouchRpcService = CreateTcpTouchRpcService(7789);
             HttpTouchRpcService httpTouchRpcService = CreateHttpTouchRpcService(7790);
             UdpTouchRpc udpTouchRpc = CreateUdpTouchRpc(7791);
-
             string code = CodeGenerator.ConvertToCode("RpcProxy", CodeGenerator.Generator<MyRpcServer, TouchRpcAttribute>());
             File.WriteAllText("../../../RpcProxy.cs", code);
             Console.ReadKey();
@@ -26,6 +25,7 @@ namespace TouchRpcServerApp
             var service = new TcpTouchRpcService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                   .SetSerializationSelector(new DefaultSerializationSelector())
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -34,6 +34,10 @@ namespace TouchRpcServerApp
                    .ConfigureRpcStore(a =>
                    {
                        a.RegisterServer<MyRpcServer>();//注册服务
+
+#if DEBUG
+                       File.WriteAllText("../../../RpcProxy.cs", a.GetProxyCodes("RpcProxy",new Type[] { typeof(TouchRpcAttribute) }));
+#endif
                    })
                    .SetVerifyToken("TouchRpc");
 
@@ -87,21 +91,6 @@ namespace TouchRpcServerApp
 
             service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
             return service;
-        }
-    }
-
-    public class MyRpcServer : RpcServer
-    {
-        [Description("登录")]
-        [TouchRpc("Login")]
-        public bool Login(string account, string password)
-        {
-            if (account == "123" && password == "abc")
-            {
-                return true;
-            }
-
-            return false;
         }
     }
 
@@ -211,6 +200,15 @@ namespace TouchRpcServerApp
                 return;
             }
             base.OnHandshaking(client, e);
+        }
+
+        protected override void OnRouting(ITouchRpc client, PackageRouterEventArgs e)
+        {
+            if (e.RouterType== RouteType.Rpc)
+            {
+                e.IsPermitOperation = true;
+            }
+            base.OnRouting(client, e);
         }
     }
 }
