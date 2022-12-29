@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.IO;
 using System.Windows.Media;
@@ -19,7 +20,7 @@ using TouchSocket.Rpc.TouchRpc;
 
 namespace FileClientGUI.Models
 {
-    public class TransferModel : RRQMSkin.MVVM.ObservableObject
+    public class TransferModel : ObservableObject
     {
         public string FileName { get => string.IsNullOrEmpty(FilePath) ? null : Path.GetFileName(FilePath); }
         public string FilePath { get; set; }
@@ -72,7 +73,7 @@ namespace FileClientGUI.Models
                   }
                   else if (this.FileOperator.Result.ResultCode == ResultCode.Success)
                   {
-                      UIInvoke(() =>
+                      App.Current.Dispatcher.Invoke(() => 
                       {
                           this.Status = new BitmapImage(new Uri("Resources/Images/完成.png", UriKind.RelativeOrAbsolute));
                       });
@@ -81,7 +82,7 @@ namespace FileClientGUI.Models
                   }
                   else
                   {
-                      UIInvoke(() =>
+                      App.Current.Dispatcher.Invoke(() =>
                       {
                           this.Status = new BitmapImage(new Uri("Resources/Images/未完成.png", UriKind.RelativeOrAbsolute));
                       });

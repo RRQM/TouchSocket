@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -12,8 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RRQMSkin" Version="4.0.0" />
-    <PackageReference Include="TouchSocket" Version="1.0.1-beta" />
+	  <PackageReference Include="TouchSocket" Version="1.0.1-beta" />
+	  <PackageReference Include="WPF-UI" Version="2.0.3" />
+	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

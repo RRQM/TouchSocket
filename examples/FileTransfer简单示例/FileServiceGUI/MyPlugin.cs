@@ -11,7 +11,6 @@ namespace FileServiceGUI
     {
         protected override void OnFileTransfering(TcpTouchRpcSocketClient client, FileOperationEventArgs e)
         {
-            e.IsPermitOperation= true;
             base.OnFileTransfering(client, e);
         }
     }
