@@ -62,7 +62,7 @@
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="150" />
+            <RowDefinition Height="auto" />
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
@@ -72,23 +72,17 @@
         </Grid.ColumnDefinitions>
 
         <GroupBox Margin="5" Header="功能区">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox x:Name="cb_resume" VerticalContentAlignment="Center" Content="断点续传" />
-                </StackPanel>
-                <WrapPanel Grid.Row="1" Orientation="Horizontal">
-                    <Button Width="50" Height="30" Margin="5,0" Click="ConButton_Click" Content="连接" />
-                    <Button Width="50" Height="30" Margin="5,0" Click="Button_Click_1" Content="Push" />
-                    <Button Width="50" Height="30" Margin="5,0" Click="Button_Click_2" Content="Pull" />
-                    <Button Width="80" Height="30" Margin="5,0" Click="PushSmallFileButton_Click" Content="Push小文件" />
-                    <Button Width="80" Height="30" Margin="5,0" Click="PullSmallFileButton_Click" Content="Pull小文件" />
-                </WrapPanel>
-            </Grid>
+            <WrapPanel Orientation="Horizontal">
+                <CheckBox x:Name="cb_resume" VerticalContentAlignment="Center" Content="断点续传" />
+                <Button Width="50" Height="30" Margin="5" Click="ConButton_Click" Content="连接" />
+                <Button Width="50" Height="30" Margin="5" Click="Button_Click_1" Content="Push" />
+                <Button Width="50" Height="30" Margin="5" Click="Button_Click_2" Content="Pull" />
+                <Button Width="80" Height="30" Margin="5" Click="PushSmallFileButton_Click" Content="Push小文件" />
+                <Button Width="80" Height="30" Margin="5" Click="PullSmallFileButton_Click" Content="Pull小文件" />
+
+                <Button Width="80" Height="30" Margin="5" Click="BigPushFileButton_Click" Content="多线程Push" />
+                <Button Width="80" Height="30" Margin="5" Click="BigPullFileButton_Click" Content="多线程Pull" />
+            </WrapPanel>
         </GroupBox>
         <GroupBox Grid.Column="1" Margin="5" Header="传输控制">
             <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal">

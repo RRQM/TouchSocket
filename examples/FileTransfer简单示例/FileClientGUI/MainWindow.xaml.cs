@@ -266,13 +266,13 @@ namespace FileClientGUI
                 Result result = Result.UnknownFail;
                 if (string.IsNullOrEmpty(clientID))
                 {
-                    result = await this.fileClient.PushSmallFileAsync(savePath, fileInfo); 
+                    result = await this.fileClient.PushSmallFileAsync(savePath, fileInfo);
                 }
                 else
                 {
                     result = await this.fileClient.PushSmallFileAsync(clientID, savePath, fileInfo);
                 }
-                
+
                 MessageBox.Show(result.ToString());
             }
         }
@@ -291,6 +291,132 @@ namespace FileClientGUI
             {
                 action.Invoke();
             });
+        }
+
+        private async void BigPushFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            PushWindow pushWindow = new PushWindow();
+            if (pushWindow.SelectRequest(out var path, out var savePath, out string clientID))
+            {
+                using TcpTouchRpcClientFactory clientFactory = CreateClientFactory();
+                var resultCon = clientFactory.CheckStatus();//检验主通信器连接状态。默认如果没有连接，则会建立。
+                if (resultCon.IsSuccess())
+                {
+                    var fileOperator = new MultithreadingFileOperator()
+                    {
+                        ResourcePath = path,
+                        SavePath = savePath,
+                    };
+                    TransferModel model = new TransferModel()
+                    {
+                        FileLength = FileUtility.ToFileLengthString(new FileInfo(path).Length),
+                        FilePath = path,
+                        FileOperator = fileOperator,
+                        TransferType = TransferType.SectionPush
+                    };
+                    model.Start();
+
+                    this.m_localModels.Add(model);
+
+                    Result result;
+                    if (string.IsNullOrEmpty(clientID))
+                    {
+                        result = await clientFactory.PushFileAsync(fileOperator);
+                    }
+                    else
+                    {
+                        result = await clientFactory.PushFileAsync(clientID, fileOperator);
+                    }
+
+                    if (result.IsSuccess())
+                    {
+                        MessageBox.Show(result.ToString());
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(resultCon.ToString());
+                }
+            }
+        }
+
+        private async void BigPullFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            PullWindow pullWindow = new PullWindow();
+            if (pullWindow.SelectRequest(out var path, out var savePath, out string clientID))
+            {
+                using TcpTouchRpcClientFactory clientFactory = CreateClientFactory();
+                var resultCon = clientFactory.CheckStatus();//检验主通信器连接状态。默认如果没有连接，则会建立。
+                if (resultCon.IsSuccess())
+                {
+                    var fileOperator = new MultithreadingFileOperator()
+                    {
+                        ResourcePath = path,
+                        SavePath = savePath,
+                    };
+                    TransferModel model = new TransferModel()
+                    {
+                        FileLength = "未知",
+                        FilePath = path,
+                        FileOperator = fileOperator,
+                        TransferType = TransferType.SectionPull
+                    };
+                    model.Start();
+
+                    this.m_localModels.Add(model);
+
+                    Result result;
+                    if (string.IsNullOrEmpty(clientID))
+                    {
+                        result = await clientFactory.PullFileAsync(fileOperator);
+                    }
+                    else
+                    {
+                        result = await clientFactory.PullFileAsync(clientID, fileOperator);
+                    }
+
+                    if (result.IsSuccess())
+                    {
+                        MessageBox.Show(result.ToString());
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(resultCon.ToString());
+                }
+            }
+        }
+
+        private TcpTouchRpcClientFactory CreateClientFactory()
+        {
+            TcpTouchRpcClientFactory clientFactory = new TcpTouchRpcClientFactory()
+            {
+                MinCount = 5,
+                MaxCount = 10,
+                OnGetMainConfig = () =>//配置主通信
+                {
+                    return new TouchSocketConfig()
+                    .SetRemoteIPHost("tcp://127.0.0.1:7789")
+                    .SetVerifyToken("FileService");
+                },
+                OnGetTransferConfig = () => //配置辅助通信
+                {
+                    return new TouchSocketConfig()
+                       .SetRemoteIPHost("tcp://127.0.0.1:7789")
+                       .SetVerifyToken("FileService");
+                }
+                ,
+                OnFindTransferIds = (client,targetId) => 
+                {
+                    //此处的操作不唯一，可能需要rpc实现。
+                    //其目的比较简单，就是获取到targetId对应的主客户端的所有传输客户端的Id集合。
+                    //这样就实现了多个客户端向多个客户端传输文件的目的。
+
+                    return new string[] { targetId};//此处为模拟结果。
+                }
+            };
+
+            return clientFactory;
         }
     }
 }
