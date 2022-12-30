@@ -9,19 +9,13 @@ namespace FileServiceConsoleApp
     {
         private static void Main(string[] args)
         {
-            TcpTouchRpcService service = GetService();
-            service.Logger.Info("服务器成功启动");
-            Console.ReadKey();
-        }
-
-        private static TcpTouchRpcService GetService()
-        {
             var service = new TouchSocketConfig()//配置
                 .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .UsePlugin()
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger<LoggerGroup<ConsoleLogger, FileLogger>>();
+                    a.AddConsoleLogger();
+                    a.AddFileLogger();
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -30,8 +24,8 @@ namespace FileServiceConsoleApp
                 })
                 .SetVerifyToken("File")//连接验证口令。
                 .BuildWithTcpTouchRpcService();//此处build相当于new TcpTouchRpcService，然后Setup，然后Start。
-
-            return service;
+            service.Logger.Info("服务器成功启动");
+            Console.ReadKey();
         }
     }
 

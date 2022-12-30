@@ -65,7 +65,6 @@
             <RowDefinition Height="150" />
             <RowDefinition />
             <RowDefinition />
-            <RowDefinition Height="100" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
@@ -82,25 +81,19 @@
                 <StackPanel Orientation="Horizontal">
                     <CheckBox x:Name="cb_resume" VerticalContentAlignment="Center" Content="断点续传" />
                 </StackPanel>
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                <WrapPanel Grid.Row="1" Orientation="Horizontal">
                     <Button Width="50" Height="30" Margin="5,0" Click="ConButton_Click" Content="连接" />
                     <Button Width="50" Height="30" Margin="5,0" Click="Button_Click_1" Content="Push" />
                     <Button Width="50" Height="30" Margin="5,0" Click="Button_Click_2" Content="Pull" />
-                    <Button Width="70" Height="30" Margin="5,0" Click="Button_Click_4" Content="发送协议" />
-                </StackPanel>
-                <StackPanel Grid.Row="2" Orientation="Horizontal">
-                    <Button Width="70" Height="30" Margin="5,0" Click="ConButton_Click" Content="连接" />
-                    <Button Width="70" Height="30" Margin="5,0" Click="Button_Click_1" Content="Push" />
-                    <Button Width="70" Height="30" Margin="5,0" Click="Button_Click_2" Content="Pull" />
-                    <Button Width="70" Height="30" Margin="5,0" Click="Button_Click_4" Content="发送协议" />
-                </StackPanel>
+                    <Button Width="80" Height="30" Margin="5,0" Click="PushSmallFileButton_Click" Content="Push小文件" />
+                    <Button Width="80" Height="30" Margin="5,0" Click="PullSmallFileButton_Click" Content="Pull小文件" />
+                </WrapPanel>
             </Grid>
         </GroupBox>
         <GroupBox Grid.Column="1" Margin="5" Header="传输控制">
             <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal">
                 <TextBlock VerticalAlignment="Center" Text="传输限速：" />
                 <TextBox Width="100" VerticalAlignment="Center" TextChanged="InputBox_TextChanged" />
-
                 <Button Margin="10,0,0,0" VerticalAlignment="Center" Click="Button_Click" Content="取消传输" />
                 <Button Margin="10,0,0,0" VerticalAlignment="Center" Click="PingButton_Click" Content="Ping" />
             </StackPanel>
@@ -108,11 +101,6 @@
 
         <GroupBox Grid.Row="1" Grid.ColumnSpan="2" Margin="5" Header="当前队列">
             <ListBox x:Name="ListBox_LocalTransfer" SelectionChanged="ListBox_SelectionChanged"
-                     Style="{StaticResource ListBox_Transfer}" />
-        </GroupBox>
-
-        <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Margin="5" Header="远程队列">
-            <ListBox x:Name="ListBox_RemoteTransfer" SelectionChanged="ListBox_SelectionChanged"
                      Style="{StaticResource ListBox_Transfer}" />
         </GroupBox>
 

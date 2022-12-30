@@ -36,7 +36,7 @@ namespace TouchRpcServerApp
                        a.RegisterServer<MyRpcServer>();//注册服务
 
 #if DEBUG
-                       File.WriteAllText("../../../RpcProxy.cs", a.GetProxyCodes("RpcProxy",new Type[] { typeof(TouchRpcAttribute) }));
+                       File.WriteAllText("../../../RpcProxy.cs", a.GetProxyCodes("RpcProxy", new Type[] { typeof(TouchRpcAttribute) }));
 #endif
                    })
                    .SetVerifyToken("TouchRpc");
@@ -151,10 +151,16 @@ namespace TouchRpcServerApp
         }
     }
 
-    public class MyRpcActionFilterAttribute : RpcActionFilterAttribute, IRpcActionFilter
+    public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
     {
         public override void Executing(ICallContext callContext, ref InvokeResult invokeResult)
         {
+            //invokeResult = new InvokeResult()
+            //{
+            //    Status = InvokeStatus.UnEnable,
+            //    Message = "不允许执行",
+            //    Result = default
+            //};
             if (callContext.Caller is TcpTouchRpcSocketClient client)
             {
                 client.Logger.Info($"即将执行RPC-{callContext.MethodInstance.Name}");
@@ -204,7 +210,7 @@ namespace TouchRpcServerApp
 
         protected override void OnRouting(ITouchRpc client, PackageRouterEventArgs e)
         {
-            if (e.RouterType== RouteType.Rpc)
+            if (e.RouterType == RouteType.Rpc)
             {
                 e.IsPermitOperation = true;
             }

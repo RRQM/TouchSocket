@@ -65,6 +65,15 @@ namespace FileServiceGUI
             this.m_localModels = new ObservableCollection<TransferModel>();
 
             this.ListBox_Clients.ItemsSource = this.m_clients;
+
+            try
+            {
+                Enterprise.ForTest();
+            }
+            catch
+            {
+                this.ShowMsg("本示例中的多线程传输，是企业版功能，所以，此处试用企业版。如果使用其他功能，请安装TouchSocket");
+            }
         }
 
         private void ShowMsg(string msg)
