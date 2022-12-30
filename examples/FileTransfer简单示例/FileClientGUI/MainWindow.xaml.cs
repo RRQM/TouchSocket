@@ -35,8 +35,6 @@ namespace FileClientGUI
 
         private ObservableCollection<TransferModel> m_localModels;
 
-        private ObservableCollection<TransferModel> m_remoteModels;
-
         private TransferModel m_transferModel;
 
         public MainWindow()
@@ -71,7 +69,6 @@ namespace FileClientGUI
             PushWindow pushWindow = new PushWindow();
             if (pushWindow.SelectRequest(out var path, out var savePath, out string clientID))
             {
-
                 FileOperator fileOperator = new FileOperator()
                 {
                     ResourcePath = path,
@@ -178,35 +175,6 @@ namespace FileClientGUI
             }
         }
 
-        private void FileClient_BeforeFileTransfer(TcpTouchRpcClient client, FileOperationEventArgs e)
-        {
-            TransferModel model = new TransferModel();
-            model.FileOperator = e.FileOperator;
-            model.TransferType = e.TransferType;
-
-            switch (e.TransferType)
-            {
-                case TransferType.Push:
-                    model.FilePath = e.SavePath;
-                    model.FileLength = FileUtility.ToFileLengthString(e.FileInfo.Length);
-                    break;
-
-                case TransferType.Pull:
-                    model.FilePath = e.ResourcePath;
-                    model.FileLength = FileUtility.ToFileLengthString(new FileInfo(e.ResourcePath).Length);
-                    break;
-
-                default:
-                    break;
-            }
-            model.Start();
-
-            UIInvoke(() =>
-            {
-                this.m_remoteModels.Add(model);
-            });
-        }
-
         private void FileClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
         }
@@ -248,24 +216,65 @@ namespace FileClientGUI
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            this.m_remoteModels = new ObservableCollection<TransferModel>();
             this.m_localModels = new ObservableCollection<TransferModel>();
-
-            this.ListBox_RemoteTransfer.ItemsSource = this.m_remoteModels;
             this.ListBox_LocalTransfer.ItemsSource = this.m_localModels;
 
-            //try
-            //{
-            //    Enterprise.ForTest();
-            //}
-            //catch (Exception ex)
-            //{
-            //    this.ShowMsg(ex.Message);
-            //}
+            try
+            {
+                Enterprise.ForTest();
+            }
+            catch
+            {
+                this.ShowMsg("本示例中的多线程传输，是企业版功能，所以，此处试用企业版。如果使用其他功能，请安装TouchSocket");
+            }
         }
+
         private void PingButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(this.fileClient.Ping().ToString());
+        }
+
+        private async void PullSmallFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            PullWindow pullWindow = new PullWindow();
+            if (pullWindow.SelectRequest(out var path, out var savePath, out string clientID))
+            {
+                PullSmallFileResult result = default;
+                if (string.IsNullOrEmpty(clientID))
+                {
+                    result = await this.fileClient.PullSmallFileAsync(path);
+                }
+                else
+                {
+                    result = await this.fileClient.PullSmallFileAsync(clientID, path);
+                }
+
+                if (result?.IsSuccess() == true)
+                {
+                    var saveResult = result.Save(savePath);
+                    MessageBox.Show(saveResult.ToString());
+                }
+            }
+        }
+
+        private async void PushSmallFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            PushWindow pushWindow = new PushWindow();
+            if (pushWindow.SelectRequest(out var path, out var savePath, out string clientID))
+            {
+                FileInfo fileInfo = new FileInfo(path);
+                Result result = Result.UnknownFail;
+                if (string.IsNullOrEmpty(clientID))
+                {
+                    result = await this.fileClient.PushSmallFileAsync(savePath, fileInfo); 
+                }
+                else
+                {
+                    result = await this.fileClient.PushSmallFileAsync(clientID, savePath, fileInfo);
+                }
+                
+                MessageBox.Show(result.ToString());
+            }
         }
 
         private void ShowMsg(string msg)
