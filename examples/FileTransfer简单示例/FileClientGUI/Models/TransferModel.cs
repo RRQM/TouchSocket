@@ -50,7 +50,7 @@ namespace FileClientGUI.Models
             set { SetProperty(ref status, value); }
         }
 
-        public FileOperator FileOperator { get; set; }
+        public FlowOperator FileOperator { get; set; }
 
         public TransferType TransferType { get; set; }
 
