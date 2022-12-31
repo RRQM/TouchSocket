@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Concurrent;
-using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,8 +21,6 @@ namespace TouchSocket.Rpc.TouchRpc
 {
     public partial class RpcActor
     {
-       
-
         /// <summary>
         /// 发送流数据
         /// </summary>
@@ -197,14 +193,11 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch
             {
-
             }
-
         }
 
         private void RequestStreamToSocketClient(object obj)
         {
-
             try
             {
                 WaitStream waitStream = (WaitStream)obj;
@@ -261,9 +254,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch
             {
-
             }
-
         }
 
         private void TaskTransferingStream(StreamOperator streamOperator, StreamOperationEventArgs args, Channel channel, long size)

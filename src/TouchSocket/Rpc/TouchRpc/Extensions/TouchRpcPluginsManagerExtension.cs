@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// TouchRpcPluginsManagerExtension
     /// </summary>
-    public static partial  class TouchRpcPluginsManagerExtension
+    public static partial class TouchRpcPluginsManagerExtension
     {
         /// <summary>
         /// 使用Redis插件。仅：TouchRpc组成员会生效。

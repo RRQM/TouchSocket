@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Text;
 
 namespace TouchSocket.Core
 {
@@ -71,7 +70,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                source =SerializeConvert.JsonSerializeToBytes(target);
+                source = SerializeConvert.JsonSerializeToBytes(target);
                 return true;
             }
             catch (Exception)

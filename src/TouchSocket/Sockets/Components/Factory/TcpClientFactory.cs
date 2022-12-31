@@ -54,15 +54,13 @@ namespace TouchSocket.Sockets
                         }
                         catch
                         {
-
                         }
                     }
                 }
-
             });
         }
 
-        readonly SingleTimer m_singleTimer;
+        private readonly SingleTimer m_singleTimer;
         private TClient m_mainClient = new TClient();
 
         /// <summary>

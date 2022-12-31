@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -501,7 +500,7 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         /// </summary>
         /// <param name="disposing"></param>
-        protected sealed override void Dispose(bool disposing)
+        protected override sealed void Dispose(bool disposing)
         {
             if (m_holding)
             {

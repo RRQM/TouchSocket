@@ -61,7 +61,6 @@ public delegate void ClientDisconnectedEventHandler<TClient>(TClient client, Cli
 /// <param name="e"></param>
 public delegate void ClientOperationEventHandler<TClient>(TClient client, ClientOperationEventArgs e);
 
-
 /// <summary>
 /// 插件数据
 /// </summary>
@@ -76,7 +75,6 @@ public delegate void PluginReceivedEventHandler<TClient>(TClient client, Receive
 /// <param name="byteBlock"></param>
 /// <param name="requestInfo"></param>
 public delegate void ReceivedEventHandler<TClient>(TClient client, ByteBlock byteBlock, IRequestInfo requestInfo);
-
 
 /// <summary>
 /// UDP接收

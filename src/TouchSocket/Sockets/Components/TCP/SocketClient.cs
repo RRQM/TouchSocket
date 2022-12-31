@@ -45,8 +45,10 @@ namespace TouchSocket.Sockets
         private DataHandlingAdapter m_adapter;
         private DelaySender m_delaySender;
         private Socket m_mainSocket;
+
         //private int m_maxPackageSize;
         private bool m_online;
+
         private bool m_useDelaySender;
         private Stream m_workStream;
 
@@ -472,9 +474,9 @@ namespace TouchSocket.Sockets
             {
                 if (Config.GetValue(TouchSocketConfigExtension.MaxPackageSizeProperty) is int v1)
                 {
-                    adapter.MaxPackageSize =v1 ;
+                    adapter.MaxPackageSize = v1;
                 }
-                if (Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty)!=TimeSpan.Zero)
+                if (Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty) != TimeSpan.Zero)
                 {
                     adapter.CacheTimeout = Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty);
                 }

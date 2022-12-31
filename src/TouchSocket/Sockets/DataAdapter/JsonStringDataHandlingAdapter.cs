@@ -142,7 +142,6 @@
 
 //        protected override FilterResult Filter(ByteBlock byteBlock, bool beCached, ref JsonRequestInfo request, ref int tempCapacity)
 //        {
-
 //        }
 //    }
 
@@ -150,7 +149,6 @@
 //    /// json解析
 //    /// </summary>
 //    public class JsonRequestInfo:IRequestInfo
-//    { 
-
+//    {
 //    }
 //}

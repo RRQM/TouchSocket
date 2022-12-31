@@ -28,6 +28,7 @@ namespace TouchSocket.Sockets
         {
             RequestInfo = requestInfo;
         }
+
         /// <summary>
         /// 对象载体
         /// </summary>

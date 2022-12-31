@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using static System.Collections.Specialized.BitVector32;
 
 namespace TouchSocket.Core
 {
@@ -116,7 +115,7 @@ namespace TouchSocket.Core
         /// <param name="container"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public static IContainer AddLogger(this IContainer container,ILog logger)
+        public static IContainer AddLogger(this IContainer container, ILog logger)
         {
             LoggerGroup loggerGroup = (LoggerGroup)container.Resolve<ILog>();
             loggerGroup.AddLogger(logger);

@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
@@ -385,7 +384,6 @@ namespace TouchSocket.Core
         /// </summary>
         public static bool NewtonsoftJsonFirst { get; set; } = true;
 
-
         /// <summary>
         /// 判断是否支持NewtonsoftJson
         /// </summary>
@@ -398,7 +396,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static bool LoadNewtonsoftJson(Type jsonConvertType)
         {
-           return JsonNet.InitJsonNet(jsonConvertType);
+            return JsonNet.InitJsonNet(jsonConvertType);
         }
 
         /// <summary>
@@ -408,9 +406,9 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static string ToJson(this object item)
         {
-            if (NewtonsoftJsonFirst&& JsonNet.IsSupported)
+            if (NewtonsoftJsonFirst && JsonNet.IsSupported)
             {
-               return JsonNet.SerializeObject(item);
+                return JsonNet.SerializeObject(item);
             }
 
 #if NETCOREAPP3_1_OR_GREATER
@@ -418,7 +416,6 @@ namespace TouchSocket.Core
 #else
             return JsonFastConverter.JsonTo(item);
 #endif
-
         }
 
         /// <summary>
@@ -431,15 +428,14 @@ namespace TouchSocket.Core
         {
             if (NewtonsoftJsonFirst && JsonNet.IsSupported)
             {
-                return JsonNet.DeserializeObject(json,type);
+                return JsonNet.DeserializeObject(json, type);
             }
 
 #if NETCOREAPP3_1_OR_GREATER
             return System.Text.Json.JsonSerializer.Deserialize(json,type);
 #else
-            return JsonFastConverter.JsonFrom(json,type);
+            return JsonFastConverter.JsonFrom(json, type);
 #endif
-
         }
 
         /// <summary>
@@ -511,7 +507,6 @@ namespace TouchSocket.Core
             return FromJson<T>(json);
         }
 
-      
         /// <summary>
         /// Json反序列化
         /// </summary>

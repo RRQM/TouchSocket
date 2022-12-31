@@ -21,7 +21,7 @@ namespace TouchSocket.Core
     /// </summary>
     public class LoggerGroup : LoggerBase
     {
-        private readonly Dictionary<string, ILog> m_logs=new Dictionary<string, ILog>();
+        private readonly Dictionary<string, ILog> m_logs = new Dictionary<string, ILog>();
 
         /// <summary>
         /// 一组日志记录器
@@ -45,7 +45,6 @@ namespace TouchSocket.Core
         [DependencyInject]
         public LoggerGroup()
         {
-          
         }
 
         /// <summary>

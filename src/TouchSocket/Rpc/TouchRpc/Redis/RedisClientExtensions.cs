@@ -20,7 +20,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public static class RedisClientExtensions
     {
-
         /// <summary>
         /// 获取或设置RedisClient的注入键。
         /// </summary>
@@ -38,6 +37,5 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             return client.GetValue(RedisClientProperty);
         }
-
     }
 }

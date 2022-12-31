@@ -128,7 +128,7 @@ namespace TouchSocket.Http.WebSockets
                 }
                 catch (Exception ex)
                 {
-                    m_logger.Exception(this,ex);
+                    m_logger.Exception(this, ex);
                 }
             }
 

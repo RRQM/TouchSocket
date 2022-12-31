@@ -104,7 +104,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static Result FromCanceled(string msg)
         {
-            return new Result( ResultCode.Canceled,msg);
+            return new Result(ResultCode.Canceled, msg);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static Result FromError(string msg)
         {
-            return new Result(ResultCode.Error,msg);
+            return new Result(ResultCode.Error, msg);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace TouchSocket.Core
         {
             return new Result(ResultCode.Success, msg);
         }
-       
+
         /// <summary>
         /// ToString
         /// </summary>

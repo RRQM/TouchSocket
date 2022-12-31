@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Rpc.TouchRpc
 {
@@ -46,6 +45,7 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             return a.value == b.value;
         }
+
         /// <summary>
         /// 判断RouteType不相等。
         /// </summary>

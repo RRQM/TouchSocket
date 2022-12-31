@@ -11,11 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -23,7 +20,7 @@ namespace TouchSocket.Core
     /// 提供Json.net无引用调用。
     /// <para>该代码来源：https://www.cnblogs.com/kewei/p/8228343.html</para>
     /// </summary>
-    static class JsonNet
+    internal static class JsonNet
     {
         /// <summary>
         /// Json.Net程序集名称
@@ -48,7 +45,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取是否得到支持
         /// </summary>
-        public static bool IsSupported { get;private set; } = false;
+        public static bool IsSupported { get; private set; } = false;
 
         /// <summary>
         /// Json.net
@@ -114,7 +111,7 @@ namespace TouchSocket.Core
         {
             serializeFunc = CreateSerializeObjectFunc(jsonConvertType);
             deserializeFunc = CreateDeserializeObjectFunc(jsonConvertType);
-           return JsonNet.IsSupported = serializeFunc != null && deserializeFunc != null;
+            return JsonNet.IsSupported = serializeFunc != null && deserializeFunc != null;
         }
 
         /// <summary>

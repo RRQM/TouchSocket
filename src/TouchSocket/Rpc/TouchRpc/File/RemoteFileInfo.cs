@@ -26,7 +26,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public RemoteFileInfo()
         {
-
         }
 
         /// <summary>

@@ -49,7 +49,7 @@ namespace TouchSocket.Sockets
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void OnReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void OnReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var data = OnNATReceived(socketClient, byteBlock, requestInfo);
             if (data != null)
@@ -66,7 +66,6 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         protected virtual void OnTargetClientDisconnected(NATSocketClient socketClient, ITcpClient tcpClient, ClientDisconnectedEventArgs e)
         {
-
         }
 
         /// <summary>

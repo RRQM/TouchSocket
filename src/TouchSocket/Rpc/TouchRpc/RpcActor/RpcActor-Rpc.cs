@@ -34,6 +34,7 @@ namespace TouchSocket.Rpc.TouchRpc
         public SerializationSelector SerializationSelector { get; set; }
 
         #region Rpc
+
         /// <inheritdoc/>
         public T Invoke<T>(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
@@ -425,9 +426,11 @@ namespace TouchSocket.Rpc.TouchRpc
                 return Invoke<T>(invokeKey, invokeOption, parameters);
             });
         }
-        #endregion
+
+        #endregion Rpc
 
         #region IdRpc
+
         /// <inheritdoc/>
         public void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
@@ -892,7 +895,8 @@ namespace TouchSocket.Rpc.TouchRpc
                 return Invoke<T>(targetId, invokeKey, invokeOption, parameters);
             });
         }
-        #endregion
+
+        #endregion IdRpc
 
         private void CanceledInvoke(object obj)
         {
@@ -1069,7 +1073,6 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch
             {
-
             }
         }
     }

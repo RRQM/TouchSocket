@@ -28,7 +28,6 @@ namespace TouchSocket.Rpc
         /// <param name="invokeResult"></param>
         public virtual void Executed(ICallContext callContext, ref InvokeResult invokeResult)
         {
-
         }
 
         /// <summary>
@@ -50,7 +49,6 @@ namespace TouchSocket.Rpc
         /// <param name="exception"></param>
         public virtual void ExecutException(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
         {
-
         }
 
         /// <summary>
@@ -72,7 +70,6 @@ namespace TouchSocket.Rpc
         /// <param name="invokeResult"></param>
         public virtual void Executing(ICallContext callContext, ref InvokeResult invokeResult)
         {
-
         }
 
         /// <summary>

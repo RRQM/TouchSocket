@@ -40,7 +40,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         UdpDataHandlingAdapter DataHandlingAdapter { get; }
 
-
         /// <summary>
         /// 设置数据处理适配器
         /// </summary>

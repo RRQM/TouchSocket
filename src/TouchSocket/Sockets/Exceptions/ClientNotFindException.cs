@@ -24,7 +24,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 构造函数
         /// </summary>
-        public ClientNotFindException() { }
+        public ClientNotFindException()
+        { }
 
         /// <summary>
         /// 构造函数

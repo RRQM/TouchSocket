@@ -24,7 +24,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        public TokenVerifyException() { }
+        public TokenVerifyException()
+        { }
 
         /// <summary>
         /// 构造函数

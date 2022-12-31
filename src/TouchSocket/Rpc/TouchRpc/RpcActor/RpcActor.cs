@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
-
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>
@@ -557,6 +556,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         return;
                     }
+
                 #endregion 100-199
 
                 #region 200-299
@@ -602,7 +602,6 @@ namespace TouchSocket.Rpc.TouchRpc
                                 rpcPackage.Unpackage(byteBlock.Seek(2));
                                 ThreadPool.QueueUserWorkItem(InvokeThis, rpcPackage);
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -658,7 +657,6 @@ namespace TouchSocket.Rpc.TouchRpc
                                     context.TokenSource.Cancel();
                                 }
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -666,11 +664,10 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         return;
                     }
+
                 #endregion 200-299
 
                 #region 300-399
-
-               
                 #endregion 300-399
 
                 #region 400-499
@@ -715,6 +712,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         }
                         return;
                     }
+
                 #endregion 400-499
 
                 #region 500-599
@@ -783,7 +781,6 @@ namespace TouchSocket.Rpc.TouchRpc
                                 waitFileInfoPackage.UnpackageBody(byteBlock);
                                 WaitHandlePool.SetRun(waitFileInfoPackage);
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -994,7 +991,6 @@ namespace TouchSocket.Rpc.TouchRpc
                                 waitSmallFilePackage.UnpackageBody(byteBlock);
                                 ThreadPool.QueueUserWorkItem(RequestPullSmallFile, waitSmallFilePackage);
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -1021,7 +1017,6 @@ namespace TouchSocket.Rpc.TouchRpc
                                 waitSmallFilePackage.UnpackageBody(byteBlock);
                                 WaitHandlePool.SetRun(waitSmallFilePackage);
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -1066,7 +1061,6 @@ namespace TouchSocket.Rpc.TouchRpc
                                 waitSmallFilePackage.UnpackageBody(byteBlock);
                                 ThreadPool.QueueUserWorkItem(RequestPushSmallFile, waitSmallFilePackage);
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -1160,7 +1154,6 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 return false;
             }
-
         }
 
         /// <summary>
@@ -1182,7 +1175,6 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 return false;
             }
-
         }
 
         /// <inheritdoc/>
@@ -1341,6 +1333,7 @@ namespace TouchSocket.Rpc.TouchRpc
         #endregion 重写
 
         #region 协议同步发送
+
         /// <summary>
         /// 发送字节
         /// </summary>
@@ -1362,9 +1355,11 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             Send(protocol, byteBlock.Buffer, 0, byteBlock.Len);
         }
+
         #endregion 协议同步发送
 
         #region 协议异步发送
+
         /// <summary>
         /// 异步发送字节
         /// </summary>
@@ -1379,6 +1374,7 @@ namespace TouchSocket.Rpc.TouchRpc
                  Send(protocol, buffer, offset, length);
              });
         }
+
         #endregion 协议异步发送
     }
 }

@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     public interface ITcpPlugin : IPlugin
     {
         /// <summary>
-        /// 客户端连接成功后触发    
+        /// 客户端连接成功后触发
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="e">参数</param>
@@ -29,7 +29,7 @@ namespace TouchSocket.Sockets
         void OnConnected(ITcpClientBase client, TouchSocketEventArgs e);
 
         /// <summary>
-        /// 客户端连接成功后触发    
+        /// 客户端连接成功后触发
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>

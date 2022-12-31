@@ -39,11 +39,11 @@ namespace TouchSocket.Rpc.TouchRpc
     internal class InternalMessageQueueClient : MessageQueueClient
     {
         private RpcActor m_rpcActor;
+
         public InternalMessageQueueClient(RpcActor rpcActor, BytesConverter converter)
         {
             m_rpcActor = rpcActor;
             Converter = converter;
-
         }
     }
 }

@@ -38,8 +38,6 @@
 //        /// </summary>
 //        public ClassCodeGenerator ClassCodeGenerator => this.m_classCodeGenerator;
 
-
-
 //        /// <summary>
 //        /// 获取接口代码
 //        /// </summary>
@@ -48,9 +46,7 @@
 //        /// <returns></returns>
 //        public string GetInterfaceProxy(MethodInstance methodInstance, RpcAttribute attribute)
 //        {
-
 //        }
-
 
 //        /// <summary>
 //        /// 获取函数代码
@@ -334,7 +330,6 @@
 //        /// <returns></returns>
 //        public string GetExtensionsMethodProxy(MethodInstance methodInstance, RpcAttribute attribute)
 //        {
-
 //        }
 //    }
 //}

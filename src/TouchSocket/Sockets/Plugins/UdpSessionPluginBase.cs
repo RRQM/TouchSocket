@@ -20,8 +20,8 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class UdpSessionPluginBase : UdpSessionPluginBase<IUdpSession>
     {
-
     }
+
     /// <summary>
     /// Udp插件实现类
     /// </summary>

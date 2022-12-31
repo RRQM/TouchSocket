@@ -18,7 +18,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class FileOperator : RemoteFileOperator
     {
-
         /// <summary>
         /// 传输标识
         /// </summary>

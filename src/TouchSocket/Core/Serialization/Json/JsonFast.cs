@@ -42,7 +42,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static T JsonFrom<T>(string s) where T : class
         {
-            return (T)JsonFrom(s,typeof(T));
+            return (T)JsonFrom(s, typeof(T));
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace TouchSocket.Core
         /// <param name="t"></param>
         /// <returns></returns>
         /// <exception cref="NullReferenceException"></exception>
-        public static object JsonFrom(string s,Type t) 
+        public static object JsonFrom(string s, Type t)
         {
             if (s == null)
                 throw new NullReferenceException("不能为null");

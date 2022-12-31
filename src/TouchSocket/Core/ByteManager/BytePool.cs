@@ -351,7 +351,7 @@ namespace TouchSocket.Core
             {
                 return 1048576;
             }
-            else if (num <= 1048576*2)//2Mb
+            else if (num <= 1048576 * 2)//2Mb
             {
                 return 1048576 * 2;
             }

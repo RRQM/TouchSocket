@@ -42,5 +42,4 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         Task SendAsync(IList<ArraySegment<byte>> transferBytes);
     }
-
 }

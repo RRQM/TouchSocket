@@ -36,7 +36,7 @@ namespace TouchSocket.Core
         /// 打包所有的路由包信息。顺序为：先调用<see cref="PackageRouter(ByteBlock)"/>，然后<see cref="PackageBody(ByteBlock)"/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public sealed override void Package(ByteBlock byteBlock)
+        public override sealed void Package(ByteBlock byteBlock)
         {
             PackageRouter(byteBlock);
             PackageBody(byteBlock);
@@ -48,8 +48,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteBlock"></param>
         public virtual void PackageBody(ByteBlock byteBlock)
-        { 
-        
+        {
         }
 
         /// <summary>
@@ -75,7 +74,7 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public sealed override void Unpackage(ByteBlock byteBlock)
+        public override sealed void Unpackage(ByteBlock byteBlock)
         {
             UnpackageRouter(byteBlock);
             UnpackageBody(byteBlock);
@@ -87,8 +86,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteBlock"></param>
         public virtual void UnpackageBody(ByteBlock byteBlock)
-        { 
-        
+        {
         }
 
         /// <summary>

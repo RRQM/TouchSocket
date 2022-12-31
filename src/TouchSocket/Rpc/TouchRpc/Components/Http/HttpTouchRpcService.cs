@@ -109,7 +109,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfered(TClient client, FileTransferStatusEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -119,7 +118,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnFileTransfering(TClient client, FileOperationEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -129,7 +127,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnHandshaked(TClient client, VerifyOptionEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -139,7 +136,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e">参数</param>
         protected virtual void OnHandshaking(TClient client, VerifyOptionEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -150,7 +146,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="byteBlock"></param>
         protected virtual void OnReceived(TClient client, short protocol, ByteBlock byteBlock)
         {
-
         }
 
         /// <summary>
@@ -160,8 +155,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnRouting(TClient client, PackageRouterEventArgs e)
         {
-
         }
+
         /// <summary>
         /// 流数据处理，用户需要在此事件中对e.Bucket手动释放。覆盖父类方法将不会触发事件和插件。
         /// </summary>
@@ -169,7 +164,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfered(TClient client, StreamStatusEventArgs e)
         {
-
         }
 
         /// <summary>
@@ -179,16 +173,17 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnStreamTransfering(TClient client, StreamOperationEventArgs e)
         {
-
         }
 
         private void PrivateOnRpcActorInit(HttpTouchRpcSocketClient client)
         {
             client.SetRpcActor(m_rpcActorGroup.CreateRpcActor(client));
         }
+
         #endregion 事件
 
         #region 小文件
+
         /// <inheritdoc/>
         public PullSmallFileResult PullSmallFile(string targetId, string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
@@ -240,7 +235,8 @@ namespace TouchSocket.Rpc.TouchRpc
                 return Task.FromResult(new Result(ResultCode.Error, TouchSocketStatus.ClientNotFind.GetDescription(targetId)));
             }
         }
-        #endregion
+
+        #endregion 小文件
 
         #region Rpc
 
@@ -331,6 +327,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             return false;
         }
+
         #endregion Rpc
 
         #region 通道
@@ -347,6 +344,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(targetId));
             }
         }
+
         /// <inheritdoc/>
         public Channel CreateChannel(string targetId, int id)
         {
@@ -508,6 +506,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             OnRouting(client, e);
         }
+
         private void OnRpcServiceStreamTransfered(RpcActor actor, StreamStatusEventArgs e)
         {
             TClient client = (TClient)actor.Caller;
@@ -595,6 +594,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription(id));
             }
         }
+
         #endregion 发送
     }
 }

@@ -23,7 +23,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        public ProtocolException() { }
+        public ProtocolException()
+        { }
 
         /// <summary>
         /// 构造函数

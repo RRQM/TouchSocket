@@ -17,7 +17,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 检查清理连接插件。服务器与客户端均适用。
+    /// 检查清理连接插件。服务器适用。
     /// </summary>
     [SingletonPlugin]
     public class CheckClearPlugin : TcpPluginBase
@@ -62,6 +62,7 @@ namespace TouchSocket.Sockets
             Duration = timeSpan;
             return this;
         }
+
         /// <inheritdoc/>
         protected override void OnLoadedConfig(object sender, ConfigEventArgs e)
         {

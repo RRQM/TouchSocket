@@ -45,6 +45,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
         public override void PackageBody(ByteBlock byteBlock)
         {
+            base.PackageBody(byteBlock);
             byteBlock.Write(RunNow);
             byteBlock.Write((byte)DataType);
             byteBlock.Write(ChannelId);
@@ -53,6 +54,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
         public override void UnpackageBody(ByteBlock byteBlock)
         {
+            base.UnpackageBody(byteBlock);
             this.RunNow = byteBlock.ReadBoolean();
             this.DataType = (ChannelDataType)byteBlock.ReadByte();
             this.ChannelId = byteBlock.ReadInt32();

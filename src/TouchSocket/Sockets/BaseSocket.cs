@@ -26,6 +26,7 @@ namespace TouchSocket.Sockets
         {
             SyncRoot = new object();
         }
+
         private int m_bufferLength;
 
         /// <summary>

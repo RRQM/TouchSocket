@@ -49,8 +49,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public static readonly Protocol WebSocket = new Protocol("ws");
 
-
-        /// <summary>       
+        /// <summary>
         /// 表示
         /// </summary>
         /// <param name="value">值</param>

@@ -334,15 +334,12 @@ namespace TouchSocket.Rpc
                 }
             }
 
-
             foreach (var item in classCodeGenerator.GetClassCellCodes())
             {
                 serverCellCode.ClassCellCodes.Add(item.Name, item);
             }
 
             //ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
-
-
 
             bool first = true;
             foreach (var item in instances)

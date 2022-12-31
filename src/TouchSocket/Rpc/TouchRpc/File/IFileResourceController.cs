@@ -20,7 +20,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public interface IFileResourceController
     {
-       
         /// <summary>
         /// 获取文件信息
         /// </summary>
@@ -38,7 +37,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <returns></returns>
         string GetFullPath(string root, string path);
 
-        
         /// <summary>
         /// 读取缓存文件信息
         /// </summary>

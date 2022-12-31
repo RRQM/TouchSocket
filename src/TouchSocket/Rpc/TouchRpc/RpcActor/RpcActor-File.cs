@@ -211,7 +211,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 TargetId = targetId,
                 Route = targetId.HasValue(),
                 Metadata = fileOperator.Metadata,
-                SavePath = fileOperator.SavePath,
+                SavePath = this.FileController.GetFullPath(this.m_rootPath, fileOperator.SavePath),
                 Flags = fileOperator.Flags,
                 ResourcePath = fileOperator.ResourcePath
             };
@@ -440,7 +440,7 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 FileInfo = fileInfo,
                 Metadata = fileOperator.Metadata,
-                ResourcePath = fileOperator.ResourcePath,
+                ResourcePath = this.FileController.GetFullPath(this.m_rootPath, fileOperator.ResourcePath),
                 SavePath = fileOperator.SavePath,
                 Flags = fileOperator.Flags,
                 TargetId = targetId,
@@ -659,6 +659,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 byteBlock.Dispose();
             }
         }
+
         private Result PrivatePushSmallFile(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
             if (!File.Exists(fileInfo.FullName))
@@ -744,6 +745,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 BytePool.Recycle(buffer);
             }
         }
+
         private void RequestPullSmallFile(object o)
         {
             //2.不响应

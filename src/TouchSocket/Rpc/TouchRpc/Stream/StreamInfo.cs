@@ -17,7 +17,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public struct StreamInfo
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

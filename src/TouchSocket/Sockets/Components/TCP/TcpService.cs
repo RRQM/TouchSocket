@@ -504,40 +504,29 @@ namespace TouchSocket.Sockets
             List<NetworkMonitor> networkMonitors = new List<NetworkMonitor>();
             foreach (var iPHost in iPHosts)
             {
-                try
+                Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
                 {
-                    Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    socket.ReceiveBufferSize = BufferLength;
-                    socket.SendBufferSize = BufferLength;
-                    if (m_config.GetValue<bool>(TouchSocketConfigExtension.ReuseAddressProperty))
-                    {
-                        socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                    }
-                    PreviewBind(socket);
-                    socket.Bind(iPHost.EndPoint);
-                    socket.Listen(m_backlog);
-
-                    networkMonitors.Add(new NetworkMonitor(iPHost, socket));
-                }
-                catch (Exception ex)
+                    ReceiveBufferSize = BufferLength,
+                    SendBufferSize = BufferLength
+                };
+                if (m_config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty))
                 {
-                    Logger.Log(LogType.Error, this, $"在监听{iPHost.ToString()}时发送错误。", ex);
+                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 }
+                PreviewBind(socket);
+                socket.Bind(iPHost.EndPoint);
+                socket.Listen(m_backlog);
+
+                networkMonitors.Add(new NetworkMonitor(iPHost, socket));
             }
 
-            if (networkMonitors.Count > 0)
-            {
-                m_monitors = networkMonitors.ToArray();
-            }
-            else
-            {
-                throw new Exception("监听地址全都不可用。");
-            }
-
+            m_monitors = networkMonitors.ToArray();
             foreach (var networkMonitor in m_monitors)
             {
-                SocketAsyncEventArgs e = new SocketAsyncEventArgs();
-                e.UserToken = networkMonitor.Socket;
+                SocketAsyncEventArgs e = new SocketAsyncEventArgs
+                {
+                    UserToken = networkMonitor.Socket
+                };
                 e.Completed += Args_Completed;
                 if (!networkMonitor.Socket.AcceptAsync(e))
                 {
@@ -561,8 +550,8 @@ namespace TouchSocket.Sockets
                     }
                     else
                     {
-                        Logger.Warning(this, "连接客户端数量已达到设定最大值");
                         socket.SafeDispose();
+                        Logger.Warning(this, "连接客户端数量已达到设定最大值");
                     }
                 }
                 e.AcceptSocket = null;
@@ -592,7 +581,7 @@ namespace TouchSocket.Sockets
             client.BufferLength = BufferLength;
             if (client.CanSetDataHandlingAdapter)
             {
-                client.SetDataHandlingAdapter(Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
+                client.SetDataHandlingAdapter(Config.GetValue(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
             }
         }
 
@@ -600,7 +589,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                if (Config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty))
+                if (Config.GetValue(TouchSocketConfigExtension.NoDelayProperty))
                 {
                     socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
                 }

@@ -17,12 +17,12 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// WaitCreateChannel
     /// </summary>
-    class WaitCreateChannelPackage : WaitRouterPackage
+    internal class WaitCreateChannelPackage : WaitRouterPackage
     {
         /// <summary>
         /// 随机ID
         /// </summary>
-        public bool Random{ get; set; }
+        public bool Random { get; set; }
 
         /// <summary>
         /// 通道ID
@@ -39,8 +39,8 @@ namespace TouchSocket.Rpc.TouchRpc
         public override void UnpackageBody(ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);
-            this.Random=byteBlock.ReadBoolean();
-            this.ChannelID=byteBlock.ReadInt32();
+            this.Random = byteBlock.ReadBoolean();
+            this.ChannelID = byteBlock.ReadInt32();
         }
     }
 }

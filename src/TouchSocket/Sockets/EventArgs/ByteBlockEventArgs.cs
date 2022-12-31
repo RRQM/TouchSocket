@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
 
-
 namespace TouchSocket.Sockets
 {
     /// <summary>

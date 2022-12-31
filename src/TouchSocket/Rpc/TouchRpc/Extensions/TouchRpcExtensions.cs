@@ -11,11 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -36,6 +34,7 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         #region 批量传输（弃用）
+
         /// <summary>
         /// 批量拉取文件
         /// </summary>
@@ -291,7 +290,8 @@ namespace TouchSocket.Rpc.TouchRpc
 
             loopAction.RunAsync();
         }
-        #endregion
+
+        #endregion 批量传输（弃用）
 
         /// <summary>
         /// 转化Protocol协议标识为TouchRpc

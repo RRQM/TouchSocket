@@ -10,18 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 可承载消息的路由包
     /// </summary>
-    public class MsgRouterPackage:RouterPackage
+    public class MsgRouterPackage : RouterPackage
     {
         /// <summary>
         /// 消息
@@ -31,12 +26,13 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public override void PackageBody(ByteBlock byteBlock)
         {
-           byteBlock.Write(Message);
+            byteBlock.Write(Message);
         }
+
         /// <inheritdoc/>
         public override void UnpackageBody(ByteBlock byteBlock)
         {
-           this.Message=byteBlock.ReadString();
+            this.Message = byteBlock.ReadString();
         }
     }
 }

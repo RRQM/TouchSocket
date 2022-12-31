@@ -21,7 +21,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class StreamEventArgs : MsgEventArgs
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

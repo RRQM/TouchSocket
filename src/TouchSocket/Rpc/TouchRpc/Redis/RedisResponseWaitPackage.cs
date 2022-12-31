@@ -16,7 +16,6 @@ namespace TouchSocket.Rpc.TouchRpc
 {
     internal class RedisResponseWaitPackage : WaitPackage
     {
-
         public byte[] value;
 
         public override void Package(ByteBlock byteBlock)

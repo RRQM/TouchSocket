@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 
-
 namespace TouchSocket.Rpc.TouchRpc
 {
     /// <summary>

@@ -53,7 +53,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             if (IsService)
             {
-                if (this.TryFindRpcActor(targetId,out RpcActor actor))
+                if (this.TryFindRpcActor(targetId, out RpcActor actor))
                 {
                     return actor.CreateChannel(id);
                 }
@@ -77,7 +77,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         throw new Exception(TouchSocketStatus.ChannelExisted.GetDescription(id));
                     }
                 }
-                
+
                 ByteBlock byteBlock = new ByteBlock();
                 WaitCreateChannelPackage waitCreateChannel = new WaitCreateChannelPackage()
                 {
@@ -142,10 +142,10 @@ namespace TouchSocket.Rpc.TouchRpc
 
         internal void SendChannelPackage(ChannelPackage channelPackage)
         {
-            using (ByteBlock byteBlock=new ByteBlock(channelPackage.GetLen()))
+            using (ByteBlock byteBlock = new ByteBlock(channelPackage.GetLen()))
             {
                 channelPackage.Package(byteBlock);
-                this.Send(TouchRpcUtility.P_101_ChannelPackage,byteBlock);
+                this.Send(TouchRpcUtility.P_101_ChannelPackage, byteBlock);
             }
         }
 
@@ -165,7 +165,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 }
                 throw new ClientNotFindException(TouchSocketStatus.ClientNotFind.GetDescription());
             }
-            return this.PrivateCreateChannel(targetId,true);
+            return this.PrivateCreateChannel(targetId, true);
         }
 
         internal void RemoveChannel(int id)

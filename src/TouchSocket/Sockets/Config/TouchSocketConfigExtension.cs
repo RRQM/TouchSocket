@@ -15,7 +15,6 @@ using System.Security.Authentication;
 using System.Threading;
 using TouchSocket.Core;
 
-
 namespace TouchSocket.Sockets
 {
     /// <summary>
@@ -120,7 +119,7 @@ namespace TouchSocket.Sockets
         public static readonly DependencyProperty<string> ServerNameProperty = DependencyProperty<string>.Register("ServerName", typeof(TouchSocketConfigExtension), "TouchSocketServer");
 
         /// <summary>
-        /// 多线程数量。
+        /// 多线程数量。默认-1缺省。
         /// <para>TCP模式中，该值等效于<see cref="ThreadPool.SetMinThreads(int, int)"/></para>
         /// <para>UDP模式中，该值为重叠IO并发数</para>
         /// 所需类型<see cref="int"/>
@@ -156,6 +155,7 @@ namespace TouchSocket.Sockets
         #endregion ServiceBase
 
         #region 适配器配置
+
         /// <summary>
         /// 适配器数据包缓存启用。默认为缺省（null），如果有正常值会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.CacheTimeout"/>
         /// </summary>
@@ -223,7 +223,8 @@ namespace TouchSocket.Sockets
             config.SetValue(MaxPackageSizeProperty, value);
             return config;
         }
-        #endregion
+
+        #endregion 适配器配置
 
         #region TcpClient
 
@@ -238,8 +239,6 @@ namespace TouchSocket.Sockets
         /// 所需类型<see cref="bool"/>
         /// </summary>
         public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = DependencyProperty<KeepAliveValue>.Register("KeepAliveValue", typeof(TouchSocketConfigExtension), new KeepAliveValue());
-
-
 
         /// <summary>
         /// 设置Socket不使用Delay算法，
@@ -389,6 +388,7 @@ namespace TouchSocket.Sockets
             config.SetValue(NoDelayProperty, true);
             return config;
         }
+
         #endregion TcpClient
 
         #region TcpService
@@ -463,7 +463,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。",true)]
+        [Obsolete("该操作已被弃用，请使用CheckClearPlugin插件，或者在插件中，配置UseCheckClear。", true)]
         public static TouchSocketConfig SetClearType(this TouchSocketConfig config, CheckClearType value)
         {
             throw new NotImplementedException();
