@@ -18,7 +18,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class ClientDisconnectedEventArgs : MsgEventArgs
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -33,6 +32,5 @@ namespace TouchSocket.Sockets
         /// 是否为主动行为。
         /// </summary>
         public bool Manual { get; private set; }
-
     }
 }

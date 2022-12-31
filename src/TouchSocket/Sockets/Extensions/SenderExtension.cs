@@ -125,7 +125,7 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static Task DefaultSendAsync<TClient>(this TClient client, string value) where TClient : IDefaultSender
         {
-           return client.DefaultSendAsync(Encoding.UTF8.GetBytes(value));
+            return client.DefaultSendAsync(Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -138,6 +138,7 @@ namespace TouchSocket.Sockets
         {
             return client.DefaultSendAsync(buffer, 0, buffer.Length);
         }
+
         #endregion IDefaultSender
 
         #region IIDSender
@@ -187,7 +188,7 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static Task SendAsync<TClient>(this TClient client, string id, string value) where TClient : IIDSender
         {
-           return client.SendAsync(id, Encoding.UTF8.GetBytes(value));
+            return client.SendAsync(id, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -199,8 +200,9 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         public static Task SendAsync<TClient>(this TClient client, string id, byte[] buffer) where TClient : IIDSender
         {
-           return client.SendAsync(id, buffer, 0, buffer.Length);
+            return client.SendAsync(id, buffer, 0, buffer.Length);
         }
+
         #endregion IIDSender
 
         #region IUdpDefaultSender
@@ -245,7 +247,7 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpDefaultSender
         {
-           return client.DefaultSendAsync(endPoint, Encoding.UTF8.GetBytes(value));
+            return client.DefaultSendAsync(endPoint, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -259,7 +261,7 @@ namespace TouchSocket.Sockets
         public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
             where TClient : IUdpDefaultSender
         {
-           return client.DefaultSendAsync(endPoint, buffer, 0, buffer.Length);
+            return client.DefaultSendAsync(endPoint, buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -273,7 +275,7 @@ namespace TouchSocket.Sockets
         public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
             where TClient : IUdpDefaultSender
         {
-          return  client.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+            return client.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
         }
 
         #endregion IUdpDefaultSender
@@ -329,7 +331,7 @@ namespace TouchSocket.Sockets
         /// <param name="value"></param>
         public static Task SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
         {
-           return client.SendAsync(endPoint, Encoding.UTF8.GetBytes(value));
+            return client.SendAsync(endPoint, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
@@ -343,8 +345,9 @@ namespace TouchSocket.Sockets
         public static Task SendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
             where TClient : IUdpClientSender
         {
-           return client.SendAsync(endPoint, buffer, 0, buffer.Length);
+            return client.SendAsync(endPoint, buffer, 0, buffer.Length);
         }
+
         #endregion IUdpClientSender
     }
 }

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Threading;
 using TouchSocket.Core;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -85,13 +84,11 @@ namespace TouchSocket.Rpc.TouchRpc
 
         #endregion 委托
 
-
         /// <summary>
         /// 配置
         /// </summary>
         public TouchSocketConfig Config { get; set; }
 
-       
         /// <summary>
         /// RpcStore
         /// </summary>

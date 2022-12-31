@@ -174,7 +174,6 @@ namespace TouchSocket.Rpc.XmlRpc
                     invokeResult.Message = "没有找到这个服务。";
                 }
 
-
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
                     IRpcServer rpcServer = methodInstance.ServerFactory.Create(callContext, ps);

@@ -50,7 +50,6 @@ namespace TouchSocket.Rpc
         /// </summary>
         public ConcurrentDictionary<Type, string> GenericTypeDic { get; private set; }
 
-
         /// <summary>
         /// 属性类型字典。
         /// </summary>
@@ -143,7 +142,6 @@ namespace TouchSocket.Rpc
                             goon = true;
                         }
                     }
-
                 }
                 GenericTypeDic[strItem.Key] = strItemNew;
             }
@@ -163,7 +161,6 @@ namespace TouchSocket.Rpc
                             goon = true;
                         }
                     }
-
                 }
                 PropertyDic[strItem.Key].Code = strItemNew;
             }

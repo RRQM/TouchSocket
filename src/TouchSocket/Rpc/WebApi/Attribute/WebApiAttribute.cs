@@ -16,7 +16,6 @@ using System.Text;
 
 namespace TouchSocket.Rpc.WebApi
 {
-
     /// <summary>
     /// WebApiAttribute
     /// </summary>
@@ -33,7 +32,6 @@ namespace TouchSocket.Rpc.WebApi
         {
             m_method = method;
         }
-
 
         /// <summary>
         /// <inheritdoc/>

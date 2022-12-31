@@ -24,8 +24,8 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public WaitSetID()
         {
-
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>

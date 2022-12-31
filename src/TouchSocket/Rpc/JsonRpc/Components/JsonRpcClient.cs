@@ -11,12 +11,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -370,7 +368,7 @@ namespace TouchSocket.Rpc.JsonRpc
                     }
                 case JRPT.Websocket:
                     {
-                        if (requestInfo is WSDataFrame dataFrame&&dataFrame.Opcode== WSDataType.Text)
+                        if (requestInfo is WSDataFrame dataFrame && dataFrame.Opcode == WSDataType.Text)
                         {
                             jsonString = dataFrame.ToText();
                         }
@@ -416,7 +414,6 @@ namespace TouchSocket.Rpc.JsonRpc
             }
             catch
             {
-
             }
             return true;
         }
@@ -449,10 +446,10 @@ namespace TouchSocket.Rpc.JsonRpc
                 parameters ??= new object[0];
                 JsonRpcRequest jsonRpcRequest = new JsonRpcRequest()
                 {
-                     method= method,
-                      @params= parameters
+                    method = method,
+                    @params = parameters
                 };
-               
+
                 if (invokeOption.FeedbackType == FeedbackType.WaitInvoke)
                 {
                     jsonRpcRequest.id = context.Sign.ToString();
@@ -522,7 +519,7 @@ namespace TouchSocket.Rpc.JsonRpc
                                 return (T)resultContext.Return.ToString().ParseToType(typeof(T));
                             }
 
-                           return resultContext.Return.ToJson().FromJson<T>();
+                            return resultContext.Return.ToJson().FromJson<T>();
                         }
                     default:
                         return default;

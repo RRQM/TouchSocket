@@ -70,7 +70,6 @@ namespace TouchSocket.Sockets
             m_monitor = new NetworkMonitor(null, socket);
         }
 
-
         /// <summary>
         /// 处理未经过适配器的数据。返回值表示是否继续向下传递。
         /// </summary>
@@ -80,7 +79,6 @@ namespace TouchSocket.Sockets
         /// 处理经过适配器后的数据。返回值表示是否继续向下传递。
         /// </summary>
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get; set; }
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -628,7 +626,6 @@ namespace TouchSocket.Sockets
             });
         }
 
-
         #endregion 向默认远程异步发送
 
         #region 向设置的远程同步发送
@@ -647,6 +644,7 @@ namespace TouchSocket.Sockets
         {
             m_adapter.SendInput(remoteEP, buffer, offset, length);
         }
+
         #endregion 向设置的远程同步发送
 
         #region 向设置的远程异步发送
@@ -820,6 +818,7 @@ namespace TouchSocket.Sockets
                 Send(endPoint, transferBytes);
             });
         }
+
         #endregion 组合发送
     }
 }

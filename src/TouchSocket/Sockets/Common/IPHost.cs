@@ -31,7 +31,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class IPHost
     {
-
         /// <summary>
         /// IP解析映射
         /// <para>
@@ -110,6 +109,7 @@ namespace TouchSocket.Sockets
         /// 具有端口信息的host
         /// </summary>
         public string Host { get; private set; }
+
         /// <summary>
         /// IP
         /// </summary>

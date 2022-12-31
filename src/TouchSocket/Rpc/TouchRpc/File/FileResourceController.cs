@@ -61,11 +61,10 @@ namespace TouchSocket.Rpc.TouchRpc
             }
         }
 
-       
         /// <inheritdoc/>
         public virtual bool TryReadTempInfo(string path, TransferFlags flags, ref TouchRpcFileInfo info)
         {
-            if (flags== TransferFlags.None)
+            if (flags == TransferFlags.None)
             {
                 return false;
             }

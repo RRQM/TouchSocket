@@ -14,7 +14,6 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-
     /// <summary>
     /// 过滤结果
     /// </summary>

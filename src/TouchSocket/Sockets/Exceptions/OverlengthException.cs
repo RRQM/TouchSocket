@@ -24,7 +24,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 构造函数
         /// </summary>
-        public OverlengthException() { }
+        public OverlengthException()
+        { }
 
         /// <summary>
         /// 构造函数

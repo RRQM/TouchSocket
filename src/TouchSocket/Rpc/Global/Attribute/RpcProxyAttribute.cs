@@ -20,7 +20,6 @@ namespace TouchSocket.Rpc
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
     public class RpcProxyAttribute : Attribute
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

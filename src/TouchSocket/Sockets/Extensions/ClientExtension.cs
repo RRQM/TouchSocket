@@ -93,7 +93,6 @@ namespace TouchSocket.Sockets
             try
             {
                 client.Close(msg);
-
             }
             catch
             {
@@ -152,6 +151,7 @@ namespace TouchSocket.Sockets
                 return new Result(ResultCode.Exception, ex.Message);
             }
         }
-        #endregion
+
+        #endregion 连接
     }
 }

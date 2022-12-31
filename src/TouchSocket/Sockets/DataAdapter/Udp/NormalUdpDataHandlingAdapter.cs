@@ -96,7 +96,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override void Reset()
         {
-
         }
     }
 }

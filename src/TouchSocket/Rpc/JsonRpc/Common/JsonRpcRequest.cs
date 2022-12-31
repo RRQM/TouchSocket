@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc.JsonRpc
 {
@@ -26,7 +21,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <summary>
         /// jsonrpc
         /// </summary>
-        public string jsonrpc="2.0";
+        public string jsonrpc = "2.0";
 
         /// <summary>
         /// method

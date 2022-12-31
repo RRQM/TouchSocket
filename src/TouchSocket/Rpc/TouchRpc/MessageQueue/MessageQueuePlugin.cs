@@ -25,7 +25,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public BytesConverter Converter { get; private set; } = new BytesConverter();
 
-
         /// <summary>
         /// 定义元素的序列化和反序列化。
         /// <para>注意：Byte[]类型不用考虑。内部单独会做处理。</para>
@@ -54,7 +53,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected override void OnReceivedProtocolData(IDependencyTouchRpc client, ProtocolDataEventArgs e)
         {
-
         }
     }
 }

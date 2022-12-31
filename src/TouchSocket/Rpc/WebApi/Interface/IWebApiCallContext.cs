@@ -18,6 +18,5 @@ namespace TouchSocket.Rpc.WebApi
     /// </summary>
     public interface IWebApiCallContext : IHttpCallContext
     {
-
     }
 }

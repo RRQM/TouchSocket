@@ -123,9 +123,7 @@ namespace TouchSocket.Sockets
             }
             catch
             {
-
             }
-           
         }
 
         private bool SwitchToRun()

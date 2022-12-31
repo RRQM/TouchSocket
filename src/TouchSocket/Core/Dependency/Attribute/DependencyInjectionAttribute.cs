@@ -59,7 +59,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 指定依赖类型，构造函数，可用于构造函数，属性，方法。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class| AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method)]
     public class DependencyInjectAttribute : Attribute
     {
         /// <summary>
@@ -135,8 +135,6 @@ namespace TouchSocket.Core
         /// 注入类型
         /// </summary>
         public Type Type { get; }
-
-
 
         /// <summary>
         /// 构造函数

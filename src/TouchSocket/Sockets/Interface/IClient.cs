@@ -20,7 +20,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface IClient : IDependencyObject, IDisposable
     {
-
         /// <summary>
         /// 处理未经过适配器的数据。返回值表示是否继续向下传递。
         /// </summary>

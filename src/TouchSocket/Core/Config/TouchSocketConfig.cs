@@ -11,10 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Concurrent;
-using System.Threading;
-
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -28,7 +24,7 @@ namespace TouchSocket.Core
         private IPluginsManager m_pluginsManager;
 
         //ConcurrentQueue<Tuple<Delegate, object[]>> actions = new ConcurrentQueue<Tuple<Delegate, object[]>>();
-        
+
         ///// <summary>
         ///// 添加构建委托，该委托会在<see cref="Build"/>时调用。
         ///// </summary>

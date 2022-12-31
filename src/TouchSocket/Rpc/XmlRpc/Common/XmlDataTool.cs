@@ -130,7 +130,6 @@ namespace TouchSocket.Rpc.XmlRpc
                 }
             }
 
-
             HttpRequest request = new HttpRequest();
             request.FromXML(xml.OuterXml)
                 .InitHeaders()

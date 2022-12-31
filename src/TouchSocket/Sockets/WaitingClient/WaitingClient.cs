@@ -11,9 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -28,7 +25,6 @@ namespace TouchSocket.Sockets
         private readonly WaitData<ResponsedData> m_waitData;
 
         private WaitingOptions m_waitingOptions;
-
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
         {

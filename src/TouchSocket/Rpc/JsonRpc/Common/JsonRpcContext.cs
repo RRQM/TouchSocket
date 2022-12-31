@@ -11,14 +11,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-
-
 namespace TouchSocket.Rpc.JsonRpc
 {
     /// <summary>
     /// JsonRpcPackage
     /// </summary>
-    public class JsonRpcContext: JsonRpcRequest
+    public class JsonRpcContext : JsonRpcRequest
     {
         /// <summary>
         /// parameters

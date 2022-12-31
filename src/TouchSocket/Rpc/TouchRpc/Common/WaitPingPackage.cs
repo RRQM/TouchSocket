@@ -16,6 +16,5 @@ namespace TouchSocket.Rpc.TouchRpc
 {
     internal class WaitPingPackage : WaitRouterPackage
     {
-
     }
 }

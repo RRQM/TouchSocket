@@ -168,6 +168,5 @@ namespace TouchSocket.Sockets
         /// <param name="endCode"></param>
         /// <returns></returns>
         bool OnParsingEndCode(byte[] endCode);
-
     }
 }

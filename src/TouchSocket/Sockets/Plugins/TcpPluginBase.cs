@@ -20,7 +20,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class TcpPluginBase : TcpPluginBase<ITcpClientBase>
     {
-
     }
 
     /// <summary>

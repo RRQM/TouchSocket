@@ -20,6 +20,5 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public interface IDependencyTouchRpc : ITouchRpc, IDependencyObject
     {
-
     }
 }

@@ -42,7 +42,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 默认的全局资源控制器。
         /// </summary>
-        public static readonly FileResourceController FileController=new FileResourceController();
+        public static readonly FileResourceController FileController = new FileResourceController();
 
         /// <summary>
         /// 获取文件资源控制器。如果没有注册的话，会新建一个<see cref="FileResourceController"/>

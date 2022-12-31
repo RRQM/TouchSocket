@@ -46,7 +46,6 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 timeSpan = byteBlock.ReadTimeSpan();
             }
-
         }
     }
 }

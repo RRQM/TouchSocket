@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc.TouchRpc
@@ -138,6 +137,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 向客户端发送流
         /// </summary>
         public const short P_401_SendStreamToClient = -401;
+
         #endregion Stream协议 400-499
 
         #region FileTransfer协议 500-599
@@ -261,6 +261,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 推送确认小文件响应
         /// </summary>
         public const short P_1518_PushSmallFile_Response = -1518;
+
         #endregion FileTransfer协议 500-599
 
         #region Redis 600-699

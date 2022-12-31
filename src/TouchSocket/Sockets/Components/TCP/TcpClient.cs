@@ -70,6 +70,7 @@ namespace TouchSocket.Sockets
         private bool m_usePlugin;
         private Stream m_workStream;
         private IPHost m_remoteIPHost;
+
         #endregion 变量
 
         #region 事件
@@ -441,7 +442,6 @@ namespace TouchSocket.Sockets
                     m_mainSocket.SafeDispose();
                     throw new TimeoutException();
                 }
-
             }
         }
 
@@ -801,6 +801,7 @@ namespace TouchSocket.Sockets
         }
 
         #region 发送
+
         #region 同步发送
 
         /// <summary>
@@ -970,6 +971,7 @@ namespace TouchSocket.Sockets
                 LastSendTime = DateTime.Now;
             }
         }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -986,7 +988,8 @@ namespace TouchSocket.Sockets
                 DefaultSend(buffer, offset, length);
             });
         }
-        #endregion
+
+        #endregion 发送
 
         private void LoadSocketAndReadIpPort()
         {

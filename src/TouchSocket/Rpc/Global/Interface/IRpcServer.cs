@@ -18,6 +18,5 @@ namespace TouchSocket.Rpc
     /// </summary>
     public interface IRpcServer
     {
-
     }
 }

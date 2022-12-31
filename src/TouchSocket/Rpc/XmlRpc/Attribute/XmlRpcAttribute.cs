@@ -38,6 +38,7 @@ namespace TouchSocket.Rpc.XmlRpc
         {
             InvokenKey = invokenKey;
         }
+
         /// <summary>
         /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
         /// </summary>
@@ -67,7 +68,6 @@ namespace TouchSocket.Rpc.XmlRpc
             {
                 return base.GetInvokenKey(methodInstance);
             }
-
         }
     }
 }

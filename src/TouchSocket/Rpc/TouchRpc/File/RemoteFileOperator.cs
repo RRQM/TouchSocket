@@ -21,6 +21,5 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             this.completedLength = completedLength;
         }
-
     }
 }

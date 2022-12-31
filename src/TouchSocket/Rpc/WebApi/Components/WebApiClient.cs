@@ -36,7 +36,6 @@ namespace TouchSocket.Rpc.WebApi
         /// </summary>
         public Func<IRpcClient, bool> TryCanInvoke { get; set; }
 
-
         private readonly StringConverter m_stringConverter;
 
         /// <summary>

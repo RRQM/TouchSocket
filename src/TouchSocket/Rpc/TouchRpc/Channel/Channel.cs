@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Diagnostics;
-using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -425,7 +424,6 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch
             {
-
             }
         }
 
@@ -508,7 +506,6 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch
             {
-
             }
             base.Dispose(disposing);
         }
@@ -705,7 +702,6 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             catch
             {
-
             }
         }
 

@@ -34,6 +34,5 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public interface ITcpRpcClientBase : ITcpClientBase, IDependencyTouchRpc
     {
-
     }
 }

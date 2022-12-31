@@ -57,6 +57,7 @@ namespace TouchSocket.Resources
         Exception,
 
         #region TouchRpc
+
         /// <summary>
         /// 不允许路由该包，信息：{0}。
         /// </summary>
