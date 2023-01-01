@@ -31,7 +31,7 @@ namespace Log4netConsoleApp
 
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                .SetMaxCount(10000)
+                
                 .SetThreadCount(10)
                 .ConfigurePlugins(a =>
                 {

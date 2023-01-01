@@ -102,7 +102,7 @@ namespace UnityServerConsoleApp
             TcpService service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })//同时监听两个地址
-                .SetMaxCount(10000)
+                
                 .SetThreadCount(10)
                 .UsePlugin()
                 .SetDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
