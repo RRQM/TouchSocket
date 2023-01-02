@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RpcProxy;
+using System;
 using TouchSocket.Core;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
@@ -32,11 +33,10 @@ namespace WSTouchRpcClientConsoleApp
         {
             TimeSpan timeSpan = TimeMeasurer.Run(() =>
             {
-                string key = "TouchRpcWebApplication.RpcProviders.TestServerProvider.Performance".ToLower();
                 for (int i = 0; i < 1000; i++)
                 {
-                    client.Invoke<int>(key, null, i);
-                    if (i % 1000 == 0)
+                    client.Performance(i);
+                    if (i % 10 == 0)
                     {
                         Console.WriteLine(i);
                     }
@@ -49,13 +49,14 @@ namespace WSTouchRpcClientConsoleApp
         {
             while (true)
             {
+                Console.WriteLine("请输入账号，密码，中间使用空格");
                 string[] strs = Console.ReadLine().Split(' ');
                 if (strs.Length != 2)
                 {
-                    Console.WriteLine("参数不对");
+                    Console.WriteLine("参数不对，请输入账号，密码，中间使用空格");
                     continue;
                 }
-                Console.WriteLine(client.Invoke<bool>("TouchRpcWebApplication.RpcProviders.TestServerProvider.Login".ToLower(), null, strs[0], strs[1]));
+                Console.WriteLine(client.Login(strs[0], strs[1]));
                 Console.ReadKey();
             }
         }
