@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System.IO;
 using TouchRpcWebApplication.RpcProviders;
 using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
@@ -41,6 +42,9 @@ namespace TouchRpcWebApplication
                 .ConfigureRpcStore(a =>
                 {
                     a.RegisterServer<MyRpcServer>();//注册rpc服务。
+#if DEBUG
+                   File.WriteAllText("RpcProxy.cs",a.GetProxyCodes("RpcProxy")) ;
+#endif
                 }));
 
             services.AddControllers();
