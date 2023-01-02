@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.TouchRpc;
@@ -190,6 +191,16 @@ namespace TouchRpcServerApp
 
     internal class MyTouchRpcPlugin : TouchRpcPluginBase
     {
+        protected override void OnReceivedProtocolData(ITouchRpc client, ProtocolDataEventArgs e)
+        {
+            if (e.Protocol == 10)
+            {
+                //判断完协议以后，从e.ByteBlock可以拿到实际的数据
+                //但是需要注意的是，真实数据会整体向右偏移2个字节。
+                string msg = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 2, e.ByteBlock.Len - 2);
+            }
+            base.OnReceivedProtocolData(client, e);
+        }
         protected override void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e)
         {
             //if (e.Metadata["a"] != "a")
