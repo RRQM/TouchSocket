@@ -23,9 +23,6 @@ namespace ServiceConsoleApp
             //此组件包含Http所有功能，可以承载JsonRpc、XmlRpc、WebSocket、TouchRpc等等。
             var service = new TouchSocketConfig()
                 .UsePlugin()
-                .SetBufferLength(1024 * 64)
-                .SetThreadCount(50)
-                .SetReceiveType(ReceiveType.Auto)
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .ConfigureContainer(a =>
                 {
