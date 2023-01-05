@@ -156,7 +156,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Log4netConsoleApp", "exampl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "包序列化模式", "包序列化模式", "{55970A52-E1A6-493B-91C4-9F4EE3E888B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PackageConsoleApp", "examples\包序列化模式\PackageConsoleApp\PackageConsoleApp.csproj", "{BDF15495-BC59-4A66-8643-F8166907B28E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackageConsoleApp", "examples\包序列化模式\PackageConsoleApp\PackageConsoleApp.csproj", "{BDF15495-BC59-4A66-8643-F8166907B28E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdapterTesterConsoleApp", "examples\Adapter简单示例\AdapterTesterConsoleApp\AdapterTesterConsoleApp.csproj", "{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -348,6 +350,10 @@ Global
 		{BDF15495-BC59-4A66-8643-F8166907B28E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDF15495-BC59-4A66-8643-F8166907B28E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDF15495-BC59-4A66-8643-F8166907B28E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -407,6 +413,7 @@ Global
 		{D5892A0B-DE58-42C2-B5EE-E1C34745493B} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{0E76C63C-66CC-43BE-A6AF-A7862E669C2F} = {14C9DCF7-767F-48F5-956F-782161BA2420}
 		{BDF15495-BC59-4A66-8643-F8166907B28E} = {55970A52-E1A6-493B-91C4-9F4EE3E888B6}
+		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
