@@ -64,7 +64,7 @@ namespace PackageConsoleApp
 
             //字典类型，可以先判断是否为null
             byteBlock.WriteIsNull(P6);
-            if (P5 != null)
+            if (P6 != null)
             {
                 //如果不为null
                 //就先写入字典长度
