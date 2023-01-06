@@ -7,6 +7,33 @@ using TouchSocket.Sockets;
 
 namespace LimitNumberOfConnectionsConsoleApp
 {
+    internal class Program
+    {
+        /// <summary>
+        /// 限制同一个IP的连接数量
+        /// 博客地址<see href="https://blog.csdn.net/qq_40374647/article/details/125390655"/>
+        /// </summary>
+        /// <param name="args"></param>
+        private static void Main(string[] args)
+        {
+            TcpService service = new TcpService();
+            service.Setup(new TouchSocketConfig()//载入配置
+                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<LimitNumberOfConnectionsPlugin>();
+                })
+                .UsePlugin())
+                .Start();//启动
+            service.Logger.Info("服务器已启动");
+            Console.ReadKey();
+        }
+    }
+
     internal class Count
     {
         private int num;
@@ -74,41 +101,6 @@ namespace LimitNumberOfConnectionsConsoleApp
                 }
             }
             base.OnDisconnected(client, e);
-        }
-    }
-
-    internal class Program
-    {
-        /// <summary>
-        /// 限制同一个IP的连接数量
-        /// 博客地址<see href="https://blog.csdn.net/qq_40374647/article/details/125390655"/>
-        /// </summary>
-        /// <param name="args"></param>
-        private static void Main(string[] args)
-        {
-            TcpService service = new TcpService();
-            service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接
-            service.Received = (client, byteBlock, requestInfo) =>
-            {
-                //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                Console.WriteLine($"已从{client.ID}接收到信息：{mes}");
-
-                client.Send(mes);//将收到的信息直接返回给发送方
-            };
-
-            service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                
-                
-                .UsePlugin())
-                .Start();//启动
-
-            service.AddPlugin<LimitNumberOfConnectionsPlugin>();
-
-            Console.ReadKey();
         }
     }
 }
