@@ -8,9 +8,6 @@ namespace HeartbeatConsoleApp
 {
     internal class Program
     {
-        private static TcpService service = new TcpService();
-        private static TcpClient tcpClient = new TcpClient();
-
         /// <summary>
         /// 示例心跳。
         /// 博客地址<see href="https://blog.csdn.net/qq_40374647/article/details/125598921"/>
@@ -20,23 +17,37 @@ namespace HeartbeatConsoleApp
         {
             ConsoleAction consoleAction = new ConsoleAction();
 
+            //服务器
+            TcpService service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                
-                .UsePlugin()
-                .SetThreadCount(10))
-                .Start();//启动
-
-            service.AddPlugin<HeartbeatAndReceivePlugin>();
+                    .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+                    .UsePlugin()
+                    .SetDataHandlingAdapter(()=>new MyFixedHeaderDataHandlingAdapter())
+                    .ConfigureContainer(a =>
+                    {
+                        a.AddConsoleLogger();
+                    })
+                    .ConfigurePlugins(a =>
+                    {
+                        a.Add<HeartbeatAndReceivePlugin>();
+                    }))
+                    .Start();//启动
             service.Logger.Info("服务器成功启动");
 
+            //客户端
+            TcpClient tcpClient = new TcpClient();
             tcpClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .UsePlugin()
-                .SetBufferLength(1024 * 10));
-
-            tcpClient.AddPlugin<HeartbeatAndReceivePlugin>();
-
+                .SetDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<HeartbeatAndReceivePlugin>();
+                }));
             tcpClient.Connect();
             tcpClient.Logger.Info("客户端成功连接");
 
@@ -118,7 +129,10 @@ namespace HeartbeatConsoleApp
         {
             byteBlock.Write((ushort)((this.Data == null ? 0 : this.Data.Length) + 1));
             byteBlock.Write((byte)this.DataType);
-            byteBlock.Write(Data);
+            if (Data != null)
+            {
+                byteBlock.Write(Data);
+            }
         }
 
         public byte[] PackageAsBytes()
@@ -185,17 +199,13 @@ namespace HeartbeatConsoleApp
     internal class HeartbeatAndReceivePlugin : TcpPluginBase
     {
         private readonly int m_timeTick;
+        private readonly ILog logger;
 
         [DependencyInject(1000 * 5)]
-        public HeartbeatAndReceivePlugin(int timeTick)
+        public HeartbeatAndReceivePlugin(int timeTick, ILog logger)
         {
             this.m_timeTick = timeTick;
-        }
-
-        protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
-        {
-            client.SetDataHandlingAdapter(new MyFixedHeaderDataHandlingAdapter());//设置适配器。
-            base.OnConnecting(client, e);
+            this.logger = logger;
         }
 
         protected override void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
@@ -205,7 +215,7 @@ namespace HeartbeatConsoleApp
                 return;//此处可判断，如果为服务器，则不用使用心跳。
             }
 
-            if (client.GetValue<Timer>(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
+            if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
             {
                 timer.Dispose();
             }
@@ -221,7 +231,7 @@ namespace HeartbeatConsoleApp
         protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
         {
             base.OnDisconnected(client, e);
-            if (client.GetValue<Timer>(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
+            if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
             {
                 timer.Dispose();
                 client.SetValue(DependencyExtensions.HeartbeatTimerProperty, null);
@@ -232,7 +242,7 @@ namespace HeartbeatConsoleApp
         {
             if (e.RequestInfo is MyRequestInfo myRequest)
             {
-                client.Logger.Info(myRequest.ToString());
+                this.logger.Info(myRequest.ToString());
                 if (myRequest.DataType == DataType.Ping)
                 {
                     client.Pong();
