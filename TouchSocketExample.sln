@@ -158,7 +158,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "包序列化模式", "包�
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackageConsoleApp", "examples\包序列化模式\PackageConsoleApp\PackageConsoleApp.csproj", "{BDF15495-BC59-4A66-8643-F8166907B28E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdapterTesterConsoleApp", "examples\Adapter简单示例\AdapterTesterConsoleApp\AdapterTesterConsoleApp.csproj", "{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdapterTesterConsoleApp", "examples\Adapter简单示例\AdapterTesterConsoleApp\AdapterTesterConsoleApp.csproj", "{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tcp命令行执行插件", "Tcp命令行执行插件", "{5B8D8451-E920-42E5-9F6A-D6D1238A24B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpCommandLineConsoleApp", "examples\Tcp简单示例\Tcp命令行执行插件\TcpCommandLineConsoleApp\TcpCommandLineConsoleApp.csproj", "{15554D7C-32B3-48A2-9475-2364A721A1F7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -354,6 +358,10 @@ Global
 		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15554D7C-32B3-48A2-9475-2364A721A1F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15554D7C-32B3-48A2-9475-2364A721A1F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15554D7C-32B3-48A2-9475-2364A721A1F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15554D7C-32B3-48A2-9475-2364A721A1F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -414,6 +422,8 @@ Global
 		{0E76C63C-66CC-43BE-A6AF-A7862E669C2F} = {14C9DCF7-767F-48F5-956F-782161BA2420}
 		{BDF15495-BC59-4A66-8643-F8166907B28E} = {55970A52-E1A6-493B-91C4-9F4EE3E888B6}
 		{BF997370-81F3-4DCA-81A3-AF7D9050ABB1} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{5B8D8451-E920-42E5-9F6A-D6D1238A24B4} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
+		{15554D7C-32B3-48A2-9475-2364A721A1F7} = {5B8D8451-E920-42E5-9F6A-D6D1238A24B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
