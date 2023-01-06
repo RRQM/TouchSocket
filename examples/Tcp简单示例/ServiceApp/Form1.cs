@@ -43,6 +43,12 @@ namespace ServiceApp
                 {
                     a.AddFileLogger();
                     a.AddEasyLogger(this.ShowMsg);
+                })
+                .ConfigurePlugins(a => 
+                {
+                    a.UseCheckClear()
+                    .SetCheckClearType( CheckClearType.All)
+                    .SetDuration(TimeSpan.FromSeconds(60));
                 }))
                 .Start();//启动
             m_service.Logger.Info("服务器成功启动");
