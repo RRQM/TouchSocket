@@ -15,25 +15,26 @@ namespace ThrottlingConsoleApp
         private static void Main(string[] args)
         {
             TcpService service = new TcpService();
-            service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                Console.WriteLine($"已从{client.ID}接收到信息：{mes}");
-
-                client.Send(mes);//将收到的信息直接返回给发送方
+                client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
                 .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                )
+                .ConfigureContainer(a => 
+                {
+                    a.AddConsoleLogger();
+                })
+                .ConfigurePlugins(a => 
+                {
+                    a.Add<MyThrottlingPlugin>();
+                }))
                 .Start();//启动
-            service.AddPlugin<MyThrottlingPlugin>();
-
+            service.Logger.Info("服务器已启动");
             Console.ReadLine();
         }
     }
@@ -74,10 +75,10 @@ namespace ThrottlingConsoleApp
             base.OnConnected(client, e);
         }
 
-        protected override void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
+        protected override void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            client.GetFlowGate().AddCheckWait(e.ByteBlock.Len);//此处假设接收的是ByteBlock数据。如果是自定义适配器，按需增量即可。
-            base.OnReceivedData(client, e);
+            client.GetFlowGate().AddCheckWait(e.ByteBlock.Len);
+            base.OnReceivingData(client, e);
         }
     }
 }
