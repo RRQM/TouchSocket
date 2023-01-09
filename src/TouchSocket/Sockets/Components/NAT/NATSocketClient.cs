@@ -19,18 +19,13 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 端口转发辅助
     /// </summary>
-    public class NATSocketClient : SocketClient
+    public class NATSocketClient : SocketClient, INATSocketClient
     {
         internal Action<NATSocketClient, ITcpClient, ClientDisconnectedEventArgs> m_internalDis;
         internal Func<NATSocketClient, ITcpClient, ByteBlock, IRequestInfo, byte[]> m_internalTargetClientRev;
         private readonly ConcurrentList<ITcpClient> m_targetClients = new ConcurrentList<ITcpClient>();
 
-        /// <summary>
-        /// 添加转发客户端。
-        /// </summary>
-        /// <param name="config">配置文件</param>
-        /// <param name="setupAction">当完成配置，但是还未连接时回调。</param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public ITcpClient AddTargetClient(TouchSocketConfig config, Action<ITcpClient> setupAction = default)
         {
             TcpClient tcpClient = new TcpClient();
@@ -44,12 +39,7 @@ namespace TouchSocket.Sockets
             return tcpClient;
         }
 
-        /// <summary>
-        /// 添加转发客户端。
-        /// </summary>
-        /// <param name="config">配置文件</param>
-        /// <param name="setupAction">当完成配置，但是还未连接时回调。</param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public Task<ITcpClient> AddTargetClientAsync(TouchSocketConfig config, Action<ITcpClient> setupAction = default)
         {
             return EasyTask.Run(() =>
@@ -58,21 +48,13 @@ namespace TouchSocket.Sockets
             });
         }
 
-        /// <summary>
-        /// 获取所有目标客户端
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public ITcpClient[] GetTargetClients()
         {
             return m_targetClients.ToArray();
         }
 
-        /// <summary>
-        /// 发送数据到全部转发端。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <inheritdoc/>
         public void SendToTargetClient(byte[] buffer, int offset, int length)
         {
             foreach (var socket in m_targetClients)
@@ -87,10 +69,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
         protected override void OnDisconnected(ClientDisconnectedEventArgs e)
         {
             foreach (var client in m_targetClients)

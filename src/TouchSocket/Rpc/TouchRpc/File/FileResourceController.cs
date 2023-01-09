@@ -25,6 +25,11 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class FileResourceController : IFileResourceController
     {
+        /// <summary>
+        /// 超时时间。默认60秒。
+        /// </summary>
+        public TimeSpan Timeout { get; set; }
+
         /// <inheritdoc/>
         public virtual void GetFileInfo<T>(string path, bool md5, ref T fileInfo) where T : RemoteFileInfo
         {

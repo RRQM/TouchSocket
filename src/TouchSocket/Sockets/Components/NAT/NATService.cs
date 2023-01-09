@@ -17,13 +17,13 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// TCP端口转发服务器
     /// </summary>
-    public class NATService : TcpService<NATSocketClient>
+    public class NATService<TNATSocketClient> : TcpService<TNATSocketClient> where TNATSocketClient : NATSocketClient
     {
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <returns></returns>
-        protected override NATSocketClient GetClientInstence()
+        protected override TNATSocketClient GetClientInstence()
         {
             var client = base.GetClientInstence();
             client.m_internalDis = OnTargetClientDisconnected;
@@ -38,7 +38,7 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
         /// <returns>需要转发的数据。</returns>
-        protected virtual byte[] OnNATReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected virtual byte[] OnNATReceived(TNATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             return byteBlock?.ToArray();
         }
@@ -49,7 +49,7 @@ namespace TouchSocket.Sockets
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void OnReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void OnReceived(TNATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var data = OnNATReceived(socketClient, byteBlock, requestInfo);
             if (data != null)
@@ -80,5 +80,13 @@ namespace TouchSocket.Sockets
         {
             return byteBlock?.ToArray();
         }
+    }
+
+    /// <summary>
+    /// TCP端口转发服务器
+    /// </summary>
+    public class NATService: NATService<NATSocketClient>
+    { 
+    
     }
 }

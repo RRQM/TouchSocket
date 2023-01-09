@@ -4,7 +4,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>D:\MyStore\13_Doc\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
-		<Version>1.0.0</Version>
+		<Version>1.0.1</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2022 若汝棋茗</Copyright>
@@ -14,7 +14,7 @@
 This is a lightweight, plug-in - enabled comprehensive network communication library. Basic communication functions include Tcp, Udp, Ssl, Rpc, and Http. HTTP server supports WebSocket, static web page, XmlRpc, WebApi, JsonRpc and other extension plug-ins. And custom protocol TouchRpc, support Ssl encryption, asynchronous call, permission management, error status return, service callback, distributed call, etc. It takes 3.8 seconds for 100,000 calls when the no-load function is executing, and 0.9 seconds when the state is not returned.
 
 API：https://www.yuque.com/rrqm/touchsocket/index</Description>
-		<PackageProjectUrl>https://gitee.com/dotnetchina/touchsocket</PackageProjectUrl>
+		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<PackageIcon>logo.png</PackageIcon>
 		<Authors>若汝棋茗</Authors>

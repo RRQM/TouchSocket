@@ -23,6 +23,12 @@ namespace TouchSocket.Sockets
     /// <typeparam name="TClient"></typeparam>
     public class TcpClientFactory<TClient> : ClientFactory<TClient> where TClient : ITcpClient, new()
     {
+        private readonly TClient m_mainClient = new TClient();
+
+        private readonly SingleTimer m_singleTimer;
+
+        private bool first = true;
+
         /// <summary>
         /// 适用于Tcp客户端的连接工厂。
         /// </summary>
@@ -50,7 +56,7 @@ namespace TouchSocket.Sockets
                     {
                         try
                         {
-                            this.CreateClient(false);
+                            this.CreateTransferClient();
                         }
                         catch
                         {
@@ -59,9 +65,6 @@ namespace TouchSocket.Sockets
                 }
             });
         }
-
-        private readonly SingleTimer m_singleTimer;
-        private TClient m_mainClient = new TClient();
 
         /// <summary>
         /// 连接超时设定
@@ -72,11 +75,6 @@ namespace TouchSocket.Sockets
         public override TClient MainClient { get => m_mainClient; }
 
         /// <summary>
-        /// 获取主客户端配置
-        /// </summary>
-        public Func<TouchSocketConfig> OnGetMainConfig { get; set; }
-
-        /// <summary>
         /// 获取传输的客户端配置
         /// </summary>
         public Func<TouchSocketConfig> OnGetTransferConfig { get; set; }
@@ -84,24 +82,40 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public override Result CheckStatus(bool tryInit = true)
         {
-            try
+            lock (this.m_singleTimer)
             {
-                if (!IsAlive(m_mainClient))
+                try
                 {
-                    if (!tryInit)
+                    if (!IsAlive(m_mainClient))
                     {
-                        return Result.UnknownFail;
+                        if (!tryInit)
+                        {
+                            return Result.UnknownFail;
+                        }
+                        if (first)
+                        {
+                            OnMainClientSetuping();
+                            MainClient.Setup(this.MainConfig);
+                            first = false;
+                        }
+                        MainClient.Close();
+                        MainClient.Connect((int)this.ConnectTimeout.TotalMilliseconds);
                     }
-                    MainClient.Setup(this.GetMainConfig());
-                    MainClient.Close();
-                    MainClient.Connect((int)this.ConnectTimeout.TotalMilliseconds);
+                    return Result.Success;
                 }
-                return Result.Success;
+                catch (Exception ex)
+                {
+                    return new Result(ex);
+                }
             }
-            catch (Exception ex)
-            {
-                return new Result(ex);
-            }
+        }
+
+        /// <summary>
+        /// 在主客户端加载配置之前
+        /// </summary>
+        protected virtual void OnMainClientSetuping()
+        { 
+        
         }
 
         /// <inheritdoc/>
@@ -110,16 +124,6 @@ namespace TouchSocket.Sockets
             client.TryShutdown();
             client.SafeDispose();
             this.CreatedClients.Remove(client);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            this.m_singleTimer.SafeDispose();
-            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -186,7 +190,7 @@ namespace TouchSocket.Sockets
                 }
             }
 
-            var clientRes = CreateClient(false);
+            var clientRes = CreateTransferClient();
             return clientRes;
         }
 
@@ -225,10 +229,14 @@ namespace TouchSocket.Sockets
             }
         }
 
+        /// <summary>
         /// <inheritdoc/>
-        protected override TouchSocketConfig GetMainConfig()
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
-            return OnGetMainConfig?.Invoke();
+            this.m_singleTimer.SafeDispose();
+            base.Dispose(disposing);
         }
 
         /// <inheritdoc/>
@@ -237,15 +245,12 @@ namespace TouchSocket.Sockets
             return OnGetTransferConfig?.Invoke();
         }
 
-        private TClient CreateClient(bool main)
+        private TClient CreateTransferClient()
         {
             TClient client = new TClient();
-            client.Setup(main ? this.GetMainConfig() : this.GetTransferConfig());
+            client.Setup(this.GetTransferConfig());
             client.Connect((int)ConnectTimeout.TotalMilliseconds);
-            if (!main)
-            {
-                this.CreatedClients.Add(client);
-            }
+            this.CreatedClients.Add(client);
             return client;
         }
 

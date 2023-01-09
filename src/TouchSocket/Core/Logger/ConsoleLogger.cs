@@ -19,6 +19,14 @@ namespace TouchSocket.Core
     /// </summary>
     public class ConsoleLogger : LoggerBase
     {
+        static ConsoleLogger()
+        {
+            Default = new ConsoleLogger();
+        }
+        private readonly ConsoleColor m_consoleBackgroundColor;
+
+        private readonly ConsoleColor m_consoleForegroundColor;
+
         /// <summary>
         /// 初始化一个日志记录器
         /// </summary>
@@ -28,8 +36,10 @@ namespace TouchSocket.Core
             m_consoleBackgroundColor = Console.BackgroundColor;
         }
 
-        private readonly ConsoleColor m_consoleForegroundColor;
-        private readonly ConsoleColor m_consoleBackgroundColor;
+        /// <summary>
+        /// 默认的实例
+        /// </summary>
+        public static ConsoleLogger Default { get; }
 
         /// <summary>
         /// <inheritdoc/>
