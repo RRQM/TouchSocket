@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfurion=self.webpackChunkfurion||[]).push([[197],{4740:e=>{e.exports=JSON.parse('{"label":".net5","permalink":"/touchsocket/blog/tags/net-5","allTagsPath":"/touchsocket/blog/tags","count":7}')}}]);
