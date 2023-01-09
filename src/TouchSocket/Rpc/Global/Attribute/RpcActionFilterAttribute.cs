@@ -21,64 +21,35 @@ namespace TouchSocket.Rpc
     /// </summary>
     public abstract class RpcActionFilterAttribute : Attribute, IRpcActionFilter
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="invokeResult"></param>
-        public virtual void Executed(ICallContext callContext, ref InvokeResult invokeResult)
+        public virtual void Executed(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
         {
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="invokeResult"></param>
-        /// <returns></returns>
-        public virtual Task ExecutedAsync(ICallContext callContext, ref InvokeResult invokeResult)
+        public virtual Task ExecutedAsync(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
         {
             return EasyTask.CompletedTask;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="invokeResult"></param>
-        /// <param name="exception"></param>
-        public virtual void ExecutException(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
+        public virtual void ExecutException(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult, Exception exception)
         {
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="invokeResult"></param>
-        /// <param name="exception"></param>
-        /// <returns></returns>
-        public virtual Task ExecutExceptionAsync(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
+        public virtual Task ExecutExceptionAsync(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult, Exception exception)
         {
             return EasyTask.CompletedTask;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="invokeResult"></param>
-        public virtual void Executing(ICallContext callContext, ref InvokeResult invokeResult)
+        public virtual void Executing(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
         {
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="invokeResult"></param>
-        /// <returns></returns>
-        public virtual Task ExecutingAsync(ICallContext callContext, ref InvokeResult invokeResult)
+        public virtual Task ExecutingAsync(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
         {
             return EasyTask.CompletedTask;
         }

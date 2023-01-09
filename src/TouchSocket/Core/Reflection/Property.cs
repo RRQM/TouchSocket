@@ -20,27 +20,22 @@ namespace TouchSocket.Core
     /// <summary>
     /// 表示属性
     /// </summary>
-    public class Property
+    public class Property: Member
     {
+        /// <summary>
+        /// 类型属性的Setter缓存
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, Property[]> m_cached = new ConcurrentDictionary<Type, Property[]>();
+
         /// <summary>
         /// 获取器
         /// </summary>
-        private readonly PropertyGetter m_geter;
+        private readonly MemberGetter m_geter;
 
         /// <summary>
         /// 设置器
         /// </summary>
-        private readonly PropertySetter m_seter;
-
-        /// <summary>
-        /// 获取属性名称
-        /// </summary>
-        public string Name { get; protected set; }
-
-        /// <summary>
-        /// 获取属性信息
-        /// </summary>
-        public PropertyInfo Info { get; private set; }
+        private readonly MemberSetter m_seter;
 
         /// <summary>
         /// 属性
@@ -54,12 +49,12 @@ namespace TouchSocket.Core
             if (property.CanRead == true)
             {
                 CanRead = true;
-                m_geter = new PropertyGetter(property);
+                m_geter = new MemberGetter(property);
             }
             if (property.CanWrite == true)
             {
                 CanWrite = true;
-                m_seter = new PropertySetter(property);
+                m_seter = new MemberSetter(property);
             }
         }
 
@@ -72,6 +67,26 @@ namespace TouchSocket.Core
         /// 是否可以写入
         /// </summary>
         public bool CanWrite { get; private set; }
+
+        /// <summary>
+        /// 获取属性信息
+        /// </summary>
+        public PropertyInfo Info { get; private set; }
+
+        /// <summary>
+        /// 获取属性名称
+        /// </summary>
+        public string Name { get; protected set; }
+
+        /// <summary>
+        /// 从类型的属性获取属性
+        /// </summary>
+        /// <param name="type">类型</param>
+        /// <returns></returns>
+        public static Property[] GetProperties(Type type)
+        {
+            return m_cached.GetOrAdd(type, t => t.GetProperties().Select(p => new Property(p)).ToArray());
+        }
 
         /// <summary>
         /// 获取属性的值
@@ -101,21 +116,6 @@ namespace TouchSocket.Core
                 throw new NotSupportedException($"{Name}不允许赋值");
             }
             m_seter.Invoke(instance, value);
-        }
-
-        /// <summary>
-        /// 类型属性的Setter缓存
-        /// </summary>
-        private static readonly ConcurrentDictionary<Type, Property[]> cached = new ConcurrentDictionary<Type, Property[]>();
-
-        /// <summary>
-        /// 从类型的属性获取属性
-        /// </summary>
-        /// <param name="type">类型</param>
-        /// <returns></returns>
-        public static Property[] GetProperties(Type type)
-        {
-            return cached.GetOrAdd(type, t => t.GetProperties().Select(p => new Property(p)).ToArray());
         }
     }
 }

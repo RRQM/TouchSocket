@@ -19,41 +19,30 @@ namespace TouchSocket.Core
     /// <summary>
     /// 表示属性的Getter
     /// </summary>
-    public class PropertyGetter
+    public class MemberGetter
     {
         /// <summary>
         /// get方法委托
         /// </summary>
-        private readonly Func<object, object> getFunc;
+        private readonly Func<object, object> m_getFunc;
 
         /// <summary>
         /// 表示属性的Getter
         /// </summary>
         /// <param name="property">属性</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public PropertyGetter(PropertyInfo property)
-           : this(property?.DeclaringType, property?.Name)
+        public MemberGetter(PropertyInfo property)
         {
+            m_getFunc = CreateGetterDelegate(property);
         }
 
         /// <summary>
         /// 表示类型字段或属性的Getter
         /// </summary>
-        /// <param name="declaringType">声名属性的类型</param>
-        /// <param name="propertyName">属性的名称</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public PropertyGetter(Type declaringType, string propertyName)
+        public MemberGetter(FieldInfo fieldInfo)
         {
-            if (declaringType == null)
-            {
-                throw new ArgumentNullException(nameof(declaringType));
-            }
-
-            if (propertyName == null)
-            {
-                throw new ArgumentNullException(nameof(propertyName));
-            }
-            getFunc = CreateGetterDelegate(declaringType, propertyName);
+            m_getFunc = CreateGetterDelegate(fieldInfo);
         }
 
         /// <summary>
@@ -63,21 +52,25 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public object Invoke(object instance)
         {
-            return getFunc.Invoke(instance);
+            return m_getFunc.Invoke(instance);
         }
 
-        /// <summary>
-        /// 创建declaringType类型获取property值的委托
-        /// </summary>
-        /// <param name="declaringType">实例的类型</param>
-        /// <param name="propertyName">属性的名称</param>
-        /// <returns></returns>
-        private static Func<object, object> CreateGetterDelegate(Type declaringType, string propertyName)
+        private static Func<object, object> CreateGetterDelegate(PropertyInfo property)
         {
             var param_instance = Expression.Parameter(typeof(object));
-            var body_instance = Expression.Convert(param_instance, declaringType);
-            var body_property = Expression.Property(body_instance, propertyName);
+            var body_instance = Expression.Convert(param_instance, property.DeclaringType);
+            var body_property = Expression.Property(body_instance, property);
             var body_return = Expression.Convert(body_property, typeof(object));
+
+            return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
+        }
+
+        private static Func<object, object> CreateGetterDelegate(FieldInfo fieldInfo)
+        {
+            var param_instance = Expression.Parameter(typeof(object));
+            var body_instance = Expression.Convert(param_instance, fieldInfo.DeclaringType);
+            var body_field = Expression.Field(body_instance, fieldInfo);
+            var body_return = Expression.Convert(body_field, typeof(object));
 
             return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
         }

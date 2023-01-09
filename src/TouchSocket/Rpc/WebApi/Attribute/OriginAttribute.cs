@@ -41,8 +41,9 @@ namespace TouchSocket.Rpc.WebApi
         /// <inheritdoc/>
         /// </summary>
         /// <param name="callContext"></param>
+        /// <param name="parameters"></param>
         /// <param name="invokeResult"></param>
-        public override void Executed(ICallContext callContext, ref InvokeResult invokeResult)
+        public override void Executed(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
         {
             if (callContext is IHttpCallContext httpCallContext && httpCallContext.HttpContext != default)
             {
@@ -50,7 +51,7 @@ namespace TouchSocket.Rpc.WebApi
                 httpCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Methods", AllowMethods);
                 httpCallContext.HttpContext.Response.SetHeader("Access-Control-Allow-Credentials", AllowCredentials.ToString().ToLower());
             }
-            base.Executed(callContext, ref invokeResult);
+            base.Executed(callContext,parameters, ref invokeResult);
         }
     }
 }

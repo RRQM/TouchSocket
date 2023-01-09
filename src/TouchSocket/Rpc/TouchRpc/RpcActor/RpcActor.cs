@@ -667,9 +667,6 @@ namespace TouchSocket.Rpc.TouchRpc
 
                 #endregion 200-299
 
-                #region 300-399
-                #endregion 300-399
-
                 #region 400-499
 
                 case TouchRpcUtility.P_400_SendStreamToSocketClient_Request://StreamStatusToThis

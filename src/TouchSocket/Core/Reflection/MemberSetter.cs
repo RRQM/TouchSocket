@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 表示属性的设置器
     /// </summary>
-    public class PropertySetter
+    public class MemberSetter
     {
         /// <summary>
         /// set方法委托
@@ -31,7 +31,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="property">属性</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public PropertySetter(PropertyInfo property)
+        public MemberSetter(PropertyInfo property)
         {
             if (property == null)
             {
@@ -51,11 +51,6 @@ namespace TouchSocket.Core
             setFunc.Invoke(instance, value);
         }
 
-        /// <summary>
-        /// 创建属性的Set委托
-        /// </summary>
-        /// <param name="property">属性</param>
-        /// <returns></returns>
         private static Action<object, object> CreateSetterDelegate(PropertyInfo property)
         {
             var param_instance = Expression.Parameter(typeof(object));

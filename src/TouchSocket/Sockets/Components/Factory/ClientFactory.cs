@@ -22,6 +22,14 @@ namespace TouchSocket.Sockets
     public abstract class ClientFactory<TClient> : DisposableObject where TClient : IClient
     {
         /// <summary>
+        /// Client工厂
+        /// </summary>
+        public ClientFactory()
+        {
+            this.MainConfig = new TouchSocketConfig();
+        }
+
+        /// <summary>
         /// 已创建的客户端安全列表，一般不要直接操作。
         /// </summary>
         public ConcurrentList<TClient> CreatedClients { get; } = new ConcurrentList<TClient>();
@@ -35,6 +43,12 @@ namespace TouchSocket.Sockets
         /// 主通信客户端。
         /// </summary>
         public abstract TClient MainClient { get; }
+
+        /// <summary>
+        /// 主客户端配置
+        /// </summary>
+        /// <returns></returns>
+        public virtual TouchSocketConfig MainConfig { get; }
 
         /// <summary>
         /// 最大客户端数量。默认10。
@@ -107,12 +121,6 @@ namespace TouchSocket.Sockets
             DisposeClient(MainClient);
             this.Clear();
         }
-
-        /// <summary>
-        /// 获取主配置
-        /// </summary>
-        /// <returns></returns>
-        protected abstract TouchSocketConfig GetMainConfig();
 
         /// <summary>
         /// 获取用于传输的客户端配置

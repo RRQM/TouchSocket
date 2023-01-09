@@ -26,7 +26,7 @@ namespace TouchSocket.Sockets
     /// 服务器辅助类
     /// </summary>
     [DebuggerDisplay("ID={ID},IPAdress={IP}:{Port}")]
-    public class SocketClient : BaseSocket, ISocketClient, IPluginObject
+    public class SocketClient : BaseSocket, ISocketClient
     {
         /// <summary>
         /// 构造函数

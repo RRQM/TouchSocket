@@ -185,7 +185,7 @@ namespace TouchSocket.Core
         /// <param name="stream"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static void FastBinarySerialize(ByteBlock stream, object obj)
+        public static void FastBinarySerialize<T>(ByteBlock stream, T obj)
         {
             FastBinaryFormatter.Serialize(stream, obj);
         }
@@ -195,7 +195,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static byte[] FastBinarySerialize(object obj)
+        public static byte[] FastBinarySerialize<T>(T obj)
         {
             using (ByteBlock byteBlock = new ByteBlock())
             {
