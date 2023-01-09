@@ -154,7 +154,7 @@ namespace TouchRpcServerApp
 
     public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
     {
-        public override void Executing(ICallContext callContext, ref InvokeResult invokeResult)
+        public override void Executing(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
         {
             //invokeResult = new InvokeResult()
             //{
@@ -166,26 +166,26 @@ namespace TouchRpcServerApp
             {
                 client.Logger.Info($"即将执行RPC-{callContext.MethodInstance.Name}");
             }
-            base.Executing(callContext, ref invokeResult);
+            base.Executing(callContext, parameters, ref invokeResult);
         }
 
-        public override void Executed(ICallContext callContext, ref InvokeResult invokeResult)
+        public override void Executed(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
         {
             if (callContext.Caller is TcpTouchRpcSocketClient client)
             {
                 client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
             }
-            base.Executed(callContext, ref invokeResult);
+            base.Executed(callContext, parameters, ref invokeResult);
         }
 
-        public override void ExecutException(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
+        public override void ExecutException(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult, Exception exception)
         {
             if (callContext.Caller is TcpTouchRpcSocketClient client)
             {
                 client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
             }
 
-            base.ExecutException(callContext, ref invokeResult, exception);
+            base.ExecutException(callContext, parameters, ref invokeResult, exception);
         }
     }
 
