@@ -393,12 +393,6 @@ namespace FileClientGUI
             {
                 MinCount = 5,
                 MaxCount = 10,
-                OnGetMainConfig = () =>//配置主通信
-                {
-                    return new TouchSocketConfig()
-                    .SetRemoteIPHost("tcp://127.0.0.1:7789")
-                    .SetVerifyToken("FileService");
-                },
                 OnGetTransferConfig = () => //配置辅助通信
                 {
                     return new TouchSocketConfig()
@@ -416,6 +410,8 @@ namespace FileClientGUI
                 }
             };
 
+            clientFactory.MainConfig.SetRemoteIPHost("tcp://127.0.0.1:7789")//配置主通信
+                    .SetVerifyToken("FileService");
             return clientFactory;
         }
     }

@@ -7,6 +7,6 @@
     <Compile Include="..\TouchRpcWebApplication\RpcProxy.cs" Link="RpcProxy.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="TouchSocket.AspNetCore" Version="1.0.0-beta" />
+    <PackageReference Include="TouchSocket.AspNetCore" Version="1.0.0" />
   </ItemGroup>
 </Project>
