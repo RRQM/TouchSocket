@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktouchsocket=self.webpackChunktouchsocket||[]).push([[1928],{7482:e=>{e.exports=JSON.parse('{"label":".netcore","permalink":"/touchsocket/blog/tags/netcore","allTagsPath":"/touchsocket/blog/tags","count":7}')}}]);
