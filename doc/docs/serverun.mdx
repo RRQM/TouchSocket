@@ -1,0 +1,644 @@
+---
+id: serverun
+title: 2.0 入门指南
+sidebar_label: 2.0 入门指南
+---
+
+import useBaseUrl from "@docusaurus/useBaseUrl";
+
+:::important 版本说明
+
+以下内容仅限 `Furion 3.6.3 +` 版本使用。
+
+:::
+
+:::tip 推荐使用脚手架
+
+`Furion` 官方提供了非常灵活方便的脚手架，可以快速的创建多层架构项目。
+
+推荐使用 《[2.2 官方脚手架](template.mdx)》代替本章节功能。
+
+:::
+
+## 2.0.1 历史背景
+
+相信从 `ASP.NET 5` 升级至 `ASP.NET 6` 的开发者都经历过这样变更：
+
+- 在 `ASP.NET 5` 中，我们这样创建 `Web 主机`：
+
+```cs showLineNumbers {1} title="Program.cs"
+Host.CreateDefaultBuilder(args)
+    .ConfigureWebHostDefaults(webBuilder =>
+    {
+        webBuilder.UseStartup<Startup>();
+    });
+```
+
+- 在 `ASP.NET 6` 中， 我们这样创建 `Web 主机`：
+
+```cs showLineNumbers {1} title="Program.cs"
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+```
+
+试问，`ASP.NET 7`，`ASP.NET 8` ... `ASP.NET N` 呢？会不会每一个版本都有不同的创建方式，那后续项目如何无缝升级？
+
+**所以，为了保证一致的代码体验和后续无缝升级，创造出了 `Serve.Run()`，即使未来创建方式变了，也不用担心，交给框架即可。**
+
+## 2.0.2 创建 `控制台` 项目
+
+- 打开 `Visual Studio 2022` 并创建 `控制台` 项目
+
+<img src={useBaseUrl("img/01.png")} />
+
+- 配置项目名称
+
+<img src={useBaseUrl("img/02.png")} />
+
+- 选择 `.NET6`
+
+<img src={useBaseUrl("img/03.png")} />
+
+:::tip 使用命令行方式
+
+```bash showLineNumbers
+// 创建控制台项目
+dotnet new console -n HelloFurion
+```
+
+:::
+
+## 2.0.3 添加 `Furion` 依赖包
+
+<img src={useBaseUrl("img/04.png")} />
+
+:::tip 使用命令行方式
+
+```bash showLineNumbers
+// 进入创建的目录
+cd HelloFurion
+// 添加包
+dotnet add package Furion
+```
+
+:::
+
+## 2.0.4 一句话搞定
+
+修改 `Program.cs` 代码为：
+
+```cs showLineNumbers title="Program.cs"
+Serve.Run();
+```
+
+对，你没看错，`Furion` 已经配置好了！
+
+:::tip 功能说明
+
+`Serve.Run()` 已经包含了基本的 `WebAPI` 功能，包含动态 `WebAPI`，`跨域` 等等，如需完全自定义配置可使用 `Serve.Run(RunOptions.Default)`，之后 `AppStartup` 派生类自行配置。
+
+:::
+
+## 2.0.5 启动浏览器
+
+启动浏览器查看效果
+
+<img src={useBaseUrl("img/05.png")} />
+
+<img src={useBaseUrl("img/06.png")} />
+
+是不是超级超级简单！！！
+
+## 2.0.6 编写第一个 `API`
+
+```cs showLineNumbers title="Program.cs" {3,6}
+Serve.Run();
+
+[DynamicApiController]
+public class HelloService
+{
+    public string Say()
+    {
+        return "Hello, Furion";
+    }
+}
+```
+
+启动浏览器查看效果
+
+<img src={useBaseUrl("img/07.png")} />
+
+## 2.0.7 `Serve.Run()` 更多配置
+
+### 2.0.7.1 配置默认端口
+
+默认情况下，创建的 `Web` 主机端口为 `5000/5001` 端口，如需自定义配置，可通过第一个参数配置：
+
+```cs showLineNumbers
+Serve.Run("https://localhost:8080");
+```
+
+同时也支持 `dotnet run` 和 `dotnet watch run` 指定：
+
+```bash showLineNumbers
+dotnet run --urls https://localhost:8080
+
+# watch 方式
+dotnet watch run --urls https://localhost:8080
+```
+
+也可以通过 `ConfigureBuilder` 方式配置：
+
+```cs showLineNumbers {}
+Serve.Run(RunOptions.Default.ConfigureBuilder(builder =>
+{
+    builder.WebHost.UseUrls("https://localhost:8080");  // 也可以通过 builder.Configuration 读取 urls 配置
+}));
+```
+
+:::important 关于 `localhost` 和多端口
+
+建议使用 `*` 代替 `localhost`，这样可以自适应主机地址，多个端口使用 `;` 分割，结尾无需 `;`
+
+:::
+
+:::tip 通过 `json` 方式配置
+
+如需通过配置文件配置端口，需两个该步骤：
+
+1. 编辑控制台启动项目 `.csproj` 文件，修改 `Project` 节点为：
+
+```xml showLineNumbers
+<Project Sdk="Microsoft.NET.Sdk.Web">
+```
+
+也就是在原来的 `Sdk` 中添加 `.Web` 即可。
+
+2. 在控制台启动项目中添加 `Properties` 文件夹并在此文件夹中创建 `launchSettings.json` 文件，同时写入以下内容：
+
+```json showLineNumbers {4,8} title="launchSettings.json"
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "启动项目名称": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "",
+      "applicationUrl": "https://localhost:8080;http://localhost:8081",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+```
+
+除了 `launchsettings.json` 的方式，还可以在 `appsettings.json` 简单配置
+
+---
+
+```json showLineNumbers {2} title="appsettings.json"
+{
+  "Urls": "http://localhost:8081"
+}
+```
+
+:::
+
+### 2.0.7.2 便捷服务注册
+
+:::important 版本说明
+
+以下内容仅限 `Furion 4.8.0 +` 版本使用。
+
+:::
+
+```cs showLineNumbers {1,7,13,19}
+Serve.Run(additional: services =>
+{
+    services.AddRemoteRequest();
+});
+
+// 通用泛型主机方式
+Serve.RunGeneric(additional: services =>
+{
+    services.AddRemoteRequest();
+});
+
+// 还可以省去 additional
+Serve.Run(services =>
+{
+    services.AddRemoteRequest();
+});
+
+// 通用泛型主机方式
+Serve.RunGeneric(services =>
+{
+    services.AddRemoteRequest();
+});
+```
+
+### 2.0.7.3 自定义配置
+
+传入 `RunOptions` 对象相当于自由定义和控制，也就是除了默认集成了 `Furion` 以外，没有注册任何功能。
+
+- 仅集成 `Furion` 的默认配置
+
+```cs showLineNumbers
+Serve.Run(RunOptions.Default);
+```
+
+- 配置更多服务/中间件
+
+```cs showLineNumbers {1,2,7}
+Serve.Run(RunOptions.Default
+    .ConfigureBuilder(builder =>
+    {
+        builder.Services.AddControllers()
+                        .AddInject();
+    })
+    .Configure(app =>
+    {
+        app.UseRouting();
+        app.UseInject(string.Empty);
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
+    }));
+```
+
+- `WebComponent` 方式
+
+:::important 版本说明
+
+以下内容仅限 `Furion 4.3.5 +` 版本使用。
+
+:::
+
+```cs showLineNumbers {2,4,6}
+Serve.Run(RunOptions.Default
+     .AddWebComponent<XXXWebComponent>());
+
+public class XXXWebComponent : IWebComponent
+{
+    public void Load(WebApplicationBuilder builder, ComponentContext componentContext)
+    {
+        // ....
+    }
+}
+```
+
+### 2.0.7.4 `Serve.Run` 和 `Startup` 最佳组合
+
+默认情况下 `Serve.Run()` 内置了 `跨域`，`控制器`，`路由`，`规范化结果`、`静态文件` 服务/中间件。适合快速开始项目和编写测试代码。
+
+**但不能对这些已注册服务/中间件进行自定义配置**，这时只需要配置 `RunOptions` 属性/方法即可，如：
+
+```cs showLineNumbers title="Program.cs"
+Serve.Run(RunOptions.Default
+    .ConfigureBuilder(...)
+    .Configure(..));
+```
+
+**但把所有服务/中间件都放在 `Program.cs` 中好吗？**答案是不好的，因为会导致后续迁移代码维护代码造成了一些困扰。
+
+所以 `Furion` 推荐下面更加灵活且易维护的方式，`Program.cs` 只需一句话即可：
+
+:::tip 推荐使用组件启动
+
+`Furion 3.7.3+` 官方提供了非常灵活方便的组件化启动配置服务。
+
+推荐使用 《[3.1 组件化启动](./component)》代替 `AppStartup` 方式功能。
+
+:::
+
+```cs showLineNumbers title="Program.cs"
+Serve.Run(RunOptions.Default);
+```
+
+然后添加自定义 `Startup.cs` 文件，代码如下：
+
+```cs showLineNumbers {8,10,15} title="Startup.cs"
+using Furion;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace HelloFurion;
+
+public class Startup : AppStartup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // ....
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        // ....
+    }
+}
+```
+
+:::tip 小提示
+
+正常情况下，自定义 `Startup.cs` 文件应该放在独立的 `YourProject.Web.Core` 层或其他层。
+
+:::
+
+### 2.0.7.5 更多配置
+
+如配置 `WebHost`...
+
+```cs showLineNumbers
+Serve.Run(RunOptions.Default
+    .ConfigureBuilder(builder => {
+        builder.WebHost.....
+    }));
+```
+
+## 2.0.8 支持 `Furion` 所有功能
+
+`Serve.Run()` 看似非常简单，实则非常灵活，而且支持 `Furion` 和 `.NET` 所有功能。
+
+### 2.0.8.1 添加 `appsettings.json`
+
+创建 `appsettings.json` 文件，并设置 `属性` 为 `如果较新则复制` 和 `内容`（生成操作）
+
+```json showLineNumbers
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information",
+      "Microsoft.EntityFrameworkCore": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+```
+
+在代码中读取配置：
+
+```cs showLineNumbers {10}
+using Furion;
+
+Serve.Run();
+
+[DynamicApiController]
+public class HelloService
+{
+    public string Say()
+    {
+        return "Hello, Furion " + App.Configuration["Logging:LogLevel:Default"];
+    }
+}
+```
+
+<img src={useBaseUrl("img/08.png")} />
+
+### 2.0.8.2 添加自定义 `Startup`
+
+在 `Furion` 中可以派生自 `AppStartup` 可以实现更多配置，如：
+
+```cs showLineNumbers title="Program.cs"
+Serve.Run();
+```
+
+:::important 特别注意
+
+如果您想自己配置 `Web` 项目服务，可通过 `Serve.Run(RunOptions.Default);` 方式，因为 `Serve.Run()` 已经包含了常用的 `Web` 可能会提示重复注册错误。
+
+:::
+
+```cs showLineNumbers {8,10,12,15,17} title="MyStartup.cs"
+using Furion;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace HelloFurion;
+
+public class MyStartup : AppStartup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        Console.WriteLine("调用服务注册啦~~");
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        Console.WriteLine("调用中间件注册啦");
+    }
+}
+```
+
+<img src={useBaseUrl("img/09.png")} />
+
+### 2.0.8.3 将控制台项目变成 `Web` 项目
+
+只需要编辑 `.csproj` 文件，将第一行 `Project` 节点的 `Sdk`
+
+```xml showLineNumbers
+<Project Sdk="Microsoft.NET.Sdk">
+```
+
+修改为：
+
+```xml showLineNumbers
+<Project Sdk="Microsoft.NET.Sdk.Web">
+```
+
+即可完成转换，实际上只是追加了 `.Web`。
+
+### 2.0.8.4 添加 `args` 启动参数
+
+:::important 版本说明
+
+以下内容仅限 `Furion 4.2.4 +` 版本使用。
+
+:::
+
+```cs showLineNumbers {1,3,5}
+Serve.Run(args: args);
+
+Serve.Run(RunOptions.Default.WithArgs(args));
+
+Serve.Run(RunOptions.Main(args));
+```
+
+### 2.0.8.5 还没看够？
+
+是不是非常强大啊，`Serve.Run()` 虽然简单，但是 100% 支持 `Furion` 和 `.NET` 所有功能。尽情去体验吧！
+
+## 2.0.9 `RunOptions`，`LegacyRunOptions` 和 `GenericRunOptions`
+
+`Serve.Run` 提供了 `RunOptions`，`LegacyRunOptions` 和 `GenericRunOptions` 重载参数类型，他们的主要区别：
+
+- `RunOptions`：使用的是 `WebApplication` 方式，**创建 `Web` 主机优先推荐方式**
+- `LegacyRunOptions`：使用的是 `Host` 方式，但默认配置了 `Web` 主机
+- `GenericRunOptions`：使用的是 `Host` 方式，通用类型主机，可用于 `WorkerService`
+
+`LegacyRunOptions` 配置例子：
+
+```cs showLineNumbers {5-6,15-16}
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+
+Serve.Run(LegacyRunOptions.Default
+    // 配置 Web 主机
+    .ConfigureWebDefaults(builder => builder.ConfigureServices(services =>
+        {
+            // ...
+        })
+        .Configure(app =>
+        {
+            // ...
+        });
+    })
+    // 配置 Host 主机
+    .ConfigureBuilder(builder => builder....));
+```
+
+`GenericRunOptions` 配置例子：
+
+```cs showLineNumbers {2-3}
+Serve.Run(GenericRunOptions.Default
+    // 配置 Host 主机
+    .ConfigureBuilder(hostBuilder => hostBuilder....);
+```
+
+更多发布命令说明可查阅微软官方文档 [https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-publish)
+
+## 2.0.10 在 `Winform/WPF` 桌面中使用
+
+在 `Winform` 或 `WPF` 中使用，请确保 `Serve.Run()` 在桌面应用程序之前初始化：
+
+- **Winform**
+
+```cs showLineNumbers {3,9}
+namespace WinFormsApp2;
+
+internal static class Program
+{
+    [STAThread]
+    static void Main()
+    {
+        // 如果在 4.8.0 之前版本无返回值
+        var host = Serve.Run(silence: true);   // 静默启动
+
+        ApplicationConfiguration.Initialize();
+        Application.Run(new Form1());
+    }
+}
+```
+
+- **WPF**
+
+```cs showLineNumbers {79,12,15-22}
+using Microsoft.Extensions.Hosting;
+
+namespace WpfApp1;
+
+public partial class App : Application
+{
+    private readonly IHost _host;
+
+    public App()
+    {
+        // 如果在 4.8.0 之前版本无返回值
+        _host = Serve.Run(silence: true);
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        // 停止服务并释放
+        _host.StopAsync();
+        _host.Dispose();
+
+        base.OnExit(e);
+    }
+}
+```
+
+### 2.0.10.1 添加更多服务
+
+如果想注册服务，可创建 `YourStartup` 派生自 `AppStartup` 即可，如：
+
+```cs showLineNumbers {6,8,10} title="YourStartup.cs"
+using Furion;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace YourProject;
+
+public class YourStartup : AppStartup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddRemoteRequest();
+    }
+}
+```
+
+## 2.0.11 静默启动
+
+默认情况下，`Serve.Run()` 使用阻塞线程方式启动，但有些时候我们不希望阻塞现有的代码，可使用**静默启动**的方式：
+
+```cs showLineNumbers {1}
+Serve.Run(silence: true);
+
+Console.WriteLine("Hello, World!");
+Console.ReadKey();
+```
+
+也可以通过 `RunOptions`，`LegacyRunOptions` 或 `GenericRunOptions` 方式，如：
+
+```cs showLineNumbers {2,5,8}
+// RunOptions 方式
+Serve.Run(RunOptions.DefaultSilence);
+
+// LegacyRunOptions 方式
+Serve.Run(LegacyRunOptions.DefaultSilence);
+
+// GenericRunOptions 方式
+Serve.Run(GenericRunOptions.DefaultSilence);
+```
+
+## 2.0.12 `.NET5` 模式找不到 `Views` 视图路径
+
+由于 `.NET5` 必须在使用 `.UseStartup<>` 配置启动项，所以 `Serve.Run()` 模式会提示找不到 `Views` 视图路径，这时候只需要在启动目录创建 `Startup.cs` 文件并通过泛型方式指定即可，如：
+
+```cs showLineNumbers title="Startup.cs"
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace YourProject.Web.Entity
+{
+    public class Startup
+    {
+        public void ConfigureServices(IServiceCollection _)
+        {
+        }
+
+        public void Configure(IApplicationBuilder _)
+        {
+        }
+    }
+}
+```
+
+将 `Startup` 类通过 `Serve.Run` 泛型指定：
+
+```cs showLineNumbers
+Serve.Run<Startup>(LegacyRunOptions.Default);
+```
+
+## 2.0.13 反馈与建议
+
+:::note 与我们交流
+
+给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+
+:::
