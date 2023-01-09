@@ -32,6 +32,7 @@ namespace UdpDemoApp
 
             m_udpSession.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(this.textBox2.Text))
+                 .UseBroadcast()
                  .SetUdpDataHandlingAdapter(() =>
                  {
                      if (checkBox1.Checked)

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktouchsocket=self.webpackChunktouchsocket||[]).push([[2399],{1574:t=>{t.exports=JSON.parse('{"permalink":"/touchsocket/blog/tags/net-6","page":1,"postsPerPage":10,"totalPages":1,"totalCount":5,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);
