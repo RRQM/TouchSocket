@@ -1,0 +1,1 @@
+import{_ as e,p as _,q as t,R as c}from"./framework-96b046e1.js";const o={},s=c("p",null,"我是软件资源",-1),n=[s];function r(a,l){return _(),t("div",null,n)}const f=e(o,[["render",r],["__file","软件资源.html.vue"]]);export{f as default};
