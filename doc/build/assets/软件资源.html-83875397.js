@@ -1,0 +1,1 @@
+const t=JSON.parse('{"key":"v-1c5c3483","path":"/%E8%BD%AF%E4%BB%B6%E8%B5%84%E6%BA%90/%E8%BD%AF%E4%BB%B6%E8%B5%84%E6%BA%90.html","title":"","lang":"zh-CN","frontmatter":{},"headers":[],"git":{"updatedTime":null,"contributors":[]},"filePathRelative":"软件资源/软件资源.md"}');export{t as data};
