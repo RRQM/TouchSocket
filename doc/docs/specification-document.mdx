@@ -79,7 +79,7 @@ import TabItem from "@theme/TabItem";
 
 ## 6.5 Swagger 使用
 
-`Furion` 框架提供了非常方便且灵活的 `Swagger` 配置，无需增加额外学习成本。
+`TouchSocket` 框架提供了非常方便且灵活的 `Swagger` 配置，无需增加额外学习成本。
 
 ### 6.5.1 注册服务
 
@@ -89,13 +89,13 @@ import TabItem from "@theme/TabItem";
 
 :::
 
-```cs showLineNumbers  {13,21} title="Furion.Web.Core\Startup.cs"
+```cs showLineNumbers  {13,21} title="TouchSocket.Web.Core\Startup.cs"
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     [AppStartup(800)]
     public sealed class FurWebCoreStartup : AppStartup
@@ -129,7 +129,7 @@ namespace Furion.Web.Core
 
 ### 6.5.2 默认地址
 
-在 `Furion` 框架中，默认 `规范化文档` 地址为 `/api` 目录，**支持自定义配置**。
+在 `TouchSocket` 框架中，默认 `规范化文档` 地址为 `/api` 目录，**支持自定义配置**。
 
 如下图所示：
 
@@ -157,7 +157,7 @@ app.UseInject("testapi"); // 那么  /testapi 就是规范化地址
 
 ### 6.5.3 默认分组
 
-`Furion` 框架中默认分组名为 `Default`，**支持自定义配置**。
+`TouchSocket` 框架中默认分组名为 `Default`，**支持自定义配置**。
 
 ```cs showLineNumbers  {3}
 {
@@ -169,19 +169,19 @@ app.UseInject("testapi"); // 那么  /testapi 就是规范化地址
 
 ### 6.5.4 文档注释
 
-规范化文档默认扫描 `Furion.Application`，`Furion.Web.Core`，`Furion.Web.Entry` 三个程序集`.xml` 注释文件，**支持自定义配置**。
+规范化文档默认扫描 `TouchSocket.Application`，`TouchSocket.Web.Core`，`TouchSocket.Web.Entry` 三个程序集`.xml` 注释文件，**支持自定义配置**。
 
 只支持 `///` 标识的注释语法，如：**类、方法、属性、参数、返回值、验证特性**。
 
 ```cs showLineNumbers  {5-7,10-13,19-23}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     /// <summary>
     /// 类注释
     /// </summary>
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         /// <summary>
         /// 方法注释
@@ -189,7 +189,7 @@ namespace Furion.Application
         /// <returns></returns>
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         /// <summary>
@@ -225,15 +225,15 @@ namespace Furion.Application
 
 ### 6.5.5 多分组支持
 
-多分组是一个系统中必备功能，我们可以将系统划分为多个模块，每个模块都独立的 `api` 配置。在 `Furion` 框架中，实现多分组非常简单。如：
+多分组是一个系统中必备功能，我们可以将系统划分为多个模块，每个模块都独立的 `api` 配置。在 `TouchSocket` 框架中，实现多分组非常简单。如：
 
 ```cs showLineNumbers  {5,21,32}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     [ApiDescriptionSettings("Group1")]
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         /// <summary>
         /// 随父类 Group1 分组
@@ -241,7 +241,7 @@ namespace Furion.Application
         /// <returns></returns>
         public string Post()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         /// <summary>
@@ -251,7 +251,7 @@ namespace Furion.Application
         [ApiDescriptionSettings("Group1", "Group3")]
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         /// <summary>
@@ -286,22 +286,22 @@ namespace Furion.Application
 **通过分组名称添加 `@整数` 进行排序**
 
 ```cs showLineNumbers  {5,19}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     [ApiDescriptionSettings("Group1@1")]
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public string Post()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         [ApiDescriptionSettings("Group1", "Group3")]
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         [ApiDescriptionSettings("Group@2")]
@@ -320,7 +320,7 @@ namespace Furion.Application
 
 **通过配置文件配置排序**
 
-```json showLineNumbers  {2-17} title="Furion.Web.Entry/appsettings.json"
+```json showLineNumbers  {2-17} title="TouchSocket.Web.Entry/appsettings.json"
 {
   "SpecificationDocumentSettings": {
     "GroupOpenApiInfos": [
@@ -356,9 +356,9 @@ namespace Furion.Application
 
 ### 6.5.7 多分组信息配置
 
-`Furion` 框架提供了可通过 `appsetting.json` 配置分组信息：
+`TouchSocket` 框架提供了可通过 `appsetting.json` 配置分组信息：
 
-```json showLineNumbers  {3-20} title="Furion.Web.Entry/appsettings.json"
+```json showLineNumbers  {3-20} title="TouchSocket.Web.Entry/appsettings.json"
 {
   "SpecificationDocumentSettings": {
     "GroupOpenApiInfos": [
@@ -367,7 +367,7 @@ namespace Furion.Application
         "Title": "分组标题",
         "Description": "这里是分组描述",
         "Version": "版本号",
-        "TermsOfService": "https://furion.icu",
+        "TermsOfService": "https://TouchSocket.icu",
         "Contact": {
           "Name": "百小僧",
           "Url": "https://gitee.com/monksoul",
@@ -375,7 +375,7 @@ namespace Furion.Application
         },
         "License": {
           "Name": "MIT",
-          "Url": "https://gitee.com/dotnetchina/Furion/blob/alpha/LICENSE"
+          "Url": "https://gitee.com/rrqm_home/TouchSocket/blob/alpha/LICENSE"
         }
       }
     ]
@@ -403,15 +403,15 @@ namespace Furion.Application
 #### 未贴标签之前
 
 ```cs showLineNumbers
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         public int Get(int id)
@@ -424,7 +424,7 @@ namespace Furion.Application
     {
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         public int Get(int id)
@@ -438,16 +438,16 @@ namespace Furion.Application
 #### 贴标签之后
 
 ```cs showLineNumbers  {5,19}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     [ApiDescriptionSettings(Tag = "分组一")]
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         public int Get(int id)
@@ -461,7 +461,7 @@ namespace Furion.Application
     {
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         public int Get(int id)
@@ -480,16 +480,16 @@ namespace Furion.Application
   <TabItem value="tag2">
 
 ```cs showLineNumbers  {5,19}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     [ApiDescriptionSettings(Tag = "合并所有标签")]
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         public int Get(int id)
@@ -503,7 +503,7 @@ namespace Furion.Application
     {
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
 
         public int Get(int id)
@@ -529,7 +529,7 @@ namespace Furion.Application
 
 ### 6.5.9 默认展开所有文档
 
-```json showLineNumbers  {2-4} title="Furion.Web.Entry/appsettings.json"
+```json showLineNumbers  {2-4} title="TouchSocket.Web.Entry/appsettings.json"
 {
   "SpecificationDocumentSettings": {
     "DocExpansionState": "Full"
@@ -549,7 +549,7 @@ namespace Furion.Application
 
 ### 6.5.10 配置文档标题
 
-```json showLineNumbers  {2-4} title="Furion.Web.Entry/appsettings.json"
+```json showLineNumbers  {2-4} title="TouchSocket.Web.Entry/appsettings.json"
 {
   "SpecificationDocumentSettings": {
     "DocumentTitle": "我是自定义标题"
@@ -563,9 +563,9 @@ namespace Furion.Application
 
 ### 6.5.11 授权控制
 
-**新版本 `Furion` 已经默认启用了 Bearer Token 授权配置，无需手动配置**，如需手动配置，可手动添加以下类似配置：
+**新版本 `TouchSocket` 已经默认启用了 Bearer Token 授权配置，无需手动配置**，如需手动配置，可手动添加以下类似配置：
 
-```json showLineNumbers  title="Furion.Web.Entry/appsettings.json"
+```json showLineNumbers  title="TouchSocket.Web.Entry/appsettings.json"
 {
   "SpecificationDocumentSettings": {
     "EnableAuthorized": true,
@@ -618,18 +618,18 @@ namespace Furion.Application
 ### 6.5.14 定义接口输出类型
 
 ```cs showLineNumbers  {2,8-9}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         [ProducesResponseType(201, Type = typeof(TestDto))]
         [ProducesResponseType(400)]
         public string Get()
         {
-            return nameof(Furion);
+            return nameof(TouchSocket);
         }
     }
 }
@@ -641,7 +641,7 @@ namespace Furion.Application
 
 ### 6.5.15 隐藏特定分组
 
-`Furion` 新版本提供了隐藏分组的 `Visible` 配置，设置为 `false` 之后该分组将不显示在规范化文档中，如：
+`TouchSocket` 新版本提供了隐藏分组的 `Visible` 配置，设置为 `false` 之后该分组将不显示在规范化文档中，如：
 
 ```json showLineNumbers  title="appsetting.json"
 {
@@ -707,7 +707,7 @@ public int Age { get; set; }
 
 ### 6.5.19 自定义 `Swagger` 配置
 
-`Furion` 框架除了内置了不少配置以外，还提供了直接配置 `Swagger` Api 的参数，如：
+`TouchSocket` 框架除了内置了不少配置以外，还提供了直接配置 `Swagger` Api 的参数，如：
 
 ```cs showLineNumbers {5}
 public void ConfigureServices(IServiceCollection services)
@@ -725,7 +725,7 @@ public void ConfigureServices(IServiceCollection services)
 ```cs showLineNumbers {6,11}
  public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
  {
-      // 如果使用 Furion 4.4.8+ 版本可以 app.UseInject(options => {}) 了，无需指定 configure:
+      // 如果使用 TouchSocket 4.4.8+ 版本可以 app.UseInject(options => {}) 了，无需指定 configure:
       app.UseInject(configure: options =>
       {
           options.ConfigureSwagger(swg =>
@@ -744,7 +744,7 @@ public void ConfigureServices(IServiceCollection services)
 
 ### 6.5.20 配置 `Swagger`的 `Schemes`
 
-`Furion` 框架默认只显示名称，如果需要自定义显示规则，只需要添加配置即可。
+`TouchSocket` 框架默认只显示名称，如果需要自定义显示规则，只需要添加配置即可。
 
 ```cs showLineNumbers {4,6}
 services.AddControllersWithViews()
@@ -759,7 +759,7 @@ services.AddControllersWithViews()
 
 ### 6.5.21 自定义 `swagger.json` 路由模板
 
-默认情况下，`Furion` 框架会生成统一的分组模板，如：`swagger/{documentName}/swagger.json`，`{documentName}` 会在运行时替换为分组名，如需自定义，配置 `RouteTemplate` 即可：
+默认情况下，`TouchSocket` 框架会生成统一的分组模板，如：`swagger/{documentName}/swagger.json`，`{documentName}` 会在运行时替换为分组名，如需自定义，配置 `RouteTemplate` 即可：
 
 ```json showLineNumbers  title="appsetting.json"
 {
@@ -825,7 +825,7 @@ services.AddControllers()
 
 ### 6.5.25 `Swagger` 多语言支持
 
-在 `Furion 2.9.0 + ` 版本已经支持了 `Swagger` 文档地址 `?culture=en-US` 参数多语言转发功能了，也就是 `Swagger` 地址带 `?culture=` 参数将自动添加到每一个请求的 `api` 地址中。
+在 `TouchSocket 2.9.0 + ` 版本已经支持了 `Swagger` 文档地址 `?culture=en-US` 参数多语言转发功能了，也就是 `Swagger` 地址带 `?culture=` 参数将自动添加到每一个请求的 `api` 地址中。
 
 ### 6.5.26 自定义逻辑控制 `Swagger` 每一个 `api` 可见性
 
@@ -839,7 +839,7 @@ services.AddInject(options =>
     {
         gen.DocInclusionPredicate((currentGroup, apiDescription) =>
         {
-            // Furion 内部检查，必须放第一行
+            // TouchSocket 内部检查，必须放第一行
             var isShow = SpecificationDocumentBuilder.CheckApiDescriptionInCurrentGroup(currentGroup, apiDescription);
 
             // 获取当前方法
@@ -877,7 +877,7 @@ _httpContextAccessor.HttpContext.SigninToSwagger("传入 token");
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.3.3+` 版本使用。
+以下内容仅限 `TouchSocket v3.3.3+` 版本使用。
 
 :::
 
@@ -899,7 +899,7 @@ _httpContextAccessor.HttpContext.SigninToSwagger("传入 token");
 
 #### 配置说明
 
-- `LoginInfo`：配置 `Swagger` 是否需要登录才能访问，`SpecificationLoginInfo` 类型，默认 `null`，**仅在 Furion v3.3.3+` 有效**
+- `LoginInfo`：配置 `Swagger` 是否需要登录才能访问，`SpecificationLoginInfo` 类型，默认 `null`，**仅在 TouchSocket v3.3.3+` 有效**
   - `Enabled`：是否启用登录授权，默认 `false`
   - `CheckUrl`：检查登录状态的 `Url` 地址，**该地址必须是 `POST` 请求**，已授权返回 `200`，否则返回 `401`，支持相对地址，以 `/` 开头
   - `SubmitUrl`：提交登录的 `Url` 地址，**该地址必须是 `POST` 请求且只有一个 `SpecificationAuth` 类型参数**，成功登录返回 `200`，否则返回 `401`，支持相对地址，以 `/` 开头
@@ -907,12 +907,12 @@ _httpContextAccessor.HttpContext.SigninToSwagger("传入 token");
 #### 配置示例
 
 ```cs showLineNumbers {10-14,16-31}
-using Furion.SpecificationDocument;
+using TouchSocket.SpecificationDocument;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
-namespace Furion.Web.Entry.Controllers;
+namespace TouchSocket.Web.Entry.Controllers;
 
 public class HomeController : Controller
 {
@@ -947,16 +947,16 @@ public class HomeController : Controller
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.3.3+` 版本使用。
+以下内容仅限 `TouchSocket v3.3.3+` 版本使用。
 
 :::
 
-在过去我们在接口定义的时候编写了完整的成员注释，然后在派生成员中又要重复写一次，实际上做了很大无用功，现在 `Furion` 支持了注释继承了，同时 `Swagger` 中也能正确显示。
+在过去我们在接口定义的时候编写了完整的成员注释，然后在派生成员中又要重复写一次，实际上做了很大无用功，现在 `TouchSocket` 支持了注释继承了，同时 `Swagger` 中也能正确显示。
 
 ```cs showLineNumbers {5,8,14}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     /// <inheritdoc cref="ITestInheritdoc" />
     public class TestInheritdoc : ITestInheritdoc, IDynamicApiController
@@ -964,7 +964,7 @@ namespace Furion.Application
         /// <inheritdoc cref="ITestInheritdoc.GetName"/>
         public string GetName()
         {
-            return "Furion";
+            return "TouchSocket";
         }
 
         /// <inheritdoc />
@@ -1009,7 +1009,7 @@ namespace Furion.Application
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.3.4+` 版本使用。
+以下内容仅限 `TouchSocket v3.3.4+` 版本使用。
 
 :::
 
@@ -1027,7 +1027,7 @@ namespace Furion.Application
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.3.5+` 版本使用。
+以下内容仅限 `TouchSocket v3.3.5+` 版本使用。
 
 :::
 
@@ -1037,7 +1037,7 @@ namespace Furion.Application
 [Obsolete("GetName() 已经过时，请调用 GetFrameworkName() 替代")]
 public string GetName()
 {
-  return nameof(Furion);
+  return nameof(TouchSocket);
 }
 
 [Obsolete]
@@ -1053,7 +1053,7 @@ public string Other()
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.3.5+` 版本使用。
+以下内容仅限 `TouchSocket v3.3.5+` 版本使用。
 
 :::
 
@@ -1089,14 +1089,14 @@ https://localhost:你的端口/swagger/Default/swagger.json
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.6.4+` 版本使用。
+以下内容仅限 `TouchSocket v3.6.4+` 版本使用。
 
 :::
 
 有时候，不同程序集会定义相同的类型名称 `Name`，这样就会导致生成 `Swagger` 的 `SchemaId` 出现冲突，这时只需要在类型上贴 `[SchemaId]` 特性即可，如：
 
 ```cs showLineNumbers {3}
-using Furion.SpecificationDocument;
+using TouchSocket.SpecificationDocument;
 
 [SchemaId("Other_")]
 public class PersonDto
@@ -1113,14 +1113,14 @@ public class PersonDto
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.1.7+` 版本使用。
+以下内容仅限 `TouchSocket 4.1.7+` 版本使用。
 
 :::
 
 通过我们根据 `swagger.json` 生成前端代码时，`Swagger` 会自动根据路由地址生成调用的 `api` 名称，但这样的名称往往不易读，这时候可自定义 `[OperationId]` 来配置生成的前端名称。
 
 ```cs showLineNumbers {5}
-using Furion.SpecificationDocument;
+using TouchSocket.SpecificationDocument;
 
 public class PersonDto
 {
@@ -1134,14 +1134,14 @@ public class PersonDto
 
 ### 6.5.37 `Swagger` 接口文档支持完整的 `Markdown`
 
-在 `Furion` 最新版中，支持了完整的 `Markdown` 注册，如：
+在 `TouchSocket` 最新版中，支持了完整的 `Markdown` 注册，如：
 
 ````cs showLineNumbers {4,80}
 /// <summary>
 /// 测试 Markdown
 /// </summary>
 /// <remarks>
-/// # 先知 / Furion ([探索版](https://gitee.com/dotnetchina/Furion/tree/experimental/))
+/// # 先知 / TouchSocket ([探索版](https://gitee.com/rrqm_home/TouchSocket/tree/experimental/))
 ///
 ///     一个应用程序框架，您可以将它集成到任何.NET/C# 应用程序中。
 ///
@@ -1149,23 +1149,23 @@ public class PersonDto
 ///
 /// ## 安装 / Installation
 ///
-/// - [Package Manager] (https://www.nuget.org/packages/Furion)
+/// - [Package Manager] (https://www.nuget.org/packages/TouchSocket)
 ///
 /// ```powershell
-/// Install-Package Furion
+/// Install-Package TouchSocket
 /// ```
 ///
-/// - [.NET CLI] (https://www.nuget.org/packages/Furion)
+/// - [.NET CLI] (https://www.nuget.org/packages/TouchSocket)
 ///
 /// ```powershell
-/// dotnet add package Furion
+/// dotnet add package TouchSocket
 /// ```
 ///
 /// ## 例子 / Examples
 ///
-/// 我们在[主页](https://furion.baiqian.ltd)上有不少例子，这是让您入门的第一个：
+/// 我们在[主页](https://TouchSocket.baiqian.ltd)上有不少例子，这是让您入门的第一个：
 ///
-/// We have several examples [on the website] (https://furion.baiqian.ltd). Here is the first one to get you started:
+/// We have several examples [on the website] (https://TouchSocket.baiqian.ltd). Here is the first one to get you started:
 ///
 /// ```cs
 /// Serve.Run();
@@ -1175,7 +1175,7 @@ public class PersonDto
 ///     {
 ///         public string Say()
 ///         {
-///             return "Hello, Furion";
+///             return "Hello, TouchSocket";
 ///         }
 ///     }
 /// ```
@@ -1186,32 +1186,32 @@ public class PersonDto
 ///
 /// ## 文档 / Documentation
 ///
-/// 您可以在[主页] (https://furion.baiqian.ltd)或[备份主页](https://furion.icu)找到 Furion 文档。
+/// 您可以在[主页] (https://TouchSocket.baiqian.ltd)或[备份主页](https://TouchSocket.icu)找到 TouchSocket 文档。
 ///
-/// You can find the Furion documentation[on the website](https://furion.baiqian.ltd) or [on the backup website](https://furion.icu).
+/// You can find the TouchSocket documentation[on the website](https://TouchSocket.baiqian.ltd) or [on the backup website](https://TouchSocket.icu).
 ///
 /// ## 贡献 / Contributing
 ///
-/// 该存储库的主要目的是继续发展 Furion 核心，使其更快、更易于使用。 Furion 的开发在[Gitee](https://gitee.com/dotnetchina/Furion) 上公开进行，我们感谢社区贡献错误修复和改进。
+/// 该存储库的主要目的是继续发展 TouchSocket 核心，使其更快、更易于使用。 TouchSocket 的开发在[Gitee](https://gitee.com/rrqm_home/TouchSocket) 上公开进行，我们感谢社区贡献错误修复和改进。
 ///
-/// 阅读[贡献指南] (https://furion.baiqian.ltd/docs/contribute)内容，了解如何参与改进 Furion。
+/// 阅读[贡献指南] (https://TouchSocket.baiqian.ltd/docs/contribute)内容，了解如何参与改进 TouchSocket。
 ///
-/// The main purpose of this repository is to continue evolving Furion core, making it faster and easier to use.Development of Furion happens in the open on[Gitee] (https://gitee.com/dotnetchina/Furion), and we are grateful to the community for contributing bugfixes and improvements.
+/// The main purpose of this repository is to continue evolving TouchSocket core, making it faster and easier to use.Development of TouchSocket happens in the open on[Gitee] (https://gitee.com/rrqm_home/TouchSocket), and we are grateful to the community for contributing bugfixes and improvements.
 ///
-/// Read[contribution documents] (https://furion.baiqian.ltd/docs/contribute) to learn how you can take part in improving Furion.
+/// Read[contribution documents] (https://TouchSocket.baiqian.ltd/docs/contribute) to learn how you can take part in improving TouchSocket.
 ///
 /// ## 许可证 / License
 ///
-/// Furion 采用[MIT](https://gitee.com/dotnetchina/Furion/blob/v4/LICENSE) 开源许可证。
+/// TouchSocket 采用[MIT](https://gitee.com/rrqm_home/TouchSocket/blob/v4/LICENSE) 开源许可证。
 ///
-/// Furion uses the[MIT] (https://gitee.com/dotnetchina/Furion/blob/v4/LICENSE) open source license.
+/// TouchSocket uses the[MIT] (https://gitee.com/rrqm_home/TouchSocket/blob/v4/LICENSE) open source license.
 ///
 /// ```
 /// Copyright(c) 2020-2023 百小僧, Baiqian Co., Ltd.
-/// Furion is licensed under Mulan PSL v2.
+/// TouchSocket is licensed under Mulan PSL v2.
 /// You can use this software according to the terms andconditions of the Mulan PSL v2.
 /// You may obtain a copy of Mulan PSL v2 at:
-///             https://gitee.com/dotnetchina/Furion/blob/v4/LICENSE
+///             https://gitee.com/rrqm_home/TouchSocket/blob/v4/LICENSE
 /// THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUTWARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 /// See the Mulan PSL v2 for more details.
 /// ```
@@ -1220,7 +1220,7 @@ public class PersonDto
 /// <returns></returns>
 public string Hello()
 {
-    return "Furion";
+    return "TouchSocket";
 }
 ````
 
@@ -1228,7 +1228,7 @@ public string Hello()
 
 ### 6.5.38 第三方 `UI` 集成，如 `Knife4jUI`
 
-在 `Furion` 框架中，集成第三方 `SwaggerUI` 非常容易，比如集成 `IGeekFan.AspNetCore.Knife4jUI`：
+在 `TouchSocket` 框架中，集成第三方 `SwaggerUI` 非常容易，比如集成 `IGeekFan.AspNetCore.Knife4jUI`：
 
 :::note 安装包
 
@@ -1250,7 +1250,7 @@ app.UseKnife4UI(options =>
     }
 });
 
-app.UseInject(routePrefix); // 配置 Furion 路由地址
+app.UseInject(routePrefix); // 配置 TouchSocket 路由地址
 ```
 
 **`Knife4jUI` 和 `Swagger` 共存版本配置**
@@ -1265,7 +1265,7 @@ app.UseKnife4UI(options =>
     }
 });
 
-app.UseInject();  // Furion 默认 api 地址为  /api
+app.UseInject();  // TouchSocket 默认 api 地址为  /api
 ```
 
 <img src={useBaseUrl("img/sg20.png")} />
@@ -1283,7 +1283,7 @@ ke.global.setAllHeader(
 
 ## 6.6 `SpecificationDocumentSettings` 配置
 
-除了上述例子外，`Furion` 提供了一些配置选项，如：
+除了上述例子外，`TouchSocket` 提供了一些配置选项，如：
 
 - `DocumentTitle`：文档标题，`string`，默认 `Specification Api Document`
 - `DefaultGroupName`：默认分组名，`string`，默认 `Default`
@@ -1294,7 +1294,7 @@ ke.global.setAllHeader(
   - `List`：列表式（展开子类），**默认值**
   - `Full`：完全展开
   - `None`：列表式（不展开子类）
-- `XmlComments`：程序集注释描述文件名（可带 `.xml`，`string`，默认 `Furion.Application, Furion.Web.Entry, Furion.Web.Core`
+- `XmlComments`：程序集注释描述文件名（可带 `.xml`，`string`，默认 `TouchSocket.Application, TouchSocket.Web.Entry, TouchSocket.Web.Core`
 - `GroupOpenApiInfos`：分组信息配置，`SpecificationOpenApiInfo[]`，默认 `{ 'Group': 'Default'}`
 - `SecurityDefinitions`：安全策略定义配置，`SpecificationOpenApiSecurityScheme[]`，默认 `[]`
 - `Servers`：配置 Server 下拉列表，`OpenApiServer[]` 类型，默认 `[]`，如：`{Servers:[ { Url:"地址", Description:"描述"} ]}`
@@ -1303,12 +1303,12 @@ ke.global.setAllHeader(
 - `PackagesGroups`：配置模块化内置分组名称，`string[]` 类型，默认 `[]`
 - `EnableEnumSchemaFilter`：启用枚举 Schema 筛选器，`bool` 类型，默认 `true`
 - `EnableTagsOrderDocumentFilter`：启用标签排序筛选器，`bool` 类型，默认 `true`
-- `ServerDir`：配置 `IIS` 添加 `Application` 部署名，`string` 类型，默认空，**仅在 Furion v3.2.0+` 有效**
-- `LoginInfo`：配置 `Swagger` 是否需要登录才能访问，`SpecificationLoginInfo` 类型，默认 `null`，**仅在 Furion v3.3.3+` 有效**
+- `ServerDir`：配置 `IIS` 添加 `Application` 部署名，`string` 类型，默认空，**仅在 TouchSocket v3.2.0+` 有效**
+- `LoginInfo`：配置 `Swagger` 是否需要登录才能访问，`SpecificationLoginInfo` 类型，默认 `null`，**仅在 TouchSocket v3.3.3+` 有效**
   - `Enabled`：是否启用登录授权，默认 `false`
   - `CheckUrl`：检查登录状态的 `Url` 地址，**该地址必须是 `POST` 请求**，已授权返回 `200`，否则返回 `401`
   - `SubmitUrl`：提交登录的 `Url` 地址，**该地址必须是 `POST` 请求且只有一个 `SpecificationAuth` 类型参数**，成功登录返回 `200`，否则返回 `401`，支持相对地址，以 `/` 开头
-- `EnableAllGroups`：启用 `Swagger` 总分组功能，自动将所有分组的接口合并到 `All Groups` 中，`bool` 类型，默认 `false`，**仅在 Furion v3.3.4+` 有效**
+- `EnableAllGroups`：启用 `Swagger` 总分组功能，自动将所有分组的接口合并到 `All Groups` 中，`bool` 类型，默认 `false`，**仅在 TouchSocket v3.3.4+` 有效**
 
 另外 `SpecificationOpenApiInfo` 内置配置如下：
 
@@ -1333,7 +1333,7 @@ ke.global.setAllHeader(
         "Title": "分组标题",
         "Description": "这里是分组描述",
         "Version": "版本号",
-        "TermsOfService": "https://furion.icu",
+        "TermsOfService": "https://TouchSocket.icu",
         "Contact": {
           "Name": "百小僧",
           "Url": "https://gitee.com/monksoul",
@@ -1341,7 +1341,7 @@ ke.global.setAllHeader(
         },
         "License": {
           "Name": "MIT",
-          "Url": "https://gitee.com/dotnetchina/Furion/blob/alpha/LICENSE"
+          "Url": "https://gitee.com/rrqm_home/TouchSocket/blob/alpha/LICENSE"
         }
       }
     ]
@@ -1351,7 +1351,7 @@ ke.global.setAllHeader(
 
 ## 6.7 统一返回值模型/规范化结果/API 返回值
 
-`Furion` 框架提供 `规范化结果` 功能，可以通过实现 `IUnifyResultProvider` 提供器实现统一规范化返回值定制，如：
+`TouchSocket` 框架提供 `规范化结果` 功能，可以通过实现 `IUnifyResultProvider` 提供器实现统一规范化返回值定制，如：
 
 - **定义结果包装类型**
 
@@ -1394,9 +1394,9 @@ public class YourRESTfulResult<T>
 - **定义 `IUnifyResultProvider` 实现类，并贴特性 `[UnifyModel(typeof(YourRESTfulResult<>))]`**
 
 ```cs showLineNumbers  {15-16,24,36,48,61}
-using Furion.DataValidation;
-using Furion.DependencyInjection;
-using Furion.UnifyResult.Internal;
+using TouchSocket.DataValidation;
+using TouchSocket.DependencyInjection;
+using TouchSocket.UnifyResult.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -1420,7 +1420,7 @@ namespace YourProject.UnifyResult
         public IActionResult OnException(ExceptionContext context, ExceptionMetadata metadata)
         {
             return new JsonResult(YourRESTfulResult(metadata.StatusCode, data: metadata.Data, errors: metadata.Errors)
-                , UnifyContext.GetSerializerSettings(context)); // 当前行仅限 Furion 4.6.6+ 使用
+                , UnifyContext.GetSerializerSettings(context)); // 当前行仅限 TouchSocket 4.6.6+ 使用
         }
 
         /// <summary>
@@ -1432,7 +1432,7 @@ namespace YourProject.UnifyResult
         public IActionResult OnSucceeded(ActionExecutedContext context, object data)
         {
             return new JsonResult(YourRESTfulResult(StatusCodes.Status200OK, true, data)
-                , UnifyContext.GetSerializerSettings(context)); // 当前行仅限 Furion 4.6.6+ 使用
+                , UnifyContext.GetSerializerSettings(context)); // 当前行仅限 TouchSocket 4.6.6+ 使用
         }
 
         /// <summary>
@@ -1444,7 +1444,7 @@ namespace YourProject.UnifyResult
         public IActionResult OnValidateFailed(ActionExecutingContext context, ValidationMetadata metadata)
         {
             return new JsonResult(YourRESTfulResult(metadata.StatusCode ?? StatusCodes.Status400BadRequest, data: metadata.Data, errors: metadata.ValidationResult)
-                , UnifyContext.GetSerializerSettings(context)); // 当前行仅限 Furion 4.6.6+ 使用
+                , UnifyContext.GetSerializerSettings(context)); // 当前行仅限 TouchSocket 4.6.6+ 使用
         }
 
         /// <summary>
@@ -1553,7 +1553,7 @@ public Person GetPerson(int id)
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.4.4 +` 版本使用。
+以下内容仅限 `TouchSocket 4.4.4 +` 版本使用。
 
 :::
 
@@ -1629,7 +1629,7 @@ public class TestUnifyProvider : IDynamicApiController
 
 很少开发者注意到 `new JsonResult(data)` 实际上有第二个参数的，也就是 `new JsonResult(data, serializerSettings)`，那么可以根据自己的逻辑传递第二个参数，如果不传递则采用全局配置的序列化选项。
 
-`Furion` 框架提供两种处理方式。
+`TouchSocket` 框架提供两种处理方式。
 
 ### 6.9.1 通过 `JsonResult` 设置第二个参数
 
@@ -1645,7 +1645,7 @@ public IActionResult SpecialApi()
         Succeeded = true,
         Data = new
         {
-            Name = "Furion"
+            Name = "TouchSocket"
         },
         Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
     }, new JsonSerializerOptions
@@ -1659,7 +1659,7 @@ public IActionResult SpecialApi()
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.6.6 +` 版本使用。
+以下内容仅限 `TouchSocket 4.6.6 +` 版本使用。
 
 :::
 
@@ -1680,7 +1680,7 @@ public object SpecialApi()
 {
     return new
     {
-      Name = "Furion"
+      Name = "TouchSocket"
     }
 }
 ```
@@ -1695,6 +1695,6 @@ public object SpecialApi()
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

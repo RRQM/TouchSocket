@@ -22,12 +22,12 @@ import TabItem from "@theme/TabItem";
   <TabItem value="person">
 
 ```cs showLineNumbers  {38,43,48}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class Person : Entity
     {
@@ -77,9 +77,9 @@ namespace Furion.Core
   <TabItem value="person-detail">
 
 ```cs showLineNumbers  {25}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class PersonDetail : EntityBase
     {
@@ -110,10 +110,10 @@ namespace Furion.Core
   <TabItem value="children">
 
 ```cs showLineNumbers  {35}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using System;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class Children : Entity
     {
@@ -154,11 +154,11 @@ namespace Furion.Core
   <TabItem value="post">
 
 ```cs showLineNumbers  {26}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using System;
 using System.Collections.Generic;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class Post : Entity
     {
@@ -377,13 +377,13 @@ var query = repository.AsQueryable()
   <TabItem value="city">
 
 ```cs showLineNumbers  {12,36,41,49-55}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 城市
@@ -461,7 +461,7 @@ namespace Furion.Core
 ```cs showLineNumbers 
 using System.Collections.Generic;
 
-namespace Furion.Application.Persons
+namespace TouchSocket.Application.Persons
 {
     public class CityDto
     {
@@ -497,9 +497,9 @@ var dtos = cities.Adapt<List<CityDto>>();
 
 ## 9.11.10 动态 `Sql` 查询
 
-`Furion` 默认不支持 动态 `Sql` 查询功能，不过可以通过第三方实现：
+`TouchSocket` 默认不支持 动态 `Sql` 查询功能，不过可以通过第三方实现：
 
-在 `Furion` 项目层安装 `System.Linq.Dynamic.Core` 包 [https://github.com/zzzprojects/System.Linq.Dynamic.Core](https://github.com/zzzprojects/System.Linq.Dynamic.Core)
+在 `TouchSocket` 项目层安装 `System.Linq.Dynamic.Core` 包 [https://github.com/zzzprojects/System.Linq.Dynamic.Core](https://github.com/zzzprojects/System.Linq.Dynamic.Core)
 
 ### 9.11.10.1 动态 `Sql`
 
@@ -512,7 +512,7 @@ var query = repository.AsQueryable()
 
 // 示例二
 var list = repository.AsQueryable()
-                     .Where("Name.Contains(@0)","Furion")
+                     .Where("Name.Contains(@0)","TouchSocket")
                      .ToList();
 
 // 示例三，支持 ? 语法
@@ -542,17 +542,17 @@ var e = DynamicExpressionParser.ParseLambda(
 
 :::warning 功能移除声明
 
-以下内容在 `Furion 2.13 +` 版本中已移除。
+以下内容在 `TouchSocket 2.13 +` 版本中已移除。
 
 :::
 
-`Furion` 框架还提供了时态查询功能，可以查询特定时间的数据，如：
+`TouchSocket` 框架还提供了时态查询功能，可以查询特定时间的数据，如：
 
 ```cs showLineNumbers 
 var result = rep.Entities
     .AsTemporalOf(DateTime.UtcNow.AddDays(-1))
     .Include(i=> i.Company)
-    .FirstOrDefault(i => i.Name == "Furion");
+    .FirstOrDefault(i => i.Name == "TouchSocket");
 ```
 
 另外提供了多个时态查询方法
@@ -567,7 +567,7 @@ var result = rep.Entities
 
 默认情况下，`EF Core` 会跟踪所有实体，也就是任何数据改变都会引起数据检查，所以如果只做查询操作，建议关闭实体跟踪功能。
 
-`Furion` 框架提供了以下高性能实体集合：
+`TouchSocket` 框架提供了以下高性能实体集合：
 
 - `DetachedEntities`：脱轨/不追踪实体
 - `AsQueryable(false)`：不追踪实体
@@ -578,13 +578,13 @@ var result = rep.Entities
 ## 9.11.13 分表查询小例子
 
 ```cs showLineNumbers 
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class Person : Entity, IEntityTypeBuilder<Person>
     {
@@ -615,6 +615,6 @@ var posts = repository.Where(u => u.Id > 10).ToList();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

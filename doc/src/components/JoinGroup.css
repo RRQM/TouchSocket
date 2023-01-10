@@ -1,4 +1,4 @@
-.furion-join-group {
+.TouchSocket-join-group {
   position: fixed;
   /* right: 15px; */
   bottom: 20px;
@@ -12,13 +12,13 @@
   margin-left: -145px;
 }
 
-.furion-join-group img {
+.TouchSocket-join-group img {
   display: block;
   height: 18em;
   margin: 1em auto 0 auto;
 }
 
-.furion-join-group a {
+.TouchSocket-join-group a {
   display: block;
   margin: 0;
   padding: 0;
@@ -35,12 +35,12 @@
   display: block;
 }
 
-.furion-join-group button:hover {
+.TouchSocket-join-group button:hover {
   background: rgba(135, 89, 255, 0.9);
 }
 
 @media screen and (max-width: 1024px) {
-  .furion-join-group {
+  .TouchSocket-join-group {
     display: none;
   }
 }

@@ -54,7 +54,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 11.4 多租户使用方案
 
-`Furion` 框架支持以上三种多租户实现方案，使用简单且容易维护。下面分别使用三种不同方式演示多租户方案用法。
+`TouchSocket` 框架支持以上三种多租户实现方案，使用简单且容易维护。下面分别使用三种不同方式演示多租户方案用法。
 
 :::important 特别说明
 
@@ -68,11 +68,11 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ### 11.5.1 创建租户数据库上下文
 
-```cs showLineNumbers  {6-7} title="Furion.EntityFramework.Core\DbContexts\MultiTenantDbContext.cs"
-using Furion.DatabaseAccessor;
+```cs showLineNumbers  {6-7} title="TouchSocket.EntityFramework.Core\DbContexts\MultiTenantDbContext.cs"
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class MultiTenantDbContext : AppDbContext<MultiTenantDbContext, MultiTenantDbContextLocator>
@@ -93,10 +93,10 @@ namespace Furion.EntityFramework.Core
 ### 11.5.2 注册多租户数据库上下文
 
 ```cs showLineNumbers  {14}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppStartup(600)]
     public sealed class FurEntityFrameworkCoreStartup : AppStartup
@@ -105,7 +105,7 @@ namespace Furion.EntityFramework.Core
         {
             services.AddDatabaseAccessor(options =>
             {
-                options.AddDbPool<FurionDbContext>();
+                options.AddDbPool<TouchSocketDbContext>();
                 options.AddDbPool<MultiTenantDbContext, MultiTenantDbContextLocator>();
             });
         }
@@ -115,13 +115,13 @@ namespace Furion.EntityFramework.Core
 
 ### 11.5.3 添加 `Tenant` 种子数据
 
-```cs showLineNumbers  {8,12-28} title="Furion.EntityFramework.Core\SeedDatas\TenantSeedData.cs"
-using Furion.DatabaseAccessor;
+```cs showLineNumbers  {8,12-28} title="TouchSocket.EntityFramework.Core\SeedDatas\TenantSeedData.cs"
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     public class TenantSeedData : IEntitySeedData<Tenant, MultiTenantDbContextLocator>
     {
@@ -170,16 +170,16 @@ Update-Database -Context MultiTenantDbContext
 在需要多租户的数据库上下文中实现 `IMultiTenantOnTable` 接口，如：
 
 ```cs showLineNumbers  {8,14-17}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using System;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
-    public class FurionDbContext : AppDbContext<FurionDbContext>, IMultiTenantOnTable, IModelBuilderFilter
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>, IMultiTenantOnTable, IModelBuilderFilter
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -195,7 +195,7 @@ namespace Furion.EntityFramework.Core
 
 :::important 特别说明
 
-`base.Tenant` 只是 `Furion` 框架提供的默认租户实现方法，如果不能满足业务需求，只需要在 `GetTenantId` 里面写你的业务代码即可，也就是无需调用 `base.Tenant`。如：
+`base.Tenant` 只是 `TouchSocket` 框架提供的默认租户实现方法，如果不能满足业务需求，只需要在 `GetTenantId` 里面写你的业务代码即可，也就是无需调用 `base.Tenant`。如：
 
 ```cs showLineNumbers 
 public object GetTenantId()
@@ -212,17 +212,17 @@ public object GetTenantId()
 `IModelBuilderFilter` 接口是全局查询过滤器实现接口，所以我们需要配置实体 `TenantId` 过滤器
 
 ```cs showLineNumbers  {9,20-23}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
-    public class FurionDbContext : AppDbContext<FurionDbContext>, IMultiTenantOnTable, IModelBuilderFilter
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>, IMultiTenantOnTable, IModelBuilderFilter
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -249,18 +249,18 @@ namespace Furion.EntityFramework.Core
 实现上面的步骤很简单，只需要重写 `SavingChangesEvent` 事件方法即可。
 
 ```cs showLineNumbers  {26-48}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Linq;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
-    public class FurionDbContext : AppDbContext<FurionDbContext>, IMultiTenantOnTable, IModelBuilderFilter
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>, IMultiTenantOnTable, IModelBuilderFilter
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -312,11 +312,11 @@ namespace Furion.EntityFramework.Core
 
 ### 11.6.1 创建租户数据库上下文
 
-```cs showLineNumbers  {6-7} title="Furion.EntityFramework.Core\DbContexts\MultiTenantDbContext.cs"
-using Furion.DatabaseAccessor;
+```cs showLineNumbers  {6-7} title="TouchSocket.EntityFramework.Core\DbContexts\MultiTenantDbContext.cs"
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class MultiTenantDbContext : AppDbContext<MultiTenantDbContext, MultiTenantDbContextLocator>
@@ -337,10 +337,10 @@ namespace Furion.EntityFramework.Core
 ### 11.6.2 注册多租户数据库上下文
 
 ```cs showLineNumbers  {13,14}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppStartup(600)]
     public sealed class FurEntityFrameworkCoreStartup : AppStartup
@@ -349,7 +349,7 @@ namespace Furion.EntityFramework.Core
         {
             services.AddDatabaseAccessor(options =>
             {
-                options.AddDb<FurionDbContext>();
+                options.AddDb<TouchSocketDbContext>();
                 options.AddDbPool<MultiTenantDbContext, MultiTenantDbContextLocator>();
             });
         }
@@ -365,13 +365,13 @@ namespace Furion.EntityFramework.Core
 
 ### 11.6.3 添加 `Tenant` 种子数据
 
-```cs showLineNumbers  {8,12-30} title="Furion.EntityFramework.Core\SeedDatas\TenantSeedData.cs"
-using Furion.DatabaseAccessor;
+```cs showLineNumbers  {8,12-30} title="TouchSocket.EntityFramework.Core\SeedDatas\TenantSeedData.cs"
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     public class TenantSeedData : IEntitySeedData<Tenant, MultiTenantDbContextLocator>
     {
@@ -385,7 +385,7 @@ namespace Furion.EntityFramework.Core
                     Name = "默认租户",
                     Host = "localhost:44313",
                     CreatedTime = DateTime.Parse("2020-10-06 20:19:07"),
-                    ConnectionString = "Data Source=./Furion.db" // 配置连接字符串
+                    ConnectionString = "Data Source=./TouchSocket.db" // 配置连接字符串
                 },
                 new Tenant
                 {
@@ -422,15 +422,15 @@ Update-Database -Context MultiTenantDbContext
 在需要多租户的数据库上下文中实现 `IMultiTenantOnDatabase` 接口，如：
 
 ```cs showLineNumbers  {6,13-16}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     // 这里可不配置
-    public class FurionDbContext : AppDbContext<FurionDbContext>, IMultiTenantOnDatabase
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>, IMultiTenantOnDatabase
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -444,7 +444,7 @@ namespace Furion.EntityFramework.Core
 
 :::important 特别说明
 
-`base.Tenant` 只是 `Furion` 框架提供的默认租户实现方法，如果不能满足业务需求，只需要在 `GetDatabaseConnectionString` 里面写你的业务代码即可，也就是无需调用 `base.Tenant`。如：
+`base.Tenant` 只是 `TouchSocket` 框架提供的默认租户实现方法，如果不能满足业务需求，只需要在 `GetDatabaseConnectionString` 里面写你的业务代码即可，也就是无需调用 `base.Tenant`。如：
 
 ```cs showLineNumbers 
 public string GetDatabaseConnectionString()
@@ -461,14 +461,14 @@ public string GetDatabaseConnectionString()
 在需要多租户的数据库上下文中重写 `OnConfiguring` 方法并配置连接字符串：
 
 ```cs showLineNumbers  {12-17}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
-    public class FurionDbContext : AppDbContext<FurionDbContext>, IMultiTenantOnDatabase
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>, IMultiTenantOnDatabase
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -508,11 +508,11 @@ optionsBuilder.UseSqlite(GetDatabaseConnectionString(), options=>
 
 ### 11.7.1 创建租户数据库上下文
 
-```cs showLineNumbers  {6-7} title="Furion.EntityFramework.Core\DbContexts\MultiTenantDbContext.cs"
-using Furion.DatabaseAccessor;
+```cs showLineNumbers  {6-7} title="TouchSocket.EntityFramework.Core\DbContexts\MultiTenantDbContext.cs"
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class MultiTenantDbContext : AppDbContext<MultiTenantDbContext, MultiTenantDbContextLocator>
@@ -533,10 +533,10 @@ namespace Furion.EntityFramework.Core
 ### 11.7.2 注册多租户数据库上下文
 
 ```cs showLineNumbers  {14}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppStartup(600)]
     public sealed class FurEntityFrameworkCoreStartup : AppStartup
@@ -545,7 +545,7 @@ namespace Furion.EntityFramework.Core
         {
             services.AddDatabaseAccessor(options =>
             {
-                options.AddDbPool<FurionDbContext>();
+                options.AddDbPool<TouchSocketDbContext>();
                 options.AddDbPool<MultiTenantDbContext, MultiTenantDbContextLocator>();
             });
         }
@@ -555,13 +555,13 @@ namespace Furion.EntityFramework.Core
 
 ### 11.7.3 添加 `Tenant` 种子数据
 
-```cs showLineNumbers  {8,12-30} title="Furion.EntityFramework.Core\SeedDatas\TenantSeedData.cs"
-using Furion.DatabaseAccessor;
+```cs showLineNumbers  {8,12-30} title="TouchSocket.EntityFramework.Core\SeedDatas\TenantSeedData.cs"
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     public class TenantSeedData : IEntitySeedData<Tenant, MultiTenantDbContextLocator>
     {
@@ -583,7 +583,7 @@ namespace Furion.EntityFramework.Core
                     Name = "其他租户",
                     Host = "localhost:5000",
                     CreatedTime = DateTime.Parse("2020-10-06 20:20:32"),
-                    Schema = "furion" // Schema
+                    Schema = "TouchSocket" // Schema
                 }
             };
         }
@@ -612,15 +612,15 @@ Update-Database -Context MultiTenantDbContext
 在需要多租户的数据库上下文中实现 `IMultiTenantOnSchema` 接口，如：
 
 ```cs showLineNumbers  {6,12-15}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
-    public class FurionDbContext : AppDbContext<FurionDbContext>, IMultiTenantOnSchema
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>, IMultiTenantOnSchema
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -634,7 +634,7 @@ namespace Furion.EntityFramework.Core
 
 :::important 特别说明
 
-`base.Tenant` 只是 `Furion` 框架提供的默认租户实现方法，如果不能满足业务需求，只需要在 `GetSchemaName` 里面写你的业务代码即可，也就是无需调用 `base.Tenant`。如：
+`base.Tenant` 只是 `TouchSocket` 框架提供的默认租户实现方法，如果不能满足业务需求，只需要在 `GetSchemaName` 里面写你的业务代码即可，也就是无需调用 `base.Tenant`。如：
 
 ```cs showLineNumbers 
 public string GetSchemaName()
@@ -668,7 +668,7 @@ public string GetSchemaName()
 
 ## 11.8 自定义 `Tenant` 类型
 
-默认情况下，`Furion` 框架提供了内置的 `Tenant` 类型，方便大家快速实现 `SaaS` 多租户功能，如果需要自定义多租户 `Tenant` 类型，只需要启用以下配置即可：
+默认情况下，`TouchSocket` 框架提供了内置的 `Tenant` 类型，方便大家快速实现 `SaaS` 多租户功能，如果需要自定义多租户 `Tenant` 类型，只需要启用以下配置即可：
 
 ### 11.8.1 启动自定义多租户类型配置
 
@@ -676,7 +676,7 @@ public string GetSchemaName()
 services.AddDatabaseAccessor(options =>
 {
     options.CustomizeMultiTenants();    // 启用自定义多租户类型，有一个默认参数，配置多租户表字段名
-    options.AddDbPool<FurionDbContext>();
+    options.AddDbPool<TouchSocketDbContext>();
 });
 ```
 
@@ -686,7 +686,7 @@ services.AddDatabaseAccessor(options =>
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class MyTenant : IEntity<MultiTenantDbContextLocator>
     {
@@ -709,10 +709,10 @@ var myTenant = tenantDbContext.Set<MyTenant>();
 
 ## 11.9 刷新租户缓存
 
-`Furion` 框架会在租户上下文第一次查询时候将租户表缓存起来，避免频发查询数据库，如果更新了租户表，则需要手动刷新租户信息，如：
+`TouchSocket` 框架会在租户上下文第一次查询时候将租户表缓存起来，避免频发查询数据库，如果更新了租户表，则需要手动刷新租户信息，如：
 
 ```cs showLineNumbers 
-using Furion.DatabaseAccessor.Extensions;
+using TouchSocket.DatabaseAccessor.Extensions;
 
 // 在更新租户信息后调用
 _repository.Context.RefreshTenantCache();
@@ -722,4 +722,4 @@ _repository.Context.RefreshTenantCache();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。

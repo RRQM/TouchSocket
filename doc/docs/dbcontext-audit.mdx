@@ -18,7 +18,7 @@ sidebar_label: 9.22 审计日志 (Audit)
 
 ## 9.22.2 关于 `SaveChanges` 事件
 
-`Furion` 框架中为所有 `AppDbContext` 子类都提供了三个可重写的方法，这三个方法分别由三个事件触发：
+`TouchSocket` 框架中为所有 `AppDbContext` 子类都提供了三个可重写的方法，这三个方法分别由三个事件触发：
 
 - `提交更改之前 SavingChanges 事件`：触发 `void SavingChangesEvent(DbContextEventData eventData, InterceptionResult<int> result)` 方法
 - `提交更改之后 SavedChanges 事件`：触发 `void SavedChangesEvent(SaveChangesCompletedEventData eventData, int result)` 方法
@@ -33,7 +33,7 @@ sidebar_label: 9.22 审计日志 (Audit)
 我们只需要在 `AppDbContext` 子类中重写 `SavingChanges` 事件对应方法即可：
 
 ```cs showLineNumbers  {23}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -41,12 +41,12 @@ using System;
 using System.Linq;
 using System.Security.AccessControl;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString")]
-    public class FurionDbContext : AppDbContext<FurionDbContext>
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -167,7 +167,7 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     /// <summary>
     /// 执行 sql 审计
@@ -217,7 +217,7 @@ namespace Furion.Web.Core
 
 ```cs showLineNumbers
 // services.AddDb 一样
-services.AddDbPool<FurionDbContext>(interceptors: new IInterceptor[] {
+services.AddDbPool<TouchSocketDbContext>(interceptors: new IInterceptor[] {
     new SqlCommandAuditInterceptor()
 });
 ```
@@ -234,6 +234,6 @@ services.AddDbPool<FurionDbContext>(interceptors: new IInterceptor[] {
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

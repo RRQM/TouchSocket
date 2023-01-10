@@ -62,10 +62,10 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 代码示例：
 
 ```cs showLineNumbers  {4}
-public class FurionService
+public class TouchSocketService
 {
     private readonly IRepository _repository;
-    public FurionService(IRepository repository)
+    public TouchSocketService(IRepository repository)
     {
         _repository = repository;
     }
@@ -76,7 +76,7 @@ public class FurionService
 
 :::warning 特别声明
 
-在 `Furion` 新版本中，已经移除属性注入功能，建议使用构造函数或方法方式注入，也可以通过 `App.GetService<TService>` 方式注入。
+在 `TouchSocket` 新版本中，已经移除属性注入功能，建议使用构造函数或方法方式注入，也可以通过 `App.GetService<TService>` 方式注入。
 
 :::
 
@@ -93,7 +93,7 @@ public class FurionService
   - 不直观，无法清晰地表示哪些属性是必须的
 
 ```cs showLineNumbers  {3}
-public class FurionService
+public class TouchSocketService
 {
     public IRepository Repository { get; set; }
 }
@@ -113,7 +113,7 @@ public class FurionService
   - 与构造方法注入一样，会有很多参数
 
 ```cs showLineNumbers  {3}
-public class FurionService
+public class TouchSocketService
 {
     public Person GetById([FromServices]IRepository repository, int id)
     {
@@ -152,7 +152,7 @@ public class FurionService
 
 ## 12.6 内置依赖接口
 
-`Furion` 框架提供三个接口依赖分别对应不同的服务生存期：
+`TouchSocket` 框架提供三个接口依赖分别对应不同的服务生存期：
 
 - `ITransient`：对应暂时/瞬时作用域服务生存期
 - `IScoped`：对应请求作用域服务生存期
@@ -171,11 +171,11 @@ public class FurionService
 创建 `IBusinessService` 接口和 `BusinessService` 实现类，代码如下：
 
 ```cs showLineNumbers  {7,12}
-using Furion.Core;
-using Furion.DatabaseAccessor;
-using Furion.DependencyInjection;
+using TouchSocket.Core;
+using TouchSocket.DatabaseAccessor;
+using TouchSocket.DependencyInjection;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface IBusinessService
     {
@@ -202,10 +202,10 @@ namespace Furion.Application
 创建 `PersonController` 控制器，代码如下：
 
 ```cs showLineNumbers  {11,19}
-using Furion.Application;
+using TouchSocket.Application;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -233,7 +233,7 @@ namespace Furion.Web.Entry.Controllers
 
 **例子解说**
 
-`Furion` 框架提供了非常灵活且方便的实现依赖注入的方式，只需要实例类继承对应生存期的接口即可，这里继承了 `ITransient`，也就表明了这是一个 `暂时/瞬时` 作用域实例类。该类就可以作为被注入对象，同时也能注入其他接口对象。
+`TouchSocket` 框架提供了非常灵活且方便的实现依赖注入的方式，只需要实例类继承对应生存期的接口即可，这里继承了 `ITransient`，也就表明了这是一个 `暂时/瞬时` 作用域实例类。该类就可以作为被注入对象，同时也能注入其他接口对象。
 
 上面的例子中，`BusinessService` 注入了 `IRepository<Person>` 仓储接口，同时 `PersonController` 控制器注入了 `IBusinessService` 接口。
 
@@ -246,11 +246,11 @@ namespace Furion.Web.Entry.Controllers
 创建 `IBusinessService<T>` 接口和 `BusinessService<T>` 实现类，代码如下：
 
 ```cs showLineNumbers  {7,12}
-using Furion.Core;
-using Furion.DatabaseAccessor;
-using Furion.DependencyInjection;
+using TouchSocket.Core;
+using TouchSocket.DatabaseAccessor;
+using TouchSocket.DependencyInjection;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface IBusinessService<T>
     {
@@ -277,10 +277,10 @@ namespace Furion.Application
 创建 `PersonController` 控制器，代码如下：
 
 ```cs showLineNumbers  {11,19}
-using Furion.Application;
+using TouchSocket.Application;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -315,9 +315,9 @@ namespace Furion.Web.Entry.Controllers
 创建 `IBusinessService` 接口和 `BusinessService`、`OtherBusinessService` 两个实现类，代码如下：
 
 ```cs showLineNumbers  {5,10,18}
-using Furion.DependencyInjection;
+using TouchSocket.DependencyInjection;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface IBusinessService
     {
@@ -344,12 +344,12 @@ namespace Furion.Application
 
 :::tip 新版本，推荐使用
 
-在 `Furion 3.8.6+` 版本之后新增了 `INamedServiceProvider` 服务接口，可替代 `Func<string, ILifetime, object>` 方式：
+在 `TouchSocket 3.8.6+` 版本之后新增了 `INamedServiceProvider` 服务接口，可替代 `Func<string, ILifetime, object>` 方式：
 
 ```cs showLineNumbers {8,15-17,19-23}
-using Furion.Application.Services;
+using TouchSocket.Application.Services;
 
-namespace Furion.Application;
+namespace TouchSocket.Application;
 
 public class TestNamedServices : IDynamicApiController
 {
@@ -379,12 +379,12 @@ public class TestNamedServices : IDynamicApiController
 :::important 不再推荐 `Func<string, TLifetime, object>` 方式
 
 ```cs showLineNumbers  {15,17,18}
-using Furion.Application;
-using Furion.DependencyInjection;
+using TouchSocket.Application;
+using TouchSocket.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
 using System;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -417,9 +417,9 @@ namespace Furion.Web.Entry.Controllers
 如果需要自定义解析名称，只需要贴 `[Injection(Named = "名称")]` 即可，如：
 
 ```cs showLineNumbers  {5,11}
-using Furion.DependencyInjection;
+using TouchSocket.DependencyInjection;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     [Injection(Named = "BusName1")]
     public class BusinessService : IBusinessService, ITransient
@@ -451,11 +451,11 @@ _otherBusinessService = resolveNamed("BusName2", default) as IBusinessService;
 创建 `SelfService` 实例类，代码如下：
 
 ```cs showLineNumbers  {7,11}
-using Furion.Core;
-using Furion.DatabaseAccessor;
-using Furion.DependencyInjection;
+using TouchSocket.Core;
+using TouchSocket.DatabaseAccessor;
+using TouchSocket.DependencyInjection;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class SelfService : ITransient
     {
@@ -477,11 +477,11 @@ namespace Furion.Application
 创建 `ValueController` 控制器，代码如下：
 
 ```cs showLineNumbers  {13,21}
-using Furion.Application;
-using Furion.Core;
+using TouchSocket.Application;
+using TouchSocket.Core;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -505,7 +505,7 @@ namespace Furion.Web.Entry.Controllers
 
 ## 12.8 `[Injection]` 特性配置
 
-`Furion` 框架提供 `[Injection]` 特性可以改变注册方式，同时还能配置 `AOP` 拦截。
+`TouchSocket` 框架提供 `[Injection]` 特性可以改变注册方式，同时还能配置 `AOP` 拦截。
 
 `[Injection]` 提供以下配置支持：
 
@@ -525,7 +525,7 @@ namespace Furion.Web.Entry.Controllers
 
 ## 12.9 自定义高级注册
 
-默认情况下，`Furion` 提供的注册方式可以满足大多数依赖注入的需求，如有特别注册需求，只需要在 `Startup` 中配置即可，如：
+默认情况下，`TouchSocket` 提供的注册方式可以满足大多数依赖注入的需求，如有特别注册需求，只需要在 `Startup` 中配置即可，如：
 
 ```cs showLineNumbers
 services.AddScoped(typeof(ISpecService), provider = > {
@@ -538,7 +538,7 @@ services.AddScoped(typeof(ISpecService), provider = > {
 
 :::note 补充说明
 
-`Furion` 框架中的 `AppDbContext` 数据库上下文还有 `ISqlDispatchProxy` 都是通过这种方式创建的。
+`TouchSocket` 框架中的 `AppDbContext` 数据库上下文还有 `ISqlDispatchProxy` 都是通过这种方式创建的。
 
 :::
 
@@ -557,14 +557,14 @@ services.AddScoped(typeof(ISpecService), provider = > {
   "DependencyInjectionSettings": {
     "Definitions": [
       {
-        "Interface": "Furion.Application;Furion.Application.ITestService",
-        "Service": "Furion.Application;Furion.Application.TestService",
+        "Interface": "TouchSocket.Application;TouchSocket.Application.ITestService",
+        "Service": "TouchSocket.Application;TouchSocket.Application.TestService",
         "RegisterType": "Transient",
         "Action": "Add",
         "Pattern": "SelfWithFirstInterface",
         "Named": "TestService",
         "Order": 1,
-        "Proxy": "Furion.Application;Furion.Application.LogDispathProxy"
+        "Proxy": "TouchSocket.Application;TouchSocket.Application.LogDispathProxy"
       }
     ]
   }
@@ -576,7 +576,7 @@ services.AddScoped(typeof(ISpecService), provider = > {
 - `DependencyInjectionSettings`：依赖注入配置根节点
   - `Definitions`：动态依赖注入配置节点，`ExternalService` 数组类型
     - `ExternalService`：配置单个依赖注入信息
-      - `Interface`：配置依赖接口信息，格式：`程序集名称;接口完整名称`，如：`Furion.Application;Furion.Application.ITestService`
+      - `Interface`：配置依赖接口信息，格式：`程序集名称;接口完整名称`，如：`TouchSocket.Application;TouchSocket.Application.ITestService`
       - `Service`：配置接口实现信息，格式同上
       - `RegisterType`：配置依赖注入的对象生存期，取值：`Transient`，`Scoped`，`Singleton`
       - `Action`：注册行为，可选值：`Add`，`TryAdd`，参见 [#128-injection-特性配置](#128-injection-特性配置)
@@ -601,7 +601,7 @@ services.AddScoped(typeof(ISpecService), provider = > {
 
 ## 12.11 注册顺序和优先级
 
-`Furion` 框架中，默认注册顺序是按照程序集扫描顺序进行注册，如果需要改变注册顺序，可通过 `[Injection(Order)]` 特性指定，`Order` 值越大，则越在最后注册。
+`TouchSocket` 框架中，默认注册顺序是按照程序集扫描顺序进行注册，如果需要改变注册顺序，可通过 `[Injection(Order)]` 特性指定，`Order` 值越大，则越在最后注册。
 
 另外 `appsettings.json` 配置的优先级最大，`appsettings.json` 配置的注册会覆盖之前所有注册。
 
@@ -615,7 +615,7 @@ services.AddScoped(typeof(ISpecService), provider = > {
 
 `AOP` 是非常重要的思想和技术，也就是 `面向切面` 编程，可以让我们在不改动原来代码的情况下进行动态篡改业务代码。
 
-在 `Furion` 框架中，实现 `Aop` 非常简单，如：
+在 `TouchSocket` 框架中，实现 `Aop` 非常简单，如：
 
 假设我们有 `ITestService` 和 `TestService` 两个类型：
 
@@ -641,11 +641,11 @@ public class TestService: ITestService, ITransient
 这个时候我们只需要创建一个代理类即可，如 `LogDispatchProxy`
 
 ```cs showLineNumbers  {1,3,7,25,37,48}
-using Furion.DependencyInjection;
+using TouchSocket.DependencyInjection;
 using System;
 using System.Reflection;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class LogDispatchProxy : AspectDispatchProxy, IDispatchProxy
     {
@@ -726,13 +726,13 @@ public class TestService: ITestService, ITransient
 
 ### 12.12.1 `全局Aop拦截`
 
-`Furion` 框架也提供了全局拦截的方式，只需要将 `IDispatchProxy` 修改为 `IGlobalDispatchProxy` 即可。
+`TouchSocket` 框架也提供了全局拦截的方式，只需要将 `IDispatchProxy` 修改为 `IGlobalDispatchProxy` 即可。
 
 ```cs showLineNumbers
-using Furion;
+using TouchSocket;
 using System.Reflection;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class LogDispatchProxy : AspectDispatchProxy, IGlobalDispatchProxy
     {
@@ -751,7 +751,7 @@ namespace Furion.Application
 
 ### 12.12.2 `AOP` 注入解析服务
 
-`Furion` 框架未提供 `Proxy` 构造函数注入功能，但是提供了 `Services` 属性，如果需要解析服务，则可以通过以下方式：
+`TouchSocket` 框架未提供 `Proxy` 构造函数注入功能，但是提供了 `Services` 属性，如果需要解析服务，则可以通过以下方式：
 
 ```cs showLineNumbers
 var someServices = Services.GetService<ISomeService>(); // 推荐方式
@@ -806,7 +806,7 @@ var services = scope.ServiceProvider;
 
 ### 12.13.3 `Scoped` 静态类
 
-为了方法快速创建服务作用域，`Furion` 框架提供了 `Scoped` 静态类，如：
+为了方法快速创建服务作用域，`TouchSocket` 框架提供了 `Scoped` 静态类，如：
 
 ```cs showLineNumbers {1-2}
 Scoped.Create((factory, scope) => {
@@ -816,7 +816,7 @@ Scoped.Create((factory, scope) => {
 
 ## 12.14 自定义扫描/筛选注册服务
 
-`Furion` 框架中并未提供完全自定义依赖注入扫描的机制，但推荐一个非常优秀的 `.NET Core` 依赖注入拓展库：`Scrutor`，使用非常简单，主要通过 `FromAssemblyOf<>` 扫描程序集和 `AddClasses(o)` 进行筛选注册。
+`TouchSocket` 框架中并未提供完全自定义依赖注入扫描的机制，但推荐一个非常优秀的 `.NET Core` 依赖注入拓展库：`Scrutor`，使用非常简单，主要通过 `FromAssemblyOf<>` 扫描程序集和 `AddClasses(o)` 进行筛选注册。
 
 使用如下：
 
@@ -852,6 +852,6 @@ services.Scan(scan => scan
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

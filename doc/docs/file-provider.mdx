@@ -13,7 +13,7 @@ import Tag from "@site/src/components/Tag.js";
 
 - **新特性**
 
-  - &nbsp;<Tag>新增</Tag> `*.bcmap` 和 `.properties` 文件类型 `MIME` 支持 <sup>4.8.4.9</sup> <sup>⏱️2023.01.06</sup> [!694](https://gitee.com/dotnetchina/Furion/pulls/694)
+  - &nbsp;<Tag>新增</Tag> `*.bcmap` 和 `.properties` 文件类型 `MIME` 支持 <sup>4.8.4.9</sup> <sup>⏱️2023.01.06</sup> [!694](https://gitee.com/rrqm_home/TouchSocket/pulls/694)
 
 </div>
   </div>
@@ -21,7 +21,7 @@ import Tag from "@site/src/components/Tag.js";
 
 :::important 版本说明
 
-以下内容仅限 `Furion 2.5.0 +` 版本使用。
+以下内容仅限 `TouchSocket 2.5.0 +` 版本使用。
 
 :::
 
@@ -33,7 +33,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ### 31.1.1 文件系统类型
 
-`Furion` 提供了两种文件系统类型：
+`TouchSocket` 提供了两种文件系统类型：
 
 - `Physical`：物理文件系统类型，也就是物理机中实际存在的文件
 - `Embedded`：嵌入资源文件系统类型，也就是资源文件嵌入到了程序集中，常用于模块化开发
@@ -48,7 +48,7 @@ services.AddVirtualFileServer();
 
 ### 31.3.1 `Func<FileProviderTypes, object, IFileProvider>` 方式
 
-`Furion` 框架提供了 `Func<FileProviderTypes, object, IFileProvider>` 委托供构造函数注入或解析服务，如：
+`TouchSocket` 框架提供了 `Func<FileProviderTypes, object, IFileProvider>` 委托供构造函数注入或解析服务，如：
 
 ```cs showLineNumbers  {6,8-9,11-12}
 public class PersonServices
@@ -69,7 +69,7 @@ public class PersonServices
 
 ### 31.3.2 `FS` 静态类方式
 
-`Furion` 框架也提供了 `FS` 静态类方式创建，如：
+`TouchSocket` 框架也提供了 `FS` 静态类方式创建，如：
 
 ```cs showLineNumbers
 // 解析物理文件系统
@@ -313,7 +313,7 @@ public async Task<IActionResult> UploadFileAsync(IFormFile file)
 
 :::tip 便捷拓展方法
 
-在 Furion `v3.2.0` 新增了 `IFormFile` 的 `ToByteArray` 拓展，如:
+在 TouchSocket `v3.2.0` 新增了 `IFormFile` 的 `ToByteArray` 拓展，如:
 
 ```cs showLineNumbers  {4}
 [HttpPost]
@@ -463,7 +463,7 @@ app.Configuration.Get<WebHostBuilder>().ConfigureKestrel(options =>
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

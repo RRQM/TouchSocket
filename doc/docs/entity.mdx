@@ -33,7 +33,7 @@ sidebar_label: 9.3 数据库实体
 
 ## 9.3.2 如何定义实体
 
-`Furion` 框架提供多种定义实体的接口依赖：
+`TouchSocket` 框架提供多种定义实体的接口依赖：
 
 - `IEntity`：实体基接口，是所有实体的基接口
 - `IEntityNotKey`：无键实体接口，也就是视图、存储过程、函数依赖接口
@@ -43,23 +43,23 @@ sidebar_label: 9.3 数据库实体
 
 :::important 实体定义位置
 
-`Furion` 框架中有约定，实体统一定义在 `Furion.Core` 层。
+`TouchSocket` 框架中有约定，实体统一定义在 `TouchSocket.Core` 层。
 
 :::
 
 ### 9.3.2.1 实体继承选用原则
 
-- 如果你不需要 `Furion` 为实体添加任何内置特性，选用 `IEntity`，无键实体选用 `IEntityNotKey`
+- 如果你不需要 `TouchSocket` 为实体添加任何内置特性，选用 `IEntity`，无键实体选用 `IEntityNotKey`
 - 如果你只需要 `Id` 属性，选用 `EntityBase`
-- 如果你需要 `Furion` 为你自动添加常用字段，则选用 `Entity`
+- 如果你需要 `TouchSocket` 为你自动添加常用字段，则选用 `Entity`
 - 如果你需要视图、存储过程、函数可以通过 `DbSet` 操作，则继承 `EntityNotKey`
 
 ### 9.3.2.2 `IEntity` 示范：
 
 ```cs showLineNumbers  {1,5}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class User : IEntity
     {
@@ -79,9 +79,9 @@ namespace Furion.Core
 ### 9.3.2.3 `EntityBase` 示范：
 
 ```cs showLineNumbers  {1,5}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class User : EntityBase
     {
@@ -98,9 +98,9 @@ namespace Furion.Core
 ### 9.3.2.4 `Entity` 示范：
 
 ```cs showLineNumbers  {1,5}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class User : Entity
     {
@@ -118,9 +118,9 @@ namespace Furion.Core
 ### 9.3.2.5 `EntityNotKey` 示范：
 
 ```cs showLineNumbers  {1,5,7-9}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class UserView : EntityNotKey
     {
@@ -143,7 +143,7 @@ namespace Furion.Core
 
 :::note 特别注意
 
-在 `Furion` 框架中，数据库实体必须直接或间接继承 `IEntity` 才能进行仓储等操作。
+在 `TouchSocket` 框架中，数据库实体必须直接或间接继承 `IEntity` 才能进行仓储等操作。
 
 :::
 
@@ -151,7 +151,7 @@ namespace Furion.Core
 
 在实际项目开发中，我们通常每个应用的数据库表都有一些公共的类，比如创建人，创建时间等，这个时候我们就需要自定义公共实体类了。
 
-在 `Furion` 框架中，创建公共实体类需要满足以下条件：
+在 `TouchSocket` 框架中，创建公共实体类需要满足以下条件：
 
 - 公共实体类**必须是公开且是抽象类**
 - 公共实体类必须含有无参构造函数
@@ -262,19 +262,19 @@ namespace Your.Namespace
 
 ## 9.3.4 数据库实体配置
 
-在过去的 `EF Core` 项目开发中，数据库实体配置需要在 `DbContext` 的 `OnModelCreating` 中配置。`Furion` 为了简化配置和提高开发效率，抽象出了 `IEntityTypeBuilder<TEntity>` 接口。
+在过去的 `EF Core` 项目开发中，数据库实体配置需要在 `DbContext` 的 `OnModelCreating` 中配置。`TouchSocket` 为了简化配置和提高开发效率，抽象出了 `IEntityTypeBuilder<TEntity>` 接口。
 
 通过 `IEntityTypeBuilder<TEntity>` 接口，我们无需在 `DbContext` 的 `OnModelCreating` 中配置，可在任意地方配置。
 
 ### 9.3.4.1 在数据库实体中配置
 
 ```cs showLineNumbers  {1,5,20-25}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class User : Entity, IEntityTypeBuilder<User>
     {
@@ -301,12 +301,12 @@ namespace Furion.Core
 ### 9.3.4.2 在任何实例类中配置
 
 ```cs showLineNumbers  {1,8,10-14}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class SomeClass : IEntityTypeBuilder<User>
     {
@@ -335,7 +335,7 @@ namespace Furion.Core
 
 ## 9.3.5 数据库实体配置说明
 
-`Furion` 框架会自动扫描所有继承 `IEntity` 接口的类进行 `DbSet<TEntity>` 注册，也就是实现自动配置 `DbContext` 的 `OnModelCreating`。
+`TouchSocket` 框架会自动扫描所有继承 `IEntity` 接口的类进行 `DbSet<TEntity>` 注册，也就是实现自动配置 `DbContext` 的 `OnModelCreating`。
 
 如果需要跳过自动注册，只需要贴 `[Manual]` 或 `[SuppressSniffer]` 特性即可。一旦贴了此特性，那么就需要手动配置 `DbContext` 的 `OnModelCreating`
 
@@ -351,6 +351,6 @@ namespace Furion.Core
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

@@ -6,7 +6,7 @@ sidebar_label: 23. JSON 序列化
 
 :::important 版本说明
 
-以下内容仅限 `Furion 1.16.0 +` 版本使用。
+以下内容仅限 `TouchSocket 1.16.0 +` 版本使用。
 
 :::
 
@@ -20,19 +20,19 @@ sidebar_label: 23. JSON 序列化
 
 目前在 C# 语言中有两个主流的 `JSON` 序列化操作库：
 
-- `System.Text.Json`：`.NET Core` 内置 `JSON` 序列化库，也是 `Furion` 框架默认实现
+- `System.Text.Json`：`.NET Core` 内置 `JSON` 序列化库，也是 `TouchSocket` 框架默认实现
 - `Newtonsoft.Json`：目前使用人数最多的 `JSON` 序列化库，需要安装 `Microsoft.AspNetCore.Mvc.NewtonsoftJson` 拓展包
 
 由于目前 `System.Text.Json` 相比 `Newtonsoft.Json` 功能和稳定性有许多不足之处，比如循环引用问题在 `System.Text.Json` 无解。但在 `.NET 6` 之后得到解决。
 
-`Furion` 框架为了解决多种序列化工具配置和用法上的差异问题，抽象出了 `IJsonSerializerProvider` 接口。
+`TouchSocket` 框架为了解决多种序列化工具配置和用法上的差异问题，抽象出了 `IJsonSerializerProvider` 接口。
 
 ## 23.3 `IJsonSerializerProvider` 接口
 
-`Furion` 框架提供了 `IJsonSerializerProvider` 接口规范，同时**要求实现该接口的实体都必须采用单例模式**，该接口定义代码如下：
+`TouchSocket` 框架提供了 `IJsonSerializerProvider` 接口规范，同时**要求实现该接口的实体都必须采用单例模式**，该接口定义代码如下：
 
 ```cs showLineNumbers
-namespace Furion.JsonSerialization
+namespace TouchSocket.JsonSerialization
 {
     /// <summary>
     /// Json 序列化提供器
@@ -75,7 +75,7 @@ namespace Furion.JsonSerialization
 
 ### 23.4.1 获取序列化对象
 
-`Furion` 框架提供了两种方式获取 `IJsonSerializerProvider` 实例：
+`TouchSocket` 框架提供了两种方式获取 `IJsonSerializerProvider` 实例：
 
 - 构造函数注入 `IJsonSerializerProvider`
 - 静态类 `JSON.GetJsonSerializer()` 方式，**查看 [JSON 静态类](./global/json.mdx)**
@@ -83,10 +83,10 @@ namespace Furion.JsonSerialization
 如：
 
 ```cs showLineNumbers  {10,13}
-using Furion.DynamicApiController;
-using Furion.JsonSerialization;
+using TouchSocket.DynamicApiController;
+using TouchSocket.JsonSerialization;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class JsonDemo : IDynamicApiController
     {
@@ -109,7 +109,7 @@ public string GetText()
     return _jsonSerializer.Serialize(new
     {
         Id = 1,
-        Name = "Furion"
+        Name = "TouchSocket"
     });
 }
 ```
@@ -119,7 +119,7 @@ public string GetText()
 ```cs showLineNumbers
 public object GetObject()
 {
-    var json = "{\"Id\":1,\"Name\":\"Furion\"}";
+    var json = "{\"Id\":1,\"Name\":\"TouchSocket\"}";
     var obj = _jsonSerializer.Deserialize<object>(json);
     return obj;
 }
@@ -151,7 +151,7 @@ var obj = _jsonSerializer.Deserialize<object>(json, new JsonSerializerOptions
 
 ### 23.4.4 序列化更多配置
 
-`Furion` 框架不推荐一个框架中有多种序列化实现类，也就是说使用 `System.Text.Json` 就不要使用 `Newtonsoft.Json`，反之亦然。
+`TouchSocket` 框架不推荐一个框架中有多种序列化实现类，也就是说使用 `System.Text.Json` 就不要使用 `Newtonsoft.Json`，反之亦然。
 
 如需配置更多选项，只需创建 `JsonSerializerOptions` 配置对象即可，如：
 
@@ -159,7 +159,7 @@ var obj = _jsonSerializer.Deserialize<object>(json, new JsonSerializerOptions
 var json =  _jsonSerializer.Serialize(new
             {
                 Id = 1,
-                Name = "Furion"
+                Name = "TouchSocket"
             }, new JsonSerializerOptions {
                 WriteIndented = true
             });
@@ -169,11 +169,11 @@ var json =  _jsonSerializer.Serialize(new
 
 ### 23.5.1 自定义序列化提供器
 
-正如上文所说，`Furion` 默认的 `IJsonSerializerProvider` 实现方式是 `System.Text.Json` 库，如需替换为 `Newtonsoft.Json`，只需以下步骤即可：
+正如上文所说，`TouchSocket` 默认的 `IJsonSerializerProvider` 实现方式是 `System.Text.Json` 库，如需替换为 `Newtonsoft.Json`，只需以下步骤即可：
 
 :::tip 无需安装
 
-在 `Furion 4.6.5+` 版本已经内置了 `Microsoft.AspNetCore.Mvc.NewtonsoftJson` 拓展包，也就是直接在 `Startup.cs` 中注册即可。
+在 `TouchSocket 4.6.5+` 版本已经内置了 `Microsoft.AspNetCore.Mvc.NewtonsoftJson` 拓展包，也就是直接在 `Startup.cs` 中注册即可。
 
 :::
 
@@ -187,11 +187,11 @@ services.AddControllersWithViews()
 2. 实现 `IJsonSerializerProvider` 提供器
 
 ```cs showLineNumbers  {10}
-using Furion.DependencyInjection;
-using Furion.JsonSerialization;
+using TouchSocket.DependencyInjection;
+using TouchSocket.JsonSerialization;
 using Newtonsoft.Json;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     /// <summary>
     /// Newtonsoft.Json 实现
@@ -509,7 +509,7 @@ public class NewtonsoftJsonSerializerProvider : IJsonSerializerProvider, ISingle
 
 ### 23.5.13 `DateOnly` 和 `TimeOnly` 类型序列化支持
 
-在 `.NET6+` 添加了 `DateOnly` 和 `TimeOnly` 类型，`Furion 4.7.9+` 提供了支持。
+在 `.NET6+` 添加了 `DateOnly` 和 `TimeOnly` 类型，`TouchSocket 4.7.9+` 提供了支持。
 
 - `System.Text.Json` 方式
 
@@ -559,7 +559,7 @@ Could not convert string to DateTimeOffset: 0001-01-01 00:00:00
 
 ## 23.6 `DataTable`、`DataSet`、`Tuple` 、`JArray`，`JObject` 等序列化问题
 
-由于默认 `Furion` 采用 `System.Text.Json` 进行序列化，但是不支持复杂类型，如 `DataTable`、`DataSet`、`Tuple` 、`JArray`，`JObject`等类型，所以需要更换成 `NewtonsoftJson` 即可，见 [JSON 序列化 - 23.5.1 自定义序列化提供器](./json-serialization#2351-自定义序列化提供器)
+由于默认 `TouchSocket` 采用 `System.Text.Json` 进行序列化，但是不支持复杂类型，如 `DataTable`、`DataSet`、`Tuple` 、`JArray`，`JObject`等类型，所以需要更换成 `NewtonsoftJson` 即可，见 [JSON 序列化 - 23.5.1 自定义序列化提供器](./json-serialization#2351-自定义序列化提供器)
 
 ## 23.7 `System.Text.Json` 和 `Newtonsoft.Json` 完整差异化对比
 
@@ -569,6 +569,6 @@ Could not convert string to DateTimeOffset: 0001-01-01 00:00:00
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

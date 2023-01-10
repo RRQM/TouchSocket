@@ -60,7 +60,7 @@ export default function Support() {
               color: "rgb(114, 60, 255)",
             }}
           >
-            如果你觉得 Furion
+            如果你觉得 TouchSocket
             确实有用，并且实实在在的帮助到了你，那么可以考虑支持一下我们。
           </div>
           <img src={useBaseUrl("img/support.png")} style={{ width: "100%" }} />

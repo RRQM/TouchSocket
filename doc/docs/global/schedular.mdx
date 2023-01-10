@@ -6,7 +6,7 @@ sidebar_label: 17. Schedular 静态类
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.0 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.0 +` 版本使用。
 
 :::
 
@@ -25,7 +25,7 @@ IDisposable dispose =  ScheduleServe.Run(options =>
 
 :::tip 推荐使用 `Serve.Run()` 或 `Serve.RunGeneric()` 方式替代
 
-`Furion` 框架提供了 `Serve.Run()` 方式支持跨平台使用，还能支持注册更多服务，如：
+`TouchSocket` 框架提供了 `Serve.Run()` 方式支持跨平台使用，还能支持注册更多服务，如：
 
 ```cs showLineNumbers {1,3,5}
 Serve.Run(services =>
@@ -61,7 +61,7 @@ var args = new object[] { "* * * * * *", CronStringFormat.WithSeconds };
 var stringArgs = Schedular.Serialize(args);
 
 // 作业额外数据
-var jobData = new Dictionary<string, object> { { "name", "Furion" } };
+var jobData = new Dictionary<string, object> { { "name", "TouchSocket" } };
 var stringJobData = Schedular.Serialize(jobData);
 ```
 
@@ -73,6 +73,6 @@ var stringArgs = "[\"* * * * *\",0]";
 var args = Schedular.Deserialize<object[]>(stringArgs);
 
 // 作业额外数据
-var stringJobData = "{\"name\":\"Furion\"}";
+var stringJobData = "{\"name\":\"TouchSocket\"}";
 var args = Schedular.Deserialize<Dictionary<string, object>>(stringJobData);
 ```

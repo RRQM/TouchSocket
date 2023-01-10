@@ -227,10 +227,10 @@ class Example
 //      Expected 'Value 1', got 'Value 1', ThreadLocal value is ''
 ```
 
-为了简化操作，`Furion v2.18+` 版本实现了轻量级的 `CallContext` 静态类，内部使用 `AsyncLocal<T>` 实现，使用如下：
+为了简化操作，`TouchSocket v2.18+` 版本实现了轻量级的 `CallContext` 静态类，内部使用 `AsyncLocal<T>` 实现，使用如下：
 
 ```cs showLineNumbers 
-CallContext.SetLocalValue("name", "Furion");
+CallContext.SetLocalValue("name", "TouchSocket");
 CallContext.GetLocalValue("name");
 
 CallContext<int>.SetLocalValue("count", 1);
@@ -243,4 +243,4 @@ CallContext<int>.GetLocalValue("count");
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。

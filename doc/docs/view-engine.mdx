@@ -8,7 +8,7 @@ sidebar_label: 17. 视图引擎
 
 视图引擎负责根据视图模板创建 HTML。视图通常是 HTML 和编程语言的某种混合。支持变量定义、方法调用及逻辑编写。
 
-在 `Furion` 框架中，底层集成了微软提供的 `Razor` 视图引擎组件并提供更加灵活方便的语法糖。
+在 `TouchSocket` 框架中，底层集成了微软提供的 `Razor` 视图引擎组件并提供更加灵活方便的语法糖。
 
 ## 17.2 视图引擎作用
 
@@ -36,10 +36,10 @@ public void ConfigureServices(IServiceCollection services)
 - 构造函数注入 `IViewEngine`
 
 ```cs showLineNumbers  {2,9,12}
-using Furion.DynamicApiController;
-using Furion.ViewEngine;
+using TouchSocket.DynamicApiController;
+using TouchSocket.ViewEngine;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class ViewEngineService : IDynamicApiController
     {
@@ -47,7 +47,7 @@ namespace Furion.Application
         public ViewEngineService(IViewEngine viewEngine)
         {
             _viewEngine = viewEngine;
-            var result = _viewEngine.RunCompile("Hello @Model.Name", new { Name = "Furion" });
+            var result = _viewEngine.RunCompile("Hello @Model.Name", new { Name = "TouchSocket" });
         }
     }
 }
@@ -56,19 +56,19 @@ namespace Furion.Application
 - 字符串方式
 
 ```cs showLineNumbers 
-var result = "Hello @Model.Name".RunCompile(new { Name = "Furion" });
+var result = "Hello @Model.Name".RunCompile(new { Name = "TouchSocket" });
 ```
 
 ### 17.3.3 弱类型模板
 
 ```cs showLineNumbers 
-var result = _viewEngine.RunCompile("Hello @Model.Name", new { Name = "Furion" });
+var result = _viewEngine.RunCompile("Hello @Model.Name", new { Name = "TouchSocket" });
 ```
 
 结果：
 
 ```html showLineNumbers 
-Hello Furion
+Hello TouchSocket
 ```
 
 支持异步 `RunCompileAsync`
@@ -84,7 +84,7 @@ Hello @Model.Name
 }
 ", new TestModel
 {
-    Name = "Furion",
+    Name = "TouchSocket",
     Items = new[] { 3, 1, 2 }
 });
 ```
@@ -92,7 +92,7 @@ Hello @Model.Name
 结果：
 
 ```html showLineNumbers 
-Hello Furion
+Hello TouchSocket
 <p>3</p>
 <p>1</p>
 <p>2</p>
@@ -115,7 +115,7 @@ Hello @Model.Name
 }
 ", new TestModel
 {
-    Name = "Furion",
+    Name = "TouchSocket",
     Items = new[] { 3, 1, 2 }
 });
 ```
@@ -123,7 +123,7 @@ Hello @Model.Name
 结果：
 
 ```html showLineNumbers 
-Hello Furion
+Hello TouchSocket
 <p>3</p>
 <p>1</p>
 <p>2</p>
@@ -142,7 +142,7 @@ Hello @Model.Name
 }
 ", new TestModel
 {
-    Name = "Furion",
+    Name = "TouchSocket",
     Items = new[] { 5,6,7,8 }
 });
 ```
@@ -150,7 +150,7 @@ Hello @Model.Name
 结果：
 
 ```html showLineNumbers 
-Hello Furion
+Hello TouchSocket
 <p>5</p>
 <p>6</p>
 <p>7</p>
@@ -168,7 +168,7 @@ Hello Furion
 比如这里添加 `System.IO` 程序集：
 
 ```cs showLineNumbers 
-var result = _viewEngine.RunCompileFromCached(@"<div>@System.IO.Path.Combine(""Furion"", ""ViewEngine"")</div>", builderAction: builder =>
+var result = _viewEngine.RunCompileFromCached(@"<div>@System.IO.Path.Combine(""TouchSocket"", ""ViewEngine"")</div>", builderAction: builder =>
             {
                 builder.AddAssemblyReferenceByName("System.IO");
             });
@@ -177,10 +177,10 @@ var result = _viewEngine.RunCompileFromCached(@"<div>@System.IO.Path.Combine(""F
 结果：
 
 ```html showLineNumbers 
-<div>Furion\\ViewEngine</div>
+<div>TouchSocket\\ViewEngine</div>
 ```
 
-另外，`Furion` 提供多种方式加载程序集：
+另外，`TouchSocket` 提供多种方式加载程序集：
 
 ```cs showLineNumbers 
 builder.AddAssemblyReferenceByName("System.Security"); // 通过名称
@@ -191,7 +191,7 @@ builder.AddAssemblyReference(Assembly.Load("source")); // 通过元数据引用
 ### 17.4.2 添加命名空间
 
 ```cs showLineNumbers 
-var result = _viewEngine.RunCompileFromCached(@"<div>@Path.Combine(""Furion"", ""ViewEngine"")</div>", builderAction: builder =>
+var result = _viewEngine.RunCompileFromCached(@"<div>@Path.Combine(""TouchSocket"", ""ViewEngine"")</div>", builderAction: builder =>
             {
                 builder.AddUsing("System.IO");
                 builder.AddAssemblyReferenceByName("System.IO");
@@ -201,14 +201,14 @@ var result = _viewEngine.RunCompileFromCached(@"<div>@Path.Combine(""Furion"", "
 结果：
 
 ```html showLineNumbers 
-<div>Furion\\ViewEngine</div>
+<div>TouchSocket\\ViewEngine</div>
 ```
 
 也支持加入多个 `using`：
 
 ```
 builder.AddUsing("System.IO");
-builder.AddUsing("Furion");
+builder.AddUsing("TouchSocket");
 ```
 
 ### 17.4.3 定义模板方法
@@ -323,22 +323,22 @@ Task<IViewEngineTemplate<T>> CompileAsync<T>(string content, Action<IViewEngineO
 
 ## 17.6 字符串模板替换引擎
 
-`Furion` 除了内置视图引擎之外，还支持以下几种模板替换，如：
+`TouchSocket` 除了内置视图引擎之外，还支持以下几种模板替换，如：
 
 ```cs showLineNumbers 
 // 提供数据模板方式
-var str = "我叫{name}".Render(new Dictionary{ {"name", "Furion"} });
-var str = "我叫{Name}".Render(new { Name = "Furion" });
+var str = "我叫{name}".Render(new Dictionary{ {"name", "TouchSocket"} });
+var str = "我叫{Name}".Render(new { Name = "TouchSocket" });
 var str = "我叫{Detail.Name}".Render(new { Detail = new { Name = "Furoin" } });
 
 // 从配置读取方式
-var str = "我叫#(Furion:Address)".Render();
+var str = "我叫#(TouchSocket:Address)".Render();
 ```
 
 ```json showLineNumbers 
 {
-  "Furion": {
-    "Address": "https://www.furion.icu"
+  "TouchSocket": {
+    "Address": "https://www.TouchSocket.icu"
   }
 }
 ```
@@ -347,6 +347,6 @@ var str = "我叫#(Furion:Address)".Render();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

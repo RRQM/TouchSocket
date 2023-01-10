@@ -6,7 +6,7 @@ sidebar_label: 9.6 更新操作
 
 :::warning 功能移除声明
 
-以下内容包含 `Exists` 单词的在 `Furion 2.6.0 +` 版本中已移除。
+以下内容包含 `Exists` 单词的在 `TouchSocket 2.6.0 +` 版本中已移除。
 
 :::
 
@@ -437,10 +437,10 @@ repository.Update(entity, ignoreNullValues: true);
 也可以全局配置，在 `AppDbContext` 的派生类的构造函数中启用即可：
 
 ```cs showLineNumbers  {11}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class DefaultDbContext : AppDbContext<DefaultDbContext>
@@ -457,6 +457,6 @@ namespace Furion.EntityFramework.Core
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

@@ -14,31 +14,31 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 2.2.1 脚手架
 
-`Furion` 官方提供了多种 `Web` 应用类型的脚手架，方便大家快速创建多层架构项目。目前支持以下应用脚手架：
+`TouchSocket` 官方提供了多种 `Web` 应用类型的脚手架，方便大家快速创建多层架构项目。目前支持以下应用脚手架：
 
-### 2.2.1.1 `Furion + EFCore`
+### 2.2.1.1 `TouchSocket + EFCore`
 
 |                                                                 模板类型                                                                 | 名称                             | 版本                                                                                                                                                                 | 关键词                 | 描述                   |
 | :--------------------------------------------------------------------------------------------------------------------------------------: | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ---------------------- |
-|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.Template.Mvc/)        | Furion.Template.Mvc              | [![nuget](https://img.shields.io/nuget/v/Furion.Template.Mvc.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.Template.Mvc/)                           | 👉 **furionmvc**       | Mvc 模板               |
-|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.Template.Api/)        | Furion.Template.Api              | [![nuget](https://img.shields.io/nuget/v/Furion.Template.Api.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.Template.Api/)                           | 👉 **furionapi**       | WebApi 模板            |
-|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.Template.App/)        | Furion.Template.App              | [![nuget](https://img.shields.io/nuget/v/Furion.Template.App.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.Template.App/)                           | 👉 **furionapp**       | Mvc/WebApi 模板        |
-|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.Template.Razor/)       | Furion.Template.Razor            | [![nuget](https://img.shields.io/nuget/v/Furion.Template.Razor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.Template.Razor/)                       | 👉 **furionrazor**     | RazorPages 模板        |
-| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.Template.RazorWithWebApi/)  | Furion.Template.RazorWithWebApi  | [![nuget](https://img.shields.io/nuget/v/Furion.Template.RazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.Template.RazorWithWebApi/)   | 👉 **furionrazorapi**  | RazorPages/WebApi 模板 |
-|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.Template.Blazor/)      | Furion.Template.Blazor           | [![nuget](https://img.shields.io/nuget/v/Furion.Template.Blazor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.Template.Blazor/)                     | 👉 **furionblazor**    | Blazor 模板            |
-| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.Template.BlazorWithWebApi/) | Furion.Template.BlazorWithWebApi | [![nuget](https://img.shields.io/nuget/v/Furion.Template.BlazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.Template.BlazorWithWebApi/) | 👉 **furionblazorapi** | Blazor/WebApi 模板     |
+|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.Template.Mvc/)        | TouchSocket.Template.Mvc              | [![nuget](https://img.shields.io/nuget/v/TouchSocket.Template.Mvc.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.Template.Mvc/)                           | 👉 **TouchSocketmvc**       | Mvc 模板               |
+|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.Template.Api/)        | TouchSocket.Template.Api              | [![nuget](https://img.shields.io/nuget/v/TouchSocket.Template.Api.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.Template.Api/)                           | 👉 **TouchSocketapi**       | WebApi 模板            |
+|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.Template.App/)        | TouchSocket.Template.App              | [![nuget](https://img.shields.io/nuget/v/TouchSocket.Template.App.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.Template.App/)                           | 👉 **TouchSocketapp**       | Mvc/WebApi 模板        |
+|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.Template.Razor/)       | TouchSocket.Template.Razor            | [![nuget](https://img.shields.io/nuget/v/TouchSocket.Template.Razor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.Template.Razor/)                       | 👉 **TouchSocketrazor**     | RazorPages 模板        |
+| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.Template.RazorWithWebApi/)  | TouchSocket.Template.RazorWithWebApi  | [![nuget](https://img.shields.io/nuget/v/TouchSocket.Template.RazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.Template.RazorWithWebApi/)   | 👉 **TouchSocketrazorapi**  | RazorPages/WebApi 模板 |
+|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.Template.Blazor/)      | TouchSocket.Template.Blazor           | [![nuget](https://img.shields.io/nuget/v/TouchSocket.Template.Blazor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.Template.Blazor/)                     | 👉 **TouchSocketblazor**    | Blazor 模板            |
+| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.Template.BlazorWithWebApi/) | TouchSocket.Template.BlazorWithWebApi | [![nuget](https://img.shields.io/nuget/v/TouchSocket.Template.BlazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.Template.BlazorWithWebApi/) | 👉 **TouchSocketblazorapi** | Blazor/WebApi 模板     |
 
-### 2.2.1.2 `Furion + SqlSugar`
+### 2.2.1.2 `TouchSocket + SqlSugar`
 
 |                                                                     模板类型                                                                      | 名称                                      | 版本                                                                                                                                                                                   | 关键词             | 描述                   |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------: | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------- |
-|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Mvc/)        | Furion.SqlSugar.Template.Mvc              | [![nuget](https://img.shields.io/nuget/v/Furion.SqlSugar.Template.Mvc.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Mvc/)                           | 👉 **fsmvc**       | Mvc 模板               |
-|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Api/)        | Furion.SqlSugar.Template.Api              | [![nuget](https://img.shields.io/nuget/v/Furion.SqlSugar.Template.Api.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Api/)                           | 👉 **fsapi**       | WebApi 模板            |
-|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.App/)        | Furion.SqlSugar.Template.App              | [![nuget](https://img.shields.io/nuget/v/Furion.SqlSugar.Template.App.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.App/)                           | 👉 **fsapp**       | Mvc/WebApi 模板        |
-|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Razor/)       | Furion.SqlSugar.Template.Razor            | [![nuget](https://img.shields.io/nuget/v/Furion.SqlSugar.Template.Razor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Razor/)                       | 👉 **fsrazor**     | RazorPages 模板        |
-| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.RazorWithWebApi/)  | Furion.SqlSugar.Template.RazorWithWebApi  | [![nuget](https://img.shields.io/nuget/v/Furion.SqlSugar.Template.RazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.RazorWithWebApi/)   | 👉 **fsrazorapi**  | RazorPages/WebApi 模板 |
-|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Blazor/)      | Furion.SqlSugar.Template.Blazor           | [![nuget](https://img.shields.io/nuget/v/Furion.SqlSugar.Template.Blazor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.Blazor/)                     | 👉 **fsblazor**    | Blazor 模板            |
-| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.BlazorWithWebApi/) | Furion.SqlSugar.Template.BlazorWithWebApi | [![nuget](https://img.shields.io/nuget/v/Furion.SqlSugar.Template.BlazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/Furion.SqlSugar.Template.BlazorWithWebApi/) | 👉 **fsblazorapi** | Blazor/WebApi 模板     |
+|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Mvc/)        | TouchSocket.SqlSugar.Template.Mvc              | [![nuget](https://img.shields.io/nuget/v/TouchSocket.SqlSugar.Template.Mvc.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Mvc/)                           | 👉 **fsmvc**       | Mvc 模板               |
+|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Api/)        | TouchSocket.SqlSugar.Template.Api              | [![nuget](https://img.shields.io/nuget/v/TouchSocket.SqlSugar.Template.Api.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Api/)                           | 👉 **fsapi**       | WebApi 模板            |
+|       [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.App/)        | TouchSocket.SqlSugar.Template.App              | [![nuget](https://img.shields.io/nuget/v/TouchSocket.SqlSugar.Template.App.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.App/)                           | 👉 **fsapp**       | Mvc/WebApi 模板        |
+|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Razor/)       | TouchSocket.SqlSugar.Template.Razor            | [![nuget](https://img.shields.io/nuget/v/TouchSocket.SqlSugar.Template.Razor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Razor/)                       | 👉 **fsrazor**     | RazorPages 模板        |
+| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.RazorWithWebApi/)  | TouchSocket.SqlSugar.Template.RazorWithWebApi  | [![nuget](https://img.shields.io/nuget/v/TouchSocket.SqlSugar.Template.RazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.RazorWithWebApi/)   | 👉 **fsrazorapi**  | RazorPages/WebApi 模板 |
+|      [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Blazor/)      | TouchSocket.SqlSugar.Template.Blazor           | [![nuget](https://img.shields.io/nuget/v/TouchSocket.SqlSugar.Template.Blazor.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.Blazor/)                     | 👉 **fsblazor**    | Blazor 模板            |
+| [![nuget](https://shields.io/badge/-Nuget-yellow?cacheSeconds=604800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.BlazorWithWebApi/) | TouchSocket.SqlSugar.Template.BlazorWithWebApi | [![nuget](https://img.shields.io/nuget/v/TouchSocket.SqlSugar.Template.BlazorWithWebApi.svg?cacheSeconds=10800)](https://www.nuget.org/packages/TouchSocket.SqlSugar.Template.BlazorWithWebApi/) | 👉 **fsblazorapi** | Blazor/WebApi 模板     |
 
 ## 2.2.2 安装脚手架
 
@@ -46,9 +46,9 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ```bash showLineNumbers
 // EFCore
-dotnet new --install Furion.Template.Api::4.8.4.8
+dotnet new --install TouchSocket.Template.Api::4.8.4.8
 // SqlSugar
-dotnet new --install Furion.SqlSugar.Template.Api::4.8.4.8
+dotnet new --install TouchSocket.SqlSugar.Template.Api::4.8.4.8
 ```
 
 :::tip `SqlSugar` 脚手架基本使用
@@ -62,12 +62,12 @@ dotnet new --install Furion.SqlSugar.Template.Api::4.8.4.8
 ## 2.2.3 使用脚手架
 
 ```bash showLineNumbers {1,4-6,9-11}
-dotnet new furionapi -n 项目名称 -f .NET版本
+dotnet new TouchSocketapi -n 项目名称 -f .NET版本
 
 # EFCore：支持创建 .NET5-7 版本
-dotnet new furionapi -n MyProject -f net5
-dotnet new furionapi -n MyProject -f net6
-dotnet new furionapi -n MyProject -f net7
+dotnet new TouchSocketapi -n MyProject -f net5
+dotnet new TouchSocketapi -n MyProject -f net6
+dotnet new TouchSocketapi -n MyProject -f net7
 
 # SqlSugar：支持创建 .NET5-7 版本
 dotnet new fsapi -n MyProject -f net5
@@ -87,7 +87,7 @@ dotnet new fsapi -n MyProject -f net7
 
 :::important 特别提醒
 
-`furionapi` 对应的是上面列表的 `关键字`，我们也可以通过 `dotnet new --list` 查看。
+`TouchSocketapi` 对应的是上面列表的 `关键字`，我们也可以通过 `dotnet new --list` 查看。
 
 想了解更多可以使用 `dotnet new 关键字 --help` 查看更多参数。
 
@@ -98,7 +98,7 @@ dotnet new fsapi -n MyProject -f net7
 只需要重新安装最新版替换即可，如：
 
 ```bash showLineNumbers
-dotnet new --install Furion.Template.Api::4.8.4.8
+dotnet new --install TouchSocket.Template.Api::4.8.4.8
 ```
 
 不带版本号总是安装最新的版本。
@@ -111,7 +111,7 @@ dotnet new --install Furion.Template.Api::4.8.4.8
 
 ## 2.2.6 `关于 MVC 添加区域出错问题`
 
-由于 `Furion` 底层依赖了 `Microsoft.CodeAnalysis.CSharp` 包，所以可能通过 `Viusal Studio` 的界面添加 `Area 区域` 时会出错，这时候只需要在 `Web.Entry` 层安装下面几个包即可：
+由于 `TouchSocket` 底层依赖了 `Microsoft.CodeAnalysis.CSharp` 包，所以可能通过 `Viusal Studio` 的界面添加 `Area 区域` 时会出错，这时候只需要在 `Web.Entry` 层安装下面几个包即可：
 
 - `Microsoft.CodeAnalysis.CSharp.Features`
 - `Microsoft.CodeAnalysis.CSharp.Scripting`
@@ -127,15 +127,15 @@ dotnet new --install Furion.Template.Api::4.8.4.8
 
 [https://www.cnblogs.com/catcher1994/p/10061470.html](https://www.cnblogs.com/catcher1994/p/10061470.html)
 
-**推荐直接拷贝 `Furion` 脚手架文件夹进行修改，可避免很多问题。**
+**推荐直接拷贝 `TouchSocket` 脚手架文件夹进行修改，可避免很多问题。**
 
-[Furion 脚手架源码](https://gitee.com/dotnetchina/Furion/tree/v4/templates)
+[TouchSocket 脚手架源码](https://gitee.com/rrqm_home/TouchSocket/tree/v4/templates)
 
 ## 2.2.8 反馈与建议
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

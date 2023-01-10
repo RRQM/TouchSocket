@@ -18,19 +18,19 @@ sidebar_label: 33. IPC 进程通信
 - FIFOs(命名管道)
 - **消息队列**（常用模式）
 - 信号量
-- **共享内存**（常用模式，`Furion` 框架默认实现方式）
+- **共享内存**（常用模式，`TouchSocket` 框架默认实现方式）
 - **网络 Socket**（常用模式）
 
 ## 33.3 `IPC` 通信模式
 
-`IPC` 本身指的是 `进程间` 通信，但 `Furion` 框架将内置 `进程间/内` 两种进程通信模式。
+`IPC` 本身指的是 `进程间` 通信，但 `TouchSocket` 框架将内置 `进程间/内` 两种进程通信模式。
 
-- `进程内通信`：`Furion` 采用 `Channel` 管道提供进程内通信
-- `进程外通信`：`Furion` 采用 `MemoryMapperFile` 共享内存方式实现进程外通信（后续版本完善）
+- `进程内通信`：`TouchSocket` 采用 `Channel` 管道提供进程内通信
+- `进程外通信`：`TouchSocket` 采用 `MemoryMapperFile` 共享内存方式实现进程外通信（后续版本完善）
 
 ## 33.4 进程内通信（线程间）
 
-进程内通信俗称线程间通信，`Furion` 框架采用 `C#` 提供的 `Channel（管道）` + `Lazy` + `Task.Factory` 实现长时间高性能的线程间通信机制。`Channel` 管道也是目前 `.NET/C#` 实现 `生产者-订阅者` 模式最简易且最为强大的实现。
+进程内通信俗称线程间通信，`TouchSocket` 框架采用 `C#` 提供的 `Channel（管道）` + `Lazy` + `Task.Factory` 实现长时间高性能的线程间通信机制。`Channel` 管道也是目前 `.NET/C#` 实现 `生产者-订阅者` 模式最简易且最为强大的实现。
 
 ### 33.4.1 了解 `Channel`
 
@@ -38,21 +38,21 @@ sidebar_label: 33. IPC 进程通信
 
 `Channel` 的主要应用场景是 `发布/订阅、观察者模式` 中使用，如：`事件总线` 就是最好的实现方式。通过 `Channel` 实现 `生产-消费` 机制可以减少项目间的耦合，提高应用吞吐量。
 
-`Furion` 框架提供了 `ChannelContext<TMessage, THandler>` 密封类，提供 `UnBoundedChannel` 和 `BoundedChannel` 两种管道通信模式。
+`TouchSocket` 框架提供了 `ChannelContext<TMessage, THandler>` 密封类，提供 `UnBoundedChannel` 和 `BoundedChannel` 两种管道通信模式。
 
 - `UnBoundedChannel`：具有无限容量的 `Channel`, 生产者可以全速进行生产数据，但如果消费者的消费速度低于生产者，`Channel` 的资源使用会无限增加，会有服务器资源耗尽的可能。
-- `BoundedChannel`：具有有限容量的 `Channel`，`Furion` 框架默认为 `1000`，到达上限后，生产者进入等待写入直到有空闲，好处是可以控制生产的速度，控制系统资源的使用。**（推荐）**
+- `BoundedChannel`：具有有限容量的 `Channel`，`TouchSocket` 框架默认为 `1000`，到达上限后，生产者进入等待写入直到有空闲，好处是可以控制生产的速度，控制系统资源的使用。**（推荐）**
 
 ### 33.4.2 常规使用
 
 #### 创建 `ChannelHandler<TMessage>` 管道处理程序
 
 ```cs showLineNumbers  {1,10,17}
-using Furion.IPCChannel;
+using TouchSocket.IPCChannel;
 using System;
 using System.Threading.Tasks;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 创建管道处理程序（处理 String 类型消息）
@@ -97,7 +97,7 @@ public async Task SendAsync()
 
 ### 33.4.3 实现多订阅
 
-默认情况下，`Furion` 初始化了一个长时间的 `Task` 任务进行数据检查及订阅，如需实现多订阅模式，可创建新的订阅任务即可：
+默认情况下，`TouchSocket` 初始化了一个长时间的 `Task` 任务进行数据检查及订阅，如需实现多订阅模式，可创建新的订阅任务即可：
 
 ```cs showLineNumbers 
 var reader = ChannelContext<string, MyChannelHandler>.BoundedChannel.Reader;
@@ -120,10 +120,10 @@ _ = Task.Factory.StartNew(async () =>
 
 ### 33.4.5 `CallContext` 方式
 
-在 `Furion v2.18+` 版本提供了 `CallContext` 静态类，内部使用 `AsyncLocal<T>` 实现，也可以实现线程间通信，如：
+在 `TouchSocket v2.18+` 版本提供了 `CallContext` 静态类，内部使用 `AsyncLocal<T>` 实现，也可以实现线程间通信，如：
 
 ```cs showLineNumbers 
-CallContext.SetLocalValue("name", "Furion");
+CallContext.SetLocalValue("name", "TouchSocket");
 CallContext.GetLocalValue("name");
 
 CallContext<int>.SetLocalValue("count", 1);
@@ -132,7 +132,7 @@ CallContext<int>.GetLocalValue("count");
 
 ## 34.5 进程外通信（共享内存）
 
-`Furion` 目前暂未提供的进程外通信功能，将在后续版本实现（主要是模块设计还未想好，技术已实现）。
+`TouchSocket` 目前暂未提供的进程外通信功能，将在后续版本实现（主要是模块设计还未想好，技术已实现）。
 
 主要是通过 `MemoryMapperFile` 实现共享内存达到进程外通信功能，[了解更多 MemoryMapperFile](https://docs.microsoft.com/zh-cn/dotnet/api/system.io.memorymappedfiles.memorymappedfile?view=net-5.0)
 
@@ -140,6 +140,6 @@ CallContext<int>.GetLocalValue("count");
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

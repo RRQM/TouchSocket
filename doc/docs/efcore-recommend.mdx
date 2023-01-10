@@ -6,7 +6,7 @@ sidebar_label: 9.29 EFCore 最佳实践
 
 ## 9.29.1 EFCore 高性能
 
-在 `Furion` 框架，默认推荐使用 `EFCore` 操作数据库，但很多朋友对 `EFCore` 使用不当，特意编写此文档说明。
+在 `TouchSocket` 框架，默认推荐使用 `EFCore` 操作数据库，但很多朋友对 `EFCore` 使用不当，特意编写此文档说明。
 
 - 尽可能的采用 `IRepository/IRepository<TEntity>` 仓储方式在构造函数中初始化，**避免使用 `Db.GetRepository<TEntity>` 方式**。
 - 请以**异步方式**调用所有数据访问 api。
@@ -39,6 +39,6 @@ using (var db = new CustomerContext())
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

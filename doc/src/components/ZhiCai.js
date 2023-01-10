@@ -14,11 +14,11 @@ export default function ZhiCai({}) {
         <div className={classes.content}>
           <p>
             自2012年09月投入开源以来，这9年期间一直免费无偿提供优质开源项目，其中但不限于
-            Hui，DotDot，Layx，Furion 等项目。
+            Hui，DotDot，Layx，TouchSocket 等项目。
             <br />
             但在2020年09月开源新项目{" "}
-            <a href="https://gitee.com/dotnetchina/Furion" target="_blank">
-              Furion
+            <a href="https://gitee.com/rrqm_home/TouchSocket" target="_blank">
+              TouchSocket
             </a>{" "}
             后这一年里受到来自某些无脑 .NET
             开发者来自各大论坛、社区、QQ/微信群等各大平台的辱骂和恶意抹黑，故而发此通告。

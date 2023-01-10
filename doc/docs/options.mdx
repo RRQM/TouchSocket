@@ -33,7 +33,7 @@ import TabItem from "@theme/TabItem";
 ```json showLineNumbers  {2-6}
 {
   "AppInfo": {
-    "Name": "Furion",
+    "Name": "TouchSocket",
     "Version": "1.0.0",
     "Company": "Baiqian"
   }
@@ -43,9 +43,9 @@ import TabItem from "@theme/TabItem";
 ### 4.2.3.2 创建 `AppInfoOptions` 强类型类
 
 ```cs showLineNumbers  {1,5}
-using Furion.ConfigurableOptions;
+using TouchSocket.ConfigurableOptions;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class AppInfoOptions : IConfigurableOptions
     {
@@ -60,7 +60,7 @@ namespace Furion.Application
 
 建议所有选项类都应该以 **`Options`** 命名结尾。
 
-另外，`Furion` 框架提供了非常灵活的注册选项服务的方法，只需要继承 **`IConfigurableOptions`** 接口即可，该接口位于 **`Furion.ConfigurableOptions`** 命名空间下。
+另外，`TouchSocket` 框架提供了非常灵活的注册选项服务的方法，只需要继承 **`IConfigurableOptions`** 接口即可，该接口位于 **`TouchSocket.ConfigurableOptions`** 命名空间下。
 
 :::
 
@@ -68,12 +68,12 @@ namespace Furion.Application
 
 **选项不同于配置，需在应用启动时注册**
 
-```cs showLineNumbers  {12} title="Furion.Web.Core\FurWebCoreStartup.cs"
+```cs showLineNumbers  {12} title="TouchSocket.Web.Core\FurWebCoreStartup.cs"
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     [AppStartup(800)]
     public sealed class FurWebCoreStartup : AppStartup
@@ -88,7 +88,7 @@ namespace Furion.Web.Core
 
 ### 4.2.3.4 读取 `AppInfoOptions` 信息
 
-在 `Furion` 框架中，提供了多种读取方式：
+在 `TouchSocket` 框架中，提供了多种读取方式：
 
 - 通过 `App.GetOptions<TOptions>(path)` 读取（**不推荐**）
 - 通过依赖注入以下实例读取：
@@ -120,10 +120,10 @@ namespace Furion.Web.Core
   <TabItem value="App.GetOptions<TOptions>(path)">
 
 ```cs showLineNumbers  {13-16}
-using Furion.Application;
+using TouchSocket.Application;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     public class DefaultController : ControllerBase
@@ -145,11 +145,11 @@ namespace Furion.Web.Entry.Controllers
   <TabItem value="依赖注入方式">
 
 ```cs showLineNumbers  {3,15-17,27-29,31-33,35-37}
-using Furion.Application;
+using TouchSocket.Application;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     public class DefaultController : ControllerBase
@@ -194,10 +194,10 @@ namespace Furion.Web.Entry.Controllers
   <TabItem value="App.GetOptions<TOptions>()">
 
 ```cs showLineNumbers  {12-15,17-20,22-25}
-using Furion.Application;
+using TouchSocket.Application;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     public class DefaultController : ControllerBase
@@ -271,7 +271,7 @@ namespace Furion.Web.Entry.Controllers
 
 ## 4.2.5 选项自定义配置
 
-我们知道，选项实际上需要和配置文件特定键值挂钩，那 `Furion` 是如何准确的找到配置文件中的键值的呢？
+我们知道，选项实际上需要和配置文件特定键值挂钩，那 `TouchSocket` 是如何准确的找到配置文件中的键值的呢？
 
 ### 4.2.5.1 选项查找键流程
 
@@ -353,7 +353,7 @@ public class AppInfoSettings : IConfigurableOptions
 
 ## 4.2.7 选项验证
 
-选项支持验证配置有效性，在 `Furion` 框架中，通过 `services.AddConfigurableOptions<TOptions>()` 注册选项默认启用了验证支持。
+选项支持验证配置有效性，在 `TouchSocket` 框架中，通过 `services.AddConfigurableOptions<TOptions>()` 注册选项默认启用了验证支持。
 
 包括：
 
@@ -370,10 +370,10 @@ public class AppInfoSettings : IConfigurableOptions
   <TabItem value="texin">
 
 ```cs showLineNumbers  {2,8,10,12}
-using Furion.ConfigurableOptions;
+using TouchSocket.ConfigurableOptions;
 using System.ComponentModel.DataAnnotations;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class AppInfoOptions : IConfigurableOptions
     {
@@ -396,7 +396,7 @@ namespace Furion.Application
 using Microsoft.Extensions.Options;
 using System.Text.RegularExpressions;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class AppInfoValidation : IValidateOptions<AppInfoOptions>
     {
@@ -416,10 +416,10 @@ namespace Furion.Application
 - 选项类继承 `IConfigurableOptions<TOptions, TOptionsValidation>` 接口，并实现该接口。
 
 ```cs showLineNumbers  {6,16-18}
-using Furion.ConfigurableOptions;
+using TouchSocket.ConfigurableOptions;
 using System.ComponentModel.DataAnnotations;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class AppInfoOptions : IConfigurableOptions<AppInfoOptions, AppInfoValidation>
     {
@@ -441,12 +441,12 @@ namespace Furion.Application
 - 完整代码如下：
 
 ```cs showLineNumbers  {4,9,19,25,27,31,34}
-using Furion.ConfigurableOptions;
+using TouchSocket.ConfigurableOptions;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     // 继承 IConfigurableOptions<TOptions, TOptionsValidation> 接口
     public class AppInfoOptions : IConfigurableOptions<AppInfoOptions, AppInfoValidation>
@@ -493,14 +493,14 @@ namespace Furion.Application
 
 选项后期配置通俗一点来说，可以在运行时解析值或设定默认值/后期配置等。
 
-在 `Furion` 框架中，配置选项后期配置很简单，只需要继承 `IConfigurableOptions<TOptions>` 接口并实现 `PostConfigure(TOptions options)` 方法。
+在 `TouchSocket` 框架中，配置选项后期配置很简单，只需要继承 `IConfigurableOptions<TOptions>` 接口并实现 `PostConfigure(TOptions options)` 方法。
 
 ```cs showLineNumbers  {7,16-21}
-using Furion.ConfigurableOptions;
+using TouchSocket.ConfigurableOptions;
 using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class AppInfoOptions : IConfigurableOptions<AppInfoOptions>
     {
@@ -513,7 +513,7 @@ namespace Furion.Application
 
         public void PostConfigure(AppInfoOptions options, IConfiguration configuration)
         {
-            options.Name ??= "Furion";
+            options.Name ??= "TouchSocket";
             options.Version ??= "1.0.0";
             options.Company ??= "Baiqian";
         }
@@ -529,14 +529,14 @@ namespace Furion.Application
 
 ## 4.2.9 选项更改通知（`热更新`）
 
-`Furion` 框架提供了非常简单且灵活的方式监听选项更改，也就是 **`appsettings.json` 或 自定义配置文件发生任何更改都会触发处理方法**。
+`TouchSocket` 框架提供了非常简单且灵活的方式监听选项更改，也就是 **`appsettings.json` 或 自定义配置文件发生任何更改都会触发处理方法**。
 
 使用非常简单，只需要继承 `IConfigurableOptionsListener<TOptions>` 接口并实现 `void OnListener(TOptions options, IConfiguration configuration)` 方法即可。
 
 ```cs showLineNumbers  {5,11-15}
-using Furion.ConfigurableOptions;
+using TouchSocket.ConfigurableOptions;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class AppInfoOptions : IConfigurableOptionsListener<AppInfoOptions>
     {
@@ -565,9 +565,9 @@ namespace Furion.Application
 
 ### 4.2.9.1 关于多次触发问题
 
-在 `Furion` 底层使用的是 `ChangeToken.OnChange` 监听文件更改，但是此方式会导致 `OnListener` 触发两次，这并非是框架的 `bug`，而是 `.NET Core` 本身存在的问题，详见：[https://github.com/dotnet/aspnetcore/issues/2542](https://github.com/dotnet/aspnetcore/issues/2542)
+在 `TouchSocket` 底层使用的是 `ChangeToken.OnChange` 监听文件更改，但是此方式会导致 `OnListener` 触发两次，这并非是框架的 `bug`，而是 `.NET Core` 本身存在的问题，详见：[https://github.com/dotnet/aspnetcore/issues/2542](https://github.com/dotnet/aspnetcore/issues/2542)
 
-所以，`Furion` 框架也给出另一种解决方案可替代 `IConfigurableOptionsListener` 的方式，也就是通过局部注入 `IOptionsMonitor` 的方式，如：
+所以，`TouchSocket` 框架也给出另一种解决方案可替代 `IConfigurableOptionsListener` 的方式，也就是通过局部注入 `IOptionsMonitor` 的方式，如：
 
 ```cs showLineNumbers {1,3,7,9,14,19}
 public class YourService : IYourService, IDisposable
@@ -617,7 +617,7 @@ public class YourService : IYourService, IDisposable
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.4.3+` 版本使用。
+以下内容仅限 `TouchSocket v3.4.3+` 版本使用。
 
 :::
 
@@ -625,7 +625,7 @@ public class YourService : IYourService, IDisposable
 
 ```json showLineNumbers {4}
 "AppInfo": {
-    "Name": "Furion",
+    "Name": "TouchSocket",
     "Version": "1.0.0",
     "Company_Name": "Baiqian"
 }
@@ -652,7 +652,7 @@ public class AppInfoOptions : IConfigurableOptions
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

@@ -16,7 +16,7 @@ sidebar_label: 9.0 入门简要 ✨
 
 :::tip
 
-在本章节所在的类别中，所有数据库操作功能均需要依赖 `EntityFramework Core` 框架，但 `Furion` 框架底层并未集成 `EntityFramework Core` 包，而是采用动态加载程序集方式自动载入。
+在本章节所在的类别中，所有数据库操作功能均需要依赖 `EntityFramework Core` 框架，但 `TouchSocket` 框架底层并未集成 `EntityFramework Core` 包，而是采用动态加载程序集方式自动载入。
 
 :::
 
@@ -36,17 +36,17 @@ sidebar_label: 9.0 入门简要 ✨
 
 :::tip 小知识
 
-这些数据库包应该安装在 `Furion.EntityFramework.Core` 层。特殊情况需安装在 `Furion.Core` 层中，如 `Mysql` `HasCharset()` 配置。
+这些数据库包应该安装在 `TouchSocket.EntityFramework.Core` 层。特殊情况需安装在 `TouchSocket.Core` 层中，如 `Mysql` `HasCharset()` 配置。
 
 :::
 
 ### 9.0.1.2 创建数据库上下文
 
 ```cs showLineNumbers  {7}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class DefaultDbContext : AppDbContext<DefaultDbContext>
@@ -70,14 +70,14 @@ namespace Furion.EntityFramework.Core
 
 ### 9.0.1.3 配置连接字符串
 
-`Furion` 框架提供多种方式配置数据库连接字符串：
+`TouchSocket` 框架提供多种方式配置数据库连接字符串：
 
 - `appsettings.json` 中配置
 
 ```json showLineNumbers  {2-3}
 {
   "ConnectionStrings": {
-    "Sqlite3ConnectionString": "Data Source=./Furion.db"
+    "Sqlite3ConnectionString": "Data Source=./TouchSocket.db"
   }
 }
 ```
@@ -87,7 +87,7 @@ namespace Furion.EntityFramework.Core
 ```json showLineNumbers  {2-3}
 {
   "ConnectionStrings": {
-    "Sqlite3ConnectionString": "Data Source=./Furion.db"
+    "Sqlite3ConnectionString": "Data Source=./TouchSocket.db"
   }
 }
 ```
@@ -97,7 +97,7 @@ namespace Furion.EntityFramework.Core
 - `[AppDbContext]` 特性配置
 
 ```cs showLineNumbers  {1}
-[AppDbContext("Data Source=./Furion.db", DbProvider.Sqlite)]
+[AppDbContext("Data Source=./TouchSocket.db", DbProvider.Sqlite)]
 public class DefaultDbContext : AppDbContext<DefaultDbContext>
 {
 }
@@ -116,10 +116,10 @@ services.AddDatabaseAccessor(options =>
 - 在 `DbContext` 中配置
 
 ```cs showLineNumbers  {12-14}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     public class DefaultDbContext : AppDbContext<DefaultDbContext>
     {
@@ -138,19 +138,19 @@ namespace Furion.EntityFramework.Core
 
 ### 9.0.1.4 各类数据库连接字符串配置示例
 
-- `Sqlite`：`Data Source=./Furion.db`
-- `MySql`：`Data Source=localhost;Database=Furion;User ID=root;Password=000000;pooling=true;port=3306;sslmode=none;CharSet=utf8;`
-- `SqlServer`：`Server=localhost;Database=Furion;User=sa;Password=000000;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;`
+- `Sqlite`：`Data Source=./TouchSocket.db`
+- `MySql`：`Data Source=localhost;Database=TouchSocket;User ID=root;Password=000000;pooling=true;port=3306;sslmode=none;CharSet=utf8;`
+- `SqlServer`：`Server=localhost;Database=TouchSocket;User=sa;Password=000000;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;`
 - `Oracle`：`User Id=orcl;Password=orcl;Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=orcl)))`
 - `PostgreSQL`：`PORT=5432;DATABASE=postgres;HOST=127.0.0.1;PASSWORD=postgres;USER ID=postgres;`
 
 ### 9.0.1.5 注册数据库上下文
 
-```cs showLineNumbers  {12-19} title="Furion.EntityFramework.Core\Startup.cs"
-using Furion.DependencyInjection;
+```cs showLineNumbers  {12-19} title="TouchSocket.EntityFramework.Core\Startup.cs"
+using TouchSocket.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppStartup(600)]
     public sealed class FurEntityFrameworkCoreStartup : AppStartup
@@ -181,7 +181,7 @@ namespace Furion.EntityFramework.Core
 
 :::important 特别注意
 
-`Furion` 框架默认数据迁移的程序集为：`Furion.Database.Migrations`，所以如果您改了程序集名称或通过 `Nuget` 方式安装的 `Furion` 包，则需要配置迁移程序集名称：
+`TouchSocket` 框架默认数据迁移的程序集为：`TouchSocket.Database.Migrations`，所以如果您改了程序集名称或通过 `Nuget` 方式安装的 `TouchSocket` 包，则需要配置迁移程序集名称：
 
 ```cs showLineNumbers  {4}
 services.AddDatabaseAccessor(options =>
@@ -202,6 +202,6 @@ Add-Migration v1.0.0 -Context DefaultDbContext
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

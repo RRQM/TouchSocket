@@ -13,8 +13,8 @@ import Tag from "@site/src/components/Tag.js";
 
 - **新特性**
 
-  - &nbsp;<Tag>新增</Tag> **`App.GetThreadId()` 和 `App.GetTraceId()` 获取线程 `Id` 和请求 `TraceId`** <sup>4.8.2.4</sup> <sup>⏱️2022.11.29</sup> [910fc1f](https://gitee.com/dotnetchina/Furion/commit/910fc1fbad9e40245c5694f30457cd4d2ca0d630)
-  - &nbsp;<Tag>新增</Tag> **`App.GetExecutionTime(() => { /*Your Code*/ })` 获取代码执行耗时** <sup>4.8.2.4</sup> <sup>⏱️2022.11.29</sup> [5ab4b19](https://gitee.com/dotnetchina/Furion/commit/5ab4b19786e53d8934de08fd2f5430fc66c3b9a1)
+  - &nbsp;<Tag>新增</Tag> **`App.GetThreadId()` 和 `App.GetTraceId()` 获取线程 `Id` 和请求 `TraceId`** <sup>4.8.2.4</sup> <sup>⏱️2022.11.29</sup> [910fc1f](https://gitee.com/rrqm_home/TouchSocket/commit/910fc1fbad9e40245c5694f30457cd4d2ca0d630)
+  - &nbsp;<Tag>新增</Tag> **`App.GetExecutionTime(() => { /*Your Code*/ })` 获取代码执行耗时** <sup>4.8.2.4</sup> <sup>⏱️2022.11.29</sup> [5ab4b19](https://gitee.com/rrqm_home/TouchSocket/commit/5ab4b19786e53d8934de08fd2f5430fc66c3b9a1)
 
 </div>
   </div>
@@ -196,7 +196,7 @@ App.DisposeUnmanagedObjects();  // 通常在非 `Web` 环境中手动处理释�
 
 :::important 版本说明
 
-以下内容仅限 `Furion 3.6.8 +` 版本使用。
+以下内容仅限 `TouchSocket 3.6.8 +` 版本使用。
 
 :::
 
@@ -208,7 +208,7 @@ bool isSingleFileEnviroment = App.SingleFileEnvironment;
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.4.5 +` 版本使用。
+以下内容仅限 `TouchSocket 4.4.5 +` 版本使用。
 
 :::
 
@@ -221,7 +221,7 @@ cmdConfig.TryGet("参数", out var value);
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.2.4 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.2.4 +` 版本使用。
 
 :::
 
@@ -233,7 +233,7 @@ var threadId = App.GetThreadId();
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.2.4 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.2.4 +` 版本使用。
 
 :::
 
@@ -245,13 +245,13 @@ var traceId = App.GetTraceId();
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.2.4 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.2.4 +` 版本使用。
 
 :::
 
 ```cs showLineNumbers
 var elapsedMilliseconds = App.GetExecutionTime(() =>
 {
-    Console.WriteLine("Hello, Furion");
+    Console.WriteLine("Hello, TouchSocket");
 });
 ```

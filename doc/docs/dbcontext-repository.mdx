@@ -12,7 +12,7 @@ sidebar_label: 9.4 仓储模式 (Repository)
 
 ## 9.4.2 内置仓储
 
-`Furion` 框架内置了一个数据库操作的仓储，方便大家拓展和集成：
+`TouchSocket` 框架内置了一个数据库操作的仓储，方便大家拓展和集成：
 
 :::info 关于依赖注入说明
 
@@ -95,7 +95,7 @@ var readRepository = rep.Constraint<IReadableRepository<TEntity>>();
 
 :::warning 功能移除声明
 
-该功能在 `Furion 2.5.1 +` 版本中已移除。此操作让很多不了解 `EFCore` 的开发者产生了很大的误解，不知何时新增或何时更新，故移除此功能。
+该功能在 `TouchSocket 2.5.1 +` 版本中已移除。此操作让很多不了解 `EFCore` 的开发者产生了很大的误解，不知何时新增或何时更新，故移除此功能。
 
 :::
 
@@ -122,13 +122,13 @@ var readRepository = rep.Constraint<IReadableRepository<TEntity>>();
 
 ## 9.4.3 仓储使用
 
-`Furion` 提供了非常多的方式创建仓储，目的是为了让大家可以在不同的场景中使用。
+`TouchSocket` 提供了非常多的方式创建仓储，目的是为了让大家可以在不同的场景中使用。
 
 ### 9.4.3.1 构造函数注入
 
 ```cs showLineNumbers  {2}
 private readonly IRepository<Person> _personRepository;
-public FurionService(IRepository<Person> personRepository)
+public TouchSocketService(IRepository<Person> personRepository)
 {
     _personRepository = personRepository;
 }
@@ -159,7 +159,7 @@ var sqlRepository = Db.GetSqlRepository();
 
 :::important 特别说明
 
-不管采用哪种方式，`Furion` 都保证了仓储一次请求唯一性。同时 `Db.GetRepository<TEntity>()` 方式支持任何静态类中使用。
+不管采用哪种方式，`TouchSocket` 都保证了仓储一次请求唯一性。同时 `Db.GetRepository<TEntity>()` 方式支持任何静态类中使用。
 
 :::
 
@@ -197,7 +197,7 @@ var sqlRepository = repository.Sql();
 
 ## 9.4.5 多数据库操作
 
-`Furion` 通过 `DbContextLocator` 数据库上下文定位器实现多种数据库操作，可以随意切换数据库
+`TouchSocket` 通过 `DbContextLocator` 数据库上下文定位器实现多种数据库操作，可以随意切换数据库
 
 ### 9.4.5.1 动态切换多个数据库
 
@@ -375,6 +375,6 @@ public class MyRepository<TEntity> : MyRepository<TEntity, MasterDbContextLocato
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

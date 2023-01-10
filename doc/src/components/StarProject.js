@@ -6,7 +6,7 @@ export default function StarProject() {
   const [show, setShow] = useState(true);
 
   return (
-    <div className="furion-star-project">
+    <div className="TouchSocket-star-project">
       <a href="https://gitee.com/monksoul" target="_blank">
         <img src={useBaseUrl("img/icon.png")} title="点击了解百小僧" />
       </a>

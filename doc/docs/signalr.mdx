@@ -45,7 +45,7 @@ ASP.NET Core SignalR 是一种开放源代码库，可简化将实时 web 功能
 
 ## 24.4 注册 `SignalR` 服务
 
-在 `Furion` 框架中，任何服务功能都需要先注册后再使用，`SignalR` 也不例外。只需要在 `Startup.cs` 中添加注册即可：
+在 `TouchSocket` 框架中，任何服务功能都需要先注册后再使用，`SignalR` 也不例外。只需要在 `Startup.cs` 中添加注册即可：
 
 ```cs showLineNumbers  {1,15,22,25}
 using Microsoft.AspNetCore.Builder;
@@ -53,7 +53,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     public sealed class Startup : AppStartup
     {
@@ -112,10 +112,10 @@ namespace Furion.Web.Core
 - `Hub` 方式
 
 ```cs showLineNumbers  {9}
-using Furion.InstantMessaging;
+using TouchSocket.InstantMessaging;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 聊天集线器
@@ -157,15 +157,15 @@ public class StronglyTypedChatHub : Hub<IChatClient>
 
 ### 24.6.2 `[MapHub]` 配置连接地址
 
-在 `SignalR` 库中要求每一个公开的集线器都需要配置客户端连接地址，所以，`Furion` 框架提供了更加 `[MapHub]` 配置，如：
+在 `SignalR` 库中要求每一个公开的集线器都需要配置客户端连接地址，所以，`TouchSocket` 框架提供了更加 `[MapHub]` 配置，如：
 
 ```cs showLineNumbers  {1,11}
-using Furion.InstantMessaging;
+using TouchSocket.InstantMessaging;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 聊天集线器
@@ -180,7 +180,7 @@ namespace Furion.Core
 
 :::important `SignalR` 原生配置方式
 
-在 `Furion` 中推荐使用 `[MapHub]` 方式配置集线器客户端连接地址，当然也可以使用 `SignalR` 提供的方式，如在 `Startup.cs` 配置：
+在 `TouchSocket` 中推荐使用 `[MapHub]` 方式配置集线器客户端连接地址，当然也可以使用 `SignalR` 提供的方式，如在 `Startup.cs` 配置：
 
 ```cs showLineNumbers  {10}
 public sealed class Startup : AppStartup
@@ -205,12 +205,12 @@ public sealed class Startup : AppStartup
 有些时候，我们需要注册 `Hub` 时配置更多参数，比如权限、跨域等，这时只需要在 `Hub` 派生类中编写以下静态方法即可：
 
 ```cs showLineNumbers  {1,8,13,18}
-using Furion.InstantMessaging;
+using TouchSocket.InstantMessaging;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     [MapHub("/hubs/chathub")]
     public class ChatHub : Hub
@@ -483,7 +483,7 @@ import { HubConnectionBuilder } from "@microsoft/signalr";
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

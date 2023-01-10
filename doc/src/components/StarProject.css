@@ -1,4 +1,4 @@
-.furion-star-project {
+.TouchSocket-star-project {
   position: fixed;
   right: 0;
   bottom: 0;
@@ -6,7 +6,7 @@
   display: inline-block;
 }
 
-.furion-star-project img {
+.TouchSocket-star-project img {
   display: block;
   height: 50px;
   animation: move 3s 0s infinite;

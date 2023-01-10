@@ -8,7 +8,7 @@ sidebar_label: 9.23 实体/全局查询筛选器
 
 通常，我们系统中有一些维护字段，如 `IsDeleted` 字段，这个字段用来标识用户已经删除的数据，那么我们需要每次查询数据的时候带上这个字段，避免查询出不该出现的数据。
 
-`Furion` 提供非常灵活方便的全局查询筛选器，能够应用到每一次查询中。
+`TouchSocket` 提供非常灵活方便的全局查询筛选器，能够应用到每一次查询中。
 
 ## 9.23.2 多种筛选器配置
 
@@ -17,12 +17,12 @@ sidebar_label: 9.23 实体/全局查询筛选器
 单表筛选器就是只针对特定实体进行筛选操作，使用简单，只需要在继承 `IEntityTypeBuilder<TEntity>` 接口并实现即可，如：
 
 ```cs showLineNumbers  {8,24}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class Person : Entity, IEntityTypeBuilder<Person>
     {
@@ -58,18 +58,18 @@ namespace Furion.Core
 通过实现这两个方法即可配置全局过滤器，如：
 
 ```cs showLineNumbers  {10,18-19,21,24}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Linq.Expressions;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString")]
-    public class FurionDbContext : AppDbContext<FurionDbContext>, IModelBuilderFilter
+    public class TouchSocketDbContext : AppDbContext<TouchSocketDbContext>, IModelBuilderFilter
     {
-        public FurionDbContext(DbContextOptions<FurionDbContext> options) : base(options)
+        public TouchSocketDbContext(DbContextOptions<TouchSocketDbContext> options) : base(options)
         {
         }
 
@@ -95,6 +95,6 @@ namespace Furion.EntityFramework.Core
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

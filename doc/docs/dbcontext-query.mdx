@@ -43,72 +43,72 @@ var person = await repository.Entities.FindAsync(1);
 // ==== 同步操作 ====
 
 // 示例一
-var person = repository.Single(u => u.Name == "Furion");
+var person = repository.Single(u => u.Name == "TouchSocket");
 
 // 示例二
-var person = repository.SingleOrDefault(u => u.Name == "Furion");
+var person = repository.SingleOrDefault(u => u.Name == "TouchSocket");
 
 // 示例三
-var person = repository.First(u => u.Name == "Furion");
+var person = repository.First(u => u.Name == "TouchSocket");
 
 // 示例四
-var person = repository.FirstOrDefault(u => u.Name == "Furion");
+var person = repository.FirstOrDefault(u => u.Name == "TouchSocket");
 
 // 示例五
-var person = repository.Last(u => u.Name == "Furion");
+var person = repository.Last(u => u.Name == "TouchSocket");
 
 // 示例六
-var person = repository.LastOrDefault(u => u.Name == "Furion");
+var person = repository.LastOrDefault(u => u.Name == "TouchSocket");
 
 // 示例七
-var person = repository.Entities.Single(u => u.Name == "Furion");
+var person = repository.Entities.Single(u => u.Name == "TouchSocket");
 
 // 示例八
-var person = repository.Entities.First(u => u.Name == "Furion");
+var person = repository.Entities.First(u => u.Name == "TouchSocket");
 
 // 示例九
-var person = repository.Entities.FirstOrDefault(u => u.Name == "Furion");
+var person = repository.Entities.FirstOrDefault(u => u.Name == "TouchSocket");
 
 // 示例十
-var person = repository.Entities.Last(u => u.Name == "Furion");
+var person = repository.Entities.Last(u => u.Name == "TouchSocket");
 
 // 示例十一
-var person = repository.Entities.LastOrDefault(u => u.Name == "Furion");
+var person = repository.Entities.LastOrDefault(u => u.Name == "TouchSocket");
 
 // ==== 异步操作 ====
 
 // 示例一
-var person = await repository.SingleAsync(u => u.Name == "Furion");
+var person = await repository.SingleAsync(u => u.Name == "TouchSocket");
 
 // 示例二
-var person = await repository.SingleOrDefaultAsync(u => u.Name == "Furion");
+var person = await repository.SingleOrDefaultAsync(u => u.Name == "TouchSocket");
 
 // 示例三
-var person = await repository.FirstAsync(u => u.Name == "Furion");
+var person = await repository.FirstAsync(u => u.Name == "TouchSocket");
 
 // 示例四
-var person = await repository.FirstOrDefaultAsync(u => u.Name == "Furion");
+var person = await repository.FirstOrDefaultAsync(u => u.Name == "TouchSocket");
 
 // 示例五
-var person = await repository.LastAsync(u => u.Name == "Furion");
+var person = await repository.LastAsync(u => u.Name == "TouchSocket");
 
 // 示例六
-var person = await repository.LastOrDefaultAsync(u => u.Name == "Furion");
+var person = await repository.LastOrDefaultAsync(u => u.Name == "TouchSocket");
 
 // 示例七
-var person = await repository.Entities.SingleAsync(u => u.Name == "Furion");
+var person = await repository.Entities.SingleAsync(u => u.Name == "TouchSocket");
 
 // 示例八
-var person = await repository.Entities.FirstAsync(u => u.Name == "Furion");
+var person = await repository.Entities.FirstAsync(u => u.Name == "TouchSocket");
 
 // 示例九
-var person = await repository.Entities.FirstOrDefaultAsync(u => u.Name == "Furion");
+var person = await repository.Entities.FirstOrDefaultAsync(u => u.Name == "TouchSocket");
 
 // 示例十
-var person = await repository.Entities.LastAsync(u => u.Name == "Furion");
+var person = await repository.Entities.LastAsync(u => u.Name == "TouchSocket");
 
 // 示例十一
-var person = await repository.Entities.LastOrDefaultAsync(u => u.Name == "Furion");
+var person = await repository.Entities.LastOrDefaultAsync(u => u.Name == "TouchSocket");
 ```
 
 ## 9.10.3 查询所有数据
@@ -139,42 +139,42 @@ var persons = await repository.AsQueryable().ToListAsync();
 var persons = repository.Where(u => u.Id > 10);
 
 // 示例二
-var persons = repository.Where(u => u.Id > 10 && u.Name.Equals("Furion"));
+var persons = repository.Where(u => u.Id > 10 && u.Name.Equals("TouchSocket"));
 
-// 示例三  (多个 where 里是 "并且"，Id>10 and Name == "Furion")
-var persons = repository.Where(u => u.Id > 10).Where(u => u.Name.Equals("Furion"));
+// 示例三  (多个 where 里是 "并且"，Id>10 and Name == "TouchSocket")
+var persons = repository.Where(u => u.Id > 10).Where(u => u.Name.Equals("TouchSocket"));
 
-// 示例四 (判断 name 是否有值，如果 name 是空的则不会执行 u => u.Id > 10 && u.Name.Equals("Furion")，如果 name 有值就会执行 u => u.Id > 10 && u.Name.Equals("Furion"))
-var persons = repository.Where(!string.IsNullOrEmpty(name), u => u.Id > 10 && u.Name.Equals("Furion"));
+// 示例四 (判断 name 是否有值，如果 name 是空的则不会执行 u => u.Id > 10 && u.Name.Equals("TouchSocket")，如果 name 有值就会执行 u => u.Id > 10 && u.Name.Equals("TouchSocket"))
+var persons = repository.Where(!string.IsNullOrEmpty(name), u => u.Id > 10 && u.Name.Equals("TouchSocket"));
 
 // 示例五
 var persons = repository.Where(!string.IsNullOrEmpty(name), u => u.Id > 10)
                         .Where(age > 18, u => u.Name.Contains("百小僧"))
                         .Where(u => u.Age > 18);
 
-// 示例六 (在一个 where 里用逗号分隔是 "或者"，Name=="Furion" or Name == "百小僧" or Name == "MonkSoul")
-var persons = repository.Where(u => u.Name == "Furion",
+// 示例六 (在一个 where 里用逗号分隔是 "或者"，Name=="TouchSocket" or Name == "百小僧" or Name == "MonkSoul")
+var persons = repository.Where(u => u.Name == "TouchSocket",
                                  u => u.Name == "百小僧",
                                  u => u.Name == "MonkSoul");
 
 // 示例七
-var persons = repository.Where(u => u.Id > 10).Where(u => u.Name.Equals("Furion"))
+var persons = repository.Where(u => u.Id > 10).Where(u => u.Name.Equals("TouchSocket"))
                         .Where(age > 18, u => u.Name.Contains("百小僧"))
-                        .Where(u => u.Name == "Furion",
+                        .Where(u => u.Name == "TouchSocket",
                                  u => u.Name == "百小僧",
                                  u => u.Name == "MonkSoul");
 
 // 示例八
-var persons = repository.Where((age > 18, u => u.Name == "Furion"),
+var persons = repository.Where((age > 18, u => u.Name == "TouchSocket"),
                                    (!string.IsNullOrEmpty(name), u => u.Id > 10));
 
 // 示例九
-var persons = repository.Where(u => u.Id > 10).Where(u => u.Name.Equals("Furion"))
+var persons = repository.Where(u => u.Id > 10).Where(u => u.Name.Equals("TouchSocket"))
                         .Where(age > 18, u => u.Name.Contains("百小僧"))
-                        .Where(u => u.Name == "Furion",
+                        .Where(u => u.Name == "TouchSocket",
                                  u => u.Name == "百小僧",
                                  u => u.Name == "MonkSoul")
-                        .Where((age > 18, u => u.Name == "Furion"),
+                        .Where((age > 18, u => u.Name == "TouchSocket"),
                                    (!string.IsNullOrEmpty(name), u => u.Id > 10));
 
 // 示例十
@@ -185,7 +185,7 @@ var persons = repository.Entities.Where(u => u.Id > 10)
 var persons = repository.DetachedEntities.Where(u => u.Id > 20);
 
 // 示例十二
-var persons = repository.AsQueryable(u => u.Id > 20).Where(u => u.Name == "Furion");
+var persons = repository.AsQueryable(u => u.Id > 20).Where(u => u.Name == "TouchSocket");
 ```
 
 ## 9.10.5 分页查询
@@ -426,13 +426,13 @@ var query = repository.Where(u => u.CreatedDt >= starDate && u.CreatedDt <= endD
 
 ```cs showLineNumbers 
 // 示例一
-repository.Where(u => u.Name.StartsWith("Furion"));
+repository.Where(u => u.Name.StartsWith("TouchSocket"));
 
 // 示例二
-_testRepository.Where(u => u.Name.EndsWith("Furion"));
+_testRepository.Where(u => u.Name.EndsWith("TouchSocket"));
 
 // 示例三
-_testRepository.Where(u => u.Name.Contains("Furion"));
+_testRepository.Where(u => u.Name.Contains("TouchSocket"));
 ```
 
 ### 9.10.6.9 `Case When`
@@ -443,6 +443,6 @@ _testRepository.Where(u => u.Name.Contains("Furion"));
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

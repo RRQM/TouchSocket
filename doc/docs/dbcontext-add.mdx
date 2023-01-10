@@ -4,7 +4,7 @@ title: 9.5 新增操作
 sidebar_label: 9.5 新增操作
 ---
 
-`Furion` 框架提供非常多的语法糖进行数据库操作。
+`TouchSocket` 框架提供非常多的语法糖进行数据库操作。
 
 ## 9.5.1 新增一条，无返回值
 
@@ -129,10 +129,10 @@ repository.Insert(entity, ignoreNullValues: true);
 也可以全局配置，在 `AppDbContext` 的派生类的构造函数中启用即可：
 
 ```cs showLineNumbers  {11}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class DefaultDbContext : AppDbContext<DefaultDbContext>
@@ -165,12 +165,12 @@ public void Configure(EntityTypeBuilder<YourEntity> entityBuilder, DbContext dbC
 }
 ```
 
-相关 Issue [https://gitee.com/dotnetchina/Furion/issues/I5S4EC](https://gitee.com/dotnetchina/Furion/issues/I5S4EC)
+相关 Issue [https://gitee.com/rrqm_home/TouchSocket/issues/I5S4EC](https://gitee.com/rrqm_home/TouchSocket/issues/I5S4EC)
 
 ## 9.5.7 反馈与建议
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

@@ -6,7 +6,7 @@ sidebar_label: 10.2 Dapper 集成
 
 :::warning 温馨提醒
 
-在 `Furion` 包中默认集成了 `EFCore`，**如果不使用 `EFCore`，可安装纯净版 `Furion.Pure` 代替 `Furion`**。
+在 `TouchSocket` 包中默认集成了 `EFCore`，**如果不使用 `EFCore`，可安装纯净版 `TouchSocket.Pure` 代替 `TouchSocket`**。
 
 :::
 
@@ -18,17 +18,17 @@ sidebar_label: 10.2 Dapper 集成
 
 ## 10.2.2 如何集成
 
-在 `Furion` 框架中，已经推出 `Dapper` 拓展包 [Furion.Extras.DatabaseAccessor.Dapper](https://www.nuget.org/packages/Furion.Extras.DatabaseAccessor.Dapper)。
+在 `TouchSocket` 框架中，已经推出 `Dapper` 拓展包 [TouchSocket.Extras.DatabaseAccessor.Dapper](https://www.nuget.org/packages/TouchSocket.Extras.DatabaseAccessor.Dapper)。
 
 ### 10.2.2.1 注册 `Dapper` 服务
 
 使用非常简单，只需要在 `Startup.cs` 中添加 `services.AddDapper(connStr, SqlProvider)` 即可。如：
 
 ```cs showLineNumbers
-services.AddDapper("Data Source=./Furion.db", SqlProvider.Sqlite);
+services.AddDapper("Data Source=./TouchSocket.db", SqlProvider.Sqlite);
 
 // 更多配置，仅 v3.4.3+ 版本有效
-servers.AddDapper("Data Source=./Furion.db", SqlProvider.Sqlite, () => {
+servers.AddDapper("Data Source=./TouchSocket.db", SqlProvider.Sqlite, () => {
   DefaultTypeMap.MatchNamesWithUnderscores = true;
 })
 ```
@@ -44,7 +44,7 @@ servers.AddDapper("Data Source=./Furion.db", SqlProvider.Sqlite, () => {
 
 :::important 安装拓展包位置
 
-在 `Furion` 框架中，推荐将拓展包 `Furion.Extras.DatabaseAccessor.Dapper` 安装到 `Furion.Core` 层中。
+在 `TouchSocket` 框架中，推荐将拓展包 `TouchSocket.Extras.DatabaseAccessor.Dapper` 安装到 `TouchSocket.Core` 层中。
 
 :::
 
@@ -97,7 +97,7 @@ var user = _dapperRepository.Query<User>("spGetUser", new {Id = 1},
 
 ### 10.2.3.2 `<TEntity>` 操作
 
-`Furion` 框架提供了 `IDapperRepository` 和 `IDapperRepository<TEntity>` 两个操作仓储，后者继承前者。使用如下：
+`TouchSocket` 框架提供了 `IDapperRepository` 和 `IDapperRepository<TEntity>` 两个操作仓储，后者继承前者。使用如下：
 
 ```cs showLineNumbers
 var person = personRepository.Get(1);
@@ -190,7 +190,7 @@ using (var reader = dapperRepository.Context.ExecuteReader("select * from Shapes
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

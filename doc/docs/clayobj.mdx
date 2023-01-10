@@ -6,13 +6,13 @@ sidebar_label: 29. 粘土对象
 
 :::important 版本说明
 
-以下内容仅限 `Furion 2.1.12 +` 版本使用。
+以下内容仅限 `TouchSocket 2.1.12 +` 版本使用。
 
 :::
 
 ## 29.1 关于粘土对象
 
-粘土对象是 `Furion` 框架自创的一种概念，是一种可以模拟弱语言特性的对象，类似 `Javascript` 一样操作对象。只需通过 `Clay` 类初始化即可。
+粘土对象是 `TouchSocket` 框架自创的一种概念，是一种可以模拟弱语言特性的对象，类似 `Javascript` 一样操作对象。只需通过 `Clay` 类初始化即可。
 
 **为什么起名为 “粘土” 呢？因为这个对象可以自由的添加属性，移除属性，又可以固化成任何对象，具有可拓展、可塑造的特点。**
 
@@ -95,7 +95,7 @@ dynamic clay = Clay.Object(new
 });
 
 // 更新
-clay.Foo = "Furion";
+clay.Foo = "TouchSocket";
 clay["Nest"].Foobar = false;
 clay.Nest["Foobar"] = true;
 ```
@@ -173,7 +173,7 @@ foreach (KeyValuePair<string, dynamic> item in clay)
 
 ```cs showLineNumbers
 dynamic clay = new Clay();
-clay.Arr = new string[] { "Furion", "Fur" };
+clay.Arr = new string[] { "TouchSocket", "Fur" };
 
 // 数组转换示例
 var a1 = clay.Arr.Deserialize<string[]>(); // 通过 Deserialize 方法
@@ -289,6 +289,6 @@ Dictionary<string, object> parms = clay.ToDictionary();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

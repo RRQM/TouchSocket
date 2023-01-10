@@ -6,20 +6,20 @@ sidebar_label: 9.17 Sql 高级代理
 
 ## 9.17.1 关于 `Sql` 代理
 
-`Sql` 代理是 `Furion` 框架中对 `Sql` 操作一个非常重要的概念，通过这种方式可以大大提高 `Sql` 书写效率，而且后期极易维护。
+`Sql` 代理是 `TouchSocket` 框架中对 `Sql` 操作一个非常重要的概念，通过这种方式可以大大提高 `Sql` 书写效率，而且后期极易维护。
 
-`Sql` 代理属于 `Furion` 框架中一个高级功能。
+`Sql` 代理属于 `TouchSocket` 框架中一个高级功能。
 
 ## 9.17.2 了解 `ISqlDispatchProxy`
 
-`ISqlDispatchProxy` 接口是 `Furion` 实现**被代理接口**的唯一依赖，任何公开的接口一旦集成了 `ISqlDispatchProxy` 接口，那么这个接口就是**被托管拦截**的 `Sql` 操作接口。
+`ISqlDispatchProxy` 接口是 `TouchSocket` 实现**被代理接口**的唯一依赖，任何公开的接口一旦集成了 `ISqlDispatchProxy` 接口，那么这个接口就是**被托管拦截**的 `Sql` 操作接口。
 
 简单定义一个 **Sql 代理接口**
 
 ```cs showLineNumbers  {1,5}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -39,7 +39,7 @@ namespace Furion.Application
 
 ```cs showLineNumbers  {1-2}
 private readonly ISql _sql;
-public FurionService(ISql sql)
+public TouchSocketService(ISql sql)
 {
     _sql = sql;
 }
@@ -64,9 +64,9 @@ var sql = Db.GetSqlDispatchProxy<ISql>();
 ### 9.17.4.1 返回 `DataTable`
 
 ```cs showLineNumbers  {8,12,16,20}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -120,9 +120,9 @@ select * from person where id > @id and name = @name;
 ### 9.17.4.2 返回 `List<T>`
 
 ```cs showLineNumbers  {8,12,16,20}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -152,9 +152,9 @@ namespace Furion.Application
 ### 9.17.4.3 返回 `DataSet`
 
 ```cs showLineNumbers  {8-10,14-16,20-22,26-28,32-35}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -195,9 +195,9 @@ namespace Furion.Application
 ### 9.17.4.4 返回 `Tuple<T1,...T8>`
 
 ```cs showLineNumbers  {8-10,14-16,20-22,26-28,32-35,38-42}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -243,9 +243,9 @@ namespace Furion.Application
 ### 9.17.4.5 返回 `单行单列`
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -264,9 +264,9 @@ namespace Furion.Application
 ### 9.17.4.6 无返回值
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -286,7 +286,7 @@ namespace Furion.Application
 
 :::important 版本说明
 
-以下内容仅限 `Furion 3.7.1 +` 版本使用。
+以下内容仅限 `TouchSocket 3.7.1 +` 版本使用。
 
 :::
 
@@ -303,7 +303,7 @@ public interface ISql : ISqlDispatchProxy
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.4.5 +` 版本使用。
+以下内容仅限 `TouchSocket 4.4.5 +` 版本使用。
 
 :::
 
@@ -327,9 +327,9 @@ public interface ISql : ISqlDispatchProxy
 ### 9.17.5.1 返回 `DataTable`
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -348,9 +348,9 @@ namespace Furion.Application
 ### 9.17.5.2 返回 `List<T>`
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -369,9 +369,9 @@ namespace Furion.Application
 ### 9.17.5.3 返回 `DataSet`
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -390,9 +390,9 @@ namespace Furion.Application
 ### 9.17.5.4 返回 `Tuple(T1,...T8)`
 
 ```cs showLineNumbers  {7,10,13,16-18}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -415,9 +415,9 @@ namespace Furion.Application
 ### 9.17.5.5 返回 `单行单列`
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -436,9 +436,9 @@ namespace Furion.Application
 ### 9.17.5.6 无返回值
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -457,9 +457,9 @@ namespace Furion.Application
 ### 9.17.5.7 带 `OUTPUT/RETURN` 返回
 
 ```cs showLineNumbers  {7,10,13}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -479,7 +479,7 @@ namespace Furion.Application
 
 :::important 版本说明
 
-以下内容仅限 `Furion 3.7.1 +` 版本使用。
+以下内容仅限 `TouchSocket 3.7.1 +` 版本使用。
 
 :::
 
@@ -495,9 +495,9 @@ public interface ISql : ISqlDispatchProxy
 ## 9.17.6 `函数` 操作
 
 ```cs showLineNumbers  {7,10}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public interface ISql : ISqlDispatchProxy
     {
@@ -562,7 +562,7 @@ public interface ISql : ISqlDispatchProxy
 
 ### 9.17.8.3 运行时 `.Change` 方法切换
 
-除了以上两种 `静态` 配置方式，`Furion` 框架还提供 `动态` 方式，如：
+除了以上两种 `静态` 配置方式，`TouchSocket` 框架还提供 `动态` 方式，如：
 
 ```cs showLineNumbers  {2,6}
 // 将 sql 代理数据库切换成特定数据库
@@ -588,7 +588,7 @@ _sql.GetPerson();
 
 ## 9.17.9 `Sql` 代理拦截
 
-在 `Furion v2.13 +` 版本新增了 `Sql` 代理拦截功能，可以篡改特定方法或所有代理方法实际执行的参数，如 `sql语句、参数、执行对象等等`。
+在 `TouchSocket v2.13 +` 版本新增了 `Sql` 代理拦截功能，可以篡改特定方法或所有代理方法实际执行的参数，如 `sql语句、参数、执行对象等等`。
 
 **若在 `Sql` 代理中实现拦截功能，必须满足两个条件**：
 
@@ -652,6 +652,6 @@ public interface ISql : ISqlDispatchProxy
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

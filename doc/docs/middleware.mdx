@@ -39,7 +39,7 @@ app.Run(async context =>
 app.Use(async (context, next) =>
 {
     // 比如设置统一头
-    context.Response.Headers["framework"] = "Furion";
+    context.Response.Headers["framework"] = "TouchSocket";
 
     // 执行下一个中间件
     await next.Invoke();
@@ -353,6 +353,6 @@ var attribute = endpointFeature?.Endpoint?.Metadata?.GetMetadata<YourAttribute>(
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

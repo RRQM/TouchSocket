@@ -12,22 +12,22 @@ sidebar_label: 9.21 实体种子数据
 
 ## 9.21.1 什么是种子数据
 
-在 `Furion` 框架中，种子数据通常指的是通过程序为数据库预先设置一些初始化数据，比如我们的数据字典表，我们可能希望在系统构建初期就自动将一些规范化数据保存到数据库中。
+在 `TouchSocket` 框架中，种子数据通常指的是通过程序为数据库预先设置一些初始化数据，比如我们的数据字典表，我们可能希望在系统构建初期就自动将一些规范化数据保存到数据库中。
 
 如性别：男/女，地区，行业信息等等。
 
 ## 9.21.2 如何配置
 
-`Furion` 提供非常灵活方便的 `IEntitySeedData<TEntity>` 依赖接口可以快速的构建种子数据，支持任何无参构造函数对象类中使用。如我们需要为 `Person` 表插入初始化数据：
+`TouchSocket` 提供非常灵活方便的 `IEntitySeedData<TEntity>` 依赖接口可以快速的构建种子数据，支持任何无参构造函数对象类中使用。如我们需要为 `Person` 表插入初始化数据：
 
 ### 9.21.2.1 在实体定义中使用
 
 ```cs showLineNumbers  {7,16-23}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using System;
 using System.Collections.Generic;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class Person : EntityBase, IEntitySeedData<Person>
     {
@@ -59,10 +59,10 @@ namespace Furion.Core
 ### 9.21.2.2 在任意对象类中使用
 
 ```cs showLineNumbers  {6,9-16}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using System.Collections.Generic;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class PersonSeedData : IEntitySeedData<Person>
     {
@@ -85,13 +85,13 @@ namespace Furion.Application
 
 ## 9.21.4 多个数据库种子数据
 
-`Furion` 提供泛型的方式支持多个数据库种子数据设定，如：
+`TouchSocket` 提供泛型的方式支持多个数据库种子数据设定，如：
 
 ```cs showLineNumbers  {6,9-16}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using System.Collections.Generic;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class PersonSeedData : IEntitySeedData<Person, MySqlDbContextLocator, SqliteDbContextLocator>
     {
@@ -114,7 +114,7 @@ namespace Furion.Application
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

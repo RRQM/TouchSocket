@@ -6,7 +6,7 @@ sidebar_label: 10.1 SqlSugar 集成
 
 :::caution 关于拓展包
 
-由于 `SqlSugar` 高速发展，新版本带来了诸多特性，而 `Furion.Extras.DatabaseAccessor.SqlSugar` 拓展包更新不及时导致不能第一时间体验新特性。
+由于 `SqlSugar` 高速发展，新版本带来了诸多特性，而 `TouchSocket.Extras.DatabaseAccessor.SqlSugar` 拓展包更新不及时导致不能第一时间体验新特性。
 
 **所以，和 `SqlSugar` 作者商量后，决定全面推荐使用 `SqlSugar` 原生拓展包即可。以下文档已更新**，[查看旧文档](./sqlsugar-old)
 
@@ -14,7 +14,7 @@ sidebar_label: 10.1 SqlSugar 集成
 
 :::warning 温馨提醒
 
-在 `Furion` 包中默认集成了 `EFCore`，**如果不使用 `EFCore`，可安装纯净版 `Furion.Pure` 代替 `Furion`**。
+在 `TouchSocket` 包中默认集成了 `EFCore`，**如果不使用 `EFCore`，可安装纯净版 `TouchSocket.Pure` 代替 `TouchSocket`**。
 
 :::
 
@@ -44,7 +44,7 @@ sidebar_label: 10.1 SqlSugar 集成
  <a href="https://www.donet5.com/home/Doc?typeId=1226">安装</a>| [简单查询](https://www.donet5.com/Home/Doc?typeId=1187)  | <a href="https://www.donet5.com/Home/Doc?typeId=1193"> 增 </a> |<a href="https://www.donet5.com/Home/Doc?typeId=1191">改</a>|    <a href="https://www.donet5.com/Home/Doc?typeId=1195">删</a>    | 
 [入门](https://www.donet5.com/home/Doc?typeId=1181)| <a target="_bank" href="https://www.donet5.com/Home/Doc?typeId=1185">联表 </a> |   |   |    |         |
 
-## 10.1.4 Furion 集成
+## 10.1.4 TouchSocket 集成
 
 1. 创建一个拓展类：
 
@@ -369,7 +369,7 @@ db.Fastest<Order>().PageSize(300000).BulkCopy(insertObjs);
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

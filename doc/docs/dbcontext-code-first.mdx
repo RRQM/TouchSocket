@@ -14,7 +14,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 9.20.1 数据库开发方式
 
-`Furion` 提供两种主要方法来 **保持实体模型和数据库架构同步**。
+`TouchSocket` 提供两种主要方法来 **保持实体模型和数据库架构同步**。
 
 至于我们应该选用哪个方法，请确定你是希望以实体模型为准还是以数据库为准：
 
@@ -28,19 +28,19 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 :::important 特别注意
 
-`Furion` 框架默认数据迁移的程序集为：`Furion.Database.Migrations`，所以如果您改了程序集名称或通过 `Nuget` 方式安装的 `Furion` 包，则需要配置迁移程序集名称：
+`TouchSocket` 框架默认数据迁移的程序集为：`TouchSocket.Database.Migrations`，所以如果您改了程序集名称或通过 `Nuget` 方式安装的 `TouchSocket` 包，则需要配置迁移程序集名称：
 
 ```cs showLineNumbers  {4}
 services.AddDatabaseAccessor(options =>
 {
-    options.AddDbPool<FurionDbContext>(DbProvider.Sqlite);
+    options.AddDbPool<TouchSocketDbContext>(DbProvider.Sqlite);
 }, "存放迁移文件的项目名称");
 ```
 
 另外，如果应用中配置了多个数据库上下文，那么所有的 `迁移命令` 都需要指定 `-Context 数据库上下文名称` 参数。如：
 
 ```shell showLineNumbers 
-Add-Migration v1.0.0 -Context FurionDbContext
+Add-Migration v1.0.0 -Context TouchSocketDbContext
 ```
 
 :::
@@ -48,12 +48,12 @@ Add-Migration v1.0.0 -Context FurionDbContext
 ### 9.20.2.1 创建实体模型 `Person`
 
 ```cs showLineNumbers  {1,6,8}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class Person : Entity
     {
@@ -97,7 +97,7 @@ namespace Furion.Core
 
 ### 9.20.2.3 切换默认项目
 
-将 `程序包管理控制台` 默认项目设置为 `Furion.Database.Migrations`
+将 `程序包管理控制台` 默认项目设置为 `TouchSocket.Database.Migrations`
 
 <img src={useBaseUrl("img/codefirst1.png")} />
 
@@ -122,12 +122,12 @@ Build succeeded.
 Microsoft.EntityFrameworkCore.Model.Validation[10400]
       Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data, this mode should only be enabled during development.
 Microsoft.EntityFrameworkCore.Infrastructure[10403]
-      Entity Framework Core 5.0.0-rc.1.20451.13 initialized 'FurionDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite' with options: SensitiveDataLoggingEnabled DetailedErrorsEnabled MaxPoolSize=100 MigrationsAssembly=Furion.Database.Migrations
+      Entity Framework Core 5.0.0-rc.1.20451.13 initialized 'TouchSocketDbContext' using provider 'Microsoft.EntityFrameworkCore.Sqlite' with options: SensitiveDataLoggingEnabled DetailedErrorsEnabled MaxPoolSize=100 MigrationsAssembly=TouchSocket.Database.Migrations
 To undo this action, use Remove-Migration.
 PM>
 ```
 
-生成成功后，`Furion.Database.Migrations` 项目下会新增 `Migrations` 文件夹（如果没有），同时本次的架构生成文件，如：
+生成成功后，`TouchSocket.Database.Migrations` 项目下会新增 `Migrations` 文件夹（如果没有），同时本次的架构生成文件，如：
 
 <img src={useBaseUrl("img/codefirst3.png")} />
 
@@ -185,25 +185,25 @@ dotnet tool install --global dotnet-ef --version 5.0.0-rc.2.20475.6
 
 通过 `VS Code` 打开 `.sln` 所在的目录，如：`framework`。
 
-之后进入 `Furion.Database.Migrations` 目录
+之后进入 `TouchSocket.Database.Migrations` 目录
 
 ```shell showLineNumbers 
-cd Furion.Database.Migrations
+cd TouchSocket.Database.Migrations
 ```
 
 ### 9.20.5.3 执行命令
 
 ```shell showLineNumbers 
-dotnet ef migrations add v1.0.0 -s "../Furion.Web.Entry"
+dotnet ef migrations add v1.0.0 -s "../TouchSocket.Web.Entry"
 ```
 
 ```shell showLineNumbers 
-dotnet ef database update -s "../Furion.Web.Entry"
+dotnet ef database update -s "../TouchSocket.Web.Entry"
 ```
 
 ## 9.20.6 应用启动时自动生成数据库
 
-`Furion` 框架建议大家使用命令方式操作数据库，**完全不推荐自动化生成数据库**，但是有些特殊情况下，有这个必要，故将此功能写出：
+`TouchSocket` 框架建议大家使用命令方式操作数据库，**完全不推荐自动化生成数据库**，但是有些特殊情况下，有这个必要，故将此功能写出：
 
 ### 9.20.6.1 对已经生成 `Migrations` 文件情况
 
@@ -217,7 +217,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
     {
         Scoped.Create((_, scope) =>
         {
-            var context = scope.ServiceProvider.GetRequiredService<FurionDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<TouchSocketDbContext>();
             context.Database.Migrate();
         });
     }
@@ -236,7 +236,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
     {
         Scoped.Create((_, scope) =>
         {
-            var context = scope.ServiceProvider.GetRequiredService<FurionDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<TouchSocketDbContext>();
             context.Database.EnsureCreated();
         });
     }
@@ -258,7 +258,7 @@ Build succeeded.
 Microsoft.EntityFrameworkCore.Model.Validation[10400]
       Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
 Microsoft.EntityFrameworkCore.Infrastructure[10403]
-      Entity Framework Core 6.0.8 initialized 'DefaultDbContext' using provider 'MySql.EntityFrameworkCore:6.0.4+MySQL8.0.30' with options: SensitiveDataLoggingEnabled DetailedErrorsEnabled MaxPoolSize=100 MigrationsAssembly=Furion.TestMS.Database.Migrations 
+      Entity Framework Core 6.0.8 initialized 'DefaultDbContext' using provider 'MySql.EntityFrameworkCore:6.0.4+MySQL8.0.30' with options: SensitiveDataLoggingEnabled DetailedErrorsEnabled MaxPoolSize=100 MigrationsAssembly=TouchSocket.TestMS.Database.Migrations 
 System.InvalidOperationException: Unable to resolve service for type 'Microsoft.EntityFrameworkCore.Storage.TypeMappingSourceDependencies' while attempting to activate 'MySql.EntityFrameworkCore.Storage.Internal.MySQLTypeMappingSource'.
    at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteFactory.CreateArgumentCallSites(Type implementationType, CallSiteChain callSiteChain, ParameterInfo[] parameters, Boolean throwIfCallSiteNotFound)
    at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteFactory.CreateConstructorCallSite(ResultCache lifetime, Type serviceType, Type implementationType, CallSiteChain callSiteChain)
@@ -325,13 +325,13 @@ public class MysqlEntityFrameworkDesignTimeServices : IDesignTimeServices
 }
 ```
 
-相关 `Issue` 讨论：[https://gitee.com/dotnetchina/Furion/issues/I5O5ER](https://gitee.com/dotnetchina/Furion/issues/I5O5ER)
+相关 `Issue` 讨论：[https://gitee.com/rrqm_home/TouchSocket/issues/I5O5ER](https://gitee.com/rrqm_home/TouchSocket/issues/I5O5ER)
 
 ## 9.20.8 反馈与建议
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

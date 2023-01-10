@@ -13,15 +13,15 @@ import Tag from "@site/src/components/Tag.js";
 
 - **新特性**
 
-  - &nbsp;<Tag>新增</Tag> 远程请求 `[QueryString]` 特性添加时间格式化 `Format` 属性 <sup>4.8.1.2</sup> <sup>⏱️2022.11.24</sup> [!670](https://gitee.com/dotnetchina/Furion/pulls/670)
+  - &nbsp;<Tag>新增</Tag> 远程请求 `[QueryString]` 特性添加时间格式化 `Format` 属性 <sup>4.8.1.2</sup> <sup>⏱️2022.11.24</sup> [!670](https://gitee.com/rrqm_home/TouchSocket/pulls/670)
 
 - **问题修复**
 
-  - &nbsp;<Tag>修复</Tag> 远程请求配置 `WithEncodeUrl(false)` 对 `application/x-www-form-urlencoded` 请求类型无效 <sup>4.8.4</sup> <sup>⏱️2022.12.30</sup> [#I682DX](https://gitee.com/dotnetchina/Furion/issues/I682DX)
+  - &nbsp;<Tag>修复</Tag> 远程请求配置 `WithEncodeUrl(false)` 对 `application/x-www-form-urlencoded` 请求类型无效 <sup>4.8.4</sup> <sup>⏱️2022.12.30</sup> [#I682DX](https://gitee.com/rrqm_home/TouchSocket/issues/I682DX)
 
 - **文档**
 
-  - &nbsp;<Tag>新增</Tag> 远程请求 `[QueryString]` 配置时间类型 `Format` 格式化文档 <sup>4.8.1.2</sup> <sup>⏱️2022.11.25</sup> [!673](https://gitee.com/dotnetchina/Furion/pulls/673)
+  - &nbsp;<Tag>新增</Tag> 远程请求 `[QueryString]` 配置时间类型 `Format` 格式化文档 <sup>4.8.1.2</sup> <sup>⏱️2022.11.25</sup> [!673](https://gitee.com/rrqm_home/TouchSocket/pulls/673)
 
 </div>
   </div>
@@ -29,7 +29,7 @@ import Tag from "@site/src/components/Tag.js";
 
 :::important 版本说明
 
-以下内容仅限 `Furion 1.16.0 +` 版本使用。
+以下内容仅限 `TouchSocket 1.16.0 +` 版本使用。
 
 :::
 
@@ -63,7 +63,7 @@ public void ConfigureServices(IServiceCollection services)
 
 ### 19.3.2 使用方式
 
-`Furion` 提供两种方式访问发送远程请求。
+`TouchSocket` 提供两种方式访问发送远程请求。
 
 <Tabs
   defaultValue="IHttpDispatchProxy 代理方式"
@@ -82,22 +82,22 @@ public void ConfigureServices(IServiceCollection services)
 ```cs showLineNumbers  {1,3,6,9,12,15,18}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Get("https://www.furion.icu/get")]
+    [Get("https://www.TouchSocket.icu/get")]
     Task<Result> GetXXXAsync();
 
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<Result> PostXXXAsync();
 
-    [Put("https://www.furion.icu/put")]
+    [Put("https://www.TouchSocket.icu/put")]
     Task<Result> PutXXXAsync();
 
-    [Delete("https://www.furion.icu/delete")]
+    [Delete("https://www.TouchSocket.icu/delete")]
     Task<Result> DeleteXXXAsync();
 
-    [Patch("https://www.furion.icu/patch")]
+    [Patch("https://www.TouchSocket.icu/patch")]
     Task<Result> PatchXXXAsync();
 
-    [Head("https://www.furion.icu/head")]
+    [Head("https://www.TouchSocket.icu/head")]
     Task<Result> HeadXXXAsync();
 }
 ```
@@ -105,10 +105,10 @@ public interface IHttp : IHttpDispatchProxy
 通过构造函数注入 `接口`
 
 ```cs showLineNumbers  {9,16}
-using Furion.DynamicApiController;
-using Furion.RemoteRequest.Extensions;
+using TouchSocket.DynamicApiController;
+using TouchSocket.RemoteRequest.Extensions;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class RemoteRequestService : IDynamicApiController
     {
@@ -130,20 +130,20 @@ namespace Furion.Application
   <TabItem value="字符串拓展方式">
 
 ```cs showLineNumbers
-var response = await "https://www.furion.icu/get".GetAsync();
+var response = await "https://www.TouchSocket.icu/get".GetAsync();
 
-var response = await "https://www.furion.icu/post".PostAsync();
+var response = await "https://www.TouchSocket.icu/post".PostAsync();
 
-var response = await "https://www.furion.icu/put".PutAsync();
+var response = await "https://www.TouchSocket.icu/put".PutAsync();
 
-var response = await "https://www.furion.icu/delete".DeleteAsync();
+var response = await "https://www.TouchSocket.icu/delete".DeleteAsync();
 
-var response = await "https://www.furion.icu/patch".PatchAsync();
+var response = await "https://www.TouchSocket.icu/patch".PatchAsync();
 
-var response = await "https://www.furion.icu/head".HeadAsync();
+var response = await "https://www.TouchSocket.icu/head".HeadAsync();
 ```
 
-需引入 `using Furion.RemoteRequest.Extensions` 命名空间。
+需引入 `using TouchSocket.RemoteRequest.Extensions` 命名空间。
 
   </TabItem>
 </Tabs>
@@ -154,55 +154,55 @@ var response = await "https://www.furion.icu/head".HeadAsync();
 
 ```cs showLineNumbers
 // 发送 Get 请求
-var response = await "https://www.furion.icu/get".GetAsync();
+var response = await "https://www.TouchSocket.icu/get".GetAsync();
 
 // 发送 Post 请求
-var response = await "https://www.furion.icu/post".PostAsync();
+var response = await "https://www.TouchSocket.icu/post".PostAsync();
 
 // 发送 Put 请求
-var response = await "https://www.furion.icu/put".PutAsync();
+var response = await "https://www.TouchSocket.icu/put".PutAsync();
 
 // 发送 Delete 请求
-var response = await "https://www.furion.icu/delete".DeleteAsync();
+var response = await "https://www.TouchSocket.icu/delete".DeleteAsync();
 
 // 发送 Patch 请求
-var response = await "https://www.furion.icu/patch".PatchAsync();
+var response = await "https://www.TouchSocket.icu/patch".PatchAsync();
 
 // 发送 Head 请求
-var response = await "https://www.furion.icu/head".HeadAsync();
+var response = await "https://www.TouchSocket.icu/head".HeadAsync();
 
 // 手动指定发送特定请求
-var response = await "https://www.furion.icu/post".SetHttpMethod(HttpMethod.Post)
+var response = await "https://www.TouchSocket.icu/post".SetHttpMethod(HttpMethod.Post)
                                                   .SendAsync();
 ```
 
 ### 19.4.2 设置请求地址
 
 ```cs showLineNumbers
-// 该方式在 Furion v3.0.0 已移除，多此一举了
-await "".SetRequestUrl("https://www.furion.icu/");
+// 该方式在 TouchSocket v3.0.0 已移除，多此一举了
+await "".SetRequestUrl("https://www.TouchSocket.icu/");
 ```
 
 ### 19.4.3 设置请求方式
 
 ```cs showLineNumbers
-await "https://www.furion.icu/post".SetHttpMethod(HttpMethod.Get);
+await "https://www.TouchSocket.icu/post".SetHttpMethod(HttpMethod.Get);
 ```
 
 ### 19.4.4 设置地址模板
 
 ```cs showLineNumbers
 // 字典方式
-await "https://www.furion.icu/post/{id}?name={name}&id={p.Id}".SetTemplates(new Dictionary<string , object> {
+await "https://www.TouchSocket.icu/post/{id}?name={name}&id={p.Id}".SetTemplates(new Dictionary<string , object> {
     { "id", 1 },
-    { "name", "Furion" },
+    { "name", "TouchSocket" },
     { "p.Id", new Person { Id = 1 } }
 });
 
 // 对象/匿名对象方式
-await "https://www.furion.icu/post/{id}?name={name}".SetTemplates(new {
+await "https://www.TouchSocket.icu/post/{id}?name={name}".SetTemplates(new {
     id = 1,
-    name = "Furion"
+    name = "TouchSocket"
 });
 ```
 
@@ -212,13 +212,13 @@ await "https://www.furion.icu/post/{id}?name={name}".SetTemplates(new {
 
 ```cs showLineNumbers
 // 字典方式
-await "https://www.furion.icu/post".SetHeaders(new Dictionary<string , object> {
+await "https://www.TouchSocket.icu/post".SetHeaders(new Dictionary<string , object> {
     { "Authorization", "Bearer 你的token"},
     { "X-Authorization", "Bearer 你的刷新token"}
 });
 
 // 对象/匿名对象方式
-await "https://www.furion.icu/post".SetHeaders(new {
+await "https://www.TouchSocket.icu/post".SetHeaders(new {
     Authorization = "Bearer 你的token"
 });
 ```
@@ -227,26 +227,26 @@ await "https://www.furion.icu/post".SetHeaders(new {
 
 ```cs showLineNumbers
 // 字典方式
-await "https://www.furion.icu/get".SetQueries(new Dictionary<string , object> {
+await "https://www.TouchSocket.icu/get".SetQueries(new Dictionary<string , object> {
     { "id", 1 },
-    { "name", "Furion"}
+    { "name", "TouchSocket"}
 });
 
 // 对象/匿名对象方式
-await "https://www.furion.icu/get".SetQueries(new {
+await "https://www.TouchSocket.icu/get".SetQueries(new {
     id = 1,
-    name = "Furion"
+    name = "TouchSocket"
 });
 
-// Furion 4.7.3+ 新增忽略 null 值重载
-await "https://www.furion.icu/get".SetQueries(new {
+// TouchSocket 4.7.3+ 新增忽略 null 值重载
+await "https://www.TouchSocket.icu/get".SetQueries(new {
     id = 1,
-    name = "Furion",
+    name = "TouchSocket",
     nullValue = default(object)
 }, true);   // 设置 true 则忽略 null 值
 ```
 
-最终输出格式为：`https://www.furion.icu/get?id=1&name=Furion`。
+最终输出格式为：`https://www.TouchSocket.icu/get?id=1&name=TouchSocket`。
 
 ### 19.4.7 设置请求客户端
 
@@ -273,34 +273,34 @@ await "get".SetClient("github");
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.3.8 +` 版本使用。
+以下内容仅限 `TouchSocket 4.3.8 +` 版本使用。
 
 :::
 
 ```cs showLineNumbers
-await "https://www.furion.icu".SetClient(() => new HttpClient());
+await "https://www.TouchSocket.icu".SetClient(() => new HttpClient());
 ```
 
 ### 19.4.8 设置 `Body` 参数
 
 ```cs showLineNumbers
 // 传入对象
-await "https://www.furion.icu/api/user/add".SetBody(new User { Id = 1, Name = "Furion" });
+await "https://www.TouchSocket.icu/api/user/add".SetBody(new User { Id = 1, Name = "TouchSocket" });
 
 // 配置 Content-Type
-await "https://www.furion.icu/api/user/add".SetBody(new { Id = 1, Name = "Furion" }, "application/json");
+await "https://www.TouchSocket.icu/api/user/add".SetBody(new { Id = 1, Name = "TouchSocket" }, "application/json");
 
 // 设置 Encoding 编码
-await  "https://www.furion.icu/api/user/add".SetBody(new User { Id = 1, Name = "Furion" }, "application/json", Encoding.UTF8);
+await  "https://www.TouchSocket.icu/api/user/add".SetBody(new User { Id = 1, Name = "TouchSocket" }, "application/json", Encoding.UTF8);
 
 // 处理 application/x-www-form-urlencoded 请求
-await "https://www.furion.icu/api/user/add".SetBody(new Dictionary<string , object> {
+await "https://www.TouchSocket.icu/api/user/add".SetBody(new Dictionary<string , object> {
     { "Id", 1 },
-    { "Name", "Furion"}
+    { "Name", "TouchSocket"}
 }, "application/x-www-form-urlencoded");
 
 // 处理 application/xml、text/xml
-await "https://www.furion.icu/api/user/add".SetBody("<SomeDto><SomeTag>somevalue</SomeTag></SomeDto>", "application/xml");
+await "https://www.TouchSocket.icu/api/user/add".SetBody("<SomeDto><SomeTag>somevalue</SomeTag></SomeDto>", "application/xml");
 ```
 
 :::important 特别注意
@@ -312,33 +312,33 @@ await "https://www.furion.icu/api/user/add".SetBody("<SomeDto><SomeTag>somevalue
 ### 19.4.9 设置 `Content-Type`
 
 ```cs showLineNumbers
-await "https://www.furion.icu/post".SetContentType("application/json");
+await "https://www.TouchSocket.icu/post".SetContentType("application/json");
 ```
 
 ### 19.4.10 设置内容编码
 
 ```cs showLineNumbers
-await "https://www.furion.icu/post".SetContentEncoding(Encoding.UTF8);
+await "https://www.TouchSocket.icu/post".SetContentEncoding(Encoding.UTF8);
 ```
 
 ### 19.4.11 设置 `JSON` 序列化提供程序
 
-`Furion` 默认情况下采用 `System.Text.Json` 进行 `JSON` 序列化处理，如需设置第三方 `JSON` 提供器，则可以通过以下配置：
+`TouchSocket` 默认情况下采用 `System.Text.Json` 进行 `JSON` 序列化处理，如需设置第三方 `JSON` 提供器，则可以通过以下配置：
 
 ```cs showLineNumbers
 // 泛型方式
-await "https://www.furion.icu/api/user/add".SetJsonSerialization<NewtonsoftJsonSerializerProvider>();
+await "https://www.TouchSocket.icu/api/user/add".SetJsonSerialization<NewtonsoftJsonSerializerProvider>();
 
 // 非泛型方式
-await "https://www.furion.icu/api/user/add".SetJsonSerialization(typeof(NewtonsoftJsonSerializerProvider));
+await "https://www.TouchSocket.icu/api/user/add".SetJsonSerialization(typeof(NewtonsoftJsonSerializerProvider));
 
 // 添加更多配置
-await "https://www.furion.icu/api/user/add".SetJsonSerialization<NewtonsoftJsonSerializerProvider>(new JsonSerializerSettings {
+await "https://www.TouchSocket.icu/api/user/add".SetJsonSerialization<NewtonsoftJsonSerializerProvider>(new JsonSerializerSettings {
 
 });
 
 // 比如配置缺省的序列化选项
-await "https://www.furion.icu".SetJsonSerialization(default, new JsonSerializerOptions
+await "https://www.TouchSocket.icu".SetJsonSerialization(default, new JsonSerializerOptions
     {
         // 中文乱码
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -355,10 +355,10 @@ await "https://www.furion.icu".SetJsonSerialization(default, new JsonSerializerO
 ### 19.4.12 启用 `Body` 参数验证
 
 ```cs showLineNumbers
-await "https://www.furion.icu/api/user/add".SetValidationState();
+await "https://www.TouchSocket.icu/api/user/add".SetValidationState();
 
 // 设置不验证 null 值
-await "https://www.furion.icu/api/user/add".SetValidationState(includeNull: true);
+await "https://www.TouchSocket.icu/api/user/add".SetValidationState(includeNull: true);
 ```
 
 支持类中 `[Required]` 等完整模型验证特性。
@@ -366,7 +366,7 @@ await "https://www.furion.icu/api/user/add".SetValidationState(includeNull: true
 ### 19.4.13 请求拦截
 
 ```cs showLineNumbers
-await "https://www.furion.icu/".OnRequesting((client, req) => {
+await "https://www.TouchSocket.icu/".OnRequesting((client, req) => {
     // req 为 HttpRequestMessage 对象
     // 追加更多参数
     req.AppendQueries(new Dictionary<string, object> {
@@ -380,7 +380,7 @@ await "https://www.furion.icu/".OnRequesting((client, req) => {
 ### 19.4.14 `HttpClient` 拦截
 
 ```cs showLineNumbers
-await "https://www.furion.icu/".OnClientCreating(client => {
+await "https://www.TouchSocket.icu/".OnClientCreating(client => {
     // client 为 HttpClient 对象
     client.Timeout = 30000; // 设置超时时间
 });
@@ -391,7 +391,7 @@ await "https://www.furion.icu/".OnClientCreating(client => {
 ### 19.4.15 请求之前拦截
 
 ```cs showLineNumbers
-await "https://www.furion.icu/".OnRequesting((client, req) => {
+await "https://www.TouchSocket.icu/".OnRequesting((client, req) => {
     // req 为 HttpRequestMessage 对象
 });
 ```
@@ -401,7 +401,7 @@ await "https://www.furion.icu/".OnRequesting((client, req) => {
 ### 19.4.16 成功请求拦截
 
 ```cs showLineNumbers
-await "https://www.furion.icu/".OnResponsing((client, res) => {
+await "https://www.TouchSocket.icu/".OnResponsing((client, res) => {
     // res 为 HttpResponseMessage 对象
 });
 ```
@@ -411,7 +411,7 @@ await "https://www.furion.icu/".OnResponsing((client, res) => {
 ### 19.4.17 请求异常拦截
 
 ```cs showLineNumbers
-await "https://www.furion.icu/".OnException((client, res, errors) => {
+await "https://www.TouchSocket.icu/".OnException((client, res, errors) => {
     // res 为 HttpResponseMessage 对象
 });
 ```
@@ -420,7 +420,7 @@ await "https://www.furion.icu/".OnException((client, res, errors) => {
 
 ### 19.4.18 各种返回值处理
 
-`Furion` 远程请求默认提供四种返回值类型：
+`TouchSocket` 远程请求默认提供四种返回值类型：
 
 - `HttpResponseMessage`：请求响应消息类型
 - `Stream`：流类型
@@ -432,13 +432,13 @@ await "https://www.furion.icu/".OnException((client, res, errors) => {
 
 ```cs showLineNumbers
 // HttpResponseMessage
-var res = await "https://www.furion.icu/".GetAsync();
+var res = await "https://www.TouchSocket.icu/".GetAsync();
 
 // Stream
-var (stream, encoding) = await "https://www.furion.icu/".GetAsStreamAsync();
+var (stream, encoding) = await "https://www.TouchSocket.icu/".GetAsStreamAsync();
 
 // T
-var user = await "https://www.furion.icu/".GetAsAsync<User>();
+var user = await "https://www.TouchSocket.icu/".GetAsAsync<User>();
 
 // String
 var str = await "https://www.baidu.com".GetAsStringAsync();
@@ -446,9 +446,9 @@ var str = await "https://www.baidu.com".GetAsStringAsync();
 
 ### 19.4.19 设置 `Byte[]/Stream` 类型/上传文件
 
-:::warning `Furion 4.4.0` 以下版本
+:::warning `TouchSocket 4.4.0` 以下版本
 
-在 `Furion 4.4.0+` 版本移除了 `.SetBodyBytes` 方式，原因是拓展性太差，**新版本请使用 `.SetFiles` 方式**。
+在 `TouchSocket 4.4.0+` 版本移除了 `.SetBodyBytes` 方式，原因是拓展性太差，**新版本请使用 `.SetFiles` 方式**。
 
 :::
 
@@ -456,19 +456,19 @@ var str = await "https://www.baidu.com".GetAsStringAsync();
 
 ```cs showLineNumbers {3,7,10,15}
 // 支持单文件，bytes 可以通过 File.ReadAllBytes(文件路径) 获取
-var res = await "https://www.furion.icu/upload".SetContentType("multipart/form-data")
+var res = await "https://www.TouchSocket.icu/upload".SetContentType("multipart/form-data")
                                                .SetBodyBytes(("键", bytes, "文件名")).PostAsync();
 
 // 支持多个文件
-var res = await "https://www.furion.icu/upload".SetContentType("multipart/form-data")
+var res = await "https://www.TouchSocket.icu/upload".SetContentType("multipart/form-data")
                                                .SetBodyBytes(("键", bytes, "文件名"),("键", bytes, "文件名")).PostAsync();
 
-// 支持单文件，Furion 4.5.8 版本支持 Stream 方式更新
-var res = await "https://www.furion.icu/upload".SetContentType("multipart/form-data")
+// 支持单文件，TouchSocket 4.5.8 版本支持 Stream 方式更新
+var res = await "https://www.TouchSocket.icu/upload".SetContentType("multipart/form-data")
                                                .SetBodyBytes(("键", fileStream, "文件名")).PostAsync();
 
-// 支持多个文件，Furion 4.5.8 版本支持 Stream 方式更新
-var res = await "https://www.furion.icu/upload".SetContentType("multipart/form-data")
+// 支持多个文件，TouchSocket 4.5.8 版本支持 Stream 方式更新
+var res = await "https://www.TouchSocket.icu/upload".SetContentType("multipart/form-data")
                                                .SetBodyBytes(("键", fileStream, "文件名"),("键", fileStream, "文件名")).PostAsync();
 ```
 
@@ -485,19 +485,19 @@ var result = await $"https://api.weixin.qq.com/wxa/img_sec_check?access_token={t
 
 :::
 
-:::tip `Furion 4.4.0+` 版本
+:::tip `TouchSocket 4.4.0+` 版本
 
-如果使用 `Furion 4.4.0+` 版本，请使用以下的 `.SetFiles` 替代 `.SetBodyBytes` 操作。
+如果使用 `TouchSocket 4.4.0+` 版本，请使用以下的 `.SetFiles` 替代 `.SetBodyBytes` 操作。
 
 :::
 
 ```cs showLineNumbers {3,7}
 // bytes 可以通过 File.ReadAllBytes(文件路径) 获取
-var res = await "https://www.furion.icu/upload".SetContentType("multipart/form-data")
+var res = await "https://www.TouchSocket.icu/upload".SetContentType("multipart/form-data")
                                                .SetFiles(HttpFile.Create("file", bytes, "image.png")).PostAsync();
 
 // 支持多个文件
-var res = await "https://www.furion.icu/upload".SetContentType("multipart/form-data")
+var res = await "https://www.TouchSocket.icu/upload".SetContentType("multipart/form-data")
                                                .SetFiles(HttpFile.CreateMultiple("files", (bytes, "image1.png"), (bytes, "image2.png"))).PostAsync();
 ```
 
@@ -506,7 +506,7 @@ var res = await "https://www.furion.icu/upload".SetContentType("multipart/form-d
 有时候我们需要构建一个作用域的 `IServiceProvider`，这时只需要设置即可：
 
 ```cs showLineNumbers
-var res = await "https://www.furion.icu/upload".SetRequestScoped(services);
+var res = await "https://www.TouchSocket.icu/upload".SetRequestScoped(services);
 ```
 
 ### 19.4.21 支持模板配置
@@ -514,41 +514,41 @@ var res = await "https://www.furion.icu/upload".SetRequestScoped(services);
 模板格式为：`#(配置路径)`
 
 ```cs showLineNumbers
-var res = await "#(Furion:Address)/upload".GetAsync();
+var res = await "#(TouchSocket:Address)/upload".GetAsync();
 ```
 
 ```json showLineNumbers
 {
-  "Furion": {
-    "Address": "https://www.furion.icu"
+  "TouchSocket": {
+    "Address": "https://www.TouchSocket.icu"
   }
 }
 ```
 
 ### 19.4.22 重试策略
 
-在 `Furion v2.18+` 版本支持配置重试策略，如：
+在 `TouchSocket v2.18+` 版本支持配置重试策略，如：
 
 ```cs showLineNumbers
-var res = await "https://www.furion.icu".SetRetryPolicy(3, 1000).GetAsync();
+var res = await "https://www.TouchSocket.icu".SetRetryPolicy(3, 1000).GetAsync();
 ```
 
 以上代码表示请求失败重试 `3` 次，每次延迟 `1000ms` 。
 
 ### 19.4.23 支持 `GZip` 压缩
 
-在 `Furion v3.2.0+` 版本支持`GZip` 压缩，如：
+在 `TouchSocket v3.2.0+` 版本支持`GZip` 压缩，如：
 
 ```cs showLineNumbers
-var res = await "https://www.furion.icu".WithGZip().GetAsync();
+var res = await "https://www.TouchSocket.icu".WithGZip().GetAsync();
 ```
 
 ### 19.4.24 设置 `Url` 转码
 
-过去版本会对所有的 `Url` 进行 `Uri.EscapeDataString` 转码，在 `Furion v3.8.0+` 版本支持 `Url` 转码设置，如：
+过去版本会对所有的 `Url` 进行 `Uri.EscapeDataString` 转码，在 `TouchSocket v3.8.0+` 版本支持 `Url` 转码设置，如：
 
 ```cs showLineNumbers
-var res = await "https://www.furion.icu".WithEncodeUrl(false).GetAsync();
+var res = await "https://www.TouchSocket.icu".WithEncodeUrl(false).GetAsync();
 ```
 
 ## 19.5 `IHttpDispatchProxy` 代理方式
@@ -559,27 +559,27 @@ var res = await "https://www.furion.icu".WithEncodeUrl(false).GetAsync();
 public interface IHttp : IHttpDispatchProxy
 {
     // 发送 Get 请求
-    [Get("https://www.furion.icu/get")]
+    [Get("https://www.TouchSocket.icu/get")]
     Task<HttpResponseMessage> GetXXXAsync();
 
     // 发送 Post 请求
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync();
 
     // 发送 Put 请求
-    [Put("https://www.furion.icu/put")]
+    [Put("https://www.TouchSocket.icu/put")]
     Task<HttpResponseMessage> PutXXXAsync();
 
     // 发送 Delete 请求
-    [Delete("https://www.furion.icu/delete")]
+    [Delete("https://www.TouchSocket.icu/delete")]
     Task<HttpResponseMessage> DeleteXXXAsync();
 
     // 发送 Patch 请求
-    [Patch("https://www.furion.icu/patch")]
+    [Patch("https://www.TouchSocket.icu/patch")]
     Task<HttpResponseMessage> PatchXXXAsync();
 
     // 发送 Head 请求
-    [Head("https://www.furion.icu/head")]
+    [Head("https://www.TouchSocket.icu/head")]
     Task<HttpResponseMessage> HeadXXXAsync();
 }
 ```
@@ -589,7 +589,7 @@ public interface IHttp : IHttpDispatchProxy
 ```cs showLineNumbers
 public interface IHttp : IHttpDispatchProxy
 {
-    [Get("https://www.furion.icu/get/{id}?name={name}&number={p.PersonDetail.PhonNumber}")]
+    [Get("https://www.TouchSocket.icu/get/{id}?name={name}&number={p.PersonDetail.PhonNumber}")]
     Task<HttpResponseMessage> GetXXXAsync(int id, string name, Person p);
 }
 ```
@@ -598,7 +598,7 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.3 设置请求报文头
 
-`Furion` 框架远程请求代理模式提供三种方式设置请求报文头：
+`TouchSocket` 框架远程请求代理模式提供三种方式设置请求报文头：
 
 - 支持在接口中声明
 - 支持在方法中声明
@@ -609,13 +609,13 @@ public interface IHttp : IHttpDispatchProxy
 [Headers("key1","value2")] // 设置多个
 public interface IHttp : IHttpDispatchProxy
 {
-    [Get("https://www.furion.icu/get/{id}?name={name}"), Headers("key2","value2")]
+    [Get("https://www.TouchSocket.icu/get/{id}?name={name}"), Headers("key2","value2")]
     Task<HttpResponseMessage> GetXXXAsync(int id, string name);
 
-    [Get("https://www.furion.icu")]
+    [Get("https://www.TouchSocket.icu")]
     Task<HttpResponseMessage> GetXXX2Async(int id, [Headers]string token = default);
 
-    [Get("https://www.furion.icu")]
+    [Get("https://www.TouchSocket.icu")]
     Task<HttpResponseMessage> GetXXX2Async(int id, string name, [Headers("别名")]string token = default);
 }
 ```
@@ -625,33 +625,33 @@ public interface IHttp : IHttpDispatchProxy
 ```cs showLineNumbers  {4,7,10,13,17,21,25}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Get("https://www.furion.icu/get/{id}?name={name}")]
+    [Get("https://www.TouchSocket.icu/get/{id}?name={name}")]
     Task<HttpResponseMessage> GetXXXAsync(int id, string name);
 
-    [Get("https://www.furion.icu/get/{p.Id}?name={p.Name}")]
+    [Get("https://www.TouchSocket.icu/get/{p.Id}?name={p.Name}")]
     Task<HttpResponseMessage> GetXXXAsync(Person p);
 
-    [Get("https://www.furion.icu/get")]
+    [Get("https://www.TouchSocket.icu/get")]
     Task<HttpResponseMessage> GetXXXAsync([QueryString]int id, [QueryString]string name);
 
-    [Get("https://www.furion.icu/get")]
+    [Get("https://www.TouchSocket.icu/get")]
     Task<HttpResponseMessage> GetXXXAsync([QueryString]int id, [QueryString("别名")]string name);
 
-    // Furion 4.8.1.4 新增 [QueryString(Format)] 配置时间类型格式化
-    [Get("https://www.furion.icu/get")]
+    // TouchSocket 4.8.1.4 新增 [QueryString(Format)] 配置时间类型格式化
+    [Get("https://www.TouchSocket.icu/get")]
     Task<HttpResponseMessage> GetXXXAsync([QueryString(Format = "yyyy-MM-dd HH:mm:ss")] DateTime queryStartTime, [QueryString(Format = "yyyy-MM-dd HH:mm:ss")] DateTime queryEndTime);
 
-    // Furion 4.8.1.4 新增 [QueryString(Format)] 配置时间类型格式化
-    [Get("https://www.furion.icu/get")]
+    // TouchSocket 4.8.1.4 新增 [QueryString(Format)] 配置时间类型格式化
+    [Get("https://www.TouchSocket.icu/get")]
     Task<HttpResponseMessage> GetXXXAsync([QueryString(Format = "yyyy-MM-dd HH:mm:ss")] DateTimeOffset queryStartTime, [QueryString(Format = "yyyy-MM-dd HH:mm:ss")] DateTimeOffset queryEndTime);
 
-    // Furion 4.7.3 新增 IgnoreNullValueQueries 配置忽略空值
-    [Get("https://www.furion.icu/get", IgnoreNullValueQueries = true)]
+    // TouchSocket 4.7.3 新增 IgnoreNullValueQueries 配置忽略空值
+    [Get("https://www.TouchSocket.icu/get", IgnoreNullValueQueries = true)]
     Task<HttpResponseMessage> GetXXXAsync([QueryString]int id, [QueryString]string name, [QueryString]string nullValue);
 }
 ```
 
-最终输出格式为：`https://www.furion.icu/get?id=1&name=Furion`。
+最终输出格式为：`https://www.TouchSocket.icu/get?id=1&name=TouchSocket`。
 
 ### 19.5.5 设置请求客户端
 
@@ -682,7 +682,7 @@ public interface IHttp : IHttpDispatchProxy
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.3.8 +` 版本使用。
+以下内容仅限 `TouchSocket 4.3.8 +` 版本使用。
 
 :::
 
@@ -707,28 +707,28 @@ public interface IHttp : IHttpDispatchProxy
 ```cs showLineNumbers  {3,6,9}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Body]User user);
 
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Body("application/x-www-form-urlencoded")]User user);
 
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Body("application/x-www-form-urlencoded", "UTF-8")]User user);
 }
 ```
 
 ### 19.5.7 设置 `JSON` 序列化提供程序
 
-`Furion` 默认情况下采用 `System.Text.Json` 进行 `JSON` 序列化处理，如需设置第三方 `JSON` 提供器，则可以通过以下配置：
+`TouchSocket` 默认情况下采用 `System.Text.Json` 进行 `JSON` 序列化处理，如需设置第三方 `JSON` 提供器，则可以通过以下配置：
 
 ```cs showLineNumbers  {3,6-7}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu/post"), JsonSerialization(typeof(NewtonsoftJsonSerializerProvider))]
+    [Post("https://www.TouchSocket.icu/post"), JsonSerialization(typeof(NewtonsoftJsonSerializerProvider))]
     Task<HttpResponseMessage> PostXXXAsync([Body]User user);
 
-    [Post("https://www.furion.icu/post"), JsonSerialization(typeof(NewtonsoftJsonSerializerProvider))]
+    [Post("https://www.TouchSocket.icu/post"), JsonSerialization(typeof(NewtonsoftJsonSerializerProvider))]
     Task<HttpResponseMessage> PostXXXAsync([Body]User user, [JsonSerializerOptions]object jsonSerializerOptions = default);
 
     /// <summary>
@@ -760,17 +760,17 @@ public interface IHttp : IHttpDispatchProxy
 ```cs showLineNumbers  {4,7}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Range(1,10)]int id, [Required, MaxLength(10)]string name);
 
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Required]User user);  // 对象类型支持属性配置特性验证
 }
 ```
 
 ### 19.5.9 请求拦截
 
-`Furion` 远程请求代理方式提供两种拦截方式：
+`TouchSocket` 远程请求代理方式提供两种拦截方式：
 
 - 接口静态方法拦截
 - 参数标记拦截
@@ -779,7 +779,7 @@ public interface IHttp : IHttpDispatchProxy
 public interface IHttp : IHttpDispatchProxy
 {
     // 通过参数拦截
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Interceptor(InterceptorTypes.Request)] Action<HttpClient, HttpRequestMessage> action = default);
 
     // 全局拦截，类中每一个方法都会触发
@@ -805,7 +805,7 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.10 `HttpClient` 拦截
 
-`Furion` 远程请求代理方式提供两种拦截方式：
+`TouchSocket` 远程请求代理方式提供两种拦截方式：
 
 - 接口静态方法拦截
 - 参数标记拦截
@@ -814,7 +814,7 @@ public interface IHttp : IHttpDispatchProxy
 public interface IHttp : IHttpDispatchProxy
 {
     // 通过参数拦截
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Interceptor(InterceptorTypes.Client)] Action<HttpClient> action = default);
 
     // 全局拦截，类中每一个方法都会触发
@@ -837,7 +837,7 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.11 请求之前拦截
 
-`Furion` 远程请求代理方式提供两种拦截方式：
+`TouchSocket` 远程请求代理方式提供两种拦截方式：
 
 - 接口静态方法拦截
 - 参数标记拦截
@@ -846,7 +846,7 @@ public interface IHttp : IHttpDispatchProxy
 public interface IHttp : IHttpDispatchProxy
 {
     // 通过参数拦截
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Interceptor(InterceptorTypes.Request)] Action<HttpClient, HttpRequestMessage> action = default);
 
     // 全局拦截，类中每一个方法都会触发
@@ -869,7 +869,7 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.12 成功请求拦截
 
-`Furion` 远程请求代理方式提供两种拦截方式：
+`TouchSocket` 远程请求代理方式提供两种拦截方式：
 
 - 接口静态方法拦截
 - 参数标记拦截
@@ -878,7 +878,7 @@ public interface IHttp : IHttpDispatchProxy
 public interface IHttp : IHttpDispatchProxy
 {
     // 通过参数拦截
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Interceptor(InterceptorTypes.Response)] Action<HttpClient, HttpResponseMessage> action = default);
 
     // 全局拦截，类中每一个方法都会触发
@@ -901,7 +901,7 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.13 请求异常拦截
 
-`Furion` 远程请求代理方式提供两种拦截方式：
+`TouchSocket` 远程请求代理方式提供两种拦截方式：
 
 - 接口静态方法拦截
 - 参数标记拦截
@@ -910,7 +910,7 @@ public interface IHttp : IHttpDispatchProxy
 public interface IHttp : IHttpDispatchProxy
 {
     // 通过参数拦截
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync([Interceptor(InterceptorTypes.Exception)] Action<HttpClient, HttpResponseMessage, string> action = default);
 
     // 全局拦截，类中每一个方法都会触发
@@ -933,7 +933,7 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.14 各种返回值处理
 
-`Furion` 远程请求默认提供四种返回值类型：
+`TouchSocket` 远程请求默认提供四种返回值类型：
 
 - `HttpResponseMessage`：请求响应消息类型
 - `Stream`：流类型
@@ -945,25 +945,25 @@ public interface IHttp : IHttpDispatchProxy
 ```cs showLineNumbers
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<HttpResponseMessage> PostXXXAsync();
 
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<Stream> PostXXXAsync();
 
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<User> PostXXXAsync();
 
-    [Post("https://www.furion.icu/post")]
+    [Post("https://www.TouchSocket.icu/post")]
     Task<string> PostXXXAsync();
 }
 ```
 
 ### 19.5.15 设置 `Byte[]/Stream` 类型/上传文件
 
-:::warning `Furion 4.4.0` 以下版本
+:::warning `TouchSocket 4.4.0` 以下版本
 
-在 `Furion 4.4.0+` 版本移除了 `[BodyBytes]` 方式，原因是拓展性太差，**新版本请使用 `HttpFile` 方式**。
+在 `TouchSocket 4.4.0+` 版本移除了 `[BodyBytes]` 方式，原因是拓展性太差，**新版本请使用 `HttpFile` 方式**。
 
 :::
 
@@ -972,37 +972,37 @@ public interface IHttp : IHttpDispatchProxy
 ```cs showLineNumbers {3,4}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu/upload", ContentType = "multipart/form-data")] // bytes 可以通过 File.ReadAllBytes(文件路径) 获取
+    [Post("https://www.TouchSocket.icu/upload", ContentType = "multipart/form-data")] // bytes 可以通过 File.ReadAllBytes(文件路径) 获取
     Task<HttpResponseMessage> PostXXXAsync([BodyBytes("键","文件名")]Byte[] bytes);
 
     // 支持多个文件
-    [Post("https://www.furion.icu/upload", ContentType = "multipart/form-data")] // bytes 可以通过 File.ReadAllBytes(文件路径) 获取
+    [Post("https://www.TouchSocket.icu/upload", ContentType = "multipart/form-data")] // bytes 可以通过 File.ReadAllBytes(文件路径) 获取
     Task<HttpResponseMessage> PostXXXAsync([BodyBytes("键","文件名")]Byte[] bytes,[BodyBytes("键","文件名")]Byte[] bytes2);
 }
 ```
 
-:::tip `Furion 4.4.0+` 版本
+:::tip `TouchSocket 4.4.0+` 版本
 
-如果使用 `Furion 4.4.0+` 版本，请使用以下的 `HttpFile` 替代 `[BodyBytes]` 操作。请求有额外参数时 `HttpFile` 必须设置 `fileName` 值。
+如果使用 `TouchSocket 4.4.0+` 版本，请使用以下的 `HttpFile` 替代 `[BodyBytes]` 操作。请求有额外参数时 `HttpFile` 必须设置 `fileName` 值。
 
 :::
 
 ```cs showLineNumbers {3-4,7-8,11-12,15-16}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu/upload", ContentType = "multipart/form-data")]
+    [Post("https://www.TouchSocket.icu/upload", ContentType = "multipart/form-data")]
     Task<HttpResponseMessage> PostXXXAsync(HttpFile file);
 
 
-    [Post("https://www.furion.icu/upload", ContentType = "multipart/form-data")]
+    [Post("https://www.TouchSocket.icu/upload", ContentType = "multipart/form-data")]
     Task<HttpResponseMessage> PostXXXAsync(HttpFile file, [Body("multipart/form-data")]User user);
 
     // 支持多个文件
-    [Post("https://www.furion.icu/upload", ContentType = "multipart/form-data")]
+    [Post("https://www.TouchSocket.icu/upload", ContentType = "multipart/form-data")]
     Task<HttpResponseMessage> PostXXXAsync(HttpFile[] files);
 
     // 支持多个文件
-    [Post("https://www.furion.icu/upload", ContentType = "multipart/form-data")]
+    [Post("https://www.TouchSocket.icu/upload", ContentType = "multipart/form-data")]
     Task<HttpResponseMessage> PostXXXAsync(IList<HttpFile> files);
 }
 ```
@@ -1014,15 +1014,15 @@ public interface IHttp : IHttpDispatchProxy
 ```cs showLineNumbers
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("#(Furion:Address)/upload")]
+    [Post("#(TouchSocket:Address)/upload")]
     Task<HttpResponseMessage> PostXXXAsync([Body]User user);
 }
 ```
 
 ```json showLineNumbers
 {
-  "Furion": {
-    "Address": "https://www.furion.icu"
+  "TouchSocket": {
+    "Address": "https://www.TouchSocket.icu"
   }
 }
 ```
@@ -1031,13 +1031,13 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.17 重试策略
 
-在 `Furion v2.18+` 版本支持配置重试策略，如：
+在 `TouchSocket v2.18+` 版本支持配置重试策略，如：
 
 ```cs showLineNumbers
 [RetryPolicy(3, 1000)] // 支持全局
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu"), RetryPolicy(3, 1000)]    // 支持局部
+    [Post("https://www.TouchSocket.icu"), RetryPolicy(3, 1000)]    // 支持局部
     Task<HttpResponseMessage> PostXXXAsync([Body]User user);
 }
 ```
@@ -1046,31 +1046,31 @@ public interface IHttp : IHttpDispatchProxy
 
 ### 19.5.18 支持 `GZip`
 
-在 `Furion v3.2.0+` 版本支持 `GZip`，如：
+在 `TouchSocket v3.2.0+` 版本支持 `GZip`，如：
 
 ```cs showLineNumbers
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu", WithGZip = true)]
+    [Post("https://www.TouchSocket.icu", WithGZip = true)]
     Task<HttpResponseMessage> PostXXXAsync([Body]User user);
 }
 ```
 
 ### 19.5.19 设置 `Url` 转码
 
-过去版本会对所有的 `Url` 进行 `Uri.EscapeDataString` 转码，在 `Furion v3.8.0+` 版本支持 `Url` 转码设置，如：
+过去版本会对所有的 `Url` 进行 `Uri.EscapeDataString` 转码，在 `TouchSocket v3.8.0+` 版本支持 `Url` 转码设置，如：
 
 ```cs showLineNumbers
 public interface IHttp : IHttpDispatchProxy
 {
-    [Post("https://www.furion.icu", WithEncodeUrl = false)]
+    [Post("https://www.TouchSocket.icu", WithEncodeUrl = false)]
     Task<HttpResponseMessage> PostXXXAsync([Body]User user);
 }
 ```
 
 ## 19.6 请求客户端配置
 
-`Furion` 框架也提供了多个请求客户端配置，可以为多个客户端请求配置默认请求信息，目前支持四种模式进行配置。
+`TouchSocket` 框架也提供了多个请求客户端配置，可以为多个客户端请求配置默认请求信息，目前支持四种模式进行配置。
 
 ### 19.6.1 `Startup.cs` 统一配置
 
@@ -1282,7 +1282,7 @@ public class ValuesController : Controller
 ```cs showLineNumbers {5,7-8,13,15-16}
 services.AddRemoteRequest(options=>
 {
-    // 默认 HttpClient 在 Furion 框架内部已经配置了该操作
+    // 默认 HttpClient 在 TouchSocket 框架内部已经配置了该操作
     options.AddHttpClient(string.Empty)
             .ConfigurePrimaryHttpMessageHandler(u => new HttpClientHandler
             {
@@ -1305,7 +1305,7 @@ services.AddRemoteRequest(options=>
 ```cs showLineNumbers {5,7,12,14}
 services.AddRemoteRequest(options=>
 {
-    // 默认 HttpClient 在 Furion 框架内部已经配置了该操作
+    // 默认 HttpClient 在 TouchSocket 框架内部已经配置了该操作
     options.AddHttpClient(string.Empty)
             .ConfigurePrimaryHttpMessageHandler(u => new HttpClientHandler
             {
@@ -1363,7 +1363,7 @@ services.AddRemoteRequest(options=>
 
 :::important 版本说明
 
-以下内容仅限 `Furion v3.6.6+` 版本使用。
+以下内容仅限 `TouchSocket v3.6.6+` 版本使用。
 
 :::
 
@@ -1377,7 +1377,7 @@ services.AddRemoteRequest(options=>
 
 ## 19.8 关于返回值非 `200` 时忽略 `Http状态`
 
-`Furion` 提供了非常方便的请求并且序列化请求结果 `PostAsAsync<T>`
+`TouchSocket` 提供了非常方便的请求并且序列化请求结果 `PostAsAsync<T>`
 在 `2.8.8` 及以下版本，当返回结果的 `Http` 状态为非 `200` 时，会直接截断。考虑到请求接口的多样性，在 `2.8.9` 及以上版本增加忽略返回 `Http` 状态，直接序列化结果的方式。
 
 ```cs showLineNumbers
@@ -1401,7 +1401,7 @@ var result = await "https://api.facebook.com/"
 
 ## 19.9 关于同步请求
 
-`Furion` 框架内部默认不提供同步请求操作，建议总是使用异步的方式请求。如在不能使用异步的情况下，可自行转换为同步执行。如：
+`TouchSocket` 框架内部默认不提供同步请求操作，建议总是使用异步的方式请求。如在不能使用异步的情况下，可自行转换为同步执行。如：
 
 - 字符串拓展方式：
 
@@ -1438,7 +1438,7 @@ await HttpRequestPart.Default().SetRequestUrl("https://www.baidu.com").GetAsStri
 
 ## 19.11 关闭 `Http` 请求日志
 
-在 `Furion` 框架底层中，`HttpClient` 对象默认通过 `IHttpClientFactory` 创建的，只要发送请求就会自动打印日志，如：
+在 `TouchSocket` 框架底层中，`HttpClient` 对象默认通过 `IHttpClientFactory` 创建的，只要发送请求就会自动打印日志，如：
 
 ```bash showLineNumbers {13-22}
 info: 2022-10-26 11:38:16(+08:00) 星期三 L System.Logging.EventBusService[0] #1
@@ -1452,7 +1452,7 @@ info: 2022-10-26 11:38:17(+08:00) 星期三 L Microsoft.Hosting.Lifetime[0] #1
 info: 2022-10-26 11:38:17(+08:00) 星期三 L Microsoft.Hosting.Lifetime[0] #1
       Hosting environment: Development
 info: 2022-10-26 11:38:17(+08:00) 星期三 L Microsoft.Hosting.Lifetime[0] #1
-      Content root path: D:\Workplaces\OpenSources\Furion\samples\Furion.Web.Entry\
+      Content root path: D:\Workplaces\OpenSources\TouchSocket\samples\TouchSocket.Web.Entry\
 info: 2022-10-26 11:39:00(+08:00) 星期三 L System.Net.Http.HttpClient.Default.LogicalHandler[100] #8
       Start processing HTTP request GET https://www.baidu.com/
 info: 2022-10-26 11:39:00(+08:00) 星期三 L System.Net.Http.HttpClient.Default.ClientHandler[100] #8
@@ -1484,14 +1484,14 @@ info: 2022-10-26 11:39:04(+08:00) 星期三 L System.Net.Http.HttpClient.Default
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.7.4 +` 版本使用。
+以下内容仅限 `TouchSocket 4.7.4 +` 版本使用。
 
 :::
 
 - 字符串方式
 
 ```cs showLineNumbers {2}
-var response = await "https://www.furion.icu/".GetAsync();
+var response = await "https://www.TouchSocket.icu/".GetAsync();
 var cookies = response.GetCookies();
 ```
 
@@ -1500,7 +1500,7 @@ var cookies = response.GetCookies();
 ```cs showLineNumbers {4,8}
 public interface IHttp : IHttpDispatchProxy
 {
-    [Get("https://www.furion.icu/")]
+    [Get("https://www.TouchSocket.icu/")]
     Task<HttpResponseMessage> GetAsync();
 }
 
@@ -1512,7 +1512,7 @@ var cookies = response.GetCookies();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

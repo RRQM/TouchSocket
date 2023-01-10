@@ -1,5 +1,5 @@
 module.exports = {
-  title: "Furion",
+  title: "TouchSocket",
   tagline: "让 .NET 开发更简单，更通用，更流行。",
   url: "https://rrqm_home.gitee.io",
   baseUrl: "/touchsocket",
@@ -7,7 +7,7 @@ module.exports = {
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
   organizationName: "Baiqian Co.,Ltd",
-  projectName: "Furion",
+  projectName: "TouchSocket",
   scripts: [],
   themeConfig: {
     zoom: {
@@ -34,14 +34,14 @@ module.exports = {
     // algolia: {
     //   appId: "XYY4NGVXSA",
     //   apiKey: "957b35892d68e9ac86c35c96d89dcedf",
-    //   indexName: "furion",
+    //   indexName: "TouchSocket",
     //   contextualSearch: true,
     // },
     navbar: {
-      title: "Furion",
+      title: "TouchSocket",
       logo: {
-        alt: "Furion Logo",
-        src: "img/furionlogo.png",
+        alt: "TouchSocket Logo",
+        src: "img/TouchSocketlogo.png",
       },
       hideOnScroll: true,
       items: [
@@ -103,7 +103,7 @@ module.exports = {
         //   ],
         // },
         // {
-        //   href: "https://gitee.com/dotnetchina/Furion/board",
+        //   href: "https://gitee.com/rrqm_home/touchsocket/board",
         //   label: "看板",
         //   position: "right",
         // },
@@ -119,11 +119,11 @@ module.exports = {
           items: [
             {
               label: "Gitee（主库）",
-              href: "https://gitee.com/dotnetchina/Furion",
+              href: "https://gitee.com/rrqm_home/touchsocket",
             },
             {
               label: "GitHub",
-              href: "https://github.com/MonkSoul/Furion",
+              href: "https://github.com/MonkSoul/TouchSocket",
             },
             {
               label: "Nuget",
@@ -177,11 +177,11 @@ module.exports = {
           items: [
             {
               label: "讨论",
-              href: "https://gitee.com/dotnetchina/Furion/issues",
+              href: "https://gitee.com/rrqm_home/touchsocket/issues",
             },
             {
               label: "看板",
-              href: "https://gitee.com/dotnetchina/Furion/board",
+              href: "https://gitee.com/rrqm_home/touchsocket/board",
             },
           ],
         },
@@ -194,7 +194,7 @@ module.exports = {
             },
             {
               label: "仓库",
-              href: "https://gitee.com/dotnetchina/Furion",
+              href: "https://gitee.com/rrqm_home/touchsocket",
             },
           ],
         },
@@ -212,7 +212,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://gitee.com/dotnetchina/Furion/tree/v4/handbook/",
+          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/v4/handbook/",
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
@@ -221,7 +221,7 @@ module.exports = {
         },
         blog: {
           showReadingTime: true,
-          editUrl: "https://gitee.com/dotnetchina/Furion/tree/v4/handbook/",
+          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/v4/handbook/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),

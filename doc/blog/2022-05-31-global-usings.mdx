@@ -5,7 +5,7 @@ author: dotNET China
 author_title: 让 .NET 开发更简单，更通用，更流行。
 author_url: https://www.chinadot.net
 author_image_url: https://i.loli.net/2021/01/19/M8q5a3OTZWUKicl.png
-tags: [furion, furos, .net, .netcore, .net5, .net6]
+tags: [TouchSocket, furos, .net, .netcore, .net5, .net6]
 ---
 
 import useBaseUrl from "@docusaurus/useBaseUrl";
@@ -27,15 +27,15 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 配置之后，现在就可以把常用的 `using` 放到 `GlobalUsings.cs` 中了，写法如下：
 
-```cs showLineNumbers title="Furion 推荐的全局命名空间"
-global using Furion;
-global using Furion.DatabaseAccessor;
-global using Furion.DataEncryption;
-global using Furion.DataValidation;
-global using Furion.DependencyInjection;
-global using Furion.DynamicApiController;
-global using Furion.Extensions;
-global using Furion.FriendlyException;
+```cs showLineNumbers title="TouchSocket 推荐的全局命名空间"
+global using TouchSocket;
+global using TouchSocket.DatabaseAccessor;
+global using TouchSocket.DataEncryption;
+global using TouchSocket.DataValidation;
+global using TouchSocket.DependencyInjection;
+global using TouchSocket.DynamicApiController;
+global using TouchSocket.Extensions;
+global using TouchSocket.FriendlyException;
 global using Mapster;
 global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Http;
@@ -60,7 +60,7 @@ global using System.ComponentModel.DataAnnotations;
 可能由于 `Visual Studio` 版本的问题，导致 `GlobalUsings.cs` 定义出错，这时候需要在 `using` 后面加 `global::`，如：
 
 ```cs showLineNumbers
-global using global::Furion;
+global using global::TouchSocket;
 ```
 
 :::
@@ -68,7 +68,7 @@ global using global::Furion;
 接下来在代码中使用：
 
 ```cs showLineNumbers {1}
-// 无需 using Furion 的命名空间了哦，清爽了不少
+// 无需 using TouchSocket 的命名空间了哦，清爽了不少
 
 namespace Your.Application;
 

@@ -8,13 +8,13 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 :::warning v2.20 以下版本说明
 
-**在 `Furion v2.20+` 版本采用 [Jaina](https://gitee.com/dotnetchina/Jaina) 事件总线替换原有的 `EventBus`**，[查看旧文档](/docs/event-bus-old)
+**在 `TouchSocket v2.20+` 版本采用 [Jaina](https://gitee.com/dotnetchina/Jaina) 事件总线替换原有的 `EventBus`**，[查看旧文档](/docs/event-bus-old)
 
 :::
 
 :::important 版本说明
 
-以下内容仅限 `Furion 2.20.0 +` 版本使用。
+以下内容仅限 `TouchSocket 2.20.0 +` 版本使用。
 
 :::
 
@@ -72,7 +72,7 @@ public class ToDoEventSubscriber : IEventSubscriber
         await Task.CompletedTask;
     }
 
-    // 支持多种异常重试配置，Furion 4.2.10+ 版本支持
+    // 支持多种异常重试配置，TouchSocket 4.2.10+ 版本支持
     [EventSubscribe("test:error", NumRetries = 3)]
     [EventSubscribe("test:error", NumRetries = 3, RetryTimeout = 1000)] // 重试间隔时间
     [EventSubscribe("test:error", NumRetries = 3, ExceptionTypes = new[] { typeof(ArgumentException) })]    // 特定类型异常才重试
@@ -82,7 +82,7 @@ public class ToDoEventSubscriber : IEventSubscriber
         await Task.CompletedTask;
     }
 
-    // 支持简单 Order 编排，Furion 4.8.0+ 版本支持
+    // 支持简单 Order 编排，TouchSocket 4.8.0+ 版本支持
     [EventSubscribe("test:order", Order = 1)]
     public async Task ExceptionHandler(EventHandlerExecutingContext context)
     {
@@ -129,7 +129,7 @@ services.AddEventBus(builder =>
     // 注册 ToDo 事件订阅者
     builder.AddSubscriber<ToDoEventSubscriber>();
 
-    // 通过类型注册，Furion 4.2.1+ 版本
+    // 通过类型注册，TouchSocket 4.2.1+ 版本
     builder.AddSubscriber(typeof(ToDoEventSubscriber));
 
     // 批量注册事件订阅者
@@ -139,7 +139,7 @@ services.AddEventBus(builder =>
 
 :::tip 懒人提醒
 
-在 `Furion` 中可以不用通过 `builder.AddSubscriber<T>()` 方式一一注册，只需要实现 `ISingleton` 接口即可，如：
+在 `TouchSocket` 中可以不用通过 `builder.AddSubscriber<T>()` 方式一一注册，只需要实现 `ISingleton` 接口即可，如：
 
 ```cs showLineNumbers  {1}
 public class ToDoEventSubscriber : IEventSubscriber, ISingleton
@@ -160,7 +160,7 @@ info: Jaina.Samples.ToDoEventSubscriber[0]
 
 ## 22.3 自定义事件源
 
-`Furion` 使用 `IEventSource` 作为消息载体，任何实现该接口的类都可以充当消息载体。
+`TouchSocket` 使用 `IEventSource` 作为消息载体，任何实现该接口的类都可以充当消息载体。
 
 如需自定义，只需实现 `IEventSource` 接口即可：
 
@@ -253,7 +253,7 @@ services.AddEventBus(builder =>
         return new RedisEventSourceStorer(redisClient);
     });
 
-    // Furion 4.7.6 版本新增 ReplaceStorerOrFallback ，可在自定义事件源存储器初始失败时回退到默认值
+    // TouchSocket 4.7.6 版本新增 ReplaceStorerOrFallback ，可在自定义事件源存储器初始失败时回退到默认值
     builder.ReplaceStorerOrFallback(() => new YourEventSourceStorer());
     // 支持 IServiceProvider 参数
     builder.ReplaceStorerOrFallback(serviceProvider =>
@@ -268,7 +268,7 @@ services.AddEventBus(builder =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.3.4 +` 版本使用。
+以下内容仅限 `TouchSocket 4.3.4 +` 版本使用。
 
 :::
 
@@ -283,7 +283,7 @@ Install-Package RabbitMQ.Client -Version 6.4.0
 **2. 创建 `RabbitMQEventSourceStorer` 自定义存储器**
 
 ```cs showLineNumbers {13,41,60,66-78,99-112,122-124,130-134}
-using Furion.EventBus;
+using TouchSocket.EventBus;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -293,7 +293,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Furion.Core;
+namespace TouchSocket.Core;
 
 public sealed class RabbitMQEventSourceStorer : IEventSourceStorer, IDisposable
 {
@@ -458,7 +458,7 @@ Install-Package Confluent.Kafka -Version 1.9.3
 ```cs showLineNumbers {10}
 using Confluent.Kafka;
 
-namespace Furion.Core;
+namespace TouchSocket.Core;
 
 /// <summary>
 /// Kafka 消息扩展
@@ -584,11 +584,11 @@ public class EventConsumer<TKey, TValue> : IDisposable
 
 ```cs showLineNumbers {11,55-63,84-99,109-110,119-120}
 using Confluent.Kafka;
-using Furion.EventBus;
+using TouchSocket.EventBus;
 using Newtonsoft.Json;
 using System.Threading.Channels;
 
-namespace Furion.Core;
+namespace TouchSocket.Core;
 
 /// <summary>
 /// Kafka 存储源
@@ -739,7 +739,7 @@ services.AddEventBus(options =>
 
 ## 22.5 自定义事件发布者
 
-`Furion` 默认内置基于 `Channel` 的事件发布者 `ChannelEventPublisher`。
+`TouchSocket` 默认内置基于 `Channel` 的事件发布者 `ChannelEventPublisher`。
 
 如需自定义，只需实现 `IEventPublisher` 接口即可：
 
@@ -772,7 +772,7 @@ services.AddEventBus(builder =>
 
 ## 22.6 添加事件执行监视器
 
-`Furion` 提供了 `IEventHandlerMonitor` 监视器接口，实现该接口可以监视所有订阅事件，包括 `执行之前、执行之后，执行异常，共享上下文数据`。
+`TouchSocket` 提供了 `IEventHandlerMonitor` 监视器接口，实现该接口可以监视所有订阅事件，包括 `执行之前、执行之后，执行异常，共享上下文数据`。
 
 如添加 `ToDoEventHandlerMonitor`：
 
@@ -817,7 +817,7 @@ services.AddEventBus(builder =>
 
 ## 22.7 添加事件执行器
 
-`Furion` 提供了 `IEventHandlerExecutor` 执行器接口，可以让开发者自定义事件处理函数执行策略，如 `超时控制，失败重试、熔断等等`。
+`TouchSocket` 提供了 `IEventHandlerExecutor` 执行器接口，可以让开发者自定义事件处理函数执行策略，如 `超时控制，失败重试、熔断等等`。
 
 如添加 `RetryEventHandlerExecutor`：
 
@@ -846,7 +846,7 @@ services.AddEventBus(builder =>
 
 ## 22.8 使用有作用域的服务
 
-在 `Furion` 中， `Event Bus` 所有服务均注册为单例，如需使用作用域服务（单例服务可直接注入），可通过依赖注入 `IServiceProvider` 实例并通过 `CreateScope()` 创建一个作用域，如：
+在 `TouchSocket` 中， `Event Bus` 所有服务均注册为单例，如需使用作用域服务（单例服务可直接注入），可通过依赖注入 `IServiceProvider` 实例并通过 `CreateScope()` 创建一个作用域，如：
 
 ```cs showLineNumbers  {5,8,12,17-21}
 public class ToDoEventSubscriber : IEventSubscriber
@@ -894,11 +894,11 @@ services.AddEventBus(builder =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.2.10 +` 版本使用。
+以下内容仅限 `TouchSocket 4.2.10 +` 版本使用。
 
 :::
 
-在该版本中，`Furion` 提供了 `IEventBusFactory` 工厂服务，可在运行时动态新增或删除订阅，如：
+在该版本中，`TouchSocket` 提供了 `IEventBusFactory` 工厂服务，可在运行时动态新增或删除订阅，如：
 
 ```cs showLineNumbers {4,14-17,24}
 public class TestEventBus : IDynamicApiController
@@ -933,11 +933,11 @@ public class TestEventBus : IDynamicApiController
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.3.3 +` 版本使用。
+以下内容仅限 `TouchSocket 4.3.3 +` 版本使用。
 
 :::
 
-在 `Furion 4.3.3` 版本新增了 `MessageCenter` 静态类，可在任何地方发送事件消息或订阅消息。
+在 `TouchSocket 4.3.3` 版本新增了 `MessageCenter` 静态类，可在任何地方发送事件消息或订阅消息。
 
 ```cs showLineNumbers {2,5,11}
 // 发送消息（含诸多重载）
@@ -957,7 +957,7 @@ MessageCenter.Unsubscribe("messageId");
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.6.1 +` 版本使用。
+以下内容仅限 `TouchSocket 4.6.1 +` 版本使用。
 
 :::
 
@@ -1084,6 +1084,6 @@ builder.Services.AddCap(options =>
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

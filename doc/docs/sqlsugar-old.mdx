@@ -6,7 +6,7 @@ sidebar_label: 10.1. SqlSugar 集成
 
 :::warning 温馨提醒
 
-在 `Furion` 包中默认集成了 `EFCore`，**如果不使用 `EFCore`，可安装纯净版 `Furion.Pure` 代替 `Furion`，这样可以忽略本章节直接按照 `SqlSugar` 官方文档使用**。
+在 `TouchSocket` 包中默认集成了 `EFCore`，**如果不使用 `EFCore`，可安装纯净版 `TouchSocket.Pure` 代替 `TouchSocket`，这样可以忽略本章节直接按照 `SqlSugar` 官方文档使用**。
 
 :::
 
@@ -22,7 +22,7 @@ sidebar_label: 10.1. SqlSugar 集成
 
 ## 10.1.2 如何集成
 
-在 `Furion` 框架中，已经推出 `SqlSugar` 拓展包 [Furion.Extras.DatabaseAccessor.SqlSugar](https://www.nuget.org/packages/Furion.Extras.DatabaseAccessor.SqlSugar)。
+在 `TouchSocket` 框架中，已经推出 `SqlSugar` 拓展包 [TouchSocket.Extras.DatabaseAccessor.SqlSugar](https://www.nuget.org/packages/TouchSocket.Extras.DatabaseAccessor.SqlSugar)。
 
 ### 10.1.2.1 注册 `SqlSugar` 服务
 
@@ -98,7 +98,7 @@ db =>
 
 :::important 安装拓展包位置
 
-在 `Furion` 框架中，推荐将拓展包 `Furion.Extras.DatabaseAccessor.SqlSugar` 安装到 `Furion.Core` 层中。
+在 `TouchSocket` 框架中，推荐将拓展包 `TouchSocket.Extras.DatabaseAccessor.SqlSugar` 安装到 `TouchSocket.Core` 层中。
 
 :::
 
@@ -321,7 +321,7 @@ db =>
         //方法一
         App.PrintToMiniProfiler("SqlSugar", "Info", sql + "\r\n" +string.Join(",", pars?.Select(it => it.ParameterName + ":" + it.Value)));
 
-        //方法二:Furion对上述用法进行二次封装 建议方式 Sql参数会直接写入到生成Sql中
+        //方法二:TouchSocket对上述用法进行二次封装 建议方式 Sql参数会直接写入到生成Sql中
         App.PrintToMiniProfiler("SqlSugar","Info",SqlProfiler.ParameterFormat(sql,pars));
     };
 });
@@ -342,6 +342,6 @@ db =>
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

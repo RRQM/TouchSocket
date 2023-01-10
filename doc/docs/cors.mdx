@@ -14,11 +14,11 @@ sidebar_label: 16. CORS 跨域
 
 | 当前页面 url                | 被请求页面 url                    | 是否跨域 | 原因                           |
 | --------------------------- | --------------------------------- | -------- | ------------------------------ |
-| http://www.furion.icu/      | http://www.furion.icu/index.html  | 否       | 同源（协议、域名、端口号相同） |
-| http://www.furion.icu/      | https://www.furion.icu/index.html | 跨域     | 协议不同（http/https）         |
-| http://www.furion.icu/      | http://www.baidu.com/             | 跨域     | 主域名不同（chinadot/baidu）   |
-| http://www.furion.icu/      | http://blog.furion.icu/           | 跨域     | 子域名不同（www/blog）         |
-| http://www.furion.icu:8080/ | http://www.furion.icu:7001/       | 跨域     | 端口号不同（8080/7001）        |
+| http://www.TouchSocket.icu/      | http://www.TouchSocket.icu/index.html  | 否       | 同源（协议、域名、端口号相同） |
+| http://www.TouchSocket.icu/      | https://www.TouchSocket.icu/index.html | 跨域     | 协议不同（http/https）         |
+| http://www.TouchSocket.icu/      | http://www.baidu.com/             | 跨域     | 主域名不同（chinadot/baidu）   |
+| http://www.TouchSocket.icu/      | http://blog.TouchSocket.icu/           | 跨域     | 子域名不同（www/blog）         |
+| http://www.TouchSocket.icu:8080/ | http://www.TouchSocket.icu:7001/       | 跨域     | 端口号不同（8080/7001）        |
 
 ## 16.3 什么是 CORS
 
@@ -41,7 +41,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     [AppStartup(700)]
     public sealed class FurWebCoreStartup : AppStartup
@@ -77,7 +77,7 @@ namespace Furion.Web.Core
 
 :::important 小提醒
 
-默认情况下，`Furion` 允许所有域名来源访问，也就是无需配置任何来源域名，另外前端也需要设置请求参数：`withCredentials:false`
+默认情况下，`TouchSocket` 允许所有域名来源访问，也就是无需配置任何来源域名，另外前端也需要设置请求参数：`withCredentials:false`
 
 :::
 
@@ -87,7 +87,7 @@ namespace Furion.Web.Core
 {
   "CorsAccessorSettings": {
     "PolicyName": "自定义跨域策略名",
-    "WithOrigins": ["http://localhost:4200", "https://furion.icu"]
+    "WithOrigins": ["http://localhost:4200", "https://TouchSocket.icu"]
   }
 }
 ```
@@ -163,7 +163,7 @@ $.ajax({
 
 官方文档说明 [https://docs.microsoft.com/zh-cn/aspnet/core/signalr/security?view=aspnetcore-6.0](https://docs.microsoft.com/zh-cn/aspnet/core/signalr/security?view=aspnetcore-6.0)
 
-**在 `Furion 4.1.4+` 版本已修正 `SignalR` 跨域问题，只需要启用 `SignalRSupport` 配置即可**，如：
+**在 `TouchSocket 4.1.4+` 版本已修正 `SignalR` 跨域问题，只需要启用 `SignalRSupport` 配置即可**，如：
 
 ```json showLineNumbers {2,3}
 {
@@ -177,7 +177,7 @@ $.ajax({
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

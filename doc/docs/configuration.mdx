@@ -41,7 +41,7 @@ import TabItem from "@theme/TabItem";
 ```json showLineNumbers  {2-6}
 {
   "AppInfo": {
-    "Name": "Furion",
+    "Name": "TouchSocket",
     "Version": "1.0.0",
     "Company": "Baiqian"
   }
@@ -58,7 +58,7 @@ import TabItem from "@theme/TabItem";
 
 ### 4.1.2.2 读取 `appsettings.json` 信息
 
-在 `Furion` 框架中，提供了两种读取方式：
+在 `TouchSocket` 框架中，提供了两种读取方式：
 
 - 依赖注入 `IConfiguration` 对象读取
 - 通过 `App.Configuration[path]` 读取
@@ -78,7 +78,7 @@ import TabItem from "@theme/TabItem";
 ```cs showLineNumbers  {11-13}
 using Microsoft.AspNetCore.Mvc;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     public class DefaultController : ControllerBase
@@ -101,7 +101,7 @@ namespace Furion.Web.Entry.Controllers
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
-namespace Furion.Web.Entry.Controllers
+namespace TouchSocket.Web.Entry.Controllers
 {
     [Route("api/[controller]")]
     public class DefaultController : ControllerBase
@@ -159,13 +159,13 @@ public IConfiguration Configuration { get; set; }
 
 ### 4.1.2.4 读取配置并转换成特定类型
 
-`ASP.NET Core` 和 `Furion` 提供了多种配置类型读取并转换成特定类型，包括基础类型，对象类型，数组，集合，字典等等，如：
+`ASP.NET Core` 和 `TouchSocket` 提供了多种配置类型读取并转换成特定类型，包括基础类型，对象类型，数组，集合，字典等等，如：
 
 ```cs showLineNumbers {2,5}
 // ASP.NET Core
 var data = Configuration.GetSection("配置节点").Get<类型>();
 
-// Furion，推荐！！！
+// TouchSocket，推荐！！！
 var data = App.GetConfig<类型>("配置节点");
 ```
 
@@ -178,7 +178,7 @@ var data = App.GetConfig<类型>("配置节点");
 ```json showLineNumbers  {5-12}
 {
   "AppInfo": {
-    "Name": "Furion",
+    "Name": "TouchSocket",
     "Version": "1.0.0",
     "Company": {
       "Name": "Baiqian",
@@ -204,7 +204,7 @@ var data = App.GetConfig<类型>("配置节点");
   <TabItem value="two">
 
 ```cs showLineNumbers
-var companyName = App.Configuration["AppInfo:Name"]; // => Furion
+var companyName = App.Configuration["AppInfo:Name"]; // => TouchSocket
 ```
 
   </TabItem>
@@ -239,13 +239,13 @@ var companyName = App.Configuration["AppInfo:Tier2:Tier3:Tier4...Tiern1:Tiern3..
 
 :::important XML 配置说明
 
-`Furion v2.8.0` 版本移除了 `.xml` 文件自动扫描配置了，改为手动添加配置。
+`TouchSocket v2.8.0` 版本移除了 `.xml` 文件自动扫描配置了，改为手动添加配置。
 
 :::
 
-大多情况下，我们的配置只需要在 `appsettings.json` 中配置即可，但一些特殊情况下，我们希望某些组件或功能拥有独立的配置，这个时候就需要用到自定义配置，`Furion` 目前支持 `.json` 和 `.xml` 两种方式配置，如：
+大多情况下，我们的配置只需要在 `appsettings.json` 中配置即可，但一些特殊情况下，我们希望某些组件或功能拥有独立的配置，这个时候就需要用到自定义配置，`TouchSocket` 目前支持 `.json` 和 `.xml` 两种方式配置，如：
 
-```json showLineNumbers  {2-13} title="Furion.Web.Entry/emailsetting.json"
+```json showLineNumbers  {2-13} title="TouchSocket.Web.Entry/emailsetting.json"
 {
   "outlook": {
     "smtp": {
@@ -287,7 +287,7 @@ var companyName = App.Configuration["AppInfo:Tier2:Tier3:Tier4...Tiern1:Tiern3..
 
 :::important 特别说明
 
-`Furion` 框架会在启动时自动扫描每一个项目层根目录下的 `*.json` 文件加入配置中，所以无需手工配置。
+`TouchSocket` 框架会在启动时自动扫描每一个项目层根目录下的 `*.json` 文件加入配置中，所以无需手工配置。
 
 新增 `*.json` 文件的属性 `复制到输出目录` 设置为始终复制或较新复制，否则不会载入。另外配置文件不能出现重名，也就是保证整个项目中配置文件名字唯一。比如不能在非 `Web` 其他层定义 `appsettings.json` 文件。
 
@@ -301,7 +301,7 @@ var companyName = App.Configuration["AppInfo:Tier2:Tier3:Tier4...Tiern1:Tiern3..
 
 :::
 
-同时 `Furion` 提供了非常灵活的方式支持自定义配置文件读取，如：
+同时 `TouchSocket` 提供了非常灵活的方式支持自定义配置文件读取，如：
 
 ### 4.1.4.1 读取 `emailsetting.json` 配置
 
@@ -427,7 +427,7 @@ public class Program
 ```cs showLineNumbers {2-4}
 var builder = WebApplication.CreateBuilder(args)
 builder.Configuration.AddJsonFile("MyConfig.json", optional: true, reloadOnChange: true);
-// 注意先添加配置再初始化 Furion
+// 注意先添加配置再初始化 TouchSocket
 builder.Inject();
 var app = builder.Build();
 app.Run();
@@ -471,7 +471,7 @@ Serve.Run(RunOptions.Default.ConfigureConfiguration((env, configuration) => {
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.4.9 +` 版本使用。
+以下内容仅限 `TouchSocket 4.4.9 +` 版本使用。
 
 :::
 
@@ -553,7 +553,7 @@ public class Program
 
 ## 4.1.11 重载配置
 
-`Furion` 会在应用启动的时候对 `IConfiguration` 进行静态缓存，如果使用了 `App.Configuration` 静态属性且配置数据已发生变更，则调用以下方法刷新即可：
+`TouchSocket` 会在应用启动的时候对 `IConfiguration` 进行静态缓存，如果使用了 `App.Configuration` 静态属性且配置数据已发生变更，则调用以下方法刷新即可：
 
 ```cs showLineNumbers
 App.Configuration.Reload();
@@ -563,7 +563,7 @@ App.Configuration.Reload();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

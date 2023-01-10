@@ -5,7 +5,7 @@ author: dotNET China
 author_title: 让 .NET 开发更简单，更通用，更流行。
 author_url: https://www.chinadot.net
 author_image_url: https://i.loli.net/2021/01/19/M8q5a3OTZWUKicl.png
-tags: [furion, furos, .net, .netcore, .net5, httpcontext]
+tags: [TouchSocket, furos, .net, .netcore, .net5, httpcontext]
 ---
 
 import useBaseUrl from "@docusaurus/useBaseUrl";
@@ -26,7 +26,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ### 通过注入 `IHttpContextAccessor`
 
-在 `Furion` 框架中，默认已经注册了 `IHttpContextAccessor` 服务，所以我们可以通过构造函数注入该对象获取。
+在 `TouchSocket` 框架中，默认已经注册了 `IHttpContextAccessor` 服务，所以我们可以通过构造函数注入该对象获取。
 
 ```cs showLineNumbers  {3,5}
 public class AppService
@@ -44,7 +44,7 @@ public class AppService
 
 ## `HttpContext` 拓展方法
 
-`Furion` 框架也提供了一些常用的 `HttpContext` 拓展方法
+`TouchSocket` 框架也提供了一些常用的 `HttpContext` 拓展方法
 
 ### 获取当前请求的特性
 
