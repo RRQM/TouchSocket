@@ -212,7 +212,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/v4/handbook/",
+          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
@@ -221,7 +221,7 @@ module.exports = {
         },
         blog: {
           showReadingTime: true,
-          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/v4/handbook/",
+          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
