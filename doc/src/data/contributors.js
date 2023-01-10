@@ -4,7 +4,7 @@ const contributors = [
     link: "https://gitee.com/monksoul",
     photo:
       "https://portrait.gitee.com/uploads/avatars/user/324/974299_monksoul_1578937227.png!avatar200",
-    extra: "Furion、Layx 作者，dotNET China MIP",
+    extra: "TouchSocket、Layx 作者，dotNET China MIP",
   },
   {
     author: "YaChengMu",

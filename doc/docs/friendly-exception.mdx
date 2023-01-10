@@ -51,7 +51,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 7.4 友好异常处理使用示例
 
-`Furion` 框架提供了非常灵活的友好异常处理方式。
+`TouchSocket` 框架提供了非常灵活的友好异常处理方式。
 
 :::tip 小提示
 
@@ -61,10 +61,10 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ### 7.4.1 注册友好异常服务
 
-```cs showLineNumbers  {11} title="Furion.Web.Core\FurWebCoreStartup.cs"
+```cs showLineNumbers  {11} title="TouchSocket.Web.Core\FurWebCoreStartup.cs"
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     [AppStartup(800)]
     public sealed class FurWebCoreStartup : AppStartup
@@ -89,12 +89,12 @@ namespace Furion.Web.Core
 #### 简单抛个异常
 
 ```cs showLineNumbers  {2,12}
-using Furion.DynamicApiController;
-using Furion.FriendlyException;
+using TouchSocket.DynamicApiController;
+using TouchSocket.FriendlyException;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public int Get(int id)
         {
@@ -116,13 +116,13 @@ namespace Furion.Application
 #### 抛出特定类型异常
 
 ```cs showLineNumbers  {2,13}
-using Furion.DynamicApiController;
-using Furion.FriendlyException;
+using TouchSocket.DynamicApiController;
+using TouchSocket.FriendlyException;
 using System;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public int Get(int id)
         {
@@ -154,7 +154,7 @@ namespace Furion.Application
 ```cs showLineNumbers  {13,22,30,39}
 using System;
 
-namespace Furion.FriendlyException
+namespace TouchSocket.FriendlyException
 {
     public static class Oops
     {
@@ -197,7 +197,7 @@ namespace Furion.FriendlyException
 
 ## 7.6 最佳实践 🤗
 
-在 `Furion` 框架中，提供了非常灵活且规范化的友好异常处理方式，通过这个方式可以方便管理异常状态码、异常信息及异常本地化。
+在 `TouchSocket` 框架中，提供了非常灵活且规范化的友好异常处理方式，通过这个方式可以方便管理异常状态码、异常信息及异常本地化。
 
 ### 7.6.1 创建异常信息类型
 
@@ -208,9 +208,9 @@ namespace Furion.FriendlyException
 - 枚举中每一项必须贴有 `[ErrorCodeItemMetadata]` 特性
 
 ```cs showLineNumbers  {1,5,8,11,14,17}
-using Furion.FriendlyException;
+using TouchSocket.FriendlyException;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     [ErrorCodeType]
     public enum ErrorCodes
@@ -232,25 +232,25 @@ namespace Furion.Application
 
 :::important
 
-`Furion` 框架提供了 `[ErrorCodeType]` 特性和 `IErrorCodeTypeProvider` 提供器接口来提供异常信息扫描，这里用的是 `[ErrorCodeType]` 特性类。
+`TouchSocket` 框架提供了 `[ErrorCodeType]` 特性和 `IErrorCodeTypeProvider` 提供器接口来提供异常信息扫描，这里用的是 `[ErrorCodeType]` 特性类。
 
 :::
 
 ### 7.6.2 关于 `[ErrorCodeItemMetadata]`
 
-`Furion` 框架提供了`[ErrorCodeItemMetadata]` 特性用来标识**枚举字段**异常元数据，该特性支持传入 `消息内容` 和 `格式化参数`。最终会使用 `String.Format(消息内容，格式化参数)` 进行格式化。
+`TouchSocket` 框架提供了`[ErrorCodeItemMetadata]` 特性用来标识**枚举字段**异常元数据，该特性支持传入 `消息内容` 和 `格式化参数`。最终会使用 `String.Format(消息内容，格式化参数)` 进行格式化。
 
 如果消息内容中包含`格式化占位符`但未指定`格式化参数`，那么会查找异常所在方法是否贴有 `[IfException]` 特性且含有格式化参数，接着就会查找 `Oops.Oh` 中指定的 `格式化参数`。
 
 ### 7.6.3 静态异常类使用
 
 ```cs showLineNumbers  {2,12}
-using Furion.DynamicApiController;
-using Furion.FriendlyException;
+using TouchSocket.DynamicApiController;
+using TouchSocket.FriendlyException;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public int Get(int id)
         {
@@ -310,9 +310,9 @@ throw Oops.Bah(1000);
 ## 7.7 多个异常信息类型
 
 ```cs showLineNumbers  {5-6,21-22}
-using Furion.FriendlyException;
+using TouchSocket.FriendlyException;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     [ErrorCodeType]
     public enum ErrorCodes
@@ -350,13 +350,13 @@ namespace Furion.Application
 
 ## 7.8 `IErrorCodeTypeProvider` 提供器
 
-在 `Furion` 框架中，还提供了 `IErrorCodeTypeProvider` 异常消息提供器接口，方便在不能贴 `[ErrorCodeType]` 特性情况下使用：
+在 `TouchSocket` 框架中，还提供了 `IErrorCodeTypeProvider` 异常消息提供器接口，方便在不能贴 `[ErrorCodeType]` 特性情况下使用：
 
 ```cs showLineNumbers  {2,6,8-11}
-using Furion.FriendlyException;
+using TouchSocket.FriendlyException;
 using System;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class CustomErrorCodeTypeProvider : IErrorCodeTypeProvider
     {
@@ -370,10 +370,10 @@ namespace Furion.Application
 
 启用 `IErrorCodeTypeProvider` 提供器：
 
-```cs showLineNumbers  {11} title="Furion.Web.Core\FurWebCoreStartup.cs"
+```cs showLineNumbers  {11} title="TouchSocket.Web.Core\FurWebCoreStartup.cs"
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     [AppStartup(800)]
     public sealed class FurWebCoreStartup : AppStartup
@@ -395,9 +395,9 @@ namespace Furion.Web.Core
 
 ## 7.9 `appsetting.json` 中配置
 
-`Furion` 框架还提供了非常灵活的配置文件配置异常，通过这种方式可以实现异常信息后期配置，也就是无需在开发阶段预先定义。
+`TouchSocket` 框架还提供了非常灵活的配置文件配置异常，通过这种方式可以实现异常信息后期配置，也就是无需在开发阶段预先定义。
 
-```json showLineNumbers  {2-8} title="Furion.Web.Entry/appsettings.json"
+```json showLineNumbers  {2-8} title="TouchSocket.Web.Entry/appsettings.json"
 {
   "ErrorCodeMessageSettings": {
     "Definitions": [
@@ -414,12 +414,12 @@ namespace Furion.Web.Core
 #### 使用示例
 
 ```cs showLineNumbers  {2,12}
-using Furion.DynamicApiController;
-using Furion.FriendlyException;
+using TouchSocket.DynamicApiController;
+using TouchSocket.FriendlyException;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         public int Get(int id)
         {
@@ -442,7 +442,7 @@ namespace Furion.Application
 
 ## 7.10 `[IfException]` 使用
 
-`Furion` 框架提供了 `[IfException]` 特性可以**覆盖默认消息配置**。也就是覆盖 `异常消息类型` 和 `appsettings.json` 中的配置。
+`TouchSocket` 框架提供了 `[IfException]` 特性可以**覆盖默认消息配置**。也就是覆盖 `异常消息类型` 和 `appsettings.json` 中的配置。
 
 :::caution 特别注意
 
@@ -466,12 +466,12 @@ public enum ErrorCodes
 - 覆盖默认配置
 
 ```cs showLineNumbers  {8}
-using Furion.DynamicApiController;
-using Furion.FriendlyException;
+using TouchSocket.DynamicApiController;
+using TouchSocket.FriendlyException;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         [IfException(ErrorCodes.z1000, ErrorMessage = "我覆盖了默认的：{0} 不能小于 {1}")]
         public int Get(int id)
@@ -494,12 +494,12 @@ namespace Furion.Application
 ### 7.10.2 更多例子
 
 ```cs showLineNumbers  {2,8-11}
-using Furion.DynamicApiController;
-using Furion.FriendlyException;
+using TouchSocket.DynamicApiController;
+using TouchSocket.FriendlyException;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
-    public class FurionAppService : IDynamicApiController
+    public class TouchSocketAppService : IDynamicApiController
     {
         [IfException(typeof(ExceptionType), ErrorMessage = "特定异常类型全局拦截")]
         [IfException(ErrorMessage = "全局异常拦截")]
@@ -550,12 +550,12 @@ namespace Furion.Application
 通常我们需要在异常捕获的时候写日志，这时候就需要使用到 `IGlobalExceptionHandler` 异常定义处理程序，如：
 
 ```cs showLineNumbers  {8}
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
+using TouchSocket.DependencyInjection;
+using TouchSocket.FriendlyException;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Threading.Tasks;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class LogExceptionHandler : IGlobalExceptionHandler, ISingleton
     {
@@ -591,14 +591,14 @@ namespace Furion.Application
 
 :::important 版本说明
 
-以下内容仅限 `Furion 3.6.1 +` 版本使用。
+以下内容仅限 `TouchSocket 3.6.1 +` 版本使用。
 
 :::
 
-`Furion` 在该版本之后内置了 `BadPageResult` 错误结果类型，该类型派生自 `IActionResult`，如需返回只需要在 `Action` 中返回即可。
+`TouchSocket` 在该版本之后内置了 `BadPageResult` 错误结果类型，该类型派生自 `IActionResult`，如需返回只需要在 `Action` 中返回即可。
 
 ```cs showLineNumbers{1,7}
-using Furion.FriendlyException;
+using TouchSocket.FriendlyException;
 
 public IActionResult Add(Person person)
 {
@@ -623,6 +623,6 @@ public IActionResult Add(Person person)
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

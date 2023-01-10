@@ -43,7 +43,7 @@ EXPOSE 80
 EXPOSE 443
 
 COPY . .
-ENTRYPOINT ["dotnet", "Furion.Web.Entry.dll"]
+ENTRYPOINT ["dotnet", "TouchSocket.Web.Entry.dll"]
 ```
 
 - 👉 将 `Dockerfile` 文件拷贝到发布根目录
@@ -83,7 +83,7 @@ docker tag 网站名称:网站版本号 docker账号名/网站名称:网站版�
 如：
 
 ```bash showLineNumbers 
-docker tag furion:v2.20 monksoul/furion:v2.20
+docker tag TouchSocket:v2.20 monksoul/TouchSocket:v2.20
 ```
 
 - 👉 登录 `docker`
@@ -101,7 +101,7 @@ docker push docker账号名/网站名称:网站版本号
 如：
 
 ```bash showLineNumbers 
-docker push monksoul/furion:v2.20
+docker push monksoul/TouchSocket:v2.20
 ```
 
 :::
@@ -136,7 +136,7 @@ WORKDIR /app
 COPY --from=build /app ./
 EXPOSE 80
 EXPOSE 443
-ENTRYPOINT ["dotnet", "Furion.Web.Entry.dll"]
+ENTRYPOINT ["dotnet", "TouchSocket.Web.Entry.dll"]
 ```
 
 - 👉 在 `Dockerfile` 所在路径构建
@@ -147,6 +147,6 @@ ENTRYPOINT ["dotnet", "Furion.Web.Entry.dll"]
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

@@ -24,7 +24,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 5.6.2 如何解决？
 
-`Furion` 框架编写的所有后端接口都会生成规范化的 `swagger.json` 文件，使用该文件可以在 **[https://editor.swagger.io](https://editor.swagger.io)** 生成任何支持标准 `swagger` 的界面或客户端代码。
+`TouchSocket` 框架编写的所有后端接口都会生成规范化的 `swagger.json` 文件，使用该文件可以在 **[https://editor.swagger.io](https://editor.swagger.io)** 生成任何支持标准 `swagger` 的界面或客户端代码。
 
 **自此，前端程序员再也无需自己手写 `$.ajax` 和 `axios` 代码，这部分代码全部自动生成，以后开发效率至少提高一半以上。**
 
@@ -52,7 +52,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 :::tip 无法联网
 
-`Furion` 也提供了 **[Swagger-Editor.rar](https://gitee.com/dotnetchina/Furion/blob/v4/clients/Swagger-Editor.rar)** 离线包，可直接下载解压并双击 `index.html` 即可。
+`TouchSocket` 也提供了 **[Swagger-Editor.rar](https://gitee.com/rrqm_home/TouchSocket/blob/v4/clients/Swagger-Editor.rar)** 离线包，可直接下载解压并双击 `index.html` 即可。
 
 :::
 
@@ -92,9 +92,9 @@ yarn add axios@0.21.4
 
 :::
 
-**接着下载 `Furion` 提供的 `Vue/React` 工具库 `axios-utils.ts` 并拷贝到和 `api-services` 同级目录下：**
+**接着下载 `TouchSocket` 提供的 `Vue/React` 工具库 `axios-utils.ts` 并拷贝到和 `api-services` 同级目录下：**
 
-[axios-utils.ts 下载地址](https://gitee.com/dotnetchina/Furion/blob/v4/clients/axios_vue_react/axios-utils.ts)
+[axios-utils.ts 下载地址](https://gitee.com/rrqm_home/TouchSocket/blob/v4/clients/axios_vue_react/axios-utils.ts)
 
 <img src={useBaseUrl("img/sg7.png")} />
 
@@ -129,9 +129,9 @@ yarn add axios@0.21.4
 
 <img src={useBaseUrl("img/sg11.png")} />
 
-**接着下载 `Furion` 提供的 `Angular` 工具库 `angular-utils.ts` 并拷贝到和 `api-services` 同级目录下：**
+**接着下载 `TouchSocket` 提供的 `Angular` 工具库 `angular-utils.ts` 并拷贝到和 `api-services` 同级目录下：**
 
-[angular-utils.ts 下载地址](https://gitee.com/dotnetchina/Furion/blob/v4/clients/angular/angular-utils.ts)
+[angular-utils.ts 下载地址](https://gitee.com/rrqm_home/TouchSocket/blob/v4/clients/angular/angular-utils.ts)
 
 <img src={useBaseUrl("img/sg12.png")} />
 
@@ -188,7 +188,7 @@ export class AppModule {}
 
 ### 5.6.4.1 `Vue/React` 配置
 
-在 `Vue/React` 项目中编辑 `Furion` 框架提供的 `axios-utils.ts` 文件，并将 `serveConfig` 修改为对应的后端地址即可，如：
+在 `Vue/React` 项目中编辑 `TouchSocket` 框架提供的 `axios-utils.ts` 文件，并将 `serveConfig` 修改为对应的后端地址即可，如：
 
 ```ts showLineNumbers {21-24}
 /**
@@ -214,7 +214,7 @@ export const serveConfig = new Configuration({
   basePath:
     process.env.NODE_ENV !== "production"
       ? "https://localhost:44342" // 开发环境服务器接口地址
-      : "https://furion.icu", // 生产环境服务器接口地址
+      : "https://TouchSocket.icu", // 生产环境服务器接口地址
 });
 
 // ......
@@ -224,7 +224,7 @@ export const serveConfig = new Configuration({
 
 ### 5.6.4.2 `Angular` 配置
 
-如果是 `Angular` 项目则编辑 `Furion` 框架提供的 `angular-utils.ts` 文件，并将 `serveConfig` 修改为对应的后端地址即可，如：
+如果是 `Angular` 项目则编辑 `TouchSocket` 框架提供的 `angular-utils.ts` 文件，并将 `serveConfig` 修改为对应的后端地址即可，如：
 
 ```ts showLineNumbers {25-27}
 /**
@@ -253,7 +253,7 @@ import { environment } from "./environments/environment";
 export const serveConfig = new Configuration({
   basePath: !environment.production
     ? "https://localhost:44316" // 开发环境服务器接口地址
-    : "https://furion.icu", // 生产环境服务器接口地址
+    : "https://TouchSocket.icu", // 生产环境服务器接口地址
 });
 
 // ......
@@ -378,14 +378,14 @@ export class AppComponent {
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.1.7+` 版本使用。
+以下内容仅限 `TouchSocket 4.1.7+` 版本使用。
 
 :::
 
 通过我们根据 `swagger.json` 生成前端代码时，`Swagger` 会自动根据路由地址生成调用的 `api` 名称，但这样的名称往往不易读，这时候可自定义 `[OperationId]` 来配置生成的前端名称。
 
 ```cs showLineNumbers {5}
-using Furion.SpecificationDocument;
+using TouchSocket.SpecificationDocument;
 
 public class PersonDto
 {
@@ -399,7 +399,7 @@ public class PersonDto
 
 ## 5.6.9 框架客户端工具库介绍
 
-`axios-utils.ts` 和 `angular-utils.ts` 是 `Furion` 框架专门针对 `Furion` 开发的 `WebAPI` 项目编写的客户端代理库，在这个代理库中已经处理了跨域，授权，自动刷新 `token` 以及解密客户端 `JWT token` 问题。
+`axios-utils.ts` 和 `angular-utils.ts` 是 `TouchSocket` 框架专门针对 `TouchSocket` 开发的 `WebAPI` 项目编写的客户端代理库，在这个代理库中已经处理了跨域，授权，自动刷新 `token` 以及解密客户端 `JWT token` 问题。
 
 同时提供了非常方便的 `feature` 方法，可将异步方法进行同步化处理。
 
@@ -407,7 +407,7 @@ public class PersonDto
 
 在一些比较注重代码安全的组织或公司中，可能不能连接外网进行生成，这个时候只需要下载 [https://github.com/swagger-api/swagger-editor](https://github.com/swagger-api/swagger-editor) 代码在本地部署即可。
 
-`Furion` 官网也提供了 `Swagger-Editor.rar` 离线包下载：[https://gitee.com/dotnetchina/Furion/blob/v4/clients/Swagger-Editor.rar](https://gitee.com/dotnetchina/Furion/blob/v4/clients/Swagger-Editor.rar)
+`TouchSocket` 官网也提供了 `Swagger-Editor.rar` 离线包下载：[https://gitee.com/rrqm_home/TouchSocket/blob/v4/clients/Swagger-Editor.rar](https://gitee.com/rrqm_home/TouchSocket/blob/v4/clients/Swagger-Editor.rar)
 
 下载离线包后直接双击 `index.html` 启动即可
 
@@ -417,6 +417,6 @@ public class PersonDto
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

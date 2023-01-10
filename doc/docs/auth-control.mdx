@@ -65,7 +65,7 @@ services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 
 ### 15.2.2 添加 `Jwt` 身份验证
 
-- 安装 `Furion.Extras.Authentication.JwtBearer` 拓展包
+- 安装 `TouchSocket.Extras.Authentication.JwtBearer` 拓展包
 
 - 在 `Startup.cs` 中注册 `AddJwt` 服务，注意，**必须在 `.AddControllers()` 之前注册！！**
 
@@ -84,12 +84,12 @@ services.AddJwt();
 默认 `JwtHandler` 代码：
 
 ```cs showLineNumbers {8,14}
-using Furion.Authorization;
+using TouchSocket.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
-namespace FurionApi.Web.Core;
+namespace TouchSocketApi.Web.Core;
 
 public class JwtHandler : AppAuthorizeHandler
 {
@@ -125,7 +125,7 @@ public class JwtHandler : AppAuthorizeHandler
 
 :::warning 系统安全注意事项
 
-`Furion` 框架为了方便开发，已经自动添加了 `Jwt` 默认配置。建议每个项目都应该单独配置 `IssuerSigningKey`，`ValidIssuer`，`ValidAudience` 这三个。否则同样用了 `Furion` 框架生成的 `Token` 可能存在相互访问各自系统的风险。
+`TouchSocket` 框架为了方便开发，已经自动添加了 `Jwt` 默认配置。建议每个项目都应该单独配置 `IssuerSigningKey`，`ValidIssuer`，`ValidAudience` 这三个。否则同样用了 `TouchSocket` 框架生成的 `Token` 可能存在相互访问各自系统的风险。
 
 :::
 
@@ -203,20 +203,20 @@ public class ApiServices : IDynamicApiController
 
 ## 15.3 高级自定义授权
 
-`Furion` 框架提供了非常灵活的高级策略鉴权和授权方式，通过该策略授权方式可以实现任何自定义授权。
+`TouchSocket` 框架提供了非常灵活的高级策略鉴权和授权方式，通过该策略授权方式可以实现任何自定义授权。
 
 ### 15.3.1 `AppAuthorizeHandler`
 
-`Furion` 框架提供了 `AppAuthorizeHandler` 策略授权处理程序提供基类，只需要创建自己的 `Handler` 继承它即可。如：`JwtHandler`：
+`TouchSocket` 框架提供了 `AppAuthorizeHandler` 策略授权处理程序提供基类，只需要创建自己的 `Handler` 继承它即可。如：`JwtHandler`：
 
 ```cs showLineNumbers  {20,12}
-using Furion.Authorization;
-using Furion.Core;
+using TouchSocket.Authorization;
+using TouchSocket.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.JsonWebTokens;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     /// <summary>
     /// JWT 授权自定义处理程序
@@ -265,13 +265,13 @@ services.AddJwt<JwtHandler>();
 有些时候可能针对不同的平台采用不一样的授权方式，比如合作信任的第三方机构可以免授权，这时候我们只需要重写 `HandleAsync` 方法即可。如：
 
 ```cs showLineNumbers  {11-25}
-using Furion.Authorization;
-using Furion.Core;
+using TouchSocket.Authorization;
+using TouchSocket.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     public class JwtHandler : AppAuthorizeHandler
     {
@@ -338,15 +338,15 @@ httpContextAccessor.HttpContext.Response.Headers["x-access-token"] = refreshToke
 ### 15.5.2 后端授权 `Handler` 部分
 
 ```cs showLineNumbers  {16-28}
-using Furion.Authorization;
-using Furion.Core;
-using Furion.DataEncryption;
+using TouchSocket.Authorization;
+using TouchSocket.Core;
+using TouchSocket.DataEncryption;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     /// <summary>
     /// JWT 授权自定义处理程序
@@ -392,7 +392,7 @@ Authorization: Bearer 你的token
 X-Authorization: Bearer 你的刷新token
 ```
 
-`Furion` 框架提供了 `vue/react/angular` 客户端请求参考代码：**[https://gitee.com/dotnetchina/Furion/tree/v4/clients](https://gitee.com/dotnetchina/Furion/tree/v4/clients)**
+`TouchSocket` 框架提供了 `vue/react/angular` 客户端请求参考代码：**[https://gitee.com/rrqm_home/TouchSocket/tree/v4/clients](https://gitee.com/rrqm_home/TouchSocket/tree/v4/clients)**
 
 :::tip 小建议
 
@@ -406,7 +406,7 @@ X-Authorization: Bearer 你的刷新token
 
 :::
 
-如果 `Token` 过期，那么 `Furion` 将自动根据有效期内的 `refreshToken` 自动生成新的 `AccessToken`，并在 **响应报文头** 中返回，如：
+如果 `Token` 过期，那么 `TouchSocket` 将自动根据有效期内的 `refreshToken` 自动生成新的 `AccessToken`，并在 **响应报文头** 中返回，如：
 
 ```
 access-token: 新的token
@@ -480,7 +480,7 @@ function decryptJWT(token) {
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

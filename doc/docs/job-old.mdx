@@ -6,7 +6,7 @@ sidebar_label: 26. 定时任务/后台任务
 
 :::warning 4.8.0+ 版本说明
 
-**在 `Furion 4.8.0+` 版本采用 [Sundial](https://gitee.com/dotnetchina/Sundial) 定时任务替换原有的 `TaskScheduler`**，**😶[查看新文档](/docs/job)**
+**在 `TouchSocket 4.8.0+` 版本采用 [Sundial](https://gitee.com/dotnetchina/Sundial) 定时任务替换原有的 `TaskScheduler`**，**😶[查看新文档](/docs/job)**
 
 旧版本将支持到 `2022年12月31日`，之后旧版本代码从框架中移除，请尽快使用新版本替代。
 
@@ -14,7 +14,7 @@ sidebar_label: 26. 定时任务/后台任务
 
 :::important 版本说明
 
-以下内容仅限 `Furion 2.0.0 +` 版本使用。
+以下内容仅限 `TouchSocket 2.0.0 +` 版本使用。
 
 :::
 
@@ -37,7 +37,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 26.2 如何实现
 
-`Furion` 框架提供了两种方式实现定时任务：
+`TouchSocket` 框架提供了两种方式实现定时任务：
 
 - `SpareTime` 静态类：`SpareTime` 静态类提供 `SpareTime.Do([options])` 方式调用。
 - `ISpareTimeWorker` 依赖方式：通过自定义类实现 `ISpareTimeWorker` 接口并编写一定规则的方法即可。**需要在 `Startup.cs` 中注册 `services.AddTaskScheduler()`**
@@ -283,7 +283,7 @@ Cron 从左到右（用空格隔开）：`秒` `分` `小时` `月份中的日�
 
 ### 26.5.4 `Macro` 标识符
 
-为了方便定义 `Cron` 表达式，`Furion` 框架也提供了非常方便的占位符实现常用的时间格式：
+为了方便定义 `Cron` 表达式，`TouchSocket` 框架也提供了非常方便的占位符实现常用的时间格式：
 
 | 占位符          | 对应表达式    | 占位符代表含义                 |
 | --------------- | ------------- | ------------------------------ |
@@ -309,7 +309,7 @@ SpareTime.Do("* * * * * *", (timer, count) => {
 
 :::important 关于 CronFormat
 
-默认情况下，`Furion` 框架未启用对 `秒` 的支持，如需开启，则设置 `cronFormat: CronFormat.IncludeSeconds` 即可。默认值是 `cronFormat: CronFormat.Standard`
+默认情况下，`TouchSocket` 框架未启用对 `秒` 的支持，如需开启，则设置 `cronFormat: CronFormat.IncludeSeconds` 即可。默认值是 `cronFormat: CronFormat.Standard`
 
 :::
 
@@ -444,7 +444,7 @@ SpareTime.Do(()=>{
 
 ## 26.7 `ISpareTimeWorker` 说明
 
-除了上面的 `SpareTime` 静态类方式，`Furion` 框架还提供了 `ISpareTimeWorker` 方式，使用该方式非常简单，只需要自定义一个**公开且非抽象非静态**类并实现 `ISpareTimeWorker` 即可。
+除了上面的 `SpareTime` 静态类方式，`TouchSocket` 框架还提供了 `ISpareTimeWorker` 方式，使用该方式非常简单，只需要自定义一个**公开且非抽象非静态**类并实现 `ISpareTimeWorker` 即可。
 
 在该类中定义的任务方法需满足以下规则：
 
@@ -611,7 +611,7 @@ var nextTime = SpareTime.GetCronNextOccurrence("* * * * *");
 
 ## 26.9 `并行`和`串行`执行方式
 
-`Furion` 框架提供了任务两种执行方式 `并行` 和 `串行`：
+`TouchSocket` 框架提供了任务两种执行方式 `并行` 和 `串行`：
 
 - `并行`：无需等待上一次任务完成，**默认值**
 - `串行`：需等待上一次任务完成
@@ -639,7 +639,7 @@ public void DoSomething1(SpareTimer timer, long count)
 
 ## 26.10 任务异常处理
 
-有些时候我们可能在执行任务过程中出现异常，`Furion` 也提供了属性判断是否有异常和异常信息，方便记录到日志中，如：
+有些时候我们可能在执行任务过程中出现异常，`TouchSocket` 也提供了属性判断是否有异常和异常信息，方便记录到日志中，如：
 
 ```cs showLineNumbers  {4-7,11}
 SpareTime.Do(1000, (t, c) =>
@@ -766,7 +766,7 @@ public class Worker : BackgroundService
 ### 26.12.2 `Cron` 表达式执行方式
 
 ```cs showLineNumbers  {9,14,21,23,32}
-using Furion.TimeCrontab;
+using TouchSocket.TimeCrontab;
 
 namespace WorkerService;
 
@@ -805,15 +805,15 @@ public class Worker : BackgroundService
 
 ## 26.13 定时任务监听器
 
-在 `Furion v2.18+` 版本之后新增了定时任务监听器 `ISpareTimeListener`，通过监听器可以实现所有定时任务的状态。如，创建一个 `单例` 的监听器 `SpareTimeListener`：
+在 `TouchSocket v2.18+` 版本之后新增了定时任务监听器 `ISpareTimeListener`，通过监听器可以实现所有定时任务的状态。如，创建一个 `单例` 的监听器 `SpareTimeListener`：
 
 ```cs showLineNumbers  {8,15}
-using Furion.DependencyInjection;
-using Furion.TaskScheduler;
+using TouchSocket.DependencyInjection;
+using TouchSocket.TaskScheduler;
 using System;
 using System.Threading.Tasks;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
     public class SpareTimeListener : ISpareTimeListener, ISingleton
     {
@@ -885,6 +885,6 @@ namespace Furion.Core
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

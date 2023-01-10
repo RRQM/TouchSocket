@@ -6,7 +6,7 @@ sidebar_label: 5.4 请求审计日志 (Audit)
 
 :::tip 小知识
 
-`Furion` 提供了非常强大的 `LoggingMonitor` 审计日志功能，可直接使用：[LoggingMonitor 文档](logging.mdx#186-loggingmonitor-监听日志)
+`TouchSocket` 提供了非常强大的 `LoggingMonitor` 审计日志功能，可直接使用：[LoggingMonitor 文档](logging.mdx#186-loggingmonitor-监听日志)
 
 :::
 
@@ -39,7 +39,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     public class RequestAuditFilter : IAsyncActionFilter
     {
@@ -104,13 +104,13 @@ services.AddMvcFilter<RequestAuditFilter>();
 
 :::tip 小知识
 
-`Furion` 提供了非常强大的 `LoggingMonitor` 审计日志功能，可直接使用：[LoggingMonitor 文档](logging.mdx#186-loggingmonitor-监听日志)
+`TouchSocket` 提供了非常强大的 `LoggingMonitor` 审计日志功能，可直接使用：[LoggingMonitor 文档](logging.mdx#186-loggingmonitor-监听日志)
 
 :::
 
 ```bash showLineNumbers
 ┏━━━━━━━━━━━  Logging Monitor ━━━━━━━━━━━
-┣ Furion.Application.TestLoggerServices.GetPerson (Furion.Application)
+┣ TouchSocket.Application.TestLoggerServices.GetPerson (TouchSocket.Application)
 ┣
 ┣ 控制器名称：              TestLoggerServices
 ┣ 操作名称：                GetPerson
@@ -132,13 +132,13 @@ services.AddMvcFilter<RequestAuditFilter>();
 ┣ nbf (integer)：           1658716797
 ┣ exp (integer)：           1658717997
 ┣ iss (string)：            dotnetchina
-┣ aud (string)：            powerby Furion
+┣ aud (string)：            powerby TouchSocket
 ┣ ━━━━━━━━━━━━━━━  参数列表 ━━━━━━━━━━━━━━━
 ┣ Content-Type：
 ┣
 ┣ id (Int32)：              11
 ┣ ━━━━━━━━━━━━━━━  返回信息 ━━━━━━━━━━━━━━━
-┣ 类型：                    Furion.Application.Persons.PersonDto
+┣ 类型：                    TouchSocket.Application.Persons.PersonDto
 ┣ 返回值：                  {"Id":11,"Name":null,"Age":0,"Address":null,"PhoneNumber":null,"QQ":null,"CreatedTime":"0001-01-01T00:00:00+00:00","Childrens":null,"Posts":null}
 ┗━━━━━━━━━━━  Logging Monitor ━━━━━━━━━━━
 ````
@@ -147,6 +147,6 @@ services.AddMvcFilter<RequestAuditFilter>();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

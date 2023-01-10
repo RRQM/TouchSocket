@@ -126,22 +126,22 @@ function Sponsor() {
           alignItems: "center",
         }}
       >
-        <a href="https://gitee.com/dotnetchina/Furion/stargazers">
+        <a href="https://gitee.com/rrqm_home/TouchSocket/stargazers">
           <img
-            src="https://gitee.com/dotnetchina/Furion/badge/star.svg?theme=gvp"
+            src="https://gitee.com/rrqm_home/TouchSocket/badge/star.svg?theme=gvp"
             alt="star"
           ></img>
         </a>
-        <a href="https://gitee.com/dotnetchina/Furion">
+        <a href="https://gitee.com/rrqm_home/TouchSocket">
           <img
-            src="https://gitee.com/dotnetchina/Furion/widgets/widget_5.svg"
+            src="https://gitee.com/rrqm_home/TouchSocket/widgets/widget_5.svg"
             alt="Fork me on Gitee"
             height={20}
           ></img>
         </a>
-        <a href="https://gitee.com/dotnetchina/Furion/members">
+        <a href="https://gitee.com/rrqm_home/TouchSocket/members">
           <img
-            src="https://gitee.com/dotnetchina/Furion/badge/fork.svg?theme=gvp"
+            src="https://gitee.com/rrqm_home/TouchSocket/badge/fork.svg?theme=gvp"
             alt="fork"
           ></img>
         </a>

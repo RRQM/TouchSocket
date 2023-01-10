@@ -16,7 +16,7 @@ import TabItem from "@theme/TabItem";
 
 :::
 
-## 9.18.1 `Furion` 支持数据库提供器
+## 9.18.1 `TouchSocket` 支持数据库提供器
 
 | SqlServer | Sqlite | Cosmos | InMemoryDatabase | MySql | PostgreSQL | Oracle | Firebird | Dm  |
 | --------- | ------ | ------ | ---------------- | ----- | ---------- | ------ | -------- | --- |
@@ -38,7 +38,7 @@ import TabItem from "@theme/TabItem";
 
 :::tip 小知识
 
-这些数据库包应该安装在 `Furion.EntityFramework.Core` 层。特殊情况需安装在 `Furion.Core` 层中，如 `Mysql` `HasCharset()` 配置。
+这些数据库包应该安装在 `TouchSocket.EntityFramework.Core` 层。特殊情况需安装在 `TouchSocket.Core` 层中，如 `Mysql` `HasCharset()` 配置。
 
 :::
 
@@ -46,36 +46,36 @@ import TabItem from "@theme/TabItem";
 
 ```cs showLineNumbers
 // 注册 SqlServer
-options.AddDbPool<FurionDbContext>(DbProvider.SqlServer);
-options.AddDbPool<FurionDbContext>($"{DbProvider.SqlServer}@2005"); // 支持 2005 数据库
-options.AddDbPool<FurionDbContext>($"{DbProvider.SqlServer}@2008"); // 支持 2008 数据库
+options.AddDbPool<TouchSocketDbContext>(DbProvider.SqlServer);
+options.AddDbPool<TouchSocketDbContext>($"{DbProvider.SqlServer}@2005"); // 支持 2005 数据库
+options.AddDbPool<TouchSocketDbContext>($"{DbProvider.SqlServer}@2008"); // 支持 2008 数据库
 
 // 注册 Sqlite
-options.AddDbPool<FurionDbContext>(DbProvider.Sqlite);
+options.AddDbPool<TouchSocketDbContext>(DbProvider.Sqlite);
 
 // 注册 Cosmos
-options.AddDbPool<FurionDbContext>(DbProvider.Cosmos);
+options.AddDbPool<TouchSocketDbContext>(DbProvider.Cosmos);
 
 // 注册 InMemoryDatabase
-options.AddDbPool<FurionDbContext>(DbProvider.InMemoryDatabase);
+options.AddDbPool<TouchSocketDbContext>(DbProvider.InMemoryDatabase);
 
 // 注册 MySql
-options.AddDbPool<FurionDbContext>(DbProvider.MySql);
-options.AddDbPool<FurionDbContext>($"{DbProvider.MySql}@8.0.22");  // 可以指定版本号
-options.AddDbPool<FurionDbContext>(DbProvider.MySqlOfficial);   // 使用 MySql 官方包（MySql.EntityFrameworkCore）
+options.AddDbPool<TouchSocketDbContext>(DbProvider.MySql);
+options.AddDbPool<TouchSocketDbContext>($"{DbProvider.MySql}@8.0.22");  // 可以指定版本号
+options.AddDbPool<TouchSocketDbContext>(DbProvider.MySqlOfficial);   // 使用 MySql 官方包（MySql.EntityFrameworkCore）
 
 // 注册 PostgreSQL
-options.AddDbPool<FurionDbContext>(DbProvider.Npgsql);
+options.AddDbPool<TouchSocketDbContext>(DbProvider.Npgsql);
 
 // 注册 Oracle
-options.AddDbPool<FurionDbContext>(DbProvider.Oracle);
-options.AddDbPool<FurionDbContext>($"{DbProvider.Oracle}@11");  // 支持 Oracle 11 版本
+options.AddDbPool<TouchSocketDbContext>(DbProvider.Oracle);
+options.AddDbPool<TouchSocketDbContext>($"{DbProvider.Oracle}@11");  // 支持 Oracle 11 版本
 
 // 注册 Firebird
-options.AddDbPool<FurionDbContext>(DbProvider.Firebird);
+options.AddDbPool<TouchSocketDbContext>(DbProvider.Firebird);
 
 // 注册 Dm
-options.AddDbPool<FurionDbContext>(DbProvider.Dm);
+options.AddDbPool<TouchSocketDbContext>(DbProvider.Dm);
 ```
 
 :::caution 新版 SqlServer/MySQL/Oracle 注意
@@ -85,8 +85,8 @@ options.AddDbPool<FurionDbContext>(DbProvider.Dm);
 ```cs showLineNumbers
 services.AddDatabaseAccessor(options =>
 {
-    options.AddDbPool<FurionDbContext>($"{DbProvider.SqlServer}@2005"); // 支持 2005 数据库
-    options.AddDbPool<FurionDbContext>($"{DbProvider.SqlServer}@2008"); // 支持 2008 数据库
+    options.AddDbPool<TouchSocketDbContext>($"{DbProvider.SqlServer}@2005"); // 支持 2005 数据库
+    options.AddDbPool<TouchSocketDbContext>($"{DbProvider.SqlServer}@2008"); // 支持 2008 数据库
 });
 ```
 
@@ -95,7 +95,7 @@ services.AddDatabaseAccessor(options =>
 ```cs showLineNumbers
 services.AddDatabaseAccessor(options =>
 {
-    options.AddDbPool<FurionDbContext>($"{DbProvider.MySql}@8.0.22");
+    options.AddDbPool<TouchSocketDbContext>($"{DbProvider.MySql}@8.0.22");
 });
 ```
 
@@ -104,7 +104,7 @@ services.AddDatabaseAccessor(options =>
 ```cs showLineNumbers
 services.AddDatabaseAccessor(options =>
 {
-    options.AddDbPool<FurionDbContext>(DbProvider.MySqlOfficial);
+    options.AddDbPool<TouchSocketDbContext>(DbProvider.MySqlOfficial);
 });
 ```
 
@@ -114,10 +114,10 @@ services.AddDatabaseAccessor(options =>
 services.AddDatabaseAccessor(options =>
 {
     // 正常这样配置即可
-    options.AddDbPool<FurionDbContext>($"{DbProvider.Oracle}@11");
+    options.AddDbPool<TouchSocketDbContext>($"{DbProvider.Oracle}@11");
 
     // 如果依然出现 ORA-00933: SQL 错误，可以尝试以下配置：
-    options.AddDbPool<FurionDbContext>($"{DbProvider.Oracle}@11", optionBuilder: (ses, opt) =>
+    options.AddDbPool<TouchSocketDbContext>($"{DbProvider.Oracle}@11", optionBuilder: (ses, opt) =>
     {
         opt.UseOracle(b => b.UseOracleSQLCompatibility("11"));
     });
@@ -128,17 +128,17 @@ services.AddDatabaseAccessor(options =>
 
 ## 9.18.3 各类数据库连接字符串配置示例
 
-- `Sqlite`：`Data Source=./Furion.db`
-- `MySql`：`Data Source=localhost;Database=Furion;User ID=root;Password=000000;pooling=true;port=3306;sslmode=none;CharSet=utf8;`
-- `SqlServer`：`Server=localhost;Database=Furion;User=sa;Password=000000;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;`
+- `Sqlite`：`Data Source=./TouchSocket.db`
+- `MySql`：`Data Source=localhost;Database=TouchSocket;User ID=root;Password=000000;pooling=true;port=3306;sslmode=none;CharSet=utf8;`
+- `SqlServer`：`Server=localhost;Database=TouchSocket;User=sa;Password=000000;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;`
 - `Oracle`：`User Id=orcl;Password=orcl;Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=orcl)))`
 - `PostgreSQL`：`PORT=5432;DATABASE=postgres;HOST=127.0.0.1;PASSWORD=postgres;USER ID=postgres;`
 
 ## 9.18.4 多数据库使用方式
 
-`Furion` 通过独创的 `数据库上下文定位器` 实现多数据库灵活操作切换。只需要为每一种数据库绑定唯一的数据库上下文定位器即可。
+`TouchSocket` 通过独创的 `数据库上下文定位器` 实现多数据库灵活操作切换。只需要为每一种数据库绑定唯一的数据库上下文定位器即可。
 
-以下是 `Furion` 支持多数据库操作的实例：
+以下是 `TouchSocket` 支持多数据库操作的实例：
 
 ### 9.18.4.1 实体仓储方式
 
@@ -234,7 +234,7 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
 ## 9.18.6 `MySql` 时区问题/少 8 小时问题
 
-可查阅相关 `Issue`：[https://gitee.com/dotnetchina/Furion/issues/I3RSCO](https://gitee.com/dotnetchina/Furion/issues/I3RSCO)
+可查阅相关 `Issue`：[https://gitee.com/rrqm_home/TouchSocket/issues/I3RSCO](https://gitee.com/rrqm_home/TouchSocket/issues/I3RSCO)
 
 ## 9.18.7 `snake_case` 风格表名和字段
 
@@ -251,6 +251,6 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

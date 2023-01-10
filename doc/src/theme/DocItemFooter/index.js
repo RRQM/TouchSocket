@@ -99,22 +99,22 @@ export default function DocItemFooter(props) {
                   ⭐️ 本章节讨论区：
                   <a
                     href={
-                      "https://github.com/MonkSoul/Furion/issues/" + issueId
+                      "https://github.com/MonkSoul/TouchSocket/issues/" + issueId
                     }
                     target="_blank"
                   >
-                    https://github.com/MonkSoul/Furion/issues/{issueId}
+                    https://github.com/MonkSoul/TouchSocket/issues/{issueId}
                   </a>
                 </div>
                 <GitalkComponent
                   options={{
                     clientID: "5c5f6505b699717b8a86",
                     clientSecret: "164cc4221e5892accacd87f9ad46c8db6be5a460",
-                    repo: "Furion",
+                    repo: "TouchSocket",
                     owner: "MonkSoul",
                     admin: ["MonkSoul"],
                     number: issueId,
-                    labels: ["Furion"],
+                    labels: ["TouchSocket"],
                   }}
                 />
               </>

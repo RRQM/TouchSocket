@@ -22,7 +22,7 @@ sidebar_label: 14. 分布式缓存
 
 :::important 备注
 
-在 `Furion` 框架中，内存缓存服务已经默认注册，无需手动注册。
+在 `TouchSocket` 框架中，内存缓存服务已经默认注册，无需手动注册。
 
 :::
 
@@ -31,11 +31,11 @@ sidebar_label: 14. 分布式缓存
 如，缓存当前时间：
 
 ```cs showLineNumbers  {13,21-24}
-using Furion.DynamicApiController;
+using TouchSocket.DynamicApiController;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 
-namespace Furion.Application
+namespace TouchSocket.Application
 {
     public class CacheServices : IDynamicApiController
     {
@@ -209,7 +209,7 @@ private static void DependentEvictionCallback(object key, object value,
 
 :::important 备注
 
-在 `Furion` 框架中，分布式内存缓存服务已经默认注册，无需手动调用 `services.AddDistributedMemoryCache();` 注册。
+在 `TouchSocket` 框架中，分布式内存缓存服务已经默认注册，无需手动调用 `services.AddDistributedMemoryCache();` 注册。
 
 :::
 
@@ -251,7 +251,7 @@ services.AddStackExchangeRedisCache(options =>
     // 连接字符串，这里也可以读取配置文件
     options.Configuration = "192.168.111.134,password=aW1HAyupRKmiZn3Q";
     // 键名前缀
-    options.InstanceName = "furion_";
+    options.InstanceName = "TouchSocket_";
 });
 ```
 
@@ -338,7 +338,7 @@ public class IndexModel : PageModel
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

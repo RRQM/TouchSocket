@@ -47,7 +47,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 - `NUnit`
 - `MSTest`
 
-**在本章节，`Furion` 框架使用 `xUnit` 库进行单元测试。**
+**在本章节，`TouchSocket` 框架使用 `xUnit` 库进行单元测试。**
 
 ## 36.1.5 第一个例子
 
@@ -93,25 +93,25 @@ namespace TestProject1
 
 <img src={useBaseUrl("img/ut5.png")} />
 
-## 36.1.6 集成 `Furion` 强大功能
+## 36.1.6 集成 `TouchSocket` 强大功能
 
-`Furion` 是跨平台、跨项目的开发框架，支持任意项目类型，包括单元测试项目。
+`TouchSocket` 是跨平台、跨项目的开发框架，支持任意项目类型，包括单元测试项目。
 
-### 36.1.6.1 安装 `Furion.Xunit` 包
+### 36.1.6.1 安装 `TouchSocket.Xunit` 包
 
-:::note `Furion` 纯净版
+:::note `TouchSocket` 纯净版
 
-如果使用的是 `Furion.Pure` 则安装 `Furion.Pure.Xunit` 这个拓展包。
+如果使用的是 `TouchSocket.Pure` 则安装 `TouchSocket.Pure.Xunit` 这个拓展包。
 
 :::
 
-打开 `Nuget` 程序包控制台，安装 `Furion.Xunit` 包
+打开 `Nuget` 程序包控制台，安装 `TouchSocket.Xunit` 包
 
 <img src={useBaseUrl("img/ut6.png")} />
 
 :::important 特别注意
 
-`Furion.Xunit` 已经包含 `Furion` 无需再次安装 `Furion`。
+`TouchSocket.Xunit` 已经包含 `TouchSocket` 无需再次安装 `TouchSocket`。
 
 :::
 
@@ -120,7 +120,7 @@ namespace TestProject1
 在单元测试项目根目录下添加 `TestProgram.cs` 类，并写下以下代码：
 
 ```cs showLineNumbers {6,13,18} title="TestProgram.cs"
-using Furion.Xunit;
+using TouchSocket.Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -136,7 +136,7 @@ public class TestProgram : TestStartup
 {
     public TestProgram(IMessageSink messageSink) : base(messageSink)
     {
-        // 初始化 Furion
+        // 初始化 TouchSocket
         Serve.Run(silence: true);
     }
 }
@@ -148,14 +148,14 @@ public class TestProgram : TestStartup
 
 :::
 
-### 36.1.6.3 使用 `Furion` 完整功能
+### 36.1.6.3 使用 `TouchSocket` 完整功能
 
-`Furion` 是跨平台、跨项目的开发框架，下面在单元测试中演示 `远程请求` 并请求 `https://www.baidu.com` 数据，并测试是否请求成功。
+`TouchSocket` 是跨平台、跨项目的开发框架，下面在单元测试中演示 `远程请求` 并请求 `https://www.baidu.com` 数据，并测试是否请求成功。
 
 - 在根目录下添加 `Startup.cs` 启动类，并继承 `AppStartup`:
 
 ```cs showLineNumbers {8,13} title="Startup.cs"
-using Furion;
+using TouchSocket;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -191,7 +191,7 @@ public async Task 测试请求百度()
 
 <img src={useBaseUrl("img/ut7.png")} />
 
-很神奇吧！`Furion` 支持任何项目类型，任何平台使用。
+很神奇吧！`TouchSocket` 支持任何项目类型，任何平台使用。
 
 ## 36.1.7 带参数的测试方法
 
@@ -216,12 +216,12 @@ public void 带参数测试(int i, int j)
 
 ## 36.1.8 如何进行依赖注入
 
-有些时候，我们需要测试某接口，或者进行依赖注入方式解析服务并调用，`Furion.Xunit` 提供完整的构造函数注入。
+有些时候，我们需要测试某接口，或者进行依赖注入方式解析服务并调用，`TouchSocket.Xunit` 提供完整的构造函数注入。
 
 ### 36.1.8.1 编写一个 `ICalcService` 接口及实现类
 
 ```cs showLineNumbers  {5,10}
-using Furion.DependencyInjection;
+using TouchSocket.DependencyInjection;
 
 namespace TestProject1.Services;
 
@@ -287,8 +287,8 @@ namespace TestProject1
         [Fact]
         public void Test_String_Equal()
         {
-            Output.WriteLine("哈哈哈哈，我是 Furion");
-            Assert.NotEqual("Furion", "Fur");
+            Output.WriteLine("哈哈哈哈，我是 TouchSocket");
+            Assert.NotEqual("TouchSocket", "Fur");
         }
     }
 }
@@ -298,7 +298,7 @@ namespace TestProject1
 
 ### 36.1.8.4 关于依赖注入作用域释放
 
-`Furion` 会在创建单元测试实例时创建一个 `IServiceScope` 对象，等该实例所有测试案例执行完毕自动调用 `Dispose`，编写测试的开发者无需关注。
+`TouchSocket` 会在创建单元测试实例时创建一个 `IServiceScope` 对象，等该实例所有测试案例执行完毕自动调用 `Dispose`，编写测试的开发者无需关注。
 
 ### 36.1.8.5 测试释放资源
 
@@ -315,7 +315,7 @@ namespace TestProject1
         [Fact]
         public void Test_String_Equal()
         {
-            Assert.NotEqual("Furion", "Fur");
+            Assert.NotEqual("TouchSocket", "Fur");
         }
 
         public void Dispose()
@@ -358,7 +358,7 @@ public class MyAssemblyFixture : IDisposable
 - **在 `TestProgram.cs` 顶部全局注册**
 
 ```cs showLineNumbers {11} title="TestProgram.cs"
-using Furion.Xunit;
+using TouchSocket.Xunit;
 using TestProject1;
 using Xunit;
 using Xunit.Abstractions;
@@ -656,7 +656,7 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public string Get()
         {
-            return "Furion 集成测试";
+            return "TouchSocket 集成测试";
         }
     }
 }
@@ -743,13 +743,13 @@ public class UnitTest1
 
 `WebApplicationTests.TestHostingStartup` 为您要测试的 `Web` 项目启动类。
 
-### 36.1.9.4 集成 `Furion.Xunit` 拓展
+### 36.1.9.4 集成 `TouchSocket.Xunit` 拓展
 
-`Web` 集成测试支持完整的 `Furion` 特性，参考上面单元测试集成 `Furion` 章节。
+`Web` 集成测试支持完整的 `TouchSocket` 特性，参考上面单元测试集成 `TouchSocket` 章节。
 
-:::note `Furion` 纯净版
+:::note `TouchSocket` 纯净版
 
-如果使用的是 `Furion.Pure` 则安装 `Furion.Pure.Xunit` 这个拓展包。
+如果使用的是 `TouchSocket.Pure` 则安装 `TouchSocket.Pure.Xunit` 这个拓展包。
 
 :::
 
@@ -767,7 +767,7 @@ public class UnitTest1
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 

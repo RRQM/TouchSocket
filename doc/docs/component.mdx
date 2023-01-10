@@ -12,7 +12,7 @@ sidebar_label: 3.2 组件化启动 ✨
 
 在这里，不阐述 `Startup.cs` 的优点，就列举几个比较明显的缺点：
 
-- 默认情况下必须放在启动层且主机启动时需通过 `.UseStartup<>` 进行注册，此问题在 `Furion` 已解决 `AppStartup`
+- 默认情况下必须放在启动层且主机启动时需通过 `.UseStartup<>` 进行注册，此问题在 `TouchSocket` 已解决 `AppStartup`
 - 配置服务很容易编写出又臭又长的 `service.AddXXX()` 和 `app.AddXXX()` 代码，不管是阅读性和灵活性大大减分
 - **对服务注册和中间件注册有顺序要求，不同的顺序可能产生不同的效果，甚至出现异常**
 - **不能实现模块化自动装载注册，添加新的模块需要手动注册，注册又得考虑模块化之间依赖顺序问题**
@@ -28,7 +28,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Furion.Web.Core;
+namespace TouchSocket.Web.Core;
 
 public sealed class FurWebCoreStartup : AppStartup
 {
@@ -83,7 +83,7 @@ public sealed class FurWebCoreStartup : AppStartup
 
 ## 3.2.3 当然有解
 
-在 `Furion 3.7.3+` 版本之后，借助 `Docker-Compose` 的设计理念，推出了全新的 `Component 组件化` 模式，通过组件化开发可以实现组件之间相互依赖，相互链接，还可以共享参数，你仅仅需要编写一个入口组件即可。
+在 `TouchSocket 3.7.3+` 版本之后，借助 `Docker-Compose` 的设计理念，推出了全新的 `Component 组件化` 模式，通过组件化开发可以实现组件之间相互依赖，相互链接，还可以共享参数，你仅仅需要编写一个入口组件即可。
 
 **先看一个例子：**
 
@@ -176,11 +176,11 @@ public sealed class EntryServiceComponent : IServiceComponent
 
 **看到这里，是否已找到答案：每一个项目只有一个入口组件，每个组件只做一件事，组件之间可以通过 `DependsOn` 配置依赖，组件之间还能共享上下文数据 `ComponentContext`。**
 
-没错，这就是 Furion 目前能够想到的最优解决方案。
+没错，这就是 TouchSocket 目前能够想到的最优解决方案。
 
 ## 3.2.4 `IComponent`
 
-在 `Furion 3.7.3+` 版本，新增了 `Components` 模块，该模块的根接口为 `IComponent`，含有两个派生接口 `IServiceComponent` 和 `IApplicationComponent`。
+在 `TouchSocket 3.7.3+` 版本，新增了 `Components` 模块，该模块的根接口为 `IComponent`，含有两个派生接口 `IServiceComponent` 和 `IApplicationComponent`。
 
 ### 3.2.4.1 `IServiceComponent`
 
@@ -253,7 +253,7 @@ public interface IWebComponent : IComponent
 需要注册中间件可在 `Load` 方法中注册即可。
 ### 3.2.4.3 注册组件
 
-`Furion` 提供了多种注册组件的方式：
+`TouchSocket` 提供了多种注册组件的方式：
 
 - 方式一
 
@@ -361,7 +361,7 @@ public sealed class XXXWebComponent : IWebComponent
 
 ## 3.2.6 `[DependsOn]` 详解
 
-由于组件和组件之间存在依赖方式，甚至没有依赖关系但支持唤醒其他组件功能，所以 `Furion` 提供了 `[DependsOn]` 特性。
+由于组件和组件之间存在依赖方式，甚至没有依赖关系但支持唤醒其他组件功能，所以 `TouchSocket` 提供了 `[DependsOn]` 特性。
 
 ### 3.2.6.1 配置介绍
 
@@ -397,7 +397,7 @@ public sealed class XXXWebComponent : IWebComponent
 
 ### 3.2.6.2 重复依赖问题
 
-`Furion` 框架中已经处理了组件重复依赖问题，会自动生成好最佳的注册顺序并去除重复依赖注册问题。
+`TouchSocket` 框架中已经处理了组件重复依赖问题，会自动生成好最佳的注册顺序并去除重复依赖注册问题。
 
 ### 3.2.6.3 循环依赖问题
 
@@ -506,6 +506,6 @@ Serve.Run(RunOptions.Default
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

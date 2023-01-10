@@ -20,7 +20,7 @@ sidebar_label: 9.2 数据库上下文定位器
 
 由于 `EF Core` 本身支持多个数据库上下文操作，但是通过 `依赖注入` 的方式默认只初始化一个数据库上下文，也就是如果我们想要操作多个数据库上下文，那么 `构造函数` 注入方式就会变得复杂。
 
-所以，`Furion` 实现了一套 `定位器` 功能，通过这个 `定位器` ，我们就能够通过 `依赖注入` 等多个方式定位到数据库上下文并初始化。
+所以，`TouchSocket` 实现了一套 `定位器` 功能，通过这个 `定位器` ，我们就能够通过 `依赖注入` 等多个方式定位到数据库上下文并初始化。
 
 ## 9.2.2 数据库上下文定位器作用
 
@@ -39,11 +39,11 @@ sidebar_label: 9.2 数据库上下文定位器
 数据库上下文定位器定义代码如下：
 
 ```cs showLineNumbers  {1,5}
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 
-namespace Furion.Core
+namespace TouchSocket.Core
 {
-    public sealed class FurionDbContextLocator : IDbContextLocator
+    public sealed class TouchSocketDbContextLocator : IDbContextLocator
     {
     }
 }
@@ -51,15 +51,15 @@ namespace Furion.Core
 
 ## 9.2.4 默认数据库上下文定位器
 
-在 `Furion` 框架中已经提供了 `MasterDbContextLocator` 默认数据库上下文定位器，所以默认数据库上下文只需继承 `AppDbContext<TDbContext>` 即可。
+在 `TouchSocket` 框架中已经提供了 `MasterDbContextLocator` 默认数据库上下文定位器，所以默认数据库上下文只需继承 `AppDbContext<TDbContext>` 即可。
 
 如：只有一个数据库上下文定义：
 
 ```cs showLineNumbers 
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class DefaultDbContext : AppDbContext<DefaultDbContext>  // 无需指定定位器
@@ -84,10 +84,10 @@ options.AddDbPool<OtherDbContext, OtherDbContextLocator>();
 - 定义上下文
 
 ```cs showLineNumbers 
-using Furion.DatabaseAccessor;
+using TouchSocket.DatabaseAccessor;
 using Microsoft.EntityFrameworkCore;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppDbContext("Sqlite3ConnectionString", DbProvider.Sqlite)]
     public class OtherDbContext : AppDbContext<OtherDbContext, OtherDbContextLocator>   // 需指定定位器
@@ -126,6 +126,6 @@ namespace Furion.EntityFramework.Core
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

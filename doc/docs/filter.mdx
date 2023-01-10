@@ -114,7 +114,7 @@ public void ConfigureServices(IServiceCollection services)
         options.Filters.Add<TFilter>();
     });
 
-    // Mvc 注册方式三，全局执行，Furion 框架提供方式
+    // Mvc 注册方式三，全局执行，TouchSocket 框架提供方式
     services.AddMvcFilter<TFilter>();
 }
 ```
@@ -272,7 +272,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyAuthorizationFilter>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyAuthorizationFilter>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -377,7 +377,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyResourceFilter>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyResourceFilter>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -511,7 +511,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyActionFilter>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyActionFilter>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -591,7 +591,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyActionAttribute>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyActionAttribute>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -687,7 +687,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyExceptionFilter>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyExceptionFilter>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -752,7 +752,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyExceptionAttribute>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyExceptionAttribute>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -821,7 +821,7 @@ public class MyResultFilter : IAsyncResultFilter
         if (context.Result is ViewResult viewResult)
         {
             // 动态添加数据，在 Razor 中就可以直接使用 @TempData["Name"] 获取数据了
-            viewResult.TempData["Name"] = "Furion";
+            viewResult.TempData["Name"] = "TouchSocket";
 
             // 动态添加数据，在 Razor 中就可以直接使用 @ViewBag.Version 或 @ViewData["Name"] 获取数据了
             viewResult.ViewData["Version"] = 1;
@@ -852,7 +852,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyResultFilter>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyResultFilter>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -913,7 +913,7 @@ services.Configure<MvcOptions>(options =>
 
 :::tip 更简易方式
 
-`Furion` 框架中提供了 `services.AddMvcFilter<MyResultAttribute>()`，可使用它代替上面多行注册。
+`TouchSocket` 框架中提供了 `services.AddMvcFilter<MyResultAttribute>()`，可使用它代替上面多行注册。
 
 :::
 
@@ -1111,6 +1111,6 @@ services.AddScoped<MyActionFilterAttribute>();
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

@@ -102,7 +102,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FurionWorkers
+namespace TouchSocketWorkers
 {
     public class Worker : BackgroundService
     {
@@ -131,7 +131,7 @@ namespace FurionWorkers
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace FurionWorkers
+namespace TouchSocketWorkers
 {
     public class Program
     {
@@ -152,7 +152,7 @@ namespace FurionWorkers
 
 :::important 小知识
 
-如果使用了 `Furion` 包后可实现自动注册。
+如果使用了 `TouchSocket` 包后可实现自动注册。
 
 :::
 
@@ -175,7 +175,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FurionWorkers
+namespace TouchSocketWorkers
 {
     public class Worker : BackgroundService
     {
@@ -211,15 +211,15 @@ namespace FurionWorkers
 }
 ```
 
-### 25.3.5 集成 `Furion`
+### 25.3.5 集成 `TouchSocket`
 
-`Worker Service` 集成 `Furion` 非常方便，只需要安装 `Furion` 的包即可，并在 `Program.cs` 中调用 `.Inject()` 方法，如：
+`Worker Service` 集成 `TouchSocket` 非常方便，只需要安装 `TouchSocket` 的包即可，并在 `Program.cs` 中调用 `.Inject()` 方法，如：
 
 ```cs showLineNumbers  {15}
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace FurionWorkers
+namespace TouchSocketWorkers
 {
     public class Program
     {
@@ -233,7 +233,7 @@ namespace FurionWorkers
                 .Inject()
                 .ConfigureServices((hostContext, services) =>
                 {
-                    // 以下代码可不用编写，Furion 已实现自动注册 Worker;
+                    // 以下代码可不用编写，TouchSocket 已实现自动注册 Worker;
                     // services.AddHostedService<Worker>();
                 });
     }
@@ -244,7 +244,7 @@ namespace FurionWorkers
 
 :::tip 小知识
 
-集成 `Furion` 后会自动扫描 `Worker` 类并实现自动注册。
+集成 `TouchSocket` 后会自动扫描 `Worker` 类并实现自动注册。
 
 :::
 
@@ -256,7 +256,7 @@ namespace FurionWorkers
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace FurionWorkers
+namespace TouchSocketWorkers
 {
     public class Program
     {
@@ -293,7 +293,7 @@ namespace FurionWorkers
 
 :::
 
-`Furion` 框架为 `BackgroundService` 提供了定时任务的支持。
+`TouchSocket` 框架为 `BackgroundService` 提供了定时任务的支持。
 
 ### 25.4.1 间隔执行方式
 
@@ -341,7 +341,7 @@ public class Worker : BackgroundService
 :::
 
 ```cs showLineNumbers  {9,14,21,23-31}
-using Furion.TimeCrontab;
+using TouchSocket.TimeCrontab;
 
 namespace WorkerService;
 
@@ -390,7 +390,7 @@ public class Worker : BackgroundService
 默认情况下，定时任务都是采用 `并行` 的方式，也就是不会等待上一次任务完成，如果需要等待上一次任务完成，可以修改为 `串行` 方式：
 
 ```cs showLineNumbers {11,23-24,30,37-38,40}
-using Furion.TimeCrontab;
+using TouchSocket.TimeCrontab;
 
 namespace WorkerService;
 
@@ -508,7 +508,7 @@ public class Worker : BackgroundService
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace FurionWorkers
+namespace TouchSocketWorkers
 {
     public class Program
     {
@@ -523,29 +523,29 @@ namespace FurionWorkers
                 .Inject()
                 .ConfigureServices((hostContext, services) =>
                 {
-                    // 以下代码可不用编写，Furion 已实现自动注册 Worker;
+                    // 以下代码可不用编写，TouchSocket 已实现自动注册 Worker;
                     // services.AddHostedService<Worker>();
                 });
     }
 }
 ```
 
-- **第三步**：发布 `Worker Service`，可通过 `dotnet publish -c Release -o C:\FurionWorker` 命令发布或通过 `Visual Studio 2019` 发布。
+- **第三步**：发布 `Worker Service`，可通过 `dotnet publish -c Release -o C:\TouchSocketWorker` 命令发布或通过 `Visual Studio 2019` 发布。
 
 独立发布不依赖 SDK 方式 `dotnet publish -c release -r win10-x64 --framework net6.0`
 
 - **第四步**：通过 `sc.exe` 工具来管理并创建 `Windows` 服务，通过 **管理员模式** 并打开控制台，输入：
 
 ```cmd
-sc.exe create FurionWorkerServices binPath= C:\FurionWorker\FurionWorker.exe
+sc.exe create TouchSocketWorkerServices binPath= C:\TouchSocketWorker\TouchSocketWorker.exe
 ```
 
 注意`=`后面要有一个空格
-创建成功后可通过 `sc.exe query FurionWorkerServices` 查看服务状态。
+创建成功后可通过 `sc.exe query TouchSocketWorkerServices` 查看服务状态。
 
 - **第五步**
 
-启动服务：`sc.exe start FurionWorkerServices`，启动之后就可以在 `Windows` 服务工具中查看了。
+启动服务：`sc.exe start TouchSocketWorkerServices`，启动之后就可以在 `Windows` 服务工具中查看了。
 
 停止服务：`sc.exe stop NETCoreDemoWorkerService`
 
@@ -570,7 +570,7 @@ sc.exe delete NETCoreDemoWorkerService, 执行删除时候, 把`Windows` 服务�
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace FurionWorkers
+namespace TouchSocketWorkers
 {
     public class Program
     {
@@ -585,7 +585,7 @@ namespace FurionWorkers
                 .Inject()
                 .ConfigureServices((hostContext, services) =>
                 {
-                    // 以下代码可不用编写，Furion 已实现自动注册 Worker;
+                    // 以下代码可不用编写，TouchSocket 已实现自动注册 Worker;
                     // services.AddHostedService<Worker>();
                 });
     }
@@ -604,6 +604,6 @@ namespace FurionWorkers
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

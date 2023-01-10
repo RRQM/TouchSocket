@@ -16,7 +16,7 @@ sidebar_label: 20. 数据加解密
 - `DESC` 加解密
 - `AES` 加解密
 - `JWT` 加解密
-- `PBKDF2` 加密（`Furion v2.12 +` 版本已移除）
+- `PBKDF2` 加密（`TouchSocket v2.12 +` 版本已移除）
 - `RSA` 加解密
 
 ## 20.3 加解密使用
@@ -32,7 +32,7 @@ return (md5Hash, isEqual);
 // 输出大写 MD5 加密
 var md5Hash = MD5Encryption.Encrypt("百小僧", true);
 
-// 输出 16位 MD5 加密，Furion 4.2.6+ 版本
+// 输出 16位 MD5 加密，TouchSocket 4.2.6+ 版本
 var md5Hash16 = MD5Encryption.Encrypt("百小僧", is16: true);
 ```
 
@@ -40,8 +40,8 @@ var md5Hash16 = MD5Encryption.Encrypt("百小僧", is16: true);
 
 ```cs showLineNumbers
 // 测试 DESC 加解密
-var descHash = DESCEncryption.Encrypt("百小僧", "Furion"); // 加密
-var str = DESCEncryption.Decrypt(descHash, "Furion");  // 解密
+var descHash = DESCEncryption.Encrypt("百小僧", "TouchSocket"); // 加密
+var str = DESCEncryption.Decrypt(descHash, "TouchSocket");  // 解密
 return (descHash, str);
 ```
 
@@ -72,13 +72,13 @@ var (isValid, tokenData, validationResult) = JWTEncryption.Validate("你的token
 
 :::important 特别注意
 
-`JWTEncryption` 加解密并未包含在 `Furion` 框架中，需要安装 `Furion` 框架提供的 `Furion.Extras.Authentication.JwtBearer` 拓展包。
+`JWTEncryption` 加解密并未包含在 `TouchSocket` 框架中，需要安装 `TouchSocket` 框架提供的 `TouchSocket.Extras.Authentication.JwtBearer` 拓展包。
 
 :::
 
 ### 20.3.5 `PBKDF2` 加密
 
-**`Furion v2.12 +` 版本已移除。**
+**`TouchSocket v2.12 +` 版本已移除。**
 
 ```cs showLineNumbers
 // 测试 PBKDF2 加密，比较
@@ -124,42 +124,42 @@ return (basestring, str2);
 
 :::important 关于 `RSA` 签名和校验
 
-`Furion` 框架底层不内置 `RSA` 签名和校验功能，如需添加该功能可查阅开发者提交的代码：[查看 RSA 签名和校验](https://gitee.com/dotnetchina/Furion/pulls/349)
+`TouchSocket` 框架底层不内置 `RSA` 签名和校验功能，如需添加该功能可查阅开发者提交的代码：[查看 RSA 签名和校验](https://gitee.com/rrqm_home/TouchSocket/pulls/349)
 
 :::
 
 ## 20.4 字符串拓展方式
 
-`Furion` 框架也提供了字符串拓展方式进行 `MD5加密、AES/DESC加解密、RSA加解密`。
+`TouchSocket` 框架也提供了字符串拓展方式进行 `MD5加密、AES/DESC加解密、RSA加解密`。
 
 ```cs showLineNumbers
-using Furion.DataEncryption.Extensions;
+using TouchSocket.DataEncryption.Extensions;
 
 // MD5 加密
-var s = "Furion".ToMD5Encrypt();
-var b = "Furion".ToMD5Compare(s);   // 比较
+var s = "TouchSocket".ToMD5Encrypt();
+var b = "TouchSocket".ToMD5Compare(s);   // 比较
 
 // AES加解密
-var s = "Furion".ToAESEncrypt("sfdsfdsfdsfdsfdsfdsfdsfdsfdfdsfdsfdfdfdfd");
+var s = "TouchSocket".ToAESEncrypt("sfdsfdsfdsfdsfdsfdsfdsfdsfdfdsfdsfdfdfdfd");
 var str = s.ToAESDecrypt("sfdsfdsfdsfdsfdsfdsfdsfdsfdfdsfdsfdfdfdfd");
 
 // DESC 加解密
-var s = "Furion".ToDESCEncrypt("sfdsfdsfdsfdsfdsfdsfdsfdsfdfdsfdsfdfdfdfd");
+var s = "TouchSocket".ToDESCEncrypt("sfdsfdsfdsfdsfdsfdsfdsfdsfdfdsfdsfdfdfdfd");
 var str = s.ToDESCDecrypt("sfdsfdsfdsfdsfdsfdsfdsfdsfdfdsfdsfdfdfdfd");
 
-// PBKDF2 加密（`Furion v2.12 +` 版本已移除！！！！！！！！）
-var s = "Furion".ToPBKDF2Encrypt();
-var b = "Furion".ToPBKDF2Compare(s);   // 比较
+// PBKDF2 加密（`TouchSocket v2.12 +` 版本已移除！！！！！！！！）
+var s = "TouchSocket".ToPBKDF2Encrypt();
+var b = "TouchSocket".ToPBKDF2Compare(s);   // 比较
 
 // RSA 加解密
 var (publicKey, privateKey) = RSAEncryption.GenerateSecretKey(2048);  //生成 RSA 秘钥 秘钥大小必须为 2048 到 16384，并且是 8 的倍数
-var s= "Furion".ToRSAEncrpyt(publicKey);  // 加密
+var s= "TouchSocket".ToRSAEncrpyt(publicKey);  // 加密
 var str=s.ToRSADecrypt(privateKey);  // 解密
 ```
 
 ## 20.5 `SM2`、`SM3`，`SM4` 国密
 
-`Furion` 框架未内置国密算法 `SM2-4`，但是已有开发者贡献实现并开源，可查阅 [Gitee 仓库](https://gitee.com/xxcxy/SM/tree/master/GfsDemo/Smcrypto)，感谢 `QQ（373696184）形影相印²º²²` 贡献
+`TouchSocket` 框架未内置国密算法 `SM2-4`，但是已有开发者贡献实现并开源，可查阅 [Gitee 仓库](https://gitee.com/xxcxy/SM/tree/master/GfsDemo/Smcrypto)，感谢 `QQ（373696184）形影相印²º²²` 贡献
 
 ```cs showLineNumbers
 var data = "{\"lx\":\"1\",\"wxid\":\"\",\"ehealth_code_id\":\"68A018036186B717CC1B051C10996F4EEE805F5F81EB1594C9EB43592545F7F6\",\"ehealth_code\":\"68A018036186B717CC1B051C10996F4EEE805F5F81EB1594C9EB43592545F7F6\",\"xm\":\"测试\"}";
@@ -185,6 +185,6 @@ var a1 = sM4Utils.解密(a);
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

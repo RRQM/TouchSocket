@@ -8,7 +8,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 :::warning v2.20+ 版本说明
 
-**在 `Furion v2.20+` 版本采用 [Jaina](https://gitee.com/dotnetchina/Jaina) 事件总线替换原有的 `EventBus`**，**😶[查看新文档](/docs/event-bus)**
+**在 `TouchSocket v2.20+` 版本采用 [Jaina](https://gitee.com/dotnetchina/Jaina) 事件总线替换原有的 `EventBus`**，**😶[查看新文档](/docs/event-bus)**
 
 :::
 
@@ -22,7 +22,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 22.2 `MessageCenter` 消息中心
 
-在 `Furion` 框架中，实现了一种轻量级的事件总线实现机制：`MessageCenter`（消息中心），`MessageCenter` 采用字符串消息机制进行广播， 可以在绝大多数中小型项目中发挥作用，缺点是消息处理是在主线程中完成并且消息不支持分布式存储。
+在 `TouchSocket` 框架中，实现了一种轻量级的事件总线实现机制：`MessageCenter`（消息中心），`MessageCenter` 采用字符串消息机制进行广播， 可以在绝大多数中小型项目中发挥作用，缺点是消息处理是在主线程中完成并且消息不支持分布式存储。
 
 另外，`MessageCenter` 支持单播、多播发布及多订阅。如图所示：
 
@@ -85,7 +85,7 @@ MessageCenter.Send("remove:user", new User {}); // => 打印：我是remove:user
 
 在上面的例子中，我们需要创建 `ISubscribeHandler` 的派生类进行相关配置才能实现订阅处理。
 
-在某些特殊情况下，可能只需要订阅一次即可。所以，在 `Furion` 框架中，为了更简便的订阅消息，也提供了 `MessageCenter.Subscribe<T>` 静态方法，如：
+在某些特殊情况下，可能只需要订阅一次即可。所以，在 `TouchSocket` 框架中，为了更简便的订阅消息，也提供了 `MessageCenter.Subscribe<T>` 静态方法，如：
 
 ```cs showLineNumbers
 MessageCenter.Subscribe<User>("create:user", (i,p) => {
@@ -103,7 +103,7 @@ MessageCenter.Send("create:user", isSync: true);
 
 ## 22.4 关于依赖注入
 
-在 `Furion` 框架中，事件总线是不支持构造函数注入的，而且构造函数也只会执行一次。所以需要用到服务，应该通过静态类解析，`App.GetService<xx>()` 或 `Db.GetRepository<XX>()`。
+在 `TouchSocket` 框架中，事件总线是不支持构造函数注入的，而且构造函数也只会执行一次。所以需要用到服务，应该通过静态类解析，`App.GetService<xx>()` 或 `Db.GetRepository<XX>()`。
 
 ```cs showLineNumbers  {5,12-20}
 public class UserChangeSubscribeHandler : ISubscribeHandler
@@ -152,6 +152,6 @@ public class UserChangeSubscribeHandler : ISubscribeHandler
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

@@ -10,11 +10,11 @@ sidebar_label: 3.1 AppStartup 启动
 
 **.NET5** 方式
 
-```cs showLineNumbers  {18} title="Furion.Web.Entry\Program.cs"
+```cs showLineNumbers  {18} title="TouchSocket.Web.Entry\Program.cs"
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace Furion.Web.Entry
+namespace TouchSocket.Web.Entry
 {
     public class Program
     {
@@ -48,12 +48,12 @@ namespace Furion.Web.Entry
 
 默认代码如下：
 
-```cs showLineNumbers  {9,13} title="Furion.Web.Entry\Startup.cs"
+```cs showLineNumbers  {9,13} title="TouchSocket.Web.Entry\Startup.cs"
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.Web.Entry
+namespace TouchSocket.Web.Entry
 {
     public class Startup
     {
@@ -78,7 +78,7 @@ namespace Furion.Web.Entry
 
 ## 3.1.2 `AppStartup`
 
-在 `Furion` 框架中，提供了更为灵活的 `Startup` 类配置方式，**无需在 `Web 启用层` 中配置，可将配置放到任何项目层。**
+在 `TouchSocket` 框架中，提供了更为灵活的 `Startup` 类配置方式，**无需在 `Web 启用层` 中配置，可将配置放到任何项目层。**
 
 可能会有读者有疑问，为什么要多此一举呢？原因有几点：
 
@@ -86,7 +86,7 @@ namespace Furion.Web.Entry
 - 随着业务的增长，需要集成越来越多的第三方服务，这时候 `Startup` 类就会变得越来越臃肿，难以维护
 - `Startup` 类无法与其他项目类型进行共用
 
-所以，`Furion` 提供了更加灵活的配置方式：`AppStartup`。
+所以，`TouchSocket` 提供了更加灵活的配置方式：`AppStartup`。
 
 :::warning 注意事项
 
@@ -110,7 +110,7 @@ namespace Furion.Web.Entry
 ```cs showLineNumbers  {5,7,12,18,23}
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     public class MyStartup : AppStartup
     {
@@ -146,7 +146,7 @@ namespace Furion.EntityFramework.Core
 ```cs showLineNumbers  {5}
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppStartup(10)]
     public class FirstStartup : AppStartup
@@ -165,7 +165,7 @@ namespace Furion.EntityFramework.Core
 ```cs showLineNumbers  {5}
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.EntityFramework.Core
+namespace TouchSocket.EntityFramework.Core
 {
     [AppStartup(9)]
     public class SecondStartup : AppStartup
@@ -191,18 +191,18 @@ namespace Furion.EntityFramework.Core
 
 :::important `v3.6.3+` 说明
 
-在 `Furion v3.6.3+` 版本之后无需创建空 `Startup.cs` 类，内部已实现 `FakeStartup` 模式。
+在 `TouchSocket v3.6.3+` 版本之后无需创建空 `Startup.cs` 类，内部已实现 `FakeStartup` 模式。
 
 :::
 
 建议 `Web` 启动层的 `Startup.cs` 保持为空方法体，如：
 
-```cs showLineNumbers {9-11,13-15} title="Furion.Web.Entry\Startup.cs"
+```cs showLineNumbers {9-11,13-15} title="TouchSocket.Web.Entry\Startup.cs"
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Furion.Web.Entry
+namespace TouchSocket.Web.Entry
 {
     public class Startup
     {
@@ -217,15 +217,15 @@ namespace Furion.Web.Entry
 }
 ```
 
-将所有 `Web 应用层` 配置迁移到 `Furion.Web.Core.Startup.cs` 中，如：
+将所有 `Web 应用层` 配置迁移到 `TouchSocket.Web.Core.Startup.cs` 中，如：
 
-```cs showLineNumbers  title="Furion.Web.Core\Startup.cs"
+```cs showLineNumbers  title="TouchSocket.Web.Core\Startup.cs"
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Furion.Web.Core
+namespace TouchSocket.Web.Core
 {
     public sealed class FurWebCoreStartup : AppStartup
     {
@@ -291,15 +291,15 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 
 在默认情况下，`ASP.NET Core` 配置放在 `appsettings.json` 中配置，但是这样的方式和 `Startup.cs` 配置一样的道理，一旦我们更换了 `Web 应用层`，那么 `appsettings.json` 又要重新配置一次。
 
-所以，`Furion` 框架提供了更加灵活的方式配置 `appsettings.json`，**只需要在任何项目层根目录下创建 `.json` 文件即可。`Furion` 框架最后会自动合并所有分散的配置文件。**
+所以，`TouchSocket` 框架提供了更加灵活的方式配置 `appsettings.json`，**只需要在任何项目层根目录下创建 `.json` 文件即可。`TouchSocket` 框架最后会自动合并所有分散的配置文件。**
 
-如我们在 `Furion.EntityFramework.Core` 层创建 `dbsettings.json` 配置数据库连接字符串，如：
+如我们在 `TouchSocket.EntityFramework.Core` 层创建 `dbsettings.json` 配置数据库连接字符串，如：
 
-```json showLineNumbers  title="Furion.EntityFramework.Core\dbsettings.json"
+```json showLineNumbers  title="TouchSocket.EntityFramework.Core\dbsettings.json"
 {
   "ConnectionStrings": {
-    "DbConnectionString": "Server=localhost;Database=Furion;User=sa;Password=000000;MultipleActiveResultSets=True;",
-    "Sqlite3ConnectionString": "Data Source=./Furion.db"
+    "DbConnectionString": "Server=localhost;Database=TouchSocket;User=sa;Password=000000;MultipleActiveResultSets=True;",
+    "Sqlite3ConnectionString": "Data Source=./TouchSocket.db"
   }
 }
 ```
@@ -334,6 +334,6 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

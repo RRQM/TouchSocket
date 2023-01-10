@@ -25,7 +25,7 @@ sidebar_label: 28. 模块化开发
 
 ## 28.3 如何进行模块化开发
 
-在 `Furion` 框架设计之初就考虑到模块化开发，所以从最初版本就具备此功能。启用 `Furion` 模块化支持非常简单。
+在 `TouchSocket` 框架设计之初就考虑到模块化开发，所以从最初版本就具备此功能。启用 `TouchSocket` 模块化支持非常简单。
 
 ### 28.3.1 启用模块化支持
 
@@ -45,7 +45,7 @@ sidebar_label: 28. 模块化开发
 
 1. **直接通过项目添加模块化引用或编辑 `.csproj` 添加模块**
 
-这种方式无需任何配置，`Furion` 框架可自动加载模块。
+这种方式无需任何配置，`TouchSocket` 框架可自动加载模块。
 
 2. **通过添加 `.dll` 方式引用模块**
 
@@ -100,14 +100,14 @@ sidebar_label: 28. 模块化开发
 
 ## 28.5 关于热插拔机制
 
-在 `Furion v2.4.0 +` 版本之后，**框架移除了热加载和热卸载模块的功能**，原因是目前微软提供的 `AssemblyLoadContext + 文件夹监听` 处理 `.dll` 运行时热拔插机制还未成熟，此功能将在 `.NET6` 版本得到改善。
+在 `TouchSocket v2.4.0 +` 版本之后，**框架移除了热加载和热卸载模块的功能**，原因是目前微软提供的 `AssemblyLoadContext + 文件夹监听` 处理 `.dll` 运行时热拔插机制还未成熟，此功能将在 `.NET6` 版本得到改善。
 
-也就是，自 `v2.4.0+` 版本之后，`Furion` 框架只提供在启动时加载模块，不在运行时进行任何处理。
+也就是，自 `v2.4.0+` 版本之后，`TouchSocket` 框架只提供在启动时加载模块，不在运行时进行任何处理。
 
 ## 28.6 反馈与建议
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

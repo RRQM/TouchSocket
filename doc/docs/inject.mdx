@@ -16,7 +16,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 `Inject [ɪnˈdʒekt]` 意思是 `注入，注射` 的意思，在这里意为使用最小的侵入式对应用进行机能改造。
 
-`Inject()` 方法是 `Furion` 框架提供的最小侵入式的方法，可以让任何 `ASP.NET Core` Web 后端项目瞬间支持所有 `Furion` 框架特性。
+`Inject()` 方法是 `TouchSocket` 框架提供的最小侵入式的方法，可以让任何 `ASP.NET Core` Web 后端项目瞬间支持所有 `TouchSocket` 框架特性。
 
 ## 2.4.2 `Inject` 方法有哪些
 
@@ -32,13 +32,13 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ### 2.4.3.1 `Inject()` 方法
 
-`Inject()` 是在启动程序 `Program.cs` 中使用的，集成 `Furion` 框架唯一方法，如：
+`Inject()` 是在启动程序 `Program.cs` 中使用的，集成 `TouchSocket` 框架唯一方法，如：
 
-```cs showLineNumbers  {6,18} title="Furion.Web.Entry\Program.cs"
+```cs showLineNumbers  {6,18} title="TouchSocket.Web.Entry\Program.cs"
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace Furion.Web.Entry
+namespace TouchSocket.Web.Entry
 {
     public class Program
     {
@@ -65,7 +65,7 @@ namespace Furion.Web.Entry
 ```cs showLineNumbers {1}
 .Inject((builder, options) =>
 {
-    options.AssemblyName = "Furion";    // 配置外部程序集名称
+    options.AssemblyName = "TouchSocket";    // 配置外部程序集名称
     options.AutoRegisterBackgroundService = true;   // 是否自动注册 BackgroundService
 
     options.ConfigurationScanDirectories("目录1", "目录2", ...); // 配置配置文件扫描目录
@@ -111,7 +111,7 @@ services.AddSpecificationDocuments([options])
 使用如下：
 
 ```cs showLineNumbers  {3,5,7,10}
-namespace Furion.Web.Entry
+namespace TouchSocket.Web.Entry
 {
     public class Startup
     {
@@ -148,7 +148,7 @@ services.AddDataValidation()
 
 :::important 版本说明
 
-以下内容仅限 `Furion 3.7.6 +` 版本使用。
+以下内容仅限 `TouchSocket 3.7.6 +` 版本使用。
 
 :::
 
@@ -184,7 +184,7 @@ app.UseSpecificationDocuments();
 使用如下：
 
 ```cs showLineNumbers  {3,5,12}
-namespace Furion.Web.Entry
+namespace TouchSocket.Web.Entry
 {
     public class Startup
     {
@@ -229,6 +229,6 @@ namespace Furion.Web.Entry
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

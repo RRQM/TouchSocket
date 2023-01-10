@@ -8,7 +8,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 :::important 版本说明
 
-以下内容仅限 `Furion 3.5.2 +` 版本使用。
+以下内容仅限 `TouchSocket 3.5.2 +` 版本使用。
 
 :::
 
@@ -16,9 +16,9 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 自 `.NET Core 3` 起，微软就提供了单文件发布的技术支持，但实际上并不是 `.NET` 所有 `CLR` 都支持单文件发布，如 `Microsoft.Extensions.DependencyModel` 包本身不支持单文件发布，原因是内部使用了 `Assembley.CodeBase`。
 
-**好巧不巧**，`Furion` 中招了，在过去两年中，`Furion` 依赖该包的 `DependencyContext.Default` 特性进行程序集扫描，所以单文件发布也就成了 `Furion` 不愿提起的痛！！！
+**好巧不巧**，`TouchSocket` 中招了，在过去两年中，`TouchSocket` 依赖该包的 `DependencyContext.Default` 特性进行程序集扫描，所以单文件发布也就成了 `TouchSocket` 不愿提起的痛！！！
 
-**终于，在 `Furion v3.5.2+` 版本想出了新的解决方案，自此彻底解决了单文件发布的问题。**
+**终于，在 `TouchSocket v3.5.2+` 版本想出了新的解决方案，自此彻底解决了单文件发布的问题。**
 
 :::tip `.NET` 官方单文件发布说明
 
@@ -28,7 +28,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 ## 34.5.2 必要配置
 
-在 `Furion v3.5.2+` 版本之后，新增了 `ISingleFilePublish` 接口。
+在 `TouchSocket v3.5.2+` 版本之后，新增了 `ISingleFilePublish` 接口。
 
 - **编辑启动层 `.csproj` 文件，添加下列代码到 `<PropertyGroup>` 节点中**
 
@@ -61,7 +61,7 @@ public class SingleFilePublish : ISingleFilePublish
     /// <returns></returns>
     public Assembly[] IncludeAssemblies()
     {
-        // 需要 Furion 框架扫描哪些程序集就写上去即可
+        // 需要 TouchSocket 框架扫描哪些程序集就写上去即可
         return Array.Empty<Assembly>();
     }
 
@@ -72,14 +72,14 @@ public class SingleFilePublish : ISingleFilePublish
     /// <returns></returns>
     public string[] IncludeAssemblyNames()
     {
-        // 需要 Furion 框架扫描哪些程序集就写上去即可
+        // 需要 TouchSocket 框架扫描哪些程序集就写上去即可
         return new[]
         {
             "YourProject.Application",
             "YourProject.Core",
             "YourProject.EntityFramework.Core",
             "YourProject.Web.Core",
-            "Furion.Extras.ObjectMapper.Mapster"    // 解决 Mapster 单文件失效问题，v3.5.3+版本后无需配置
+            "TouchSocket.Extras.ObjectMapper.Mapster"    // 解决 Mapster 单文件失效问题，v3.5.3+版本后无需配置
         };
     }
 }
@@ -87,11 +87,11 @@ public class SingleFilePublish : ISingleFilePublish
 
 :::tip 配置说明
 
-`IncludeAssemblies` 和 `IncludeAssemblyNames` 的区别是前者是开发者直接返回 `Assembley` 集合，后者是直接返回名称，`Furion` 会自动加载程序集，**可同时配置，也可以配置其中一个。**
+`IncludeAssemblies` 和 `IncludeAssemblyNames` 的区别是前者是开发者直接返回 `Assembley` 集合，后者是直接返回名称，`TouchSocket` 会自动加载程序集，**可同时配置，也可以配置其中一个。**
 
 如果只配置启用一个，则另外一个返回 `Array.Empty<Assembley>()` 或 `Array.Empty<string>()` 即可。
 
-如果发布后出现 `Mapster` 不能映射问题，可将 `Furion.Extras.ObjectMapper.Mapster` 添加到 `IncludeAssemblyNames` 集合中即可。**`v3.5.3+` 版本后无需配置。**
+如果发布后出现 `Mapster` 不能映射问题，可将 `TouchSocket.Extras.ObjectMapper.Mapster` 添加到 `IncludeAssemblyNames` 集合中即可。**`v3.5.3+` 版本后无需配置。**
 
 :::
 
@@ -275,6 +275,6 @@ pm2 delete app_name
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

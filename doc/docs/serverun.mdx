@@ -8,13 +8,13 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 
 :::important 版本说明
 
-以下内容仅限 `Furion 3.6.3 +` 版本使用。
+以下内容仅限 `TouchSocket 3.6.3 +` 版本使用。
 
 :::
 
 :::tip 推荐使用脚手架
 
-`Furion` 官方提供了非常灵活方便的脚手架，可以快速的创建多层架构项目。
+`TouchSocket` 官方提供了非常灵活方便的脚手架，可以快速的创建多层架构项目。
 
 推荐使用 《[2.2 官方脚手架](template.mdx)》代替本章节功能。
 
@@ -63,12 +63,12 @@ var app = builder.Build();
 
 ```bash showLineNumbers
 // 创建控制台项目
-dotnet new console -n HelloFurion
+dotnet new console -n HelloTouchSocket
 ```
 
 :::
 
-## 2.0.3 添加 `Furion` 依赖包
+## 2.0.3 添加 `TouchSocket` 依赖包
 
 <img src={useBaseUrl("img/04.png")} />
 
@@ -76,9 +76,9 @@ dotnet new console -n HelloFurion
 
 ```bash showLineNumbers
 // 进入创建的目录
-cd HelloFurion
+cd HelloTouchSocket
 // 添加包
-dotnet add package Furion
+dotnet add package TouchSocket
 ```
 
 :::
@@ -91,7 +91,7 @@ dotnet add package Furion
 Serve.Run();
 ```
 
-对，你没看错，`Furion` 已经配置好了！
+对，你没看错，`TouchSocket` 已经配置好了！
 
 :::tip 功能说明
 
@@ -119,7 +119,7 @@ public class HelloService
 {
     public string Say()
     {
-        return "Hello, Furion";
+        return "Hello, TouchSocket";
     }
 }
 ```
@@ -209,7 +209,7 @@ Serve.Run(RunOptions.Default.ConfigureBuilder(builder =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.0 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.0 +` 版本使用。
 
 :::
 
@@ -240,9 +240,9 @@ Serve.RunGeneric(services =>
 
 ### 2.0.7.3 自定义配置
 
-传入 `RunOptions` 对象相当于自由定义和控制，也就是除了默认集成了 `Furion` 以外，没有注册任何功能。
+传入 `RunOptions` 对象相当于自由定义和控制，也就是除了默认集成了 `TouchSocket` 以外，没有注册任何功能。
 
-- 仅集成 `Furion` 的默认配置
+- 仅集成 `TouchSocket` 的默认配置
 
 ```cs showLineNumbers
 Serve.Run(RunOptions.Default);
@@ -272,7 +272,7 @@ Serve.Run(RunOptions.Default
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.3.5 +` 版本使用。
+以下内容仅限 `TouchSocket 4.3.5 +` 版本使用。
 
 :::
 
@@ -303,11 +303,11 @@ Serve.Run(RunOptions.Default
 
 **但把所有服务/中间件都放在 `Program.cs` 中好吗？**答案是不好的，因为会导致后续迁移代码维护代码造成了一些困扰。
 
-所以 `Furion` 推荐下面更加灵活且易维护的方式，`Program.cs` 只需一句话即可：
+所以 `TouchSocket` 推荐下面更加灵活且易维护的方式，`Program.cs` 只需一句话即可：
 
 :::tip 推荐使用组件启动
 
-`Furion 3.7.3+` 官方提供了非常灵活方便的组件化启动配置服务。
+`TouchSocket 3.7.3+` 官方提供了非常灵活方便的组件化启动配置服务。
 
 推荐使用 《[3.1 组件化启动](./component)》代替 `AppStartup` 方式功能。
 
@@ -320,12 +320,12 @@ Serve.Run(RunOptions.Default);
 然后添加自定义 `Startup.cs` 文件，代码如下：
 
 ```cs showLineNumbers {8,10,15} title="Startup.cs"
-using Furion;
+using TouchSocket;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace HelloFurion;
+namespace HelloTouchSocket;
 
 public class Startup : AppStartup
 {
@@ -358,9 +358,9 @@ Serve.Run(RunOptions.Default
     }));
 ```
 
-## 2.0.8 支持 `Furion` 所有功能
+## 2.0.8 支持 `TouchSocket` 所有功能
 
-`Serve.Run()` 看似非常简单，实则非常灵活，而且支持 `Furion` 和 `.NET` 所有功能。
+`Serve.Run()` 看似非常简单，实则非常灵活，而且支持 `TouchSocket` 和 `.NET` 所有功能。
 
 ### 2.0.8.1 添加 `appsettings.json`
 
@@ -383,7 +383,7 @@ Serve.Run(RunOptions.Default
 在代码中读取配置：
 
 ```cs showLineNumbers {10}
-using Furion;
+using TouchSocket;
 
 Serve.Run();
 
@@ -392,7 +392,7 @@ public class HelloService
 {
     public string Say()
     {
-        return "Hello, Furion " + App.Configuration["Logging:LogLevel:Default"];
+        return "Hello, TouchSocket " + App.Configuration["Logging:LogLevel:Default"];
     }
 }
 ```
@@ -401,7 +401,7 @@ public class HelloService
 
 ### 2.0.8.2 添加自定义 `Startup`
 
-在 `Furion` 中可以派生自 `AppStartup` 可以实现更多配置，如：
+在 `TouchSocket` 中可以派生自 `AppStartup` 可以实现更多配置，如：
 
 ```cs showLineNumbers title="Program.cs"
 Serve.Run();
@@ -414,12 +414,12 @@ Serve.Run();
 :::
 
 ```cs showLineNumbers {8,10,12,15,17} title="MyStartup.cs"
-using Furion;
+using TouchSocket;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace HelloFurion;
+namespace HelloTouchSocket;
 
 public class MyStartup : AppStartup
 {
@@ -457,7 +457,7 @@ public class MyStartup : AppStartup
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.2.4 +` 版本使用。
+以下内容仅限 `TouchSocket 4.2.4 +` 版本使用。
 
 :::
 
@@ -471,7 +471,7 @@ Serve.Run(RunOptions.Main(args));
 
 ### 2.0.8.5 还没看够？
 
-是不是非常强大啊，`Serve.Run()` 虽然简单，但是 100% 支持 `Furion` 和 `.NET` 所有功能。尽情去体验吧！
+是不是非常强大啊，`Serve.Run()` 虽然简单，但是 100% 支持 `TouchSocket` 和 `.NET` 所有功能。尽情去体验吧！
 
 ## 2.0.9 `RunOptions`，`LegacyRunOptions` 和 `GenericRunOptions`
 
@@ -568,7 +568,7 @@ public partial class App : Application
 如果想注册服务，可创建 `YourStartup` 派生自 `AppStartup` 即可，如：
 
 ```cs showLineNumbers {6,8,10} title="YourStartup.cs"
-using Furion;
+using TouchSocket;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace YourProject;
@@ -639,6 +639,6 @@ Serve.Run<Startup>(LegacyRunOptions.Default);
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::

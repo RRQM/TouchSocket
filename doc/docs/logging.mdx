@@ -13,15 +13,15 @@ import Tag from "@site/src/components/Tag.js";
 
 - **问题修复**
 
-  - &nbsp;<Tag>修复</Tag> 数据库日志注册在一些特殊情况下丢失日志上下文问题 <sup>4.8.4.6</sup> <sup>⏱️2023.01.04</sup> [#I68PDF](https://gitee.com/dotnetchina/Furion/issues/I68PDF)
-  - &nbsp;<Tag>修复</Tag> 在类中贴 `[SuppressMonitor]` 特性但 `LoggingMonitor` 依然输出问题 <sup>4.8.4</sup> <sup>⏱️2022.12.30</sup> [#I6882I](https://gitee.com/dotnetchina/Furion/issues/I6882I)
-  - &nbsp;<Tag>修复</Tag> `LoggingMonitor` 序列化 `IQueryable<>` 或 `OData` 返回值类型出现死循环问题 <sup>4.8.3.4</sup> <sup>⏱️2022.12.10</sup> [7e8c9d0](https://gitee.com/dotnetchina/Furion/commit/7e8c9d0e3910c4d0cfa18a7a15cbe8415d34dd66)
-  - &nbsp;<Tag>修复</Tag> **通过 `Ctrl + C` 终止应用程序后获取 `TraceId` 出现对象已释放异常** <sup>4.8.1.12</sup> <sup>⏱️2022.12.07</sup> [55c3e49](https://gitee.com/dotnetchina/Furion/commit/55c3e4942b1f89e0548d4cf90453937ba4ea512c)
-  - &nbsp;<Tag>修复</Tag> 日志模块因 `v4.8.0+` 版本导致写入数据库日志空异常问题 <sup>4.8.2.1</sup> <sup>⏱️2022.11.28</sup> [8d9d72b](https://gitee.com/dotnetchina/Furion/commit/8d9d72b5bfcb8dfc730462c9313266ec0661d561)
+  - &nbsp;<Tag>修复</Tag> 数据库日志注册在一些特殊情况下丢失日志上下文问题 <sup>4.8.4.6</sup> <sup>⏱️2023.01.04</sup> [#I68PDF](https://gitee.com/rrqm_home/TouchSocket/issues/I68PDF)
+  - &nbsp;<Tag>修复</Tag> 在类中贴 `[SuppressMonitor]` 特性但 `LoggingMonitor` 依然输出问题 <sup>4.8.4</sup> <sup>⏱️2022.12.30</sup> [#I6882I](https://gitee.com/rrqm_home/TouchSocket/issues/I6882I)
+  - &nbsp;<Tag>修复</Tag> `LoggingMonitor` 序列化 `IQueryable<>` 或 `OData` 返回值类型出现死循环问题 <sup>4.8.3.4</sup> <sup>⏱️2022.12.10</sup> [7e8c9d0](https://gitee.com/rrqm_home/TouchSocket/commit/7e8c9d0e3910c4d0cfa18a7a15cbe8415d34dd66)
+  - &nbsp;<Tag>修复</Tag> **通过 `Ctrl + C` 终止应用程序后获取 `TraceId` 出现对象已释放异常** <sup>4.8.1.12</sup> <sup>⏱️2022.12.07</sup> [55c3e49](https://gitee.com/rrqm_home/TouchSocket/commit/55c3e4942b1f89e0548d4cf90453937ba4ea512c)
+  - &nbsp;<Tag>修复</Tag> 日志模块因 `v4.8.0+` 版本导致写入数据库日志空异常问题 <sup>4.8.2.1</sup> <sup>⏱️2022.11.28</sup> [8d9d72b](https://gitee.com/rrqm_home/TouchSocket/commit/8d9d72b5bfcb8dfc730462c9313266ec0661d561)
 
 - **其他更改**
 
-  - &nbsp;<Tag>调整</Tag> `LoggingMonitor` 解析授权逻辑，如果接口未授权则不打印授权信息 <sup>4.8.2.1</sup> <sup>⏱️2022.11.28</sup> [#I63D2E](https://gitee.com/dotnetchina/Furion/issues/I63D2E)
+  - &nbsp;<Tag>调整</Tag> `LoggingMonitor` 解析授权逻辑，如果接口未授权则不打印授权信息 <sup>4.8.2.1</sup> <sup>⏱️2022.11.28</sup> [#I63D2E](https://gitee.com/rrqm_home/TouchSocket/issues/I63D2E)
 
 </div>
   </div>
@@ -122,7 +122,7 @@ public class ContactModel : PageModel
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.2.1 +` 版本使用。
+以下内容仅限 `TouchSocket 4.2.1 +` 版本使用。
 
 :::
 
@@ -146,7 +146,7 @@ Log.Critical("Critical");
 
 ### 18.4.4 `懒人模式` 😁
 
-在 `Furion` 框架中，提供了更懒的方式写入日志，也就是通过字符串拓展的方式写入，如：
+在 `TouchSocket` 框架中，提供了更懒的方式写入日志，也就是通过字符串拓展的方式写入，如：
 
 ```cs showLineNumbers
 "简单日志".LogInformation();
@@ -164,7 +164,7 @@ Log.Critical("Critical");
 
 :::tip 版本说明
 
-以下小节仅在 `Furion 3.9.0+` 版本提供。
+以下小节仅在 `TouchSocket 3.9.0+` 版本提供。
 
 :::
 
@@ -173,7 +173,7 @@ Log.Critical("Critical");
 ### 18.5.1 输出到控制台
 
 ```bash showLineNumbers
-info: Furion.EventBus.EventBusHostedService[0]
+info: TouchSocket.EventBus.EventBusHostedService[0]
       EventBus Hosted Service is running.
 info: Microsoft.Hosting.Lifetime[14]
       Now listening on: https://localhost:5001
@@ -184,7 +184,7 @@ info: Microsoft.Hosting.Lifetime[0]
 info: Microsoft.Hosting.Lifetime[0]
       Hosting environment: Development
 info: Microsoft.Hosting.Lifetime[0]
-      Content root path: C:\Workplaces\Furion\samples\Furion.Web.Entry\
+      Content root path: C:\Workplaces\TouchSocket\samples\TouchSocket.Web.Entry\
 ```
 
 如果希望不输出某些日志类别的日志可以添加以下过滤：
@@ -264,11 +264,11 @@ public class WebComponent : IWebComponent
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.5.0 +` 版本使用。
+以下内容仅限 `TouchSocket 4.5.0 +` 版本使用。
 
 :::
 
-在 `ASP.NET Core` 默认控制台日志相对简洁，并未包含常见的日志时间、线程 `Id` 等，而且自定义模板也相对复杂，所以 `Furion 4.5.0+` 版本提供了简化配置，如：
+在 `ASP.NET Core` 默认控制台日志相对简洁，并未包含常见的日志时间、线程 `Id` 等，而且自定义模板也相对复杂，所以 `TouchSocket 4.5.0+` 版本提供了简化配置，如：
 
 1. `Startup.cs` 方式
 
@@ -322,7 +322,7 @@ info: 2022-09-27T13:17:35.1893063+08:00 Microsoft.Hosting.Lifetime[0] #1
 info: 2022-09-27T13:17:35.1941484+08:00 Microsoft.Hosting.Lifetime[0] #1
       Hosting environment: Development
 info: 2022-09-27T13:17:35.1996545+08:00 Microsoft.Hosting.Lifetime[0] #1
-      Content root path: D:\Workplaces\OpenSources\Furion\samples\Furion.Web.Entry\
+      Content root path: D:\Workplaces\OpenSources\TouchSocket\samples\TouchSocket.Web.Entry\
 ```
 
 - **自定义控制台日志输出模板**
@@ -339,11 +339,11 @@ services.AddConsoleFormatter(options =>
     };
 });
 
-// 输出为 JSON 格式，Furion 4.5.2+
+// 输出为 JSON 格式，TouchSocket 4.5.2+
 services.AddConsoleFormatter(options =>
 {
     options.MessageFormat = LoggerFormatter.Json;
-    // Furion 4.8.0+ 新增 JSON 美化输出
+    // TouchSocket 4.8.0+ 新增 JSON 美化输出
     options.MessageFormat = LoggerFormatter.JsonIndented;
 });
 ```
@@ -352,7 +352,7 @@ services.AddConsoleFormatter(options =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.5.1 +` 版本使用。
+以下内容仅限 `TouchSocket 4.5.1 +` 版本使用。
 
 :::
 
@@ -375,14 +375,14 @@ info: 2022-09-28 02:02:22(+08:00) 星期三 Microsoft.Hosting.Lifetime[0] #1
 info: 2022-09-28 02:02:22(+08:00) 星期三 Microsoft.Hosting.Lifetime[0] #1
       Hosting environment: Development
 info: 2022-09-28 02:02:22(+08:00) 星期三 Microsoft.Hosting.Lifetime[0] #1
-      Content root path: D:\Workplaces\OpenSources\Furion\samples\Furion.Web.Entry\
+      Content root path: D:\Workplaces\OpenSources\TouchSocket\samples\TouchSocket.Web.Entry\
 ```
 
 - **完整自定义日志格式化写入**
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.5.2 +` 版本使用。
+以下内容仅限 `TouchSocket 4.5.2 +` 版本使用。
 
 :::
 
@@ -400,7 +400,7 @@ services.AddConsoleFormatter(options =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.1.3 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.1.3 +` 版本使用。
 
 :::
 
@@ -429,10 +429,10 @@ info: 2022-11-24 14:34:56.4384567 +08:00 星期四 L Microsoft.Hosting.Lifetime[
 info: 2022-11-24 14:34:56.4408766 +08:00 星期四 L Microsoft.Hosting.Lifetime[0] #1
       Hosting environment: Development
 info: 2022-11-24 14:34:56.4427659 +08:00 星期四 L Microsoft.Hosting.Lifetime[0] #1
-      Content root path: D:\Workplaces\OpenSources\Furion\samples\Furion.Web.Entry
-info: 2022-11-24 14:35:06.8507338 +08:00 Thursday L Furion.Application.TestLoggerServices[0] #17 '00-48df9ac5c8280de2f301faa44a23a10c-b75678d9f3883b0b-00'
+      Content root path: D:\Workplaces\OpenSources\TouchSocket\samples\TouchSocket.Web.Entry
+info: 2022-11-24 14:35:06.8507338 +08:00 Thursday L TouchSocket.Application.TestLoggerServices[0] #17 '00-48df9ac5c8280de2f301faa44a23a10c-b75678d9f3883b0b-00'
       我是一个日志 20
-info: 2022-11-24 14:35:16.0373384 +08:00 星期四 L Furion.Application.TestLoggerServices[0] #17 '00-ff4fb15d6ff41a0411784e66400f0dfd-962bc25eff788b25-00'
+info: 2022-11-24 14:35:16.0373384 +08:00 星期四 L TouchSocket.Application.TestLoggerServices[0] #17 '00-ff4fb15d6ff41a0411784e66400f0dfd-962bc25eff788b25-00'
       我是一个日志 20
 ```
 
@@ -580,13 +580,13 @@ services.AddFileLogging("someclass.log", options =>
 
 - **自定义日志模板**
 
-默认情况下，`Furion` 提供了标准的日志输出模板，如：
+默认情况下，`TouchSocket` 提供了标准的日志输出模板，如：
 
 ```bash showLineNumbers
-2022-07-23T20:16:29.3459053+08:00	[INF]	[Furion.EventBus.EventBusHostedService]	[0]	EventBus Hosted Service is running.
+2022-07-23T20:16:29.3459053+08:00	[INF]	[TouchSocket.EventBus.EventBusHostedService]	[0]	EventBus Hosted Service is running.
 2022-07-23T20:16:29.5827366+08:00	[INF]	[Microsoft.Hosting.Lifetime]	[0]	Application started. Press Ctrl+C to shut down.
 2022-07-23T20:16:29.5828798+08:00	[INF]	[Microsoft.Hosting.Lifetime]	[0]	Hosting environment: Development
-2022-07-23T20:16:29.5829377+08:00	[INF]	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Workplaces\Furion\samples\Furion.Web.Entry\
+2022-07-23T20:16:29.5829377+08:00	[INF]	[Microsoft.Hosting.Lifetime]	[0]	Content root path: C:\Workplaces\TouchSocket\samples\TouchSocket.Web.Entry\
 ```
 
 如需自定义：
@@ -637,11 +637,11 @@ services.AddFileLogging("mytemplate.log", options =>
     };
 });
 
-// 输出为 JSON 格式，Furion 4.5.2+
+// 输出为 JSON 格式，TouchSocket 4.5.2+
 services.AddFileLogging("mytemplate.log", options =>
 {
     options.MessageFormat = LoggerFormatter.Json;
-    // Furion 4.8.0+ 新增 JSON 美化输出
+    // TouchSocket 4.8.0+ 新增 JSON 美化输出
     options.MessageFormat = LoggerFormatter.JsonIndented;
 });
 ```
@@ -674,7 +674,7 @@ services.AddFileLogging("template-obj.log", options =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.5.1 +` 版本使用。
+以下内容仅限 `TouchSocket 4.5.1 +` 版本使用。
 
 :::
 
@@ -697,14 +697,14 @@ info: 2022-09-28 02:02:22(+08:00) 星期三 Microsoft.Hosting.Lifetime[0] #1
 info: 2022-09-28 02:02:22(+08:00) 星期三 Microsoft.Hosting.Lifetime[0] #1
       Hosting environment: Development
 info: 2022-09-28 02:02:22(+08:00) 星期三 Microsoft.Hosting.Lifetime[0] #1
-      Content root path: D:\Workplaces\OpenSources\Furion\samples\Furion.Web.Entry\
+      Content root path: D:\Workplaces\OpenSources\TouchSocket\samples\TouchSocket.Web.Entry\
 ```
 
 - **输出日志 `TraceId/HttpContextId`**
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.1.3 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.1.3 +` 版本使用。
 
 :::
 
@@ -733,21 +733,21 @@ info: 2022-11-24 14:34:56.4384567 +08:00 星期四 L Microsoft.Hosting.Lifetime[
 info: 2022-11-24 14:34:56.4408766 +08:00 星期四 L Microsoft.Hosting.Lifetime[0] #1
       Hosting environment: Development
 info: 2022-11-24 14:34:56.4427659 +08:00 星期四 L Microsoft.Hosting.Lifetime[0] #1
-      Content root path: D:\Workplaces\OpenSources\Furion\samples\Furion.Web.Entry
-info: 2022-11-24 14:35:06.8507338 +08:00 Thursday L Furion.Application.TestLoggerServices[0] #17 '00-48df9ac5c8280de2f301faa44a23a10c-b75678d9f3883b0b-00'
+      Content root path: D:\Workplaces\OpenSources\TouchSocket\samples\TouchSocket.Web.Entry
+info: 2022-11-24 14:35:06.8507338 +08:00 Thursday L TouchSocket.Application.TestLoggerServices[0] #17 '00-48df9ac5c8280de2f301faa44a23a10c-b75678d9f3883b0b-00'
       我是一个日志 20
-info: 2022-11-24 14:35:16.0373384 +08:00 星期四 L Furion.Application.TestLoggerServices[0] #17 '00-ff4fb15d6ff41a0411784e66400f0dfd-962bc25eff788b25-00'
+info: 2022-11-24 14:35:16.0373384 +08:00 星期四 L TouchSocket.Application.TestLoggerServices[0] #17 '00-ff4fb15d6ff41a0411784e66400f0dfd-962bc25eff788b25-00'
       我是一个日志 20
 ```
 
 ### 18.5.3 输出到数据库/其他存储介质
 
-将日志输出到数据库中也是非常常见的需求，`Furion` 把该功能做到了非常简单，支持任何存储介质。
+将日志输出到数据库中也是非常常见的需求，`TouchSocket` 把该功能做到了非常简单，支持任何存储介质。
 
 在写入数据库/其他存储介质之前需创建数据库日志写入器并实现 `IDatabaseLoggingWriter` 接口，**支持多个**，如：
 
 ```cs showLineNumbers {1,5,8,12}
-using Furion.Logging;
+using TouchSocket.Logging;
 
 namespace YourProject.Core;
 
@@ -891,11 +891,11 @@ services.AddDatabaseLogging<DatabaseLoggingWriter>(options =>
     };
 });
 
-// 输出为 JSON 格式，Furion 4.5.2+
+// 输出为 JSON 格式，TouchSocket 4.5.2+
 services.AddDatabaseLogging<DatabaseLoggingWriter>(options =>
 {
     options.MessageFormat = LoggerFormatter.Json;
-    // Furion 4.8.0+ 新增 JSON 美化输出
+    // TouchSocket 4.8.0+ 新增 JSON 美化输出
     options.MessageFormat = LoggerFormatter.JsonIndented;
 });
 ```
@@ -919,7 +919,7 @@ services.AddDatabaseLogging<DatabaseLoggingWriter>(options =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.8.1.3 +` 版本使用。
+以下内容仅限 `TouchSocket 4.8.1.3 +` 版本使用。
 
 :::
 
@@ -948,16 +948,16 @@ info: 2022-11-24 14:34:56.4384567 +08:00 星期四 L Microsoft.Hosting.Lifetime[
 info: 2022-11-24 14:34:56.4408766 +08:00 星期四 L Microsoft.Hosting.Lifetime[0] #1
       Hosting environment: Development
 info: 2022-11-24 14:34:56.4427659 +08:00 星期四 L Microsoft.Hosting.Lifetime[0] #1
-      Content root path: D:\Workplaces\OpenSources\Furion\samples\Furion.Web.Entry
-info: 2022-11-24 14:35:06.8507338 +08:00 Thursday L Furion.Application.TestLoggerServices[0] #17 '00-48df9ac5c8280de2f301faa44a23a10c-b75678d9f3883b0b-00'
+      Content root path: D:\Workplaces\OpenSources\TouchSocket\samples\TouchSocket.Web.Entry
+info: 2022-11-24 14:35:06.8507338 +08:00 Thursday L TouchSocket.Application.TestLoggerServices[0] #17 '00-48df9ac5c8280de2f301faa44a23a10c-b75678d9f3883b0b-00'
       我是一个日志 20
-info: 2022-11-24 14:35:16.0373384 +08:00 星期四 L Furion.Application.TestLoggerServices[0] #17 '00-ff4fb15d6ff41a0411784e66400f0dfd-962bc25eff788b25-00'
+info: 2022-11-24 14:35:16.0373384 +08:00 星期四 L TouchSocket.Application.TestLoggerServices[0] #17 '00-ff4fb15d6ff41a0411784e66400f0dfd-962bc25eff788b25-00'
       我是一个日志 20
 ```
 
 ### 18.5.4 `ILoggerFactory` 方式
 
-`Furion` 也提供了运行时动态创建日志提供器并写入：
+`TouchSocket` 也提供了运行时动态创建日志提供器并写入：
 
 ```cs showLineNumbers  {5,7-8}
 public class ContactModel : PageModel
@@ -979,7 +979,7 @@ public class ContactModel : PageModel
 
 ### 18.5.5 `ILoggingBuilder` 方式
 
-`Furion` 也提供了原生 `services.AddLogging(builder => {})` 方式配置，如
+`TouchSocket` 也提供了原生 `services.AddLogging(builder => {})` 方式配置，如
 
 ```cs showLineNumbers {1,3,5}
 services.AddLogging(builder =>
@@ -1016,14 +1016,14 @@ services.AddLogging(builder =>
 
 ## 18.6 `[LoggingMonitor]` 监听日志
 
-在 `Furion 3.9.1` 版本新增了 `[LoggingMonitor]` 特性，支持在控制器或操作中贴该特性，可以实现强大的请求日志监听，方便测试，如：
+在 `TouchSocket 3.9.1` 版本新增了 `[LoggingMonitor]` 特性，支持在控制器或操作中贴该特性，可以实现强大的请求日志监听，方便测试，如：
 
 ### 18.6.1 特性配置
 
 ```cs showLineNumbers {1,7}
-using Furion.Logging;
+using TouchSocket.Logging;
 
-namespace Furion.Application;
+namespace TouchSocket.Application;
 
 public class TestLoggerServices : IDynamicApiController
 {
@@ -1040,16 +1040,16 @@ public class TestLoggerServices : IDynamicApiController
 
 - `[LoggingMonitor]` 支持以下配置：
   - `Title`：配置标题，`string` 类型，默认 `Logging Monitor`
-  - `WithReturnValue`：是否包含返回值打印，`bool` 类型，默认 `true`，`Furion 4.3.9+ 有效`
-  - `ReturnValueThreshold`：配置返回值字符串阈值，`int` 类型，默认 `0` 全量输出，`Furion 4.3.9+ 有效`
-  - `JsonBehavior`：配置 `LoggingMonitor` `Json` 输出行为，默认 `None`，`Furion 4.5.2+` 有效
-  - `JsonIndented`：配置 `LoggingMonitor` `Json` 格式化行为，`bool` 类型，默认 `false`，`Furion 4.8.0+` 有效
+  - `WithReturnValue`：是否包含返回值打印，`bool` 类型，默认 `true`，`TouchSocket 4.3.9+ 有效`
+  - `ReturnValueThreshold`：配置返回值字符串阈值，`int` 类型，默认 `0` 全量输出，`TouchSocket 4.3.9+ 有效`
+  - `JsonBehavior`：配置 `LoggingMonitor` `Json` 输出行为，默认 `None`，`TouchSocket 4.5.2+` 有效
+  - `JsonIndented`：配置 `LoggingMonitor` `Json` 格式化行为，`bool` 类型，默认 `false`，`TouchSocket 4.8.0+` 有效
 
 输出日志为：
 
 ```bash showLineNumbers
 ┏━━━━━━━━━━━  Logging Monitor ━━━━━━━━━━━
-┣ Furion.Application.TestLoggerServices.GetPerson (Furion.Application)
+┣ TouchSocket.Application.TestLoggerServices.GetPerson (TouchSocket.Application)
 ┣
 ┣ 控制器名称：              TestLoggerServices
 ┣ 操作名称：                GetPerson
@@ -1071,13 +1071,13 @@ public class TestLoggerServices : IDynamicApiController
 ┣ nbf (integer)：           1658716797
 ┣ exp (integer)：           1658717997
 ┣ iss (string)：            dotnetchina
-┣ aud (string)：            powerby Furion
+┣ aud (string)：            powerby TouchSocket
 ┣ ━━━━━━━━━━━━━━━  参数列表 ━━━━━━━━━━━━━━━
 ┣ Content-Type：
 ┣
 ┣ id (Int32)：              11
 ┣ ━━━━━━━━━━━━━━━  返回信息 ━━━━━━━━━━━━━━━
-┣ 类型：                    Furion.Application.Persons.PersonDto
+┣ 类型：                    TouchSocket.Application.Persons.PersonDto
 ┣ 返回值：                  {"Id":11,"Name":null,"Age":0,"Address":null,"PhoneNumber":null,"QQ":null,"CreatedTime":"0001-01-01T00:00:00+00:00","Childrens":null,"Posts":null}
 ┗━━━━━━━━━━━  Logging Monitor ━━━━━━━━━━━
 ```
@@ -1091,9 +1091,9 @@ public class TestLoggerServices : IDynamicApiController
 services.AddMvcFilter<LoggingMonitorAttribute>();
 ```
 
-:::tip `Furion 4.0.2` 新推荐配置
+:::tip `TouchSocket 4.0.2` 新推荐配置
 
-在 `Furion 4.0.2` 版本中新增了非常灵活方便的 `services.AddMonitorLogging()` 服务配置，可在配置中随意控制哪个类哪个方法启用或不启用。
+在 `TouchSocket 4.0.2` 版本中新增了非常灵活方便的 `services.AddMonitorLogging()` 服务配置，可在配置中随意控制哪个类哪个方法启用或不启用。
 
 - 注册服务
 
@@ -1111,17 +1111,17 @@ services.AddMonitorLogging();   // 默认读取 Logging:Monitor 下配置，支�
       "IncludeOfMethods": [], // 是否指定拦截特定方法，当 GlobalEnabled: false 有效
       "ExcludeOfMethods": [], // 是否指定排除特定方法，当 GlobalEnabled: true 有效
       "BahLogLevel": "Information", // 配置 Oops.Oh 和 Oops.Bah 业务日志输出级别，默认 Information
-      "WithReturnValue": true, // 配置是否包含返回值，默认 `true`，Furion 4.3.9+ 有效
-      "ReturnValueThreshold": 0, // 配置返回值字符串阈值，默认 0，全量输出，Furion 4.3.9+ 有效
-      "JsonBehavior": "None", // 配置 LoggingMonitor Json 输出行为，默认 None，Furion 4.5.2+ 有效
-      "JsonIndented": false, // 配置 LoggingMonitor Json 格式化行为，默认 false，Furion 4.8.2+ 有效
+      "WithReturnValue": true, // 配置是否包含返回值，默认 `true`，TouchSocket 4.3.9+ 有效
+      "ReturnValueThreshold": 0, // 配置返回值字符串阈值，默认 0，全量输出，TouchSocket 4.3.9+ 有效
+      "JsonBehavior": "None", // 配置 LoggingMonitor Json 输出行为，默认 None，TouchSocket 4.5.2+ 有效
+      "JsonIndented": false, // 配置 LoggingMonitor Json 格式化行为，默认 false，TouchSocket 4.8.2+ 有效
       "MethodsSettings": [
-        // 配置被监视方法更多信息，Furion 4.3.9+ 有效
+        // 配置被监视方法更多信息，TouchSocket 4.3.9+ 有效
         {
-          "FullName": "Furion.Application.TestLoggerServices.MethodName", // 方法完全限定名
-          "WithReturnValue": true, // 配置是否包含返回值，默认 `true`，Furion 4.3.9+ 有效
-          "ReturnValueThreshold": 0, // 配置返回值字符串阈值，默认 0，全量输出，Furion 4.3.9+ 有效
-          "JsonIndented": false // 配置 LoggingMonitor Json 格式化行为，默认 false，Furion 4.8.2+ 有效
+          "FullName": "TouchSocket.Application.TestLoggerServices.MethodName", // 方法完全限定名
+          "WithReturnValue": true, // 配置是否包含返回值，默认 `true`，TouchSocket 4.3.9+ 有效
+          "ReturnValueThreshold": 0, // 配置返回值字符串阈值，默认 0，全量输出，TouchSocket 4.3.9+ 有效
+          "JsonIndented": false // 配置 LoggingMonitor Json 格式化行为，默认 false，TouchSocket 4.8.2+ 有效
         }
       ]
     }
@@ -1129,7 +1129,7 @@ services.AddMonitorLogging();   // 默认读取 Logging:Monitor 下配置，支�
 }
 ```
 
-`IncludeOfMethods` 和 `ExcludeOfMethods` 方法签名格式为：`类完全限定名.方法名`，如：`Furion.Application.TestNamedServices.GetName`，`Furion.Application.TestNamedServices` 是类名，`GetName` 是方法名。
+`IncludeOfMethods` 和 `ExcludeOfMethods` 方法签名格式为：`类完全限定名.方法名`，如：`TouchSocket.Application.TestNamedServices.GetName`，`TouchSocket.Application.TestNamedServices` 是类名，`GetName` 是方法名。
 
 :::
 
@@ -1139,7 +1139,7 @@ services.AddMonitorLogging();   // 默认读取 Logging:Monitor 下配置，支�
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.3.9 +` 版本使用。
+以下内容仅限 `TouchSocket 4.3.9 +` 版本使用。
 
 :::
 
@@ -1166,7 +1166,7 @@ services.AddMonitorLogging(jsonKey: "YourKey:Monitor");
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.5.2 +` 版本使用。
+以下内容仅限 `TouchSocket 4.5.2 +` 版本使用。
 
 :::
 
@@ -1176,14 +1176,14 @@ services.AddMonitorLogging(jsonKey: "YourKey:Monitor");
 // 全局
 services.AddMonitorLogging(options =>
 {
-    options.JsonBehavior = Furion.Logging.JsonBehavior.OnlyJson;
-    options.JsonIndented = true;    // 是否美化 JSON，Furion 4.8.0+ 版本有效
+    options.JsonBehavior = TouchSocket.Logging.JsonBehavior.OnlyJson;
+    options.JsonIndented = true;    // 是否美化 JSON，TouchSocket 4.8.0+ 版本有效
 });
 
 // 局部
-[LoggingMonitor(JsonBehavior = Furion.Logging.JsonBehavior.OnlyJson)]
-// 是否美化 JSON，Furion 4.8.0+ 版本有效
-[LoggingMonitor(JsonBehavior = Furion.Logging.JsonBehavior.OnlyJson, JsonIndented = true)]
+[LoggingMonitor(JsonBehavior = TouchSocket.Logging.JsonBehavior.OnlyJson)]
+// 是否美化 JSON，TouchSocket 4.8.0+ 版本有效
+[LoggingMonitor(JsonBehavior = TouchSocket.Logging.JsonBehavior.OnlyJson, JsonIndented = true)]
 ```
 
 :::note 关于 `JsonBehavior`
@@ -1195,7 +1195,7 @@ services.AddMonitorLogging(options =>
 2. 写入存储介质
 
 ```cs showLineNumbers {14-18}
-using Furion.Logging;
+using TouchSocket.Logging;
 
 namespace YourProject.Core;
 
@@ -1229,7 +1229,7 @@ public class DatabaseLoggingWriter : IDatabaseLoggingWriter
   "actionName": "person",
   "actionTypeName": "GetPerson",
   "areaName": null,
-  "displayName": "Furion.Application.TestLoggerServices.GetPerson (Furion.Application)",
+  "displayName": "TouchSocket.Application.TestLoggerServices.GetPerson (TouchSocket.Application)",
   "localIPv4": "0.0.0.1",
   "remoteIPv4": "0.0.0.1",
   "httpMethod": "GET",
@@ -1273,7 +1273,7 @@ public class DatabaseLoggingWriter : IDatabaseLoggingWriter
     {
       "type": "aud",
       "valueType": "string",
-      "value": "powerby Furion"
+      "value": "powerby TouchSocket"
     }
   ],
   "parameters": [
@@ -1284,8 +1284,8 @@ public class DatabaseLoggingWriter : IDatabaseLoggingWriter
     }
   ],
   "returnInformation": {
-    "type": "Furion.UnifyResult.RESTfulResult`1[[System.Object, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-    "actType": "Furion.Application.Persons.PersonDto",
+    "type": "TouchSocket.UnifyResult.RESTfulResult`1[[System.Object, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+    "actType": "TouchSocket.Application.Persons.PersonDto",
     "value": {
       "StatusCode": 200,
       "Data": {
@@ -1308,7 +1308,7 @@ public class DatabaseLoggingWriter : IDatabaseLoggingWriter
   "exception": {
     "type": "System.DivideByZeroException",
     "message": "Attempted to divide by zero.",
-    "stackTrace": "   at Furion.Application.TestLoggerServices.测试日志监听8(Int32 id) in D:\\Workplaces\\OpenSources\\Furion\\samples\\Furion.Application\\TestLoggerServices.cs:line 78\r\n   at lambda_method103(Closure , Object , Object[] )\r\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.SyncObjectResultExecutor.Execute(IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)\r\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)\r\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)"
+    "stackTrace": "   at TouchSocket.Application.TestLoggerServices.测试日志监听8(Int32 id) in D:\\Workplaces\\OpenSources\\TouchSocket\\samples\\TouchSocket.Application\\TestLoggerServices.cs:line 78\r\n   at lambda_method103(Closure , Object , Object[] )\r\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.SyncObjectResultExecutor.Execute(IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)\r\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)\r\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)"
   },
   "validation": {
     "errorCode": null,
@@ -1322,11 +1322,11 @@ public class DatabaseLoggingWriter : IDatabaseLoggingWriter
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.5.9 +` 版本使用。
+以下内容仅限 `TouchSocket 4.5.9 +` 版本使用。
 
 :::
 
-在 `Furion 4.5.9+` 版本新增了 `WriteFilter` 过滤功能，可根据自定义逻辑自定义过滤拦截：
+在 `TouchSocket 4.5.9+` 版本新增了 `WriteFilter` 过滤功能，可根据自定义逻辑自定义过滤拦截：
 
 ```cs showLineNumbers showLineNumbers {1,3,10}
 services.AddMonitorLogging(options =>
@@ -1347,7 +1347,7 @@ services.AddMonitorLogging(options =>
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.6.1 +` 版本使用。
+以下内容仅限 `TouchSocket 4.6.1 +` 版本使用。
 
 :::
 
@@ -1400,7 +1400,7 @@ services.AddDatabaseLogging<DatabaseLoggingWriter>(options =>
 2. 写入数据库
 
 ```cs showLineNumbers {1,5,8,12}
-using Furion.Logging;
+using TouchSocket.Logging;
 
 namespace YourProject.Core;
 
@@ -1429,7 +1429,7 @@ services.AddDatabaseLogging<DatabaseLoggingWriter>();   // 注意这里没有过
 且不想多注册一个数据库日志服务，那么只需要在代码中过滤即可：
 
 ```cs showLineNumbers {1,5,8,12,15}
-using Furion.Logging;
+using TouchSocket.Logging;
 
 namespace YourProject.Core;
 
@@ -1459,7 +1459,7 @@ public class DatabaseLoggingWriter : IDatabaseLoggingWriter
 
 ## 18.7 打印日志到 `Swagger` 中
 
-在 `Furion` 框架中默认集成了 `MiniProfiler` 组件并与 `Swagger` 进行了结合，如需打印日志或调试代码，只需调用以下方法即可：
+在 `TouchSocket` 框架中默认集成了 `MiniProfiler` 组件并与 `Swagger` 进行了结合，如需打印日志或调试代码，只需调用以下方法即可：
 
 ```cs showLineNumbers
 App.PrintToMiniProfiler("分类", "状态", "要打印的消息");
@@ -1473,14 +1473,14 @@ StringLoggingPart.Default().SetMessage("这是一个日志").LogInformation();
 
 ## 18.9 规范日志模板
 
-在 `Furion v3.5.3+` 新增了 `TP.Wrapper(...)` 规范模板，使用如下：
+在 `TouchSocket v3.5.3+` 新增了 `TP.Wrapper(...)` 规范模板，使用如下：
 
 ```cs showLineNumbers {2}
 // 生成模板字符串
-var template = TP.Wrapper("Furion 框架", "让 .NET 开发更简单，更通用，更流行。",
+var template = TP.Wrapper("TouchSocket 框架", "让 .NET 开发更简单，更通用，更流行。",
     "##作者## 百小僧",
     "##当前版本## v3.5.3",
-    "##文档地址## https://furion.icu",
+    "##文档地址## https://TouchSocket.icu",
     "##Copyright## 百小僧, Baiqian Co.,Ltd.");
 
 Console.WriteLine(template);
@@ -1489,14 +1489,14 @@ Console.WriteLine(template);
 日志打印模板如下：
 
 ```bash showLineNumbers
-┏━━━━━━━━━━━  Furion 框架 ━━━━━━━━━━━
+┏━━━━━━━━━━━  TouchSocket 框架 ━━━━━━━━━━━
 ┣ 让 .NET 开发更简单，更通用，更流行。
 ┣
 ┣ 作者：        百小僧
 ┣ 当前版本：     v3.5.3
-┣ 文档地址：     https://furion.icu
+┣ 文档地址：     https://TouchSocket.icu
 ┣ Copyright：   百小僧, Baiqian Co.,Ltd.
-┗━━━━━━━━━━━  Furion 框架 ━━━━━━━━━━━
+┗━━━━━━━━━━━  TouchSocket 框架 ━━━━━━━━━━━
 
 ```
 
@@ -1504,7 +1504,7 @@ Console.WriteLine(template);
 
 如果列表项以 `##属性名##` 开头，自动生成 `属性名：` 作为行首且自动等宽对齐。
 
-`Furion 3.9.1` 之前版本使用 `[属性名]` 开头。
+`TouchSocket 3.9.1` 之前版本使用 `[属性名]` 开头。
 
 :::
 
@@ -1512,7 +1512,7 @@ Console.WriteLine(template);
 
 :::important 版本说明
 
-以下内容仅限 `Furion 4.6.0 +` 版本使用。
+以下内容仅限 `TouchSocket 4.6.0 +` 版本使用。
 
 :::
 
@@ -1520,14 +1520,14 @@ Console.WriteLine(template);
 
 ```cs showLineNumbers {2,8,15,21,25,28}
 // 写法一
-using (var scope = _logger.ScopeContext(ctx => ctx.Set("Name", "Furion").Set("UserId", 10)))
+using (var scope = _logger.ScopeContext(ctx => ctx.Set("Name", "TouchSocket").Set("UserId", 10)))
 {
   _logger.LogInformation("我是一个日志 {id}", 20);
 }
 
 // 写法二
 using var scope = _logger.ScopeContext(new Dictionary<object, object> {
-    { "Name", "Furion" },
+    { "Name", "TouchSocket" },
     { "UserId", 10 }
 });
 _logger.LogInformation("我是一个日志 {id}", 20);
@@ -1562,7 +1562,7 @@ services.AddFileLogging("infomation.log", options =>
     options.WriteFilter = (logMsg) =>
     {
         // 还可以设置给运行时使用：logMsg.Context.Set(...);
-        return logMsg.Context.Get("Name") == "Furion";
+        return logMsg.Context.Get("Name") == "TouchSocket";
     };
 });
 
@@ -1594,7 +1594,7 @@ public TestAppService: ITestAppService, IDisposable
         // 共享全局上下文数据
         _logger.LogInformation("写入新的日志");
 
-        return "Furion";
+        return "TouchSocket";
     }
 
     public string GetTags(int id)
@@ -1638,7 +1638,7 @@ public TestAppService: ITestAppService, IDisposable
 微软提供的 `EFCore` 或者第三方 `ORM` 本身操作数据库时自带日志输出，这就会导致 `IDatabaseLoggingWriter` 的 `Write` 死循环，解决这个问题有以下方法：
 
 1. 创建新的数据库操作实例并关闭日志
-2. 更新到 `Furion 4.7.0+` 版本 **（推荐）**
+2. 更新到 `TouchSocket 4.7.0+` 版本 **（推荐）**
 3. 自行根据业务逻辑过滤
 
 **如不存在该问题可关闭框架自带死循环检测功能（对性能有提升作用）**：
@@ -1654,7 +1654,7 @@ services.AddDatabaseLogging<DatabaseLoggingWriter>(options =>
 
 :::note 与我们交流
 
-给 Furion 提 [Issue](https://gitee.com/dotnetchina/Furion/issues/new?issue)。
+给 TouchSocket 提 [Issue](https://gitee.com/rrqm_home/TouchSocket/issues/new?issue)。
 
 :::
 
