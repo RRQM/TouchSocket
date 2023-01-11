@@ -166,6 +166,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpCommandLineConsoleApp", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AccessRestrictionsConsoleApp", "examples\BlogsDemos\AccessRestrictionsConsoleApp\AccessRestrictionsConsoleApp.csproj", "{0897A17C-8822-4E42-83BE-A59F21A4E5E2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DifferentProtocolConsoleApp", "examples\BlogsDemos\DifferentProtocolConsoleApp\DifferentProtocolConsoleApp.csproj", "{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -368,6 +370,10 @@ Global
 		{0897A17C-8822-4E42-83BE-A59F21A4E5E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0897A17C-8822-4E42-83BE-A59F21A4E5E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0897A17C-8822-4E42-83BE-A59F21A4E5E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -431,6 +437,7 @@ Global
 		{5B8D8451-E920-42E5-9F6A-D6D1238A24B4} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
 		{15554D7C-32B3-48A2-9475-2364A721A1F7} = {5B8D8451-E920-42E5-9F6A-D6D1238A24B4}
 		{0897A17C-8822-4E42-83BE-A59F21A4E5E2} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
+		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

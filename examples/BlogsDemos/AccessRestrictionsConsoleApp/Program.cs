@@ -6,6 +6,10 @@ namespace AccessRestrictionsConsoleApp
 {
     internal class Program
     {
+        /// <summary>
+        /// 实现黑白名单功能，博客<see href="https://blog.csdn.net/qq_40374647/article/details/128640132"/>
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             TcpService service = new TcpService();
@@ -16,7 +20,8 @@ namespace AccessRestrictionsConsoleApp
                 client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置     
+            service.Setup(new TouchSocketConfig()//载入配置
+                .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
