@@ -5,8 +5,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import components from "@theme/MDXComponents";
 import React from "react";
-import contributors from "../data/contributors";
-import urls from "../data/urls";
+import AndroidIcon from "./android.svg";
 import DockerIcon from "./docker.svg";
 import "./index.css";
 import "./index.own.css";
@@ -14,7 +13,6 @@ import KubernetesIcon from "./kubernetes.svg";
 import LinuxIcon from "./linux.svg";
 import MacOSIcon from "./macos.svg";
 import WindowIcon from "./windows.svg";
-import AndroidIcon from "./android.svg";
 
 function Home() {
   const context = useDocusaurusContext();
@@ -29,11 +27,6 @@ function Home() {
     >
       <Banner />
       <Gitee />
-      {/* <ProccessOn /> */}
-      {/* <Remark /> */}
-      {/* <WhoUse /> */}
-      {/* <Contributor /> */}
-      {/* <Links /> <Bifa /> */}
     </Layout>
   );
 }
@@ -47,8 +40,7 @@ function Banner() {
             TouchSocket{" "}
             <span
               style={{ fontSize: 14, fontWeight: "normal", color: "#8759ff" }}
-            >
-            </span>
+            ></span>
           </div>
           <div style={{ color: "#82aaff", position: "relative", fontSize: 14 }}>
             一款简单易用的基础网络通讯组件库。
@@ -58,7 +50,10 @@ function Banner() {
           </div>
           <ul className="TouchSocket-banner-spec">
             <li> Apache-2.0 宽松开源协议，商业免费授权</li>
-            <li>支持 .NET Framework 4.5及以上， .NET Core3.1及以上，.NET Standard2.0及以上</li>
+            <li>
+              支持 .NET Framework 4.5及以上， .NET Core3.1及以上，.NET
+              Standard2.0及以上
+            </li>
             <li>无依赖</li>
             <li>极速上手，极简使用</li>
           </ul>
@@ -84,7 +79,7 @@ function Banner() {
             </span>
           </div>
           <div className="TouchSocket-get-start-btn">
-            <Link className="TouchSocket-get-start" to={useBaseUrl("docs/descriptions")}>
+            <Link className="TouchSocket-get-start" to={useBaseUrl("docs")}>
               入门指南
               <span className="TouchSocket-version">v1.0</span>
             </Link>
@@ -108,7 +103,7 @@ service.Received = (client, byteBlock, requestInfo) =>
     client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
 };
 
-service.Setup(new TouchSocketConfig()//载入配置     
+service.Setup(new TouchSocketConfig()//载入配置
     .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
@@ -138,7 +133,7 @@ function Gitee() {
         开源免费/商业免费授权
       </p>
       <h1 className={"TouchSocket-big-title" + (isDarkTheme ? " dark" : "")}>
-        ⭐️  Apache-2.0 开源协议，代码在 Gitee/Github 平台托管 ⭐️
+        ⭐️ Apache-2.0 开源协议，代码在 Gitee/Github 平台托管 ⭐️
       </h1>
       <div className="TouchSocket-gitee-log">
         <div
@@ -177,291 +172,6 @@ function Gitee() {
             <span className={isDarkTheme ? " dark" : ""}>Downloads</span>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function Remark() {
-  const { colorMode, setLightTheme, setDarkTheme } = useColorMode();
-  const isDarkTheme = colorMode === "dark";
-  return (
-    <div className="TouchSocket-content">
-      <p className={"TouchSocket-small-title" + (isDarkTheme ? " dark" : "")}>
-        大量使用者测评
-      </p>
-      <h1 className={"TouchSocket-big-title" + (isDarkTheme ? " dark" : "")}>
-        来听听他们是怎么说的
-      </h1>
-      <div className="TouchSocket-remark">
-        <div className="TouchSocket-remark-item">
-          <div className="TouchSocket-remark-p">
-            <h1>理想和现实</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              作者的技术是我接触.NET程序员中最好的一个，代码的质量，文档的质量都是一等一的。
-            </p>
-          </div>
-          <div className="TouchSocket-remark-p">
-            <h1>kesshei</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              强烈支持，因为有你们，.net 会走的更远。
-            </p>
-          </div>
-          <div className="TouchSocket-remark-p">
-            <h1>逆天的蝈蝈</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              非常优秀的开源作品，点赞支持
-            </p>
-          </div>
-        </div>
-        <div className="TouchSocket-remark-item">
-          <div className="TouchSocket-remark-p">
-            <h1>张芸溪</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              大概看了一下，觉得项目非常棒。core生态一定能火
-            </p>
-          </div>
-          <div className="TouchSocket-remark-p">
-            <h1>赖皮小鳄鱼</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              作者好棒，支持国内.net！
-            </p>
-          </div>
-          <div className="TouchSocket-remark-p">
-            <h1>gudufy</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              做得非常棒，打算基于你的框架做一个基本的后台管理出来，供大家快速开发中小型项目。
-            </p>
-          </div>
-        </div>
-        <div className="TouchSocket-remark-item">
-          <div className="TouchSocket-remark-p">
-            <h1>ThinkCoder</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              文档写的真不错，代码质量也非常高，注释非常完善，赞一个。
-            </p>
-          </div>
-          <div className="TouchSocket-remark-p">
-            <h1>liuina</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              期待文档写完的那一天，绝对惊艳四座。
-            </p>
-          </div>
-          <div className="TouchSocket-remark-p">
-            <h1>weiyu.xiao</h1>
-            <p className={isDarkTheme ? " dark" : undefined}>
-              很不错的项目，对快速搭建健壮的技术架构，帮助业务成功很有帮助。
-            </p>
-          </div>
-        </div>
-      </div>
-      <div>
-        <a
-          href="https://github.com/MonkSoul/TouchSocket/issues/39"
-          target="_blank"
-          className="TouchSocket-get-start"
-          style={{ margin: 0 }}
-        >
-          想看更多评论？
-        </a>
-      </div>
-    </div>
-  );
-}
-
-function WhoUse() {
-  return (
-    <div className="TouchSocket-whouse">
-      <div className="TouchSocket-who-custom">
-        {/* <h1>等待下一个幸运儿，会是你吗？</h1> */}
-        <div className="TouchSocket-custom-img">
-          <a href="https://gitee.com/dotnetchina" target="_blank">
-            <img src={useBaseUrl("img/chinadotnet.png")} id="dotnet-china" />
-          </a>
-        </div>
-        <div className="TouchSocket-custom-img">
-          <img
-            src={useBaseUrl("img/custom1.png")}
-            height="100"
-            style={{ height: 100 }}
-          />
-        </div>
-        <div className="TouchSocket-custom-img">
-          <img
-            src={useBaseUrl("img/custom2.png")}
-            height="100"
-            style={{ height: 100 }}
-          />
-        </div>
-        <div className="TouchSocket-custom-img">
-          <img
-            src={useBaseUrl("img/custom3.png")}
-            height="100"
-            style={{ height: 100 }}
-          />
-        </div>
-        <div className="TouchSocket-custom-img">
-          <img
-            src={useBaseUrl("img/custom4.jpg")}
-            height="100"
-            style={{ height: 100 }}
-          />
-        </div>
-        <div className="TouchSocket-custom-img">
-          <a href="http://www.hezongsoft.net" target="_blank">
-            <img
-              src={useBaseUrl("img/custom5.png")}
-              height="100"
-              style={{ height: 100 }}
-            />
-          </a>
-        </div>
-        <div className="TouchSocket-custom-img">
-          <a href="http://www.dilon.vip/" target="_blank">
-            <img
-              src={useBaseUrl("img/custom6.png")}
-              height="100"
-              style={{ height: 100 }}
-            />
-          </a>
-        </div>
-        <div className="TouchSocket-custom-img">
-          <img
-            src={useBaseUrl("img/c10.jpg")}
-            height="100"
-            style={{ height: 100 }}
-          />
-        </div>
-        <div className="TouchSocket-custom-img">
-          <img
-            src={useBaseUrl("img/jjd.png")}
-            height="100"
-            style={{ height: 100 }}
-          />
-        </div>
-        <div className="TouchSocket-custom-img">
-          <a href="http://www.samfeng.cn/" target="_blank">
-            <img
-              src={useBaseUrl("img/custom10.png")}
-              height="100"
-              style={{ height: 100 }}
-            />
-          </a>
-        </div>
-        <div className="TouchSocket-custom-img">
-          <a href="http://www.ketaisoft.com/" target="_blank">
-            <img
-              src={useBaseUrl("img/custom11.png")}
-              height="100"
-              style={{ height: 100 }}
-            />
-          </a>
-        </div>
-      </div>
-      <div className="TouchSocket-who-des">
-        <div style={{ maxWidth: 350 }}>
-          <div></div>
-          <h1>他们都在用</h1>
-          <p>
-            TouchSocket
-            已在全球超过550万个项目中使用。从小型企业到企业的解决方案及知名企业。他们在简单软件和复杂管理系统的开发方面都信任我们。
-          </p>
-          <a
-            className="TouchSocket-get-start"
-            href="https://github.com/MonkSoul/TouchSocket/issues/154"
-            target="_blank"
-          >
-            立即添加您的公司
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Links() {
-  const { colorMode, setLightTheme, setDarkTheme } = useColorMode();
-  const isDarkTheme = colorMode === "dark";
-  return (
-    <div className="TouchSocket-links">
-      <p className={"TouchSocket-small-title" + (isDarkTheme ? " dark" : "")}>
-        友情链接
-      </p>
-      <h1 className={"TouchSocket-big-title" + (isDarkTheme ? " dark" : "")}>
-        它们一样是优秀的项目/网站
-      </h1>
-      <div className="TouchSocket-links-content">
-        {urls.map((item, i) => (
-          <a href={item.url} key={i} target="_blank" title={item.title}>
-            {item.text}
-          </a>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Contributor() {
-  const { colorMode, setLightTheme, setDarkTheme } = useColorMode();
-  const isDarkTheme = colorMode === "dark";
-
-  return (
-    <div className="TouchSocket-contributors">
-      <p className={"TouchSocket-small-title" + (isDarkTheme ? " dark" : "")}>
-        框架贡献者
-      </p>
-      <h1 className={"TouchSocket-big-title" + (isDarkTheme ? " dark" : "")}>
-        没有你们所有人，TouchSocket 不可能做到这一点
-      </h1>
-      <div className="TouchSocket-contributors-list">
-        {contributors.map((c, i) => (
-          <div
-            className={"TouchSocket-contributor-item" + (isDarkTheme ? " dark" : "")}
-            key={i}
-          >
-            {!c.extra ? (
-              ""
-            ) : (
-              <div className="TouchSocket-contributor-extra">{c.extra}</div>
-            )}
-            <a
-              href={c.link}
-              target="_blank"
-              title={"点击查看 " + c.author + " 开源主页"}
-            >
-              <img
-                src={c.photo}
-                alt={c.author + " 头像"}
-                title={"点击查看 " + c.author + " 开源主页"}
-              />
-              <div>{c.author}</div>
-            </a>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProccessOn() {
-  const { colorMode, setLightTheme, setDarkTheme } = useColorMode();
-  const isDarkTheme = colorMode === "dark";
-  return (
-    <div className="TouchSocket-proccesson">
-      <p className={"TouchSocket-small-title" + (isDarkTheme ? " dark" : "")}>
-        功能模块
-      </p>
-      <h1 className={"TouchSocket-big-title" + (isDarkTheme ? " dark" : "")}>
-        麻雀虽小五脏俱全
-      </h1>
-      <div className="TouchSocket-proccesson-content">
-        <iframe
-          id="embed_dom"
-          name="embed_dom"
-          frameBorder="0"
-          style={{ display: "block", width: "100%", height: "600px" }}
-          src="https://www.processon.com/embed/60a7489f6376891bafa2d353"
-        ></iframe>
       </div>
     </div>
   );
@@ -520,32 +230,6 @@ function SystemWindow(systemWindowProps) {
       {children}
     </div>
   );
-}
-
-function Bifa() {
-  return (
-    <div className="TouchSocket-bifa">
-      <div className="TouchSocket-wzi-title">
-        <b>TouchSocket</b>
-        历经两年打磨
-      </div>
-      <Wzi>网友笔伐过</Wzi>
-      <Wzi>用户捧杀过</Wzi>
-      <Wzi>
-        内心<span>反复放弃</span>过
-      </Wzi>
-      <Wzi>
-        最终<span>化茧成蝶</span>
-      </Wzi>
-      <Wzi>
-        为<span>祖国信创</span>添砖加瓦
-      </Wzi>
-    </div>
-  );
-}
-
-function Wzi(props) {
-  return <div className="TouchSocket-wzi">{props.children}</div>;
 }
 
 export default Home;
