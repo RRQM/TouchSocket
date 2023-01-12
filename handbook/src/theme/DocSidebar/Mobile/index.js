@@ -17,8 +17,8 @@ const DocSidebarMobileSecondaryMenu = ({ sidebar, path }) => {
     <>
       {show && (
         <>
-          <Sponsor />
-          <span
+          {/* <Sponsor /> */}
+          {/* <span
             style={{
               margin: "0 auto",
               display: "inline-block",
@@ -44,7 +44,7 @@ const DocSidebarMobileSecondaryMenu = ({ sidebar, path }) => {
             onClick={() => setShow((s) => !s)}
           >
             收
-          </span>
+          </span> */}
         </>
       )}
       <ul className={clsx(ThemeClassNames.docs.docSidebarMenu, "menu__list")}>

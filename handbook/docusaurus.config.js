@@ -55,19 +55,19 @@ module.exports = {
           label: "文档",
           position: "left",
         },
-        {
-          to: "docs/global/app",
-          activeBasePath: "docs/global",
-          label: "静态类",
-          position: "left",
-        },
-        {
-          to: "docs/settings/appsettings",
-          activeBasePath: "docs/settings",
-          label: "配置",
-          position: "left",
-        },
-        { to: "blog", label: "博客", position: "left" },
+        // {
+        //   to: "docs/global/app",
+        //   activeBasePath: "docs/global",
+        //   label: "静态类",
+        //   position: "left",
+        // },
+        // {
+        //   to: "docs/settings/appsettings",
+        //   activeBasePath: "docs/settings",
+        //   label: "配置",
+        //   position: "left",
+        // },
+        // { to: "blog", label: "博客", position: "left" },
         {
           label: "更新日志",
           position: "left",
@@ -76,18 +76,18 @@ module.exports = {
               label: "📝 查看日志（v4.8.4.8）",
               href: "/docs/upgrade",
             },
-            {
-              label: "🚀 路线图",
-              href: "/docs/target",
-            },
+            // {
+            //   label: "🚀 路线图",
+            //   href: "/docs/target",
+            // },
           ],
         },
-        {
-          to: "docs/net6-to-net7",
-          activeBasePath: "docs/net6-to-net7",
-          label: ".NET7🚀",
-          position: "left",
-        },
+        // {
+        //   to: "docs/net6-to-net7",
+        //   activeBasePath: "docs/net6-to-net7",
+        //   label: ".NET7🚀",
+        //   position: "left",
+        // },
         // {
         //   label: "视频",
         //   position: "right",
@@ -136,18 +136,18 @@ module.exports = {
           position: "right",
           href: "https://gitee.com/dotnetchina",
         },
-        {
-          label: "案例",
-          position: "right",
-          to: "docs/case",
-          activeBasePath: "docs/case",
-        },
-        {
-          label: "赞助",
-          position: "right",
-          to: "docs/donate",
-          activeBasePath: "docs/donate",
-        },
+        // {
+        //   label: "案例",
+        //   position: "right",
+        //   to: "docs/case",
+        //   activeBasePath: "docs/case",
+        // },
+        // {
+        //   label: "赞助",
+        //   position: "right",
+        //   to: "docs/donate",
+        //   activeBasePath: "docs/donate",
+        // },
         // {
         //   label: "耻辱柱",
         //   position: "right",
@@ -164,7 +164,7 @@ module.exports = {
           items: [
             {
               label: "入门",
-              to: "docs/serverun",
+              to: "docs/descriptions",
             },
             {
               label: "手册",
@@ -188,10 +188,10 @@ module.exports = {
         {
           title: "更多",
           items: [
-            {
-              label: "博客",
-              to: "blog",
-            },
+            // {
+            //   label: "博客",
+            //   to: "blog",
+            // },
             {
               label: "仓库",
               href: "https://gitee.com/rrqm_home/touchsocket",
