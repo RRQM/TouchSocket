@@ -28,15 +28,7 @@ module.exports = {
     },
     prism: {
       additionalLanguages: ["powershell", "csharp", "sql"],
-      // theme: require("prism-react-renderer/themes/github"),
-      // darkTheme: require("prism-react-renderer/themes/dracula"),
     },
-    // algolia: {
-    //   appId: "XYY4NGVXSA",
-    //   apiKey: "957b35892d68e9ac86c35c96d89dcedf",
-    //   indexName: "TouchSocket",
-    //   contextualSearch: true,
-    // },
     navbar: {
       title: "TouchSocket",
       logo: {
@@ -45,74 +37,22 @@ module.exports = {
       },
       hideOnScroll: true,
       items: [
-        // {
-        //   type: "docsVersionDropdown",
-        //   position: "left",
-        // },
         {
           to: "docs",
           activeBasePath: "docs",
           label: "文档",
           position: "left",
         },
-        // {
-        //   to: "docs/global/app",
-        //   activeBasePath: "docs/global",
-        //   label: "静态类",
-        //   position: "left",
-        // },
-        // {
-        //   to: "docs/settings/appsettings",
-        //   activeBasePath: "docs/settings",
-        //   label: "配置",
-        //   position: "left",
-        // },
-        // { to: "blog", label: "博客", position: "left" },
         {
           label: "更新日志",
           position: "left",
           items: [
             {
               label: "📝 查看日志（v4.8.4.8）",
-              href: "/docs/upgrade",
+              href: "docs/upgrade",
             },
-            // {
-            //   label: "🚀 路线图",
-            //   href: "/docs/target",
-            // },
           ],
         },
-        // {
-        //   to: "docs/net6-to-net7",
-        //   activeBasePath: "docs/net6-to-net7",
-        //   label: ".NET7🚀",
-        //   position: "left",
-        // },
-        // {
-        //   label: "视频",
-        //   position: "right",
-        //   href: "https://space.bilibili.com/695987967",
-        // },
-        // {
-        //   label: "工具",
-        //   position: "right",
-        //   items: [
-        //     {
-        //       label: "代码生成器",
-        //     },
-        //   ],
-        // },
-        // {
-        //   href: "https://gitee.com/rrqm_home/touchsocket/board",
-        //   label: "看板",
-        //   position: "right",
-        // },
-        // {
-        //   label: "耻辱柱",
-        //   position: "right",
-        //   to: "docs/pillar-of-humiliation",
-        //   activeBasePath: "docs/pillar-of-humiliation",
-        // },
         {
           label: "源码",
           position: "right",
@@ -136,24 +76,6 @@ module.exports = {
           position: "right",
           href: "https://gitee.com/dotnetchina",
         },
-        // {
-        //   label: "案例",
-        //   position: "right",
-        //   to: "docs/case",
-        //   activeBasePath: "docs/case",
-        // },
-        // {
-        //   label: "赞助",
-        //   position: "right",
-        //   to: "docs/donate",
-        //   activeBasePath: "docs/donate",
-        // },
-        // {
-        //   label: "耻辱柱",
-        //   position: "right",
-        //   to: "docs/pillar-of-humiliation",
-        //   activeBasePath: "docs/pillar-of-humiliation",
-        // },
       ],
     },
     footer: {
@@ -164,7 +86,7 @@ module.exports = {
           items: [
             {
               label: "入门",
-              to: "docs/descriptions",
+              to: "docs",
             },
             {
               label: "手册",
@@ -188,10 +110,6 @@ module.exports = {
         {
           title: "更多",
           items: [
-            // {
-            //   label: "博客",
-            //   to: "blog",
-            // },
             {
               label: "仓库",
               href: "https://gitee.com/rrqm_home/touchsocket",
@@ -199,11 +117,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © 2020-${new Date().getFullYear()} 若汝棋茗, 百小僧.`,
-      // logo: {
-      //   src: "img/chinadotnet.png",
-      //   href: "https://gitee.com/dotnetchina",
-      // },
+      copyright: `Copyright © 2020-${new Date().getFullYear()} 若汝棋茗.`,
     },
   },
   presets: [
@@ -212,17 +126,19 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
+          editUrl:
+            "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
           sidebarCollapsed: true,
           // sidebarCollapsible: true,
         },
-        blog: {
-          showReadingTime: true,
-          editUrl: "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
-        },
+        // blog: {
+        //   showReadingTime: true,
+        //   editUrl:
+        //     "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
+        // },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },

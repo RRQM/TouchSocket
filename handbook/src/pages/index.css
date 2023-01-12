@@ -538,8 +538,6 @@
 }
 
 .TouchSocket-bifa {
-  background: linear-gradient(rgba(33, 27, 80, 0.8), rgba(65, 42, 148, 0.8)),
-    url(@site/static/img/bgs.jpg);
   background-position: center center;
   background-repeat: no-repeat;
   background-size: cover;
