@@ -6,7 +6,6 @@ module.exports = {
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
-  organizationName: "Baiqian Co.,Ltd",
   projectName: "TouchSocket",
   scripts: [],
   themeConfig: {
@@ -46,12 +45,7 @@ module.exports = {
         {
           label: "更新日志",
           position: "left",
-          items: [
-            {
-              label: "📝 查看日志（v4.8.4.8）",
-              href: "docs/upgrade",
-            },
-          ],
+          to: "docs/upgrade"
         },
         {
           label: "源码",
@@ -63,11 +57,11 @@ module.exports = {
             },
             {
               label: "GitHub",
-              href: "https://github.com/MonkSoul/TouchSocket",
+              href: "https://github.com/RRQM/TouchSocket",
             },
             {
               label: "Nuget",
-              href: "https://www.nuget.org/profiles/monk.soul",
+              href: "https://www.nuget.org/profiles/rrqm",
             },
           ],
         },

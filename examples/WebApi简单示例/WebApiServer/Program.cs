@@ -24,6 +24,7 @@ namespace WebApiServerApp
                .ConfigurePlugins(a =>
                {
                    webApiParser = a.UseWebApi();
+                   a.UseDefaultHttpServicePlugin();//此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
                }))
                .Start();
 
