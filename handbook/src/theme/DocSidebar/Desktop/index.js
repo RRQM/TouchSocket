@@ -32,8 +32,8 @@ function DocSidebarDesktop({ path, sidebar, onCollapse, isHidden }) {
       {hideOnScroll && <Logo tabIndex={-1} className={styles.sidebarLogo} />}
       {show && (
         <>
-          <Sponsor />
-          <span
+          {/* <Sponsor /> */}
+          {/* <span
             style={{
               margin: "0 auto",
               display: "inline-block",
@@ -59,7 +59,7 @@ function DocSidebarDesktop({ path, sidebar, onCollapse, isHidden }) {
             onClick={() => setShow((s) => !s)}
           >
             收
-          </span>
+          </span> */}
         </>
       )}
       <Content path={path} sidebar={sidebar} />
