@@ -14,6 +14,7 @@ import KubernetesIcon from "./kubernetes.svg";
 import LinuxIcon from "./linux.svg";
 import MacOSIcon from "./macos.svg";
 import WindowIcon from "./windows.svg";
+import AndroidIcon from "./android.svg";
 
 function Home() {
   const context = useDocusaurusContext();
@@ -23,16 +24,16 @@ function Home() {
 
   return (
     <Layout
-      title={`让 .NET 开发更简单，更通用，更流行。 ${siteConfig.title}`}
-      description="让 .NET 开发更简单，更通用，更流行。"
+      title={`TouchSocket说明文档。 ${siteConfig.title}`}
+      description="TouchSocket说明文档"
     >
       <Banner />
       <Gitee />
       {/* <ProccessOn /> */}
       {/* <Remark /> */}
-      <WhoUse />
+      {/* <WhoUse /> */}
       {/* <Contributor /> */}
-      <Links /> <Bifa />
+      {/* <Links /> <Bifa /> */}
     </Layout>
   );
 }
@@ -47,21 +48,19 @@ function Banner() {
             <span
               style={{ fontSize: 14, fontWeight: "normal", color: "#8759ff" }}
             >
-              [fu:rɪən]
             </span>
           </div>
           <div style={{ color: "#82aaff", position: "relative", fontSize: 14 }}>
-            您的痛点，TouchSocket 已阅已历；TouchSocket 的惊喜，您且慢慢享受。
+            一款简单易用的基础网络通讯组件库。
           </div>
           <div className="TouchSocket-banner-description">
             让 .NET 开发更简单，更通用，更流行。
           </div>
           <ul className="TouchSocket-banner-spec">
-            <li>MIT 宽松开源协议，商业无需授权</li>
-            <li>支持 .NET5/6/7+ 平台，没有历史包袱</li>
-            <li>极少依赖，只依赖两个第三方包</li>
-            <li>极速上手，一个 Inject() 完成配置</li>
-            <li>代码无侵入性，100% 兼容原生写法</li>
+            <li> Apache-2.0 宽松开源协议，商业免费授权</li>
+            <li>支持 .NET Framework 4.5及以上， .NET Core3.1及以上，.NET Standard2.0及以上</li>
+            <li>无依赖</li>
+            <li>极速上手，极简使用</li>
           </ul>
           <div className="TouchSocket-support-platform">受支持平台：</div>
           <div className="TouchSocket-support-icons">
@@ -70,6 +69,9 @@ function Banner() {
             </span>
             <span>
               <LinuxIcon height="39" width="39" />
+            </span>
+            <span>
+              <AndroidIcon height="39" width="39" />
             </span>
             <span>
               <MacOSIcon height="39" width="39" />
@@ -84,13 +86,7 @@ function Banner() {
           <div className="TouchSocket-get-start-btn">
             <Link className="TouchSocket-get-start" to={useBaseUrl("docs/serverun")}>
               入门指南
-              <span className="TouchSocket-version">v4.8.4.8</span>
-            </Link>
-            <Link
-              className="TouchSocket-try-demo"
-              to="https://replit.com/@MonkSoul/HelloTouchSocket?v=1#Program.cs"
-            >
-              云上体验
+              <span className="TouchSocket-version">v1.0</span>
             </Link>
           </div>
         </div>
@@ -101,34 +97,28 @@ function Banner() {
               // section="schema"
               source={`
 // highlight-next-line
-Serve.Run();
-
-public class TouchSocketAppService : IDynamicApiController
+TcpService service = new TcpService();
+service.Connecting = (client, e) => { };//有客户端正在连接
+service.Connected = (client, e) => { };//有客户端成功连接
+service.Disconnected = (client, e) => { };//有客户端断开连接
+service.Received = (client, byteBlock, requestInfo) =>
 {
-    private readonly IRepository<User> _userRepository;
-    // highlight-next-line
-    public TouchSocketAppService(IRepository<User> userRepository)
-    {
-        _userRepository = userRepository;
-    }
+    //从客户端收到信息
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+};
 
-    // highlight-next-line
-    [IfException(1000, ErrorMessage = "用户ID: {0} 不存在")]
-    public async Task<UserDto> GetUser([Range(1, int.MaxValue)] int userId)
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
-        var user = await _userRepository.FindOrDefaultAsync(userId);
-        // highlight-next-line
-        _ = user ?? throw Oops.Oh(1000, userId);
-        return user.Adapt<UserDto>();
-    }
-
-    public async Task<RemoteData> GetRemote(string id)
+        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+    })
+    .ConfigurePlugins(a =>
     {
-      // highlight-next-line
-        var data = await $"https://www.TouchSocket.icu/data?id={id}".GetAsAsync<RemoteData>();
-        return data;
-    }
-}
+        //a.Add();//此处可以添加插件
+    }))
+    .Start();//启动
 `}
             />
           </SystemWindow>
@@ -145,10 +135,10 @@ function Gitee() {
   return (
     <div className="TouchSocket-content">
       <p className={"TouchSocket-small-title" + (isDarkTheme ? " dark" : "")}>
-        开源免费/商业无需授权
+        开源免费/商业免费授权
       </p>
       <h1 className={"TouchSocket-big-title" + (isDarkTheme ? " dark" : "")}>
-        ⭐️ MIT 开源协议，代码在 Gitee/Github 平台托管 ⭐️
+        ⭐️  Apache-2.0 开源协议，代码在 Gitee/Github 平台托管 ⭐️
       </h1>
       <div className="TouchSocket-gitee-log">
         <div
@@ -159,7 +149,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#723cff" }}>10000 +</div>
+            <div style={{ color: "#723cff" }}>1000 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Stars</span>
           </div>
         </div>
@@ -171,7 +161,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#3fbbfe" }}>4000 +</div>
+            <div style={{ color: "#3fbbfe" }}>400 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Forks</span>
           </div>
         </div>
@@ -183,7 +173,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#1fd898" }}>5,508,625</div>
+            <div style={{ color: "#1fd898" }}>106,125</div>
             <span className={isDarkTheme ? " dark" : ""}>Downloads</span>
           </div>
         </div>
