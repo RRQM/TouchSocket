@@ -199,11 +199,11 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © 2020-${new Date().getFullYear()} 百小僧, Baiqian Co.,Ltd and Contributors.`,
-      logo: {
-        src: "img/chinadotnet.png",
-        href: "https://gitee.com/dotnetchina",
-      },
+      copyright: `Copyright © 2020-${new Date().getFullYear()} 若汝棋茗, 百小僧.`,
+      // logo: {
+      //   src: "img/chinadotnet.png",
+      //   href: "https://gitee.com/dotnetchina",
+      // },
     },
   },
   presets: [
