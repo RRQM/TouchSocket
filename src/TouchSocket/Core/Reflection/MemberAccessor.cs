@@ -14,7 +14,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 动态成员访问器
         /// </summary>
-        public MemberAccessor():base(typeof(T))
+        public MemberAccessor() : base(typeof(T))
         {
 
         }
@@ -23,11 +23,11 @@ namespace TouchSocket.Core
     /// <summary>
     /// 动态成员访问器
     /// </summary>
-    public class MemberAccessor: IMemberAccessor
+    public class MemberAccessor : IMemberAccessor
     {
-         Func<object, string, object> GetValueDelegate;
+        Func<object, string, object> GetValueDelegate;
 
-         Action<object, string, object> SetValueDelegate;
+        Action<object, string, object> SetValueDelegate;
 
         /// <summary>
         /// 动态成员访问器
@@ -52,7 +52,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取属性
         /// </summary>
-        public Func<Type, PropertyInfo[]>OnGetProperties { get; set; }
+        public Func<Type, PropertyInfo[]> OnGetProperties { get; set; }
 
         /// <summary>
         /// 获取字段
@@ -97,6 +97,10 @@ namespace TouchSocket.Core
 
                 cases.Add(Expression.SwitchCase(Expression.Convert(property, typeof(object)), propertyHash));
             }
+            if (cases.Count == 0)
+            {
+                return (a, b) => default;
+            }
             var switchEx = Expression.Switch(nameHash, Expression.Constant(null), cases.ToArray());
             var methodBody = Expression.Block(typeof(object), new[] { nameHash }, calHash, switchEx);
 
@@ -130,6 +134,10 @@ namespace TouchSocket.Core
                 var propertyHash = Expression.Constant(propertyInfo.Name.GetHashCode(), typeof(int));
 
                 cases.Add(Expression.SwitchCase(Expression.Convert(setValue, typeof(object)), propertyHash));
+            }
+            if (cases.Count == 0)
+            {
+                return (a, b, c) => { };
             }
             var switchEx = Expression.Switch(nameHash, Expression.Constant(null), cases.ToArray());
             var methodBody = Expression.Block(typeof(object), new[] { nameHash }, calHash, switchEx);
