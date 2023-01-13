@@ -1,0 +1,29 @@
+---
+id: consoleaction
+sidebar_position: 2
+title: 控制台行为
+sidebar_label: 4.2 控制台行为
+---
+
+## 一、说明
+这是一个很简单的控制台命令器，重要作用就是很方便的实现控制台控制。
+
+**Nuget Package：**[TouchSocket](https://www.nuget.org/packages/TouchSocket/)
+## 二、使用
+```csharp
+ConsoleAction consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
+consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
+consoleAction.Add("sp|shareProxy", "分享代理", ShareProxy);//示例命令
+consoleAction.Add("ssp|stopShareProxy", "停止分享代理", StopShareProxy);//示例命令
+consoleAction.Add("ga|getAll", "获取所有客户端信息", GetAll);//示例命令
+Console.WriteLine("请输入“h|help|?”获得帮助。");
+while (true)
+{
+    if (!consoleAction.Run(Console.ReadLine()))
+    {
+        Console.WriteLine("命令不正确，请输入“h|help|?”获得帮助。");
+    }
+}
+```
+## 三、效果图
+![](https://images.gitee.com/uploads/images/2022/0124/094722_a1bd8a90_8553710.gif#crop=0&crop=0&crop=1&crop=1&id=RLG69&originHeight=522&originWidth=986&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=)截图1.gif

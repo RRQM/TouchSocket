@@ -1,0 +1,75 @@
+---
+id: filepool
+sidebar_position: 11
+title: 文件流池
+sidebar_label: 4.11 文件流池
+---
+> > - 引用[TouchSocket](https://www.nuget.org/packages/TouchSocket)
+> - 适用版本:**0.2.4**及以上
+
+## 一、说明
+文件在读，或写的时候，一直都是独占状态。这个问题在不同进程中，似乎是合理的，但是如果在相同进程里，就会显得很呆。例如：我们在下载文件的时候，希望能同一时间多个读取同一个文件。且能有一个闭环的管理。那么，使用FilePool，就显得非常必要了。
+
+## 二、使用读
+从FilePool.GetReader的静态函数中，获取一个文件读取访问器线程安全，该访问器，具有读，和相关的操作属性。在每次读取后，Position会递增。
+
+使用完成后，可以随时释放。
+
+注意默认调用**Dispose**后，文件**不会**立即释放，默认会在5秒后释放。如果想想立即释放，请使用FilePool.TryReleaseFile实现。
+```csharp
+int len = 0;
+byte[] buffer = new byte[1024 * 1024];
+
+using (var reader = FilePool.GetReader(path))
+{
+    while (true)
+    {
+        int r = reader.Read(buffer, 0, buffer.Length);
+        if (r == 0)
+        {
+            break;
+        }
+        len += r;
+    }
+}
+
+Console.WriteLine(len);
+```
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1657503731471-4f3e1659-2187-4397-994c-def8240d3b50.png#clientId=u3c566979-5d02-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=366&id=u11242d28&margin=%5Bobject%20Object%5D&name=image.png&originHeight=366&originWidth=740&originalType=binary&ratio=1&rotation=0&showTitle=false&size=278994&status=done&style=none&taskId=uc4539c8a-6aa9-468f-a3b4-ef0d2a73a1b&title=&width=740)
+
+## 三、使用写
+从FilePool.GetWriter的静态函数中，获取一个文件写入访问器线程安全，该访问器，具有写，和相关的操作属性。在每次写入后，Position会递增。
+
+使用完成后，可以随时释放。
+
+注意默认调用**Dispose**后，文件会根据创建类型是否为**单一访问**而决定是否立即释放。
+```csharp
+byte[] buffer = new byte[1024];
+
+using (var writer = FilePool.GetWriter(path,true))
+{
+    writer.Position = num * package;
+    int surLen = package;
+    while (surLen > 0)
+    {
+        int r = Math.Min(surLen, buffer.Length);
+        writer.Write(buffer, 0, r);
+        surLen -= r;
+    }
+}
+Console.WriteLine("完成");
+```
+
+## 四、手动释放文件资源
+当某个文件没有及时释放，或者由于不可知异常而没有释放时，可以调用FilePool.TryReleaseFile减少引用，并尝试释放资源。
+
+减少引用的意思是，当某个文件，被创建多个访问器时，会递增其引用数，当引用数不为0时，是不会释放的。所以当调用FilePool.TryReleaseFile时，首先会减少引用，然后才会判断是否可以释放。
+
+当需要强制释放某个文件时，可以采取下列措施。
+```csharp
+while (FilePool.TryReleaseFile(fileName, 0).ResultCode!= ResultCode.Success)
+{
+
+}
+```
+
