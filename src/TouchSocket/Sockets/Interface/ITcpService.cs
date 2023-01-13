@@ -29,12 +29,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        ClientOperationEventHandler<TClient> Connecting { get; set; }
+        OperationEventHandler<TClient> Connecting { get; set; }
 
         /// <summary>
         /// 有用户断开连接
         /// </summary>
-        ClientDisconnectedEventHandler<TClient> Disconnected { get; set; }
+        DisconnectEventHandler<TClient> Disconnected { get; set; }
 
         /// <summary>
         /// 尝试获取TClient

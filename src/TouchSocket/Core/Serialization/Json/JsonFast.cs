@@ -114,7 +114,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 过滤不需要序列化的字段
     /// </summary>
-    public class FastIgnore : Attribute
+    public class JsonFastIgnore : Attribute
     { }
 
     /// <summary>
@@ -841,7 +841,7 @@ namespace TouchSocket.Core
                 List<PropertyInfo> cache = new List<PropertyInfo>();
                 foreach (var item in props)
                 {
-                    if (Attribute.GetCustomAttributes(item, typeof(FastIgnore))?.Length == 0)
+                    if (Attribute.GetCustomAttributes(item, typeof(JsonFastIgnore))?.Length == 0)
                         cache.Add(item);
                 }
                 InfoCache[type] = cache.ToArray();

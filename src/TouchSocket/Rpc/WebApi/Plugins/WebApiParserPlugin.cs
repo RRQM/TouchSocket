@@ -166,7 +166,7 @@ namespace TouchSocket.Rpc.WebApi
 
                 if (!e.Context.Request.KeepAlive)
                 {
-                    client.Shutdown(SocketShutdown.Both);
+                    client.TryShutdown(SocketShutdown.Both);
                 }
             }
 
@@ -299,7 +299,7 @@ namespace TouchSocket.Rpc.WebApi
 
                 if (!e.Context.Request.KeepAlive)
                 {
-                    client.Shutdown(SocketShutdown.Both);
+                    client.TryShutdown(SocketShutdown.Both);
                 }
             }
 

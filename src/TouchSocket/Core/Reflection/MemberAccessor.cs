@@ -121,6 +121,10 @@ namespace TouchSocket.Core
             }
             foreach (var propertyInfo in this.OnGetProperties(Type))
             {
+                if (!propertyInfo.CanWrite)
+                {
+                    continue;
+                }
                 var property = Expression.Property(Expression.Convert(instance, Type), propertyInfo.Name);
                 var setValue = Expression.Assign(property, Expression.Convert(newValue, propertyInfo.PropertyType));
                 var propertyHash = Expression.Constant(propertyInfo.Name.GetHashCode(), typeof(int));

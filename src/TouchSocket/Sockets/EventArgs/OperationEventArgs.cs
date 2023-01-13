@@ -10,27 +10,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 断开连接事件参数
+    /// ClientOperationEventArgs
     /// </summary>
-    public class ClientDisconnectedEventArgs : MsgEventArgs
+    [Obsolete("此类已被弃用，请使用OperationEventArgs代替", true)]
+    public class ClientOperationEventArgs : TouchSocketEventArgs
+    { 
+    
+    }
+    /// <summary>
+    /// Client消息操作事件
+    /// </summary>
+    public class OperationEventArgs : TouchSocketEventArgs
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="manual"></param>
-        /// <param name="mes"></param>
-        public ClientDisconnectedEventArgs(bool manual, string mes) : base(mes)
+        public OperationEventArgs()
         {
-            Manual = manual;
+            IsPermitOperation = true;
         }
 
         /// <summary>
-        /// 是否为主动行为。
+        /// 客户端ID
         /// </summary>
-        public bool Manual { get; private set; }
+        public string ID { get; set; }
     }
 }

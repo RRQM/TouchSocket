@@ -228,7 +228,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
-        protected override void OnConnecting(ClientConnectingEventArgs e)
+        protected override void OnConnecting(ConnectingEventArgs e)
         {
             Protocol = Protocol.Http;
             SetDataHandlingAdapter(new HttpClientDataHandlingAdapter());

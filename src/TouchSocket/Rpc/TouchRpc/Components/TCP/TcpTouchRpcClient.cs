@@ -433,14 +433,14 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <inheritdoc/>
-        protected override void OnConnecting(ClientConnectingEventArgs e)
+        protected override void OnConnecting(ConnectingEventArgs e)
         {
             SetDataHandlingAdapter(new FixedHeaderPackageAdapter());
             base.OnConnecting(e);
         }
 
         /// <inheritdoc/>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(DisconnectEventArgs e)
         {
             m_rpcActor.Close(e.Message);
             base.OnDisconnected(e);

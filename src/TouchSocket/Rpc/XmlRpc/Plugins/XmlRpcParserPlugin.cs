@@ -208,7 +208,7 @@ namespace TouchSocket.Rpc.XmlRpc
 
                 if (!e.Context.Request.KeepAlive)
                 {
-                    client.Shutdown(SocketShutdown.Both);
+                    client.TryShutdown(SocketShutdown.Both);
                 }
             }
             base.OnPost(client, e);

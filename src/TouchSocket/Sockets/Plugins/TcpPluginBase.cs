@@ -42,22 +42,22 @@ namespace TouchSocket.Sockets
             return OnConnectedAsync((TClient)client, e);
         }
 
-        void ITcpPlugin.OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+        void ITcpPlugin.OnConnecting(ITcpClientBase client, OperationEventArgs e)
         {
             OnConnecting((TClient)client, e);
         }
 
-        Task ITcpPlugin.OnConnectingAsync(ITcpClientBase client, ClientOperationEventArgs e)
+        Task ITcpPlugin.OnConnectingAsync(ITcpClientBase client, OperationEventArgs e)
         {
             return OnConnectingAsync((TClient)client, e);
         }
 
-        void ITcpPlugin.OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        void ITcpPlugin.OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             OnDisconnected((TClient)client, e);
         }
 
-        Task ITcpPlugin.OnDisconnectedAsync(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        Task ITcpPlugin.OnDisconnectedAsync(ITcpClientBase client, DisconnectEventArgs e)
         {
             return OnDisconnectedAsync((TClient)client, e);
         }
@@ -122,7 +122,28 @@ namespace TouchSocket.Sockets
             return OnSendingDataAsync((TClient)client, e);
         }
 
+        void ITcpPlugin.OnDisconnecting(ITcpClientBase client, DisconnectEventArgs e)
+        {
+            this.OnDisconnecting((TClient)client,e) ;
+        }
+
+        Task ITcpPlugin.OnDisconnectingAsync(ITcpClientBase client, DisconnectEventArgs e)
+        {
+            return this.OnDisconnectingAsync((TClient)client, e);
+        }
         #region 虚函数实现
+
+        /// <inheritdoc cref="ITcpClientBase.Disconnecting"/>
+        protected virtual void OnDisconnecting(TClient client, DisconnectEventArgs e)
+        {
+           
+        }
+
+        /// <inheritdoc cref="ITcpClientBase.Disconnecting"/>
+        protected virtual Task OnDisconnectingAsync(TClient client, DisconnectEventArgs e)
+        {
+            return EasyTask.CompletedTask;
+        }
 
         /// <summary>
         /// 成功建立连接
@@ -149,7 +170,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnecting(TClient client, ClientOperationEventArgs e)
+        protected virtual void OnConnecting(TClient client, OperationEventArgs e)
         {
         }
 
@@ -159,7 +180,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnConnectingAsync(TClient client, ClientOperationEventArgs e)
+        protected virtual Task OnConnectingAsync(TClient client, OperationEventArgs e)
         {
             return EasyTask.CompletedTask;
         }
@@ -169,7 +190,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(TClient client, ClientDisconnectedEventArgs e)
+        protected virtual void OnDisconnected(TClient client, DisconnectEventArgs e)
         {
         }
 
@@ -179,7 +200,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        protected virtual Task OnDisconnectedAsync(TClient client, ClientDisconnectedEventArgs e)
+        protected virtual Task OnDisconnectedAsync(TClient client, DisconnectEventArgs e)
         {
             return EasyTask.CompletedTask;
         }

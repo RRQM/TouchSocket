@@ -56,6 +56,9 @@ namespace TouchSocket.Sockets
 
         #region 属性
 
+        /// <inheritdoc/>
+        public bool IsClient => false;
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -141,10 +144,101 @@ namespace TouchSocket.Sockets
         #region 事件&委托
 
         /// <summary>
-        /// 断开连接
+        /// <inheritdoc/>
         /// </summary>
-        public ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get; set; }
+        public DisconnectEventHandler<ITcpClientBase> Disconnected { get; set; }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DisconnectEventHandler<ITcpClientBase> Disconnecting { get; set; }
+
+
+        /// <summary>
+        /// 即将断开连接(仅主动断开时有效)。
+        /// <para>
+        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
+        /// </para>
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnecting(DisconnectEventArgs e)
+        {
+            try
+            {
+                Disconnecting?.Invoke(this, e);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogType.Error, this, $"在事件{nameof(Disconnecting)}中发生错误。", ex);
+            }
+        }
+        /// <summary>
+        /// 当客户端完整建立TCP连接，如果覆盖父类方法，则不会触发插件。
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnConnected(TouchSocketEventArgs e)
+        {
+            m_service.OnInternalConnected(this, e);
+        }
+
+        /// <summary>
+        /// 客户端正在连接，如果覆盖父类方法，则不会触发插件。
+        /// </summary>
+        protected virtual void OnConnecting(OperationEventArgs e)
+        {
+            m_service.OnInternalConnecting(this, e);
+        }
+
+        /// <summary>
+        /// 在延迟发生错误
+        /// </summary>
+        /// <param name="ex"></param>
+        protected virtual void OnDelaySenderError(Exception ex)
+        {
+            Logger.Log(LogType.Error, this, "发送错误", ex);
+        }
+
+        /// <summary>
+        /// 客户端已断开连接，如果从Connecting中拒绝连接，则不会触发。如果覆盖父类方法，则不会触发插件。
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnected(DisconnectEventArgs e)
+        {
+            Disconnected?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 当初始化完成时，执行在<see cref="OnConnecting(OperationEventArgs)"/>之前。
+        /// </summary>
+        protected virtual void OnInitialized()
+        {
+        }
+
+        private void PrivateOnDisconnected(DisconnectEventArgs e)
+        {
+            if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e))
+            {
+                return;
+            }
+            OnDisconnected(e);
+            if (!e.Handled)
+            {
+                m_service.OnInternalDisconnected(this, e);
+            }
+        }
+
+        private void PrivateOnDisconnecting(DisconnectEventArgs e)
+        {
+            if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnecting), this, e))
+            {
+                return;
+            }
+            OnDisconnecting(e);
+            if (!e.Handled)
+            {
+                m_service.OnInternalDisconnecting(this, e);
+            }
+        }
         #endregion 事件&委托
 
         /// <summary>
@@ -177,21 +271,27 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int ServicePort { get; private set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public virtual void Close()
         {
             Close($"主动调用{nameof(Close)}");
         }
 
-        /// <summary>
-        /// 中断终端，传递中断消息
-        /// </summary>
-        /// <param name="msg"></param>
+        /// <inheritdoc/>
         public virtual void Close(string msg)
         {
-            BreakOut(msg, true);
+            if (this.m_online)
+            {
+                var args = new DisconnectEventArgs(true, msg)
+                {
+                    IsPermitOperation = true
+                };
+                PrivateOnDisconnecting(args);
+                if (this.DisposedValue || args.IsPermitOperation)
+                {
+                    BreakOut(msg, true);
+                }
+            }
         }
 
         /// <summary>
@@ -280,15 +380,6 @@ namespace TouchSocket.Sockets
             SetAdapter(adapter);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="how"></param>
-        public void Shutdown(SocketShutdown how)
-        {
-            MainSocket.Shutdown(how);
-        }
-
         internal void BeginReceive(ReceiveType receiveType)
         {
             try
@@ -346,7 +437,7 @@ namespace TouchSocket.Sockets
             OnConnected(e);
         }
 
-        internal void InternalConnecting(ClientOperationEventArgs e)
+        internal void InternalConnecting(OperationEventArgs e)
         {
             if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnecting), this, e))
             {
@@ -377,11 +468,15 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            if (DisposedValue)
+            if (this.m_online)
             {
-                return;
+                var args = new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开");
+                PrivateOnDisconnecting(args);
             }
-            Close($"主动调用{nameof(Dispose)}");
+            Config = default;
+            m_adapter.SafeDispose();
+            m_adapter = default;
+            BreakOut($"{nameof(Dispose)}主动断开", true);
             base.Dispose(disposing);
         }
 
@@ -417,48 +512,7 @@ namespace TouchSocket.Sockets
             return true;
         }
 
-        /// <summary>
-        /// 当客户端完整建立TCP连接，如果覆盖父类方法，则不会触发插件。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnConnected(TouchSocketEventArgs e)
-        {
-            m_service.OnInternalConnected(this, e);
-        }
-
-        /// <summary>
-        /// 客户端正在连接，如果覆盖父类方法，则不会触发插件。
-        /// </summary>
-        protected virtual void OnConnecting(ClientOperationEventArgs e)
-        {
-            m_service.OnInternalConnecting(this, e);
-        }
-
-        /// <summary>
-        /// 在延迟发生错误
-        /// </summary>
-        /// <param name="ex"></param>
-        protected virtual void OnDelaySenderError(Exception ex)
-        {
-            Logger.Log(LogType.Error, this, "发送错误", ex);
-        }
-
-        /// <summary>
-        /// 客户端已断开连接，如果从Connecting中拒绝连接，则不会触发。如果覆盖父类方法，则不会触发插件。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
-        {
-            Disconnected?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// 当初始化完成时，执行在<see cref="OnConnecting(ClientOperationEventArgs)"/>之前。
-        /// </summary>
-        protected virtual void OnInitialized()
-        {
-        }
-
+        
         /// <summary>
         /// 设置适配器，该方法不会检验<see cref="CanSetDataHandlingAdapter"/>的值。
         /// </summary>
@@ -515,7 +569,7 @@ namespace TouchSocket.Sockets
 
         private void BreakOut(string msg, bool manual)
         {
-            lock (this)
+            lock (this.SyncRoot)
             {
                 if (m_online)
                 {
@@ -525,7 +579,7 @@ namespace TouchSocket.Sockets
                     m_delaySender.SafeDispose();
                     m_adapter.SafeDispose();
                     m_service?.SocketClients.TryRemove(m_id, out _);
-                    PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
+                    PrivateOnDisconnected(new DisconnectEventArgs(manual, msg));
                     Disconnected = null;
                 }
                 base.Dispose(true);
@@ -623,19 +677,7 @@ namespace TouchSocket.Sockets
             m_service.OnInternalReceivedData(this, byteBlock, requestInfo);
         }
 
-        private void PrivateOnDisconnected(ClientDisconnectedEventArgs e)
-        {
-            if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e))
-            {
-                return;
-            }
-            OnDisconnected(e);
-            if (!e.Handled)
-            {
-                m_service.OnInternalDisconnected(this, e);
-            }
-        }
-
+       
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
             if (DisposedValue)

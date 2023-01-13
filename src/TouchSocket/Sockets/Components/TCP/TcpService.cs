@@ -122,12 +122,20 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 有用户连接的时候
         /// </summary>
-        public ClientOperationEventHandler<TClient> Connecting { get; set; }
+        public OperationEventHandler<TClient> Connecting { get; set; }
 
         /// <summary>
         /// 有用户断开连接
         /// </summary>
-        public ClientDisconnectedEventHandler<TClient> Disconnected { get; set; }
+        public DisconnectEventHandler<TClient> Disconnected { get; set; }
+
+        /// <summary>
+        /// 即将断开连接(仅主动断开时有效)。
+        /// <para>
+        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
+        /// </para>
+        /// </summary>
+        public DisconnectEventHandler<TClient> Disconnecting { get; set; }
 
         /// <summary>
         /// 当客户端ID被修改时触发。
@@ -149,7 +157,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        protected override sealed void OnClientConnecting(ISocketClient socketClient, OperationEventArgs e)
         {
             OnConnecting((TClient)socketClient, e);
         }
@@ -159,9 +167,19 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
+        protected override sealed void OnClientDisconnected(ISocketClient socketClient, DisconnectEventArgs e)
         {
             OnDisconnected((TClient)socketClient, e);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected override sealed void OnClientDisconnecting(ISocketClient socketClient, DisconnectEventArgs e)
+        {
+            OnDisconnecting((TClient)socketClient, e);
         }
 
         /// <summary>
@@ -190,7 +208,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
+        protected virtual void OnConnecting(TClient socketClient, OperationEventArgs e)
         {
             Connecting?.Invoke(socketClient, e);
         }
@@ -200,9 +218,22 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(TClient socketClient, ClientDisconnectedEventArgs e)
+        protected virtual void OnDisconnected(TClient socketClient, DisconnectEventArgs e)
         {
             Disconnected?.Invoke(socketClient, e);
+        }
+
+        /// <summary>
+        /// 即将断开连接(仅主动断开时有效)。
+        /// <para>
+        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
+        /// </para>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnecting(TClient socketClient, DisconnectEventArgs e)
+        {
+            Disconnecting?.Invoke(socketClient, e);
         }
 
         /// <summary>
@@ -598,7 +629,7 @@ namespace TouchSocket.Sockets
                 client.SetSocket(socket);
                 client.InternalInitialized();
 
-                ClientOperationEventArgs args = new ClientOperationEventArgs
+                OperationEventArgs args = new OperationEventArgs
                 {
                     ID = GetDefaultNewID()
                 };

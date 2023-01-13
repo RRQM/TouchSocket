@@ -122,7 +122,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+        protected override void OnConnecting(ITcpClientBase client, OperationEventArgs e)
         {
             if (AutoSwitch && client.Protocol == Protocol.TCP)
             {

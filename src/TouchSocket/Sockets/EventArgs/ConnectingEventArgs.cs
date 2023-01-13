@@ -11,14 +11,23 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
 using System.Net.Sockets;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
+    /// ClientConnectingEventArgs
+    /// </summary>
+    [Obsolete("此类已被弃用，请使用ConnectingEventArgs代替", true)]
+    public class ClientConnectingEventArgs : OperationEventArgs
+    { 
+    
+    }
+    /// <summary>
     /// 客户端连接事件。
     /// </summary>
-    public class ClientConnectingEventArgs : ClientOperationEventArgs
+    public class ConnectingEventArgs : OperationEventArgs
     {
         private readonly Socket socket;
 
@@ -26,7 +35,7 @@ namespace TouchSocket.Sockets
         /// 构造函数
         /// </summary>
         /// <param name="socket"></param>
-        public ClientConnectingEventArgs(Socket socket)
+        public ConnectingEventArgs(Socket socket)
         {
             this.socket = socket;
         }

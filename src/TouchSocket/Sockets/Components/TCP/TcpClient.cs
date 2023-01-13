@@ -83,12 +83,17 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
         /// </summary>
-        public ClientConnectingEventHandler<ITcpClient> Connecting { get; set; }
+        public ConnectingEventHandler<ITcpClient> Connecting { get; set; }
 
         /// <summary>
         /// 断开连接。在客户端未设置连接状态时，不会触发
         /// </summary>
-        public ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get; set; }
+        public DisconnectEventHandler<ITcpClientBase> Disconnected { get; set; }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public DisconnectEventHandler<ITcpClientBase> Disconnecting { get; set; }
 
         private void PrivateOnConnected(MsgEventArgs e)
         {
@@ -119,7 +124,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void PrivateOnConnecting(ClientConnectingEventArgs e)
+        private void PrivateOnConnecting(ConnectingEventArgs e)
         {
             LastReceivedTime = DateTime.Now;
             LastSendTime = DateTime.Now;
@@ -142,7 +147,7 @@ namespace TouchSocket.Sockets
         /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnConnecting(ClientConnectingEventArgs e)
+        protected virtual void OnConnecting(ConnectingEventArgs e)
         {
             try
             {
@@ -154,7 +159,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void PrivateOnDisconnected(ClientDisconnectedEventArgs e)
+        private void PrivateOnDisconnected(DisconnectEventArgs e)
         {
             if (m_usePlugin)
             {
@@ -171,7 +176,7 @@ namespace TouchSocket.Sockets
         /// 断开连接。在客户端未设置连接状态时，不会触发
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
+        protected virtual void OnDisconnected(DisconnectEventArgs e)
         {
             try
             {
@@ -180,6 +185,38 @@ namespace TouchSocket.Sockets
             catch (Exception ex)
             {
                 Logger.Log(LogType.Error, this, $"在事件{nameof(Disconnected)}中发生错误。", ex);
+            }
+        }
+
+        private void PrivateOnDisconnecting(DisconnectEventArgs e)
+        {
+            if (m_usePlugin)
+            {
+                PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnecting), this, e);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+            OnDisconnecting(e);
+        }
+
+        /// <summary>
+        /// 即将断开连接(仅主动断开时有效)。
+        /// <para>
+        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
+        /// </para>
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnDisconnecting(DisconnectEventArgs e)
+        {
+            try
+            {
+                Disconnecting?.Invoke(this, e);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogType.Error, this, $"在事件{nameof(Disconnecting)}中发生错误。", ex);
             }
         }
 
@@ -282,6 +319,9 @@ namespace TouchSocket.Sockets
         /// </summary>
         public IPHost RemoteIPHost => m_remoteIPHost;
 
+        /// <inheritdoc/>
+        public bool IsClient => true;
+
         #endregion 属性
 
         #region 断开操作
@@ -300,12 +340,23 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         public virtual void Close(string msg)
         {
-            BreakOut(msg, true);
+            if (this.m_online)
+            {
+                var args = new DisconnectEventArgs(true, msg)
+                {
+                    IsPermitOperation = true
+                };
+                PrivateOnDisconnecting(args);
+                if (this.DisposedValue || args.IsPermitOperation)
+                {
+                    BreakOut(msg, true);
+                }
+            }
         }
 
         private void BreakOut(string msg, bool manual)
         {
-            lock (this)
+            lock (this.SyncRoot)
             {
                 if (m_online)
                 {
@@ -315,22 +366,9 @@ namespace TouchSocket.Sockets
                     m_delaySender.SafeDispose();
                     m_workStream.SafeDispose();
                     m_adapter.SafeDispose();
-                    PrivateOnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
+                    PrivateOnDisconnected(new DisconnectEventArgs(manual, msg));
                 }
             }
-        }
-
-        /// <summary>
-        /// 禁用发送或接收
-        /// </summary>
-        /// <param name="how"></param>
-        public void Shutdown(SocketShutdown how)
-        {
-            if (m_mainSocket == null)
-            {
-                return;
-            }
-            m_mainSocket.Shutdown(how);
         }
 
         /// <summary>
@@ -339,15 +377,17 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            Close($"{nameof(Dispose)}主动断开");
-            base.Dispose(disposing);
-            if (disposing)
+            if (this.m_online)
             {
-                PluginsManager.Clear();
-                m_config = default;
-                m_adapter.SafeDispose();
-                m_adapter = default;
+                var args = new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开");
+                PrivateOnDisconnecting(args);
             }
+            PluginsManager.Clear();
+            m_config = default;
+            m_adapter.SafeDispose();
+            m_adapter = default;
+            BreakOut($"{nameof(Dispose)}主动断开", true);
+            base.Dispose(disposing);
         }
 
         #endregion 断开操作
@@ -387,7 +427,7 @@ namespace TouchSocket.Sockets
                 }
                 m_mainSocket = CreateSocket(iPHost);
 
-                ClientConnectingEventArgs args = new ClientConnectingEventArgs(m_mainSocket);
+                ConnectingEventArgs args = new ConnectingEventArgs(m_mainSocket);
                 PrivateOnConnecting(args);
                 if (timeout == 5000)
                 {

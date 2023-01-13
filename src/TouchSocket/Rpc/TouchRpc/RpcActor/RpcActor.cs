@@ -72,6 +72,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public Action<RpcActor, VerifyOptionEventArgs> OnHandshaking { get; set; }
 
+
         /// <summary>
         /// 接收到数据
         /// </summary>
