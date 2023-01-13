@@ -641,7 +641,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             OnStreamTransfering(client, e);
         }
 
-        private void PrivateDisconnected(WSTouchRpcSocketClient client, ClientDisconnectedEventArgs e)
+        private void PrivateDisconnected(WSTouchRpcSocketClient client, DisconnectEventArgs e)
         {
             if (TryRemove(client.ID, out _))
             {
@@ -703,7 +703,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(WSTouchRpcSocketClient client, ClientDisconnectedEventArgs e)
+        protected virtual void OnDisconnected(WSTouchRpcSocketClient client, DisconnectEventArgs e)
         {
         }
 
