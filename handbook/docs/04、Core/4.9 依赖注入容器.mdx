@@ -1,0 +1,439 @@
+---
+id: ioc
+sidebar_position: 9
+title: 依赖注入容器
+sidebar_label: 4.9 依赖注入容器
+---
+
+## 一、说明
+所谓依赖注入，是指程序运行过程中，如果需要调用另一个对象协助时，无须在代码中创建被调用者，而是依赖于外部的注入。通俗来讲，就是把有依赖关系的类放到容器中，然后在我们需要这些类时，容器自动解析出这些类的实例。依赖注入最大的好处时实现类的解耦，利于程序拓展、单元测试、自动化模拟测试等。依赖注入的英文为：Dependency Injection，简称 DI。（说明来自网络）
+
+TouchSocket内置了**_Container_**容器。只需要引入TouchSocket.Core即可使用。
+
+## 二、特点
+
+- 支持构造函数、属性、方法三种注入方式，可以选择其中部分生效。
+- 支持 Singleton、Scoped、Transient三种生命周期。
+- 支持单接口，多实现注入。
+- 支持当获取类型是可实例类型时，即使不注册，也能成功构造。
+- 支持默认参数注入。
+- 支持构建参数注入。
+- 支持标签参数注入。
+- 支持泛型注入。
+- 支持Object注入。
+
+## 三、注入方式
+对于一个类，默认情况下，会支持构造函数、属性、方法三种注入方式。但是，当明确知道该类型仅会使用其中部分方式注入时，可以设置注入类型，以此节约性能。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1655695330593-c974d0a6-8c8b-4279-b1e0-7e012bed7dfd.png#clientId=u0d2b3083-5d77-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=121&id=u6c4a0fc0&margin=%5Bobject%20Object%5D&name=image.png&originHeight=121&originWidth=856&originalType=binary&ratio=1&rotation=0&showTitle=false&size=96952&status=done&style=none&taskId=u9f41967d-75c8-4d54-bed0-acaaa4a4715&title=&width=856)
+#### 3.1 构造函数注入
+其中MyLog1，MyLog2虽然没有注册，但是因为是实例，所以依然可以成功构造。
+```csharp
+[Fact]
+public void CtorShouldBeOk()
+{
+    Container container = new Container();
+    container.RegisterTransient<ILog, MyLog3>();
+
+    var log3 = container.Resolve<ILog>() as MyLog3;
+
+    Assert.NotNull(log3.MyLog1);
+    Assert.NotNull(log3.MyLog2);
+}
+```
+```csharp
+public class MyLog3 : ILog
+{
+    public MyLog3(MyLog1 myLog1, MyLog2 myLog2)
+        {
+            this.MyLog1 = myLog1;
+            this.MyLog2 = myLog2;
+        }
+
+    public MyLog1 MyLog1 { get; }
+    public MyLog2 MyLog2 { get; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+```
+#### 3.2 属性注入
+使用**DependencyParamterInject**，或者**DependencyInject**标记属性，即可注入。
+
+示例中使用的是单接口多实现，所以使用**DependencyParamterInject**标记。
+```csharp
+[Fact]
+public void PropertyShouldBeOk()
+{
+    Container container = new Container();
+    container.RegisterTransient<ILog, MyLog1>("MyLog1");
+    container.RegisterTransient<ILog, MyLog2>("MyLog2");
+    container.RegisterTransient<ILog, MyLog3>("MyLog3");
+    container.RegisterTransient<ILog, MyLog5>();
+
+    var log5 = container.Resolve<ILog>() as MyLog5;
+
+    Assert.NotNull(log5.MyLog1);
+    Assert.NotNull(log5.MyLog2);
+    Assert.True(log5.MyLog1.GetType() == typeof(MyLog1));
+    Assert.True(log5.MyLog2.GetType() == typeof(MyLog2));
+}
+
+```
+```csharp
+public class MyLog5 : ILog
+{
+    [DependencyParamterInject("MyLog1")]
+    public ILog MyLog1 { get; set; }
+
+    [DependencyParamterInject("MyLog2")]
+    public ILog MyLog2 { get; set; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+```
+#### 3.2 方法注入
+使用**DependencyInject**标记属性，即可对方法注入。
+
+同时，示例中演示了默认参数设定。在初始化MyLog6后，A=10，B="TouchSocket"。
+
+同时，还能嵌套MyLog1和MyLog4的同一接口的不同实现，和实现的默认参数构造。
+
+```csharp
+[Fact]
+public void MethodShouldBeOk()
+{
+    Container container = new Container();
+    container.RegisterTransient<ILog, MyLog1>("MyLog1");
+    container.RegisterTransient<ILog, MyLog2>("MyLog2");
+    container.RegisterTransient<ILog, MyLog3>("MyLog3");
+    container.RegisterTransient<ILog, MyLog4>("MyLog4");
+    container.RegisterTransient<ILog, MyLog6>("MyLog5");
+    container.RegisterTransient<ILog, MyLog6>();
+
+    var log6 = container.Resolve<ILog>() as MyLog6;
+
+    Assert.NotNull(log6.MyLog1);
+    Assert.NotNull(log6.MyLog4);
+    Assert.True(log6.MyLog1.GetType() == typeof(MyLog1));
+    Assert.True(log6.MyLog4.GetType() == typeof(MyLog4));
+    Assert.True(((MyLog4)log6.MyLog4).A == 20);
+    Assert.True(((MyLog4)log6.MyLog4).B == "IOU");
+}
+```
+```csharp
+public class MyLog6 : ILog
+{
+    [DependencyInject(10, "TouchSocket")]
+    public void DependencyMethod(int a, string b, [DependencyParamterInject("MyLog1")] ILog myLog1, [DependencyParamterInject("MyLog4", 20, "IOU")] ILog myLog4)
+    {
+        this.A = a;
+        this.B = b;
+        this.MyLog1 = myLog1;
+        this.MyLog4 = myLog4;
+    }
+
+    public int A { get; set; }
+    public string B { get; set; }
+    public ILog MyLog1 { get; set; }
+    public ILog MyLog4 { get; set; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+```
+Object注入
+```csharp
+[Fact]
+public void ObjectSingletonShouldBeOk()
+{
+    Container container = new Container();
+    container.RegisterSingleton<ILog, MyLog1>();
+    container.RegisterSingleton<ILog, MyLog10>("10");
+
+    var log10 = container.Resolve<ILog>("10") as MyLog10;
+    Assert.NotNull(log10);
+    Assert.NotNull(log10.MyLog1);
+    Assert.True(log10.MyLog1.GetType() == typeof(MyLog1));
+}
+```
+```csharp
+public class MyLog10 : ILog
+{
+    [DependencyParamterInject(typeof(ILog))]
+    public object MyLog1 { get; set; }
+
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+    {
+
+    }
+
+    public void Debug(LogType logType, object source, string message)
+    {
+
+    }
+}
+```
+
+## 四、生命周期
+生命周期是对注入构造的实例的有效性而言的。TouchSocket支持三种生命周期。
+
+-  Singleton：单例注入，当注入，并且实例化以后，全局唯一实例。
+- Transient：瞬时注入，每次获取的实例都是新实例。
+- Scoped：区域单例注入，当在一个IScopedContainer时，实例唯一。
+
+对于前两种，熟悉IOC的同学，相信都知道到。那接下来就演示一下Scoped。
+
+实际上使用Scoped时，得先明确区域，也就是创建一个IScopedContainer的区域容器（类似Aps.net的IServiceProvider）。然后后续实例从IScopedContainer获得即可。
+```csharp
+[Fact]
+public void ScopedShouldBeOk()
+{
+    Container container = new Container();
+    container.RegisterScoped<ILog, MyLog1>();
+
+    var log1 = container.Resolve<ILog>();
+    var log2 = container.Resolve<ILog>();
+    Assert.NotNull(log1);
+    Assert.False(log1 == log2);
+
+    IScopedContainer scopedContainer = container.Resolve<IScopedContainer>();
+    log1 = scopedContainer.Resolve<ILog>();
+    log2 = scopedContainer.Resolve<ILog>();
+    Assert.NotNull(log1);
+    Assert.True(log1 == log2);
+}
+```
+
+## 所有模型定义
+```csharp
+public interface IGeneric<T1, T2>
+{
+}
+
+public class Generic<T1, T2> : IGeneric<T1, T2>
+{
+
+}
+
+
+
+public class MyLog1 : ILog
+{
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+public class MyLog2 : ILog
+{
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+
+public class MyLog3 : ILog
+{
+    public MyLog3(MyLog1 myLog1, MyLog2 myLog2)
+        {
+            this.MyLog1 = myLog1;
+            this.MyLog2 = myLog2;
+        }
+
+    public MyLog1 MyLog1 { get; }
+    public MyLog2 MyLog2 { get; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+
+public class MyLog4 : ILog
+{
+    [DependencyInject(10, "TouchSocket")]
+    public MyLog4(int a, string b, MyLog1 myLog1, MyLog2 myLog2)
+        {
+            this.A = a;
+            this.B = b;
+            this.MyLog1 = myLog1;
+            this.MyLog2 = myLog2;
+        }
+
+    public int A { get; }
+    public string B { get; }
+    public MyLog1 MyLog1 { get; }
+    public MyLog2 MyLog2 { get; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+
+public class MyLog5 : ILog
+{
+    [DependencyParamterInject("MyLog1")]
+    public ILog MyLog1 { get; set; }
+
+    [DependencyParamterInject("MyLog2")]
+    public ILog MyLog2 { get; set; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+
+public class MyLog6 : ILog
+{
+    [DependencyInject(10, "TouchSocket")]
+    public void DependencyMethod(int a, string b, [DependencyParamterInject("MyLog1")] ILog myLog1, [DependencyParamterInject("MyLog4", 20, "IOU")] ILog myLog4)
+        {
+            this.A = a;
+            this.B = b;
+            this.MyLog1 = myLog1;
+            this.MyLog4 = myLog4;
+        }
+
+    public int A { get; set; }
+    public string B { get; set; }
+    public ILog MyLog1 { get; set; }
+    public ILog MyLog4 { get; set; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+        {
+
+        }
+
+    public void Debug(LogType logType, object source, string message)
+        {
+
+        }
+}
+
+public class MyLog7 : ILog
+{
+    public MyLog7(IGeneric<ILog, MyLog2> generic)
+    {
+        this.Generic = generic;
+    }
+
+    public IGeneric<ILog, MyLog2> Generic { get; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+    {
+
+    }
+
+    public void Debug(LogType logType, object source, string message)
+    {
+
+    }
+}
+
+[DependencyType(DependencyType.Constructor)]
+public class MyLog8 : ILog
+{
+    [DependencyInject(10, "RRQM")]
+    public void DependencyMethod(int a, string b, [DependencyParamterInject("MyLog1")] ILog myLog1, [DependencyParamterInject("MyLog4", 20, "IOU")] ILog myLog4)
+    {
+        this.A = a;
+        this.B = b;
+        this.MyLog1 = myLog1;
+        this.MyLog4 = myLog4;
+    }
+
+    public int A { get; set; }
+    public string B { get; set; }
+    public ILog MyLog1 { get; set; }
+    public ILog MyLog4 { get; set; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+    {
+
+    }
+
+    public void Debug(LogType logType, object source, string message)
+    {
+
+    }
+}
+
+[DependencyType(DependencyType.Constructor | DependencyType.Method)]
+public class MyLog9 : ILog
+{
+    [DependencyInject(10, "RRQM")]
+    public void DependencyMethod(int a, string b, [DependencyParamterInject("MyLog1")] ILog myLog1, [DependencyParamterInject("MyLog4", 20, "IOU")] ILog myLog4)
+    {
+        this.A = a;
+        this.B = b;
+        this.MyLog1 = myLog1;
+        this.MyLog4 = myLog4;
+    }
+
+    public int A { get; set; }
+    public string B { get; set; }
+    public ILog MyLog1 { get; set; }
+    public ILog MyLog4 { get; set; }
+
+    public void Debug(LogType logType, object source, string message, Exception exception)
+    {
+
+    }
+
+    public void Debug(LogType logType, object source, string message)
+    {
+
+    }
+}
+```
+

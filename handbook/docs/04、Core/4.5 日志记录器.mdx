@@ -1,0 +1,46 @@
+---
+id: ilog
+sidebar_position: 5
+title: 日志记录器
+sidebar_label: 4.5 日志记录器
+---
+
+## 一、日志记录接口（ILog）
+继承ILog接口，然后实现以下方法。即可实现内部的日志记录。
+当用户自行输出日志时，可自行实现过程。
+```csharp
+public interface ILog
+{
+    LogType LogType { get; set; }
+    
+    void Log(LogType logType, object source, string message, Exception exception);
+}
+
+```
+**LogType表示当前日志的可输出类型，并非输出级别，所以当需要输出多种类型时，请进行位域操作。**
+```csharp
+LogType= LogType.Warning| LogType.Information;
+```
+
+## 二、控制台日志记录器（ConsoleLogger）
+在使用控制台日志记录器时，会按照以下格式输出。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1645362519650-0a526ef1-d410-4158-8dbf-54842d4f3b2d.png#clientId=u27122025-3a3c-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=54&id=uef064240&margin=%5Bobject%20Object%5D&name=image.png&originHeight=107&originWidth=809&originalType=binary&ratio=1&rotation=0&showTitle=false&size=17952&status=error&style=none&taskId=u317166cd-8368-45ba-9cea-59171b10e95&title=&width=404.5)
+
+## 三、文件日志记录器（FileLogger）
+在使用文件日志记录器时，先会在指定目录下创建“logs”目录，然后按日期生成“.log”文件。
+![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1645362772786-6538579f-b6f3-427b-b750-28ac38abd09b.png#clientId=u27122025-3a3c-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=163&id=u2ddd4417&margin=%5Bobject%20Object%5D&name=image.png&originHeight=325&originWidth=1391&originalType=binary&ratio=1&rotation=0&showTitle=false&size=35937&status=error&style=shadow&taskId=u4ac63909-dab3-4911-9084-a7f79001deb&title=&width=695.5)
+
+## 四、日志组记录器（LoggerGroup）
+使用日志组记录器时，可以同时记录多个日志，例如：下列示例就同时在控制台和文件记录日志。
+```csharp
+LoggerGroup logger = new LoggerGroup(new ConsoleLogger(),new FileLogger());
+```
+
+## 五、日志扩展
+引入命名空间。可快捷记录日志。
+```csharp
+LoggerGroup logger = new LoggerGroup(new ConsoleLogger(),new FileLogger());
+logger.Info("Message");
+logger.Warning("Warning");
+logger.Error("Error");
+```
