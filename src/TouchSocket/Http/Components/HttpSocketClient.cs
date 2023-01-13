@@ -32,7 +32,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
-        protected override void OnConnecting(ClientOperationEventArgs e)
+        protected override void OnConnecting(OperationEventArgs e)
         {
             SetDataHandlingAdapter(new HttpServerDataHandlingAdapter());
             base.OnConnecting(e);

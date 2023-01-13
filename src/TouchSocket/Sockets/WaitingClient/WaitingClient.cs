@@ -20,28 +20,24 @@ namespace TouchSocket.Sockets
 {
     internal class WaitingClient<TClient> : IWaitingClient<TClient> where TClient : IClient, IDefaultSender, ISender
     {
-        private readonly TClient m_client;
-
         private readonly WaitData<ResponsedData> m_waitData;
-
-        private WaitingOptions m_waitingOptions;
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
         {
-            m_client = client ?? throw new ArgumentNullException(nameof(client));
+            Client = client ?? throw new ArgumentNullException(nameof(client));
             m_waitData = new WaitData<ResponsedData>();
-            m_waitingOptions = waitingOptions;
+            WaitingOptions = waitingOptions;
         }
 
         public bool CanSend
         {
             get
             {
-                if (m_client is ITcpClientBase tcpClient)
+                if (Client is ITcpClientBase tcpClient)
                 {
                     return tcpClient.Online;
                 }
-                else if (m_client is IUdpSession)
+                else if (Client is IUdpSession)
                 {
                     return true;
                 }
@@ -52,9 +48,11 @@ namespace TouchSocket.Sockets
             }
         }
 
-        public TClient Client => m_client;
+        public TClient Client { get; private set; }
 
-        public WaitingOptions WaitingOptions { get => m_waitingOptions; set => m_waitingOptions = value; }
+        public WaitingOptions WaitingOptions { get; set; }
+        public bool ThrowBreakException { get; set; }
+        public bool BreakTrigger { get; set; }
 
         /// <summary>
         /// 发送字节流
@@ -76,22 +74,27 @@ namespace TouchSocket.Sockets
                 {
                     m_waitData.Reset();
 
-                    if (m_waitingOptions == WaitingOptions.AllAdapter || m_waitingOptions == WaitingOptions.WaitAdapter)
+                    if (this.BreakTrigger && this.Client is ITcpClientBase tcpClient)
                     {
-                        m_client.OnHandleReceivedData += OnHandleReceivedData;
-                    }
-                    else
-                    {
-                        m_client.OnHandleRawBuffer += OnHandleRawBuffer;
+                        tcpClient.Disconnected += this.OnDisconnected;
                     }
 
-                    if (m_waitingOptions == WaitingOptions.AllAdapter || m_waitingOptions == WaitingOptions.SendAdapter)
+                    if (WaitingOptions == WaitingOptions.AllAdapter || WaitingOptions == WaitingOptions.WaitAdapter)
                     {
-                        m_client.Send(buffer, offset, length);
+                        Client.OnHandleReceivedData += OnHandleReceivedData;
                     }
                     else
                     {
-                        m_client.DefaultSend(buffer, offset, length);
+                        Client.OnHandleRawBuffer += OnHandleRawBuffer;
+                    }
+
+                    if (WaitingOptions == WaitingOptions.AllAdapter || WaitingOptions == WaitingOptions.SendAdapter)
+                    {
+                        Client.Send(buffer, offset, length);
+                    }
+                    else
+                    {
+                        Client.DefaultSend(buffer, offset, length);
                     }
 
                     m_waitData.SetCancellationToken(token);
@@ -114,16 +117,21 @@ namespace TouchSocket.Sockets
                 }
                 finally
                 {
-                    if (m_waitingOptions == WaitingOptions.AllAdapter || m_waitingOptions == WaitingOptions.WaitAdapter)
+                    if (WaitingOptions == WaitingOptions.AllAdapter || WaitingOptions == WaitingOptions.WaitAdapter)
                     {
-                        m_client.OnHandleReceivedData -= OnHandleReceivedData;
+                        Client.OnHandleReceivedData -= OnHandleReceivedData;
                     }
                     else
                     {
-                        m_client.OnHandleRawBuffer -= OnHandleRawBuffer;
+                        Client.OnHandleRawBuffer -= OnHandleRawBuffer;
                     }
                 }
             }
+        }
+
+        private void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        {
+            
         }
 
         /// <summary>
@@ -337,7 +345,6 @@ namespace TouchSocket.Sockets
             {
                 responsedData = new ResponsedData(null, requestInfo);
             }
-
             return !m_waitData.Set(responsedData);
         }
     }

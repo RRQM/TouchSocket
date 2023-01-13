@@ -97,7 +97,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
+        protected override void OnConnecting(TClient socketClient, OperationEventArgs e)
         {
             socketClient.SetRpcActor(m_rpcActorGroup.CreateRpcActor(socketClient));
             base.OnConnecting(socketClient, e);

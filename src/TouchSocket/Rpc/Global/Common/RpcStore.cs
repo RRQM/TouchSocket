@@ -190,7 +190,7 @@ namespace TouchSocket.Rpc
                     for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
                         callContext.MethodInstance.Filters[i].Executing(callContext,ps, ref invokeResult);
-                        callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, ref invokeResult).Wait();
+                        callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, ref invokeResult);
                     }
                 }
 
@@ -213,7 +213,7 @@ namespace TouchSocket.Rpc
                     for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
                         callContext.MethodInstance.Filters[i].Executed(callContext, ps, ref invokeResult);
-                        callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, ref invokeResult).Wait();
+                        callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, ref invokeResult);
                     }
                 }
             }
@@ -233,7 +233,7 @@ namespace TouchSocket.Rpc
                     for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
                         callContext.MethodInstance.Filters[i].ExecutException(callContext, ps, ref invokeResult, ex);
-                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex).Wait();
+                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex);
                     }
                 }
             }
@@ -246,7 +246,7 @@ namespace TouchSocket.Rpc
                     for (int i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
                         callContext.MethodInstance.Filters[i].ExecutException(callContext, ps, ref invokeResult, ex);
-                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex).Wait();
+                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex);
                     }
                 }
             }

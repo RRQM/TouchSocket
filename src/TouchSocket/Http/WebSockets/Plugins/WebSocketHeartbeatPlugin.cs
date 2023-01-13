@@ -60,7 +60,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             base.OnDisconnected(client, e);
             if (client.GetValue<Timer>(WebSocketExtensions.HeartbeatTimerProperty) is Timer timer)

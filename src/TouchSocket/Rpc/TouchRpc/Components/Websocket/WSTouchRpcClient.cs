@@ -75,7 +75,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 断开连接
         /// </summary>
-        public ClientDisconnectedEventHandler<WSTouchRpcClient> Disconnected { get; set; }
+        public DisconnectEventHandler<WSTouchRpcClient> Disconnected { get; set; }
 
         /// <inheritdoc/>
         public string ID => m_rpcActor.ID;
@@ -291,7 +291,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// 已断开连接。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(ClientDisconnectedEventArgs e)
+        protected virtual void OnDisconnected(DisconnectEventArgs e)
         {
             if (UsePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e))
             {
@@ -342,7 +342,7 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             m_client.SafeDispose();
             m_rpcActor.SafeDispose();
-            OnDisconnected(new ClientDisconnectedEventArgs(manual, msg));
+            OnDisconnected(new DisconnectEventArgs(manual, msg));
         }
 
         #region 小文件

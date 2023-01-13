@@ -43,7 +43,7 @@ public delegate void IDChangedEventHandler<TClient>(TClient client, IDChangedEve
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void ClientConnectingEventHandler<TClient>(TClient client, ClientConnectingEventArgs e);
+public delegate void ConnectingEventHandler<TClient>(TClient client, ConnectingEventArgs e);
 
 /// <summary>
 /// 客户端断开连接
@@ -51,7 +51,7 @@ public delegate void ClientConnectingEventHandler<TClient>(TClient client, Clien
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void ClientDisconnectedEventHandler<TClient>(TClient client, ClientDisconnectedEventArgs e);
+public delegate void DisconnectEventHandler<TClient>(TClient client, DisconnectEventArgs e);
 
 /// <summary>
 /// 正在连接事件
@@ -59,7 +59,7 @@ public delegate void ClientDisconnectedEventHandler<TClient>(TClient client, Cli
 /// <typeparam name="TClient"></typeparam>
 /// <param name="client"></param>
 /// <param name="e"></param>
-public delegate void ClientOperationEventHandler<TClient>(TClient client, ClientOperationEventArgs e);
+public delegate void OperationEventHandler<TClient>(TClient client, OperationEventArgs e);
 
 /// <summary>
 /// 插件数据

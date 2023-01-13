@@ -278,7 +278,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(DisconnectEventArgs e)
         {
             m_rpcActor?.Close(e.Message);
             base.OnDisconnected(e);

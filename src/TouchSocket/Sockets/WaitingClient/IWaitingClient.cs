@@ -33,6 +33,16 @@ namespace TouchSocket.Sockets
         TClient Client { get; }
 
         /// <summary>
+        /// 当<see cref="Client"/>为Tcp系时。是否在断开连接时以异常返回结果。
+        /// </summary>
+        bool ThrowBreakException { get; set; }
+
+        /// <summary>
+        /// 当<see cref="Client"/>为Tcp系时。是否在断开连接时立即触发结果。默认会返回null。当<see cref="ThrowBreakException"/>为<see langword="true"/>时，会触发异常。
+        /// </summary>
+        bool BreakTrigger { get; set; }
+
+        /// <summary>
         /// 发送字节流
         /// </summary>
         /// <param name="buffer">数据缓存区</param>

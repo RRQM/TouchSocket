@@ -331,7 +331,6 @@ namespace TouchSocket.Rpc.TouchRpc
                         long position = waitTransfer.Position;
                         reader.Position = position;
                         fileOperator.SetFileCompletedLength(waitTransfer.Position);
-
                         channel.Timeout = fileOperator.Timeout;
                         while (true)
                         {
@@ -473,6 +472,10 @@ namespace TouchSocket.Rpc.TouchRpc
                                 case TouchSocketStatus.ClientNotFind:
                                     {
                                         return fileOperator.SetResult(new Result(ResultCode.Error, TouchSocketStatus.ClientNotFind.GetDescription(targetId)));
+                                    }
+                                case TouchSocketStatus.DirectoryNotExists:
+                                    {
+                                        return fileOperator.SetResult(new Result(ResultCode.Error, TouchSocketStatus.DirectoryNotExists.GetDescription(waitResult.Path)));
                                     }
                                 case TouchSocketStatus.RemoteRefuse:
                                 default:
@@ -1104,7 +1107,19 @@ namespace TouchSocket.Rpc.TouchRpc
                     fileOperator.SetResult(new Result(ResultCode.Fail, TouchSocketStatus.RemoteRefuse.GetDescription(args.Message)));
                     waitTransferPackage.Message = args.Message;
                     waitTransferPackage.Status = TouchSocketStatus.RemoteRefuse.ToValue();
-                    fileOperator.SetResult(new Result(ResultCode.Fail, TouchSocketStatus.RemoteRefuse.GetDescription(args.Message)));
+                    OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(fileOperator.Result, args));
+                    SendPackage(TouchRpcUtility.P_1502_PushFile_Response, waitTransferPackage);
+                    return;
+                }
+
+                string saveFullPath = FileController.GetFullPath(m_rootPath, args.SavePath);
+
+                if (!Directory.Exists(Path.GetDirectoryName(saveFullPath)))
+                {
+                    fileOperator.SetResult(new Result(ResultCode.Fail, TouchSocketStatus.DirectoryNotExists.GetDescription(Path.GetDirectoryName(saveFullPath))));
+                    waitTransferPackage.Message = args.Message;
+                    waitTransferPackage.Status = TouchSocketStatus.DirectoryNotExists.ToValue();
+                    waitTransferPackage.Path = Path.GetDirectoryName(saveFullPath);
                     OnFileTransfered?.Invoke(this, new FileTransferStatusEventArgs(fileOperator.Result, args));
                     SendPackage(TouchRpcUtility.P_1502_PushFile_Response, waitTransferPackage);
                     return;
@@ -1112,7 +1127,6 @@ namespace TouchSocket.Rpc.TouchRpc
                 Channel channel = null;
                 try
                 {
-                    string saveFullPath = FileController.GetFullPath(m_rootPath, args.SavePath);
                     FileController.TryReadTempInfo(saveFullPath, args.Flags, ref fileInfo);
                     using (TouchRpcFileStream stream = TouchRpcFileStream.Create(saveFullPath, ref fileInfo, args.Flags.HasFlag(TransferFlags.MD5Verify)))
                     {

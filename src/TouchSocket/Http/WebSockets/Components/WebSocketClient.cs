@@ -190,7 +190,7 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         /// </summary>
         /// <param name="e"></param>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(DisconnectEventArgs e)
         {
             SetValue(WebSocketServerPlugin.HandshakedProperty, false);
             base.OnDisconnected(e);

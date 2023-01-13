@@ -136,14 +136,19 @@ namespace TouchSocket.Sockets
             OnClientConnected(socketClient, e);
         }
 
-        internal void OnInternalConnecting(ISocketClient socketClient, ClientOperationEventArgs e)
+        internal void OnInternalConnecting(ISocketClient socketClient, OperationEventArgs e)
         {
             OnClientConnecting(socketClient, e);
         }
 
-        internal void OnInternalDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e)
+        internal void OnInternalDisconnected(ISocketClient socketClient, DisconnectEventArgs e)
         {
             OnClientDisconnected(socketClient, e);
+        }
+
+        internal void OnInternalDisconnecting(ISocketClient socketClient, DisconnectEventArgs e)
+        {
+            OnClientDisconnecting(socketClient, e);
         }
 
         internal void OnInternalReceivedData(ISocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
@@ -163,14 +168,24 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract void OnClientConnecting(ISocketClient socketClient, ClientOperationEventArgs e);
+        protected abstract void OnClientConnecting(ISocketClient socketClient, OperationEventArgs e);
 
         /// <summary>
         /// 客户端断开连接
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract void OnClientDisconnected(ISocketClient socketClient, ClientDisconnectedEventArgs e);
+        protected abstract void OnClientDisconnected(ISocketClient socketClient, DisconnectEventArgs e);
+
+        /// <summary>
+        /// 即将断开连接(仅主动断开时有效)。
+        /// <para>
+        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
+        /// </para>
+        /// </summary>
+        /// <param name="socketClient"></param>
+        /// <param name="e"></param>
+        protected abstract void OnClientDisconnecting(ISocketClient socketClient, DisconnectEventArgs e);
 
         /// <summary>
         /// 收到数据时

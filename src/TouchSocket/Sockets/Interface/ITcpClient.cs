@@ -30,7 +30,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 准备连接的时候
         /// </summary>
-        ClientConnectingEventHandler<ITcpClient> Connecting { get; set; }
+        ConnectingEventHandler<ITcpClient> Connecting { get; set; }
 
         /// <summary>
         /// 远程IPHost。

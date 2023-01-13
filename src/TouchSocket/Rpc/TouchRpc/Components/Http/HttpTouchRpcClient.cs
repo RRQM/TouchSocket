@@ -390,7 +390,7 @@ namespace TouchSocket.Rpc.TouchRpc
         #endregion 发送
 
         /// <inheritdoc/>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(DisconnectEventArgs e)
         {
             m_rpcActor?.Close(e.Message);
             base.OnDisconnected(e);

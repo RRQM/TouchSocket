@@ -38,7 +38,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             base.OnDisconnected(client, e);
 

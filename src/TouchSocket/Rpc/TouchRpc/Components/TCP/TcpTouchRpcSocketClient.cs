@@ -278,14 +278,14 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <inheritdoc/>
-        protected override void OnConnecting(ClientOperationEventArgs e)
+        protected override void OnConnecting(OperationEventArgs e)
         {
             this.SwitchProtocolToTouchRpc();
             base.OnConnecting(e);
         }
 
         /// <inheritdoc/>
-        protected override void OnDisconnected(ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(DisconnectEventArgs e)
         {
             m_rpcActor.Close(e.Message);
             base.OnDisconnected(e);

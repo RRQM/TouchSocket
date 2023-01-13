@@ -26,13 +26,6 @@ namespace TouchSocket.Core
     {
         private static readonly ConcurrentDictionary<Type, SerializObject> m_instanceCache = new ConcurrentDictionary<Type, SerializObject>();
 
-        private static readonly ConcurrentDictionary<Type, IFastBinaryConverter> m_typeToConverter = new ConcurrentDictionary<Type, IFastBinaryConverter>();
-
-        static FastBinaryFormatter()
-        {
-            AddFastBinaryConverter(typeof(Metadata), new MetadataFastBinaryConverter());
-        }
-
         /// <summary>
         /// 添加转换器。
         /// </summary>
@@ -58,7 +51,7 @@ namespace TouchSocket.Core
         /// <param name="converter"></param>
         public static void AddFastBinaryConverter(Type type, IFastBinaryConverter converter)
         {
-            m_typeToConverter.AddOrUpdate(type, converter,(k,v)=>v);
+            m_instanceCache.AddOrUpdate(type, new SerializObject(type) { Converter = converter }, (k, v) => v);
         }
 
         #region Serialize
@@ -289,13 +282,13 @@ namespace TouchSocket.Core
                         default:
                             {
                                 byteBlock.Position += 4;
-                                if (m_typeToConverter.TryGetValue(type, out IFastBinaryConverter converter))
+                                var serializeObj = GetOrAddInstance(type);
+                                if (serializeObj.Converter != null)
                                 {
-                                    len += converter.Write(byteBlock, graph);
+                                    len += serializeObj.Converter.Write(byteBlock, graph);
                                 }
                                 else
                                 {
-                                    var serializeObj = GetOrAddInstance(type);
                                     switch (serializeObj.InstanceType)
                                     {
                                         case InstanceType.List:
@@ -439,7 +432,7 @@ namespace TouchSocket.Core
                 }
                 else if (type == TouchSocketCoreUtility.dateTimeType)
                 {
-                    obj = (new DateTime(TouchSocketBitConverter.Default.ToInt64(datas,offset)));
+                    obj = (new DateTime(TouchSocketBitConverter.Default.ToInt64(datas, offset)));
                 }
                 else if (type.BaseType == typeof(Enum))
                 {
@@ -470,9 +463,9 @@ namespace TouchSocket.Core
                 }
                 else if (type.IsClass || type.IsStruct())
                 {
-                    if (m_typeToConverter.TryGetValue(type, out IFastBinaryConverter converter))
+                    if (m_instanceCache.TryGetValue(type, out var serializObject) && serializObject.Converter != null)
                     {
-                        obj = converter.Read(datas, offset, len);
+                        obj = serializObject.Converter.Read(datas, offset, len);
                     }
                     else
                     {
@@ -543,7 +536,7 @@ namespace TouchSocket.Core
                                     object obj = Deserialize(property.PropertyType, datas, ref offset);
                                     serializObject.MemberAccessor.SetValue(instance, property.Name, obj);
                                 }
-                                else if (serializObject.FieldInfosDic.TryGetValue(propertyName,out FieldInfo fieldInfo))
+                                else if (serializObject.FieldInfosDic.TryGetValue(propertyName, out FieldInfo fieldInfo))
                                 {
                                     object obj = Deserialize(fieldInfo.FieldType, datas, ref offset);
                                     serializObject.MemberAccessor.SetValue(instance, fieldInfo.Name, obj);

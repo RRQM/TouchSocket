@@ -23,7 +23,7 @@ namespace TouchSocket.Core
         private MemberInfo[] m_MemberInfos;
         private FieldInfo[] m_fieldInfos;
         private PropertyInfo[] m_properties;
-
+        public IFastBinaryConverter Converter { get; set; }
         public SerializObject(Type type)
         {
             Type = type;
@@ -86,6 +86,10 @@ namespace TouchSocket.Core
                         OnGetProperties = GetProperties
                     };
                     MemberAccessor.Build();
+                }
+                if (type.GetCustomAttribute<FastConverterAttribute>() is FastConverterAttribute attribute)
+                {
+                    this.Converter = (IFastBinaryConverter)Activator.CreateInstance(attribute.Type);
                 }
                 this.PropertiesDic = GetProperties(type).ToDictionary(a => a.Name);
                 this.FieldInfosDic = GetFieldInfos(type).ToDictionary(a => a.Name);
@@ -156,19 +160,31 @@ namespace TouchSocket.Core
         private static FieldInfo[] GetFieldInfos(Type type)
         {
             return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.Default)
-                .Where(p => !p.IsInitOnly && (!p.IsDefined(typeof(FastNonSerializedAttribute), true)))
+                .Where(p => 
+                {
+                    return !p.IsInitOnly && (!p.IsDefined(typeof(FastNonSerializedAttribute), true));
+                })
                 .ToArray();
         }
 
         private static PropertyInfo[] GetProperties(Type type)
         {
             return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.Default)
-                          .Where(p => 
-                          p.CanWrite && 
-                          p.CanRead && 
-                          (!p.IsDefined(typeof(FastNonSerializedAttribute), true)&&
-                          (p.SetMethod.GetParameters().Length==1)&&
-                          (p.GetMethod.GetParameters().Length==0)))
+                          .Where(p =>
+                          {
+                              if (p.IsDefined(typeof(FastSerializedAttribute), true))
+                              {
+                                  return true;
+                              }
+                              else
+                              {
+                                  return p.CanWrite &&
+                              p.CanRead &&
+                              (!p.IsDefined(typeof(FastNonSerializedAttribute), true) &&
+                              (p.SetMethod.GetParameters().Length == 1) &&
+                              (p.GetMethod.GetParameters().Length == 0));
+                              }
+                          })
                           .ToArray();
         }
     }

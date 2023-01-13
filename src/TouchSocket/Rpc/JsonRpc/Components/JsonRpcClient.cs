@@ -73,7 +73,7 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public ClientConnectingEventHandler<ITcpClient> Connecting { get => Client.Connecting; set => Client.Connecting = value; }
+        public ConnectingEventHandler<ITcpClient> Connecting { get => Client.Connecting; set => Client.Connecting = value; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -88,12 +88,18 @@ namespace TouchSocket.Rpc.JsonRpc
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get => Client.Disconnected; set => Client.Disconnected = value; }
+        public DisconnectEventHandler<ITcpClientBase> Disconnected { get => Client.Disconnected; set => Client.Disconnected = value; }
+
+        /// <inheritdoc/>
+        public DisconnectEventHandler<ITcpClientBase> Disconnecting { get => Client.Disconnecting; set => Client.Disconnecting = value; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public string IP => Client.IP;
+
+        /// <inheritdoc/>
+        public bool IsClient => Client.IsClient;
 
         /// <summary>
         /// 协议类型
@@ -343,14 +349,6 @@ namespace TouchSocket.Rpc.JsonRpc
         }
 
         /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void Shutdown(SocketShutdown how)
-        {
-            Client.Shutdown(how);
-        }
-
-        /// <summary>
         /// 处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
@@ -419,6 +417,16 @@ namespace TouchSocket.Rpc.JsonRpc
         }
 
         #region RPC调用
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="dp"></param>
+        /// <returns></returns>
+        public bool HasValue<TValue>(IDependencyProperty<TValue> dp)
+        {
+            return Client.HasValue(dp);
+        }
 
         /// <summary>
         /// Rpc调用
@@ -848,16 +856,6 @@ namespace TouchSocket.Rpc.JsonRpc
                         return default;
                 }
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="dp"></param>
-        /// <returns></returns>
-        public bool HasValue<TValue>(IDependencyProperty<TValue> dp)
-        {
-            return Client.HasValue(dp);
         }
 
         /// <summary>

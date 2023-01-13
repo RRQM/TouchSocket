@@ -19,15 +19,13 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TCP终端基础接口
+    /// TCP终端基础接口。
+    /// <para>
+    /// 注意：该接口并不仅表示客户端。<see cref="SocketClient"/>也实现了该接口。
+    /// </para>
     /// </summary>
     public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender
     {
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        ClientDisconnectedEventHandler<ITcpClientBase> Disconnected { get; set; }
-
         /// <summary>
         /// 缓存池大小
         /// </summary>
@@ -49,10 +47,26 @@ namespace TouchSocket.Sockets
         DataHandlingAdapter DataHandlingAdapter { get; }
 
         /// <summary>
+        /// 断开连接
+        /// </summary>
+        DisconnectEventHandler<ITcpClientBase> Disconnected { get; set; }
+
+        /// <summary>
+        /// 即将断开连接(仅主动断开时有效)。
+        /// <para>
+        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
+        /// </para>
+        /// </summary>
+        DisconnectEventHandler<ITcpClientBase> Disconnecting { get; set; }
+        /// <summary>
         /// IP地址
         /// </summary>
         string IP { get; }
 
+        /// <summary>
+        /// 表示是否为客户端。
+        /// </summary>
+        bool IsClient { get; }
         /// <summary>
         /// 主通信器
         /// </summary>
@@ -78,6 +92,7 @@ namespace TouchSocket.Sockets
         /// 使用Ssl加密
         /// </summary>
         bool UseSsl { get; }
+        
 
         /// <summary>
         /// 中断终端
@@ -101,11 +116,5 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="adapter"></param>
         void SetDataHandlingAdapter(DataHandlingAdapter adapter);
-
-        /// <summary>
-        /// 禁用发送或接收
-        /// </summary>
-        /// <param name="how"></param>
-        void Shutdown(SocketShutdown how);
     }
 }

@@ -94,7 +94,7 @@ namespace TouchSocket.Rpc.TouchRpc
         }
 
         /// <inheritdoc/>
-        protected override void OnConnecting(TClient socketClient, ClientOperationEventArgs e)
+        protected override void OnConnecting(TClient socketClient, OperationEventArgs e)
         {
             socketClient.m_internalOnRpcActorInit = PrivateOnRpcActorInit;
             base.OnConnecting(socketClient, e);
