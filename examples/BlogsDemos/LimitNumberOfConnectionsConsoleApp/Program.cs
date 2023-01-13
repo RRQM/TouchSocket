@@ -76,7 +76,7 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         public int Max { get; }
 
-        protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+        protected override void OnConnecting(ITcpClientBase client, OperationEventArgs e)
         {
             Count count = m_ipToCount.GetOrAdd(client.IP, (s) => { return new Count(); });
 
@@ -91,7 +91,7 @@ namespace LimitNumberOfConnectionsConsoleApp
             base.OnConnecting(client, e);
         }
 
-        protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             if (m_ipToCount.TryGetValue(client.IP, out Count count))
             {

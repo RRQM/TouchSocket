@@ -175,7 +175,7 @@ namespace FileClientGUI
             }
         }
 
-        private void FileClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        private void FileClient_Disconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
         }
 

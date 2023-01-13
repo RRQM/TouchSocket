@@ -30,7 +30,7 @@ namespace FileServiceGUI
             client.Logger.Info($"有客户端成功验证，ID={client.ID}");
         }
 
-        protected override void OnDisconnected(TcpTouchRpcSocketClient client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(TcpTouchRpcSocketClient client, DisconnectEventArgs e)
         {
             client.Logger.Info($"有客户端断开，ID={client.ID}");
             base.OnDisconnected(client, e);

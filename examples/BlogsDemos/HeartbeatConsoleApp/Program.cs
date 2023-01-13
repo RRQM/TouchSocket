@@ -228,7 +228,7 @@ namespace HeartbeatConsoleApp
             base.OnConnected(client, e);
         }
 
-        protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             base.OnDisconnected(client, e);
             if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)

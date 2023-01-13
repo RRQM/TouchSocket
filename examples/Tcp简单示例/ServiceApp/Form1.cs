@@ -44,17 +44,17 @@ namespace ServiceApp
                     a.AddFileLogger();
                     a.AddEasyLogger(this.ShowMsg);
                 })
-                .ConfigurePlugins(a => 
+                .ConfigurePlugins(a =>
                 {
                     a.UseCheckClear()
-                    .SetCheckClearType( CheckClearType.All)
+                    .SetCheckClearType(CheckClearType.All)
                     .SetDuration(TimeSpan.FromSeconds(60));
                 }))
                 .Start();//启动
             m_service.Logger.Info("服务器成功启动");
         }
 
-        private void M_service_Disconnected(SocketClient client, ClientDisconnectedEventArgs e)
+        private void M_service_Disconnected(SocketClient client, DisconnectEventArgs e)
         {
             this.listBox1.Items.Remove(client.ID);
         }
@@ -88,8 +88,13 @@ namespace ServiceApp
             {
                 try
                 {
-                    //然后调用GetWaitingClient获取到IWaitingClient的对象。该对象会复用。
-                    byte[] returnData = client.GetWaitingClient(WaitingOptions.AllAdapter).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
+                    //然后调用GetWaitingClient获取到IWaitingClient的对象。
+                    byte[] returnData = client.GetWaitingClient(new WaitingOptions()
+                    {
+                        AdapterFilter = AdapterFilter.AllAdapter,//表示数据发送和接收时都会经过适配器
+                        BreakTrigger = true,//当Client为Tcp系时。是否在断开连接时立即触发结果。默认会返回null。当ThrowBreakException为true时，会触发异常。
+                        ThrowBreakException = true//是否触发异常
+                    }).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
                     this.m_service.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
                 }
                 catch (TimeoutException)

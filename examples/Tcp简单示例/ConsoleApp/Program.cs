@@ -97,12 +97,8 @@ namespace ServiceConsoleApp
             this.m_service = service;
         }
 
-        protected override void OnConnecting(SocketClient client, ClientOperationEventArgs e)
+        protected override void OnConnecting(SocketClient client, OperationEventArgs e)
         {
-            if (client.Service.SocketClients.Count>1000)
-            {
-
-            }
             base.OnConnecting(client, e);
         }
     }

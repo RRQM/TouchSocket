@@ -146,7 +146,7 @@ namespace UnityServerConsoleApp
             client.Logger.Info($"客户端{client.GetInfo()}已连接");
         }
 
-        protected override void OnDisconnected(SocketClient client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(SocketClient client, DisconnectEventArgs e)
         {
             client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
         }

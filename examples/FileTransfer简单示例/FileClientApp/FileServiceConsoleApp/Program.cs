@@ -54,7 +54,7 @@ namespace FileServiceConsoleApp
 
     internal class MyTcpPlugin : TcpPluginBase
     {
-        protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             client.Logger.Info($"有客户端断开，ID={((TcpTouchRpcSocketClient)client).ID}");
             base.OnDisconnected(client, e);

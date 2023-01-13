@@ -43,7 +43,7 @@ namespace PluginConsoleApp
         {
             this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
         }
-        protected override void OnConnecting(SocketClient client, ClientOperationEventArgs e)
+        protected override void OnConnecting(SocketClient client, OperationEventArgs e)
         {
             client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
             base.OnConnecting(client, e);

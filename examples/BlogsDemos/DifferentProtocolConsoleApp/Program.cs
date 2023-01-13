@@ -39,7 +39,7 @@ namespace DifferentProtocolConsoleApp
     /// </summary>
     class DifferentProtocolPlugin : TcpPluginBase<ISocketClient>
     {
-        protected override void OnConnecting(ISocketClient client, ClientOperationEventArgs e)
+        protected override void OnConnecting(ISocketClient client, OperationEventArgs e)
         {
             if (client.ServicePort == 7789)
             {
