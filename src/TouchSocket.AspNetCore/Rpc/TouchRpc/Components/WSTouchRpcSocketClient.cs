@@ -27,7 +27,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
     public class WSTouchRpcSocketClient : DisposableObject, IRpcActor, IPluginObject, ISenderBase
     {
         internal string m_id;
-        internal ClientDisconnectedEventHandler<WSTouchRpcSocketClient> m_internalDisconnected;
+        internal DisconnectEventHandler<WSTouchRpcSocketClient> m_internalDisconnected;
         internal WSTouchRpcService m_service;
         internal bool m_usePlugin;
         private readonly byte[] m_buffer = new byte[1024 * 64];
@@ -422,7 +422,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 Dispose();
                 m_client.SafeDispose();
                 m_rpcActor.SafeDispose();
-                m_internalDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(manual, msg));
+                m_internalDisconnected?.Invoke(this, new DisconnectEventArgs(manual, msg));
             }
         }
 

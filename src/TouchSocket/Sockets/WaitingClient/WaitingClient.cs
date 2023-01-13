@@ -22,6 +22,8 @@ namespace TouchSocket.Sockets
     {
         private readonly WaitData<ResponsedData> m_waitData;
 
+        private volatile bool breaked;
+
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
         {
             Client = client ?? throw new ArgumentNullException(nameof(client));
@@ -51,8 +53,6 @@ namespace TouchSocket.Sockets
         public TClient Client { get; private set; }
 
         public WaitingOptions WaitingOptions { get; set; }
-        public bool ThrowBreakException { get; set; }
-        public bool BreakTrigger { get; set; }
 
         /// <summary>
         /// 发送字节流
@@ -72,14 +72,15 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
+                    breaked = false;
                     m_waitData.Reset();
 
-                    if (this.BreakTrigger && this.Client is ITcpClientBase tcpClient)
+                    if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
                     {
                         tcpClient.Disconnected += this.OnDisconnected;
                     }
 
-                    if (WaitingOptions == WaitingOptions.AllAdapter || WaitingOptions == WaitingOptions.WaitAdapter)
+                    if (WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || WaitingOptions.AdapterFilter == AdapterFilter.WaitAdapter)
                     {
                         Client.OnHandleReceivedData += OnHandleReceivedData;
                     }
@@ -88,7 +89,7 @@ namespace TouchSocket.Sockets
                         Client.OnHandleRawBuffer += OnHandleRawBuffer;
                     }
 
-                    if (WaitingOptions == WaitingOptions.AllAdapter || WaitingOptions == WaitingOptions.SendAdapter)
+                    if (WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
                     {
                         Client.Send(buffer, offset, length);
                     }
@@ -107,6 +108,10 @@ namespace TouchSocket.Sockets
                             throw new TimeoutException();
                         case WaitDataStatus.Canceled:
                             {
+                                if (this.WaitingOptions.ThrowBreakException && this.breaked)
+                                {
+                                    throw new Exception("等待已终止。可能是客户端已掉线，或者被注销。");
+                                }
                                 return default;
                             }
                         case WaitDataStatus.Default:
@@ -117,7 +122,12 @@ namespace TouchSocket.Sockets
                 }
                 finally
                 {
-                    if (WaitingOptions == WaitingOptions.AllAdapter || WaitingOptions == WaitingOptions.WaitAdapter)
+                    if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
+                    {
+                        tcpClient.Disconnected -= this.OnDisconnected;
+                    }
+
+                    if (WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || WaitingOptions.AdapterFilter == AdapterFilter.WaitAdapter)
                     {
                         Client.OnHandleReceivedData -= OnHandleReceivedData;
                     }
@@ -127,11 +137,6 @@ namespace TouchSocket.Sockets
                     }
                 }
             }
-        }
-
-        private void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
-        {
-            
         }
 
         /// <summary>
@@ -321,6 +326,12 @@ namespace TouchSocket.Sockets
             {
                 return SendThenReturn(byteBlock, timeout, token);
             });
+        }
+
+        private void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        {
+            breaked = true;
+            this.m_waitData.Cancel();
         }
 
         private bool OnHandleRawBuffer(ByteBlock byteBlock)
