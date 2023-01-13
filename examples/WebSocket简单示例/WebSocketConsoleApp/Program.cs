@@ -132,7 +132,7 @@ namespace WebSocketConsoleApp
             base.OnHandshaked(client, e);
         }
 
-        protected override void OnDisconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             Console.WriteLine("TCP断开连接");
             base.OnDisconnected(client, e);

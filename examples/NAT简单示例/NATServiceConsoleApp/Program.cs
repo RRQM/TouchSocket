@@ -45,7 +45,7 @@ namespace NATServiceConsoleApp
             }
         }
 
-        protected override void OnTargetClientDisconnected(NATSocketClient socketClient, ITcpClient tcpClient, ClientDisconnectedEventArgs e)
+        protected override void OnTargetClientDisconnected(NATSocketClient socketClient, ITcpClient tcpClient, DisconnectEventArgs e)
         {
             socketClient.Logger.Info($"{socketClient.IP}:{socketClient.Port}的转发客户端{tcpClient.IP}:{tcpClient.Port}已经断开连接。");
             base.OnTargetClientDisconnected(socketClient, tcpClient, e);

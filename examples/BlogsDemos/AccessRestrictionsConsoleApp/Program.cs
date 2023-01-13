@@ -47,7 +47,7 @@ namespace AccessRestrictionsConsoleApp
         {
             this.accessRestrictions = accessRestrictions ?? throw new ArgumentNullException(nameof(accessRestrictions));
         }
-        protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+        protected override void OnConnecting(ITcpClientBase client, OperationEventArgs e)
         {
             if (client is ITcpClient)
             {

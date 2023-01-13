@@ -94,7 +94,10 @@ namespace ClientApp
                 //然后使用SendThenReturn。
                 //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse
 
-                byte[] returnData = m_tcpClient.GetWaitingClient(WaitingOptions.AllAdapter).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
+                byte[] returnData = m_tcpClient.GetWaitingClient(new WaitingOptions() 
+                { 
+                    AdapterFilter = AdapterFilter.AllAdapter 
+                }).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
                 this.m_tcpClient.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
             }
             catch (TimeoutException)
@@ -109,7 +112,7 @@ namespace ClientApp
 
         private void button4_Click(object sender, EventArgs e)
         {
-            m_tcpClient.Shutdown(System.Net.Sockets.SocketShutdown.Both);
+            m_tcpClient.TryShutdown(System.Net.Sockets.SocketShutdown.Both);
             m_tcpClient.Close();
             m_tcpClient.SafeDispose();
         }

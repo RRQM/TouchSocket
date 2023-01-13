@@ -49,7 +49,7 @@ namespace EERPCClientDemo
             ShowMsg("连接成功");
         }
 
-        private void TcpRpcClient_Disconnected(ITcpClientBase client, ClientDisconnectedEventArgs e)
+        private void TcpRpcClient_Disconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             ShowMsg("已断开连接");
         }
