@@ -1,0 +1,107 @@
+---
+id: adapterdescription
+sidebar_position: 1
+title: 介绍及使用
+sidebar_label: 8.1 介绍及使用
+---
+
+## 说明
+在TouchSocket中，适配器贯穿始终，其作用实际上有两个，分别为：
+
+- 对发送和接收的数据进行预先的封装和解封，以达到解析数据的作用（可以简单理解为处理黏、分包）。
+- 将特殊数据解析为可以传递的数据结构，以达到解析数据的目的。
+
+**很明显，大家看到了，数据处理适配器的作用用一句话说，就是解析数据用的。**
+## 设计架构
+#### 工作逻辑
+![](https://images.gitee.com/uploads/images/2022/0125/192152_18f6c642_8553710.png#crop=0&crop=0&crop=1&crop=1&id=y6Ob5&originHeight=1487&originWidth=3450&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=)
+#### 数据逻辑
+TouchSocket的适配器，在初始阶段（原始TCP），会收到一个ByteBlock数据，然后经过适配器处理以后，可选择两个参数（ByteBlock和IRequestInfo）的**任意组合**投递数据。
+
+例如：**FixedHeaderPackageAdapter**，仅投递ByteBlock数据，届时IRequestInfo将为null。而如果是继承的**CustomDataHandlingAdapter**，则仅投递IRequestInfo，ByteBlock将为null。
+#### 设计解释
+大家有时候可能会迷惑，为什么TouchSocket要设计两个参数投递，而不像其他的那样的，在会话里面，把适配器直接泛型规范了，直接抛出对应的类型。这是因为泛型约束太大，不够灵活。例如：
+
+- 第一，不能随时切换适配器，例如适配webSocket，在握手阶段，要解析http数据，所以，此时应该选择http数据处理适配，而完成握手以后，就要解析ws数据格式了，所以此时应该切换适配器为ws数据处理适配器。
+- 第二，两个参数能提高性能。例如HTTP数据处理适配器，在高性能工作模式下，由IRequestInfo投递请求头，由ByteBlock投递Body，这样Body是从内存池获得，就不存在内存消耗了。
+## 三、TCP使用
+在TCP系中使用数据处理适配器是非常简单的一个过程。而且为了不同场景，TouchSocket支持多种方式的适配器使用。服务器和客户端使用一致
+
+#### 3.1 在Config配置中使用
+在Config配置使用时，相当于初始化赋值。比较单一，但是很可靠。
+```csharp
+.SetDataHandlingAdapter(()=> { return new MyCustomBetweenAndDataHandlingAdapter(); })
+```
+#### 3.2 订阅Connecting相关事件
+只需要在`OnConnecting`方法（或`Connecting`事件）中对新连接的Client，调用SetDataHandlingAdapter进行赋值即可。
+```csharp
+public class MyTcpService : TcpService<MySocketClient>
+{
+    protected override void OnConnecting(MySocketClient socketClient, ClientOperationEventArgs e)
+    {
+        socketClient.SetDataHandlingAdapter(new NormalDataHandlingAdapter());//直接对数据处理器赋值，立即生效
+        base.OnConnecting(socketClient, e);
+    }
+}
+```
+
+#### 3.3 使用插件，代替Connecting相关事件实现
+使用插件实现该功能，实际上和步骤2一样，但是因为是基于插件，所以更好于管理。
+```csharp
+class MyPlugin : TcpPluginBase
+{
+    protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
+    {
+        client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+        base.OnConnecting(client, e);
+    }
+}
+```
+
+#### 3.4 任意时刻设置
+实际上，大家可以从步骤2、3中看出来，适配器是可以被随意赋值的，这也就说明，适配器是可以随时被替换的。那么也就可以被随时赋值了。
+
+## 四、UDP使用插件
+Udp使用的插件，只能从Config配置。
+【**UdpSession**】
+```csharp
+ m_udpSession.Setup(new TouchSocketConfig()
+      .SetBindIPHost(new IPHost(this.textBox2.Text))
+      .SetUdpDataHandlingAdapter(()=> 
+      {
+          return new NormalUdpDataHandlingAdapter();
+      })
+      .ConfigureContainer(a =>
+      {
+          a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+      }))
+      .Start();
+```
+**_注意：_同一个适配器实例，只可被赋值一次，不然会异常。_如果在构造函数（或其他一次性函数）中设置适配器的话，在重连时，最好重新设置适配器，因为框架在Disconnected时会置空适配器，同时在Connecting执行完后会检测适配器，如果没有再次设置适配器的话，会选择默认适配器（TcpClient会选择普通适配器，Protocol及派生会选择固定包头适配器）。_**
+## 五、限制使用
+限制使用的场景应用于自定义封装。例如：自己封装一个服务器，然后适配器仅**特定使用**，不允许外部随意赋值，那么可以如下实现：
+```csharp
+public class MySocketClient : SocketClient
+{
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public override sealed bool CanSetDataHandlingAdapter => false;//不允许随意赋值
+    
+    private void InternalSetAdapter(DataHandlingAdapter adapter)
+    {
+        this.SetAdapter(adapter);//仅继承内部赋值
+    }
+}
+```
+
+## 六、缓存超时（仅Tcp适配器）
+当适配器在工作时，如果一个数据包在设置的周期内（默认1000ms）没有完成接收，则会清空所有缓存数据，然后重新接收。
+这种设计是为了应对，当接收数据时，如果发送方发送了异常数据（也有可能在移动网时，由运营商发送的无效包）而导致整个接收队列数据无效的问题。
+现在加入缓存超时设置，则如果发送上述情况，也会在一个周期后，快速恢复接收。
+
+相关属性设置：
+
+- CacheTimeoutEnable：是否启用缓存超时。
+- CacheTimeout：缓存超时时间
+- UpdateCacheTimeWhenRev：是否每次接收就更新缓存时间。默认true，意味着只要有数据接收，则缓存永远不会过期。当为false时，则每个缓存包，必须在设置的周期内完成接收。
