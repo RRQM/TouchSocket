@@ -1,0 +1,109 @@
+---
+title: 1、Stream传输
+url: https://www.yuque.com/rrqm/touchsocket/gbz3mf
+---
+
+<a name="jyzSl"></a>
+
+## 一、说明
+
+Stream的直接发送，**单个**TCP连接上可以**同时**进行多个传输。客户端与服务器之间可以任意相互发送。
+
+<a name="CtYNg"></a>
+
+## 二、特性
+
+1. 实时检测速度，进度等信息。
+2. 从Stream.Position开始，直到Read结束。
+
+<a name="BxGNl"></a>
+
+## 三、示例
+
+下列以服务器作为Stream的接收方。客户端为发送方。
+
+【服务器】
+
+```csharp
+TcpTouceRpcService service = CreateTcpTouceRpcService();
+
+service.StreamTransfering += (socketClient, e) =>
+{
+    e.Bucket = new MemoryStream();//此处用MemoryStream作为接收容器，也可以使用FileStream。
+    e.AddOperation(Operation.Permit);//允许接收该流
+    Metadata metadata = e.Metadata;//获取元数据
+    StreamOperator streamOperator = e.StreamOperator;//获取操作器，可用于取消任务，获取进度等。
+
+    //Console.WriteLine("设置最大传输速度为1024byte");
+    //streamOperator.SetMaxSpeed(1024);
+
+    //Console.WriteLine("5秒后设置为5Mb");
+    //RRQMCore.Run.EasyAction.DelayRun(5, () =>
+    //{
+    // streamOperator.SetMaxSpeed(1024 * 1024 * 5);
+    //});
+
+    Task.Run(async () =>
+    {
+        while (streamOperator.Result.ResultCode == ResultCode.Default)
+        {
+            Console.WriteLine($"速度={streamOperator.Speed()},进度={streamOperator.Progress}");
+
+            await Task.Delay(1000);
+        }
+
+        Console.WriteLine($"从循环传输结束,状态={streamOperator.Result}");
+    });
+    Console.WriteLine("开始接收流数据");
+};
+
+service.StreamTransfered += (socketClient, e) =>
+{
+    //此处不管传输成功与否，都会执行，具体状态通过e.Status判断。
+    if (e.Result.ResultCode == ResultCode.Success)
+    {
+       
+    }
+    e.Bucket.Dispose();//必须手动释放流数据。
+    Console.WriteLine($"从ReceivedStream传输结束,状态={e.Result}");
+};
+
+```
+
+【客户端】
+
+```csharp
+TcpTouchRpcClient client = CreateTcpTouchRpcClient();
+
+byte[] data = new byte[1024 * 1024 * 50];
+new Random().NextBytes(data);
+MemoryStream stream = new MemoryStream(data);
+stream.Position = 0;
+
+Console.WriteLine($"即将发送流数据，长度为:{stream.Length}");
+
+StreamOperator streamOperator = new StreamOperator();
+streamOperator.PackageSize = 1024 * 64;//分包长度
+//streamOperator.SetMaxSpeed(1024 * 1024 * 5);//最大传输值
+
+//streamOperator.Cancel();//随时取消传输
+
+LoopAction loopAction = LoopAction.CreateLoopAction(-1, 1000, (a) =>
+{
+    if (streamOperator.Result.ResultCode != ResultCode.Default)
+    {
+        a.Dispose();
+    }
+    Console.WriteLine($"速度：{streamOperator.Speed()},进度：{streamOperator.Progress}");
+});
+loopAction.RunAsync();
+
+Metadata metadata = new Metadata();//将键值对的元数据传到接收端
+metadata.Add("1", "1");
+metadata.Add("2", "2");
+
+//该方法会阻塞，直到结束
+Result result = client.SendStream(stream, streamOperator, metadata);
+Console.WriteLine(result);
+
+```
