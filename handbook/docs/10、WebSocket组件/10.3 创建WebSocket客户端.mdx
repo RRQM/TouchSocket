@@ -1,0 +1,121 @@
+---
+id: createwebsocketclient
+sidebar_position: 3
+title: 创建WebSocket客户端
+sidebar_label: 10.3 创建WebSocket客户端
+---
+
+
+## 说明
+
+支持Ssl的WebSocket客户端。
+
+
+## 可配置项
+
+继承HttpClient。
+
+<a name="QMJHm"></a>
+
+## 支持插件接口
+
+支持**ITcpPlugin、IWebSocketPlugin**
+
+<a name="zKCwx"></a>
+
+## 创建WS客户端
+
+```csharp
+WebSocketClient myWSClient = new WebSocketClient();
+//myWSClient.Received += this.MyWSClient_Received;
+//myWSClient.Handshaked += this.MyWSClient_Handshaked;
+
+myWSClient.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost(this.textBox3.Text)
+    .ConfigureContainer(a =>
+    {
+        a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+    }));
+myWSClient.Connect();
+
+myWSClient.Logger.Message("连接成功");
+```
+
+<a name="xWVU6"></a>
+
+## 创建WSs客户端
+
+***当需要连接到由证书机构颁发的网址（例如：**小程序**、\_\_物联网\_\_等）时，仅需要设置url即可。***
+
+```csharp
+wss://127.0.0.1:7789/ws
+```
+
+**当连接自定义证书的Ssl：wss://127.0.0.1:7789/ws**
+
+```csharp
+WebSocketClient myWSClient = new WebSocketClient();
+
+myWSClient.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost(new IPHost("wss://127.0.0.1:7789/ws"))
+    .SetClientSslOption(
+    new ClientSslOption()
+    {
+        ClientCertificates = new X509CertificateCollection() { new X509Certificate2("RRQMSocket.pfx", "RRQMSocket") },
+        SslProtocols = SslProtocols.Tls12,
+        TargetHost = "127.0.0.1",
+        CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
+    }))
+    .Connect();
+
+Console.WriteLine("连接成功");
+while (true)
+{
+    myWSClient.SendWithWS(Console.ReadLine());
+}
+```
+
+***注意：当使用域名连接时，TargetHost为域名，例如连接到IPHost("ws://baidu.com")时，TargetHost应当填写：baidu.com*** <a name="JKBcN"></a>
+
+## 发送数据
+
+将client对象转为**HttpClient**，即可使用**扩展方法**，进行发送。
+
+**作为一条消息发送**
+
+
+**将一个数据分包发送**
+例如：发送的数据为{0,1,2,3,4,5,6,7,8,9}，当设置packageSize为5时，会先发送{0,1,2,3,4}作为头包，然后发送{5,6,7,8,9}的后继包。
+
+
+<a name="RhCgs"></a>
+
+## 接收数据
+
+**订阅Received事件实现，或使用插件实现。**
+
+```csharp
+client.Received += (c, e) =>
+    {
+        switch (e.Opcode)
+        {
+            case WSDataType.Cont:
+                break;
+            case WSDataType.Text:
+                break;
+            case WSDataType.Binary:
+                break;
+            case WSDataType.Close:
+                break;
+            case WSDataType.Ping:
+                break;
+            case WSDataType.Pong:
+                break;
+            default:
+                break;
+        }
+    };
+```
+
+**附加插件实现**
+该操作和服务器一致。
