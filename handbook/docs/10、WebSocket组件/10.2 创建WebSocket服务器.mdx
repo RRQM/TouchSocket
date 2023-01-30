@@ -10,19 +10,16 @@ sidebar_label: 10.2 创建WebSocket服务器
 
 WebSocket是基于Http协议的升级协议，所以应当挂载在http服务器执行。
 
-<a name="cmsde"></a>
 
 ## 二、可配置项
 
 继承HttpService
 
-<a name="mMhq1"></a>
 
 ## 三、支持插件接口
 
 支持**ITcpPlugin、IHttpPlugin、IWebSocketPlugin**
 
-| <a name="m6yWq"></a>
 
 ### IWebSocketPlugin
 
@@ -32,11 +29,8 @@ WebSocket是基于Http协议的升级协议，所以应当挂载在http服务器
 | OnHandshaked | 表示完成握手后。 |
 | OnHandleWSDataFrame | 当收到WS数据时。 |
 
-<br />
-<a name="umBla"></a>
 ## 四、创建WebSocket服务
 
-<a name="KCLVf"></a>
 
 #### 4.1 简单通过插件创建
 
@@ -65,7 +59,6 @@ Console.WriteLine("ws://127.0.0.1:7789/ws");
 
 ```
 
-<a name="R6kn6"></a>
 
 #### 4.2 通过WebApi创建
 
