@@ -1,0 +1,142 @@
+---
+id: customdatahandlingadapter
+sidebar_position: 6
+title: 用户自定义适配器
+sidebar_label: f.用户自定义适配器
+---
+
+<a name="zLtDH"></a>
+
+## 一、说明
+
+和原始适配器相比，用户自定义适配器（**CustomDataHandlingAdapter**）简单很多。因为他只需要考虑接下来如何处理即可。
+
+<a name="ndiFD"></a>
+
+## 二、运行逻辑
+
+
+
+还是以下列数据为例：
+
+
+<a name="eCz77"></a>
+
+## 三、特点
+
+1. 更加自由度的操作数据。
+2. 能够简单的缓存不能解析的数据。
+
+<a name="S5MfM"></a>
+
+## 四、使用
+
+客户端与服务器均适用。下列以服务器为例。
+
+步骤
+
+1. 声明新建类，实现IRequestInfo接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
+2. 声明新建类，继承CustomDataHandlingAdapter，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
+3. TouchSocketConfig配置中设置。
+4. 通过Received（事件、方法、插件）中的RequestInfo对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
+
+【定义适配器】
+
+```csharp
+internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequestInfo>
+{
+
+    /// <summary>
+    /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
+    /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
+    /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Pos"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
+    /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
+    /// </summary>
+    /// <param name="byteBlock">字节块</param>
+    /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
+    /// <param name="request">对象。</param>
+    /// <param name="tempCapacity">缓存容量指导，指示当需要缓存时，应该申请多大的内存。</param>
+    /// <returns></returns>
+    protected override FilterResult Filter(ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
+    {
+        //以下解析思路为一次性解析，不考虑缓存的临时对象。
+
+        if (byteBlock.CanReadLen < 3)
+        {
+            return FilterResult.Cache;//当头部都无法解析时，直接缓存
+        }
+
+        int pos = byteBlock.Pos;//记录初始游标位置，防止本次无法解析时，回退游标。
+
+        MyRequestInfo myRequestInfo = new MyRequestInfo();
+
+        byteBlock.Read(out byte[] header, 3);//填充header
+
+        //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
+        //所有只需呀再读取header[0]-2个长度即可。
+        byte bodyLength = (byte)(header[0] - 2);
+
+        if (bodyLength > byteBlock.CanReadLen)
+        {
+            //body数据不足。
+            byteBlock.Pos = pos;//回退游标
+            return FilterResult.Cache;
+        }
+        else
+        {
+            byteBlock.Read(out byte[] body, bodyLength);//填充body
+
+            myRequestInfo.Header = header;
+            myRequestInfo.DataType = header[1];
+            myRequestInfo.OrderType = header[2];
+            myRequestInfo.Body = body;
+            request = myRequestInfo;//赋值ref
+            return FilterResult.Success;//返回成功
+        }
+    }
+}
+
+internal class MyRequestInfo : IRequestInfo
+{
+    /// <summary>
+    /// 自定义属性,Body
+    /// </summary>
+    public byte[] Body { get; internal set; }
+
+    /// <summary>
+    /// 自定义属性,Header
+    /// </summary>
+    public byte[] Header { get; internal set; }
+
+    /// <summary>
+    /// 自定义属性,DataType
+    /// </summary>
+    public byte DataType { get; internal set; }
+
+    /// <summary>
+    /// 自定义属性,OrderType
+    /// </summary>
+    public byte OrderType { get; internal set; }
+}
+```
+
+【接收】
+
+```csharp
+TcpService service = new TcpService();
+service.Received += (client, byteBlock, requestInfo) =>
+{
+    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
+    if (requestInfo is MyRequestInfo myRequestInfo)
+    {
+        //此处可以处理MyRequestInfo的相关信息了。
+        string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);
+    }
+  
+};
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
+    .SetDataHandlingAdapter(() => { return new MyCustomDataHandlingAdapter(); }))//配置适配器
+    .Start();//启动
+```
