@@ -116,7 +116,7 @@ namespace TouchSocket.Sockets
                 }
                 else if (m_tempByteBlock == null)
                 {
-                    m_tempByteBlock = BytePool.GetByteBlock(r * 2);
+                    m_tempByteBlock = new ByteBlock(r * 2);
                     m_tempByteBlock.Write(buffer, 0, r);
                     if (UpdateCacheTimeWhenRev)
                     {
@@ -139,7 +139,7 @@ namespace TouchSocket.Sockets
                         length = lastIndex - startIndex - m_terminatorCode.Length + 1;
                     }
 
-                    ByteBlock packageByteBlock = BytePool.GetByteBlock(length);
+                    ByteBlock packageByteBlock = new ByteBlock(length);
                     packageByteBlock.Write(buffer, startIndex, length);
 
                     string mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, (int)packageByteBlock.Position);
@@ -150,7 +150,7 @@ namespace TouchSocket.Sockets
                 Reset();
                 if (startIndex < r)
                 {
-                    m_tempByteBlock = BytePool.GetByteBlock((r - startIndex) * 2);
+                    m_tempByteBlock = new ByteBlock((r - startIndex) * 2);
                     m_tempByteBlock.Write(buffer, startIndex, r - startIndex);
                     if (UpdateCacheTimeWhenRev)
                     {
@@ -173,7 +173,7 @@ namespace TouchSocket.Sockets
                 throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
             int dataLen = length - offset + m_terminatorCode.Length;
-            ByteBlock byteBlock = BytePool.GetByteBlock(dataLen);
+            ByteBlock byteBlock = new ByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);
             byteBlock.Write(m_terminatorCode);
 
@@ -203,7 +203,7 @@ namespace TouchSocket.Sockets
                 throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
             int dataLen = length + m_terminatorCode.Length;
-            ByteBlock byteBlock = BytePool.GetByteBlock(dataLen);
+            ByteBlock byteBlock = new ByteBlock(dataLen);
             foreach (var item in transferBytes)
             {
                 byteBlock.Write(item.Array, item.Offset, item.Count);

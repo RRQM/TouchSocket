@@ -125,6 +125,46 @@ namespace TouchSocket.Rpc
             }
         }
 
+        /// <summary>
+        /// 获取类型全名
+        /// </summary>
+        /// <param name="parameterInfo"></param>
+        /// <returns></returns>
+        public string GetTypeFullName(ParameterInfo parameterInfo)
+        {
+            Type type= parameterInfo.ParameterType.GetRefOutType();
+            if (type.IsGenericType && type.FullName.StartsWith("System.ValueTuple"))
+            {
+                Type[] elementType = type.GetGenericArguments();
+
+                var strs = elementType.Select(e => GetTypeFullName(e));
+                var names = parameterInfo.GetTupleElementNames().ToArray();
+                if (names == null)
+                {
+                    return $"({string.Join(",", strs)})";
+                }
+                else
+                {
+                    StringBuilder stringBuilder=new StringBuilder();
+                    stringBuilder.Append("(");
+                    int i = 0;
+                    foreach (var item in strs)
+                    {
+                        stringBuilder.Append($"{item} {names[i]} ");
+                        if (names.Length-1>i)
+                        {
+                            stringBuilder.Append(",");
+                        }
+                        i++;
+                    }
+                    stringBuilder.Append(")");
+                    return stringBuilder.ToString();
+                }
+            }
+
+            return GetTypeFullName(parameterInfo.ParameterType);
+        }
+
         internal void CheckDeep()
         {
             foreach (var strItem in GenericTypeDic)

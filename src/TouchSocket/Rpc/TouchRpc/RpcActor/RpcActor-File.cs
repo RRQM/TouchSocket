@@ -325,12 +325,13 @@ namespace TouchSocket.Rpc.TouchRpc
                 fileOperator.SetLength(reader.FileStorage.FileInfo.Length);
                 if (TrySubscribeChannel(waitTransfer.ChannelID, out Channel channel))
                 {
-                    ByteBlock byteBlock = BytePool.GetByteBlock(TouchRpcUtility.TransferPackage);
+                    ByteBlock byteBlock = BytePool.Default.GetByteBlock(TouchRpcUtility.TransferPackage);
                     try
                     {
                         long position = waitTransfer.Position;
                         reader.Position = position;
                         fileOperator.SetFileCompletedLength(waitTransfer.Position);
+
                         channel.Timeout = fileOperator.Timeout;
                         while (true)
                         {
@@ -686,7 +687,7 @@ namespace TouchSocket.Rpc.TouchRpc
             WaitData<IWaitResult> waitData = WaitHandlePool.GetWaitData(waitSmallFilePackage);
 
             ByteBlock byteBlock = new ByteBlock();
-            byte[] buffer = BytePool.GetByteCore((int)fileInfo.Length);
+            byte[] buffer = BytePool.Default.GetByteCore((int)fileInfo.Length);
             try
             {
                 int r = FileController.ReadAllBytes(fileInfo, buffer);
@@ -745,7 +746,7 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 WaitHandlePool.Destroy(waitData);
                 byteBlock.Dispose();
-                BytePool.Recycle(buffer);
+                BytePool.Default.Recycle(buffer);
             }
         }
 
@@ -756,7 +757,7 @@ namespace TouchSocket.Rpc.TouchRpc
             //4.不存在
             //5.读取文件长度异常
 
-            byte[] buffer = BytePool.GetByteCore(MaxSmallFileLength);
+            byte[] buffer = BytePool.Default.GetByteCore(MaxSmallFileLength);
             try
             {
                 WaitSmallFilePackage waitSmallFilePackage = (WaitSmallFilePackage)o;
@@ -838,7 +839,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             finally
             {
-                BytePool.Recycle(buffer);
+                BytePool.Default.Recycle(buffer);
             }
         }
 
@@ -918,7 +919,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         {
                             if (TrySubscribeChannel(waitTransferPackage.ChannelID, out Channel channel))
                             {
-                                ByteBlock byteBlock = BytePool.GetByteBlock(TouchRpcUtility.TransferPackage);
+                                ByteBlock byteBlock = BytePool.Default.GetByteBlock(TouchRpcUtility.TransferPackage);
                                 FileOperator fileOperator = args.FileOperator;
                                 fileOperator.SetLength(reader.FileStorage.FileInfo.Length);
                                 try

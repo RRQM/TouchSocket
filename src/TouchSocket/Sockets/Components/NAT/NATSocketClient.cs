@@ -103,7 +103,7 @@ namespace TouchSocket.Sockets
 
         private void TcpClient_Disconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
-            client.Dispose();
+            client.SafeDispose();
             m_targetClients.Remove((ITcpClient)client);
             m_internalDis?.Invoke(this, (ITcpClient)client, e);
         }

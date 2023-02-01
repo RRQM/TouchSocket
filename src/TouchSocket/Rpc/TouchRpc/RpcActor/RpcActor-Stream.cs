@@ -37,8 +37,8 @@ namespace TouchSocket.Rpc.TouchRpc
             streamOperator.SetLength(size);
             waitStream.Size = size;
             waitStream.StreamType = stream.GetType().FullName;
-            ByteBlock byteBlock = BytePool.GetByteBlock(TouchRpcUtility.TransferPackage)
-                .WriteObject(waitStream);
+            ByteBlock byteBlock = BytePool.Default.GetByteBlock(TouchRpcUtility.TransferPackage);
+            byteBlock.WriteObject(waitStream);
             try
             {
                 Send(TouchRpcUtility.P_400_SendStreamToSocketClient_Request, byteBlock);
@@ -186,8 +186,9 @@ namespace TouchSocket.Rpc.TouchRpc
                 }
 
                 waitStream.Metadata = null;
-                using (ByteBlock byteBlock = new ByteBlock().WriteObject(waitStream))
+                using (ByteBlock byteBlock = new ByteBlock())
                 {
+                    byteBlock.WriteObject(waitStream);
                     Send(TouchRpcUtility.P_401_SendStreamToClient, byteBlock);
                 }
             }
@@ -247,8 +248,9 @@ namespace TouchSocket.Rpc.TouchRpc
                 }
 
                 waitStream.Metadata = null;
-                using (ByteBlock byteBlock = new ByteBlock().WriteObject(waitStream))
+                using (ByteBlock byteBlock = new ByteBlock())
                 {
+                    byteBlock.WriteObject(waitStream);
                     Send(TouchRpcUtility.P_1400_SendStreamToSocketClient_Response, byteBlock);
                 }
             }

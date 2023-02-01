@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core
 {
@@ -91,9 +92,11 @@ namespace TouchSocket.Core
         /// 判断当前系统是否为设置的大小端
         /// </summary>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsSameOfSet()
         {
             return !(BitConverter.IsLittleEndian ^ (endianType == EndianType.Little));
+            //return true;
         }
 
         #region ushort
@@ -121,13 +124,17 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public ushort ToUInt16(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[2];
-            Array.Copy(buffer, offset, bytes, 0, 2);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToUInt16(buffer, offset);
             }
-            return BitConverter.ToUInt16(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[2];
+                Array.Copy(buffer, offset, bytes, 0, 2);
+                Array.Reverse(bytes);
+                return BitConverter.ToUInt16(bytes, 0);
+            }
         }
 
         #endregion ushort
@@ -158,13 +165,18 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public ulong ToUInt64(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[8];
-            Array.Copy(buffer, offset, bytes, 0, 8);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToUInt64(buffer, offset);
             }
-            return BitConverter.ToUInt64(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[8];
+                Array.Copy(buffer, offset, bytes, 0, 8);
+                Array.Reverse(bytes);
+                return BitConverter.ToUInt64(bytes,0);
+            }
+            
         }
 
         #endregion ulong
@@ -220,13 +232,17 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public char ToChar(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[2];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToChar(buffer, offset);
             }
-            return BitConverter.ToChar(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[2];
+                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+                Array.Reverse(bytes);
+                return BitConverter.ToChar(bytes, 0);
+            }
         }
 
         #endregion char
@@ -257,13 +273,18 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public short ToInt16(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[2];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToInt16(buffer, offset);
             }
-            return BitConverter.ToInt16(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[2];
+                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+                Array.Reverse(bytes);
+                return BitConverter.ToInt16(bytes, 0);
+            }
+           
         }
 
         #endregion short
@@ -294,13 +315,17 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public int ToInt32(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[4];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToInt32(buffer, offset);
             }
-            return BitConverter.ToInt32(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[4];
+                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+                Array.Reverse(bytes);
+                return BitConverter.ToInt32(bytes, 0);
+            }
         }
 
         #endregion int
@@ -331,13 +356,18 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public long ToInt64(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[8];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToInt64(buffer, offset);
             }
-            return BitConverter.ToInt64(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[8];
+                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+                Array.Reverse(bytes);
+                return BitConverter.ToInt64(bytes, 0);
+            }
+           
         }
 
         #endregion long
@@ -368,13 +398,17 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public uint ToUInt32(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[4];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToUInt32(buffer, offset);
             }
-            return BitConverter.ToUInt32(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[4];
+                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+                Array.Reverse(bytes);
+                return BitConverter.ToUInt32(bytes, 0);
+            }
         }
 
         #endregion uint
@@ -405,13 +439,17 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public float ToSingle(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[4];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToSingle(buffer, offset);
             }
-            return BitConverter.ToSingle(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[4];
+                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+                Array.Reverse(bytes);
+                return BitConverter.ToSingle(bytes, 0);
+            }
         }
 
         #endregion float
@@ -442,13 +480,17 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public double ToDouble(byte[] buffer, int offset)
         {
-            byte[] bytes = new byte[8];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (!IsSameOfSet())
+            if (IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                return BitConverter.ToDouble(buffer, offset);
             }
-            return BitConverter.ToDouble(bytes, 0);
+            else
+            {
+                byte[] bytes = new byte[8];
+                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+                Array.Reverse(bytes);
+                return BitConverter.ToDouble(bytes, 0);
+            }
         }
 
         #endregion long

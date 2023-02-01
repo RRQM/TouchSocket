@@ -435,7 +435,7 @@ namespace TouchSocket.Sockets
                             SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
                             m_socketAsyncs.Add(eventArg);
                             eventArg.Completed += IO_Completed;
-                            ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength);
+                            ByteBlock byteBlock = new ByteBlock(BufferLength);
                             eventArg.UserToken = byteBlock;
                             eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                             eventArg.RemoteEndPoint = iPHost.EndPoint;
@@ -452,7 +452,7 @@ namespace TouchSocket.Sockets
                                 SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
                                 m_socketAsyncs.Add(eventArg);
                                 eventArg.Completed += IO_Completed;
-                                ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength);
+                                ByteBlock byteBlock = new ByteBlock(BufferLength);
                                 eventArg.UserToken = byteBlock;
                                 eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                                 eventArg.RemoteEndPoint = iPHost.EndPoint;
@@ -678,7 +678,7 @@ namespace TouchSocket.Sockets
 
                 HandleBuffer(e.RemoteEndPoint, byteBlock);
 
-                ByteBlock newByteBlock = BytePool.GetByteBlock(BufferLength);
+                ByteBlock newByteBlock = new ByteBlock(BufferLength);
                 e.UserToken = newByteBlock;
                 e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 

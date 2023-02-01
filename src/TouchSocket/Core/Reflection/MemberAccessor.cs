@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -40,11 +41,19 @@ namespace TouchSocket.Core
             this.OnGetProperties = (t) => { return t.GetProperties(); };
         }
 
+        private Dictionary<string, FieldInfo> dicFieldInfes;
+        private Dictionary<string, PropertyInfo> dicProperties;
         /// <summary>
         /// 构建
         /// </summary>
         public void Build()
         {
+            if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            {
+                dicFieldInfes = this.OnGetFieldInfes.Invoke(Type).ToDictionary(a => a.Name);
+                dicProperties = this.OnGetProperties.Invoke(Type).ToDictionary(a => a.Name);
+            }
+
             GetValueDelegate = GenerateGetValue();
             SetValueDelegate = GenerateSetValue();
         }
@@ -78,6 +87,22 @@ namespace TouchSocket.Core
 
         private Func<object, string, object> GenerateGetValue()
         {
+            if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            {
+                return (obj, key) =>
+                {
+                    if (dicFieldInfes.TryGetValue(key, out var value1))
+                    {
+                        return value1.GetValue(obj);
+                    }
+                    if (dicProperties.TryGetValue(key, out var value2))
+                    {
+                        return value2.GetValue(obj);
+                    }
+                    return default;
+                };
+            }
+
             var instance = Expression.Parameter(typeof(object), "instance");
             var memberName = Expression.Parameter(typeof(string), "memberName");
             var nameHash = Expression.Variable(typeof(int), "nameHash");
@@ -109,6 +134,21 @@ namespace TouchSocket.Core
 
         private Action<object, string, object> GenerateSetValue()
         {
+            if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            {
+                return (obj, key, value) =>
+                {
+                    if (dicFieldInfes.TryGetValue(key, out var value1))
+                    {
+                        value1.SetValue(obj, value);
+                    }
+                    if (dicProperties.TryGetValue(key, out var value2))
+                    {
+                        value2.SetValue(obj, value);
+                    }
+                };
+            }
+
             var instance = Expression.Parameter(typeof(object), "instance");
             var memberName = Expression.Parameter(typeof(string), "memberName");
             var newValue = Expression.Parameter(typeof(object), "newValue");

@@ -22,14 +22,19 @@ namespace TouchSocket.Core
     /// <summary>
     /// 字节池
     /// </summary>
-    public static class BytePool
+    public class BytePool
     {
-        private static readonly ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
-        private static readonly Timer m_timer;
-        private static long m_fullSize;
-        private static long m_maxSize;
+        private readonly ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
+        private readonly Timer m_timer;
+        private long m_fullSize;
+        private long m_maxSize;
 
         static BytePool()
+        {
+            Default = new BytePool();
+        }
+
+        private BytePool()
         {
             m_timer = new Timer((o) =>
             {
@@ -43,30 +48,35 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 表示内存池是否可用。
-        /// <para>当业务太轻量级，且要求超高并发时（千万数量级别），可禁用内存池。</para>
+        /// 默认的内存池实例
         /// </summary>
-        public static bool Disabled { get; set; }
+        public static BytePool Default { get; }
 
         /// <summary>
         /// 回收内存时，自动归零
         /// </summary>
-        public static bool AutoZero { get; set; }
+        public bool AutoZero { get; set; }
+
+        /// <summary>
+        /// 表示内存池是否可用。
+        /// <para>当业务太轻量级，且要求超高并发时（千万数量级别），可禁用内存池。</para>
+        /// </summary>
+        public bool Disabled { get; set; }
 
         /// <summary>
         /// 键容量
         /// </summary>
-        public static int KeyCapacity { get; set; }
+        public int KeyCapacity { get; set; }
 
         /// <summary>
         /// 单个块最大值
         /// </summary>
-        public static int MaxBlockSize { get; private set; }
+        public int MaxBlockSize { get; private set; }
 
         /// <summary>
         /// 允许的内存池最大值
         /// </summary>
-        public static long MaxSize
+        public long MaxSize
         {
             get => m_maxSize;
             set
@@ -82,14 +92,14 @@ namespace TouchSocket.Core
         /// <summary>
         /// 单个块最小值
         /// </summary>
-        public static int MinBlockSize { get; private set; }
+        public int MinBlockSize { get; private set; }
 
         /// <summary>
         /// 添加尺寸键
         /// </summary>
         /// <param name="byteSize"></param>
         /// <returns></returns>
-        public static bool AddSizeKey(int byteSize)
+        public bool AddSizeKey(int byteSize)
         {
             if (bytesDictionary.TryAdd(byteSize, new BytesQueue(byteSize)))
             {
@@ -101,7 +111,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 清理
         /// </summary>
-        public static void Clear()
+        public void Clear()
         {
             bytesDictionary.Clear();
             GC.Collect();
@@ -112,7 +122,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteSize"></param>
         /// <returns></returns>
-        public static bool ContainsSizeKey(int byteSize)
+        public bool ContainsSizeKey(int byteSize)
         {
             return bytesDictionary.ContainsKey(byteSize);
         }
@@ -121,7 +131,7 @@ namespace TouchSocket.Core
         /// 获取所以内存键
         /// </summary>
         /// <returns></returns>
-        public static long[] GetAllSizeKeys()
+        public long[] GetAllSizeKeys()
         {
             return bytesDictionary.Keys.ToArray();
         }
@@ -132,20 +142,9 @@ namespace TouchSocket.Core
         /// <param name="byteSize">长度</param>
         /// <param name="equalSize">要求长度相同</param>
         /// <returns></returns>
-        public static ByteBlock GetByteBlock(int byteSize, bool equalSize)
+        public ByteBlock GetByteBlock(int byteSize, bool equalSize)
         {
             return new ByteBlock(byteSize, equalSize);
-        }
-
-        /// <summary>
-        ///  获取ValueByteBlock
-        /// </summary>
-        /// <param name="byteSize"></param>
-        /// <param name="equalSize"></param>
-        /// <returns></returns>
-        public static ValueByteBlock GetValueByteBlock(int byteSize, bool equalSize)
-        {
-            return new ValueByteBlock(byteSize, equalSize);
         }
 
         /// <summary>
@@ -153,19 +152,9 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteSize"></param>
         /// <returns></returns>
-        public static ByteBlock GetByteBlock(int byteSize)
+        public ByteBlock GetByteBlock(int byteSize)
         {
             return new ByteBlock(byteSize, false);
-        }
-
-        /// <summary>
-        /// 获取ValueByteBlock
-        /// </summary>
-        /// <param name="byteSize"></param>
-        /// <returns></returns>
-        public static ValueByteBlock GetValueByteBlock(int byteSize)
-        {
-            return new ValueByteBlock(byteSize, false);
         }
 
         /// <summary>
@@ -175,7 +164,7 @@ namespace TouchSocket.Core
         /// <param name="byteSize"></param>
         /// <param name="equalSize"></param>
         /// <returns></returns>
-        public static byte[] GetByteCore(int byteSize, bool equalSize = false)
+        public byte[] GetByteCore(int byteSize, bool equalSize = false)
         {
             if (Disabled)
             {
@@ -224,7 +213,7 @@ namespace TouchSocket.Core
         /// 获取内存池容量
         /// </summary>
         /// <returns></returns>
-        public static long GetPoolSize()
+        public long GetPoolSize()
         {
             long size = 0;
             foreach (var item in bytesDictionary.Values)
@@ -235,11 +224,32 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        ///  获取ValueByteBlock
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <param name="equalSize"></param>
+        /// <returns></returns>
+        public ValueByteBlock GetValueByteBlock(int byteSize, bool equalSize)
+        {
+            return new ValueByteBlock(byteSize, equalSize);
+        }
+
+        /// <summary>
+        /// 获取ValueByteBlock
+        /// </summary>
+        /// <param name="byteSize"></param>
+        /// <returns></returns>
+        public ValueByteBlock GetValueByteBlock(int byteSize)
+        {
+            return new ValueByteBlock(byteSize, false);
+        }
+
+        /// <summary>
         /// 回收内存核心。
         /// <para>注意：回收的内存，必须百分百确定该对象没有再被其他引用。不然这属于危险操作。</para>
         /// </summary>
         /// <param name="bytes"></param>
-        public static void Recycle(byte[] bytes)
+        public void Recycle(byte[] bytes)
         {
             if (Disabled)
             {
@@ -277,7 +287,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteSize"></param>
         /// <returns></returns>
-        public static bool RemoveSizeKey(int byteSize)
+        public bool RemoveSizeKey(int byteSize)
         {
             if (bytesDictionary.TryRemove(byteSize, out BytesQueue queue))
             {
@@ -292,14 +302,14 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="minBlockSize"></param>
         /// <param name="maxBlockSize"></param>
-        public static void SetBlockSize(int minBlockSize, int maxBlockSize)
+        public void SetBlockSize(int minBlockSize, int maxBlockSize)
         {
-            BytePool.MaxBlockSize = maxBlockSize;
-            BytePool.MinBlockSize = minBlockSize;
+            this.MaxBlockSize = maxBlockSize;
+            this.MinBlockSize = minBlockSize;
             bytesDictionary.Clear();
         }
 
-        private static void CheckKeyCapacity(int byteSize)
+        private void CheckKeyCapacity(int byteSize)
         {
             if (byteSize < MinBlockSize || byteSize > MaxBlockSize)
             {
@@ -324,7 +334,7 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int HitSize(int num)
+        private int HitSize(int num)
         {
             if (num < MinBlockSize)
             {
