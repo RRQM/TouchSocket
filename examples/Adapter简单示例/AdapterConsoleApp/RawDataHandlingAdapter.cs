@@ -77,7 +77,7 @@ namespace AdapterConsoleApp
             {
                 throw new OverlengthException("发送数据太长。");
             }
-            ByteBlock byteBlock = BytePool.GetByteBlock(64 * 1024);//从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请64K
+            ByteBlock byteBlock = new ByteBlock(64 * 1024);//从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请64K
                                                                    //ByteBlock byteBlock = BytePool.GetByteBlock(dataLen+1);//实际写法。
             try
             {
@@ -135,14 +135,14 @@ namespace AdapterConsoleApp
                 int recedSurPlusLength = r - index - 1;
                 if (recedSurPlusLength >= length)
                 {
-                    ByteBlock byteBlock = BytePool.GetByteBlock(length);
+                    ByteBlock byteBlock =new ByteBlock(length);
                     byteBlock.Write(dataBuffer, index + 1, length);
                     PreviewHandle(byteBlock);
                     m_surPlusLength = 0;
                 }
                 else//半包
                 {
-                    this.m_tempByteBlock = BytePool.GetByteBlock(length);
+                    this.m_tempByteBlock = new ByteBlock(length);
                     m_surPlusLength = (byte)(length - recedSurPlusLength);
                     this.m_tempByteBlock.Write(dataBuffer, index + 1, recedSurPlusLength);
                 }
