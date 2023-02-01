@@ -24,14 +24,10 @@ import Tag from "@site/src/components/Tag.js";
 
 更新描述：兼容性更新。
 
-
   - &nbsp;<Tag>优化</Tag> TouchRpc支持命名元组。
-  
   - &nbsp;<Tag>修复</Tag> 序列化、反射在unity中使用il2cpp编译的bug。
-
   - &nbsp;<Tag>新增</Tag> ByteBlock对于int，long等数据，写入和读取的时候支持大小端指定。
-
-  - &nbsp;<Tag>调整</Tag> 将BytePoll由静态调整为实例，且由其Default实例作为默认。
+  - &nbsp;<Tag>调整</Tag> 将BytePool由静态调整为实例，且由其Default实例作为默认。
 ---
 
 ## v1.1.0
@@ -40,17 +36,12 @@ import Tag from "@site/src/components/Tag.js";
 
 更新描述：小版本升级，可能会有不兼容。请按下列提示修改。 
 
-
   - &nbsp;<Tag>优化</Tag> TouchRpc系文件传输时，文件夹不存在的提示。
   - &nbsp;<Tag>优化</Tag> WaitingClient，当客户端断开连接时，可选是否抛出异常。
   - &nbsp;<Tag>优化</Tag> Fast序列化时。可选序列化只读属性。
-
   - &nbsp;<Tag>修复</Tag> 多个不稳定Bug。
-
   - &nbsp;<Tag>新增</Tag> Tcp客户端新增Disconnecting事件。在主动Close时生效。
-
   - &nbsp;<Tag>调整</Tag> 多个事件类名称修改，请按照提示修改即可。
-
   - &nbsp;<Tag>移除</Tag> 多个无用方法参数。
 ---
 
@@ -61,12 +52,9 @@ import Tag from "@site/src/components/Tag.js";
 更新描述：大版本升级，请详细阅读下列更新日志。
 
   - &nbsp;<Tag>升级</Tag> 将最高版本升级为NET7。
-
   - &nbsp;<Tag>优化</Tag> Tcp系异步发送效率。
   - &nbsp;<Tag>优化</Tag> TouchRpc系Channel的稳健性。
-
   - &nbsp;<Tag>修复</Tag> 多个不稳定Bug。
-
   - &nbsp;<Tag>新增</Tag> ValueByteBlock，在简单代码块里面能有效减少创建的类。
   - &nbsp;<Tag>新增</Tag> MemoryCache类，其功能类似微软官方。但是支持全部泛型。
   - &nbsp;<Tag>新增</Tag> [IPackage系](https://www.yuque.com/rrqm/touchsocket/ag9tyar9mmhsme0m)。该系列能以超高效率的进行二进制序列化。
@@ -76,7 +64,6 @@ import Tag from "@site/src/components/Tag.js";
   - &nbsp;<Tag>新增</Tag> TouchRpc系小文件传输，在文件小于1Mb时，其传输效率是常规传输的10倍以上。
   - &nbsp;<Tag>新增</Tag> TouchRpc系超大文件多链路传输，支持多个客户端协同传输同一个文件，这在互联网环境中，效率比常规传输提高类3-5倍。
   - &nbsp;<Tag>新增</Tag> TouchRpc系Redis组件，能实现双端共同存储。
-
   - &nbsp;<Tag>调整</Tag> 严重精简所有命名空间，删除所有三级命名空间。例如：TouchSocket.Core.ByteManager精简为TouchSocket.Core。
   - &nbsp;<Tag>调整</Tag> 严重删除Newtonsoft.Json的源代码嵌入。全局的Json会根据环境动态调整，详情见[Json工具](https://www.yuque.com/rrqm/touchsocket/emqy43#PfVh1)
   - &nbsp;<Tag>调整</Tag> 严重框架默认日志由ConsoleLogger，替换为EmptyLogger（不输出任何东西）。
@@ -89,34 +76,33 @@ import Tag from "@site/src/components/Tag.js";
   - &nbsp;<Tag>调整</Tag> TokenInstance改名MessageInstance。
   - &nbsp;<Tag>调整</Tag> TouchRpc系，精简常规文件传输操作。
   - &nbsp;<Tag>调整</Tag> 严重TouchRpc系，所有插件通知参数，默认都设为不允许操作，需要手动设置e.IsPermitOperation=true。
-
   - &nbsp;<Tag>移除</Tag> Newtonsoft.Json的源代码嵌入。全局的Json会根据环境动态调整，详情见[Json工具](https://www.yuque.com/rrqm/touchsocket/emqy43#PfVh1)。
 
-  *** 更新示例指南 ***
+*** 更新示例指南 ***
+
 （1）适配器参数报错：直接删除isAsync参数，以及isAsync为**True**的所有逻辑。
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1671252946592-ef19cd00-63ca-4234-95f8-f217f79a3176.png#averageHue=%23d1d6f1&clientId=u58a6662d-6ba7-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=66&id=uf41edb79&margin=%5Bobject%20Object%5D&name=image.png&originHeight=131&originWidth=2170&originalType=binary&ratio=1&rotation=0&showTitle=false&size=199497&status=done&style=none&taskId=u8d25cc54-a3fd-4d54-b2ea-131d710813c&title=&width=1085)
+![image.png](../static/img/docs/upgrade-1.png)
 （2）依赖属性的声明报错：增加泛型约束即可，详情查看[依赖属性](https://www.yuque.com/rrqm/touchsocket/ubk57o#jyzSl)
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1671253143983-d722a876-e39c-4e11-9728-df7da6bb1a99.png#averageHue=%23d0daee&clientId=u58a6662d-6ba7-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=158&id=u8bb9067d&margin=%5Bobject%20Object%5D&name=image.png&originHeight=316&originWidth=2369&originalType=binary&ratio=1&rotation=0&showTitle=false&size=440764&status=done&style=none&taskId=u0a09b0ab-f692-4bb7-91e1-7b27fb17466&title=&width=1184.5)
+![image.png](../static/img/docs/upgrade-2.png)
 （3）服务端定时清理警告：在配置插件中使用UseCheckClear，并且进行相关配置。
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1671330357184-37a5e313-b8ce-42a4-bb86-1ae6b32d74dd.png#averageHue=%23dde2f3&clientId=u4b343245-662f-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=255&id=u90705ca7&margin=%5Bobject%20Object%5D&name=image.png&originHeight=510&originWidth=2724&originalType=binary&ratio=1&rotation=0&showTitle=false&size=808521&status=done&style=none&taskId=u6f4957fb-5f96-4067-befe-e57fe70a6b2&title=&width=1362)
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1671330408915-585d99ef-655a-4889-8ef6-4dcd1dddd0f3.png#averageHue=%23d5def1&clientId=u4b343245-662f-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=237&id=uce91bc71&margin=%5Bobject%20Object%5D&name=image.png&originHeight=473&originWidth=1830&originalType=binary&ratio=1&rotation=0&showTitle=false&size=628733&status=done&style=none&taskId=u159fed7d-e21c-47e7-a429-25ccf19c8d7&title=&width=915)
+![image.png](../static/img/docs/upgrade-3.png)
+![image.png](../static/img/docs/upgrade-4.png)
 
 ---
 
 
-## 版本号: 0.7.0NET6
+## 版本号: 0.7.0
 更新日期：2022.9.21
 更新描述：兼容性更新，增强型更新。**RPC内容需要客户端与服务器同步更新**。
 更新详情：
 
-| 优化 | 
+优化
 1. Fast二进制序列化，支持自定义序列化。
 2. TouchRpc全系，在文件传输等大型IO时，由于心跳失败而断开连接。
 3. 优化AspNetCore的IContainer。
 4. TcpCommandLinePlugin与WSCommandLinePlugin支持获取客户端参数。
- |
-| --- | --- |
-| 新增 | 
+
+新增
 1. 插件实例会以单例注入容器。
 2. 所有适配器支持[缓存超时](https://www.yuque.com/rrqm/touchsocket/83526e6320dfc85fef317d850aa51e92#Z0S0g)设定。
 3. 修改所有事件为委托。
@@ -127,16 +113,15 @@ import Tag from "@site/src/components/Tag.js";
 8. Rpc支持模板代码重写。
 9. TouchRpc支持元组。
 10. JsonRpc支持Websocket协议。
- |
-| 修改 | 
+
+修改 
 1. IScopedContainer修改为IContainerProvider
- |
-| 修复 | 
+ 
+修复
 1. BytePool回收内存时不判断大小的bug。
- |
-| 删除 | 
+
+删除
 1. 无。
- |
 
 
 ---
@@ -146,27 +131,24 @@ import Tag from "@site/src/components/Tag.js";
 更新描述：兼容性更新，增强型更新。**专为Unity 3D适配**。
 更新详情：
 
-| 优化 | 
+优化
 1. Gzip的压缩效率。
 2. 发送效率。
- |
-| --- | --- |
-| 新增 | 
+
+新增
 1. IDataCompressor数据传输压缩接口。
 2. [RemoteStream](https://www.yuque.com/rrqm/touchsocket/ukq0mu)支持数据读写压缩。
 3. WaitResultPackageBase类，专属非序列化的数据格式化。
 4. DelaySender[延迟缓存发送](https://www.yuque.com/rrqm/touchsocket/1f21a56ee75f896a5b5b38b37b071881#RL0kx)。
- |
-| 修改 | 
-1. 无
- |
-| 修复 | 
-1. Rpc注册服务为单例时，实际上是瞬时服务的bug。
- |
-| 删除 | 
-1. 独立线程发送。
- |
 
+修改
+1. 无
+
+修复
+1. Rpc注册服务为单例时，实际上是瞬时服务的bug。
+
+删除
+1. 独立线程发送。
 
 ---
 
@@ -175,26 +157,24 @@ import Tag from "@site/src/components/Tag.js";
 更新描述：兼容性更新，增强型更新。
 更新详情：
 
-| 优化 | 
+优化
 1. 全局资源的获取逻辑。
- |
-| --- | --- |
-| 新增 | 
+
+新增
 1. Container增加卸载注册功能。
 2. FilePool新增FileStorageStream的获取。
 3. http客户端（及websocket）支持代理和验证代理。
 4. TouchRpc全系新增[远程文件操作](https://www.yuque.com/rrqm/touchsocket/pearz0)
 5. TouchRpc（除udp）新增[远程流访问](https://www.yuque.com/rrqm/touchsocket/ukq0mu)
- |
-| 修改 | 
+
+修改
 1. 无
- |
-| 修复 | 
+
+修复
 1. 修复Http客户端请求重复Header时的bug。
- |
-| 删除 | 
+
+删除
 1. TouchRpc全系的事件操作，推荐直接插件的方式，或者使用TouchRpcActionPlugin然后添加委托。
- |
 
 
 更新示例
@@ -224,11 +204,10 @@ TouchRpc的相关事件均已使用插件代替。所以请使用插件实现操
 更新描述：兼容性更新，增强型更新。
 更新详情：
 
-| 优化 | 
+优化
 1. FileLogger的写入逻辑，大大地提升了写入效率。
- |
-| --- | --- |
-| 新增 | 
+
+新增
 1. [Pipeline适配器](https://www.yuque.com/rrqm/touchsocket/ofnliu)
 2. [TLV适配器](https://www.yuque.com/rrqm/touchsocket/wug4bv)
 3. WaitingClient支持按条件等待返回。
@@ -237,18 +216,17 @@ TouchRpc的相关事件均已使用插件代替。所以请使用插件实现操
 6. Rpc系统，可定义持久化模型。
 7. Rpc在使用瞬时生命周期的服务时，可以直接获取调用上下文。
 8. XmlRpc增加调用上下文。
- |
-| 修改 | 
+
+修改
 1. 日志系统。
 2. Rpc的调用上下文均采用接口，例如：JsonRpc改为IJsonRpcCallContext，WebApi为IWebApiCallContext。
 3. IRpcActionFilter的参数列表。
- |
-| 修复 | 
+
+修复
 1. UdpSession资源不释放的Bug。
- |
-| 删除 | 
+
+删除
 1. 冗余元素。
- |
 
 
 ---
@@ -258,34 +236,32 @@ TouchRpc的相关事件均已使用插件代替。所以请使用插件实现操
 更新描述：兼容性更新，增强型更新。
 更新详情：
 
-| 优化 | 
+优化
 1. 各类客户端发送逻辑。
 2. Method类的调用逻辑。
- |
-| --- | --- |
-| 新增 | 
+ 
+新增
 1. 适配器可以设定发送IRequestInfo对象。
 2. 插件新增UseWebSocket的快捷方式。
 3. ReconnectionPlugin插件可以获得重连次数的重载设置。
 4. 【企业版】TcpService的服务注入。
 5. 【企业版】HttpService的服务注入。
 6. 【企业版】IOC容器的共享使用。
- |
-| 修改 | 
+
+修改 
 1. 各类发送逻辑，以最小化发送方法为基础，其余方法改为扩展方法。
 2. 相关接口的实现。
 3. 由网友[修改GetInfo](https://gitee.com/dotnetchina/TouchSocket/pulls/11)
- |
-| 修复 | 
+
+修复
 1. Container获取泛型失败bug。
 2. BetweenAnd适配器适配器部分bug。
 3. Router标签无法路由的bug。
 4. 修复TouchRpc推送文件状态不正确bug
 5. 修复独立线程在断线重连后发送bug。
- |
-| 删除 | 
+
+删除
 1. 冗余的发送方法，不影响上版本任何使用。
- |
 
 
 ---
@@ -296,32 +272,27 @@ TouchRpc的相关事件均已使用插件代替。所以请使用插件实现操
 更新描述：兼容性更新。
 更新详情：
 
-| 优化 | 
+优化 
 1. 优化IOC容器。
 2. 优化Metadata的写入方式。
 3. FileLogger，当日志文件达到1Mb时，会再新增文件序号。
- |
-| --- | --- |
-| 新增 | 
+
+新增
 1. Mapper类，支持简单类型映射
 2. Tcp服务器、客户端、udp等增加端口复用配置。
 3. 【企业版】轮询式断线重连。
 4. 【企业版】NATService转发客户端重连。
- |
-| 修改 | 
+
+修改
 1. RRQM二进制序列化，改名为Fast。
 2. TouchRpcClient连接时的Metadata，改为由Config配置注入。
 3. FilePool，取消延迟释放机制。
- |
-| 修复 | 
+
+修复
 1. 修复WebSocket连接问题
- |
-| 删除 | 
+
+删除
 1. 客户端直接调用的短线重连方式。仅保留在Config注入的功能。
- |
-
-
-
 
 ---
 
@@ -346,10 +317,10 @@ TouchRpc的相关事件均已使用插件代替。所以请使用插件实现操
 
 #### 3.使用逻辑修改
 1）原RRQMConfig设置Logger的方法，改为容器注入：
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1657939909513-11ede2cd-0e7e-4bf2-a18c-a7640530407a.png#averageHue=%23cbd1e8&clientId=u91c718dd-98e9-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=251&id=u89906a2b&margin=%5Bobject%20Object%5D&name=image.png&originHeight=501&originWidth=2713&originalType=binary&ratio=1&rotation=0&showTitle=false&size=888291&status=error&style=none&taskId=u23b65111-2fba-4578-8fa7-c02064bdce0&title=&width=1356.5)
-2）断线重连逻辑
-![C6Z(CQV9OAV3W`S5LPJWZ[F.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1658112000678-0d181543-ab61-4310-aab3-48200b99dd74.png#averageHue=%23d2ccc6&clientId=uab7c3379-07d2-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=815&id=u40357435&margin=%5Bobject%20Object%5D&name=C6Z%28CQV9OAV3W%60S5LPJWZ%5BF.png&originHeight=815&originWidth=1409&originalType=binary&ratio=1&rotation=0&showTitle=false&size=1061449&status=error&style=none&taskId=u80c7e4fc-cd6a-4119-809b-5e149582fbb&title=&width=1409)
-3）RpcStore使用变更
+![image.png](../static/img/docs/upgrade-5.png)
+断线重连逻辑
+![image.png](../static/img/docs/upgrade-6.png)
+RpcStore使用变更
 如果是仅有一个Rpc解析器，那么可以直接删除RpcStore的声明，从而使用对应的**解析器实例**，直接注册服务。然后可以通过其属性RpcStore，获取到具体的RpcStore实例。
 
 如果是有多个解析器，那么，首先可以使用任意一个解析器的RpcStore属性实例，作为主RpcStore，然后添加其他解析器。当然也可以直接new RpcStore，然后统一管理解析器。其中构造函数中的Container容器，可以直接new Container()，但是更建议使用和解析器相同的容器，这样注入的服务会变得全局可用。
