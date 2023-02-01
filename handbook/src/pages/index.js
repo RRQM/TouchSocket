@@ -46,7 +46,7 @@ function Banner() {
             一款简单易用的基础网络通讯组件库。
           </div>
           <div className="TouchSocket-banner-description">
-            让 .NET 开发更简单，更通用，更流行。
+            两岸猿声啼不住，轻舟已过万重山。
           </div>
           <ul className="TouchSocket-banner-spec">
             <li> Apache-2.0 宽松开源协议，商业免费授权</li>
