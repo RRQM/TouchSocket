@@ -8,7 +8,7 @@ namespace BytePoolConsoleApp
         private static void Main(string[] args)
         {
             Console.ReadKey();
-
+            
             BytePool.Default.AddSizeKey(1024 * 1024);
             //BytePool.AutoZero = true;
             for (int i = 0; i < 5; i++)
