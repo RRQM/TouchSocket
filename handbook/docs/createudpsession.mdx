@@ -1,0 +1,63 @@
+---
+id: createudpsession
+title: 创建UdpSession
+---
+
+## 说明
+UdpSession既能充当服务器，又能够作为客户端。
+
+## 可配置项
+| **属性名** | **属性描述** |
+| --- | --- |
+| SetBufferLength | 缓存池容量，默认1024*64 |
+| SetThreadCount | 多线程数量。该值标识重叠IO的数量，默认为10，该值不要设置太大。 |
+| SetServerName | 服务器标识名称，无实际使用意义。 |
+| SetReceiveType | 接收类型。
+- AUTO：自动接收模式。
+- None：UDP不支持
+ |
+| UsePlugin | 是否启用插件。在启用时或许会带来一点点性能损耗，基本上不是千万数据交互根本不值一提。 |
+| SetBindIPHost | 表示本地监听地址 |
+| SetRemoteIPHost | 表示默认发送时的目标地址，一般作为客户端时建议设置。 |
+| UseReuseAddress | 启用端口复用。该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题 |
+| UseBroadcast |  该值指定可以发送或接收广播数据包。 |
+
+## 支持插件接口客户端、服务器均支持
+声明自定义实例类，然后实现**IUdpSession**接口，即可实现下列事务的触发。
+或者继承自**UdpSessionBase**类，重写相应方法即可。
+
+| ###  IUdpSession
+ |  |
+| --- | --- |
+| OnReceivedData | 在收到数据时触发 |
+
+## 使用UdpSession
+
+```csharp
+UdpSession udpSession = new UdpSession();
+udpSession.Received += (remote, byteBlock,requestInfo) =>
+{
+    udpSession.Send(remote, byteBlock);
+    Console.WriteLine($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
+};
+udpSession.Setup(new TouchSocketConfig()
+     .SetBindIPHost(new IPHost(7789)))
+     .Start();
+Console.WriteLine("等待接收");
+
+```
+
+**注意事项：**
+
+1. **即使不监听地址，Setup和Start都是必须要的。**
+2. **当udp作为客户端时，Config如果不设置SetBindIPHost，将不会接收，如果不知道绑定那个端口，可以直接绑定0端口，这样，就会使用系统空闲的一个端口了  **
+## 主要方法简介
+| **方法名** | **功能简介** |
+| --- | --- |
+| Start | 启动服务器 |
+| Stop | 停止服务器，可再次调用Start重新使用 |
+| Dispose | 释放服务器，不可再调用Start使用 |
+
+
+## 视频介绍
+

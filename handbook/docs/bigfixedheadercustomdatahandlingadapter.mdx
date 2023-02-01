@@ -1,0 +1,99 @@
+---
+id: bigfixedheadercustomdatahandlingadapter
+title: 模板解析“大数据固定包头”数据适配器
+---
+
+## 一、说明
+
+大数据固定包头，是对固定的包头模板的补充，一般来是，固定包头适配器，不能工作于超过2G的数据，但是在少数情况下，会有大量的数据传输需求。所以这部分的业务，可以用大数据固定包头实现。
+
+
+## 二、特点
+
+1. 可以自由适配**99%**的数据协议。
+2. 可以随意定制数据协议。
+3. 可以与**任意语言、框架**对接数据。
+4. 可以接收**理论无限大**的数据。
+
+
+## 三、使用
+
+客户端与服务器均适用。下列以服务器为例。
+
+步骤
+
+1. 声明新建类，实现IBigFixedHeaderRequestInfo接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
+2. 声明新建类，继承BigFixedHeaderCustomDataHandlingAdapter，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
+3. TouchSocketConfig配置中设置。
+4. 通过Received（事件、方法、插件）中的RequestInfo对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
+
+【MyBigFixedHeaderRequestInfo】
+首先，新建MyBigFixedHeaderRequestInfo类，然后实现IBigFixedHeaderRequestInfo用户自定义固定包头接口。
+然后在**OnParsingHeader**函数执行结束时，对实现的`BodyLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为Body 。
+
+```csharp
+/// <summary>
+/// 下列示例，没有实现逻辑，仅解释思路。
+/// </summary>
+class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
+{
+    public long BodyLength => throw new NotImplementedException();//此处请使用字段实现。
+
+    public void OnAppendBody(byte[] buffer, int offset, int length)
+    {
+        //在这里会一直追加数据体，用户自行实现数据的保存。
+        //注意，buffer可能为内存块的成员，所以，一定一定不要直接引用。
+    }
+
+    public bool OnFinished()
+    {
+        //触发该方法时，说明数据体接收完毕，返回true时，会触发Receive相关事件，否则不会。
+        return true;
+    }
+
+    public bool OnParsingHeader(byte[] header)
+    {
+        //解析头部。赋值BodyLength
+        return true;
+    }
+}
+
+```
+
+新建MyBigFixedHeaderCustomDataHandlingAdapter继承**CustomBigFixedHeaderDataHandlingAdapter**，然后对HeaderLength作出赋值，以此表明固定包头的长度是多少。
+
+```csharp
+/// <summary>
+/// 模板解析“大数据固定包头”数据适配器
+/// </summary>
+class MyBigFixedHeaderCustomDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyBigFixedHeaderRequestInfo>
+{
+    public override int HeaderLength =>8;
+
+    protected override MyBigFixedHeaderRequestInfo GetInstance()
+    {
+        return new MyBigFixedHeaderRequestInfo();
+    }
+}
+```
+
+【接收】
+
+```csharp
+TcpService service = new TcpService();
+service.Received += (client, byteBlock, requestInfo) =>
+{
+    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
+    if (requestInfo is MyBigFixedHeaderRequestInfo myRequestInfo)
+    {
+        //此处可以处理MyBigFixedHeaderRequestInfo的相关信息了。
+        string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);
+    }
+  
+};
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
+    .SetDataHandlingAdapter(() => { return new MyBigFixedHeaderCustomDataHandlingAdapter(); }))//配置适配器
+    .Start();//启动
+```

@@ -1,0 +1,26 @@
+---
+id: resetid
+title: 服务器重置ID
+---
+
+## 一、说明
+每个客户端在连接时，服务器都会使用雪花算法，为连接的客户端**新分配**一个唯一ID，不管是新连接，还是重连来的。
+
+ID策略是可以自由定义的，在Config配置中，自己定义新ID来源即可。要求，不和现连接的客户端ID重复。
+
+但是，这种规范，是与客户端没有联系的，这也就意味着，这种方式是无法设置与SocketClient信息相关的ID的。
+```csharp
+.SetGetDefaultNewID(()=> { return new Guid().ToString(); })
+```
+
+但往往，有时候，我们希望，SocketClient的ID，能一定程度的代表一些信息。例如：以客户端的IP和端口，作为唯一ID。
+
+那这时候，**服务器**可以订阅**Connecting**事件，然后，为新连接的SocketClient，设置与之有关联信息的ID。
+```csharp
+m_service.Connecting += (client, e) => 
+{
+    e.ID = $"{client.IP}:{client.Port}";
+};//有客户端正在连接
+```
+
+但这样，应该还不足以应对所有情况。因为，有时候我们希望，在该连接完成某种验证之后复用之前的ID，以应对情况，那这时候，可以使用TcpService，或者SocketClient的**ResetID**的方法，来实现需求。

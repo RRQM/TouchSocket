@@ -1,0 +1,77 @@
+---
+id: bytepool
+title: 内存池
+---
+
+## 一、说明
+内存池是TouchSocketCore的最重要的组成部分，在TouchSocket产品中，BytePool贯穿始终。所以熟悉使用BytePool，也是非常重要的。
+
+**Nuget Package：**[TouchSocket](https://www.nuget.org/packages/TouchSocket/)
+## 二、功能
+内存池（BytePool）的最小实现单体是内存块（ByteBlock），它是继承自Stream的类，拥有和MemoryStream一样的功能和RRQM的增强功能。而且拥有释放回收能力，所以如果有MemoryStream的使用需求的话，就可以完全让ByteBlock替代。
+## 三、创建
+BytePool是静态类，无需创建，直接使用即可。ByteBlock可通过BytePool创建，也可以直接new对象，这两者实际操作一致。
+**_注意：创建的ByteBlock必须释放（Dispose），虽然不会内存泄露，但是会影响性能。_**
+```csharp
+ByteBlock byteBlock1 = new ByteBlock(byteSize:1024*1024,equalSize:false);
+byteBlock1.Dispose();
+ByteBlock byteBlock2 = BytePool.GetByteBlock(byteSize:1024*1024,equalSize:false);
+byteBlock2.Dispose();
+using (ByteBlock byteBlock3=new ByteBlock())
+{
+}
+```
+## 四、使用
+基础使用和MemoryStream一致，下面仅介绍特定使用。
+#### 4.1 写入、读取数据对象
+```csharp
+using (ByteBlock byteBlock = new ByteBlock())
+{
+    byteBlock.Write(byte.MaxValue);
+    byteBlock.Write(int.MaxValue);
+    byteBlock.Write(long.MaxValue);
+    byteBlock.Write("RRQM");
+    byteBlock.WriteObject(new Person(), SerializationType.Json);
+    byteBlock.WriteBytesPackage(new byte[1024]);
+    byteBlock.Pos = 0;//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
+    byte ByteValue = byteBlock.ReadByte();
+    int IntValue = byteBlock.ReadInt32();
+    long LongValue = byteBlock.ReadInt64();
+    string StringValue = byteBlock.ReadString();
+    Person ObjectValue = byteBlock.ReadObject<Person>(SerializationType.Json);
+    byte[] BytesValue = byteBlock.ReadBytesPackage();
+}
+```
+#### 4.2 多线程同步协作（Hold）
+在多线程异步时，设计架构应当遵守谁（Thread）创建的ByteBlock，由谁释放，这样就能很好的避免未释放的情况发生。实际上RRQMSocket中，就是秉承这样的设计，任何非用户创建的ByteBlock，都会由创建的线程最后释放。但是在使用中，经常出现异步多线程的操作。
+以RRQMSocket的TcpClient为例。如果直接在收到数据时，使用Task异步，则必定会发生关于ByteBlock的各种各样的异常。
+**原因非常简单，byteBlock对象在到达HandleReceivedData时，触发Task异步，此时触发线程会立即返回，并释放byteBlock，而Task异步线程会滞后，然后试图从已释放的byteBlock中获取数据，所以，必定发生异常。**
+```csharp
+public class MyTClient : TcpClient
+{
+    protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    {
+        Task.Run(()=> 
+        {
+            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            Console.WriteLine($"已接收到信息：{mes}");
+        });
+    }
+}
+```
+解决方法也非常简单，只需要在异步前锁定，然后使用完成后取消锁定，且不用再调用Dispose。
+```csharp
+public class MyTClient : TcpClient
+{
+    protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    {
+        byteBlock.SetHolding(true);//异步前锁定
+        Task.Run(()=> 
+        {
+            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            byteBlock.SetHolding(false);//使用完成后取消锁定，且不用再调用Dispose
+            Console.WriteLine($"已接收到信息：{mes}");
+        });
+    }
+}
+```
