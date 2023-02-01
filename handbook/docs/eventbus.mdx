@@ -1,0 +1,74 @@
+---
+id: eventbus
+title: EventBus
+---
+
+## 说明
+
+EventBus功能是企业版专属功能，其职能类似MQTT的发布订阅模式，也类似RabbitMQ的Sub模式。如果没有使用密钥，可以[试用](https://www.yuque.com/eo2w71/rrqm/80696720a95e415d94c87fa03642513d#Dfy2T)参考。 <a name="cmsde"></a>
+
+## 创建服务器
+
+服务器的创建就是TouchRpc服务器。除udp协议外，tcp、http、websocket协议的版本均支持该功能。
+
+下列以TcpTouchRpcService为例。
+
+```csharp
+TcpTouchRpcService tcpRpcService = new TcpTouchRpcService();
+
+var config = new RRQMConfig();
+config.SetListenIPHosts(new IPHost[] { new RRQMSocket.IPHost(7789) });
+tcpRpcService
+    .Setup(config)
+    .Start();
+
+```
+
+由**服务器**发布一个事件。
+第一个参数为事件名，第二个为访问权限。
+
+```csharp
+tcpRpcService.PublishEvent("Hello", AccessType.Owner | AccessType.Service | AccessType.Everyone);
+```
+
+<a name="fesMG"></a>
+
+## 创建客户端
+
+客户端订阅该事件。
+
+```csharp
+TcpTouchRpcClient tcpRpcClient = new TcpTouchRpcClient();
+tcpRpcClient
+    .Setup("127.0.0.1:7789")
+    .Connect();
+
+tcpRpcClient.SubscribeEvent<string>("Hello", SubscribeEvent);
+
+```
+
+其中SubscribeEvent是接收委托。此处用方法转换接收。其目的为，当服务器触发该方法时，就会分发到此处。
+
+```csharp
+ private void SubscribeEvent(EventSender eventSender, string arg)
+ {
+     this.ShowMsg($"从{eventSender.RaiseSourceType}收到通知事件{eventSender.EventName}，信息：{arg}");
+ }
+```
+
+<a name="lwUT0"></a>
+
+## 服务器触发
+
+第一个参数是事件名，第二个是事件参数。可以是任意类型，但是目前仅支持一个参数。
+
+```csharp
+tcpRpcService.RaiseEvent("Hello", "Hi");
+```
+
+<a name="cLPrt"></a>
+
+## 其他
+
+实际上在TouchRpc架构中。**TouchService**、**TouchSocketClient**、**TouchClient**三者均已实现**IEventObject**接口，这意味均可以**发布、取消发布、订阅、取消订阅、触发**等操作（会验证操作权限）。
+

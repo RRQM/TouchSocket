@@ -1,0 +1,343 @@
+---
+id: rpcoption
+title: 调用配置
+---
+
+## 一、说明
+
+> RPC服务是无状态的，即只知道当前服务被调用，但无法得知是被谁调用，这个问题给日志记录、RPC回调等带来了很多麻烦事。但是，Touch的RPC支持调用上下文获取。在上下文中可以获得调用者（`ICaller`）信息等。
+
+<a name="Ga8VP"></a>
+
+## 二、通过标签参数获取
+
+**步骤：**
+
+1. RPC标签需要传入`MethodFlags.IncludeCallContext`参数。
+2. 定义的服务的第一个参数必须是`ICallContext`或其派生类。
+3. 最后获得其Caller属性即可得到调用者。
+
+```csharp
+public class MyRpcServer : RpcServer
+{
+    [Description("登录")]
+    [TouchRpc(MethodFlags = MethodFlags.IncludeCallContext)]//使用调用上才文
+    public bool Login(ICallContext callContext,string account,string password)
+    {
+        if (callContext.Caller is TcpTouchRpcSocketClient)
+        {
+            Console.WriteLine("TcpTouchRpc请求");
+        }
+        if (account=="123"&&password=="abc")
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+<a name="Vu3AK"></a>
+
+## 三、通过瞬时生命周期获取
+
+步骤：
+
+1. 继承TransientRpcServer或者实现ITransientRpcServer接口。
+
+```csharp
+public class MyRpcServer : TransientRpcServer
+{
+    [Description("登录")]
+    [TouchRpc]
+    public bool Login(string account,string password)
+    {
+        if ( this.CallContext.Caller is TcpTouchRpcSocketClient)
+        {
+            Console.WriteLine("TcpTouchRpc请求");
+        }
+        if (account=="123"&&password=="abc")
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+
+
+## 调用反馈类型
+
+RPC在调用时，的调用状态有三种状态可选，分别为：`OnlySend`、`WaitSend`、`WaitInvoke`。区别是：
+
+| OnlySend | WaitSend | WaitInvoke |
+| --- | --- | --- |
+| 仅发送RPC请求，在TCP底层协议下，能保证发送成功，但是不反馈服务器**任何状态**，也不会取得**返回值**、**异常**等信息。在UDP底层协议下，不保证发送成功，仅仅是具有请求动作而已。 | 发送RPC请求，并且等待收到状态返回，能保证RPC请求顺利到达服务，但是不能得知RPC服务是否成功执行，也不会取得**返回值**、**异常**等信息 | 发送RPC请求，且返回所有信息，包括是否成功调用，执行后的**返回值**或**异常**等信息。 |
+
+<a name="jOr0o"></a>
+
+#### 使用
+
+同样的，在InvokeOption中可以直接赋值使用。
+
+```csharp
+InvokeOption invokeOption = new InvokeOption();
+invokeOption.FeedbackType = FeedbackType.WaitInvoke;
+//invokeOption.FeedbackType = FeedbackType.OnlySend;
+//invokeOption.FeedbackType = FeedbackType.WaitSend;
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+***注意：假如IInvokeOption使用的是InvokeOption的话，在new的时候，应该对其他参数也进行设置（因为它是结构体）。***
+
+
+## 说明
+
+RPC服务在被调用是，可以使用实现**IRpcActionFilter**的**特性（Attribute）**，进行相关AOP操作。
+
+<a name="nzqGX"></a>
+
+## 声明特性
+
+```csharp
+public class MyRpcActionFilterAttribute : RpcActionFilterAttribute, IRpcActionFilter
+{
+
+    public override void Executing(ICallContext callContext, ref InvokeResult invokeResult)
+    {
+        if (callContext.Caller is TcpTouchRpcSocketClient client)
+        {
+            client.Logger.Info($"即将执行RPC-{callContext.MethodInstance.Name}");
+        }
+        base.Executing(callContext, ref invokeResult);
+    }
+
+    public override void Executed(ICallContext callContext, ref InvokeResult invokeResult)
+    {
+        if (callContext.Caller is TcpTouchRpcSocketClient client)
+        {
+            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
+        }
+        base.Executed(callContext, ref invokeResult);
+    }
+
+    public override void ExecutException(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
+    {
+        if (callContext.Caller is TcpTouchRpcSocketClient client)
+        {
+            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
+        }
+
+        base.ExecutException(callContext, ref invokeResult, exception);
+    }
+}
+
+```
+
+<a name="ICJjw"></a>
+
+## 使用
+
+```csharp
+ [Description("性能测试")]
+ [TouchRpc]
+ [MyRpcActionFilter]
+ public int Performance(int a)
+ {
+     return a;
+ }
+```
+
+
+
+## 一、序列化选择
+
+从下图（图片来源[网络](https://www.jianshu.com/p/7d6853140e13)）可以看出，序列化是RPC中至关重要的一个环节，可以说，序列化的优劣，会很大程度的影响RPC调用性能。
+
+
+#### 1.1 支持的序列化
+
+在TouchRpc中，内置了四种序列化方式，分别为`FastBinary`、`Json`、`Xml`、`SystemBinary`。这四种方式的特点，就是其序列化的特点。
+
+|  | FastBinary | Json | Xml | SystemBinary |
+| --- | --- | --- | --- | --- |
+| 特点 | 序列化方式速度快，数据量小，但是兼容的数据格式也比较有限。仅支持基础类型、自定义实体类、数组、List、字典 | 兼容性好，可读性强，但是受字符串影响，性能不出众，且数据量受限制 | 兼容性一般，可读性强，同样受字符串影响，性能不出众，且数据量受限制 | 序列化速度快。但是兼容性低。且要求类必须一致，不然需要重新指定图根。 |
+
+<a name="guhM2"></a>
+
+#### 1.2 使用预设序列化
+
+在TouchRpc中，选择序列化是非常简单的，且序列化方式完全由`调用端`决定。
+在实际的调用中，通过`InvokeOption`的参数指定。
+
+实际上，只需要传入相关参数即可。
+
+```csharp
+InvokeOption invokeOption = new InvokeOption();
+invokeOption.SerializationType = SerializationType.FastBinary;
+//invokeOption.SerializationType = RRQMCore.Serialization.SerializationType.Json;
+//invokeOption.SerializationType = RRQMCore.Serialization.SerializationType.Xml;
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+<a name="t0SF0"></a>
+
+#### 1.3 自定义序列化
+
+**a).定义**
+想要实现自定义序列化，必须通过重写序列化选择器，实现`SerializeParameter`和`DeserializeParameter`函数。如果还想留用预设序列化，请按下代码示例即可。
+
+```csharp
+/// <summary>
+/// 序列化选择器
+/// </summary>
+public class MySerializationSelector : SerializationSelector
+{
+    /// <summary>
+    /// 反序列化
+    /// </summary>
+    /// <param name="serializationType"></param>
+    /// <param name="parameterBytes"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+    {
+        if (parameterBytes == null)
+        {
+            return parameterType.GetDefault();
+        }
+        switch (serializationType)
+        {
+            case SerializationType.FastBinary:
+                {
+                    return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
+                }
+            case SerializationType.SystemBinary:
+                {
+                    return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
+                }
+            case SerializationType.Json:
+                {
+                    return Encoding.UTF8.GetString(parameterBytes).FromJson(parameterType);
+                }
+            case SerializationType.Xml:
+                {
+                    return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
+                }
+            default:
+                throw new RpcException("未指定的反序列化方式");
+        }
+    }
+
+    /// <summary>
+    /// 序列化参数
+    /// </summary>
+    /// <param name="serializationType"></param>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+    {
+        if (parameter == null)
+        {
+            return null;
+        }
+        switch (serializationType)
+        {
+            case SerializationType.FastBinary:
+                {
+                    return SerializeConvert.FastBinarySerialize(parameter);
+                }
+            case SerializationType.SystemBinary:
+                {
+                    return SerializeConvert.BinarySerialize(parameter);
+                }
+            case SerializationType.Json:
+                {
+                    return SerializeConvert.JsonSerializeToBytes(parameter);
+                }
+            case SerializationType.Xml:
+                {
+                    return SerializeConvert.XmlSerializeToBytes(parameter);
+                }
+            default:
+                throw new RpcException("未指定的序列化方式");
+        }
+    }
+}
+```
+
+**b).使用**
+首先在`解析器`和`客户端`**配置**中赋值解析器。
+
+```csharp
+var config = new TouchSocketConfig()//配置
+                   .SetSerializationSelector(new MySerializationSelector());
+```
+
+然后，因为赋值时是`SerializationType`的枚举类型，所以执行强制类型转换即可。
+
+```csharp
+InvokeOption invokeOption = new InvokeOption();
+invokeOption.SerializationType = (RRQMCore.Serialization.SerializationType)5;
+```
+
+
+## 一、说明
+
+调用RPC，不能无限制等待，必须要有计时器，或者任务取消的功能。 <a name="bt54x"></a>
+
+#### 1.1 计时器设置
+
+直接对`InvokeOption`的`Timeout` 属性赋值即可，单位为`毫秒`。
+
+```csharp
+InvokeOption invokeOption = new InvokeOption();
+invokeOption.Timeout = 1000 * 10;//10秒后无反应，则抛出RRQMTimeoutException异常
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+<a name="T7e0y"></a>
+
+#### 1.2 任务取消
+
+在RPC调用时，计时器是一个好的选择，但是还不够完美，有时候我们希望能手动终结某个调用任务。这时候，计时器就不堪重任，需要能主动取消任务的功能。熟悉.net的小伙伴都知道，CancellationToken是具备这个功能的。同样的，只需要对`InvokeOption`的`CancellationToken` 赋值即可。
+
+```csharp
+InvokeOption invokeOption = new InvokeOption();
+CancellationTokenSource tokenSource = new CancellationTokenSource();
+invokeOption.CancellationToken = tokenSource.Token;
+//tokenSource.Cancel();//调用时取消任务
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+<a name="seYXN"></a>
+
+#### 1.3 服务任务取消
+
+实际上7.2的取消任务，仅仅能实现让客户端取消请求，但是服务器并不知道，如果想让服务器也感知任务消息，就必须依托于调用上下文。
+
+此处的取消，有可能是调用者主动取消。也有可能是调用者已经掉线。
+
+```csharp
+public class ElapsedTimeRpcServer : ServerProvider
+{
+    [Description("测试可取消的调用")]
+    [RRQMRPC(MethodFlags.IncludeCallContext)]
+    public bool DelayInvoke(ICallContext serverCallContext,int tick)//同步服务
+    {
+        for (int i = 0; i < tick; i++)
+        {
+            Thread.Sleep(100);
+            if (serverCallContext.TokenSource.IsCancellationRequested)
+            {
+                Console.WriteLine("客户端已经取消该任务！");
+                return false;//实际上在取消时，客户端得不到该值
+            }
+        }
+        return true;
+    }
+}
+```

@@ -396,6 +396,232 @@ module.exports = {
             label: "8.5 适配器完整性、性能测试"
           },
         ]
+    },
+    {
+      type: "category",
+      label: "09、Http组件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "httpdescription",
+            label: "9.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "createhttpservice",
+            label: "9.2 创建HttpService"
+          },
+          {
+            type: "doc",
+            id: "createhttpclient",
+            label: "9.3 创建HttpClient"
+          },
+          {
+            type: "doc",
+            id: "httpstaticpageplugin",
+            label: "9.4 静态页面插件"
+          },
+          {
+            type: "doc",
+            id: "httpfiletransfer",
+            label: "9.5 文件传输"
+          },
+        ]
+    },
+    {
+      type: "category",
+      label: "10、WebSocket组件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "websocketdescription",
+            label: "10.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "createwebsocketservice",
+            label: "10.2 创建WebSocket服务器"
+          },
+          {
+            type: "doc",
+            id: "createwebsocketclient",
+            label: "10.3 创建WebSocket客户端"
+          },
+          {
+            type: "doc",
+            id: "wscommandlineplugin",
+            label: "10.4 WSCommandLinePlugin"
+          },
+          {
+            type: "doc",
+            id: "wsjsonrpc",
+            label: "10.5 基于WS的JsonRpc"
+          },
+        ]
+    },
+    {
+      type: "category",
+      label: "11、TouchRpc组件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "touchrpcdescription",
+            label: "11.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "createtouchrpcservice",
+            label: "11.2 创建TouchRpc服务器"
+          },
+          {
+            type: "doc",
+            id: "createtouchrpcclient",
+            label: "11.3 创建TouchRpc客户端"
+          },
+          {
+            type: "doc",
+            id: "touchrpcbase",
+            label: "11.4 基础功能"
+          },
+          {
+            type: "category",
+            label: "11.5 Rpc功能",
+            items:
+              [
+                {
+                  type: "doc",
+                  id: "createandcallrpc",
+                  label: "a.创建、调用rpc服务"
+                },
+                {
+                  type: "doc",
+                  id: "rpcstream",
+                  label: "b.Rpc大数据流式传输"
+                },
+                {
+                  type: "doc",
+                  id: "rpcoption",
+                  label: "c.调用配置"
+                },
+                {
+                  type: "doc",
+                  id: "generateproxy",
+                  label: "d.生成、获取代理"
+                }
+              ]
+          },
+          {
+            type: "category",
+            label: "11.6 文件传输",
+            items:
+              [
+                {
+                  type: "doc",
+                  id: "transferfile",
+                  label: "a.传输文件"
+                },
+                {
+                  type: "doc",
+                  id: "smallfiletransfer",
+                  label: "c.小文件传输"
+                },
+                {
+                  type: "doc",
+                  id: "multithreadingfiletransfer",
+                  label: "c.多线程文件传输"
+                }
+              ]
+          },
+          {
+            type: "doc",
+            id: "remotefilecontrol",
+            label: "11.7 远程文件操作"
+          },
+          {
+            type: "doc",
+            id: "streamtransfer",
+            label: "11.8 Stream传输"
+          },
+          {
+            type: "doc",
+            id: "remotestreamaccess",
+            label: "11.9 远程流访问"
+          },
+          {
+            type: "doc",
+            id: "eventbus",
+            label: "11.10 EventBus"
+          }
+        ]
+    },
+    {
+      type: "category",
+      label: "12、WebApi组件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "webapidescription",
+            label: "12.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "webapiservice",
+            label: "12.2 定义、发布、启动服务"
+          },
+          {
+            type: "doc",
+            id: "callwebapi",
+            label: "12.3 发现、调用服务"
+          },
+        ]
+    },
+    {
+      type: "category",
+      label: "13、JsonRpc组件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "jsonrpcdescription",
+            label: "13.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "jsonrpcservice",
+            label: "13.2 定义、发布、启动服务"
+          },
+          {
+            type: "doc",
+            id: "calljsonrpc",
+            label: "13.3 发现、调用服务"
+          },
+        ]
+    },
+    {
+      type: "category",
+      label: "14、XmlRpc组件件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "xmlrpcdescription",
+            label: "14.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "xmlrpcservice",
+            label: "14.2 定义、发布、启动服务"
+          },
+          {
+            type: "doc",
+            id: "callxmlrpc",
+            label: "14.3 发现、调用服务"
+          },
+        ]
     }
   ]
 };
